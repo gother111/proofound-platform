@@ -2,14 +2,7 @@
 
 import Image from 'next/image';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  AnimatePresence,
-  animate,
-  motion,
-  useMotionValueEvent,
-  useReducedMotion,
-  useScroll,
-} from 'framer-motion';
+import { AnimatePresence, animate, motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowRight,
   BadgeCheck,
@@ -65,10 +58,11 @@ interface StoryState {
 }
 
 const STORY_TRANSITION = {
-  duration: 0.75,
+  duration: 0.58,
   ease: [0.22, 1, 0.36, 1] as const,
 };
-const HERO_TO_BLIND_TRANSITION_SECONDS = 3;
+const HERO_TO_BLIND_TRANSITION_SECONDS = 2.1;
+const DESKTOP_FRAME_HEIGHT_VH = 88;
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const easeIn = (value: number) => {
@@ -89,6 +83,8 @@ const DESKTOP_CARD_FRAME = 'w-[31rem] max-w-[31rem] aspect-[31/42]';
 const MOBILE_CARD_FRAME = 'w-full max-w-[14rem] aspect-[31/42]';
 const GLASS_SHELL =
   'border border-white/55 bg-white/60 shadow-[0_22px_80px_-44px_rgba(45,51,48,0.4)] backdrop-blur-[24px]';
+const STORY_EYEBROW_CLASS =
+  'text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-proofound-forest/70';
 
 const proofArtifacts = [
   { label: 'PDF', icon: FileText },
@@ -380,9 +376,9 @@ function HeroResumePaperPile({ compact = false }: { compact?: boolean }) {
         src="/hero-resume-stack/paper-pile.png"
         alt=""
         fill
-        sizes={compact ? '14rem' : '31rem'}
-        fetchPriority={compact ? undefined : 'high'}
-        priority={!compact}
+        sizes={compact ? '12.25rem' : '31rem'}
+        fetchPriority="high"
+        priority
         className="pointer-events-none select-none object-contain drop-shadow-[0_32px_72px_rgba(55,45,30,0.18)]"
       />
     </div>
@@ -408,7 +404,10 @@ function HeroResumeStack({ compact = false }: { compact?: boolean }) {
     <div
       role="img"
       aria-label="Resume layered over a stack of supporting paper proof"
-      className={cn('relative isolate mx-auto', compact ? MOBILE_CARD_FRAME : DESKTOP_CARD_FRAME)}
+      className={cn(
+        'relative isolate mx-auto',
+        compact ? 'w-full max-w-[12.25rem] aspect-[31/42]' : DESKTOP_CARD_FRAME
+      )}
     >
       <HeroResumePaperPile compact={compact} />
       <HeroResumeSheet compact={compact} />
@@ -1058,9 +1057,9 @@ function ProofPackCard({
               {state.isChallenges ? (
                 <motion.div
                   key="candidate-challenges"
-                  initial={{ opacity: 0, y: 16, filter: 'blur(8px)' }}
+                  initial={{ opacity: 0, y: 16, filter: 'blur(4px)' }}
                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, y: -16, filter: 'blur(8px)' }}
+                  exit={{ opacity: 0, y: -16, filter: 'blur(4px)' }}
                   transition={STORY_TRANSITION}
                   className="flex h-full flex-col space-y-3"
                 >
@@ -1097,9 +1096,9 @@ function ProofPackCard({
               ) : state.isOutcomes ? (
                 <motion.div
                   key="outcomes"
-                  initial={{ opacity: 0, y: 16, filter: 'blur(8px)' }}
+                  initial={{ opacity: 0, y: 16, filter: 'blur(4px)' }}
                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, y: -16, filter: 'blur(8px)' }}
+                  exit={{ opacity: 0, y: -16, filter: 'blur(4px)' }}
                   transition={STORY_TRANSITION}
                   className="space-y-3"
                 >
@@ -1191,9 +1190,9 @@ function ProofPackCard({
               ) : (
                 <motion.div
                   key="summary"
-                  initial={{ opacity: 0, y: 16, filter: 'blur(8px)' }}
+                  initial={{ opacity: 0, y: 16, filter: 'blur(4px)' }}
                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, y: -16, filter: 'blur(8px)' }}
+                  exit={{ opacity: 0, y: -16, filter: 'blur(4px)' }}
                   transition={STORY_TRANSITION}
                   className={cn(isBlindReview ? 'space-y-4' : 'space-y-3')}
                 >
@@ -1426,9 +1425,9 @@ function AssignmentCard({ state, compact = false }: { state: StoryState; compact
 
           <motion.div
             key="assignment-challenges"
-            initial={{ opacity: 0, y: 16, filter: 'blur(8px)' }}
+            initial={{ opacity: 0, y: 16, filter: 'blur(4px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -16, filter: 'blur(8px)' }}
+            exit={{ opacity: 0, y: -16, filter: 'blur(4px)' }}
             transition={STORY_TRANSITION}
             className="mt-5 space-y-3"
           >
@@ -1839,23 +1838,23 @@ function HeroDesktopCopy({
       <AnimatePresence mode="wait">
         <motion.div
           key={frame.id}
-          initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 24, filter: 'blur(8px)' }}
+          initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18, filter: 'blur(4px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          exit={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -24, filter: 'blur(10px)' }}
+          exit={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -18, filter: 'blur(4px)' }}
           transition={reduceMotion ? { duration: 0 } : STORY_TRANSITION}
           className="space-y-8"
         >
-          <h1 className="max-w-none text-[8.1rem] font-semibold leading-[0.78] tracking-[-0.055em] text-foreground xl:text-[10.2rem]">
+          <h1 className="max-w-none font-display text-[7.4rem] font-semibold leading-[0.82] text-foreground xl:text-[9.35rem]">
             <span className="block">Proof behind</span>
             <span className="block">the claim</span>
           </h1>
 
           <div className="max-w-[34rem] space-y-5">
-            <p className="text-[1.06rem] leading-8 text-muted-foreground xl:text-[1.18rem]">
+            <p className="text-[1.06rem] leading-8 text-foreground/74 xl:text-[1.18rem]">
               {frame.body}
             </p>
             {frame.microcopy ? (
-              <p className="text-sm leading-6 text-foreground/60">{frame.microcopy}</p>
+              <p className="text-sm leading-6 text-foreground/70">{frame.microcopy}</p>
             ) : null}
           </div>
 
@@ -2095,13 +2094,14 @@ function StandardDesktopCopy({
       <AnimatePresence mode="wait">
         <motion.div
           key={frame.id}
-          initial={reduceMotion ? { y: 0 } : { y: 760 }}
+          initial={reduceMotion ? { y: 0 } : { y: 220 }}
           animate={{ y: 0 }}
-          exit={reduceMotion ? { y: 0 } : { y: -620 }}
-          transition={reduceMotion ? { duration: 0 } : { duration: 0.95, ease: [0.22, 1, 0.36, 1] }}
-          className="space-y-7"
+          exit={reduceMotion ? { y: 0 } : { y: -180 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="space-y-6"
         >
-          <h2 className="max-w-[13ch] text-5xl leading-[0.92] text-foreground md:text-[4.4rem]">
+          <StoryEyebrow frame={frame} />
+          <h2 className="max-w-[13ch] font-display text-5xl leading-[0.96] text-foreground md:text-[4.2rem]">
             {frame.title}
           </h2>
           <p className="max-w-[33rem] text-lg leading-8 text-muted-foreground md:text-[1.16rem]">
@@ -2159,25 +2159,25 @@ const compatibilityRoleStack = [
   {
     src: '/compatibility-transition-assets/role-senior-project-lead.png',
     alt: 'Senior Project Lead role sheet',
-    width: 440,
-    left: 280,
-    top: 40,
+    width: 400,
+    left: 310,
+    top: 58,
     zIndex: 1,
   },
   {
     src: '/compatibility-transition-assets/role-operations-manager.png',
     alt: 'Operations Manager role sheet',
-    width: 460,
-    left: 140,
-    top: 200,
+    width: 420,
+    left: 170,
+    top: 228,
     zIndex: 2,
   },
   {
     src: '/compatibility-transition-assets/role-product-operations-lead.png',
     alt: 'Product Operations Lead role sheet',
-    width: 540,
-    left: 40,
-    top: 380,
+    width: 490,
+    left: 86,
+    top: 404,
     zIndex: 3,
   },
 ] as const;
@@ -2186,28 +2186,42 @@ const compatibilityProfileStack = [
   {
     src: '/compatibility-transition-assets/profile-program-manager.png',
     alt: 'Program Manager proof profile card',
-    width: 340,
-    right: 180,
-    top: 40,
+    width: 310,
+    right: 225,
+    top: 60,
     zIndex: 1,
   },
   {
     src: '/compatibility-transition-assets/profile-people-operations-strategist.png',
     alt: 'People Operations Strategist proof profile card',
-    width: 360,
-    right: 80,
-    top: 220,
+    width: 330,
+    right: 125,
+    top: 242,
     zIndex: 2,
   },
   {
     src: '/compatibility-transition-assets/profile-delivery-operations-lead.png',
     alt: 'Delivery Operations Lead proof profile card',
-    width: 400,
-    right: -10,
-    top: 420,
+    width: 360,
+    right: 40,
+    top: 428,
     zIndex: 3,
   },
 ] as const;
+
+function StoryEyebrow({
+  frame,
+  centered = false,
+}: {
+  frame: HomepageStoryFrame;
+  centered?: boolean;
+}) {
+  return (
+    <p className={cn(STORY_EYEBROW_CLASS, centered ? 'text-center' : 'text-left')}>
+      {frame.step} / {frame.eyebrow}
+    </p>
+  );
+}
 
 function OrganizerBoxVisual({ slideY = 0, className }: { slideY?: number; className?: string }) {
   return (
@@ -2228,7 +2242,6 @@ function OrganizerBoxVisual({ slideY = 0, className }: { slideY?: number; classN
           width={1448}
           height={796}
           sizes="770px"
-          priority
           className="pointer-events-none h-full w-full select-none object-fill drop-shadow-[0_34px_80px_rgba(55,45,30,0.18)]"
         />
       </motion.div>
@@ -2249,7 +2262,6 @@ function OrganizerBoxVisual({ slideY = 0, className }: { slideY?: number; classN
           width={1448}
           height={289}
           sizes="770px"
-          priority
           className="pointer-events-none h-full w-full select-none object-fill drop-shadow-[0_18px_34px_rgba(34,38,30,0.18)]"
         />
       </motion.div>
@@ -2287,7 +2299,6 @@ function Candidate24Sheet({
         alt=""
         fill
         sizes="22rem"
-        priority
         className="pointer-events-none select-none object-contain drop-shadow-[0_18px_40px_rgba(55,45,30,0.14)]"
       />
     </motion.div>
@@ -2342,7 +2353,6 @@ function OutcomeOrganizerLayers({
               width={800}
               height={800}
               sizes="310px"
-              priority
               className="pointer-events-none h-auto w-[310px] max-w-none select-none drop-shadow-[0_15px_30px_rgba(55,45,30,0.1)]"
             />
           </motion.div>
@@ -2361,7 +2371,6 @@ function OutcomeOrganizerLayers({
           width={1916}
           height={821}
           sizes="534px"
-          priority
           className="pointer-events-none h-auto w-[534px] max-w-none select-none drop-shadow-[0_20px_38px_rgba(55,45,30,0.14)]"
         />
       </motion.div>
@@ -2390,7 +2399,6 @@ function OutcomeOrganizerLayers({
             alt=""
             fill
             sizes={`${card.width}px`}
-            priority
             className="pointer-events-none select-none object-contain drop-shadow-[0_20px_34px_rgba(55,45,30,0.16)]"
           />
           <AnimatePresence>
@@ -2440,7 +2448,6 @@ function OutcomeOrganizerLayers({
               width={1600}
               height={400}
               sizes="496px"
-              priority
               className="pointer-events-none h-auto w-[496px] max-w-none select-none drop-shadow-[0_15px_25px_rgba(55,45,30,0.12)]"
             />
           </motion.div>
@@ -2467,7 +2474,6 @@ function OutcomeOrganizerLayers({
               width={1600}
               height={400}
               sizes="528px"
-              priority
               className="pointer-events-none h-auto w-[528px] max-w-none select-none drop-shadow-[0_20px_34px_rgba(55,45,30,0.16)]"
             />
           </motion.div>
@@ -2546,23 +2552,27 @@ function HeroToBlindDesktopScene({
   const progress = clamp01(transitionProgress);
   const [sheetSwapProgress, setSheetSwapProgress] = useState(reduceMotion ? 1 : 0);
   const sheetSwapProgressRef = useRef(reduceMotion ? 1 : 0);
-  const heroTravel = 620;
-  const blindEntry = 760;
-  const heroOffsetY = reduceMotion ? 0 : mix(0, -heroTravel, progress);
-  const blindOffsetY = reduceMotion ? 0 : mix(blindEntry, 0, progress);
-  const pileOffsetY = reduceMotion ? 0 : mix(0, -heroTravel, progress);
+  const heroTravel = 520;
+  const blindEntry = 560;
+  const heroOffsetY = mix(0, -heroTravel, progress);
+  const blindOffsetY = mix(blindEntry, 0, progress);
+  const pileOffsetY = mix(0, -heroTravel, progress);
+  const heroExitOpacity = mix(1, 0, easeIn(clamp01(progress / 0.55)));
+  const pileExitOpacity = mix(1, 0, easeIn(clamp01((progress - 0.56) / 0.18)));
+  const blindCopyOpacity = easeIn(clamp01((progress - 0.36) / 0.42));
   const organizerProgress = easeInOut(progress);
-  const organizerSlideY = reduceMotion ? 0 : mix(1400, 0, organizerProgress);
-  const outgoingSheetProgress = reduceMotion ? 1 : easeInOut(clamp01(sheetSwapProgress / 0.58));
-  const incomingSheetProgress = reduceMotion
-    ? 1
-    : easeInOut(clamp01((sheetSwapProgress - 0.68) / 0.32));
-  const originalResumeSettleY = reduceMotion
-    ? 0
-    : mix(0, ORGANIZER_BACK_HEIGHT_PX + ORGANIZER_FRONT_HEIGHT_PX + 72, outgoingSheetProgress);
-  const replacementResumeY = reduceMotion ? 0 : mix(460, 0, incomingSheetProgress);
-  const originalResumeOpacity = reduceMotion ? 0 : outgoingSheetProgress < 0.995 ? 1 : 0;
-  const replacementResumeOpacity = 1;
+  const organizerSlideY = mix(1400, 0, organizerProgress);
+  const effectiveSheetSwapProgress = reduceMotion ? (progress >= 0.995 ? 1 : 0) : sheetSwapProgress;
+  const outgoingSheetProgress = easeInOut(clamp01(effectiveSheetSwapProgress / 0.58));
+  const incomingSheetProgress = easeInOut(clamp01((effectiveSheetSwapProgress - 0.68) / 0.32));
+  const originalResumeSettleY = mix(
+    0,
+    ORGANIZER_BACK_HEIGHT_PX + ORGANIZER_FRONT_HEIGHT_PX + 72,
+    outgoingSheetProgress
+  );
+  const replacementResumeY = mix(460, 0, incomingSheetProgress);
+  const originalResumeOpacity = outgoingSheetProgress < 0.995 ? 1 : 0;
+  const replacementResumeOpacity = incomingSheetProgress > 0 ? 1 : 0;
   const originalResumeClipBottom = Math.max(
     0,
     STORY_RESUME_TOP_PX + STORY_RESUME_HEIGHT_PX + originalResumeSettleY - ORGANIZER_POCKET_LINE_PX
@@ -2586,8 +2596,8 @@ function HeroToBlindDesktopScene({
     }
 
     const controls = animate(sheetSwapProgressRef.current, 1, {
-      duration: 3.6,
-      delay: 0.5,
+      duration: 2.25,
+      delay: 0.18,
       ease: [0.22, 1, 0.36, 1],
       onUpdate: (value) => {
         sheetSwapProgressRef.current = value;
@@ -2603,18 +2613,21 @@ function HeroToBlindDesktopScene({
       <div className="grid min-h-[45rem] grid-cols-[minmax(0,1fr)_31rem] items-center gap-0 overflow-visible">
         <div className="relative h-[42rem] overflow-hidden pr-10">
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2">
-            <motion.div className="space-y-8 will-change-transform" style={{ y: heroOffsetY }}>
-              <h1 className="max-w-none text-[8.1rem] font-semibold leading-[0.78] tracking-[-0.055em] text-foreground xl:text-[10.2rem]">
+            <motion.div
+              className="space-y-8 will-change-transform"
+              style={{ y: heroOffsetY, opacity: heroExitOpacity }}
+            >
+              <h1 className="max-w-none font-display text-[7.4rem] font-semibold leading-[0.82] text-foreground xl:text-[9.35rem]">
                 <span className="block">Proof behind</span>
                 <span className="block">the claim</span>
               </h1>
 
               <div className="max-w-[34rem] space-y-5">
-                <p className="text-[1.06rem] leading-8 text-muted-foreground xl:text-[1.18rem]">
+                <p className="text-[1.06rem] leading-8 text-foreground/74 xl:text-[1.18rem]">
                   {heroFrame.body}
                 </p>
                 {heroFrame.microcopy ? (
-                  <p className="text-sm leading-6 text-foreground/60">{heroFrame.microcopy}</p>
+                  <p className="text-sm leading-6 text-foreground/70">{heroFrame.microcopy}</p>
                 ) : null}
               </div>
 
@@ -2641,9 +2654,10 @@ function HeroToBlindDesktopScene({
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2">
             <motion.div
               className="max-w-[33rem] space-y-7 will-change-transform"
-              style={{ y: blindOffsetY }}
+              style={{ y: blindOffsetY, opacity: blindCopyOpacity }}
             >
-              <h2 className="max-w-[13ch] text-5xl leading-[0.92] text-foreground md:text-[4.4rem]">
+              <StoryEyebrow frame={blindFrame} />
+              <h2 className="max-w-[13ch] font-display text-5xl leading-[0.94] text-foreground md:text-[4.2rem]">
                 {blindFrame.title}
               </h2>
               <p className="max-w-[33rem] text-lg leading-8 text-muted-foreground md:text-[1.16rem]">
@@ -2672,7 +2686,10 @@ function HeroToBlindDesktopScene({
           }
         >
           <div className={cn('relative isolate', DESKTOP_CARD_FRAME)}>
-            <motion.div style={{ y: pileOffsetY }} className="absolute inset-0">
+            <motion.div
+              style={{ y: pileOffsetY, opacity: pileExitOpacity }}
+              className="absolute inset-0"
+            >
               <HeroResumePaperPile />
             </motion.div>
             <motion.div
@@ -2714,6 +2731,7 @@ function SystemCenterCopy({
   enterFromPrivacy?: boolean;
 }) {
   const isPrecision = state.isPrecision && !state.isChallenges;
+  const isCompatibility = frame.id === 'compatibility';
   const privacyFrame = HOMEPAGE_STORY_FRAMES.find((storyFrame) => storyFrame.id === 'privacy');
 
   return (
@@ -2725,7 +2743,7 @@ function SystemCenterCopy({
         'relative z-20 flex flex-col items-center text-center',
         compact
           ? 'max-w-[12rem] gap-4'
-          : isPrecision
+          : isPrecision || isCompatibility
             ? 'max-w-[28rem] gap-5'
             : 'max-w-[18rem] gap-5'
       )}
@@ -2736,21 +2754,22 @@ function SystemCenterCopy({
             key="privacy-to-compatibility-copy"
             initial={reduceMotion ? false : { opacity: 1, filter: 'blur(0px)' }}
             animate={{ opacity: 1, filter: 'blur(0px)' }}
-            exit={reduceMotion ? { opacity: 1 } : { opacity: 0, filter: 'blur(8px)' }}
+            exit={reduceMotion ? { opacity: 1 } : { opacity: 0, filter: 'blur(4px)' }}
             transition={reduceMotion ? { duration: 0 } : STORY_TRANSITION}
             className="relative min-h-[20rem] w-full"
           >
             <motion.div
               initial={false}
-              animate={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4, filter: 'blur(8px)' }}
+              animate={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4, filter: 'blur(4px)' }}
               transition={
                 reduceMotion ? { duration: 0 } : { duration: 0.62, ease: [0.22, 1, 0.36, 1] }
               }
               className="absolute inset-x-0 top-0 mx-auto max-w-[18rem] space-y-4 text-left"
             >
+              <StoryEyebrow frame={privacyFrame} />
               <h2
                 className={cn(
-                  'text-foreground',
+                  'font-display text-foreground',
                   compact ? 'text-[2rem] leading-[0.96]' : 'text-[3.72rem] leading-[0.9]'
                 )}
               >
@@ -2758,7 +2777,7 @@ function SystemCenterCopy({
               </h2>
               <p
                 className={cn(
-                  'text-muted-foreground',
+                  'text-foreground/70',
                   compact ? 'text-sm leading-6' : 'text-[1rem] leading-7'
                 )}
               >
@@ -2767,14 +2786,15 @@ function SystemCenterCopy({
             </motion.div>
 
             <motion.div
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 12, filter: 'blur(8px)' }}
+              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 12, filter: 'blur(4px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               transition={reduceMotion ? { duration: 0 } : { ...STORY_TRANSITION, delay: 0.24 }}
               className="absolute inset-x-0 top-0 mx-auto max-w-[18rem] space-y-4"
             >
+              <StoryEyebrow frame={frame} centered />
               <h2
                 className={cn(
-                  'text-foreground',
+                  'font-display text-foreground',
                   compact ? 'text-[2rem] leading-[0.96]' : 'text-[3.72rem] leading-[0.9]'
                 )}
               >
@@ -2782,43 +2802,52 @@ function SystemCenterCopy({
               </h2>
               <p
                 className={cn(
-                  'text-muted-foreground',
+                  'text-foreground/70',
                   compact ? 'text-sm leading-6' : 'text-[1rem] leading-7'
                 )}
               >
                 {frame.body}
               </p>
+              {frame.microcopy ? (
+                <p className="mx-auto max-w-[17rem] text-[0.78rem] leading-5 text-foreground/52">
+                  {frame.microcopy}
+                </p>
+              ) : null}
             </motion.div>
           </motion.div>
         ) : (
           <motion.div
             key={frame.id}
             initial={
-              reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 22, filter: 'blur(8px)' }
+              reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16, filter: 'blur(4px)' }
             }
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={
-              reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -20, filter: 'blur(10px)' }
-            }
+            exit={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -14, filter: 'blur(4px)' }}
             transition={reduceMotion ? { duration: 0 } : STORY_TRANSITION}
-            className="max-w-[18rem] space-y-4"
+            className={cn('space-y-4', isCompatibility ? 'max-w-[22rem]' : 'max-w-[18rem]')}
           >
+            <StoryEyebrow frame={frame} centered />
             <h2
               className={cn(
-                'text-foreground',
-                compact ? 'text-[2rem] leading-[0.96]' : 'text-[3.72rem] leading-[0.9]'
+                'font-display text-foreground',
+                compact ? 'text-[2rem] leading-[0.96]' : 'text-[3.72rem] leading-[0.92]'
               )}
             >
               {frame.title}
             </h2>
             <p
               className={cn(
-                'text-muted-foreground',
+                'text-foreground/70',
                 compact ? 'text-sm leading-6' : 'text-[1rem] leading-7'
               )}
             >
               {frame.body}
             </p>
+            {frame.microcopy ? (
+              <p className="mx-auto max-w-[17rem] text-[0.78rem] leading-5 text-foreground/52">
+                {frame.microcopy}
+              </p>
+            ) : null}
           </motion.div>
         )}
       </AnimatePresence>
@@ -2857,14 +2886,15 @@ function CompatibilitySideStacks({
   reduceMotion: boolean;
 }) {
   const stackProgress = reduceMotion ? (progress >= 1 ? 1 : 0) : easeOut((progress - 0.7) / 0.3);
-  const leftX = mix(-1000, 0, stackProgress);
-  const rightX = mix(1000, 0, stackProgress);
+  const leftX = mix(-1000, -170, stackProgress);
+  const rightX = mix(1000, 120, stackProgress);
+  const stackOpacity = mix(0.92, 0.78, clamp01(exitProgress * 1.5));
 
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 overflow-visible">
       <motion.div
-        className="absolute inset-y-0 left-0 w-[45rem] will-change-transform"
-        style={{ x: leftX }}
+        className="absolute inset-y-0 left-0 w-[45rem] origin-left will-change-transform"
+        style={{ x: leftX, opacity: stackOpacity, scale: 0.94 }}
       >
         {compatibilityRoleStack.map((card, idx) => {
           const isFront = idx === 2;
@@ -2892,7 +2922,6 @@ function CompatibilitySideStacks({
                 width={1448}
                 height={1086}
                 sizes={`${card.width}px`}
-                priority
                 className="pointer-events-none h-auto w-full max-w-none select-none drop-shadow-[0_28px_48px_rgba(55,45,30,0.22)]"
               />
             </motion.div>
@@ -2901,8 +2930,8 @@ function CompatibilitySideStacks({
       </motion.div>
 
       <motion.div
-        className="absolute inset-y-0 right-0 w-[50rem] will-change-transform"
-        style={{ x: rightX }}
+        className="absolute inset-y-0 right-0 w-[50rem] origin-right will-change-transform"
+        style={{ x: rightX, opacity: stackOpacity, scale: 0.94 }}
       >
         {compatibilityProfileStack.map((card, idx) => {
           const isFront = idx === 2;
@@ -2930,7 +2959,6 @@ function CompatibilitySideStacks({
                 width={760}
                 height={600}
                 sizes={`${card.width}px`}
-                priority
                 className="pointer-events-none h-auto w-full max-w-none select-none drop-shadow-[0_28px_48px_rgba(55,45,30,0.24)]"
               />
             </motion.div>
@@ -3039,14 +3067,14 @@ function EarlyOrganizerStoryScene({
       {(isTransitioning || frame.id === 'compatibility' || frame.id === 'precision') &&
         compatibilityFrame && (
           <motion.div
-            className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+            className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
             style={{
               opacity: mix(compatOpacity, 0, clamp01(compatToPrecisionProgress * 2.5)),
               scale: compatScale,
-              y: mix(-120, -1000, compatToPrecisionProgress),
+              y: mix(-150, -1000, compatToPrecisionProgress),
             }}
           >
-            <div className="pointer-events-auto">
+            <div className="pointer-events-auto rounded-[2rem] border border-white/40 bg-[#f5f0e7]/46 px-8 py-7 shadow-[0_22px_70px_-48px_rgba(45,51,48,0.38)] backdrop-blur-[10px]">
               <SystemCenterCopy
                 frame={compatibilityFrame}
                 state={deriveStoryState('compatibility')}
@@ -3184,7 +3212,6 @@ function DesktopScene({
             width={1881}
             height={1059}
             sizes="96vw"
-            priority
             className="pointer-events-none h-auto w-full max-w-none select-none object-contain"
           />
         </motion.div>
@@ -3229,6 +3256,161 @@ function DesktopScene({
   );
 }
 
+function MobileSystemVisual({ frame }: { frame: HomepageStoryFrame }) {
+  const isChallenges = frame.id === 'challenges';
+
+  if (isChallenges) {
+    return (
+      <div className="mx-auto w-full max-w-[17.5rem] overflow-hidden rounded-[1.45rem] border border-white/62 bg-white/46 p-3 shadow-[0_18px_50px_-38px_rgba(45,51,48,0.35)]">
+        <div className="grid grid-cols-[minmax(0,1fr)_5.8rem_minmax(0,1fr)] items-stretch gap-2">
+          <div className="rounded-[1.1rem] border border-white/62 bg-white/58 p-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-proofound-terracotta/12 text-proofound-terracotta">
+              <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
+            </div>
+            <p className="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-foreground/52">
+              Teams
+            </p>
+            <p className="mt-1 text-[0.68rem] leading-4 text-foreground/76">
+              Too many weak applications.
+            </p>
+          </div>
+
+          <div className="flex flex-col items-center justify-center rounded-[1.2rem] border border-proofound-forest/12 bg-proofound-sage/14 px-2 py-3 text-center">
+            <SquareStack className="h-5 w-5 text-proofound-forest/78" aria-hidden="true" />
+            <p className="mt-2 font-display text-[1.12rem] leading-[0.95] text-foreground">
+              Better starting point
+            </p>
+            <p className="mt-2 text-[0.54rem] leading-3 text-muted-foreground">
+              Less noise before review.
+            </p>
+          </div>
+
+          <div className="rounded-[1.1rem] border border-white/62 bg-white/58 p-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-proofound-sage/20 text-proofound-forest">
+              <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
+            </div>
+            <p className="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-foreground/52">
+              People
+            </p>
+            <p className="mt-1 text-[0.68rem] leading-4 text-foreground/76">
+              Real ability flattened.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-[17.5rem] overflow-hidden rounded-[1.45rem] border border-white/62 bg-white/46 p-3 shadow-[0_18px_50px_-38px_rgba(45,51,48,0.35)]">
+      <div className="grid grid-cols-[minmax(0,1fr)_5.8rem_minmax(0,1fr)] items-stretch gap-2">
+        <div className="rounded-[1.1rem] border border-white/62 bg-white/58 p-2">
+          <Briefcase className="h-4 w-4 text-proofound-forest/76" aria-hidden="true" />
+          <p className="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-foreground/52">
+            Assignment
+          </p>
+          <p className="mt-1 text-[0.68rem] leading-4 text-foreground/76">
+            Scope, context, outcomes.
+          </p>
+        </div>
+
+        <div className="flex flex-col items-center justify-center rounded-[1.2rem] border border-proofound-forest/12 bg-proofound-sage/14 px-2 py-3 text-center">
+          <Blend className="h-5 w-5 text-proofound-forest/78" aria-hidden="true" />
+          <p className="mt-2 font-display text-[1.12rem] leading-[0.95] text-foreground">
+            Shared language
+          </p>
+          <p className="mt-2 text-[0.54rem] leading-3 text-muted-foreground">
+            Compare work to proof.
+          </p>
+        </div>
+
+        <div className="rounded-[1.1rem] border border-white/62 bg-white/58 p-2">
+          <ShieldCheck className="h-4 w-4 text-proofound-forest/76" aria-hidden="true" />
+          <p className="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-foreground/52">
+            Proof pack
+          </p>
+          <p className="mt-1 text-[0.68rem] leading-4 text-foreground/76">Artifacts and trust.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MobileProofSignalVisual({ frame }: { frame: HomepageStoryFrame }) {
+  const state = deriveStoryState(frame.id);
+  const isVerified = state.hasVerification;
+
+  return (
+    <div className="mx-auto w-full max-w-[15.5rem] rounded-[1.45rem] border border-white/62 bg-white/54 p-4 shadow-[0_18px_50px_-38px_rgba(45,51,48,0.34)]">
+      <div className="flex items-center gap-3">
+        <div
+          className={cn(
+            'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border bg-white/70',
+            isVerified
+              ? 'border-emerald-200 text-emerald-700'
+              : 'border-white/70 text-proofound-forest'
+          )}
+        >
+          {isVerified ? (
+            <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <UserRound className="h-5 w-5" aria-hidden="true" />
+          )}
+        </div>
+        <div className="min-w-0">
+          <p className="font-display text-[1rem] leading-tight text-foreground">
+            Senior Operations Professional
+          </p>
+          <p className="mt-1 text-[0.6rem] uppercase tracking-[0.18em] text-foreground/45">
+            {isVerified ? 'Verified signal' : 'Outcome signal'}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-[1.1rem] border border-border/45 bg-proofound-parchment/38 p-3">
+        <p className="text-[0.56rem] font-semibold uppercase tracking-[0.24em] text-foreground/46">
+          Proof snapshot
+        </p>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          {[
+            { label: 'Team', value: '12', icon: UsersRound },
+            { label: 'Scale', value: '200+', icon: Building2 },
+            { label: 'Outcome', value: '31%', icon: TrendingUp },
+          ].map(({ label, value, icon: Icon }) => (
+            <div
+              key={label}
+              className="rounded-[0.85rem] border border-white/58 bg-white/54 px-2 py-2"
+            >
+              <Icon className="mx-auto h-3.5 w-3.5 text-proofound-forest/72" aria-hidden="true" />
+              <p className="mt-1 font-display text-sm leading-none text-foreground">{value}</p>
+              <p className="mt-1 text-[0.5rem] text-muted-foreground">{label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {(isVerified
+          ? ['Reference checked', 'Artifacts attached', 'Trust active']
+          : ['Work scope', 'Ownership', 'Context']
+        ).map((chip) => (
+          <span
+            key={chip}
+            className={cn(
+              'rounded-full border px-2 py-1 text-[0.55rem]',
+              isVerified
+                ? 'border-emerald-200 bg-emerald-50/70 text-emerald-900/72'
+                : 'border-border/55 bg-white/48 text-foreground/66'
+            )}
+          >
+            {chip}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MobileStoryVisual({
   frame,
   reduceMotion,
@@ -3243,32 +3425,10 @@ function MobileStoryVisual({
   }
 
   if (state.isSystem) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-center gap-3">
-          <div className="relative">
-            <StackSheets side="left" visible collapsed compact />
-            <AssignmentCard state={state} compact />
-          </div>
-
-          <SystemCenterCopy frame={frame} state={state} reduceMotion={reduceMotion} compact />
-
-          <div className="relative">
-            <StackSheets side="right" visible collapsed compact />
-            <ProofPackCard state={state} compact />
-          </div>
-        </div>
-      </div>
-    );
+    return <MobileSystemVisual frame={frame} />;
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-center">
-        <ProofPackCard state={state} compact />
-      </div>
-    </div>
-  );
+  return <MobileProofSignalVisual frame={frame} />;
 }
 
 function MobileStoryCard({
@@ -3285,19 +3445,31 @@ function MobileStoryCard({
   const isHero = frame.id === 'hero';
 
   return (
-    <article className="space-y-5 rounded-[2rem] border border-border/70 bg-white/68 p-5 shadow-[0_18px_60px_-40px_rgba(45,51,48,0.35)] backdrop-blur-md">
+    <article
+      className={cn(
+        'space-y-4 rounded-[1.55rem] border border-border/70 bg-white/70 shadow-[0_18px_60px_-40px_rgba(45,51,48,0.35)] backdrop-blur-md sm:space-y-5 sm:rounded-[2rem]',
+        isHero ? 'p-4 sm:p-5' : 'p-4 sm:p-5'
+      )}
+    >
       <div className="space-y-3">
         {isHero ? (
-          <h1 className="text-4xl leading-[0.92] tracking-[-0.04em] text-foreground">
+          <h1 className="font-display text-[2rem] leading-[0.94] text-foreground sm:text-4xl">
             Proof behind the claim
           </h1>
         ) : (
-          <h2 className="text-3xl leading-tight text-foreground">{frame.title}</h2>
+          <h2 className="font-display text-[1.8rem] leading-tight text-foreground sm:text-3xl">
+            {frame.title}
+          </h2>
         )}
-        <p className="text-base leading-7 text-muted-foreground">{frame.body}</p>
+        <p className="text-[0.96rem] leading-7 text-muted-foreground sm:text-base">{frame.body}</p>
       </div>
 
-      <div className="rounded-[1.7rem] border border-white/60 bg-proofound-parchment/55 px-3 py-5">
+      <div
+        className={cn(
+          'rounded-[1.35rem] border border-white/60 bg-proofound-parchment/55 px-3 sm:rounded-[1.7rem]',
+          isHero ? 'py-3' : 'py-5'
+        )}
+      >
         <MobileStoryVisual frame={frame} reduceMotion={reduceMotion} />
       </div>
 
@@ -3502,6 +3674,7 @@ export function ScrollytellingSection({
 }: ScrollytellingSectionProps) {
   const systemReduceMotion = useReducedMotion() ?? false;
   const reduceMotion = Boolean(shouldReduceMotion || systemReduceMotion);
+  const storyRef = useRef<HTMLElement>(null);
   const desktopRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [heroToBlindProgress, setHeroToBlindProgress] = useState(0);
@@ -3526,11 +3699,6 @@ export function ScrollytellingSection({
   const compatToPrecisionAnimationRef = useRef<number | null>(null);
   const compatToPrecisionProgressRef = useRef(0);
 
-  const { scrollYProgress } = useScroll({
-    target: desktopRef,
-    offset: ['start start', 'end end'],
-  });
-
   useEffect(() => {
     return () => {
       if (heroToBlindAnimationRef.current != null) {
@@ -3545,155 +3713,210 @@ export function ScrollytellingSection({
     };
   }, []);
 
-  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
-    const frameCount = HOMEPAGE_STORY_FRAMES.length;
-    const nextPosition = latest * frameCount;
-    const nextIndex = Math.min(frameCount - 1, Math.max(0, Math.floor(nextPosition)));
-    setActiveIndex((current) => (current === nextIndex ? current : nextIndex));
+  useEffect(() => {
+    let scheduledFrame: number | null = null;
 
-    const previousPosition = heroToBlindScrollPositionRef.current;
-    heroToBlindScrollPositionRef.current = nextPosition;
-
-    const isScrollingDown = nextPosition > previousPosition + 0.003;
-    const isScrollingUp = nextPosition < previousPosition - 0.003;
-    const nextTarget =
-      isScrollingDown && nextPosition >= 0.08
-        ? 1
-        : isScrollingUp && nextPosition <= 0.98
-          ? 0
-          : heroToBlindTargetRef.current;
-
-    if (nextTarget !== heroToBlindTargetRef.current) {
-      heroToBlindTargetRef.current = nextTarget;
-      setHeroToBlindTarget(nextTarget);
-      setHeroToBlindMotionKey((current) => current + 1);
-      if (heroToBlindAnimationRef.current != null) {
-        window.cancelAnimationFrame(heroToBlindAnimationRef.current);
+    const updateStoryProgress = () => {
+      scheduledFrame = null;
+      const section = storyRef.current;
+      if (!section) {
+        return;
       }
 
-      if (reduceMotion) {
-        heroToBlindProgressRef.current = nextTarget;
-        setHeroToBlindProgress(nextTarget);
-      } else {
-        const startProgress = heroToBlindProgressRef.current;
-        const startedAt = performance.now();
-        const durationMs = HERO_TO_BLIND_TRANSITION_SECONDS * 1000;
+      const scrollTop = window.scrollY || window.pageYOffset;
+      const sectionTop = section.getBoundingClientRect().top + scrollTop;
+      const scrollRange = Math.max(1, section.offsetHeight - window.innerHeight);
+      const latest = clamp01((scrollTop - sectionTop) / scrollRange);
 
-        const stepHeroToBlind = (timestamp: number) => {
-          const elapsed = clamp01((timestamp - startedAt) / durationMs);
-          const eased = easeInOut(elapsed);
-          const nextProgress = startProgress + (nextTarget - startProgress) * eased;
+      if (scrollTop <= 2) {
+        heroToBlindTargetRef.current = 0;
+        privacyToCompatTargetRef.current = 0;
+        compatToPrecisionTargetRef.current = 0;
+        heroToBlindProgressRef.current = 0;
+        privacyToCompatProgressRef.current = 0;
+        compatToPrecisionProgressRef.current = 0;
+        heroToBlindScrollPositionRef.current = 0;
+        setActiveIndex(0);
+        setHeroToBlindTarget(0);
+        setPrivacyToCompatTarget(0);
+        setCompatToPrecisionTarget(0);
+        setHeroToBlindProgress(0);
+        setPrivacyToCompatProgress(0);
+        setCompatToPrecisionProgress(0);
+        return;
+      }
 
-          heroToBlindProgressRef.current = nextProgress;
-          setHeroToBlindProgress(nextProgress);
+      const frameCount = HOMEPAGE_STORY_FRAMES.length;
+      const nextPosition = latest * frameCount;
+      const nextIndex = Math.min(frameCount - 1, Math.max(0, Math.floor(nextPosition)));
+      setActiveIndex((current) => (current === nextIndex ? current : nextIndex));
 
-          if (elapsed < 1) {
-            heroToBlindAnimationRef.current = window.requestAnimationFrame(stepHeroToBlind);
-            return;
-          }
+      const previousPosition = heroToBlindScrollPositionRef.current;
+      heroToBlindScrollPositionRef.current = nextPosition;
+      const jumpedAcrossFrames = Math.abs(nextPosition - previousPosition) > 0.72;
 
+      const isScrollingDown = nextPosition > previousPosition + 0.003;
+      const isScrollingUp = nextPosition < previousPosition - 0.003;
+      const nextTarget =
+        isScrollingDown && nextPosition >= 0.08
+          ? 1
+          : isScrollingUp && nextPosition <= 0.98
+            ? 0
+            : heroToBlindTargetRef.current;
+
+      if (nextTarget !== heroToBlindTargetRef.current) {
+        heroToBlindTargetRef.current = nextTarget;
+        setHeroToBlindTarget(nextTarget);
+        setHeroToBlindMotionKey((current) => current + 1);
+        if (heroToBlindAnimationRef.current != null) {
+          window.cancelAnimationFrame(heroToBlindAnimationRef.current);
+        }
+
+        if (reduceMotion || jumpedAcrossFrames) {
           heroToBlindProgressRef.current = nextTarget;
           setHeroToBlindProgress(nextTarget);
-          heroToBlindAnimationRef.current = null;
-        };
+        } else {
+          const startProgress = heroToBlindProgressRef.current;
+          const startedAt = performance.now();
+          const durationMs = HERO_TO_BLIND_TRANSITION_SECONDS * 1000;
 
-        heroToBlindAnimationRef.current = window.requestAnimationFrame(stepHeroToBlind);
+          const stepHeroToBlind = (timestamp: number) => {
+            const elapsed = clamp01((timestamp - startedAt) / durationMs);
+            const eased = easeInOut(elapsed);
+            const nextProgress = startProgress + (nextTarget - startProgress) * eased;
+
+            heroToBlindProgressRef.current = nextProgress;
+            setHeroToBlindProgress(nextProgress);
+
+            if (elapsed < 1) {
+              heroToBlindAnimationRef.current = window.requestAnimationFrame(stepHeroToBlind);
+              return;
+            }
+
+            heroToBlindProgressRef.current = nextTarget;
+            setHeroToBlindProgress(nextTarget);
+            heroToBlindAnimationRef.current = null;
+          };
+
+          heroToBlindAnimationRef.current = window.requestAnimationFrame(stepHeroToBlind);
+        }
       }
-    }
 
-    const nextPrivacyTarget =
-      isScrollingDown && nextPosition >= 5.08
-        ? 1
-        : isScrollingUp && nextPosition <= 5.98
-          ? 0
-          : privacyToCompatTargetRef.current;
+      const nextPrivacyTarget =
+        isScrollingDown && nextPosition >= 5.08
+          ? 1
+          : isScrollingUp && nextPosition <= 5.98
+            ? 0
+            : privacyToCompatTargetRef.current;
 
-    if (nextPrivacyTarget !== privacyToCompatTargetRef.current) {
-      privacyToCompatTargetRef.current = nextPrivacyTarget;
-      setPrivacyToCompatTarget(nextPrivacyTarget);
-      setPrivacyToCompatMotionKey((current) => current + 1);
-      if (privacyToCompatAnimationRef.current != null) {
-        window.cancelAnimationFrame(privacyToCompatAnimationRef.current);
-      }
+      if (nextPrivacyTarget !== privacyToCompatTargetRef.current) {
+        privacyToCompatTargetRef.current = nextPrivacyTarget;
+        setPrivacyToCompatTarget(nextPrivacyTarget);
+        setPrivacyToCompatMotionKey((current) => current + 1);
+        if (privacyToCompatAnimationRef.current != null) {
+          window.cancelAnimationFrame(privacyToCompatAnimationRef.current);
+        }
 
-      if (reduceMotion) {
-        privacyToCompatProgressRef.current = nextPrivacyTarget;
-        setPrivacyToCompatProgress(nextPrivacyTarget);
-      } else {
-        const startPrivacyProgress = privacyToCompatProgressRef.current;
-        const privacyStartedAt = performance.now();
-        const privacyDurationMs = 3 * 1000;
-
-        const stepPrivacyToCompat = (timestamp: number) => {
-          const elapsed = clamp01((timestamp - privacyStartedAt) / privacyDurationMs);
-          const eased = easeInOut(elapsed);
-          const nextProgress =
-            startPrivacyProgress + (nextPrivacyTarget - startPrivacyProgress) * eased;
-
-          privacyToCompatProgressRef.current = nextProgress;
-          setPrivacyToCompatProgress(nextProgress);
-
-          if (elapsed < 1) {
-            privacyToCompatAnimationRef.current = window.requestAnimationFrame(stepPrivacyToCompat);
-            return;
-          }
-
+        if (reduceMotion || jumpedAcrossFrames) {
           privacyToCompatProgressRef.current = nextPrivacyTarget;
           setPrivacyToCompatProgress(nextPrivacyTarget);
-          privacyToCompatAnimationRef.current = null;
-        };
+        } else {
+          const startPrivacyProgress = privacyToCompatProgressRef.current;
+          const privacyStartedAt = performance.now();
+          const privacyDurationMs = 2 * 1000;
 
-        privacyToCompatAnimationRef.current = window.requestAnimationFrame(stepPrivacyToCompat);
+          const stepPrivacyToCompat = (timestamp: number) => {
+            const elapsed = clamp01((timestamp - privacyStartedAt) / privacyDurationMs);
+            const eased = easeInOut(elapsed);
+            const nextProgress =
+              startPrivacyProgress + (nextPrivacyTarget - startPrivacyProgress) * eased;
+
+            privacyToCompatProgressRef.current = nextProgress;
+            setPrivacyToCompatProgress(nextProgress);
+
+            if (elapsed < 1) {
+              privacyToCompatAnimationRef.current =
+                window.requestAnimationFrame(stepPrivacyToCompat);
+              return;
+            }
+
+            privacyToCompatProgressRef.current = nextPrivacyTarget;
+            setPrivacyToCompatProgress(nextPrivacyTarget);
+            privacyToCompatAnimationRef.current = null;
+          };
+
+          privacyToCompatAnimationRef.current = window.requestAnimationFrame(stepPrivacyToCompat);
+        }
       }
-    }
 
-    const nextCompatToPrecisionTarget =
-      isScrollingDown && nextPosition >= 6.08
-        ? 1
-        : isScrollingUp && nextPosition <= 6.98
-          ? 0
-          : compatToPrecisionTargetRef.current;
+      const nextCompatToPrecisionTarget =
+        isScrollingDown && nextPosition >= 6.08
+          ? 1
+          : isScrollingUp && nextPosition <= 6.98
+            ? 0
+            : compatToPrecisionTargetRef.current;
 
-    if (nextCompatToPrecisionTarget !== compatToPrecisionTargetRef.current) {
-      compatToPrecisionTargetRef.current = nextCompatToPrecisionTarget;
-      setCompatToPrecisionTarget(nextCompatToPrecisionTarget);
-      setCompatToPrecisionMotionKey((current) => current + 1);
-      if (compatToPrecisionAnimationRef.current != null) {
-        window.cancelAnimationFrame(compatToPrecisionAnimationRef.current);
-      }
+      if (nextCompatToPrecisionTarget !== compatToPrecisionTargetRef.current) {
+        compatToPrecisionTargetRef.current = nextCompatToPrecisionTarget;
+        setCompatToPrecisionTarget(nextCompatToPrecisionTarget);
+        setCompatToPrecisionMotionKey((current) => current + 1);
+        if (compatToPrecisionAnimationRef.current != null) {
+          window.cancelAnimationFrame(compatToPrecisionAnimationRef.current);
+        }
 
-      if (reduceMotion) {
-        compatToPrecisionProgressRef.current = nextCompatToPrecisionTarget;
-        setCompatToPrecisionProgress(nextCompatToPrecisionTarget);
-      } else {
-        const startProgress = compatToPrecisionProgressRef.current;
-        const startedAt = performance.now();
-        const durationMs = 2.5 * 1000;
-
-        const stepCompatToPrecision = (timestamp: number) => {
-          const elapsed = clamp01((timestamp - startedAt) / durationMs);
-          const eased = easeInOut(elapsed);
-          const nextProgress =
-            startProgress + (nextCompatToPrecisionTarget - startProgress) * eased;
-
-          compatToPrecisionProgressRef.current = nextProgress;
-          setCompatToPrecisionProgress(nextProgress);
-
-          if (elapsed < 1) {
-            compatToPrecisionAnimationRef.current =
-              window.requestAnimationFrame(stepCompatToPrecision);
-            return;
-          }
-
+        if (reduceMotion || jumpedAcrossFrames) {
           compatToPrecisionProgressRef.current = nextCompatToPrecisionTarget;
           setCompatToPrecisionProgress(nextCompatToPrecisionTarget);
-          compatToPrecisionAnimationRef.current = null;
-        };
+        } else {
+          const startProgress = compatToPrecisionProgressRef.current;
+          const startedAt = performance.now();
+          const durationMs = 1.8 * 1000;
 
-        compatToPrecisionAnimationRef.current = window.requestAnimationFrame(stepCompatToPrecision);
+          const stepCompatToPrecision = (timestamp: number) => {
+            const elapsed = clamp01((timestamp - startedAt) / durationMs);
+            const eased = easeInOut(elapsed);
+            const nextProgress =
+              startProgress + (nextCompatToPrecisionTarget - startProgress) * eased;
+
+            compatToPrecisionProgressRef.current = nextProgress;
+            setCompatToPrecisionProgress(nextProgress);
+
+            if (elapsed < 1) {
+              compatToPrecisionAnimationRef.current =
+                window.requestAnimationFrame(stepCompatToPrecision);
+              return;
+            }
+
+            compatToPrecisionProgressRef.current = nextCompatToPrecisionTarget;
+            setCompatToPrecisionProgress(nextCompatToPrecisionTarget);
+            compatToPrecisionAnimationRef.current = null;
+          };
+
+          compatToPrecisionAnimationRef.current =
+            window.requestAnimationFrame(stepCompatToPrecision);
+        }
       }
-    }
-  });
+    };
+
+    const scheduleUpdate = () => {
+      if (scheduledFrame != null) {
+        return;
+      }
+      scheduledFrame = window.requestAnimationFrame(updateStoryProgress);
+    };
+
+    updateStoryProgress();
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+
+    return () => {
+      if (scheduledFrame != null) {
+        window.cancelAnimationFrame(scheduledFrame);
+      }
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+    };
+  }, [reduceMotion]);
 
   const activeFrame = HOMEPAGE_STORY_FRAMES[activeIndex];
   const mobileFrames = useMemo(
@@ -3705,9 +3928,14 @@ export function ScrollytellingSection({
   );
 
   return (
-    <section id="story" className="relative scroll-mt-28" data-testid="landing-story-section">
-      <div className="px-5 pb-12 pt-28 md:px-8 lg:hidden">
-        <div className="mx-auto max-w-2xl space-y-8" data-testid="landing-mobile-story">
+    <section
+      id="story"
+      ref={storyRef}
+      className="relative scroll-mt-24"
+      data-testid="landing-story-section"
+    >
+      <div className="px-4 pb-10 pt-24 md:px-8 lg:hidden">
+        <div className="mx-auto max-w-2xl space-y-6" data-testid="landing-mobile-story">
           {mobileFrames.map((frame) => {
             return (
               <MobileStoryCard
@@ -3725,10 +3953,10 @@ export function ScrollytellingSection({
       <div
         ref={desktopRef}
         className="relative hidden lg:block"
-        style={{ height: `${HOMEPAGE_STORY_FRAMES.length * 100}vh` }}
+        style={{ height: `${HOMEPAGE_STORY_FRAMES.length * DESKTOP_FRAME_HEIGHT_VH}vh` }}
         data-testid="landing-story-desktop-track"
       >
-        <div className="sticky top-0 flex h-screen items-center overflow-hidden px-8 py-24 xl:px-14">
+        <div className="sticky top-0 flex h-screen items-center overflow-hidden px-8 py-20 xl:px-14">
           <StoryBackdrop
             heroToBlindProgress={heroToBlindProgress}
             heroToBlindTarget={heroToBlindTarget}

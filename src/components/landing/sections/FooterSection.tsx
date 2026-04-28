@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface FooterSectionProps {
   shouldReduceMotion?: boolean | null;
@@ -23,13 +24,11 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div className="space-y-3">
               <Link href="/" className="inline-flex items-center gap-3" aria-label="Proofound home">
-                <img
+                <Image
                   src="/logo.png"
                   alt="Proofound"
                   width={120}
                   height={48}
-                  loading="eager"
-                  decoding="async"
                   className="h-11 w-auto"
                 />
                 <span className="text-sm uppercase tracking-[0.28em] text-foreground/48">

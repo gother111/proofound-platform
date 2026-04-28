@@ -2,20 +2,15 @@
 
 import React, { useRef } from 'react';
 import Link from 'next/link';
-import { motion, useReducedMotion, useScroll, useSpring } from 'framer-motion';
+import Image from 'next/image';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { ScrollytellingSection } from './landing/sections/ScrollytellingSection';
 import { FinalCTASection } from './landing/sections/FinalCTASection';
 import { FooterSection } from './landing/sections/FooterSection';
 
-const NetworkBackground = ({
-  shouldReduceMotion,
-  scrollProgress,
-}: {
-  shouldReduceMotion: boolean;
-  scrollProgress: any;
-}) => {
+const NetworkBackground = ({ shouldReduceMotion }: { shouldReduceMotion: boolean }) => {
   return (
     <div
       className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
@@ -78,11 +73,7 @@ const NetworkBackground = ({
         }
         className="absolute bottom-[-12%] left-[-6%] h-[34rem] w-[34rem] rounded-full bg-proofound-terracotta/12 blur-[110px]"
       />
-      <motion.div
-        initial={false}
-        style={{ opacity: scrollProgress }}
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(28,77,58,0),rgba(28,77,58,0.03))]"
-      />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(28,77,58,0),rgba(28,77,58,0.03))] opacity-60" />
     </div>
   );
 };
@@ -103,17 +94,6 @@ export function ProofoundLanding({
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion() ?? false;
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
 
   const handleIndividualSignup = () => {
     if (onIndividualSignup) {
@@ -144,7 +124,7 @@ export function ProofoundLanding({
       ref={containerRef}
       className="relative min-h-screen overflow-x-clip bg-background text-foreground"
     >
-      <NetworkBackground shouldReduceMotion={shouldReduceMotion} scrollProgress={smoothProgress} />
+      <NetworkBackground shouldReduceMotion={shouldReduceMotion} />
 
       <motion.header
         initial={{ y: shouldReduceMotion ? 0 : -16, opacity: shouldReduceMotion ? 1 : 0 }}
@@ -152,20 +132,19 @@ export function ProofoundLanding({
         transition={
           shouldReduceMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }
         }
-        className="fixed left-0 right-0 top-0 z-[80] border-b border-black/8 bg-[#f5f0e7]/94 px-4 py-4 backdrop-blur-md md:px-8 md:py-4"
+        className="fixed left-0 right-0 top-0 z-[80] border-b border-black/8 bg-[#f5f0e7]/94 px-3 py-2.5 backdrop-blur-md md:px-8 md:py-4"
         data-testid="landing-header"
       >
-        <div className="mx-auto flex max-w-[88rem] items-center justify-between gap-6 rounded-full px-2 py-0 md:px-4">
+        <div className="mx-auto flex max-w-[88rem] items-center justify-between gap-3 rounded-full px-1 py-0 md:gap-6 md:px-4">
           <div className="flex min-w-0 items-center gap-4">
             <Link href="/" aria-label="Proofound home" className="flex items-center gap-3">
-              <img
+              <Image
                 src="/logo.png"
                 alt="Proofound"
                 width={120}
                 height={48}
-                loading="eager"
-                decoding="async"
-                className="h-11 w-auto"
+                priority
+                className="h-9 w-auto sm:h-10 md:h-11"
               />
               <span className="hidden text-xs font-medium uppercase tracking-[0.32em] text-foreground/72 lg:inline">
                 Proofound
@@ -196,7 +175,7 @@ export function ProofoundLanding({
             <button
               type="button"
               onClick={handleOrganizationSignup}
-              className="inline-flex items-center gap-2 rounded-full bg-[#65755d] px-5 py-3 text-sm font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-colors hover:bg-[#5c6b54] md:px-6"
+              className="inline-flex items-center gap-2 rounded-full bg-[#65755d] px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-colors hover:bg-[#5c6b54] sm:px-5 sm:py-3 sm:text-sm md:px-6"
             >
               <span>Request a pilot</span>
               <ArrowRight className="hidden h-4 w-4 sm:block" aria-hidden="true" />

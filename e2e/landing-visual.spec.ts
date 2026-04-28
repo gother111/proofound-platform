@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * Landing visual contract locked to the known-good af705d4 baseline.
+ * Landing visual contract locked to the current proof-first landing baseline.
  *
  * This test is intentionally Chromium-only and desktop-only to avoid
  * cross-browser rendering noise in CI baseline comparisons.
  */
-test.describe('Landing Visual Baseline (af705d4)', () => {
+test.describe('Landing Visual Baseline', () => {
   test('matches baseline screenshot', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'Visual baseline is locked to Chromium in CI');
 

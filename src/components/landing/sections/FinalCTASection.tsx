@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 interface FinalCTASectionProps {
@@ -17,18 +17,24 @@ export function FinalCTASection({
   onOrganizationSignup,
   shouldReduceMotion,
 }: FinalCTASectionProps) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.08 });
   const reduceMotion = !!shouldReduceMotion;
-  const effectiveInView = reduceMotion ? true : isInView;
 
   return (
     <section
       id="start"
-      ref={ref}
-      className="relative scroll-mt-28 overflow-hidden px-6 py-20 md:px-10 md:py-28"
+      className="relative scroll-mt-24 overflow-hidden px-5 py-10 md:px-10 md:py-20"
       data-testid="landing-final-cta-section"
     >
+      <span
+        id="start-individuals"
+        className="absolute top-0 h-px w-px scroll-mt-24"
+        aria-hidden="true"
+      />
+      <span
+        id="start-organizations"
+        className="absolute top-0 h-px w-px scroll-mt-24"
+        aria-hidden="true"
+      />
       <div className="absolute inset-0 bg-transparent" aria-hidden="true" />
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <motion.div
@@ -67,36 +73,36 @@ export function FinalCTASection({
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-          animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
           transition={reduceMotion ? { duration: 0 } : { duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="rounded-[2.4rem] border border-white/55 bg-white/64 px-6 py-8 shadow-[0_28px_90px_-50px_rgba(45,51,48,0.45)] backdrop-blur-[24px] md:px-10 md:py-12">
+          <div className="rounded-[1.8rem] border border-white/55 bg-white/64 px-5 py-7 shadow-[0_28px_90px_-50px_rgba(45,51,48,0.45)] backdrop-blur-[24px] md:rounded-[2.4rem] md:px-10 md:py-12">
             <div className="mx-auto max-w-3xl text-center">
               <p className="text-sm font-medium uppercase tracking-[0.28em] text-proofound-forest/70">
                 The story resolves into action
               </p>
               <motion.h2
-                initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-                animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+                initial={false}
+                animate={{ opacity: 1, y: 0 }}
                 transition={
                   reduceMotion
                     ? { duration: 0 }
                     : { duration: 0.9, delay: 0.08, ease: [0.22, 1, 0.36, 1] }
                 }
-                className="mt-5 text-4xl leading-[0.95] text-foreground md:text-6xl"
+                className="mt-5 font-display text-[2.35rem] leading-[0.95] text-foreground md:text-6xl"
               >
                 Build hiring on stronger proof
               </motion.h2>
               <motion.p
-                initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-                animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                initial={false}
+                animate={{ opacity: 1, y: 0 }}
                 transition={
                   reduceMotion
                     ? { duration: 0 }
                     : { duration: 0.9, delay: 0.16, ease: [0.22, 1, 0.36, 1] }
                 }
-                className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-muted-foreground"
+                className="mx-auto mt-5 max-w-2xl text-base leading-7 text-muted-foreground md:mt-6 md:text-lg md:leading-8"
               >
                 Proofound helps individuals present real capability through structured evidence, and
                 helps organizations compare work-to-proof more clearly before time is lost.
@@ -104,20 +110,19 @@ export function FinalCTASection({
             </div>
 
             <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 18 }}
-              animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+              initial={false}
+              animate={{ opacity: 1, y: 0 }}
               transition={
                 reduceMotion
                   ? { duration: 0 }
                   : { duration: 0.9, delay: 0.24, ease: [0.22, 1, 0.36, 1] }
               }
-              className="mt-12 grid gap-5 lg:grid-cols-2"
+              className="mt-8 grid gap-4 md:mt-12 md:gap-5 lg:grid-cols-2"
             >
               <button
-                id="start-individuals"
                 type="button"
                 onClick={onIndividualSignup ?? onGetStarted}
-                className="group scroll-mt-32 rounded-[2rem] border border-proofound-forest/12 bg-proofound-forest px-6 py-6 text-left text-white transition-transform duration-300 hover:-translate-y-0.5"
+                className="group rounded-[1.55rem] border border-proofound-forest/12 bg-proofound-forest px-5 py-5 text-left text-white transition-transform duration-300 hover:-translate-y-0.5 md:rounded-[2rem] md:px-6 md:py-6"
               >
                 <p className="text-sm uppercase tracking-[0.24em] text-white/70">For individuals</p>
                 <p className="mt-4 text-3xl font-display leading-tight">
@@ -137,10 +142,9 @@ export function FinalCTASection({
               </button>
 
               <button
-                id="start-organizations"
                 type="button"
                 onClick={onOrganizationSignup ?? onGetStarted}
-                className="group scroll-mt-32 rounded-[2rem] border border-border/80 bg-white/78 px-6 py-6 text-left text-foreground transition-transform duration-300 hover:-translate-y-0.5"
+                className="group rounded-[1.55rem] border border-border/80 bg-white/78 px-5 py-5 text-left text-foreground transition-transform duration-300 hover:-translate-y-0.5 md:rounded-[2rem] md:px-6 md:py-6"
               >
                 <p className="text-sm uppercase tracking-[0.24em] text-foreground/54">
                   For organizations
