@@ -45,6 +45,29 @@ test.describe('Landing Page', () => {
     await expect(page.getByRole('heading', { name: /To modern challenges/i })).toBeVisible();
   });
 
+  test('locks desktop wheel gestures to one story frame at a time', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1024 });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.mouse.move(720, 512);
+
+    await page.mouse.wheel(0, 900);
+    await page.mouse.wheel(0, 900);
+    await page.mouse.wheel(0, 900);
+
+    await expect(page.getByRole('heading', { name: /Blind by default/i })).toBeVisible({
+      timeout: 3500,
+    });
+    await expect(
+      page.getByRole('heading', { name: /Real outcomes, not bullet points/i })
+    ).not.toBeVisible();
+
+    await page.waitForTimeout(2200);
+    await page.mouse.wheel(0, 900);
+    await expect(
+      page.getByRole('heading', { name: /Real outcomes, not bullet points/i })
+    ).toBeVisible({ timeout: 3500 });
+  });
+
   test('renders the dual-audience final CTA and quiet footer', async ({ page }) => {
     const ctaSection = page.getByTestId('landing-final-cta-section');
     await ctaSection.scrollIntoViewIfNeeded();
