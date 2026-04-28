@@ -209,23 +209,28 @@ export default async function IndividualHomePage() {
 
   return (
     <AppSurface density="comfortable" className="bg-[#f7f2ea]">
-      <div className="flex flex-col gap-5">
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="flex flex-col gap-6">
+        <section className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="flex min-w-0 flex-col gap-5">
-            <div className="rounded-lg border border-proofound-stone/70 bg-[#f3f6ef] p-5">
-              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                <div className="flex min-w-0 items-center gap-5">
-                  <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-[#dfead5] text-proofound-forest">
-                    <Briefcase className="h-9 w-9" />
+            <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-[0_18px_50px_rgba(45,51,48,0.06)]">
+              <div className="border-b border-proofound-stone/60 bg-[#f3f6ef] px-5 py-3">
+                <Badge
+                  variant="outline"
+                  className="border-proofound-forest/20 bg-white/70 text-proofound-forest"
+                >
+                  Proof-first home
+                </Badge>
+              </div>
+              <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
+                <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+                  <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-[#dfead5] text-proofound-forest">
+                    <Briefcase className="h-8 w-8" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-proofound-forest">
-                      Next action
-                    </p>
-                    <h1 className="mt-1 text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
+                    <h1 className="font-display text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
                       {hasProof ? 'Verify strongest proof record' : 'Add your first proof record'}
                     </h1>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
                       Welcome back, {firstName}.{' '}
                       {hasProof
                         ? 'Your proof is ready for context, trust, and visibility review.'
@@ -234,7 +239,10 @@ export default async function IndividualHomePage() {
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-col gap-2 md:items-end">
-                  <Button className="justify-between bg-proofound-forest px-6 text-white" asChild>
+                  <Button
+                    className="w-full justify-between bg-proofound-forest px-6 text-white sm:w-auto"
+                    asChild
+                  >
                     <Link href="/app/i/profile?profileView=full&tab=proof_packs">
                       {primaryProofLabel}
                       <ArrowRight className="h-4 w-4" />
@@ -244,9 +252,9 @@ export default async function IndividualHomePage() {
               </div>
             </div>
 
-            <div className="grid items-start gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white">
-                <div className="flex items-center justify-between border-b border-proofound-stone/70 p-4">
+            <div className="grid items-start gap-5 2xl:grid-cols-[1.12fr_0.88fr]">
+              <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-sm">
+                <div className="flex flex-col gap-2 border-b border-proofound-stone/70 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <h2 className="font-display text-xl font-medium text-proofound-charcoal">
                       Your Proof Wallet
@@ -255,16 +263,19 @@ export default async function IndividualHomePage() {
                       {proofRecords.length} records
                     </Badge>
                   </div>
+                  <p className="text-sm text-muted-foreground">
+                    Evidence, trust, and sharing state
+                  </p>
                 </div>
                 <div className="divide-y divide-proofound-stone/70">
                   {proofRecords.map(({ icon: Icon, title, detail, status, tone, href }) => (
                     <Link
                       key={title}
                       href={href}
-                      className="flex flex-col gap-3 p-4 transition-colors hover:bg-[#fbf8f1] sm:flex-row sm:items-center sm:gap-4"
+                      className="flex min-h-[92px] flex-col gap-3 p-5 transition-colors hover:bg-[#fbf8f1] sm:flex-row sm:items-center sm:gap-4"
                     >
                       <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eef3e8] text-proofound-forest">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#eef3e8] text-proofound-forest">
                           <Icon className="h-5 w-5" />
                         </span>
                         <div className="min-w-0 flex-1">
@@ -272,9 +283,9 @@ export default async function IndividualHomePage() {
                           <p className="text-xs leading-5 text-muted-foreground">{detail}</p>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between gap-3 pl-[52px] sm:pl-0">
+                      <div className="flex items-center justify-between gap-3 pl-14 sm:min-w-32 sm:justify-end sm:pl-0">
                         <span
-                          className={`rounded-md px-2.5 py-1 text-xs font-medium ${
+                          className={`min-w-20 rounded-md px-2.5 py-1 text-center text-xs font-medium ${
                             tone === 'success'
                               ? 'bg-[#dff0d9] text-proofound-forest'
                               : tone === 'warning'
@@ -291,7 +302,7 @@ export default async function IndividualHomePage() {
                     </Link>
                   ))}
                 </div>
-                <div className="border-t border-proofound-stone/70 p-4">
+                <div className="border-t border-proofound-stone/70 bg-[#fbf8f1]/70 p-4">
                   <Link
                     href="/app/i/profile?profileView=full&tab=proof_packs"
                     className="inline-flex items-center gap-2 text-sm font-medium text-proofound-forest"
@@ -302,8 +313,8 @@ export default async function IndividualHomePage() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-proofound-stone/70 bg-white p-4">
-                <div className="mb-4 flex items-center justify-between">
+              <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
+                <div className="mb-5 flex items-start justify-between gap-3">
                   <h2 className="font-display text-xl font-medium text-proofound-charcoal">
                     Readiness Checklist
                   </h2>
@@ -313,7 +324,7 @@ export default async function IndividualHomePage() {
                       : 'Ready'}
                   </Badge>
                 </div>
-                <div className="space-y-5">
+                <div className="space-y-4">
                   {readinessSteps.map(
                     ({ icon: Icon, title, detail, action, href, status, state }) => {
                       const stateClasses = readinessStateClasses(state);
@@ -321,13 +332,13 @@ export default async function IndividualHomePage() {
                       return (
                         <div
                           key={title}
-                          className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4"
+                          className="flex flex-col gap-3 rounded-lg border border-proofound-stone/60 bg-[#fbf8f1]/55 p-3 sm:flex-row sm:items-center sm:gap-4"
                         >
                           <div className="flex min-w-0 flex-1 gap-3">
                             <span
-                              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${stateClasses.icon}`}
+                              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${stateClasses.icon}`}
                             >
-                              <Icon className="h-6 w-6" />
+                              <Icon className="h-5 w-5" />
                             </span>
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-2">
@@ -343,7 +354,7 @@ export default async function IndividualHomePage() {
                               </p>
                             </div>
                           </div>
-                          <Button size="sm" variant="outline" className="w-full sm:w-auto" asChild>
+                          <Button size="sm" variant="outline" className="w-full sm:w-32" asChild>
                             <Link href={href}>{action}</Link>
                           </Button>
                         </div>
@@ -356,14 +367,16 @@ export default async function IndividualHomePage() {
           </div>
 
           <aside className="flex min-w-0 flex-col gap-5">
-            <div className="rounded-lg border border-proofound-stone/70 bg-white p-5">
+            <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
               <div className="flex items-start justify-between gap-3">
                 <h2 className="font-display text-xl font-medium text-proofound-charcoal">
                   Proof Readiness
                 </h2>
-                <span className="text-xs text-muted-foreground">/100</span>
+                <span className="rounded-md bg-[#eef3e8] px-2 py-1 text-xs font-medium text-proofound-forest">
+                  /100
+                </span>
               </div>
-              <div className="mt-5 flex items-end gap-2">
+              <div className="mt-6 flex items-end gap-2">
                 <p className="font-display text-5xl text-proofound-forest">{readinessScore}</p>
                 <p className="pb-2 text-sm text-muted-foreground">{readinessTone}</p>
               </div>

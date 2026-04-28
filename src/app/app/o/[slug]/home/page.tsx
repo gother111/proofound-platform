@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowRight, Users } from 'lucide-react';
+import { ArrowRight, ClipboardCheck, Eye, ShieldCheck, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
@@ -97,6 +97,7 @@ export default async function OrganizationHomePage({
 
   const queueItems = [
     {
+      icon: ShieldCheck,
       label: 'Trust profile',
       subject: org.displayName,
       detail: verifiedDomainPath
@@ -109,6 +110,7 @@ export default async function OrganizationHomePage({
       href: `/app/o/${slug}/profile`,
     },
     {
+      icon: ClipboardCheck,
       label: 'One assignment path',
       subject: 'Proof expectations',
       detail: assignmentReady
@@ -120,6 +122,7 @@ export default async function OrganizationHomePage({
       href: `/app/o/${slug}/assignments/new`,
     },
     {
+      icon: Eye,
       label: 'Match review',
       subject: 'Privacy-safe summaries',
       detail: assignmentReady
@@ -193,25 +196,25 @@ export default async function OrganizationHomePage({
 
   return (
     <AppSurface density="comfortable" className="bg-[#f7f2ea]">
-      <div className="flex flex-col gap-5">
-        <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="flex flex-col gap-6">
+        <section className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="flex min-w-0 flex-col gap-5">
-            <div className="rounded-lg border border-proofound-stone/70 bg-[#f3f6ef] p-5">
-              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                <div className="flex min-w-0 items-center gap-5">
-                  <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-[#dfead5] text-proofound-forest">
-                    <Users className="h-9 w-9" />
+            <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-[0_18px_50px_rgba(45,51,48,0.06)]">
+              <div className="border-b border-proofound-stone/60 bg-[#f3f6ef] px-5 py-3">
+                <Badge
+                  variant="outline"
+                  className="border-proofound-forest/20 bg-white/70 text-proofound-forest"
+                >
+                  Organization review cockpit
+                </Badge>
+              </div>
+              <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
+                <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+                  <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-[#dfead5] text-proofound-forest">
+                    <Users className="h-8 w-8" />
                   </span>
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className="border-proofound-forest/20 bg-white/65 text-proofound-forest"
-                      >
-                        Organization review cockpit
-                      </Badge>
-                    </div>
-                    <h1 className="mt-2 text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
+                    <h1 className="font-display text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
                       {org.displayName}
                     </h1>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -222,7 +225,10 @@ export default async function OrganizationHomePage({
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-col gap-2 md:items-end">
-                  <Button className="justify-between bg-proofound-forest px-6 text-white" asChild>
+                  <Button
+                    className="w-full justify-between bg-proofound-forest px-6 text-white sm:w-auto"
+                    asChild
+                  >
                     <Link href={primaryActionHref}>
                       {primaryActionLabel}
                       <ArrowRight className="h-4 w-4" />
@@ -232,67 +238,82 @@ export default async function OrganizationHomePage({
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white">
-              <div className="border-b border-proofound-stone/70 p-4">
+            <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-sm">
+              <div className="flex flex-col gap-2 border-b border-proofound-stone/70 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="font-display text-xl font-medium text-proofound-charcoal">
                   Corridor Queue
                 </h2>
+                <p className="text-sm text-muted-foreground">Trust, assignment, and review order</p>
               </div>
               <div className="divide-y divide-proofound-stone/70">
-                {queueItems.map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className="flex flex-col gap-3 p-4 transition-colors hover:bg-[#fbf8f1] sm:flex-row sm:items-center sm:gap-4"
-                  >
-                    <div className="flex min-w-0 flex-1 items-start gap-3">
-                      <span
-                        className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-medium ${
-                          item.tone === 'attention'
-                            ? 'bg-[#fff1df] text-[#8a4d1f]'
-                            : item.tone === 'complete'
-                              ? 'bg-[#dff0d9] text-proofound-forest'
-                              : item.tone === 'active'
-                                ? 'bg-[#eef3e8] text-proofound-forest'
-                                : 'bg-proofound-stone/35 text-muted-foreground'
-                        }`}
-                      >
-                        {item.priority}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-proofound-charcoal">
-                          {item.subject}
-                        </p>
-                        <p className="text-xs leading-5 text-muted-foreground">
-                          {item.label} · {item.detail}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between gap-3 sm:min-w-32 sm:justify-end">
-                      {'meter' in item ? (
-                        <div className="hidden w-24 shrink-0 sm:block">
-                          <TrustMeter value={item.meter} label={`${item.label} readiness`} />
+                {queueItems.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className="flex min-h-[92px] flex-col gap-3 p-5 transition-colors hover:bg-[#fbf8f1] sm:flex-row sm:items-center sm:gap-4"
+                    >
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#eef3e8] text-proofound-forest">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-semibold text-proofound-charcoal">
+                              {item.subject}
+                            </p>
+                            <span
+                              className={`rounded-md px-2.5 py-1 text-xs font-medium ${
+                                item.tone === 'attention'
+                                  ? 'bg-[#fff1df] text-[#8a4d1f]'
+                                  : item.tone === 'complete'
+                                    ? 'bg-[#dff0d9] text-proofound-forest'
+                                    : item.tone === 'active'
+                                      ? 'bg-[#eef3e8] text-proofound-forest'
+                                      : 'bg-proofound-stone/35 text-muted-foreground'
+                              }`}
+                            >
+                              {item.priority}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                            {item.label} · {item.detail}
+                          </p>
                         </div>
-                      ) : null}
-                      <span className="text-sm font-semibold text-proofound-charcoal">
-                        {item.value}
-                      </span>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </Link>
-                ))}
+                      </div>
+                      <div className="flex items-center justify-between gap-3 pl-14 sm:min-w-40 sm:justify-end sm:pl-0">
+                        {'meter' in item ? (
+                          <div className="hidden w-24 shrink-0 sm:block">
+                            <TrustMeter value={item.meter} label={`${item.label} readiness`} />
+                          </div>
+                        ) : null}
+                        <span className="min-w-24 text-right text-sm font-semibold text-proofound-charcoal">
+                          {item.value}
+                        </span>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </div>
 
           <aside className="flex min-w-0 flex-col gap-5">
-            <div className="rounded-lg border border-proofound-stone/70 bg-white p-5">
-              <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                Launch Summary
-              </h2>
-              <div className="mt-5 flex items-end gap-2">
+            <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="font-display text-xl font-medium text-proofound-charcoal">
+                  Launch Summary
+                </h2>
+                <span className="rounded-md bg-[#eef3e8] px-2 py-1 text-xs font-medium text-proofound-forest">
+                  /3
+                </span>
+              </div>
+              <div className="mt-6 flex items-end gap-2">
                 <p className="font-display text-5xl text-proofound-forest">{trustReadyCount}</p>
-                <p className="pb-2 text-sm text-muted-foreground">/ 3 trust essentials ready</p>
+                <p className="pb-2 text-sm text-muted-foreground">trust essentials ready</p>
               </div>
               <div className="mt-4">
                 <TrustMeter value={trustProgress} label="Organization launch readiness" />
@@ -323,7 +344,7 @@ export default async function OrganizationHomePage({
               </Link>
             </div>
 
-            <div className="rounded-lg border border-proofound-stone/70 bg-white p-5">
+            <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
               <div className="mb-4">
                 <h2 className="font-display text-xl font-medium text-proofound-charcoal">
                   Minimal Access
@@ -335,12 +356,9 @@ export default async function OrganizationHomePage({
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 You are currently signed in as {roleLabel}.
               </p>
-              <div className="mt-5 overflow-hidden rounded-lg border border-proofound-stone/70 bg-[#fbf8f1]">
+              <div className="mt-5 divide-y divide-proofound-stone/60 border-y border-proofound-stone/70">
                 {teamRows.map((row) => (
-                  <div
-                    key={row.label}
-                    className="border-b border-proofound-stone/60 p-3 last:border-b-0"
-                  >
+                  <div key={row.label} className="py-3">
                     <div className="flex items-center justify-between gap-3 text-sm">
                       <span className="font-medium text-proofound-charcoal">{row.label}</span>
                       {row.current ? (
