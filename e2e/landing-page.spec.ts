@@ -99,11 +99,23 @@ test.describe('Landing Page', () => {
 
   test('has no console errors', async ({ page }) => {
     const errors: string[] = [];
-    const missingResponses: string[] = [];
+    const failedAssetResponses: string[] = [];
+    const failedRequests: string[] = [];
 
     page.on('response', (response) => {
-      if (response.status() === 404) {
-        missingResponses.push(response.url());
+      const url = response.url();
+      const isImageAsset =
+        url.includes('/_next/image') || /\.(avif|gif|jpe?g|m4v|mp4|png|svg|webp)(\?|$)/i.test(url);
+
+      if (isImageAsset && response.status() >= 400) {
+        failedAssetResponses.push(`${response.status()} ${url}`);
+      }
+    });
+
+    page.on('requestfailed', (request) => {
+      const url = request.url();
+      if (/\.(avif|gif|jpe?g|png|svg|webp)(\?|$)/i.test(url)) {
+        failedRequests.push(`${request.failure()?.errorText ?? 'failed'} ${url}`);
       }
     });
 
@@ -116,7 +128,15 @@ test.describe('Landing Page', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    expect(missingResponses).toEqual([]);
+    for (const scrollRatio of [0.15, 0.35, 0.55, 0.75, 0.95]) {
+      await page.evaluate((ratio) => {
+        window.scrollTo(0, document.documentElement.scrollHeight * ratio);
+      }, scrollRatio);
+      await page.waitForLoadState('networkidle');
+    }
+
+    expect(failedAssetResponses).toEqual([]);
+    expect(failedRequests).toEqual([]);
     expect(errors).toHaveLength(0);
   });
 
