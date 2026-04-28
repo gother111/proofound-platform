@@ -1,219 +1,262 @@
 'use client';
 
+import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, EyeOff, ShieldCheck } from 'lucide-react';
-import { useRef } from 'react';
-import { MagneticButton } from '@/components/ui/magnetic-button';
+import { MagneticButton } from '@/components/landing/MagneticButton';
+import { ShieldCheck, BadgeCheck, Percent, CheckCircle2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface HeroSectionProps {
-  shouldReduceMotion?: boolean;
-  onOrganizationSignup?: () => void;
   onIndividualSignup?: () => void;
+  onOrganizationSignup?: () => void;
+  shouldReduceMotion?: boolean | null;
 }
 
 export function HeroSection({
-  shouldReduceMotion = false,
-  onOrganizationSignup,
   onIndividualSignup,
+  onOrganizationSignup,
+  shouldReduceMotion,
 }: HeroSectionProps) {
+  const reduceMotion = Boolean(shouldReduceMotion);
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ['start start', 'end end'],
+    offset: ['start start', 'end start'],
   });
 
-  const traceOpacity = useTransform(scrollYProgress, [0, 0.18, 0.32], [1, 1, 0]);
-  const proofOpacity = useTransform(scrollYProgress, [0.28, 0.5, 0.9], [0, 1, 1]);
-  const handoffOpacity = useTransform(scrollYProgress, [0.62, 0.82], [0, 1]);
-  const artifactScale = useTransform(scrollYProgress, [0, 1], [1.02, 1]);
-  const artifactY = useTransform(scrollYProgress, [0, 1], [20, 0]);
+  const y1 = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const y2 = useTransform(scrollYProgress, [0, 1], [0, -40]);
 
   return (
     <section
       ref={containerRef}
+      className="relative min-h-[100dvh] sm:min-h-[90dvh] flex items-center justify-center overflow-hidden px-6 md:px-12 pt-28 md:pt-32 pb-20 scroll-mt-24"
       data-testid="landing-hero-section"
-      className="relative min-h-[200svh] overflow-clip bg-[var(--landing-bg)]"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_14%,rgba(176,185,168,0.18),transparent_20%),radial-gradient(circle_at_63%_48%,rgba(224,207,195,0.28),transparent_24%),linear-gradient(180deg,#f6f2ea_0%,#efe8de_48%,#f3f0e8_100%)]" />
+      {/* Background Elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Grain Overlay */}
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-multiply dark:mix-blend-overlay z-0" />
+      </div>
 
-      <div className="sticky top-0 flex min-h-[100svh] items-center pt-24">
-        <div className="mx-auto w-full max-w-[1460px] px-0 lg:px-0">
+      <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-16 lg:gap-12 items-center relative z-10">
+        {/* Left Column - Text Content */}
+        <motion.div style={{ y: reduceMotion ? 0 : y1 }} className="space-y-10 max-w-2xl">
+          <div className="space-y-8">
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+              transition={
+                reduceMotion ? { duration: 0 } : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
+              }
+              className="inline-flex items-center gap-2"
+            >
+              <div className="h-px w-6 bg-proofound-forest dark:bg-proofound-parchment" />
+              <span className="text-sm font-semibold text-proofound-forest dark:text-proofound-parchment uppercase tracking-wider">
+                Proof-first hiring for people and organizations
+              </span>
+            </motion.div>
+
+            <motion.h1
+              initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.1 }
+              }
+              className="text-4xl sm:text-5xl lg:text-[64px] font-display text-foreground leading-[1.05] tracking-tight text-balance"
+            >
+              Hire and get hired through verified proof, not CV noise
+            </motion.h1>
+
+            <motion.p
+              initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { duration: 1.2, delay: 0.25, ease: [0.22, 1, 0.36, 1] }
+              }
+              className="text-lg md:text-xl text-muted-foreground leading-relaxed font-sans max-w-[540px]"
+            >
+              Proofound helps individuals turn real work into clear, shareable proof-based
+              portfolios, and helps organizations find values-aligned talent through structured
+              evidence, trust signals, and explainable matching.
+            </motion.p>
+          </div>
+
           <motion.div
-            className="relative min-h-[calc(100svh-6rem)] overflow-hidden border-y border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_42px_120px_rgba(94,94,94,0.08)] lg:min-h-[calc(100svh-7rem)] lg:rounded-[42px] lg:border"
-            style={{
-              scale: shouldReduceMotion ? 1 : artifactScale,
-              y: shouldReduceMotion ? 0 : artifactY,
-            }}
+            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+            animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { duration: 1.2, delay: 0.4, ease: [0.22, 1, 0.36, 1] }
+            }
+            className="flex flex-col gap-4"
           >
-            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.42),transparent_28%),radial-gradient(circle_at_76%_24%,rgba(176,185,168,0.14),transparent_22%)]" />
+            <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-4">
+              <MagneticButton
+                onClick={onIndividualSignup}
+                size="lg"
+                containerClassName="w-full sm:w-auto"
+                className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans w-full sm:w-auto bg-proofound-forest hover:bg-proofound-forest/90 text-white"
+              >
+                Create your proof-based portfolio
+              </MagneticButton>
+              <button
+                type="button"
+                onClick={() =>
+                  document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })
+                }
+                className="rounded-full px-8 py-4 text-lg font-medium text-foreground hover:text-proofound-forest hover:bg-muted/50 transition-colors w-full sm:w-auto"
+              >
+                See how Proofound works
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground ml-2 pt-2">
+              Share a clean public portfolio link today. No CV-first workflow.
+            </p>
+          </motion.div>
+        </motion.div>
 
-            <div className="relative grid min-h-[calc(100svh-6rem)] items-end gap-10 px-6 pb-8 pt-8 md:px-10 md:pb-10 md:pt-10 lg:min-h-[calc(100svh-7rem)] lg:grid-cols-[0.48fr_1.52fr] lg:px-14 lg:pb-12 lg:pt-12">
-              <div className="relative z-10 max-w-[390px] self-end">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[var(--landing-muted)]">
-                  Proofound
+        {/* Right Column - UI Mockups */}
+        <div className="relative w-full h-full min-h-[500px] lg:min-h-[600px] flex items-center justify-center lg:justify-end">
+          {/* Main Browser Mockup */}
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: 40 }}
+            animate={reduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { duration: 1.4, delay: 0.2, ease: [0.22, 1, 0.36, 1] }
+            }
+            className="w-full max-w-[500px] bg-card rounded-2xl shadow-xl border border-border/40 overflow-hidden relative z-10 flex flex-col will-change-transform"
+          >
+            {/* Browser Header */}
+            <div className="h-10 bg-muted/20 border-b border-border/40 flex items-center px-4 gap-2">
+              <div className="w-3 h-3 rounded-full bg-border/80" />
+              <div className="w-3 h-3 rounded-full bg-border/80" />
+              <div className="w-3 h-3 rounded-full bg-border/80" />
+              <div className="mx-auto bg-background/50 border border-border/30 rounded-md h-6 w-1/2 flex items-center justify-center">
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  proofound.co/p/alex-chen
+                </span>
+              </div>
+            </div>
+
+            {/* Portfolio Content */}
+            <div className="p-6 md:p-8 flex-1 bg-gradient-to-b from-background to-muted/5">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-display font-semibold text-foreground mb-1">
+                    Alex Chen
+                  </h3>
+                  <p className="text-sm text-muted-foreground font-medium mb-3">
+                    Senior Product Engineer
+                  </p>
+                  <p className="text-sm text-foreground/80 leading-relaxed max-w-[280px]">
+                    Building scalable systems and leading technical teams. Focused on high-impact
+                    outcomes over output.
+                  </p>
                 </div>
-                <div className="mt-4 max-w-[12ch] font-display text-[2.15rem] leading-[0.92] tracking-[-0.04em] text-[var(--landing-dark)] md:text-[2.8rem]">
-                  A calmer standard for seeing work clearly.
+                {/* Avatar Placeholder */}
+                <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center border border-border">
+                  <span className="text-lg font-display font-medium text-foreground/60">AC</span>
                 </div>
-
-                <div className="mt-10 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-clay)]">
-                  Stronger signal than CVs
-                </div>
-
-                <h1 className="mt-5 max-w-[8ch] font-display text-[3.7rem] leading-[0.9] tracking-[-0.055em] text-[var(--landing-dark)] md:text-[4.8rem] lg:text-[5.2rem]">
-                  See the work behind the claim.
-                </h1>
-
-                <p className="mt-5 max-w-[18rem] text-[0.96rem] leading-8 text-[var(--landing-text)]">
-                  Proof-backed, privacy-safe review that helps teams compare real work instead of
-                  polished claims.
-                </p>
-
-                <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-                  <MagneticButton
-                    onClick={onOrganizationSignup}
-                    className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-[var(--landing-action)] px-7 py-3 text-sm font-semibold text-white shadow-[0_16px_34px_rgba(96,108,90,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[var(--landing-dark-soft)]"
-                  >
-                    Request a pilot
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </MagneticButton>
-
-                  <button
-                    onClick={onIndividualSignup}
-                    className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-[var(--landing-border)] bg-transparent px-7 py-3 text-sm font-semibold text-[var(--landing-dark)] transition-colors hover:border-[var(--landing-clay)] hover:text-[var(--landing-clay)]"
-                  >
-                    Create your proof portfolio
-                  </button>
-                </div>
-
-                <p className="mt-5 max-w-[18rem] text-[13px] leading-7 text-[var(--landing-muted)]">
-                  For lean teams hiring through work, not noise, and for under-credited talent with
-                  real work to show.
-                </p>
               </div>
 
-              <div className="relative min-h-[540px] lg:min-h-[660px]">
-                <motion.div
-                  className="absolute left-[4%] top-[8%] z-0 w-[34%] rotate-[-5deg] border border-[var(--landing-border)] bg-[color:var(--landing-surface-soft)]/88 px-5 py-4 text-[var(--landing-muted)] shadow-[0_18px_40px_rgba(94,94,94,0.06)] backdrop-blur-sm"
-                  style={{ opacity: shouldReduceMotion ? 0 : traceOpacity }}
-                >
-                  <div className="text-[10px] uppercase tracking-[0.24em]">Resume shorthand</div>
-                  <div className="mt-3 text-sm leading-7">
-                    Maya Chen
-                    <br />
-                    ex-Stripe
-                    <br />
-                    Berkeley
-                    <br />
-                    Strategic leader
+              {/* Trust Bar */}
+              <div className="flex items-center gap-2 mb-8 bg-proofound-success-tint/30 dark:bg-green-950/20 border border-green-100 dark:border-green-900 rounded-md p-2 px-3">
+                <ShieldCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <span className="text-xs font-medium text-green-800 dark:text-green-300">
+                  Identity & Experience Verified
+                </span>
+              </div>
+
+              {/* Top Skills */}
+              <div className="mb-6">
+                <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                  Top Verified Skills
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2.5 py-1 rounded bg-muted/50 text-xs font-medium border border-border/30">
+                    System Architecture
+                  </span>
+                  <span className="px-2.5 py-1 rounded bg-muted/50 text-xs font-medium border border-border/30">
+                    React / Next.js
+                  </span>
+                  <span className="px-2.5 py-1 rounded bg-muted/50 text-xs font-medium border border-border/30">
+                    Team Leadership
+                  </span>
+                </div>
+              </div>
+
+              {/* Outcome Cards */}
+              <div>
+                <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                  Recent Outcomes
+                </h4>
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl border border-border/60 bg-background shadow-sm">
+                    <p className="text-sm font-medium text-foreground mb-1.5">
+                      Scaled API infrastructure to 10k RPS
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <BadgeCheck className="w-3.5 h-3.5 text-proofound-forest" /> Verified
+                      </span>
+                      <span>•</span>
+                      <span>Q3 2025</span>
+                    </div>
                   </div>
-                </motion.div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
 
-                <motion.div
-                  className="relative z-10 ml-auto h-full w-full max-w-[980px]"
-                  style={{ opacity: shouldReduceMotion ? 1 : proofOpacity }}
-                >
-                  <div className="relative h-full overflow-hidden rounded-[34px] border border-[var(--landing-border)] bg-[var(--landing-surface-soft)] p-6 shadow-[0_34px_100px_rgba(94,94,94,0.08)] md:p-8">
-                    <div className="absolute left-10 top-0 h-12 w-px -translate-y-5 bg-[var(--landing-surface-strong)]" />
-                    <div className="absolute right-10 top-0 h-12 w-px -translate-y-5 bg-[var(--landing-surface-strong)]" />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.58),transparent_24%)]" />
-
-                    <div className="relative flex items-start justify-between gap-4 border-b border-[var(--landing-border-soft)] pb-5">
-                      <div>
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-clay)]">
-                          Proof Pack
-                        </div>
-                        <div className="mt-3 font-display text-[2.3rem] leading-none text-[var(--landing-dark)] md:text-[3rem]">
-                          Onboarding redesign
-                        </div>
-                      </div>
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--landing-muted)]">
-                        Review-safe
-                      </div>
-                    </div>
-
-                    <div className="relative mt-6 grid gap-5 lg:grid-cols-[1.16fr_0.84fr]">
-                      <div className="rounded-[30px] bg-[#f8f4ee] p-7 shadow-[0_16px_36px_rgba(94,94,94,0.04)]">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-clay)]">
-                          Outcome
-                        </div>
-                        <div className="mt-4 max-w-[8ch] font-display text-[3.45rem] leading-[0.9] text-[var(--landing-dark)] md:text-[4rem]">
-                          Reduced onboarding time by 31%
-                        </div>
-                        <div className="mt-6 max-w-[23rem] border-l-2 border-[var(--landing-clay)]/45 pl-4 text-sm leading-7 text-[var(--landing-text)]">
-                          One documented path replaced fragmented handoffs across product, success,
-                          and ops.
-                        </div>
-                      </div>
-
-                      <div className="grid gap-5">
-                        <div className="rounded-[26px] bg-[var(--landing-surface)] p-5">
-                          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--landing-muted)]">
-                            Review rail
-                          </div>
-                          <div className="mt-4 space-y-4 text-sm leading-7 text-[var(--landing-text)]">
-                            <div>Operations lead · B2B SaaS · team of 6</div>
-                            <div className="inline-flex items-center gap-2 text-[var(--landing-action)]">
-                              <ShieldCheck className="h-4 w-4" />
-                              Peer-attested
-                            </div>
-                            <div className="inline-flex items-center gap-2 text-[var(--landing-action)]">
-                              <EyeOff className="h-4 w-4" />
-                              Identity hidden during early review
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="relative mt-5 overflow-hidden rounded-[28px] bg-[var(--landing-blush)] p-6">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-muted)]">
-                          Artifact excerpt
-                        </div>
-                        <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--landing-muted)]">
-                          Easier to trust than a CV
-                        </div>
-                      </div>
-
-                      <div className="mt-4 rounded-[22px] bg-[var(--landing-surface-soft)] p-5 shadow-[0_14px_30px_rgba(94,94,94,0.035)]">
-                        <div className="h-2.5 w-[78%] rounded-full bg-[var(--landing-surface-strong)]" />
-                        <div className="mt-3 h-2.5 w-[58%] rounded-full bg-[var(--landing-surface)]" />
-                        <div className="mt-5 grid grid-cols-3 gap-3">
-                          <div className="rounded-[14px] bg-[var(--landing-surface)] p-3">
-                            <div className="h-2.5 w-10 rounded-full bg-[var(--landing-surface-strong)]" />
-                            <div className="mt-3 h-10 rounded-[10px] bg-[var(--landing-surface-strong)]" />
-                          </div>
-                          <div className="rounded-[14px] bg-[var(--landing-surface)] p-3">
-                            <div className="h-2.5 w-12 rounded-full bg-[var(--landing-surface-strong)]" />
-                            <div className="mt-3 h-10 rounded-[10px] bg-[var(--landing-surface-strong)]" />
-                          </div>
-                          <div className="rounded-[14px] bg-[var(--landing-surface)] p-3">
-                            <div className="h-2.5 w-8 rounded-full bg-[var(--landing-surface-strong)]" />
-                            <div className="mt-3 h-10 rounded-[10px] bg-[var(--landing-surface-strong)]" />
-                          </div>
-                        </div>
-                        <div className="mt-5 border-l-2 border-[var(--landing-clay)]/45 pl-4 text-sm leading-7 text-[var(--landing-text)]">
-                          Deck excerpt and rollout notes give a reviewer something inspectable
-                          instead of a polished claim.
-                        </div>
-                      </div>
-                    </div>
-
-                    <motion.div
-                      className="pointer-events-none absolute bottom-6 right-6 overflow-hidden rounded-[20px] border border-[var(--landing-action)]/18 bg-[linear-gradient(145deg,rgba(87,98,83,0.96),rgba(103,114,95,0.93))] px-5 py-4 text-white shadow-[0_26px_52px_rgba(82,91,78,0.24)]"
-                      style={{ opacity: handoffOpacity }}
-                    >
-                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.16),transparent_38%)]" />
-                      <div className="relative text-[11px] font-semibold uppercase tracking-[0.22em] text-[#f2eadf]">
-                        Review handoff
-                      </div>
-                      <div className="relative mt-2 max-w-[18rem] text-[15px] font-medium leading-7 text-white">
-                        Shared into a privacy-safe assignment corridor.
-                      </div>
-                    </motion.div>
-                  </div>
-                </motion.div>
+          {/* Floating Match Card (Top Left overlay) */}
+          <motion.div
+            style={{ y: reduceMotion ? 0 : y2 }}
+            initial={reduceMotion ? false : { opacity: 0, x: 20 }}
+            animate={reduceMotion ? undefined : { opacity: 1, x: 0 }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { duration: 1.2, delay: 0.8, ease: [0.22, 1, 0.36, 1] }
+            }
+            className="absolute -right-4 sm:-right-8 top-10 sm:top-24 bg-background/95 backdrop-blur-xl border border-border/60 rounded-xl p-4 sm:p-5 shadow-xl z-20 w-[220px]"
+          >
+            <div className="flex items-center gap-3 mb-3 border-b border-border/40 pb-3">
+              <div className="w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
+                <Percent className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Match Score
+                </p>
+                <p className="text-xl font-display font-semibold text-foreground leading-none mt-0.5">
+                  98% Fit
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">
+                Reason Codes
+              </p>
+              <div className="flex items-center gap-2 text-xs font-medium text-foreground/80">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-500/80 flex-shrink-0" />
+                Tool fluency
+              </div>
+              <div className="flex items-center gap-2 text-xs font-medium text-foreground/80">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-500/80 flex-shrink-0" />
+                Mission alignment
+              </div>
+              <div className="flex items-center gap-2 text-xs font-medium text-foreground/80">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-500/80 flex-shrink-0" />
+                Verified outcomes
               </div>
             </div>
           </motion.div>

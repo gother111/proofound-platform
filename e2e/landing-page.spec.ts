@@ -5,108 +5,151 @@ test.describe('Landing Page', () => {
     await page.goto('/');
   });
 
-  test('renders hero with the new wedge and primary actions', async ({ page }) => {
-    const hero = page.getByTestId('landing-hero-section');
-    await expect(hero).toBeVisible();
+  test('renders the scrollytelling homepage shell', async ({ page }) => {
+    const header = page.getByTestId('landing-header');
+    await expect(header).toBeVisible();
+    await expect(header.getByText(/How it works/i)).toBeVisible();
+    await expect(header.getByRole('button', { name: /Request a pilot/i })).toBeVisible();
+
+    const heading = page.getByRole('heading', { name: /Proof behind the claim/i, level: 1 });
+    await expect(heading).toBeVisible();
+
+    const story = page.getByTestId('landing-story-section');
+    await expect(story).toBeVisible();
+
+    await expect(page.getByRole('button', { name: /Request a pilot/i }).first()).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /Create your portfolio/i }).first()
+    ).toBeVisible();
+  });
+
+  test('advances the desktop story as the page scrolls', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1024 });
+
+    const desktopTrack = page.getByTestId('landing-story-desktop-track');
+    await expect(desktopTrack).toBeVisible();
 
     await expect(
-      page.getByRole('heading', { name: /See the work behind the claim/i, level: 1 })
+      page.getByRole('heading', { name: /Proof behind the claim/i, level: 1 })
     ).toBeVisible();
 
-    await expect(hero.getByText(/Stronger signal than CVs/i)).toBeVisible();
-    await expect(hero.getByRole('button', { name: /Request a pilot/i })).toBeVisible();
-    await expect(hero.getByRole('button', { name: /Create your proof portfolio/i })).toBeVisible();
-    await expect(hero.getByText(/Review handoff/i)).toBeVisible();
-    await expect(hero.getByText(/Shared into a privacy-safe assignment corridor\./i)).toBeVisible();
-  });
-
-  test('renders the quiet desktop header navigation', async ({ page }) => {
-    const header = page.getByRole('banner');
-    await expect(header.getByRole('link', { name: /Proofound home/i })).toBeVisible();
-    await expect(header.getByRole('link', { name: 'How it works' })).toBeVisible();
-    await expect(header.getByRole('link', { name: 'For individuals' })).toBeVisible();
-    await expect(header.getByRole('link', { name: 'For organizations' })).toBeVisible();
-    await expect(header.getByRole('link', { name: 'Sign in' }).first()).toBeVisible();
-  });
-
-  test('renders the requested section sequence', async ({ page }) => {
-    await expect(page.getByText('What changes when proof comes first')).toBeVisible();
-
-    const headings = [
-      'One clear starting point for each side.',
-      'Better assignments create better shortlists.',
-      'Build proof. Publish trust. Review safely.',
-      'Every real claim should resolve to evidence.',
-      'Public does not mean exposed.',
-      'What this looks like in practice.',
-      'Start with proof, not noise.',
-    ];
-
-    for (const heading of headings) {
-      await expect(page.getByRole('heading', { name: heading })).toBeVisible();
-    }
-  });
-
-  test('renders both day-one surfaces with correct actions', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: /Public proof portfolio/i })).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.22));
     await expect(
-      page.getByRole('heading', { name: /Trust page \+ assignment corridor/i })
+      page.getByRole('heading', { name: /Real outcomes, not bullet points/i })
     ).toBeVisible();
 
-    await expect(
-      page.getByRole('link', { name: /Create your proof portfolio/i }).first()
-    ).toBeVisible();
-    await expect(page.getByRole('link', { name: /Request a pilot/i }).first()).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.68));
+    await expect(page.getByRole('heading', { name: /Precise solutions/i })).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.82));
+    await expect(page.getByRole('heading', { name: /To modern challenges/i })).toBeVisible();
   });
 
-  test('renders privacy-safe review explanations', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: /Blind by default/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Progressive reveal/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Explainable review/i })).toBeVisible();
-  });
-
-  test('renders final CTA and footer links', async ({ page }) => {
-    const finalCta = page.getByTestId('landing-final-cta-section');
-    await expect(finalCta).toBeVisible();
+  test('renders the dual-audience final CTA and quiet footer', async ({ page }) => {
+    const ctaSection = page.getByTestId('landing-final-cta-section');
+    await ctaSection.scrollIntoViewIfNeeded();
     await expect(
-      finalCta.getByRole('button', { name: /Create your proof portfolio/i })
+      ctaSection.getByRole('heading', { name: /Build hiring on stronger proof/i })
     ).toBeVisible();
-    await expect(finalCta.getByRole('button', { name: /Request a pilot/i })).toBeVisible();
+    await expect(
+      ctaSection.getByRole('button', { name: /Create your proof portfolio/i }).last()
+    ).toBeVisible();
+    await expect(
+      ctaSection.getByRole('button', { name: /Explore evidence-based hiring/i })
+    ).toBeVisible();
 
     const footer = page.getByTestId('landing-footer-section');
+    await footer.scrollIntoViewIfNeeded();
     await expect(footer).toBeVisible();
+    await expect(
+      footer.getByText(/Evidence-based hiring for a world with too much polished signal/i)
+    ).toBeVisible();
     await expect(footer.getByRole('link', { name: /Cookies/i })).toBeVisible();
     await expect(footer.getByRole('link', { name: /Cookie settings/i })).toBeVisible();
     await expect(footer.getByRole('link', { name: /Privacy/i })).toBeVisible();
     await expect(footer.getByRole('link', { name: /Terms/i })).toBeVisible();
-  });
-
-  test('maintains the new layout on mobile', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/');
-
+    await expect(footer.getByRole('link', { name: /Sign in/i })).toBeVisible();
     await expect(
-      page.getByRole('heading', { name: /See the work behind the claim/i, level: 1 })
+      footer.getByText(new RegExp(`© ${new Date().getFullYear()} Proofound`, 'i'))
     ).toBeVisible();
-
-    const hero = page.getByTestId('landing-hero-section');
-    await expect(hero.getByRole('button', { name: /Create your proof portfolio/i })).toBeVisible();
-    await expect(hero.getByRole('button', { name: /Request a pilot/i })).toBeVisible();
-    await expect(page.getByRole('banner').getByRole('link', { name: 'Sign in' })).toBeVisible();
   });
 
-  test('all primary sections render inside main', async ({ page }) => {
-    const sections = page.locator('main').locator('section');
-    await expect(sections).toHaveCount(9);
+  test('routes header sign-in and signup CTAs', async ({ page }) => {
+    await page
+      .getByTestId('landing-header')
+      .getByRole('link', { name: /Sign in/i })
+      .click();
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByTestId('login-form-shell')).toBeVisible();
+
+    await page.goto('/');
+    await page
+      .getByRole('button', { name: /Request a pilot/i })
+      .first()
+      .click();
+    await expect(page).toHaveURL(/\/signup\/organization$/);
+
+    await page.goto('/');
+    await page
+      .getByRole('button', { name: /Create your portfolio/i })
+      .first()
+      .click();
+    await expect(page).toHaveURL(/\/signup\/individual$/);
+  });
+
+  test('has no console errors', async ({ page }) => {
+    const errors: string[] = [];
+    const missingResponses: string[] = [];
+
+    page.on('response', (response) => {
+      if (response.status() === 404) {
+        missingResponses.push(response.url());
+      }
+    });
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        errors.push(msg.text());
+      }
+    });
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    expect(missingResponses).toEqual([]);
+    expect(errors).toHaveLength(0);
+  });
+
+  test('renders network background', async ({ page }) => {
+    await expect(page.getByTestId('landing-network-background')).toBeVisible();
+  });
+
+  test('uses the simplified mobile story on small screens', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+
+    const mobileStory = page.getByTestId('landing-mobile-story');
+    await expect(mobileStory).toBeVisible();
+    await expect(
+      mobileStory.getByRole('heading', { name: /Proof behind the claim/i, level: 1 })
+    ).toBeVisible();
+    await expect(
+      mobileStory.getByRole('heading', { name: /Real outcomes, not bullet points/i })
+    ).toBeVisible();
+    await expect(
+      mobileStory.getByRole('heading', { name: /Universal compatibility/i }).first()
+    ).toBeVisible();
   });
 });
 
 test.describe('Accessibility', () => {
-  test('has a single h1 and multiple supporting h2 headings', async ({ page }) => {
+  test('has proper heading hierarchy', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.locator('h1')).toHaveCount(1);
-    expect(await page.locator('h2').count()).toBeGreaterThan(0);
+    const h1Count = await page.locator('h1:visible').count();
+    expect(h1Count).toBe(1);
+
+    const h2Count = await page.locator('h2').count();
+    expect(h2Count).toBeGreaterThan(0);
   });
 
   test('all images have alt text or are decorative', async ({ page }) => {
@@ -115,12 +158,29 @@ test.describe('Accessibility', () => {
     const images = page.locator('img');
     const count = await images.count();
 
-    for (let i = 0; i < count; i += 1) {
+    for (let i = 0; i < count; i++) {
       const img = images.nth(i);
       const alt = await img.getAttribute('alt');
       const ariaHidden = await img.getAttribute('aria-hidden');
 
+      // Image should have alt text OR be marked as decorative
       expect(alt !== null || ariaHidden === 'true').toBeTruthy();
+    }
+  });
+
+  test('links have accessible names', async ({ page }) => {
+    await page.goto('/');
+
+    const links = page.locator('a');
+    const count = await links.count();
+
+    for (let i = 0; i < count; i++) {
+      const link = links.nth(i);
+      const text = await link.textContent();
+      const ariaLabel = await link.getAttribute('aria-label');
+
+      // Link should have text content OR aria-label
+      expect((text && text.trim().length > 0) || ariaLabel).toBeTruthy();
     }
   });
 });

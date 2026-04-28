@@ -1,75 +1,119 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, useScroll, useSpring } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { MagneticButton } from '@/components/ui/magnetic-button';
-import { Logo } from '@/components/brand/Logo';
-
-// Import all section components
-import { HeroSection } from './landing/sections/HeroSection';
-import { TranslationBandSection } from './landing/sections/TranslationBandSection';
-import { DayOneSurfacesSection } from './landing/sections/DayOneSurfacesSection';
-import { HiringTeamsSection } from './landing/sections/HiringTeamsSection';
-import { ThreeStepCorridorSection } from './landing/sections/ThreeStepCorridorSection';
-import { ProofObjectSection } from './landing/sections/ProofObjectSection';
-import { PrivacySafeReviewSection } from './landing/sections/PrivacySafeReviewSection';
-import { EarlyProofSection } from './landing/sections/EarlyProofSection';
+import { ArrowRight } from 'lucide-react';
+import { ScrollytellingSection } from './landing/sections/ScrollytellingSection';
 import { FinalCTASection } from './landing/sections/FinalCTASection';
 import { FooterSection } from './landing/sections/FooterSection';
-import { SectionReveal } from './landing/SectionReveal';
 
-import Lenis from 'lenis';
+const NetworkBackground = ({
+  shouldReduceMotion,
+  scrollProgress,
+}: {
+  shouldReduceMotion: boolean;
+  scrollProgress: any;
+}) => {
+  return (
+    <div
+      className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
+      data-testid="landing-network-background"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.88),_rgba(247,246,241,0.98)_38%,_rgba(244,241,233,1)_100%)]" />
+      <div
+        className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`,
+        }}
+      />
+      <div
+        className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]"
+        style={{
+          backgroundImage: 'radial-gradient(var(--proofound-forest) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }}
+      />
+      <motion.div
+        animate={
+          shouldReduceMotion
+            ? undefined
+            : {
+                y: [0, 24, 0],
+                scale: [1, 1.06, 1],
+                opacity: [0.42, 0.52, 0.42],
+              }
+        }
+        transition={
+          shouldReduceMotion
+            ? undefined
+            : {
+                duration: 18,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }
+        }
+        className="absolute right-[-5%] top-[-10%] h-[42rem] w-[42rem] rounded-full bg-proofound-forest/10 blur-[130px]"
+      />
+      <motion.div
+        animate={
+          shouldReduceMotion
+            ? undefined
+            : {
+                y: [0, -18, 0],
+                scale: [1, 1.08, 1],
+                opacity: [0.35, 0.46, 0.35],
+              }
+        }
+        transition={
+          shouldReduceMotion
+            ? undefined
+            : {
+                duration: 20,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: 1.2,
+              }
+        }
+        className="absolute bottom-[-12%] left-[-6%] h-[34rem] w-[34rem] rounded-full bg-proofound-terracotta/12 blur-[110px]"
+      />
+      <motion.div
+        initial={false}
+        style={{ opacity: scrollProgress }}
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(28,77,58,0),rgba(28,77,58,0.03))]"
+      />
+    </div>
+  );
+};
+
+// --- Main Component ---
 
 interface ProofoundLandingProps {
-  onOrganizationSignup?: () => void;
+  onGetStarted?: () => void;
   onIndividualSignup?: () => void;
+  onOrganizationSignup?: () => void;
 }
 
 export function ProofoundLanding({
-  onOrganizationSignup,
+  onGetStarted,
   onIndividualSignup,
+  onOrganizationSignup,
 }: ProofoundLandingProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion() ?? false;
 
-  // Initialize Lenis Smooth Scroll
-  useEffect(() => {
-    if (shouldReduceMotion) return;
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start start', 'end end'],
+  });
 
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
-      smoothWheel: true,
-      wheelMultiplier: 1,
-      touchMultiplier: 2,
-    });
-
-    let rafId = 0;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-
-    rafId = requestAnimationFrame(raf);
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      lenis.destroy();
-    };
-  }, [shouldReduceMotion]);
-
-  const handleOrganizationSignup = () => {
-    if (onOrganizationSignup) {
-      onOrganizationSignup();
-    } else {
-      router.push('/signup/organization');
-    }
-  };
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
 
   const handleIndividualSignup = () => {
     if (onIndividualSignup) {
@@ -79,124 +123,103 @@ export function ProofoundLanding({
     }
   };
 
+  const handleOrganizationSignup = () => {
+    if (onOrganizationSignup) {
+      onOrganizationSignup();
+    } else {
+      router.push('/signup/organization');
+    }
+  };
+
+  const handleGetStarted = () => {
+    if (onGetStarted) {
+      onGetStarted();
+    } else {
+      router.push('/signup');
+    }
+  };
+
   return (
     <div
       ref={containerRef}
-      className="landing-japandi relative min-h-screen overflow-x-clip bg-[var(--landing-bg)] text-[var(--landing-text)]"
+      className="relative min-h-screen overflow-x-clip bg-background text-foreground"
     >
+      <NetworkBackground shouldReduceMotion={shouldReduceMotion} scrollProgress={smoothProgress} />
+
       <motion.header
-        initial={{ y: shouldReduceMotion ? 0 : -20, opacity: 0 }}
+        initial={{ y: shouldReduceMotion ? 0 : -16, opacity: shouldReduceMotion ? 1 : 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={
-          shouldReduceMotion ? { duration: 0 } : { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+          shouldReduceMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }
         }
-        className="fixed left-0 right-0 top-0 z-50 border-b border-[color:var(--landing-border-soft)]/55 bg-[color:var(--landing-bg)]/70 px-6 py-4 backdrop-blur-2xl md:px-10"
+        className="fixed left-0 right-0 top-0 z-[80] border-b border-black/8 bg-[#f5f0e7]/94 px-4 py-4 backdrop-blur-md md:px-8 md:py-4"
+        data-testid="landing-header"
       >
-        <div className="mx-auto flex max-w-[1280px] items-center justify-between">
-          <Link href="/" aria-label="Proofound home" className="flex items-center gap-3">
-            <Logo size="sm" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-dark)]">
-              Proofound
-            </span>
-          </Link>
+        <div className="mx-auto flex max-w-[88rem] items-center justify-between gap-6 rounded-full px-2 py-0 md:px-4">
+          <div className="flex min-w-0 items-center gap-4">
+            <Link href="/" aria-label="Proofound home" className="flex items-center gap-3">
+              <img
+                src="/logo.png"
+                alt="Proofound"
+                width={120}
+                height={48}
+                loading="eager"
+                decoding="async"
+                className="h-11 w-auto"
+              />
+              <span className="hidden text-xs font-medium uppercase tracking-[0.32em] text-foreground/72 lg:inline">
+                Proofound
+              </span>
+            </Link>
+          </div>
 
-          <nav className="hidden items-center gap-8 md:flex">
-            <a
-              href="#how-it-works"
-              className="text-sm font-medium text-[var(--landing-muted)] transition-colors hover:text-[var(--landing-dark)]"
-            >
+          <nav className="hidden items-center gap-10 text-[1.02rem] text-foreground/66 lg:flex">
+            <a href="#story" className="transition-colors hover:text-foreground">
               How it works
             </a>
-            <a
-              href="#individuals"
-              className="text-sm font-medium text-[var(--landing-muted)] transition-colors hover:text-[var(--landing-dark)]"
-            >
+            <a href="#start" className="transition-colors hover:text-foreground">
               For individuals
             </a>
-            <a
-              href="#organizations"
-              className="text-sm font-medium text-[var(--landing-muted)] transition-colors hover:text-[var(--landing-dark)]"
-            >
+            <a href="#start" className="transition-colors hover:text-foreground">
               For organizations
             </a>
-            <Link
-              href="/login"
-              className="ml-2 border-l border-[var(--landing-border)] pl-5 text-sm font-medium text-[var(--landing-dark)] transition-colors hover:text-[var(--landing-clay)]"
-            >
-              Sign in
-            </Link>
-            <MagneticButton
-              onClick={handleOrganizationSignup}
-              className="ml-2 inline-flex min-h-[44px] items-center justify-center rounded-full bg-[var(--landing-action)] px-5 py-2 text-sm font-semibold text-white shadow-[0_14px_24px_rgba(96,108,90,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[var(--landing-dark-soft)]"
-            >
-              Request a pilot
-            </MagneticButton>
           </nav>
 
-          <div className="flex items-center gap-4 md:hidden">
-            <Link href="/login" className="text-sm font-medium text-[var(--landing-dark)]">
+          <div className="flex items-center gap-3">
+            <div className="hidden h-6 w-px bg-border/80 lg:block" aria-hidden="true" />
+            <Link
+              href="/login"
+              className="hidden text-[1.02rem] text-foreground/72 transition-colors hover:text-foreground lg:inline-flex"
+            >
               Sign in
             </Link>
             <button
+              type="button"
               onClick={handleOrganizationSignup}
-              className="rounded-full bg-[var(--landing-action)] px-4 py-2 text-sm font-semibold text-white"
+              className="inline-flex items-center gap-2 rounded-full bg-[#65755d] px-5 py-3 text-sm font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-colors hover:bg-[#5c6b54] md:px-6"
             >
-              Pilot
+              <span>Request a pilot</span>
+              <ArrowRight className="hidden h-4 w-4 sm:block" aria-hidden="true" />
             </button>
           </div>
         </div>
       </motion.header>
 
-      <main id="main-content">
-        <HeroSection
+      <main>
+        <ScrollytellingSection
           shouldReduceMotion={shouldReduceMotion}
           onIndividualSignup={handleIndividualSignup}
           onOrganizationSignup={handleOrganizationSignup}
         />
 
-        <SectionReveal>
-          <TranslationBandSection />
-        </SectionReveal>
+        <FinalCTASection
+          onGetStarted={handleGetStarted}
+          shouldReduceMotion={shouldReduceMotion}
+          onIndividualSignup={handleIndividualSignup}
+          onOrganizationSignup={handleOrganizationSignup}
+        />
 
-        <SectionReveal>
-          <div id="individuals" className="scroll-mt-24">
-            <DayOneSurfacesSection />
-          </div>
-        </SectionReveal>
-
-        <SectionReveal>
-          <div id="organizations" className="scroll-mt-24">
-            <HiringTeamsSection />
-          </div>
-        </SectionReveal>
-
-        <SectionReveal>
-          <div id="how-it-works" className="scroll-mt-24">
-            <ThreeStepCorridorSection />
-          </div>
-        </SectionReveal>
-
-        <SectionReveal>
-          <ProofObjectSection />
-        </SectionReveal>
-        <SectionReveal>
-          <PrivacySafeReviewSection />
-        </SectionReveal>
-        <SectionReveal>
-          <EarlyProofSection />
-        </SectionReveal>
-
-        <SectionReveal>
-          <FinalCTASection
-            shouldReduceMotion={shouldReduceMotion}
-            onIndividualSignup={handleIndividualSignup}
-            onOrganizationSignup={handleOrganizationSignup}
-          />
-        </SectionReveal>
-
-        <SectionReveal>
-          <FooterSection />
-        </SectionReveal>
+        <FooterSection shouldReduceMotion={shouldReduceMotion} />
       </main>
     </div>
   );

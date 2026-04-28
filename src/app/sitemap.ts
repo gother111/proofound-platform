@@ -6,6 +6,8 @@ import { getRows } from '@/lib/db/rows';
 import { isSchemaCompatibilityError } from '@/lib/db/schemaCompatibility';
 import { log } from '@/lib/log';
 
+export const dynamic = 'force-dynamic';
+
 const FALLBACK_SITE_URL = 'https://proofound.io';
 
 function getSiteUrl(): string {

@@ -174,7 +174,7 @@ export async function middleware(request: NextRequest) {
     const isStaticAsset =
       pathname.startsWith('/_next') ||
       pathname.match(
-        /\.(ico|png|jpg|jpeg|gif|svg|css|js|webp|woff2?|ttf|otf|map|txt|xml|webmanifest)$/
+        /\.(ico|png|jpg|jpeg|gif|svg|css|js|webp|mp4|m4v|webm|mov|woff2?|ttf|otf|map|txt|xml|webmanifest)$/
       );
 
     // Short-circuit obvious scanner paths before heavier logic.
