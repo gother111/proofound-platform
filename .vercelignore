@@ -17,6 +17,7 @@
 /tests
 /e2e
 /artifacts
+/.artifacts
 /data
 /drizzle
 /migrations

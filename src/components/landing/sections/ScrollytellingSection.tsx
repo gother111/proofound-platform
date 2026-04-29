@@ -94,8 +94,8 @@ const DESKTOP_CARD_FRAME = 'w-[31rem] max-w-[31rem] aspect-[31/42]';
 const MOBILE_CARD_FRAME = 'w-full max-w-[14rem] aspect-[31/42]';
 const GLASS_SHELL =
   'border border-white/55 bg-white/60 shadow-[0_22px_80px_-44px_rgba(45,51,48,0.4)] backdrop-blur-[24px]';
-const STORY_EYEBROW_CLASS =
-  'text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-proofound-forest/70';
+const STORY_COPY_EXIT_Y = -760;
+const STORY_COPY_ENTER_Y = 760;
 
 const proofArtifacts = [
   { label: 'PDF', icon: FileText },
@@ -1849,9 +1849,9 @@ function HeroDesktopCopy({
       <AnimatePresence mode="wait">
         <motion.div
           key={frame.id}
-          initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18, filter: 'blur(4px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          exit={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -18, filter: 'blur(4px)' }}
+          initial={reduceMotion ? { y: 0 } : { y: STORY_COPY_ENTER_Y }}
+          animate={{ y: 0 }}
+          exit={reduceMotion ? { y: 0 } : { y: STORY_COPY_EXIT_Y }}
           transition={reduceMotion ? { duration: 0 } : STORY_TRANSITION}
           className="space-y-8"
         >
@@ -2105,9 +2105,9 @@ function StandardDesktopCopy({
       <AnimatePresence mode="wait">
         <motion.div
           key={frame.id}
-          initial={reduceMotion ? { y: 0 } : { y: 220 }}
+          initial={reduceMotion ? { y: 0 } : { y: STORY_COPY_ENTER_Y }}
           animate={{ y: 0 }}
-          exit={reduceMotion ? { y: 0 } : { y: -180 }}
+          exit={reduceMotion ? { y: 0 } : { y: STORY_COPY_EXIT_Y }}
           transition={reduceMotion ? { duration: 0 } : { duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="space-y-6"
         >
@@ -2227,11 +2227,9 @@ function StoryEyebrow({
   frame: HomepageStoryFrame;
   centered?: boolean;
 }) {
-  return (
-    <p className={cn(STORY_EYEBROW_CLASS, centered ? 'text-center' : 'text-left')}>
-      {frame.step} / {frame.eyebrow}
-    </p>
-  );
+  void frame;
+  void centered;
+  return null;
 }
 
 function OrganizerBoxVisual({ slideY = 0, className }: { slideY?: number; className?: string }) {
@@ -2323,15 +2321,17 @@ function OutcomeOrganizerLayers({
   proofsView = false,
   verificationView = false,
   privacyView = false,
+  entryDelay = 0,
 }: {
   reduceMotion: boolean;
   proofsView?: boolean;
   verificationView?: boolean;
   privacyView?: boolean;
+  entryDelay?: number;
 }) {
   const transition = reduceMotion
     ? { duration: 0 }
-    : { duration: 1.12, ease: STORY_TRANSITION.ease, delay: 0.26 };
+    : { duration: 1.12, ease: STORY_TRANSITION.ease, delay: entryDelay + 0.26 };
 
   return (
     <motion.div
@@ -2345,7 +2345,7 @@ function OutcomeOrganizerLayers({
       }}
       initial={reduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={reduceMotion ? { duration: 0 } : { duration: 0.24, delay: 0.18 }}
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.24, delay: entryDelay + 0.18 }}
     >
       <AnimatePresence>
         {privacyView && (
@@ -2357,7 +2357,7 @@ function OutcomeOrganizerLayers({
             transition={
               reduceMotion
                 ? { duration: 0 }
-                : { duration: 0.95, ease: STORY_TRANSITION.ease, delay: 0.1 }
+                : { duration: 0.95, ease: STORY_TRANSITION.ease, delay: entryDelay + 0.1 }
             }
           >
             <Image
@@ -2397,7 +2397,11 @@ function OutcomeOrganizerLayers({
           transition={
             reduceMotion
               ? { duration: 0 }
-              : { duration: 1.08, ease: STORY_TRANSITION.ease, delay: 0.38 + index * 0.08 }
+              : {
+                  duration: 1.08,
+                  ease: STORY_TRANSITION.ease,
+                  delay: entryDelay + 0.38 + index * 0.08,
+                }
           }
           style={{
             left: card.left,
@@ -2451,7 +2455,7 @@ function OutcomeOrganizerLayers({
             transition={
               reduceMotion
                 ? { duration: 0 }
-                : { duration: 1.08, ease: STORY_TRANSITION.ease, delay: 0.1 }
+                : { duration: 1.08, ease: STORY_TRANSITION.ease, delay: entryDelay + 0.1 }
             }
             style={{ top: 310 }}
           >
@@ -2477,7 +2481,7 @@ function OutcomeOrganizerLayers({
             transition={
               reduceMotion
                 ? { duration: 0 }
-                : { duration: 1.08, ease: STORY_TRANSITION.ease, delay: 0.18 }
+                : { duration: 1.08, ease: STORY_TRANSITION.ease, delay: entryDelay + 0.18 }
             }
             style={{ top: 410 }}
           >
@@ -2510,6 +2514,8 @@ function FinalOrganizerVisual({
   reduceMotion?: boolean;
 }) {
   const candidateExitY = ORGANIZER_BACK_HEIGHT_PX + ORGANIZER_FRONT_HEIGHT_PX + 72;
+  const outcomeEntryDelay =
+    outcomeView && !proofsView && !verificationView && !privacyView ? 1.0 : 0;
   const candidateClipBottom = Math.max(
     0,
     STORY_RESUME_TOP_PX + STORY_RESUME_HEIGHT_PX + candidateExitY - ORGANIZER_POCKET_LINE_PX
@@ -2528,7 +2534,7 @@ function FinalOrganizerVisual({
             }
             animate={{
               y: reduceMotion ? candidateExitY : candidateExitY,
-              opacity: reduceMotion ? 0 : 0,
+              opacity: reduceMotion ? 0 : 1,
               clipPath: `inset(0px 0px ${candidateClipBottom}px 0px)`,
             }}
             transition={
@@ -2543,6 +2549,7 @@ function FinalOrganizerVisual({
           proofsView={proofsView}
           verificationView={verificationView}
           privacyView={privacyView}
+          entryDelay={outcomeEntryDelay}
         />
       ) : null}
       <OrganizerBoxVisual />
@@ -2568,14 +2575,14 @@ function HeroToBlindDesktopScene({
   const progress = clamp01(transitionProgress);
   const [sheetSwapProgress, setSheetSwapProgress] = useState(reduceMotion ? 1 : 0);
   const sheetSwapProgressRef = useRef(reduceMotion ? 1 : 0);
-  const heroTravel = 520;
-  const blindEntry = 560;
+  const heroTravel = 860;
+  const blindEntry = 860;
   const heroOffsetY = mix(0, -heroTravel, progress);
   const blindOffsetY = mix(blindEntry, 0, progress);
   const pileOffsetY = mix(0, -heroTravel, progress);
-  const heroExitOpacity = mix(1, 0, easeIn(clamp01(progress / 0.55)));
+  const heroExitOpacity = 1;
   const pileExitOpacity = mix(1, 0, easeIn(clamp01((progress - 0.56) / 0.18)));
-  const blindCopyOpacity = easeIn(clamp01((progress - 0.36) / 0.42));
+  const blindCopyOpacity = 1;
   const organizerProgress = easeInOut(progress);
   const organizerSlideY = mix(1400, 0, organizerProgress);
   const effectiveSheetSwapProgress = reduceMotion ? (progress >= 0.995 ? 1 : 0) : sheetSwapProgress;
@@ -2768,9 +2775,9 @@ function SystemCenterCopy({
         {enterFromPrivacy && privacyFrame ? (
           <motion.div
             key="privacy-to-compatibility-copy"
-            initial={reduceMotion ? false : { opacity: 1, filter: 'blur(0px)' }}
-            animate={{ opacity: 1, filter: 'blur(0px)' }}
-            exit={reduceMotion ? { opacity: 1 } : { opacity: 0, filter: 'blur(4px)' }}
+            initial={reduceMotion ? false : { y: 0 }}
+            animate={{ y: 0 }}
+            exit={reduceMotion ? { y: 0 } : { y: STORY_COPY_EXIT_Y }}
             transition={reduceMotion ? { duration: 0 } : STORY_TRANSITION}
             className="relative min-h-[20rem] w-full"
           >
@@ -2802,8 +2809,8 @@ function SystemCenterCopy({
             </motion.div>
 
             <motion.div
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 12, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              initial={reduceMotion ? { y: 0 } : { y: STORY_COPY_ENTER_Y }}
+              animate={{ y: 0 }}
               transition={reduceMotion ? { duration: 0 } : { ...STORY_TRANSITION, delay: 0.24 }}
               className="absolute inset-x-0 top-0 mx-auto max-w-[18rem] space-y-4"
             >
@@ -2834,11 +2841,9 @@ function SystemCenterCopy({
         ) : (
           <motion.div
             key={frame.id}
-            initial={
-              reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16, filter: 'blur(4px)' }
-            }
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -14, filter: 'blur(4px)' }}
+            initial={reduceMotion ? { y: 0 } : { y: STORY_COPY_ENTER_Y }}
+            animate={{ y: 0 }}
+            exit={reduceMotion ? { y: 0 } : { y: STORY_COPY_EXIT_Y }}
             transition={reduceMotion ? { duration: 0 } : STORY_TRANSITION}
             className={cn('space-y-4', isCompatibility ? 'max-w-[22rem]' : 'max-w-[18rem]')}
           >
@@ -2895,16 +2900,19 @@ function SystemCenterCopy({
 function CompatibilitySideStacks({
   progress,
   exitProgress = 0,
+  challengeExitProgress = 0,
   reduceMotion,
 }: {
   progress: number;
   exitProgress?: number;
+  challengeExitProgress?: number;
   reduceMotion: boolean;
 }) {
   const stackProgress = reduceMotion ? (progress >= 1 ? 1 : 0) : easeOut((progress - 0.7) / 0.3);
   const leftX = mix(-1000, -170, stackProgress);
   const rightX = mix(1000, 120, stackProgress);
-  const stackOpacity = mix(0.92, 0.78, clamp01(exitProgress * 1.5));
+  const challengeExit = clamp01(challengeExitProgress);
+  const stackOpacity = mix(1, 0, challengeExit);
   const frontCardLift = -116;
 
   return (
@@ -2918,7 +2926,8 @@ function CompatibilitySideStacks({
           const cardExitY = isFront
             ? mix(0, frontCardLift, exitProgress)
             : mix(0, -1000, exitProgress);
-          const cardOpacity = isFront ? 1 : mix(1, 0, clamp01(exitProgress * 2.5));
+          const cardOpacity =
+            (isFront ? 1 : mix(1, 0, clamp01(exitProgress * 2.5))) * (1 - challengeExit);
           const cardScale = isFront ? mix(1, 1.15, exitProgress) : 1;
 
           return (
@@ -2957,7 +2966,8 @@ function CompatibilitySideStacks({
           const cardExitY = isFront
             ? mix(0, frontCardLift, exitProgress)
             : mix(0, -1000, exitProgress);
-          const cardOpacity = isFront ? 1 : mix(1, 0, clamp01(exitProgress * 2.5));
+          const cardOpacity =
+            (isFront ? 1 : mix(1, 0, clamp01(exitProgress * 2.5))) * (1 - challengeExit);
           const cardScale = isFront ? mix(1, 1.15, exitProgress) : 1;
 
           return (
@@ -2985,6 +2995,55 @@ function CompatibilitySideStacks({
             </motion.div>
           );
         })}
+      </motion.div>
+    </div>
+  );
+}
+
+function ModernChallengesSidePanels({
+  reduceMotion,
+  animateIn = false,
+}: {
+  reduceMotion: boolean;
+  animateIn?: boolean;
+}) {
+  const panelTransition = reduceMotion ? { duration: 0 } : { ...STORY_TRANSITION, duration: 0.95 };
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute left-1/2 top-1/2 z-0 flex w-[min(92vw,72rem)] -translate-x-1/2 -translate-y-1/2 items-center justify-between gap-[24rem]"
+    >
+      <motion.div
+        initial={animateIn && !reduceMotion ? { opacity: 0, x: -34, scale: 0.98 } : false}
+        animate={{ opacity: 1, x: 0, scale: 1 }}
+        transition={panelTransition}
+        className="w-[min(24vw,23rem)] min-w-[17rem]"
+      >
+        <Image
+          src="/challenges/hiring-teams-challenges.png"
+          alt=""
+          width={493}
+          height={915}
+          sizes="(min-width: 1280px) 23rem, 24vw"
+          className="pointer-events-none h-auto w-full select-none object-contain drop-shadow-[0_30px_60px_rgba(55,45,30,0.16)]"
+        />
+      </motion.div>
+
+      <motion.div
+        initial={animateIn && !reduceMotion ? { opacity: 0, x: 34, scale: 0.98 } : false}
+        animate={{ opacity: 1, x: 0, scale: 1 }}
+        transition={panelTransition}
+        className="w-[min(24vw,23rem)] min-w-[17rem]"
+      >
+        <Image
+          src="/challenges/job-seekers-challenges.png"
+          alt=""
+          width={494}
+          height={911}
+          sizes="(min-width: 1280px) 23rem, 24vw"
+          className="pointer-events-none h-auto w-full select-none object-contain drop-shadow-[0_30px_60px_rgba(55,45,30,0.16)]"
+        />
       </motion.div>
     </div>
   );
@@ -3042,6 +3101,7 @@ function EarlyOrganizerStoryScene({
         <CompatibilitySideStacks
           progress={privacyToCompatProgress}
           exitProgress={compatToPrecisionProgress}
+          challengeExitProgress={precisionToChallengesProgress}
           reduceMotion={reduceMotion}
         />
       )}
@@ -3141,20 +3201,7 @@ function EarlyOrganizerStoryScene({
           style={{ y: challengesEntryY, opacity: 1 }}
         >
           <div className="relative mx-auto flex min-h-[45rem] w-full items-center justify-center overflow-visible">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute left-1/2 top-1/2 z-0 w-[min(96vw,105rem)]"
-              style={{ transform: 'translate(-50%, -50%)' }}
-            >
-              <Image
-                src="/challenges/modern-challenges-side-panels.png"
-                alt=""
-                width={1881}
-                height={1059}
-                sizes="96vw"
-                className="pointer-events-none h-auto w-full max-w-none select-none object-contain"
-              />
-            </div>
+            <ModernChallengesSidePanels reduceMotion={reduceMotion} />
 
             <div className="relative z-10">
               <SystemCenterCopy
@@ -3266,23 +3313,7 @@ function DesktopScene({
   if (state.isChallenges) {
     return (
       <div className="relative mx-auto flex min-h-[45rem] w-full items-center justify-center overflow-visible">
-        <motion.div
-          aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 z-0 w-[min(96vw,105rem)]"
-          initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          style={{ x: '-50%', y: '-50%' }}
-          transition={reduceMotion ? { duration: 0 } : { ...STORY_TRANSITION, duration: 0.95 }}
-        >
-          <Image
-            src="/challenges/modern-challenges-side-panels.png"
-            alt=""
-            width={1881}
-            height={1059}
-            sizes="96vw"
-            className="pointer-events-none h-auto w-full max-w-none select-none object-contain"
-          />
-        </motion.div>
+        <ModernChallengesSidePanels reduceMotion={reduceMotion} animateIn />
 
         <div className="relative z-10">
           <SystemCenterCopy frame={frame} state={state} reduceMotion={reduceMotion} />
@@ -3893,7 +3924,7 @@ export function ScrollytellingSection({
       }
 
       const nextPrivacyTarget =
-        isScrollingDown && nextPosition >= 5.08
+        isScrollingDown && nextPosition >= 6.02
           ? 1
           : isScrollingUp && nextPosition <= 5.98
             ? 0
@@ -3940,7 +3971,7 @@ export function ScrollytellingSection({
       }
 
       const nextCompatToPrecisionTarget =
-        isScrollingDown && nextPosition >= 6.08
+        isScrollingDown && nextPosition >= 7.02
           ? 1
           : isScrollingUp && nextPosition <= 6.98
             ? 0
@@ -3988,7 +4019,7 @@ export function ScrollytellingSection({
       }
 
       const nextPrecisionToChallengesTarget =
-        isScrollingDown && nextPosition >= 7.08
+        isScrollingDown && nextPosition >= 8.02
           ? 1
           : isScrollingUp && nextPosition <= 7.98
             ? 0
