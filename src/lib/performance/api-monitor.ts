@@ -20,6 +20,13 @@ const SLA_THRESHOLDS = {
   api_p50: 500, // 0.5 seconds
 };
 
+function isProductionLikeRuntime() {
+  const vercelEnv = process.env.VERCEL_ENV;
+  return (
+    vercelEnv === 'production' || vercelEnv === 'preview' || process.env.NODE_ENV === 'production'
+  );
+}
+
 /**
  * Middleware wrapper for API routes to track performance
  *
@@ -43,15 +50,14 @@ export async function withPerformanceMonitoring<T extends NextResponse>(
   try {
     const response = await handler();
 
-    // Track successful request
     const duration = Date.now() - startTime;
-    await trackApiMetric(endpoint, duration, response.status);
+    // Metrics are best-effort; do not make users wait on monitoring writes.
+    void trackApiMetric(endpoint, duration, response.status);
 
     return response;
   } catch (error) {
-    // Track failed request
     const duration = Date.now() - startTime;
-    await trackApiMetric(endpoint, duration, 500);
+    void trackApiMetric(endpoint, duration, 500);
 
     throw error;
   }
@@ -85,9 +91,11 @@ async function trackApiMetric(
     await db.insert(performanceMetrics).values(metric);
 
     // Check for SLA violations (but don't block the response)
-    checkSLAViolation(endpoint, durationMs).catch((error) => {
-      console.error('SLA check error:', error);
-    });
+    if (isProductionLikeRuntime()) {
+      checkSLAViolation(endpoint, durationMs).catch((error) => {
+        console.error('SLA check error:', error);
+      });
+    }
   } catch (error) {
     // Silent fail - don't disrupt API response
     console.error('Performance tracking error:', error);

@@ -19,6 +19,7 @@ const hstsEnabled =
   explicitHstsSetting === undefined
     ? process.env.VERCEL_ENV === 'production'
     : enabledEnvValues.has(explicitHstsSetting.trim().toLowerCase());
+const allowedDevOrigins = ['127.0.0.1', '0.0.0.0'];
 const sentryBuildArtifacts = [
   '.next/server/app/**/*.js',
   '.next/server/app/**/*.js.map',
@@ -39,6 +40,7 @@ const sentryIgnoredArtifacts = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
+  allowedDevOrigins,
   eslint: {
     // Keep lint as part of build by default. Explicitly opt out only when needed.
     ignoreDuringBuilds: skipBuildValidation,
@@ -176,8 +178,12 @@ export default withSentryConfig(config, {
     ignore: sentryIgnoredArtifacts,
   },
   hideSourceMaps: true, // Hides source maps from browser DevTools
-  disableLogger: true, // Automatically tree-shake Sentry logger statements
-  automaticVercelMonitors: false, // Avoid extra release-time work during Vercel builds
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+    },
+    automaticVercelMonitors: false, // Avoid extra release-time work during Vercel builds
+  },
   errorHandler(error) {
     console.warn('[@sentry/nextjs] Non-fatal build warning:', error?.message ?? error);
   },

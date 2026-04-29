@@ -146,6 +146,59 @@ const AssignmentCreateSchema = AssignmentBaseSchema.extend({
   }
 });
 
+async function runAssignmentCreationSideEffects({
+  requestId,
+  userId,
+  orgId,
+  assignment,
+}: {
+  requestId: string;
+  userId: string;
+  orgId: string;
+  assignment: any;
+}) {
+  try {
+    const existingAssignments = await db
+      .select({ id: assignments.id })
+      .from(assignments)
+      .where(eq(assignments.orgId, orgId))
+      .limit(2);
+
+    if (existingAssignments.length === 1) {
+      await triggerFirstAssignmentSurvey(userId);
+    }
+  } catch (error) {
+    log.error('sus_survey.first_assignment_check_failed', {
+      requestId,
+      error: sanitizeErrorForLog(error),
+      userId,
+      orgId,
+    });
+  }
+
+  try {
+    if (assignment.status === 'active') {
+      const evaluation = evaluateAssignmentActivationCriteria(assignment);
+      if (evaluation.canActivate) {
+        await checkAndEmitAssignmentActivation({
+          assignmentId: assignment.id,
+          orgId,
+          createdAt: assignment.createdAt,
+          userId,
+        });
+      }
+    }
+  } catch (error) {
+    log.error('assignment.activation_check_failed', {
+      requestId,
+      assignmentId: assignment.id,
+      error: sanitizeErrorForLog(error),
+      userId,
+      orgId,
+    });
+  }
+}
+
 /**
  * GET /api/assignments
  *
@@ -233,8 +286,13 @@ export async function GET(request: NextRequest) {
       // -----------------------------------------------------------------------
       // PRD safeguard: TTFQI 72h warning if <5 matches after 72 hours
       // -----------------------------------------------------------------------
-      const activeAssignments = assignmentsToReturn.filter((a: any) => a.status === 'active');
-      const assignmentIds = activeAssignments.map((a: any) => a.id);
+      const now = Date.now();
+      const staleActiveAssignments = assignmentsToReturn.filter((assignment: any) => {
+        if (assignment.status !== 'active') return false;
+        const ageHours = (now - new Date(assignment.createdAt).getTime()) / (1000 * 60 * 60);
+        return ageHours >= 72;
+      });
+      const assignmentIds = staleActiveAssignments.map((a: any) => a.id);
 
       let matchCounts: Record<string, number> = {};
 
@@ -257,46 +315,41 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      const now = Date.now();
-      const itemsWithWarnings = await Promise.all(
-        assignmentsToReturn.map(async (assignment: any) => {
-          const ageHours = (now - new Date(assignment.createdAt).getTime()) / (1000 * 60 * 60);
-          const count = matchCounts[assignment.id] ?? 0;
-          const warn =
-            assignment.status === 'active' && ageHours >= 72 && count < 5
-              ? {
-                  code: 'ttfqi_warning',
-                  message: 'Fewer than 5 matches after 72h. Broaden constraints or relax gates.',
-                  matchesCount: count,
-                  ageHours: Math.round(ageHours),
-                }
-              : null;
+      const itemsWithWarnings = assignmentsToReturn.map((assignment: any) => {
+        const ageHours = (now - new Date(assignment.createdAt).getTime()) / (1000 * 60 * 60);
+        const count = matchCounts[assignment.id] ?? 0;
+        const warn =
+          assignment.status === 'active' && ageHours >= 72 && count < 5
+            ? {
+                code: 'ttfqi_warning',
+                message: 'Fewer than 5 matches after 72h. Broaden constraints or relax gates.',
+                matchesCount: count,
+                ageHours: Math.round(ageHours),
+              }
+            : null;
 
-          if (warn) {
-            try {
-              await emitAnalyticsEvent({
-                eventType: 'ttfqi_warning_emitted',
-                userId: user.id,
-                organizationId: assignment.orgId,
-                entityType: 'assignment',
-                entityId: assignment.id,
-                properties: warn,
-              });
-            } catch (e) {
-              log.warn('assignments.ttfqi_warning.emit_failed', {
-                requestId: ctx.requestId,
-                assignmentId: assignment.id,
-                error: sanitizeErrorForLog(e),
-              });
-            }
-          }
+        if (warn) {
+          void emitAnalyticsEvent({
+            eventType: 'ttfqi_warning_emitted',
+            userId: user.id,
+            organizationId: assignment.orgId,
+            entityType: 'assignment',
+            entityId: assignment.id,
+            properties: warn,
+          }).catch((e) => {
+            log.warn('assignments.ttfqi_warning.emit_failed', {
+              requestId: ctx.requestId,
+              assignmentId: assignment.id,
+              error: sanitizeErrorForLog(e),
+            });
+          });
+        }
 
-          return {
-            ...assignment,
-            ttfqiWarning: warn,
-          };
-        })
-      );
+        return {
+          ...assignment,
+          ttfqiWarning: warn,
+        };
+      });
 
       return NextResponse.json({
         items: itemsWithWarnings,
@@ -476,38 +529,16 @@ export async function POST(request: NextRequest) {
         principalType: principal?.ok ? principal.context.principalType : 'organization',
       });
 
-      // Check if this is the organization's first assignment and trigger SUS survey
-      try {
-        const existingAssignments = await db
-          .select({ id: assignments.id })
-          .from(assignments)
-          .where(eq(assignments.orgId, orgId))
-          .limit(2); // Just need to know if there are 1 or more
-
-        if (existingAssignments.length === 1) {
-          // This is the first assignment - trigger SUS survey for the user who created it
-          await triggerFirstAssignmentSurvey(user.id);
-        }
-      } catch (error) {
-        log.error('sus_survey.first_assignment_check_failed', {
-          error: sanitizeErrorForLog(error),
-          userId: user.id,
-          orgId,
-        });
-        // Don't let survey trigger failure break assignment creation
-      }
-
-      // Check if assignment was created with 'active' status and meets activation criteria
-      if (newAssignment.status === 'active') {
-        const evaluation = evaluateAssignmentActivationCriteria(newAssignment);
-        if (evaluation.canActivate) {
-          await checkAndEmitAssignmentActivation({
-            assignmentId: newAssignment.id,
-            orgId,
-            createdAt: newAssignment.createdAt,
-            userId: user.id,
-          });
-        }
+      const creationSideEffects = runAssignmentCreationSideEffects({
+        requestId: ctx.requestId,
+        userId: user.id,
+        orgId,
+        assignment: newAssignment,
+      });
+      if (process.env.NODE_ENV === 'test') {
+        await creationSideEffects;
+      } else {
+        void creationSideEffects;
       }
 
       return NextResponse.json({ assignment: newAssignment }, { status: 201 });

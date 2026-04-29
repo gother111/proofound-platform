@@ -17,6 +17,17 @@ export interface ApiObservabilityOptions {
   slowThresholdMs?: number;
 }
 
+function isProductionLikeRuntime() {
+  const vercelEnv = process.env.VERCEL_ENV;
+  return (
+    vercelEnv === 'production' || vercelEnv === 'preview' || process.env.NODE_ENV === 'production'
+  );
+}
+
+function defaultSlowThresholdMs() {
+  return isProductionLikeRuntime() ? 1500 : 5000;
+}
+
 export function jsonErrorWithRequest(
   requestId: string,
   message: string,
@@ -57,7 +68,7 @@ export async function withApiObservability<T extends NextResponse>(
     userAgent: request.headers.get('user-agent') || undefined,
   };
 
-  const slowThresholdMs = options.slowThresholdMs ?? 1500;
+  const slowThresholdMs = options.slowThresholdMs ?? defaultSlowThresholdMs();
   const trackPerformance = options.trackPerformance !== false;
 
   return logContext.run(context, async () => {

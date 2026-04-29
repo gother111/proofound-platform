@@ -2,6 +2,11 @@
  * Prints a friendly checklist of missing env vars. Exits non-zero in strict
  * mode or production deploys so launch cannot proceed with mock DB/admin modes.
  */
+import { config as loadEnv } from 'dotenv';
+
+loadEnv({ path: '.env.local', quiet: true });
+loadEnv({ quiet: true });
+
 const env = process.env;
 const missing = [];
 const failures = [];
