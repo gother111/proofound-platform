@@ -29,6 +29,7 @@ yarn-debug.log*
 yarn-error.log*
 debug_log.txt
 /.artifacts/stale-build-state/
+/.artifacts/launch-validation-test-*/
 
 # local env files
 .env*.local
