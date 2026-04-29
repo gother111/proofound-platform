@@ -3,6 +3,12 @@ import { NextRequest } from 'next/server';
 import { generateCSRFToken, verifyCSRFToken, csrfProtection } from '../csrf';
 
 describe('CSRF Protection', () => {
+  beforeEach(() => {
+    delete process.env.INTERNAL_API_SECRET;
+    delete process.env.CRON_SECRET;
+    delete process.env.CRON_SECRET_PREVIEW;
+  });
+
   describe('generateCSRFToken', () => {
     it('should generate a token of correct length', () => {
       const token = generateCSRFToken();
@@ -122,11 +128,77 @@ describe('CSRF Protection', () => {
       expect(csrfProtection(request)).toBeNull();
     });
 
-    it('should return null for cron endpoints', () => {
+    it('should require a verified internal secret for cron endpoints', () => {
       const request = new NextRequest('http://localhost:3000/api/cron/test', {
         method: 'POST',
       });
+      const response = csrfProtection(request);
+
+      expect(response).not.toBeNull();
+      expect(response?.status).toBe(403);
+    });
+
+    it('should return null for verified internal cron endpoints without cookie auth', () => {
+      process.env.CRON_SECRET = 'server-only-cron-secret';
+      const request = new NextRequest('http://localhost:3000/api/cron/test', {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer server-only-cron-secret',
+        },
+      });
       expect(csrfProtection(request)).toBeNull();
+    });
+
+    it('should require CSRF when a cron request also has a browser auth cookie', () => {
+      process.env.CRON_SECRET = 'server-only-cron-secret';
+      const request = new NextRequest('http://localhost:3000/api/cron/test', {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer server-only-cron-secret',
+          Cookie: 'sb-localhost-auth-token=session-value',
+        },
+      });
+      const response = csrfProtection(request);
+
+      expect(response).not.toBeNull();
+      expect(response?.status).toBe(403);
+    });
+
+    it('should return null for pure bearer-token mobile API requests', () => {
+      const request = new NextRequest('http://localhost:3000/api/mobile/v1/bootstrap', {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer mobile-token',
+        },
+      });
+      expect(csrfProtection(request)).toBeNull();
+    });
+
+    it('should require CSRF for bearer API requests that also include browser auth cookies', () => {
+      const request = new NextRequest('http://localhost:3000/api/mobile/v1/bootstrap', {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer mobile-token',
+          Cookie: 'sb-localhost-auth-token=session-value',
+        },
+      });
+      const response = csrfProtection(request);
+
+      expect(response).not.toBeNull();
+      expect(response?.status).toBe(403);
+    });
+
+    it('should reject cookie-auth assignment mutations without CSRF', () => {
+      const request = new NextRequest('http://localhost:3000/api/assignments', {
+        method: 'POST',
+        headers: {
+          Cookie: 'sb-localhost-auth-token=session-value',
+        },
+      });
+      const response = csrfProtection(request);
+
+      expect(response).not.toBeNull();
+      expect(response?.status).toBe(403);
     });
 
     it('should return 403 response for POST without token', () => {

@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import { execFile } from 'child_process';
-import path from 'path';
 
 let supabaseMock: any;
 
@@ -23,7 +22,8 @@ const makeBuilder = (rows: Row[]) => {
     select: () => builder,
     eq: (col: string, val: any) => makeBuilder(rows.filter((r) => r[col] === val)),
     order: () => builder,
-    limit: (n?: number) => Promise.resolve({ data: typeof n === 'number' ? rows.slice(0, n) : rows, error: null }),
+    limit: (n?: number) =>
+      Promise.resolve({ data: typeof n === 'number' ? rows.slice(0, n) : rows, error: null }),
     in: (col: string, vals: any[]) =>
       Promise.resolve({ data: rows.filter((r) => vals.includes(r[col])), error: null }),
   };
@@ -36,18 +36,20 @@ const makeSupabaseStub = (data: Record<string, Row[]>) => ({
 
 describe('computeSkillGaps (smoke via tsx)', () => {
   it('computes gaps and ranks by severity', async () => {
-    const tsxBin = path.join(process.cwd(), 'node_modules', '.bin', 'tsx');
     await new Promise<void>((resolve, reject) => {
-      execFile(tsxBin, ['scripts/smoke-skill-gaps.ts'], (error, stdout, stderr) => {
-        if (error) {
-          console.error(stderr);
-          reject(error);
-          return;
+      execFile(
+        process.execPath,
+        ['--import', 'tsx', 'scripts/smoke-skill-gaps.ts'],
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error(stderr);
+            reject(error);
+            return;
+          }
+          expect(stdout).toContain('gap-service smoke ok');
+          resolve();
         }
-        expect(stdout).toContain('gap-service smoke ok');
-        resolve();
-      });
+      );
     });
   });
 });
-

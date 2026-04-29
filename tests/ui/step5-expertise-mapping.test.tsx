@@ -319,10 +319,12 @@ describe('Step5ExpertiseMapping', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/could not be auto-mapped/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/need a fresh selection from the skill library/i)
+      ).toBeInTheDocument();
     });
 
-    expect(screen.getAllByText('legacy-unknown').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Legacy Unknown').length).toBeGreaterThan(0);
   });
 
   it('honors a stricter minimum must-have skill count when embedded in basic publish flow', () => {

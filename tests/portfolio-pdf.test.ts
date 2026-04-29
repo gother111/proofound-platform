@@ -15,7 +15,8 @@ function loadGenerateTrustPdf() {
   const require = createRequire(__filename);
   const result = buildSync({
     entryPoints: [path.resolve(__dirname, '../src/lib/portfolio/pdf.ts')],
-    bundle: false,
+    bundle: true,
+    external: ['pdfkit/js/pdfkit.standalone.js'],
     platform: 'node',
     format: 'cjs',
     write: false,

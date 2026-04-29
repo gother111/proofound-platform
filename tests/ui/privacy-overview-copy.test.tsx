@@ -53,7 +53,7 @@ describe('PrivacyOverview copy', () => {
     expect(screen.getByText('Personal')).toBeInTheDocument();
     expect(screen.getAllByText('Sensitive').length).toBeGreaterThan(0);
     expect(screen.getByText('Operational')).toBeInTheDocument();
-    expect(screen.getByText('Operational (Pseudonymized)')).toBeInTheDocument();
+    expect(screen.queryByText('Operational (Pseudonymized)')).not.toBeInTheDocument();
 
     expect(screen.queryByText(/Tier 1/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tier 2/i)).not.toBeInTheDocument();

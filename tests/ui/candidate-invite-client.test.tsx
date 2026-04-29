@@ -72,7 +72,7 @@ describe('CandidateInviteClient test_match flow', () => {
     render(<CandidateInviteClient token="token-value" />);
 
     await waitFor(() => {
-      expect(screen.getByText(/test match accepted/i)).toBeInTheDocument();
+      expect(screen.getByText(/trial match accepted/i)).toBeInTheDocument();
     });
 
     expect(screen.getByRole('link', { name: /open messages/i })).toHaveAttribute(

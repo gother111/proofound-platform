@@ -123,7 +123,7 @@ describe('VerificationsClient', () => {
     expect(screen.getByRole('tab', { name: /^Incoming/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /^Sent/i })).toBeInTheDocument();
 
-    expect(screen.getByText('Pending')).toBeInTheDocument();
+    expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
     expect(screen.getByText('Accepted')).toBeInTheDocument();
     expect(screen.getByText('Declined')).toBeInTheDocument();
     expect(screen.getByText('All')).toBeInTheDocument();

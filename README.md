@@ -1,7 +1,7 @@
 # Proofound MVP
 
 > Doc Class: `active`
-> Last Verified: `2026-03-12`
+> Last Verified: `2026-04-29`
 
 Production-ready scaffold for a proof-first, privacy-first hiring corridor centered on Proof Packs, with one individual side and one organization side.
 
@@ -92,7 +92,7 @@ Design system extracted from Figma "Proofound Style Guidelines":
 
 ## Prerequisites
 
-- Node.js 20.20.0 (see `.nvmrc`) and npm
+- Node.js 20.20.0 (see `.nvmrc`) and npm 10.8.2 (pinned in `package.json`)
 - Python 3.12 recommended for local document-intelligence work (`.venv311` or `python3.11` also work for the bundled Python tests)
 - Supabase account (free tier works)
 - Resend account (free tier works)
@@ -105,8 +105,12 @@ Design system extracted from Figma "Proofound Style Guidelines":
 ```bash
 git clone <your-repo-url>
 cd proofound-platform
-npm install
+npm ci
 ```
+
+`npm ci` is the launch-gate install path. The repo uses `package-lock.json`, pins
+`packageManager: npm@10.8.2`, and enables `engine-strict=true`; installs must run
+on Node `>=20.20.0 <21`.
 
 ### 2. Set Up Supabase
 
@@ -292,7 +296,13 @@ npm run vercel:deploy:prebuilt:production # Upload prebuilt production output
 npm run vercel:env-parity # Optional env parity snapshot vs legacy project
 
 # Testing
+npm ci                   # Clean-checkout install used by CI and launch gates
 npm run test             # Run unit tests (Vitest)
+npm run test:privacy     # Core Supabase RLS/privacy suite
+npm run test:privacy:extended # Extended privacy and workflow isolation suite
+npm run test:launch:smoke # Launch smoke matrix; writes .artifacts/launch-smoke-report.json
+npm run monitor:launch   # Synthetic launch monitors; requires BASE_URL and CRON_SECRET for protected cron checks
+npm run test:archived:non-launch # Archived/removed non-MVP tests kept out of npm test
 npm run test:e2e         # Run E2E tests (Playwright)
 npm run test:e2e:ui      # Run E2E tests with UI
 npm run perf:budgets     # Perf budgets (Lighthouse TTI/CLS + API p95)
@@ -338,9 +348,9 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - `/api/cron/performance-check` — daily at 06:00 Europe/Stockholm
   - `/api/cron/health-check` — every 3 hours (no auth required by the route)
 - Unscheduled compatibility/manual routes:
-  - `/api/cron/account-deletion-workflow` — legacy no-op compatibility route
-  - `/api/cron/send-deletion-reminders` — legacy no-op compatibility route
-  - `/api/cron/process-deletions` — legacy no-op compatibility route
+  - `/api/cron/account-deletion-workflow` — retired compatibility route; returns 410 because account deletion is immediate
+  - `/api/cron/send-deletion-reminders` — retired compatibility route; returns 410 because grace-period reminders are not part of the locked launch MVP
+  - `/api/cron/process-deletions` — retired compatibility route; returns 410 because scheduled deletion processing is not part of the locked launch MVP
   - `/api/cron/generate-fairness-note` — manual fairness-note trigger with alert fan-out
   - `/api/cron/weekly-digest` — manual compatibility route; weekly digest delivery is temporarily disabled
 - Tracking & troubleshooting:
@@ -419,6 +429,10 @@ All tables have RLS enabled with policies:
 npm run test
 ```
 
+The default suite is the MVP release signal for repo-wide unit/API/UI contracts.
+It intentionally excludes archived or removed non-MVP surfaces, privacy/RLS tests
+with their own database harness, integration tests, a11y, and Playwright E2E.
+
 Tests for:
 
 - Auth helpers
@@ -446,6 +460,9 @@ E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pa
 ### Specialized Tests & Checks
 
 - `npm run test:privacy` (and `:extended`, `:coverage`, `:watch`) — Supabase RLS/Privacy suites.
+- `npm run test:launch:smoke` — launch smoke matrix for the locked MVP corridor.
+- `npm run monitor:launch` — synthetic launch monitor runner; pass `BASE_URL` and `CRON_SECRET` when checking a protected runtime.
+- `npm run test:archived:non-launch` — archived/removed non-MVP regression tests that are preserved but do not block the default launch gate.
 - `npm run test:a11y` — Playwright accessibility-only suite.
 - `npm run perf:budgets` — Lighthouse-based performance budget check.
 - `npm run go:no-go` — Composite gate (perf + a11y + readiness signals).

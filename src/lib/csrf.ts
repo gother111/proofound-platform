@@ -10,6 +10,94 @@ import { NextRequest, NextResponse } from 'next/server';
 const CSRF_TOKEN_HEADER = 'x-csrf-token';
 const CSRF_TOKEN_COOKIE = 'csrf_token';
 const TOKEN_LENGTH = 32;
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const MIN_INTERNAL_SECRET_LENGTH = 16;
+const INVALID_INTERNAL_SECRET_VALUES = new Set(['undefined', 'null']);
+const SUPABASE_SESSION_COOKIE_PATTERN = /^sb-[a-z0-9]+-auth-token(?:\.\d+)?$/i;
+
+function normalizeInternalSecret(value: string | undefined): string | null {
+  const secret = value?.trim();
+  if (!secret) return null;
+  if (INVALID_INTERNAL_SECRET_VALUES.has(secret.toLowerCase())) return null;
+  if (secret.length < MIN_INTERNAL_SECRET_LENGTH) return null;
+  return secret;
+}
+
+function getConfiguredInternalSecrets(): string[] {
+  return [
+    process.env.INTERNAL_API_SECRET,
+    process.env.CRON_SECRET,
+    process.env.CRON_SECRET_PREVIEW,
+  ].flatMap((value) => {
+    const secret = normalizeInternalSecret(value);
+    return secret ? [secret] : [];
+  });
+}
+
+function constantTimeEquals(left: string, right: string): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  let diff = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    diff |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  }
+  return diff === 0;
+}
+
+function getPresentedInternalSecrets(request: NextRequest): string[] {
+  const authorization = request.headers.get('authorization')?.trim();
+  const bearerToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+  const internalApiKey = request.headers.get('x-internal-api-key')?.trim();
+
+  return [bearerToken, internalApiKey].flatMap((value) => (value ? [value] : []));
+}
+
+function isVerifiedInternalServerRequest(request: NextRequest): boolean {
+  const configuredSecrets = getConfiguredInternalSecrets();
+  if (configuredSecrets.length === 0) {
+    return false;
+  }
+
+  const presentedSecrets = getPresentedInternalSecrets(request);
+  return configuredSecrets.some((configuredSecret) =>
+    presentedSecrets.some((presentedSecret) =>
+      constantTimeEquals(presentedSecret, configuredSecret)
+    )
+  );
+}
+
+function hasBearerAuthorization(request: NextRequest): boolean {
+  return /^Bearer\s+\S+/i.test(request.headers.get('authorization')?.trim() ?? '');
+}
+
+function hasCookieAuthenticatedSession(request: NextRequest): boolean {
+  return request.cookies.getAll().some(({ name }) => SUPABASE_SESSION_COOKIE_PATTERN.test(name));
+}
+
+function isPureBearerTokenApiRequest(request: NextRequest): boolean {
+  const pathname = request.nextUrl.pathname;
+  return (
+    pathname.startsWith('/api/mobile/') &&
+    hasBearerAuthorization(request) &&
+    !hasCookieAuthenticatedSession(request)
+  );
+}
+
+function isExternalNonCookieCallback(request: NextRequest): boolean {
+  const pathname = request.nextUrl.pathname;
+  return pathname.includes('/webhook') && !hasCookieAuthenticatedSession(request);
+}
+
+function isVerifiedInternalNonCookieRequest(request: NextRequest): boolean {
+  const pathname = request.nextUrl.pathname;
+  return (
+    pathname.includes('/cron') &&
+    isVerifiedInternalServerRequest(request) &&
+    !hasCookieAuthenticatedSession(request)
+  );
+}
 
 /**
  * Generate a cryptographically secure CSRF token
@@ -30,7 +118,7 @@ export function generateCSRFToken(): string {
 export function verifyCSRFToken(request: NextRequest): boolean {
   // GET, HEAD, OPTIONS requests don't need CSRF protection
   const method = request.method.toUpperCase();
-  if (['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+  if (SAFE_METHODS.has(method)) {
     return true;
   }
 
@@ -56,44 +144,23 @@ export function verifyCSRFToken(request: NextRequest): boolean {
 export function csrfProtection(request: NextRequest): NextResponse | null {
   // Skip CSRF check for safe methods
   const method = request.method.toUpperCase();
-  if (['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+  if (SAFE_METHODS.has(method)) {
     return null;
   }
 
-  // Skip CSRF check for webhook endpoints (they use other auth)
-  const pathname = request.nextUrl.pathname;
-  if (pathname.includes('/webhook') || pathname.includes('/cron')) {
+  // Pure bearer-token API flows do not use browser cookies for authentication.
+  if (isPureBearerTokenApiRequest(request)) {
     return null;
   }
 
-  // Mobile API endpoints are authenticated with bearer tokens and are not cookie-based.
-  // Double-submit cookies do not apply to this channel.
-  if (pathname.startsWith('/api/mobile/')) {
-    const authorization = request.headers.get('authorization');
-    if (authorization?.toLowerCase().startsWith('bearer ')) {
-      return null;
-    }
+  // Internal server-to-server jobs must prove the configured internal secret.
+  if (isVerifiedInternalNonCookieRequest(request)) {
+    return null;
   }
 
-  // Skip CSRF for internal authenticated API routes
-  // These routes are called from authenticated pages and protected by session cookies
-  // The Supabase session cookie with SameSite=Lax provides CSRF protection.
-  const internalAuthRoutes = [
-    '/api/match/',
-    '/api/assignments',
-    '/api/interviews/',
-    '/api/analytics/',
-    '/api/messages/',
-    '/api/conversations/',
-    '/api/goals/',
-    '/api/dashboard/layout',
-  ];
-
-  const hasSupabaseSession = request.cookies
-    .getAll()
-    .some(({ name }) => /^sb-[a-z0-9]+-auth-token(?:\.\d+)?$/i.test(name));
-
-  if (hasSupabaseSession && internalAuthRoutes.some((route) => pathname.startsWith(route))) {
+  // External callbacks are authenticated by their own signature/token scheme and do not use
+  // Proofound browser session cookies. Cookie-authenticated webhook-like routes still need CSRF.
+  if (isExternalNonCookieCallback(request)) {
     return null;
   }
 
@@ -102,7 +169,7 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
     return NextResponse.json(
       {
         error: 'CSRF validation failed',
-        message: 'Invalid or missing CSRF token',
+        message: 'Request blocked',
       },
       { status: 403 }
     );

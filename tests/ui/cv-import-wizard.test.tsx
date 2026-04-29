@@ -432,7 +432,7 @@ describe('CvImportWizard', () => {
       expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeDisabled();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Advanced diagnostics/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Matching details/i }));
 
     expect(screen.getAllByText('Needs mapping: 1').length).toBeGreaterThan(0);
   });

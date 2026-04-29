@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `verification.md`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-04-29`
 
 # Verification Checklist (Before Merging)
 
@@ -9,10 +9,14 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 ## Always (Most PRs)
 
 - Ensure the diff is scoped and intentional.
+- Clean install: `npm ci` (source: package.json, package-lock.json, .nvmrc, .npmrc)
+  - The launch-gate runtime is Node `20.20.0` / npm `10.8.2`; `.npmrc` enables engine-strict so unsupported Node versions fail closed.
 - Lint: `npm run lint` (source: package.json)
   - Note: lint uses `scripts/lint-or-skip.js`; ensure lint actually ran when required. (source: scripts/lint-or-skip.js)
 - Typecheck: `npm run typecheck` (source: package.json)
 - Unit tests: `npm run test` (source: package.json)
+  - Default `npm run test` excludes archived/removed non-MVP tests and privacy/E2E harnesses so the release signal stays scoped to the locked MVP corridor.
+  - Preserved archived or removed non-MVP regressions can be run with `npm run test:archived:non-launch` when that history is relevant.
 - Build: `npm run build` (source: package.json)
 - Practical sequencing note:
   - Run `npm run typecheck` and `npm run build` sequentially, not in parallel, because both write under `.next/` and parallel runs can create avoidable verification noise.

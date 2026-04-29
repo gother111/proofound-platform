@@ -1,6 +1,6 @@
 import PDFDocument from 'pdfkit/js/pdfkit.standalone.js';
 import type { TrustSignals } from './trust-signals';
-import { internalValueLabel } from '@/lib/copy/labels';
+import { internalValueLabel } from '../copy/labels';
 
 const COLORS = {
   forest: '#1C4D3A',

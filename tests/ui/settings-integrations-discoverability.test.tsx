@@ -65,9 +65,13 @@ describe('Settings interview scheduling discoverability', () => {
   it('keeps launch interview scheduling manual-first on the same settings tab', async () => {
     render(<SettingsContent userId="user-1" />);
 
-    expect(await screen.findByText(/Manual meeting links are the MVP default/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Manual meeting links are the launch default/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Interview Scheduling' })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Dashboard' })).not.toBeInTheDocument();
-    expect(screen.getByText(/No Google Meet or third-party calendar connection is required/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/No Google Meet or third-party calendar connection is required/i)
+    ).toBeInTheDocument();
   });
 });

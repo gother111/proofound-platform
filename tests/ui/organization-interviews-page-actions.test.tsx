@@ -292,7 +292,7 @@ describe('organization interviews page actions', () => {
     render(<OrganizationInterviewsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Decision: hire')).toBeInTheDocument();
+      expect(screen.getByText('Decision: Hire')).toBeInTheDocument();
       expect(screen.getByText('Engagement: Awaiting both confirmations')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /confirm engagement/i })).toBeInTheDocument();
     });

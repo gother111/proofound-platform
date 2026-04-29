@@ -183,7 +183,7 @@ describe('AdminVerificationDashboard', () => {
       );
     });
     await waitFor(() => {
-      expect(toastSuccessMock).toHaveBeenCalledWith('Queue item moved to resolved.');
+      expect(toastSuccessMock).toHaveBeenCalledWith('Queue item moved to Resolved.');
     });
   });
 });

@@ -66,9 +66,13 @@ describe('VerificationStatus', () => {
     expect(screen.getByText(/Account compatibility signals/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Add work email/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/Work email remains the only launch-active account-side compatibility signal/i)
+      screen.getByText(
+        /Work email remains the only launch-active account-side compatibility signal/i
+      )
     ).toBeInTheDocument();
-    expect(screen.getByText(/LinkedIn compatibility checks are outside the locked MVP corridor/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/LinkedIn compatibility checks are outside the launch corridor/i)
+    ).toBeInTheDocument();
     expect(screen.queryByText(/Government ID Verification/i)).not.toBeInTheDocument();
   });
 
