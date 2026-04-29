@@ -58,7 +58,8 @@
 ## 5) Post-Deploy Checks
 
 - [ ] `curl -sS https://proofound.io/api/health`
-- [ ] Confirm deployed version matches expected commit SHA.
+- [ ] Confirm public health returns only `status` and `timestamp`.
+- [ ] Confirm deployed Vercel deployment metadata matches the expected commit SHA.
 - [ ] Review Sentry and runtime logs for regressions.
 
 ## Canonical References

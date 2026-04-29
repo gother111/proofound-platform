@@ -363,7 +363,8 @@ npm run vercel:deploy:prebuilt:production
 
 1. Review the GitHub Actions summary for the prebuilt deployment URL
 2. Check the deployment logs in Vercel
-3. Confirm `https://proofound.io/api/health` returns the deployed commit SHA
+3. Confirm Vercel deployment metadata matches the intended commit SHA
+4. Confirm `https://proofound.io/api/health` returns `status:"ok"`
 
 ---
 

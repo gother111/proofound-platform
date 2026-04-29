@@ -31,7 +31,7 @@
 - [ ] `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
 - [ ] `BASE_URL=http://localhost:3000 npm run perf:budgets`
 - [ ] `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
-- [ ] `/api/health`, `/api/monitoring/perf-status`, and `/api/monitoring/launch-status` healthy.
+- [ ] `/api/health` returns minimal `status:"ok"`, and authenticated `/api/monitoring/perf-status` plus `/api/monitoring/launch-status` are healthy.
 
 ## Migration and Data Safety
 
@@ -58,7 +58,8 @@
 ## Post-Deploy Validation
 
 - [ ] `curl -sS https://proofound.io/api/health`
-- [ ] Deployed commit/version matches intended release.
+- [ ] Public health returns only `status` and `timestamp`.
+- [ ] Deployed Vercel deployment metadata matches intended release.
 - [ ] No critical Sentry spikes after deployment.
 
 ## Canonical Sources

@@ -56,7 +56,7 @@ Use this when production should be deployed from CI-built output instead of a no
   - `.github/workflows/retry-vercel-deploy.yml`
 - Behavior:
   - Runs on push to `master` and manual dispatch.
-  - Reads live SHA from `https://proofound.io/api/health` (`version`).
+  - Reads the live production SHA from Vercel deployment metadata.
   - If production is behind and no matching prebuilt deployment is already running, it:
     - runs `vercel pull --yes --environment=production`
     - runs `vercel build --prod`

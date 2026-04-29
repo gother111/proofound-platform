@@ -141,9 +141,9 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### health
 
-| Methods | Path          | Auth Tier | Notes | Source                        |
-| ------- | ------------- | --------- | ----- | ----------------------------- |
-| `GET`   | `/api/health` | `service` | -     | `src/app/api/health/route.ts` |
+| Methods | Path          | Auth Tier | Notes                                                    | Source                        |
+| ------- | ------------- | --------- | -------------------------------------------------------- | ----------------------------- |
+| `GET`   | `/api/health` | `public`  | Minimal `ok` / `degraded` liveness only; no diagnostics. | `src/app/api/health/route.ts` |
 
 ### individual
 
@@ -196,10 +196,11 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### monitoring
 
-| Methods | Path                            | Auth Tier  | Notes                    | Source                                          |
-| ------- | ------------------------------- | ---------- | ------------------------ | ----------------------------------------------- |
-| `GET`   | `/api/monitoring/launch-status` | `internal` | launch-ops auth required | `src/app/api/monitoring/launch-status/route.ts` |
-| `GET`   | `/api/monitoring/perf-status`   | `internal` | launch-ops auth required | `src/app/api/monitoring/perf-status/route.ts`   |
+| Methods | Path                                 | Auth Tier  | Notes                                        | Source                                               |
+| ------- | ------------------------------------ | ---------- | -------------------------------------------- | ---------------------------------------------------- |
+| `GET`   | `/api/monitoring/health-diagnostics` | `internal` | protected DB/env/mock/deployment diagnostics | `src/app/api/monitoring/health-diagnostics/route.ts` |
+| `GET`   | `/api/monitoring/launch-status`      | `internal` | launch-ops auth required                     | `src/app/api/monitoring/launch-status/route.ts`      |
+| `GET`   | `/api/monitoring/perf-status`        | `internal` | launch-ops auth required                     | `src/app/api/monitoring/perf-status/route.ts`        |
 
 ### org
 

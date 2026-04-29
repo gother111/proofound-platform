@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
   "scope": "full",
-  "generatedAt": "2026-04-29T05:45:51.621Z",
+  "generatedAt": "2026-04-29T11:50:49.940Z",
   "targetBaseUrl": "http://localhost:3000",
   "executionMode": "local",
   "freshnessThresholdMinutes": 60,
-  "expiresAt": "2026-04-29T06:45:51.621Z",
+  "expiresAt": "2026-04-29T12:50:49.940Z",
   "overallStatus": "pass",
   "corridors": [
     {
@@ -13,7 +13,7 @@
       "label": "Individual corridor",
       "status": "pass",
       "checkIds": ["public_individual_portfolio_visible", "proof_creation_case"],
-      "generatedAt": "2026-04-29T05:45:51.621Z"
+      "generatedAt": "2026-04-29T11:50:49.940Z"
     },
     {
       "id": "organization",
@@ -23,14 +23,14 @@
         "public_org_trust_fixture_live",
         "full_org_corridor_review_to_engagement_verification"
       ],
-      "generatedAt": "2026-04-29T05:45:51.621Z"
+      "generatedAt": "2026-04-29T11:50:49.940Z"
     },
     {
       "id": "trust_privacy",
       "label": "Trust / privacy corridor",
       "status": "pass",
       "checkIds": ["hidden_portfolio_protected", "privacy_no_leak_case"],
-      "generatedAt": "2026-04-29T05:45:51.621Z"
+      "generatedAt": "2026-04-29T11:50:49.940Z"
     }
   ],
   "checks": [
@@ -45,9 +45,9 @@
       },
       "status": "pass",
       "expectedState": "public_individual_portfolio_visible",
-      "durationMs": 1558,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 86ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  07:40:09\n   Duration  928ms (transform 117ms, setup 115ms, collect 191ms, tests 86ms, environment 216ms, prepare 50ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
-      "generatedAt": "2026-04-29T05:40:10.133Z"
+      "durationMs": 1530,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 66ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  13:45:03\n   Duration  804ms (transform 103ms, setup 98ms, collect 161ms, tests 66ms, environment 183ms, prepare 39ms)\n\n\n(node:99147) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-04-29T11:45:04.766Z"
     },
     {
       "id": "proof_creation_case",
@@ -60,9 +60,9 @@
       },
       "status": "pass",
       "expectedState": "proof_creation_case_live",
-      "durationMs": 1325,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (4 tests) 15ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  07:40:10\n   Duration  723ms (transform 56ms, setup 117ms, collect 58ms, tests 15ms, environment 213ms, prepare 47ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
-      "generatedAt": "2026-04-29T05:40:11.463Z"
+      "durationMs": 1431,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (4 tests) 13ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  13:45:05\n   Duration  761ms (transform 47ms, setup 94ms, collect 48ms, tests 13ms, environment 190ms, prepare 37ms)\n\n\n(node:99192) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-04-29T11:45:06.198Z"
     },
     {
       "id": "public_org_trust_fixture_live",
@@ -81,9 +81,9 @@
       },
       "status": "pass",
       "expectedState": "public_org_trust_fixture_live",
-      "durationMs": 22528,
-      "outputSnippet": "[seed_public_org_trust_fixture]\n> proofound@0.1.0 seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-04-29T05:40:11.830Z\",\n  \"verificationUrl\": null,\n  \"verifiedAt\": null,\n  \"httpStatus\": null\n}\n\n[seeded_public_org_trust_smoke]\n> proofound@0.1.0 test:e2e:org-trust:smoke\n> node ./scripts/playwright-node20.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\n\n\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:44:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\n\n\n\u001b[1A\u001b[2K  1 passed (19.3s)\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:81792) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22mBrowserslist: browsers data (caniuse-lite) is 6 months old. Please run:\n\u001b[2m[WebServer] \u001b[22m  npx update-browserslist-db@latest\n\u001b[2m[WebServer] \u001b[22m  Why you should do it regularly: https://github.com/browserslist/update-db#readme\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (187kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)",
-      "generatedAt": "2026-04-29T05:40:33.991Z",
+      "durationMs": 25268,
+      "outputSnippet": "[seed_public_org_trust_fixture]\n> proofound@0.1.0 seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-04-29T11:45:06.742Z\",\n  \"verificationUrl\": null,\n  \"verifiedAt\": null,\n  \"httpStatus\": null\n}\n\n(node:99236) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n\n[seeded_public_org_trust_smoke]\n> proofound@0.1.0 test:e2e:org-trust:smoke\n> node ./scripts/playwright-node20.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\n\n\n\n\n\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:44:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\n\n\n\u001b[1A\u001b[2K  1 passed (21.4s)\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[@sentry/nextjs] DEPRECATION WARNING: disableLogger is deprecated and will be removed in a future version. Use webpack.treeshake.removeDebugLogging instead.\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead.\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:99306) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[@sentry/nextjs] DEPRECATION WARNING: disableLogger is deprecated and will be removed in a future version. Use webpack.treeshake.removeDebugLogging instead.\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead.\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:99308) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (193kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)",
+      "generatedAt": "2026-04-29T11:45:31.466Z",
       "evidence": {
         "fixtureSlug": "proofound-labs",
         "fixturePath": "/portfolio/org/proofound-labs"
@@ -111,9 +111,9 @@
       },
       "status": "pass",
       "expectedState": "full_org_corridor_review_to_engagement_verification_live",
-      "durationMs": 313874,
-      "outputSnippet": "[strict_org_corridor_smoke]\n[dotenv@17.2.3] injecting env (39) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/strict/org-corridor.strict.spec.ts:276:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end\n\n\n\n\n\n\u001b[1A\u001b[2K  1 passed (5.2m)\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:81951) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (187kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22mBrowserslist: browsers data (caniuse-lite) is 6 months old. Please run:\n\u001b[2m[WebServer] \u001b[22m  npx update-browserslist-db@latest\n\u001b[2m[WebServer] \u001b[22m  Why you should do it regularly: https://github.com/browserslist/update-db#readme\n\u001b[1A\u001b[2K(node:82167) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m ⨯ [Error: aborted] { code: \u001b[32m'ECONNRESET'\u001b[39m, digest: \u001b[32m'3419021255'\u001b[39m }\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m{\"level\":\"warn\",\"event\":\"api.slow\",\"timestamp\":\"2026-04-29T05:41:36.757Z\",\"requestId\":\"fBjrObqTLG7a\",\"path\":\"/api/assignments\",\"method\":\"POST\",\"route\":\"/api/assignments\",\"durationMs\":5829}\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Performance Alert] /api/assignments P95 5904ms exceeds 1500ms\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m{\"level\":\"warn\",\"event\":\"api.slow\",\"timestamp\":\"2026-04-29T05:42:38.380Z\",\"requestId\":\"eFxfFcVbvtlO\",\"path\":\"/api/assignments\",\"method\":\"GET\",\"route\":\"/api/assignments\",\"durationMs\":3806}\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Performance Alert] /api/assignments P95 5904ms exceeds 1500ms",
-      "generatedAt": "2026-04-29T05:45:47.865Z"
+      "durationMs": 314650,
+      "outputSnippet": "[strict_org_corridor_smoke]\n[dotenv@17.2.3] injecting env (39) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/strict/org-corridor.strict.spec.ts:276:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end\n\n\n\n\n\n\n\u001b[1A\u001b[2K  1 passed (5.2m)\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[@sentry/nextjs] DEPRECATION WARNING: disableLogger is deprecated and will be removed in a future version. Use webpack.treeshake.removeDebugLogging instead.\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead.\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:99400) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[@sentry/nextjs] DEPRECATION WARNING: disableLogger is deprecated and will be removed in a future version. Use webpack.treeshake.removeDebugLogging instead.\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead.\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:99402) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (193kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K(node:99422) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Error: aborted] { code: \u001b[32m'ECONNRESET'\u001b[39m }\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m ⨯ uncaughtException: [Error: aborted] { code: \u001b[32m'ECONNRESET'\u001b[39m }\n\u001b[2m[WebServer] \u001b[22m ⨯ uncaughtException:  [Error: aborted] { code: \u001b[32m'ECONNRESET'\u001b[39m }\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m{\"level\":\"warn\",\"event\":\"api.slow\",\"timestamp\":\"2026-04-29T11:46:35.192Z\",\"requestId\":\"s1vM29Hve7Bp\",\"path\":\"/api/assignments\",\"method\":\"POST\",\"route\":\"/api/assignments\",\"durationMs\":5726}\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Performance Alert] /api/assignments P95 5904ms exceeds 1500ms\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m{\"level\":\"warn\",\"event\":\"api.slow\",\"timestamp\":\"2026-04-29T11:47:36.888Z\",\"requestId\":\"fHNRU6igt-3H\",\"path\":\"/api/assignments\",\"method\":\"GET\",\"route\":\"/api/assignments\",\"durationMs\":3747}\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Performance Alert] /api/assignments P95 5904ms exceeds 1500ms",
+      "generatedAt": "2026-04-29T11:50:46.116Z"
     },
     {
       "id": "hidden_portfolio_protected",
@@ -126,9 +126,9 @@
       },
       "status": "pass",
       "expectedState": "hidden_portfolio_protected",
-      "durationMs": 1991,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 86ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  07:45:48\n   Duration  1.35s (transform 120ms, setup 185ms, collect 205ms, tests 86ms, environment 339ms, prepare 57ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
-      "generatedAt": "2026-04-29T05:45:49.856Z"
+      "durationMs": 2169,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 67ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  13:50:47\n   Duration  1.08s (transform 103ms, setup 199ms, collect 167ms, tests 67ms, environment 330ms, prepare 56ms)\n\n\n(node:116) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-04-29T11:50:48.285Z"
     },
     {
       "id": "privacy_no_leak_case",
@@ -145,9 +145,9 @@
       },
       "status": "pass",
       "expectedState": "privacy_no_leak_enforced",
-      "durationMs": 1765,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 2ms\n ✓ tests/api/org-match-review-route.test.ts  (12 tests) 28ms\n ✓ tests/api/conversation-reveal-route.test.ts  (4 tests) 13ms\n\n Test Files  3 passed (3)\n      Tests  21 passed (21)\n   Start at  07:45:50\n   Duration  1.28s (transform 238ms, setup 364ms, collect 751ms, tests 43ms, environment 677ms, prepare 170ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\nstderr | tests/api/org-match-review-route.test.ts > POST /api/org/[id]/matches/[matchId]/review > keeps shortlist updates live when fairness persistence fails\norg review fairness persistence failed {\n  matchId: 'match-1',\n  assignmentId: 'assignment-1',\n  error: 'fairness insert failed'\n}",
-      "generatedAt": "2026-04-29T05:45:51.621Z"
+      "durationMs": 1655,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 2ms\n ✓ tests/api/org-match-review-route.test.ts  (17 tests) 37ms\n ✓ tests/api/conversation-reveal-route.test.ts  (5 tests) 14ms\n\n Test Files  3 passed (3)\n      Tests  27 passed (27)\n   Start at  13:50:48\n   Duration  890ms (transform 208ms, setup 328ms, collect 563ms, tests 53ms, environment 608ms, prepare 128ms)\n\n\n(node:230) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:230) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:230) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-04-29T11:50:49.940Z"
     }
   ]
 }

@@ -212,7 +212,7 @@ NEXT_PUBLIC_USE_MOCK_SUPABASE=false
 **Security**:
 
 - ⚠️ Do not enable in production or production deploys.
-- ⚠️ Production runtime and deploy-readiness checks fail fast when this flag or mock admin modes are enabled.
+- ⚠️ Production runtime and deploy-readiness checks fail fast when this flag or mock admin/auth modes are enabled.
 - ✅ May be set to `true` for local UI smoke checks and mock E2E runs.
 
 ---

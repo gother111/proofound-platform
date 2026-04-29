@@ -1,0 +1,7 @@
+⚠️ Deploy readiness check: missing env vars:
+ - NEXT_PUBLIC_SUPABASE_URL/SUPABASE_URL
+ - NEXT_PUBLIC_SUPABASE_ANON_KEY/SUPABASE_ANON_KEY
+ - SUPABASE_SERVICE_ROLE_KEY
+ - NEXT_PUBLIC_SITE_URL/SITE_URL
+ - DATABASE_URL
+See docs/deployment-guide.md for setup steps.

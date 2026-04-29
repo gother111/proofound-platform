@@ -1,0 +1,42 @@
+> proofound@0.1.0 test
+> vitest run tests/lib/uploads-privacy.test.ts tests/lib/upload-validate-file.test.ts tests/lib/uploads-lifecycle-queue.test.ts tests/api/upload-document-route.test.ts tests/api/upload-cover-route.test.ts tests/api/upload-status-route.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ tests/lib/uploads-privacy.test.ts  (11 tests) 4ms
+ ✓ tests/api/upload-status-route.test.ts  (2 tests) 8ms
+ ✓ tests/lib/upload-validate-file.test.ts  (4 tests) 8ms
+ ✓ tests/lib/uploads-lifecycle-queue.test.ts  (8 tests) 9ms
+stderr | tests/api/upload-cover-route.test.ts > POST /api/upload/cover > cleans up uploaded files when the organization update fails after ingest
+{"level":"error","event":"upload.cover_organization_update.failed","timestamp":"2026-04-29T10:44:13.943Z","orgId":"123e4567-e89b-42d3-a456-426614174000","status":500,"error":{"category":"unknown","message":"Unknown error"}}
+
+ ✓ tests/api/upload-cover-route.test.ts  (2 tests) 8ms
+stderr | tests/api/upload-document-route.test.ts > POST /api/upload/document > returns a generic production response for storage failures without exposing path or filename
+{"level":"error","event":"upload.document.failed","timestamp":"2026-04-29T10:44:13.942Z","status":500,"error":{"category":"storage","name":"Error","message":"[REDACTED_STORAGE_ERROR]"}}
+
+ ✓ tests/api/upload-document-route.test.ts  (6 tests) 15ms
+
+ Test Files  6 passed (6)
+      Tests  33 passed (33)
+   Start at  12:44:12
+   Duration  1.40s (transform 298ms, setup 1.51s, collect 511ms, tests 52ms, environment 2.52s, prepare 543ms)

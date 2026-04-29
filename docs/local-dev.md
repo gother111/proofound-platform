@@ -42,7 +42,7 @@ Notes:
 
 - The app uses a mock user and mock Supabase client when `NEXT_PUBLIC_USE_MOCK_SUPABASE=true`.
 - Without a `DATABASE_URL`, Drizzle falls back to an in-memory mock DB and prints a loud warning on startup.
-- Mock Supabase and mock admin flags are local/test only. Production and production deploy checks fail fast if they are enabled.
+- Mock Supabase and mock admin/auth flags are local/test only. Production and production deploy checks fail fast if they are enabled.
 
 ## Run (Real Supabase)
 

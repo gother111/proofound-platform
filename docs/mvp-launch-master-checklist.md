@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-04-20`
+> Last Verified: `2026-04-29`
 
 # Proofound MVP Launch Master Checklist
 
@@ -129,7 +129,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
 - [ ] `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 - [ ] Local `next start` is stable after the build.
-- [ ] Local `/api/health` responds healthy.
+- [ ] Local `/api/health` responds with `status:"ok"` and no diagnostics.
 - [ ] Local `/api/monitoring/launch-status` responds healthy.
 - [ ] Local launch smoke artifact is fresh and visible to the runtime being tested.
 - [ ] Public org trust smoke passes against the intended target.
@@ -169,8 +169,8 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] Required checks are green before production promotion.
 - [ ] Release notes are prepared.
 - [ ] Rollback strategy is documented.
-- [ ] After deployment, `curl -sS https://proofound.io/api/health` returns healthy.
-- [ ] After deployment, the live commit or version matches the intended SHA.
+- [ ] After deployment, `curl -sS https://proofound.io/api/health` returns `status:"ok"` and no diagnostics.
+- [ ] After deployment, Vercel deployment metadata matches the intended SHA.
 - [ ] After deployment, live `/api/monitoring/launch-status` is healthy and consistent with the bundle verdict.
 - [ ] After deployment, no critical Sentry spike or runtime regression appears.
 
@@ -217,13 +217,13 @@ Use this checklist for the final launch review. Do not treat older partial check
 
 ## 9. Launch Evidence Bundle And Signoff
 
+- [ ] `BASE_URL=http://localhost:3000 npm run launch:validate`
 - [ ] `npm run launch:checklist`
 - [ ] A fresh dated launch-validation directory exists for the intended release review.
 - [ ] The fresh bundle includes:
   - `final-launch-checklist-status.md`
-  - `final-launch-checklist-status.json`
-  - `24_gate_summary.json`
-  - `full-launch-execution-checklist.md`
+  - `commands.json`
+  - redacted per-command logs for every command that ran
 - [ ] The fresh bundle shows no unresolved launch-blocking failures.
 - [ ] Any remaining `UNVERIFIED` lines have been converted into dated evidence or explicit `NO-GO`.
 - [ ] The current release SHA is recorded in the evidence bundle or signoff memo.
@@ -271,6 +271,7 @@ npm run db:audit:migrations
 BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch
 BASE_URL=http://localhost:3000 npm run perf:budgets
 BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go
+BASE_URL=http://localhost:3000 npm run launch:validate
 npm run launch:checklist
 ```
 
