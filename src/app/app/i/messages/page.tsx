@@ -17,6 +17,7 @@ import { type Message } from '@/components/messaging/MessageThread';
 import { Lock, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingIndividualMessages from './loading';
+import { apiFetch } from '@/lib/api/fetch';
 
 export const dynamic = 'force-dynamic';
 
@@ -121,7 +122,7 @@ function MessagesPageContent() {
     if (!selectedConversationId) return;
 
     try {
-      const response = await fetch(`/api/conversations/${selectedConversationId}/messages`, {
+      const response = await apiFetch(`/api/conversations/${selectedConversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content }),

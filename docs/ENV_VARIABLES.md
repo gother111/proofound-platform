@@ -199,6 +199,24 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
+### NEXT_PUBLIC_USE_MOCK_SUPABASE
+
+**Purpose**: Local/test-only switch for mock Supabase clients.
+
+**Production value**:
+
+```env
+NEXT_PUBLIC_USE_MOCK_SUPABASE=false
+```
+
+**Security**:
+
+- ⚠️ Do not enable in production or production deploys.
+- ⚠️ Production runtime and deploy-readiness checks fail fast when this flag or mock admin modes are enabled.
+- ✅ May be set to `true` for local UI smoke checks and mock E2E runs.
+
+---
+
 ### NEXT_PUBLIC_SITE_URL
 
 **Purpose**: Your application's production URL

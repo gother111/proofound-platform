@@ -14,6 +14,7 @@ import {
   CenteredStatusSkeleton,
   PageIntroSkeleton,
 } from '@/components/skeletons/CoreLoadingPrimitives';
+import { apiFetch } from '@/lib/api/fetch';
 
 export const dynamic = 'force-dynamic';
 const MATCHING_DATA_TIMEOUT_MS = 30000;
@@ -166,7 +167,7 @@ export default function MatchingPage() {
 
       // If profile exists, fetch matches
       if (profileData.profile) {
-        const matchesRes = await fetch('/api/match/profile', {
+        const matchesRes = await apiFetch('/api/match/profile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({}),
@@ -527,7 +528,7 @@ export default function MatchingPage() {
               onInterested={async () => {
                 try {
                   // Proceed with introduction (gates checked by card component)
-                  const response = await fetch('/api/match/interest', {
+                  const response = await apiFetch('/api/match/interest', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -560,7 +561,7 @@ export default function MatchingPage() {
               onHide={async () => {
                 if (match.id) {
                   try {
-                    await fetch('/api/match/hide', {
+                    await apiFetch('/api/match/hide', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ matchId: match.id }),

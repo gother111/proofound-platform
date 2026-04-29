@@ -13,6 +13,7 @@ import {
 } from '@/components/matching/assignment-steps';
 import { Card } from '@/components/ui/card';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { apiFetch } from '@/lib/api/fetch';
 
 export const dynamic = 'force-dynamic';
 
@@ -300,7 +301,7 @@ export default function AssignmentBuilderPage() {
         successCriteria: `Achieve ${outcome.target} within ${outcome.timeframe}`,
       }));
 
-      await fetch(`/api/assignments/${targetAssignmentId}/outcomes`, {
+      await apiFetch(`/api/assignments/${targetAssignmentId}/outcomes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ outcomes: transformedOutcomes }),
@@ -331,7 +332,7 @@ export default function AssignmentBuilderPage() {
             : undefined,
       }));
 
-      await fetch(`/api/assignments/${targetAssignmentId}/expertise-matrix`, {
+      await apiFetch(`/api/assignments/${targetAssignmentId}/expertise-matrix`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ expertiseMatrix: mustRows }),
@@ -374,12 +375,12 @@ export default function AssignmentBuilderPage() {
       });
 
       const response = currentAssignmentId
-        ? await fetch(`/api/assignments/${currentAssignmentId}`, {
+        ? await apiFetch(`/api/assignments/${currentAssignmentId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
           })
-        : await fetch('/api/assignments', {
+        : await apiFetch('/api/assignments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),

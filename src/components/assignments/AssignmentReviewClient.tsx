@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { engagementTypeLabel } from '@/lib/copy/labels';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Assignment {
   id: string;
@@ -95,7 +96,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
     setIsPublishing(true);
     setPublishBlocks([]);
     try {
-      const response = await fetch(`/api/assignments/${assignmentId}/publish?orgSlug=${slug}`, {
+      const response = await apiFetch(`/api/assignments/${assignmentId}/publish?orgSlug=${slug}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -88,7 +88,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
       toast.success('Match restored', { description: 'It will reappear in your matches list.' });
 
       // Kick off parallel refreshes so Matching updates immediately
-      const warmMatches = fetch('/api/match/profile', {
+      const warmMatches = apiFetch('/api/match/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),

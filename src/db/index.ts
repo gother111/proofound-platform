@@ -6,7 +6,7 @@ import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 // Force IPv4 to avoid EHOSTUNREACH errors with Supabase on some networks
 dns.setDefaultResultOrder('ipv4first');
 
-import { getEnv } from '@/lib/env';
+import { assertMockDatabaseAllowed, getEnv } from '@/lib/env';
 
 import * as schema from './schema';
 
@@ -29,14 +29,14 @@ function createMockDb(): DbType {
 }
 
 if (!connectionString) {
-  // Check if we are allowed to use mocks
-  const allowMocks = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+  assertMockDatabaseAllowed('Database client');
+
   const isNextBuild = process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD;
 
-  // In production, DATABASE_URL is required unless mocks are explicitly enabled
+  // In production runtime, DATABASE_URL is required. Build-time env validation is handled by
+  // deploy readiness so static generation does not need live database credentials.
   if (
     (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') &&
-    !allowMocks &&
     // `next build` runs with NODE_ENV=production but should not require runtime env vars.
     !isNextBuild
   ) {

@@ -21,6 +21,14 @@ const DATABASE_URL_CANDIDATES = [
   'POSTGRES_URL_NON_POOLING',
 ] as const;
 
+const TRUE_VALUES = new Set(['true', '1', 'yes', 'on']);
+
+type EnvSource = Pick<NodeJS.ProcessEnv, string>;
+
+function isEnabledFlag(value: string | undefined): boolean {
+  return TRUE_VALUES.has((value ?? '').trim().toLowerCase());
+}
+
 function pickDatabaseUrl(): string | undefined {
   for (const key of DATABASE_URL_CANDIDATES) {
     const value = process.env[key];
@@ -98,6 +106,55 @@ function isProductionLikeRuntime(): boolean {
   );
 }
 
+export function isProductionDeployRuntime(env: EnvSource = process.env): boolean {
+  const nodeEnv = env.NODE_ENV?.trim().toLowerCase();
+  const vercelEnv = env.VERCEL_ENV?.trim().toLowerCase();
+  const appEnv = (env.NEXT_PUBLIC_APP_ENV || env.APP_ENV)?.trim().toLowerCase();
+
+  return nodeEnv === 'production' || vercelEnv === 'production' || appEnv === 'production';
+}
+
+export function isMockSupabaseEnabled(env: EnvSource = process.env): boolean {
+  return isEnabledFlag(env.NEXT_PUBLIC_USE_MOCK_SUPABASE);
+}
+
+export function getEnabledMockDatabaseModes(env: EnvSource = process.env): string[] {
+  const enabled: string[] = [];
+
+  if (isMockSupabaseEnabled(env)) {
+    enabled.push('NEXT_PUBLIC_USE_MOCK_SUPABASE');
+  }
+
+  if (isEnabledFlag(env.MOCK_ADMIN_MODE)) {
+    enabled.push('MOCK_ADMIN_MODE');
+  }
+
+  const mockPlatformRole = env.MOCK_PLATFORM_ROLE?.trim();
+  if (mockPlatformRole === 'platform_admin' || mockPlatformRole === 'super_admin') {
+    enabled.push('MOCK_PLATFORM_ROLE');
+  }
+
+  return enabled;
+}
+
+export function assertMockDatabaseAllowed(context: string, env: EnvSource = process.env): void {
+  if (!isProductionDeployRuntime(env)) {
+    return;
+  }
+
+  const enabledMockModes = getEnabledMockDatabaseModes(env);
+  if (!enabledMockModes.length) {
+    return;
+  }
+
+  const err = new Error(
+    `ENV_MISCONFIG: ${context} refused to use mock database/admin mode in production. ` +
+      `Disable: ${enabledMockModes.join(', ')}.`
+  ) as Error & { code?: string };
+  err.code = 'ENV_MISCONFIG';
+  throw err;
+}
+
 function resolveProtocol(host: string, forwardedProto?: string): string {
   if (forwardedProto) {
     return forwardedProto;
@@ -148,11 +205,13 @@ function aggregateEnv(): EnvShape {
 export function getEnv(
   strict: boolean = process.env.NODE_ENV === 'production'
 ): Required<EnvShape> {
+  assertMockDatabaseAllowed('Environment validation');
+
   const env = aggregateEnv();
   const missing: string[] = [];
 
   // Check if mocks are enabled - if so, we don't need DATABASE_URL
-  const allowMocks = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+  const allowMocks = isMockSupabaseEnabled();
 
   // Required keys depend on whether we're using mocks
   const requiredKeys: (keyof EnvShape)[] = allowMocks

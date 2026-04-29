@@ -1,11 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
+import { assertMockDatabaseAllowed, isMockSupabaseEnabled } from '@/lib/env';
+
 export function createAdminClient() {
+  assertMockDatabaseAllowed('Supabase admin client');
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || process.env.SUPABASE_URL?.trim();
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
-  // FORCE MOCK AUTH FOR TESTING
-  if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
+  if (isMockSupabaseEnabled()) {
     console.log('Using Mock Admin Client');
     return {
       from: (table: string) => ({

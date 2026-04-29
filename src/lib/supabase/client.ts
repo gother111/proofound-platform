@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr';
-import { getEnv } from '@/lib/env';
+import { assertMockDatabaseAllowed, getEnv, isMockSupabaseEnabled } from '@/lib/env';
 
 const MOCK_USER_ID = '88888888-8888-4888-8888-888888888888';
 const ORG_ID = '99999999-9999-4999-9999-999999999999';
@@ -218,11 +218,13 @@ const mockSupabaseClient = {
 } as any;
 
 export function createClient() {
+  assertMockDatabaseAllowed('Supabase browser client');
+
   // Only log in development
   if (process.env.NODE_ENV === 'development') {
     console.log('createClient called, env:', process.env.NODE_ENV);
   }
-  if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
+  if (isMockSupabaseEnabled()) {
     if (process.env.NODE_ENV === 'development') {
       console.log('Returning mock Supabase client (ORG MODE)');
     }

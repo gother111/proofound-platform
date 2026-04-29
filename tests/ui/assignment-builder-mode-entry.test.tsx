@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import AssignmentBuilderPage from '@/app/app/o/[slug]/assignments/new/page';
+import { __resetCsrfCacheForTests } from '@/lib/api/fetch';
 
 let mockDraftId: string | null = null;
 
@@ -80,6 +81,13 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
     const url = String(input);
     const isAssignmentDetailRequest = /^\/api\/assignments\/[^/]+$/.test(url);
 
+    if (url.startsWith('/api/csrf-token')) {
+      return {
+        ok: true,
+        json: async () => ({ token: 'csrf-token' }),
+      };
+    }
+
     if (
       mockDraftId &&
       url === `/api/assignments/${mockDraftId}` &&
@@ -140,6 +148,7 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
 describe('Assignment builder lean corridor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    __resetCsrfCacheForTests();
     mockDraftId = null;
     window.scrollTo = vi.fn();
   });
@@ -191,6 +200,13 @@ describe('Assignment builder lean corridor', () => {
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
+      if (url.startsWith('/api/csrf-token')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ token: 'csrf-token' }),
+        });
+      }
+
       if (url === '/api/assignments' && init?.method === 'POST') {
         return new Promise(() => {});
       }
@@ -208,11 +224,13 @@ describe('Assignment builder lean corridor', () => {
     fireEvent.click(nextButton);
     fireEvent.click(nextButton);
 
-    expect(
-      fetchMock.mock.calls.filter(
-        ([url, init]) => url === '/api/assignments' && init?.method === 'POST'
-      )
-    ).toHaveLength(1);
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.filter(
+          ([url, init]) => url === '/api/assignments' && init?.method === 'POST'
+        )
+      ).toHaveLength(1);
+    });
   });
 
   it('hydrates an existing draft into the lean builder without showing legacy controls', async () => {

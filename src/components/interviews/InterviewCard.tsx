@@ -20,6 +20,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Video, Calendar as CalendarIcon, Clock, Users, ExternalLink, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface InterviewCardProps {
   interview: {
@@ -64,7 +65,7 @@ export function InterviewCard({ interview, onCancel, onReschedule }: InterviewCa
 
     setIsCancelling(true);
     try {
-      const response = await fetch('/api/interviews/cancel', {
+      const response = await apiFetch('/api/interviews/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ interviewId: interview.id }),

@@ -15,6 +15,7 @@ Verify all required environment variables are set:
 - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase public key
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` - Supabase admin key
 - [ ] `NEXT_PUBLIC_SITE_URL` - Your production URL
+- [ ] `NEXT_PUBLIC_USE_MOCK_SUPABASE=false` and no mock admin flags (`MOCK_ADMIN_MODE`, `MOCK_PLATFORM_ROLE`) in production
 
 #### Email Features
 

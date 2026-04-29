@@ -88,6 +88,13 @@ describe('MatchingPage soft-gated state', () => {
     const fetchMock = vi.fn(async (input: string | URL, init?: RequestInit) => {
       const url = typeof input === 'string' ? input : input.toString();
 
+      if (url.startsWith('/api/csrf-token')) {
+        return {
+          ok: true,
+          json: async () => ({ token: 'csrf-token' }),
+        };
+      }
+
       if (url === '/api/matching-profile') {
         return {
           ok: true,

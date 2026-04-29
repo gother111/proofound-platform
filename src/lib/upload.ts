@@ -3,6 +3,7 @@
  */
 
 import { getUserErrorMessage, logError } from '@/lib/error-handler';
+import { apiFetch } from '@/lib/api/fetch';
 
 export type UploadType = 'avatar' | 'cover' | 'document';
 export type DocumentCategory = 'proof' | 'certificate' | 'artifact';
@@ -41,6 +42,30 @@ export interface UploadResult {
   message?: string;
 }
 
+async function fetchCsrfTokenForUpload(): Promise<string> {
+  const response = await fetch(`/api/csrf-token?ts=${Date.now()}`, {
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store',
+    headers: {
+      'cache-control': 'no-store',
+      pragma: 'no-cache',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Security token could not be initialized. Please refresh and try again.');
+  }
+
+  const payload = (await response.json()) as { token?: unknown };
+  const token = typeof payload.token === 'string' ? payload.token.trim() : '';
+  if (!token) {
+    throw new Error('Security token could not be initialized. Please refresh and try again.');
+  }
+
+  return token;
+}
+
 /**
  * Upload a file to Supabase Storage
  */
@@ -66,6 +91,7 @@ export async function uploadFile(options: UploadOptions): Promise<UploadResult> 
 
     // Determine endpoint
     const endpoint = `/api/upload/${type}`;
+    const csrfToken = await fetchCsrfTokenForUpload();
 
     // Upload with progress tracking
     const xhr = new XMLHttpRequest();
@@ -112,6 +138,8 @@ export async function uploadFile(options: UploadOptions): Promise<UploadResult> 
       });
 
       xhr.open('POST', endpoint);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader('x-csrf-token', csrfToken);
       xhr.send(formData);
     });
   } catch (error) {
@@ -134,7 +162,7 @@ export async function deleteFile(path: string, type: UploadType): Promise<Upload
         ? `/api/upload/document?path=${encodeURIComponent(path)}`
         : `/api/upload/${type}`;
 
-    const response = await fetch(endpoint, {
+    const response = await apiFetch(endpoint, {
       method: 'DELETE',
     });
 

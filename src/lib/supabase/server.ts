@@ -2,14 +2,15 @@ import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
-import { getEnv } from '@/lib/env';
+import { assertMockDatabaseAllowed, getEnv, isMockSupabaseEnabled } from '@/lib/env';
 
 type CreateClientOptions = {
   allowCookieWrite?: boolean;
 };
 
 function shouldUseMockServerClient(): boolean {
-  return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+  assertMockDatabaseAllowed('Supabase server client');
+  return isMockSupabaseEnabled();
 }
 
 async function loadMockServerClient(): Promise<SupabaseClient> {

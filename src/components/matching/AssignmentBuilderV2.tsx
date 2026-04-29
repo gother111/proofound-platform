@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 import {
   Step1BusinessValue,
   Step2TargetOutcomes,
@@ -267,7 +268,7 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
         verificationGates: [], // TODO: Add if verification gates are collected
       };
 
-      const response = await fetch('/api/assignments', {
+      const response = await apiFetch('/api/assignments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

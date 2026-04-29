@@ -82,7 +82,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
       });
 
       // Refresh the main matching list before we exit (best-effort) and also warm API
-      const warmMatches = fetch('/api/match/profile', {
+      const warmMatches = apiFetch('/api/match/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
