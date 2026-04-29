@@ -46,4 +46,21 @@ describe('GET /api/upload/status/[fileId]', () => {
       }),
     });
   });
+
+  it('does not leak storage paths when the upload does not belong to the user', async () => {
+    vi.mocked(getUploadedFileStatus).mockResolvedValue(null);
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/upload/status/upload-foreign'),
+      {
+        params: Promise.resolve({ fileId: 'upload-foreign' }),
+      }
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(payload).toEqual({ error: 'Upload not found' });
+    expect(JSON.stringify(payload)).not.toContain('user-uploads');
+    expect(JSON.stringify(payload)).not.toContain('individual_profile');
+  });
 });

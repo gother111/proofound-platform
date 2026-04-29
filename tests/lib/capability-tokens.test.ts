@@ -60,26 +60,21 @@ describe('capability token contract', () => {
     vi.clearAllMocks();
   });
 
+  function mockExecuteRows(rowSets: any[][]) {
+    let index = 0;
+    (db.execute as any).mockImplementation(async () => ({ rows: rowSets[index++] ?? [] }));
+  }
+
   it('redeems a single-use token once and rejects replay', async () => {
     const nonce = 'nonce-value';
-    const activeToken = tokenRow({
-      redeem_session_nonce_hash: hashCapabilityRedeemSessionNonce(nonce),
-      redeem_session_nonce_expires_at: new Date(Date.now() + 60_000).toISOString(),
-    });
     const redeemedToken = tokenRow({
       state: CAPABILITY_TOKEN_STATES.REDEEMED,
       redeemed_count: 1,
+      redeem_session_nonce_hash: null,
+      redeem_session_nonce_expires_at: null,
     });
 
-    (db.execute as any).mockResolvedValue({ rows: [] });
-    (db.execute as any)
-      .mockResolvedValueOnce({ rows: [activeToken] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [redeemedToken] });
+    mockExecuteRows([[redeemedToken], [], [], [], [redeemedToken], []]);
 
     const firstRedeem = await redeemCapabilityToken('raw-token', {
       tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
@@ -92,26 +87,6 @@ describe('capability token contract', () => {
       expect(firstRedeem.token.state).toBe(CAPABILITY_TOKEN_STATES.REDEEMED);
     }
 
-    (db.execute as any).mockReset();
-    (db.execute as any).mockResolvedValue({ rows: [] });
-    (db.execute as any)
-      .mockResolvedValueOnce({
-        rows: [
-          tokenRow({
-            state: CAPABILITY_TOKEN_STATES.REDEEMED,
-            redeemed_count: 1,
-            redeem_session_nonce_hash: hashCapabilityRedeemSessionNonce(nonce),
-            redeem_session_nonce_expires_at: new Date(Date.now() + 60_000).toISOString(),
-          }),
-        ],
-      })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [{ attempt_count: 1, suspicious_flag: false }] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] });
-
     const secondRedeem = await redeemCapabilityToken('raw-token', {
       tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
       requireRedeemSessionNonce: true,
@@ -121,26 +96,141 @@ describe('capability token contract', () => {
     expect(secondRedeem).toEqual({ ok: false, reason: 'replayed' });
   });
 
+  it('allows exactly one of two concurrent single-use redemption attempts to succeed', async () => {
+    const nonce = 'nonce-value';
+    const redeemedToken = tokenRow({
+      state: CAPABILITY_TOKEN_STATES.REDEEMED,
+      redeemed_count: 1,
+    });
+
+    mockExecuteRows([[redeemedToken], [], [], [redeemedToken], [], []]);
+
+    const attempts = await Promise.all([
+      redeemCapabilityToken('raw-token', {
+        tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+        requireRedeemSessionNonce: true,
+        redeemSessionNonce: nonce,
+      }),
+      redeemCapabilityToken('raw-token', {
+        tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+        requireRedeemSessionNonce: true,
+        redeemSessionNonce: nonce,
+      }),
+    ]);
+
+    expect(attempts.filter((attempt) => attempt.ok)).toHaveLength(1);
+    expect(attempts.filter((attempt) => !attempt.ok)).toEqual([{ ok: false, reason: 'replayed' }]);
+  });
+
   it('fails closed when the redeem session nonce is missing or mismatched', async () => {
-    (db.execute as any).mockResolvedValue({ rows: [] });
-    (db.execute as any)
-      .mockResolvedValueOnce({
-        rows: [
-          tokenRow({
-            redeem_session_nonce_hash: hashCapabilityRedeemSessionNonce('expected-nonce'),
-            redeem_session_nonce_expires_at: new Date(Date.now() + 60_000).toISOString(),
-          }),
-        ],
-      })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [{ attempt_count: 5, suspicious_flag: true }] })
-      .mockResolvedValueOnce({ rows: [] });
+    mockExecuteRows([
+      [],
+      [
+        tokenRow({
+          attempt_count: 5,
+          suspicious_flag: true,
+          redeem_session_nonce_hash: hashCapabilityRedeemSessionNonce('expected-nonce'),
+          redeem_session_nonce_expires_at: new Date(Date.now() + 60_000).toISOString(),
+        }),
+      ],
+      [],
+    ]);
 
     const redeemed = await redeemCapabilityToken('raw-token', {
       tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
       requireRedeemSessionNonce: true,
       redeemSessionNonce: 'wrong-nonce',
+    });
+
+    expect(redeemed).toEqual({ ok: false, reason: 'invalid' });
+  });
+
+  it('rejects expired tokens and records a failed redemption attempt', async () => {
+    mockExecuteRows([
+      [],
+      [
+        tokenRow({
+          state: CAPABILITY_TOKEN_STATES.EXPIRED,
+          expires_at: new Date(Date.now() - 60_000).toISOString(),
+          attempt_count: 1,
+        }),
+      ],
+      [],
+    ]);
+
+    const redeemed = await redeemCapabilityToken('raw-token', {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+    });
+
+    expect(redeemed).toEqual({ ok: false, reason: 'expired' });
+  });
+
+  it('rejects revoked tokens and records a failed redemption attempt', async () => {
+    mockExecuteRows([
+      [],
+      [
+        tokenRow({
+          state: CAPABILITY_TOKEN_STATES.REVOKED,
+          revoked_at: new Date().toISOString(),
+          revoked_reason: 'manual_revocation',
+          attempt_count: 1,
+        }),
+      ],
+      [],
+    ]);
+
+    const redeemed = await redeemCapabilityToken('raw-token', {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+    });
+
+    expect(redeemed).toEqual({ ok: false, reason: 'revoked' });
+  });
+
+  it('rejects wrong actors when profile binding is required', async () => {
+    mockExecuteRows([
+      [],
+      [
+        tokenRow({
+          actor_binding: CAPABILITY_BINDINGS.AUTHENTICATED_PROFILE,
+          actor_profile_id: 'profile-owner',
+          attempt_count: 1,
+        }),
+      ],
+      [],
+    ]);
+
+    const redeemed = await redeemCapabilityToken('raw-token', {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+      actor: { profileId: 'different-profile', principalType: 'user_account' },
+    });
+
+    expect(redeemed).toEqual({ ok: false, reason: 'actor_mismatch' });
+  });
+
+  it('rejects tokens once the attempt limit has been exceeded', async () => {
+    mockExecuteRows([
+      [],
+      [
+        tokenRow({
+          attempt_count: 6,
+          suspicious_flag: true,
+        }),
+      ],
+      [],
+    ]);
+
+    const redeemed = await redeemCapabilityToken('raw-token', {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+    });
+
+    expect(redeemed).toEqual({ ok: false, reason: 'invalid' });
+  });
+
+  it('uses the same outward failure shape for missing tokens', async () => {
+    mockExecuteRows([[], [], []]);
+
+    const redeemed = await redeemCapabilityToken('missing-token', {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
     });
 
     expect(redeemed).toEqual({ ok: false, reason: 'invalid' });

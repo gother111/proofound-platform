@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { and, eq, sql } from 'drizzle-orm';
 
 import { requireApiAuthContext } from '@/lib/auth';
+import { safeApiErrorResponse } from '@/lib/api/errors';
 import { db } from '@/db';
 import { organizationMembers } from '@/db/schema';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
         and(
           eq(organizationMembers.orgId, orgId),
           eq(organizationMembers.userId, user.id),
-          eq(organizationMembers.status, 'active')
+          eq(organizationMembers.state, 'active')
         )
       );
 
@@ -58,12 +59,11 @@ export async function GET(request: NextRequest) {
       : await getOrganizationReadiness(orgId);
     return NextResponse.json(readiness);
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: 'Failed to build organization readiness',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return safeApiErrorResponse({
+      event: 'org.readiness.failed',
+      error,
+      status: 500,
+      publicMessage: 'Failed to build organization readiness',
+    });
   }
 }

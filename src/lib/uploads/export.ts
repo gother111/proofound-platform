@@ -4,6 +4,8 @@ type UploadManifestRow = {
   id: string;
   upload_kind: string | null;
   sanitized_filename: string | null;
+  original_filename: string | null;
+  original_filename_sensitive: boolean | null;
   detected_mime: string | null;
   durable_path: string | null;
   public_path: string | null;
@@ -13,7 +15,9 @@ type UploadManifestRow = {
 type PortableUploadManifestBase = {
   fileId: string;
   uploadKind: string | null;
-  originalFilename: string;
+  displayLabel: string;
+  originalFilename: string | null;
+  originalFilenameSensitive: boolean;
 };
 
 type PortableIncludedUploadManifest = PortableUploadManifestBase & {
@@ -28,8 +32,7 @@ export function buildPortableUploadManifest(rows: UploadManifestRow[]) {
   const toPortableBase = (row: UploadManifestRow): PortableUploadManifestBase => ({
     fileId: row.id,
     uploadKind: row.upload_kind,
-    // Preserve the export contract field name while only emitting the owner-safe label.
-    originalFilename: resolveArtifactDisplayNameForSurface(
+    displayLabel: resolveArtifactDisplayNameForSurface(
       {
         sanitizedFilename: row.sanitized_filename,
         detectedMime: row.detected_mime,
@@ -37,6 +40,8 @@ export function buildPortableUploadManifest(rows: UploadManifestRow[]) {
       },
       'owner'
     ),
+    originalFilename: row.original_filename ?? null,
+    originalFilenameSensitive: row.original_filename_sensitive !== false,
   });
 
   const omittedFiles: PortableOmittedUploadManifest[] = rows

@@ -40,6 +40,9 @@ describe('launch gate package configuration', () => {
     expect(scripts['monitor:launch']).toBe(
       'node --import tsx ./scripts/run-launch-synthetic-monitors.ts'
     );
+    expect(scripts['launch:validate']).toBe(
+      'node --import tsx ./scripts/final-launch-validation.ts'
+    );
   });
 
   it('keeps archived and removed non-MVP tests out of the default release signal', () => {

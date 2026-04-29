@@ -13,6 +13,12 @@ const disableWebpackFileSystemCache =
 const widenSentryClientUpload = process.env.SENTRY_WIDEN_CLIENT_FILE_UPLOAD === '1';
 const disableSentryProductionBuildArtifacts =
   isVercelProductionBuild && process.env.SENTRY_ENABLE_BUILD_SOURCEMAPS !== '1';
+const enabledEnvValues = new Set(['1', 'true', 'yes', 'on']);
+const explicitHstsSetting = process.env.PROOFOUND_ENABLE_HSTS ?? process.env.ENABLE_HSTS;
+const hstsEnabled =
+  explicitHstsSetting === undefined
+    ? process.env.VERCEL_ENV === 'production'
+    : enabledEnvValues.has(explicitHstsSetting.trim().toLowerCase());
 const sentryBuildArtifacts = [
   '.next/server/app/**/*.js',
   '.next/server/app/**/*.js.map',
@@ -95,36 +101,41 @@ const nextConfig = {
     return config;
   },
   async headers() {
+    const globalSecurityHeaders = [
+      {
+        key: 'X-DNS-Prefetch-Control',
+        value: 'on',
+      },
+      {
+        key: 'X-Content-Type-Options',
+        value: 'nosniff',
+      },
+      {
+        key: 'X-XSS-Protection',
+        value: '1; mode=block',
+      },
+      {
+        key: 'Referrer-Policy',
+        value: 'strict-origin-when-cross-origin',
+      },
+      {
+        key: 'Permissions-Policy',
+        value: 'camera=(), microphone=(), geolocation=()',
+      },
+    ];
+
+    if (hstsEnabled) {
+      globalSecurityHeaders.push({
+        key: 'Strict-Transport-Security',
+        value: 'max-age=63072000; includeSubDomains; preload',
+      });
+    }
+
     return [
       {
         // Apply security headers to all routes
         source: '/:path*',
-        headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on',
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
-        ],
+        headers: globalSecurityHeaders,
       },
       {
         // Additional API-specific headers

@@ -19,6 +19,7 @@ import {
   processWeeklyDigests,
 } from '@/lib/notifications/weekly-digest';
 import { log } from '@/lib/log';
+import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import { processWorkflowAsyncJobs } from '@/lib/workflow/processor';
 
 export const runtime = 'nodejs';
@@ -75,8 +76,7 @@ export async function GET(req: NextRequest) {
     } catch (error) {
       healthCheckStatus = 'error';
       log.error('performance.health_check.cron.failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
+        error: sanitizeErrorForLog(error),
       });
       // Continue execution even if health check fails
     }
@@ -114,9 +114,12 @@ export async function GET(req: NextRequest) {
           errors: digestResult.errors.length,
         };
       } catch (error) {
+        log.error('weekly_digest.cron.failed', {
+          error: sanitizeErrorForLog(error),
+        });
         weeklyDigest = {
           status: 'error',
-          reason: error instanceof Error ? error.message : 'Unknown weekly digest error',
+          reason: 'Weekly digest processing failed',
         };
       }
     }
@@ -135,8 +138,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     log.error('decision.reminders.cron.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
+      error: sanitizeErrorForLog(error),
     });
     return NextResponse.json({ error: 'Failed to process decision reminders' }, { status: 500 });
   }

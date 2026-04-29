@@ -103,7 +103,7 @@ describe('buildCanonicalPublicProofPackProjection', () => {
             safetyStatus: 'clean',
             safetyReason: null,
             attachStatus: 'attached',
-            safeForPublic: false,
+            safeForPublic: true,
             metadata: {
               surfaceLabels: {
                 review: 'Uploaded PDF document',
@@ -128,5 +128,71 @@ describe('buildCanonicalPublicProofPackProjection', () => {
         artifactDisplayName: 'Uploaded PDF document',
       })
     );
+  });
+
+  it('blocks clean but not-public-safe upload-backed evidence from public projection', () => {
+    const projection = buildCanonicalPublicProofPackProjection({
+      pack: {
+        id: 'pack-3',
+        visibility: 'public',
+        revealGate: 'none',
+        packKind: 'verification_bundle',
+        primarySubjectType: 'experience',
+        primarySubjectId: 'experience-1',
+        lifecycleState: 'published',
+        title: 'Clean private proof',
+        summary: null,
+        evidenceSummary: null,
+        outcomesSummary: 'Private evidence outcome',
+        lastVerifiedAt: null,
+        lastRefreshedAt: null,
+        portabilityMeta: {},
+      } as any,
+      items: [
+        {
+          item: { position: 1, itemClass: 'file_upload', subtypeMetadata: {} } as any,
+          effectiveVisibility: 'public',
+          artifact: {
+            id: 'artifact-3',
+            uploadedFileId: 'upload-3',
+            artifactKind: 'document',
+            title: 'Uploaded PDF document',
+            description: 'Should not become public until reviewed clean.',
+            sourceUrl: null,
+            storagePath: null,
+            issuedAt: null,
+            expiresAt: null,
+            deletedAt: null,
+            revokedAt: null,
+            lifecycleState: 'active',
+            metadata: {},
+            revealGate: 'none',
+          } as any,
+          uploadedFile: {
+            id: 'upload-3',
+            uploadKind: 'document',
+            originalFilename: 'clean-proof.pdf',
+            sanitizedFilename: 'clean-proof.pdf',
+            detectedMime: 'application/pdf',
+            lifecycleState: 'ready_private',
+            safetyStatus: 'clean',
+            safetyReason: null,
+            attachStatus: 'attached',
+            safeForPublic: false,
+            metadata: {
+              surfaceLabels: {
+                public: 'Uploaded PDF document',
+              },
+            },
+          },
+        },
+      ],
+      verificationReferences: [],
+      verificationStatus: 'verified',
+      freshnessState: 'fresh',
+      latestEvidenceAt: null,
+    });
+
+    expect(projection).toBeNull();
   });
 });

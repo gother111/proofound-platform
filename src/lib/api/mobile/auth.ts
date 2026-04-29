@@ -7,6 +7,7 @@ import { organizationMembers, profiles } from '@/db/schema';
 import { isActiveMembershipState, normalizeAuthorizedOrgRole, type OrgRole } from '@/lib/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { mobileError } from '@/lib/api/mobile/response';
+import { assertMockDatabaseAllowed, isMockSupabaseEnabled } from '@/lib/env';
 
 type AllowedOrgRole = OrgRole;
 
@@ -48,10 +49,9 @@ export async function requireMobileAuth(
     return mobileError('unauthorized', 'Missing bearer token', 401);
   }
 
-  if (
-    process.env.MOBILE_MOCK_AUTH === 'true' ||
-    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true'
-  ) {
+  if (process.env.MOBILE_MOCK_AUTH === 'true' || isMockSupabaseEnabled()) {
+    assertMockDatabaseAllowed('Mobile mock auth');
+
     const mockUserId =
       process.env.MOBILE_MOCK_USER_ID?.trim() || '88888888-8888-4888-8888-888888888888';
     const mockEmail = process.env.MOBILE_MOCK_EMAIL?.trim() || 'mobile-smoke@proofound.io';
@@ -122,7 +122,7 @@ export async function isActiveOrgMember(
   const whereBase = and(
     eq(organizationMembers.userId, userId),
     eq(organizationMembers.orgId, orgId),
-    eq(organizationMembers.status, 'active')
+    eq(organizationMembers.state, 'active')
   );
 
   if (!whereBase) {

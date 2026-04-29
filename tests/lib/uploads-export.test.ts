@@ -3,11 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { buildPortableUploadManifest } from '@/lib/uploads/export';
 
 describe('upload export manifest', () => {
-  it('exports privacy-safe display names instead of raw original filenames', () => {
+  it('exports owner-only original filenames with a sensitive marker', () => {
     const manifest = buildPortableUploadManifest([
       {
         id: 'file-1',
         upload_kind: 'document',
+        original_filename: 'Jane Doe Resume.pdf',
+        original_filename_sensitive: true,
         sanitized_filename: 'Jane_Doe_Resume.pdf',
         detected_mime: 'application/pdf',
         durable_path: 'durable/file-1',
@@ -17,6 +19,8 @@ describe('upload export manifest', () => {
       {
         id: 'file-2',
         upload_kind: 'document',
+        original_filename: null,
+        original_filename_sensitive: true,
         sanitized_filename: null,
         detected_mime: 'application/pdf',
         durable_path: null,
@@ -29,7 +33,9 @@ describe('upload export manifest', () => {
       {
         fileId: 'file-1',
         uploadKind: 'document',
-        originalFilename: 'Jane_Doe_Resume.pdf',
+        displayLabel: 'Uploaded PDF document',
+        originalFilename: 'Jane Doe Resume.pdf',
+        originalFilenameSensitive: true,
         storagePath: 'durable/file-1',
       },
     ]);
@@ -38,7 +44,9 @@ describe('upload export manifest', () => {
         fileId: 'file-2',
         reason: 'deleted_before_export',
         uploadKind: 'document',
-        originalFilename: 'Uploaded PDF document',
+        displayLabel: 'Uploaded PDF document',
+        originalFilename: null,
+        originalFilenameSensitive: true,
       },
     ]);
   });

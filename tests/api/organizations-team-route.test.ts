@@ -178,6 +178,23 @@ describe('GET /api/organizations/[orgId]/team', () => {
     expect(db.select).not.toHaveBeenCalled();
   });
 
+  it.each(['inactive', 'suspended', 'unknown_state'])(
+    'returns 403 when caller membership state resolves as non-active for %s state',
+    async () => {
+      (getCanonicalActiveOrgMembership as any).mockResolvedValue(null);
+
+      const response = await GET(
+        new NextRequest(`http://localhost/api/organizations/${ORG_ID}/team`),
+        {
+          params: Promise.resolve({ orgId: ORG_ID }),
+        }
+      );
+
+      expect(response.status).toBe(403);
+      expect(db.select).not.toHaveBeenCalled();
+    }
+  );
+
   it('returns 403 when a legacy membership row cannot be normalized to a canonical role', async () => {
     (getCanonicalActiveOrgMembership as any).mockResolvedValue(null);
 

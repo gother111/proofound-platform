@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { DELETE, PUT } from '@/app/api/assignments/[id]/route';
+import { DELETE, GET, PUT } from '@/app/api/assignments/[id]/route';
 import { db } from '@/db';
 import { requireApiAuthContext, requireAuth } from '@/lib/auth';
-import { verifyExplicitAssignmentMutationAccess } from '@/lib/assignments/access';
+import {
+  verifyExplicitAssignmentAccess,
+  verifyExplicitAssignmentMutationAccess,
+} from '@/lib/assignments/access';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
 
 vi.mock('@/lib/auth', () => ({
@@ -14,6 +17,7 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('@/lib/assignments/access', () => ({
   verifyAssignmentAccess: vi.fn(),
+  verifyExplicitAssignmentAccess: vi.fn(),
   verifyExplicitAssignmentMutationAccess: vi.fn(),
 }));
 
@@ -37,6 +41,7 @@ vi.mock('@/db', () => {
       query: {
         assignments: { findFirst: vi.fn() },
         assignmentOutcomes: { findMany: vi.fn() },
+        assignmentExpertiseMatrix: { findMany: vi.fn() },
       },
       update,
       delete: remove,
@@ -63,6 +68,65 @@ describe('assignment [id] mutation routes', () => {
       return user ? { user, supabase: {} } : null;
     });
     (requireAuth as any).mockResolvedValue({ id: 'user-1' });
+  });
+
+  it('GET requires explicit organization context', async () => {
+    (verifyExplicitAssignmentAccess as any).mockResolvedValue({
+      status: 'missing_org_context',
+    });
+
+    const req = new NextRequest('http://localhost/api/assignments/assignment-1');
+
+    const res = await GET(req, params);
+    const payload = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(payload.error).toBe('Organization context is required');
+  });
+
+  it('GET denies wrong organization context without falling back', async () => {
+    (verifyExplicitAssignmentAccess as any).mockResolvedValue({
+      status: 'membership_not_found',
+    });
+
+    const req = new NextRequest('http://localhost/api/assignments/assignment-1?orgSlug=org-b');
+
+    const res = await GET(req, params);
+
+    expect(res.status).toBe(404);
+  });
+
+  it('GET returns an assignment for active members with explicit organization context', async () => {
+    (verifyExplicitAssignmentAccess as any).mockResolvedValue({
+      status: 'ok',
+      role: 'org_reviewer',
+      orgId: principalOrgId,
+      membershipId: 'membership-1',
+    });
+    (db.query.assignments.findFirst as any).mockResolvedValue({
+      id: 'assignment-1',
+      orgId: principalOrgId,
+      role: 'Proof Reviewer',
+      engagementType: 'full_time',
+      businessValue: 'Review proof',
+      description: 'Review proof packs',
+      expectedImpact: 'Better signal',
+      status: 'draft',
+      creationStatus: 'draft',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    });
+    (db.query.assignmentOutcomes.findMany as any).mockResolvedValue([]);
+    (db.query.assignmentExpertiseMatrix.findMany as any).mockResolvedValue([]);
+
+    const req = new NextRequest(
+      `http://localhost/api/assignments/assignment-1?orgId=${principalOrgId}`
+    );
+
+    const res = await GET(req, params);
+    const payload = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(payload.assignment.orgId).toBe(principalOrgId);
   });
 
   it('PUT returns 403 for reviewer role', async () => {

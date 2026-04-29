@@ -48,16 +48,54 @@ jobs:
           VERCEL_CANONICAL_PROJECT: proofound-platform
         run: npm run vercel:cancel-stale -- --apply --target production --branch master --limit 100
 
-      - name: Read production health SHA
+      - name: Read production deployment SHA
         id: live
         env:
-          HEALTH_URL: https://proofound.io/api/health
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          response="$(curl -fsS "$HEALTH_URL" || true)"
-          live_sha="$(
-            printf '%s' "$response" | node -e "let s='';process.stdin.on('data',c=>s+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(s);process.stdout.write(j.version||'')}catch{process.stdout.write('')}})"
-          )"
-          echo "sha=${live_sha}" >> "$GITHUB_OUTPUT"
+          node - <<'NODE' >> "$GITHUB_OUTPUT"
+          (async () => {
+            const token = process.env.VERCEL_TOKEN;
+            const projectId = process.env.VERCEL_PROJECT_ID;
+
+            if (!token || !projectId) {
+              console.log('sha=');
+              console.log('deployment=');
+              return;
+            }
+
+            const query = new URLSearchParams({
+              projectId,
+              limit: '100',
+              target: 'production',
+            });
+
+            const response = await fetch(`https://api.vercel.com/v6/deployments?${query.toString()}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            if (!response.ok) {
+              console.log('sha=');
+              console.log('deployment=');
+              return;
+            }
+
+            const json = await response.json();
+            const readyDeployment = (json.deployments ?? []).find((deployment) => {
+              const state = String(deployment.readyState || '').toUpperCase();
+              return state === 'READY' && deployment.meta?.githubCommitRef === 'master';
+            });
+
+            console.log(`sha=${readyDeployment?.meta?.githubCommitSha ?? ''}`);
+            console.log(`deployment=${readyDeployment?.uid ?? ''}`);
+          })().catch(() => {
+            console.log('sha=');
+            console.log('deployment=');
+          });
+          NODE
 
       - name: Detect active production deployment for repository SHA
         id: pending
@@ -116,6 +154,7 @@ jobs:
         run: |
           echo "Repo SHA: ${{ steps.repo.outputs.sha }}"
           echo "Live SHA: ${{ steps.live.outputs.sha }}"
+          echo "Live deployment: ${{ steps.live.outputs.deployment }}"
           echo "Active prebuilt deploy for repo SHA: ${{ steps.pending.outputs.exists }}"
 
       - name: Pull production Vercel environment
@@ -158,7 +197,8 @@ jobs:
             echo "## Production deployment sync"
             echo
             echo "- Repo SHA: \`${{ steps.repo.outputs.sha }}\`"
-            echo "- Live SHA before workflow: \`${{ steps.live.outputs.sha || 'unknown' }}\`"
+            echo "- Live production deployment SHA before workflow: \`${{ steps.live.outputs.sha || 'unknown' }}\`"
+            echo "- Live production deployment id before workflow: \`${{ steps.live.outputs.deployment || 'unknown' }}\`"
             echo "- Active prebuilt deploy already running: \`${{ steps.pending.outputs.exists }}\`"
             if [ -n "${{ steps.deploy.outputs.url }}" ]; then
               echo "- Prebuilt deployment URL: ${{ steps.deploy.outputs.url }}"

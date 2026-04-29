@@ -105,9 +105,10 @@ describe('/api/user/account lifecycle routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.authGetUser.mockResolvedValue({
-      data: { user: { email: 'user-1@example.com' } },
+      data: { user: { email: 'user-1@example.com', app_metadata: { providers: ['email'] } } },
       error: null,
     });
+    mocks.getLatestProfileDeletionRequest.mockResolvedValue(null);
     mocks.signInWithPassword.mockResolvedValue({ error: null });
     mocks.createLifecycleOperation.mockResolvedValue({ id: 'operation-1' });
     mocks.createProfileDeletionRequest.mockResolvedValue({ id: 'deletion-1' });
@@ -179,7 +180,7 @@ describe('/api/user/account lifecycle routes', () => {
         body: JSON.stringify({
           password: 'TestPassword123!',
           confirmPhrase: 'DELETE MY ACCOUNT',
-          reason: 'Privacy request',
+          reason: 'Privacy concerns',
         }),
         headers: {
           'content-type': 'application/json',
@@ -203,13 +204,210 @@ describe('/api/user/account lifecycle routes', () => {
     expect(mocks.execute).toHaveBeenCalled();
     expect(mocks.executeAccountDeletionLifecycle).toHaveBeenCalledWith({
       userId: 'user-1',
-      reason: 'Privacy request',
+      reason: 'Privacy concerns',
       operationId: 'operation-1',
     });
     expect(mocks.updateProfileDeletionRequestState).toHaveBeenCalledWith(
       expect.objectContaining({
         deletionRequestId: 'deletion-1',
         toState: 'deleted',
+      })
+    );
+  });
+
+  it('allows OAuth-only users to delete with an authenticated session and confirmation phrase', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+    mocks.authGetUser.mockResolvedValue({
+      data: {
+        user: {
+          email: 'oauth-user@example.com',
+          app_metadata: { provider: 'google', providers: ['google'] },
+        },
+      },
+      error: null,
+    });
+    mockProfileLookup({
+      id: 'user-1',
+      lifecycleState: 'active',
+      deletionRequestedAt: null,
+      deleted: false,
+    });
+
+    const response = await deleteAccount(
+      new NextRequest('http://localhost/api/user/account', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          confirmPhrase: 'DELETE MY ACCOUNT',
+          reason: 'Privacy concerns',
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.signInWithPassword).not.toHaveBeenCalled();
+    expect(mocks.adminDeleteUser).toHaveBeenCalledWith('user-1');
+    expect(mocks.createProfileDeletionRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reason: 'Privacy concerns',
+        metadata: expect.objectContaining({
+          authProviderClass: 'oauth',
+        }),
+      })
+    );
+  });
+
+  it('requires password confirmation for email/password accounts', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+    mockProfileLookup({
+      id: 'user-1',
+      lifecycleState: 'active',
+      deletionRequestedAt: null,
+      deleted: false,
+    });
+
+    const response = await deleteAccount(
+      new NextRequest('http://localhost/api/user/account', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          confirmPhrase: 'DELETE MY ACCOUNT',
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Password required');
+    expect(mocks.signInWithPassword).not.toHaveBeenCalled();
+    expect(mocks.adminDeleteUser).not.toHaveBeenCalled();
+  });
+
+  it('returns an idempotent deleted response for repeated delete requests', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+    mocks.getLatestProfileDeletionRequest.mockResolvedValue({
+      id: 'deletion-1',
+      lifecycleState: 'deleted',
+      lifecycleOperationId: 'operation-1',
+    });
+    mockProfileLookup({
+      id: 'user-1',
+      lifecycleState: 'deleted',
+      deletionRequestedAt: new Date('2026-04-09T10:00:00.000Z'),
+      deleted: true,
+    });
+
+    const response = await deleteAccount(
+      new NextRequest('http://localhost/api/user/account', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          password: 'TestPassword123!',
+          confirmPhrase: 'DELETE MY ACCOUNT',
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      status: 'deleted',
+      accountStatus: 'deleted',
+      deletionRequestId: 'deletion-1',
+      operationId: 'operation-1',
+      message: 'Your account has already been deleted.',
+    });
+    expect(mocks.signInWithPassword).not.toHaveBeenCalled();
+    expect(mocks.adminDeleteUser).not.toHaveBeenCalled();
+    expect(mocks.executeAccountDeletionLifecycle).not.toHaveBeenCalled();
+  });
+
+  it('returns an idempotent in-progress response without starting a second deletion', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+    mocks.getLatestProfileDeletionRequest.mockResolvedValue({
+      id: 'deletion-1',
+      lifecycleState: 'processing',
+      lifecycleOperationId: 'operation-1',
+    });
+    mockProfileLookup({
+      id: 'user-1',
+      lifecycleState: 'active',
+      deletionRequestedAt: null,
+      deleted: false,
+    });
+
+    const response = await deleteAccount(
+      new NextRequest('http://localhost/api/user/account', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          password: 'TestPassword123!',
+          confirmPhrase: 'DELETE MY ACCOUNT',
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(202);
+    expect(body.status).toBe('deletion_in_progress');
+    expect(mocks.signInWithPassword).not.toHaveBeenCalled();
+    expect(mocks.adminDeleteUser).not.toHaveBeenCalled();
+    expect(mocks.executeAccountDeletionLifecycle).not.toHaveBeenCalled();
+  });
+
+  it('minimizes free-text deletion reasons before retention', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+    mockProfileLookup({
+      id: 'user-1',
+      lifecycleState: 'active',
+      deletionRequestedAt: null,
+      deleted: false,
+    });
+
+    const response = await deleteAccount(
+      new NextRequest('http://localhost/api/user/account', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          password: 'TestPassword123!',
+          confirmPhrase: 'DELETE MY ACCOUNT',
+          reason: 'This has personal details that should not be retained',
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.createProfileDeletionRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reason: 'Other',
+        metadata: expect.objectContaining({
+          reasonMinimized: true,
+        }),
+      })
+    );
+    expect(mocks.executeAccountDeletionLifecycle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reason: 'Other',
       })
     );
   });

@@ -14,8 +14,10 @@ import {
   profiles,
 } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
+import { safeApiErrorResponse } from '@/lib/api/errors';
 import { emitFirstQualifiedIntroAsync, emitMatchActioned } from '@/lib/analytics/events';
 import { log } from '@/lib/log';
+import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import {
   appendManualOverrideReason,
   buildProofFirstReviewCard,
@@ -30,6 +32,7 @@ import {
   persistFairnessEvaluationForAssignment,
   recordRevealEvent,
   setMatchReviewStage,
+  type RevealScope,
 } from '@/lib/matching/review-contract';
 import { notifyIntroAccepted } from '@/lib/notifications';
 import {
@@ -88,15 +91,150 @@ async function buildReviewCardPayload(params: {
   profileId: string;
   reasonCodes: string[];
   fairnessStatus: ReturnType<typeof normalizeFairnessStatus>;
+  revealScope: RevealScope;
 }) {
   const proofPackByProfileId = await getReviewCardProofPackMap([params.profileId]);
 
-  return buildProofFirstReviewCard({
+  const reviewCard = buildProofFirstReviewCard({
     profileId: params.profileId,
     reasonCodes: params.reasonCodes,
     fairnessStatus: params.fairnessStatus,
     proofPack: proofPackByProfileId.get(params.profileId) ?? null,
   });
+
+  return params.revealScope === 'full_identity'
+    ? reviewCard
+    : sanitizeBlindReviewCardForResponse(reviewCard);
+}
+
+const ROUTE_REDACTED_TOKEN = '[redacted]';
+const ROUTE_FILE_NAME_PATTERN =
+  /\b[\w .+-]+\.(pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)\b/gi;
+const ROUTE_EMAIL_PATTERN = /\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/gi;
+const ROUTE_URL_PATTERN = /\b(?:https?:\/\/|www\.)\S+/gi;
+const ROUTE_PHONE_PATTERN = /(?:\+?\d[\s().-]*){7,}\d/g;
+const ROUTE_HANDLE_PATTERN = /(?<![\w.+-])@[a-z0-9_][a-z0-9_.-]{1,30}\b/gi;
+const ROUTE_COMPANY_PATTERN =
+  /\b(?:[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4}\s+)?(?:Inc|LLC|Ltd|Limited|Corp|Corporation|Company|Co|AB|Oy|GmbH|SARL|SAS|AS|BV)\b/g;
+const ROUTE_SCHOOL_PATTERN =
+  /\b(?:[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,6}\s+)?(?:University|College|School|Institute|Academy|Gymnasium|Universitet|Högskola)\b/g;
+const ROUTE_PRECISE_LOCATION_PATTERN =
+  /\b\d{1,6}[A-Z]?\s+[A-ZÅÄÖa-zåäö][\wÅÄÖåäö\s.'-]{2,}\s+(?:Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Drive|Dr|Boulevard|Blvd|Way|Place|Pl|Court|Ct|Väg|Vägen|Gatan|Gata|Gränd|Allé|Allee)\b/i;
+const ROUTE_FULL_NAME_PATTERN =
+  /\b[A-ZÅÄÖ][a-zåäö]{1,}(?:\s+(?:[A-ZÅÄÖ][a-zåäö]{1,}|[A-Z]\.)){1,3}\b/g;
+
+function sanitizeBlindReviewString(value: unknown, fallback: string | null) {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return { value: fallback, held: false, reasons: [] as string[] };
+  }
+
+  const reasons = new Set<string>();
+  let output = value.replace(ROUTE_FILE_NAME_PATTERN, () => {
+    reasons.add('redacted_original_filename');
+    return 'shared document';
+  });
+
+  const replace = (pattern: RegExp, replacement: string, reason: string) => {
+    let matched = false;
+    output = output.replace(pattern, () => {
+      matched = true;
+      return replacement;
+    });
+    if (matched) {
+      reasons.add(reason);
+    }
+  };
+
+  replace(ROUTE_URL_PATTERN, ROUTE_REDACTED_TOKEN, 'redacted_url');
+  replace(ROUTE_EMAIL_PATTERN, ROUTE_REDACTED_TOKEN, 'redacted_email');
+  replace(ROUTE_PHONE_PATTERN, ROUTE_REDACTED_TOKEN, 'redacted_phone');
+  replace(ROUTE_HANDLE_PATTERN, ROUTE_REDACTED_TOKEN, 'redacted_handle');
+  replace(ROUTE_COMPANY_PATTERN, 'the organization', 'redacted_company_name');
+  replace(ROUTE_SCHOOL_PATTERN, 'the institution', 'redacted_school_name');
+
+  const hasUncertainIdentity =
+    ROUTE_PRECISE_LOCATION_PATTERN.test(output) ||
+    [...output.matchAll(ROUTE_FULL_NAME_PATTERN)].some(
+      (match) => !/^(Proof Pack|Proofound|Candidate Review)$/i.test(match[0].trim())
+    );
+
+  if (hasUncertainIdentity) {
+    reasons.add('manual_review_uncertain_identity_signal');
+    return { value: fallback, held: true, reasons: [...reasons] };
+  }
+
+  output = output.replace(/\s+/g, ' ').trim();
+  return { value: output.length > 0 ? output : fallback, held: false, reasons: [...reasons] };
+}
+
+function sanitizeBlindReviewCardForResponse(
+  reviewCard: ReturnType<typeof buildProofFirstReviewCard>
+) {
+  const privacyReasons = new Set<string>(reviewCard.privacy?.reasons ?? []);
+  let held = reviewCard.privacy?.reviewState === 'held_for_manual_review';
+  const sanitize = (value: unknown, fallback: string | null) => {
+    const sanitized = sanitizeBlindReviewString(value, fallback);
+    for (const reason of sanitized.reasons) {
+      privacyReasons.add(reason);
+    }
+    if (sanitized.held) {
+      held = true;
+    }
+    return sanitized.value;
+  };
+  const strongestProofSummary = sanitize(reviewCard.strongestProof?.summary, null);
+  const strongestProofOutcome = sanitize(reviewCard.strongestProof?.outcome, null);
+  const strongestProofOwnership = sanitize(reviewCard.strongestProof?.ownership, null);
+  const strongestProofAnchorContext = sanitize(
+    reviewCard.strongestProof?.anchorContext,
+    'Anchored in prior proof'
+  );
+  const verificationSummaryLabel = sanitize(
+    reviewCard.verification?.summaryLabel,
+    'Scoped verification signal present'
+  );
+  const fitHeadline = sanitize(
+    reviewCard.fitSummary?.headline,
+    'Proof-backed fit available for review.'
+  );
+  const sanitizeList = (values: unknown) =>
+    Array.isArray(values)
+      ? values
+          .map((value) => sanitize(value, null))
+          .filter((value): value is string => Boolean(value))
+      : [];
+  const trustLabels = sanitizeList(reviewCard.trustLabels);
+  const fitBullets = sanitizeList(reviewCard.fitSummary?.bullets);
+
+  return {
+    candidateLabel: reviewCard.candidateLabel,
+    strongestProof: {
+      summary: held ? 'Proof summary held for manual privacy review.' : strongestProofSummary,
+      outcome: held ? null : strongestProofOutcome,
+      ownership: held
+        ? 'Ownership statement held for manual privacy review.'
+        : strongestProofOwnership,
+      anchorContext: strongestProofAnchorContext,
+      freshnessLabel: reviewCard.strongestProof?.freshnessLabel ?? null,
+    },
+    verification: {
+      summaryLabel: verificationSummaryLabel,
+      count: reviewCard.verification?.count ?? null,
+    },
+    trustLabels,
+    fitBand: reviewCard.fitBand ?? null,
+    fitSummary: {
+      headline: fitHeadline,
+      bullets: fitBullets,
+      reasonCodes: Array.isArray(reviewCard.fitSummary?.reasonCodes)
+        ? reviewCard.fitSummary.reasonCodes
+        : [],
+    },
+    privacy: {
+      reviewState: held ? 'held_for_manual_review' : 'visible',
+      reasons: [...privacyReasons].sort(),
+    },
+  };
 }
 
 export async function POST(
@@ -260,6 +398,7 @@ export async function POST(
           profileId: matchRow.profileId,
           reasonCodes: ['reveal_full_identity'],
           fairnessStatus,
+          revealScope: 'full_identity',
         });
 
         return NextResponse.json({
@@ -338,6 +477,7 @@ export async function POST(
         profileId: matchRow.profileId,
         reasonCodes: ['org_reveal_request_pending'],
         fairnessStatus,
+        revealScope: matchRow.revealScope,
       });
 
       return NextResponse.json({
@@ -399,6 +539,7 @@ export async function POST(
           profileId: matchRow.profileId,
           reasonCodes: ['fairness_ranking_suppressed'],
           fairnessStatus,
+          revealScope: matchRow.revealScope,
         });
 
         return NextResponse.json(
@@ -463,6 +604,7 @@ export async function POST(
           profileId: matchRow.profileId,
           reasonCodes: ['shortlist_selected'],
           fairnessStatus,
+          revealScope: matchRow.revealScope,
         });
 
         return NextResponse.json({
@@ -556,6 +698,7 @@ export async function POST(
           profileId: matchRow.profileId,
           reasonCodes: ['intro_accepted_masked'],
           fairnessStatus,
+          revealScope: 'shortlist_identity',
         });
 
         return NextResponse.json({
@@ -629,7 +772,7 @@ export async function POST(
         await notifyIntroAccepted(matchRow.profileId, matchRow.matchId, orgName);
       } catch (error) {
         log.error('org_review.request_intro.notification_failed', {
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: sanitizeErrorForLog(error),
           matchId: matchRow.matchId,
         });
       }
@@ -646,6 +789,7 @@ export async function POST(
         profileId: matchRow.profileId,
         reasonCodes: ['intro_accepted_masked'],
         fairnessStatus,
+        revealScope: 'shortlist_identity',
       });
 
       return NextResponse.json({
@@ -729,10 +873,10 @@ export async function POST(
         status: persisted.status,
       };
     } catch (error) {
-      console.error('org review fairness persistence failed', {
+      log.error('org_review.fairness_persistence_failed', {
         matchId: matchRow.matchId,
         assignmentId: matchRow.assignmentId,
-        error: error instanceof Error ? error.message : 'unknown_error',
+        error: sanitizeErrorForLog(error),
       });
       fairnessEvaluation = {
         id: null,
@@ -769,6 +913,7 @@ export async function POST(
       profileId: matchRow.profileId,
       reasonCodes,
       fairnessStatus: nextFairnessStatus,
+      revealScope: nextRevealScope,
     });
 
     return NextResponse.json({
@@ -789,7 +934,16 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('org review mutation failed', error);
-    return NextResponse.json({ error: 'Failed to update review state' }, { status: 500 });
+    const routeParams = await params.catch(() => ({ id: 'unknown', matchId: 'unknown' }));
+    return safeApiErrorResponse({
+      event: 'org_review.mutation_failed',
+      error,
+      status: 500,
+      publicMessage: 'Failed to update review state',
+      context: {
+        orgId: routeParams.id,
+        matchId: routeParams.matchId,
+      },
+    });
   }
 }

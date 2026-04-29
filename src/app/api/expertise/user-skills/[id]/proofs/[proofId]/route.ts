@@ -9,6 +9,7 @@ import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-inv
 import { db } from '@/db';
 import { proofArtifacts } from '@/db/schema';
 import { and, eq, or } from 'drizzle-orm';
+import { deleteUploadedFile, deleteUploadedFileByOwnedStoragePath } from '@/lib/uploads/lifecycle';
 
 /**
  * DELETE /api/expertise/user-skills/[id]/proofs/[proofId]
@@ -38,6 +39,13 @@ export async function DELETE(
     });
 
     if (canonicalProof) {
+      if (canonicalProof.uploadedFileId) {
+        const uploadDeleted = await deleteUploadedFile(canonicalProof.uploadedFileId, user.id);
+        if (!uploadDeleted) {
+          return NextResponse.json({ error: 'Failed to delete uploaded file' }, { status: 500 });
+        }
+      }
+
       await deleteCanonicalProofArtifactById(canonicalProof.id);
 
       if (canonicalProof.legacySourceId) {
@@ -53,12 +61,9 @@ export async function DELETE(
         }
       }
 
-      if (canonicalProof.storagePath && canonicalProof.storagePath.includes(user.id)) {
-        const { error: storageDeleteError } = await supabase.storage
-          .from('user-uploads')
-          .remove([canonicalProof.storagePath]);
-        if (storageDeleteError) {
-          console.warn('Failed to delete canonical proof file from storage:', storageDeleteError);
+      if (!canonicalProof.uploadedFileId) {
+        if (canonicalProof.storagePath) {
+          await deleteUploadedFileByOwnedStoragePath(canonicalProof.storagePath, user.id);
         }
       }
 
@@ -94,13 +99,8 @@ export async function DELETE(
     await deleteCanonicalProofArtifactForSkillProof(proofId);
 
     // Best-effort cleanup for uploaded documents. Never fail DELETE because of storage cleanup.
-    if (proof.file_path && proof.file_path.includes(user.id)) {
-      const { error: storageDeleteError } = await supabase.storage
-        .from('user-uploads')
-        .remove([proof.file_path]);
-      if (storageDeleteError) {
-        console.warn('Failed to delete proof file from storage:', storageDeleteError);
-      }
+    if (proof.file_path) {
+      await deleteUploadedFileByOwnedStoragePath(proof.file_path, user.id);
     }
 
     // Emit analytics event for proof deletion (PRD F3)

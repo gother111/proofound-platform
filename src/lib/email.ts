@@ -20,7 +20,11 @@ import VerificationRejected from '../../emails/VerificationRejected';
 import LinkedInVerificationPendingReview from '../../emails/LinkedInVerificationPendingReview';
 import { sendDebugIngest } from '@/lib/debug-ingest';
 import { EMAIL_CONFIG } from './email/config';
-import { applyWorkflowEmailPrivacy, type WorkflowEmailPrivacyOptions } from './email/privacy';
+import {
+  applyWorkflowEmailPrivacy,
+  buildRevealConversationUrl,
+  type WorkflowEmailPrivacyOptions,
+} from './email/privacy';
 
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
@@ -390,13 +394,21 @@ export async function sendIdentityRevealedEmail(
     revealedName: string;
     roleTitle?: string;
     organizationName?: string;
+    orgSlug?: string;
     conversationId: string;
     profileId: string;
   },
   privacy?: WorkflowEmailPrivacyOptions
 ): Promise<void> {
-  const viewConversationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/messages/${identityData.conversationId}`;
-  const viewProfileUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/profile/${identityData.profileId}`;
+  const viewConversationUrl = buildRevealConversationUrl({
+    baseUrl: process.env.NEXT_PUBLIC_SITE_URL,
+    conversationId: identityData.conversationId,
+    role,
+    orgSlug: identityData.orgSlug,
+  });
+  if (!viewConversationUrl) {
+    throw new Error('Failed to send identity revealed email');
+  }
   const emailPrivacy = applyWorkflowEmailPrivacy(
     {
       subject: 'Identities Revealed - Proofound',
@@ -423,7 +435,6 @@ export async function sendIdentityRevealedEmail(
         roleTitle: identityData.roleTitle,
         organizationName: emailPrivacy.organizationName ?? undefined,
         viewConversationUrl,
-        viewProfileUrl,
       }),
     });
   } catch (error) {

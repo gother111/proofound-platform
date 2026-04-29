@@ -278,7 +278,7 @@ export async function getOrgIdsForUser(userId: string): Promise<string[]> {
     SELECT org_id
     FROM organization_members
     WHERE user_id = ${userId}
-      AND status = 'active'
+      AND state = 'active'
     ORDER BY joined_at DESC
     LIMIT 5
   `);

@@ -11,13 +11,11 @@ import {
 } from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { safeApiErrorResponse, safeValidationErrorResponse } from '@/lib/api/errors';
 import { jsonErrorWithRequest, withApiObservability } from '@/lib/api/observability';
+import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import { emitAnalyticsEvent } from '@/lib/analytics/events';
-import {
-  ASSIGNMENT_MUTATION_ROLES,
-  resolveExplicitUserOrgContext,
-  resolveUserOrgContext,
-} from '@/lib/assignments/access';
+import { ASSIGNMENT_MUTATION_ROLES, resolveExplicitUserOrgContext } from '@/lib/assignments/access';
 import { ensureOrganizationPrincipal, PrincipalContextSchema } from '@/lib/authz';
 import {
   checkAndEmitAssignmentActivation,
@@ -170,14 +168,27 @@ export async function GET(request: NextRequest) {
       const searchParams = request.nextUrl.searchParams;
       const orgIdFilter = searchParams.get('orgId');
       const orgSlugFilter = searchParams.get('orgSlug');
-      const orgId = await resolveUserOrgContext(user.id, {
+
+      if (!orgIdFilter && !orgSlugFilter) {
+        return NextResponse.json({ error: 'Organization context is required' }, { status: 400 });
+      }
+
+      const orgId = await resolveExplicitUserOrgContext(user.id, {
         orgId: orgIdFilter,
         orgSlug: orgSlugFilter,
       });
 
       if (!orgId) {
-        log.info('assignments.list.no_org', { requestId: ctx.requestId, userId: user.id });
-        return NextResponse.json({ items: [], hasMore: false });
+        log.info('assignments.list.org_access_denied', {
+          requestId: ctx.requestId,
+          userId: user.id,
+          orgIdProvided: Boolean(orgIdFilter),
+          orgSlugProvided: Boolean(orgSlugFilter),
+        });
+        return NextResponse.json(
+          { error: 'Organization not found or access denied' },
+          { status: 403 }
+        );
       }
 
       // Get pagination parameters
@@ -275,7 +286,7 @@ export async function GET(request: NextRequest) {
               log.warn('assignments.ttfqi_warning.emit_failed', {
                 requestId: ctx.requestId,
                 assignmentId: assignment.id,
-                error: e instanceof Error ? e.message : String(e),
+                error: sanitizeErrorForLog(e),
               });
             }
           }
@@ -295,10 +306,16 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       log.error('assignments.list.failed', {
         requestId: ctx.requestId,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: sanitizeErrorForLog(error),
       });
 
-      return jsonErrorWithRequest(ctx.requestId, 'Failed to fetch assignments', 500);
+      return safeApiErrorResponse({
+        event: 'assignments.list.response_failed',
+        error,
+        status: 500,
+        requestId: ctx.requestId,
+        publicMessage: 'Failed to fetch assignments',
+      });
     }
   });
 }
@@ -310,12 +327,15 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   return withApiObservability(request, '/api/assignments', async (ctx) => {
+    let userId: string | undefined;
+
     try {
       const authContext = await requireApiAuthContext();
       if (!authContext) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       const { user } = authContext;
+      userId = user.id;
 
       const body = await request.json();
 
@@ -470,7 +490,7 @@ export async function POST(request: NextRequest) {
         }
       } catch (error) {
         log.error('sus_survey.first_assignment_check_failed', {
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: sanitizeErrorForLog(error),
           userId: user.id,
           orgId,
         });
@@ -496,8 +516,9 @@ export async function POST(request: NextRequest) {
         log.error('assignment.validation.failed', {
           errors: error.errors,
         });
-        return jsonErrorWithRequest(ctx.requestId, 'Invalid input', 400, {
-          details: error.errors,
+        return safeValidationErrorResponse({
+          error,
+          requestId: ctx.requestId,
           message:
             'Some required fields are missing or invalid. Please review your assignment details.',
         });
@@ -510,30 +531,28 @@ export async function POST(request: NextRequest) {
           error.message.includes('ECONNREFUSED') ||
           error.message.includes('timeout'))
       ) {
-        log.error('assignment.db.connection.failed', {
-          error: error.message,
-          stack: error.stack,
+        return safeApiErrorResponse({
+          event: 'assignment.db.connection.failed',
+          error,
+          status: 503,
+          requestId: ctx.requestId,
+          publicMessage: 'Unable to save assignment. Please try again later.',
+          context: {
+            userId,
+          },
         });
-        return jsonErrorWithRequest(
-          ctx.requestId,
-          'Database connection failed',
-          503,
-          'Unable to save assignment. Please check your connection and try again.'
-        );
       }
 
-      log.error('assignment.create.failed', {
+      return safeApiErrorResponse({
+        event: 'assignment.create.failed',
+        error,
+        status: 500,
         requestId: ctx.requestId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
+        publicMessage: 'Failed to create assignment',
+        context: {
+          userId,
+        },
       });
-
-      return jsonErrorWithRequest(
-        ctx.requestId,
-        'Failed to create assignment',
-        500,
-        error instanceof Error ? error.message : 'An unexpected error occurred.'
-      );
     }
   });
 }

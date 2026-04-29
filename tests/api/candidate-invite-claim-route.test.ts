@@ -213,7 +213,9 @@ describe('POST /api/candidate-invites/[token]/claim', () => {
       .mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue([{ userId: 'org-rep-1', role: 'org_owner' }]),
+            limit: vi
+              .fn()
+              .mockResolvedValue([{ userId: 'org-rep-1', role: 'org_owner', state: 'active' }]),
           }),
         }),
       })
@@ -297,9 +299,31 @@ describe('POST /api/candidate-invites/[token]/claim', () => {
     });
 
     const response = await POST(request, { params: Promise.resolve({ token: 'token-value' }) });
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({ error: 'Invite not found' });
   });
+
+  it.each(['invalid', 'expired', 'revoked', 'replayed', 'actor_mismatch'])(
+    'uses one generic response when token redemption fails with %s',
+    async (reason) => {
+      mockAuthUser({
+        id: '11111111-1111-1111-1111-111111111111',
+        email: 'candidate@example.com',
+      });
+      (redeemCapabilityToken as any).mockResolvedValueOnce({
+        ok: false,
+        reason,
+      });
+
+      const request = new NextRequest('http://localhost/api/candidate-invites/token/claim', {
+        method: 'POST',
+      });
+
+      const response = await POST(request, { params: Promise.resolve({ token: 'token-value' }) });
+      expect(response.status).toBe(404);
+      await expect(response.json()).resolves.toEqual({ error: 'Invite not found' });
+    }
+  );
 
   it('blocks invite claim when policy evaluation blocks the invite', async () => {
     mockAuthUser({

@@ -307,7 +307,7 @@ export const LAUNCH_MONITOR_DEFINITIONS: LaunchMonitorDefinition[] = [
     maxAgeMinutes: 15,
     alertAfterConsecutiveFailures: 1,
     failureClass: 'health_contract_broken',
-    payloadChecks: [{ key: 'status' }],
+    payloadChecks: [{ key: 'status', expectedValue: 'ok' }],
   },
   ...(shouldMonitorSeededPublicOrgTrustPage()
     ? [

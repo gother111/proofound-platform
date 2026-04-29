@@ -40,7 +40,7 @@ async function hasOrgAccess(userId: string, orgId: string) {
     where: and(
       eq(organizationMembers.userId, userId),
       eq(organizationMembers.orgId, orgId),
-      eq(organizationMembers.status, 'active')
+      eq(organizationMembers.state, 'active')
     ),
   });
 
@@ -447,7 +447,7 @@ export async function POST(request: NextRequest) {
               where: and(
                 inArray(organizationMembers.userId, reciprocalActorIds),
                 eq(organizationMembers.orgId, assignment.orgId),
-                eq(organizationMembers.status, 'active')
+                eq(organizationMembers.state, 'active')
               ),
             })
           : [];

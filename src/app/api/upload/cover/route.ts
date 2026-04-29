@@ -1,6 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
+import { safeApiErrorResponse } from '@/lib/api/errors';
+import { log } from '@/lib/log';
+import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import { authorize } from '@/lib/authz';
 import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 import { deleteUploadedFile, ingestUploadedFile, UPLOAD_KINDS } from '@/lib/uploads/lifecycle';
@@ -71,17 +74,19 @@ export async function POST(request: NextRequest) {
 
       if (updateError) {
         await deleteUploadedFile(upload.uploadedFileId, orgId).catch((cleanupError) => {
-          console.error('Failed to clean up organization cover upload after update error:', {
+          log.error('upload.cover_cleanup.organization_failed', {
             uploadedFileId: upload.uploadedFileId,
             orgId,
-            error: cleanupError instanceof Error ? cleanupError.message : cleanupError,
+            error: sanitizeErrorForLog(cleanupError),
           });
         });
-        console.error('Organization update error:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to update organization', details: updateError.message },
-          { status: 500 }
-        );
+        return safeApiErrorResponse({
+          event: 'upload.cover_organization_update.failed',
+          error: updateError,
+          status: 500,
+          publicMessage: 'Failed to update organization',
+          context: { orgId },
+        });
       }
     } else {
       const { error: updateError } = await supabase
@@ -91,17 +96,19 @@ export async function POST(request: NextRequest) {
 
       if (updateError) {
         await deleteUploadedFile(upload.uploadedFileId, user.id).catch((cleanupError) => {
-          console.error('Failed to clean up individual cover upload after update error:', {
+          log.error('upload.cover_cleanup.individual_failed', {
             uploadedFileId: upload.uploadedFileId,
             userId: user.id,
-            error: cleanupError instanceof Error ? cleanupError.message : cleanupError,
+            error: sanitizeErrorForLog(cleanupError),
           });
         });
-        console.error('Profile update error:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to update profile', details: updateError.message },
-          { status: 500 }
-        );
+        return safeApiErrorResponse({
+          event: 'upload.cover_profile_update.failed',
+          error: updateError,
+          status: 500,
+          publicMessage: 'Failed to update profile',
+          context: { userId: user.id },
+        });
       }
     }
 
@@ -110,16 +117,13 @@ export async function POST(request: NextRequest) {
       status: 'ready',
       uploadedFileId: upload.uploadedFileId,
       url: upload.url,
-      path: upload.storagePath,
     });
   } catch (error) {
-    console.error('Cover upload error:', error);
-    return NextResponse.json(
-      {
-        error: 'Upload failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return safeApiErrorResponse({
+      event: 'upload.cover.failed',
+      error,
+      status: 500,
+      publicMessage: 'Upload failed',
+    });
   }
 }

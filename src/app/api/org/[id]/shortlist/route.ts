@@ -26,6 +26,7 @@ import {
   shouldSuppressExactRank,
 } from '@/lib/matching/review-contract';
 import { authorize, normalizeAuthorizedOrgRole, type OrgRole } from '@/lib/authz';
+import { safeApiErrorResponse } from '@/lib/api/errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,13 +50,13 @@ async function getOrgWithAccess(orgIdOrSlug: string, userId: string) {
   const org = orgs[0];
 
   const memberships = await db
-    .select({ role: organizationMembers.role, status: organizationMembers.status })
+    .select({ role: organizationMembers.role, state: organizationMembers.state })
     .from(organizationMembers)
     .where(
       and(
         eq(organizationMembers.orgId, org.id),
         eq(organizationMembers.userId, userId),
-        eq(organizationMembers.status, 'active')
+        eq(organizationMembers.state, 'active')
       )
     )
     .limit(1);
@@ -253,7 +254,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }),
     });
   } catch (error) {
-    console.error('Error fetching shortlist:', error);
-    return NextResponse.json({ error: 'Failed to fetch shortlist' }, { status: 500 });
+    return safeApiErrorResponse({
+      event: 'org.shortlist.fetch_failed',
+      error,
+      status: 500,
+      publicMessage: 'Failed to fetch shortlist',
+    });
   }
 }

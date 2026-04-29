@@ -7,10 +7,6 @@ import { classifyLaunchApiPath } from '@/lib/launch/surface-policy';
 const API_ROOT = path.join(process.cwd(), 'src/app/api');
 
 const REQUIRED_ACTIVE_ROUTES = [
-  '/api/analytics/events',
-  '/api/analytics/track',
-  '/api/analytics/tour-event',
-  '/api/analytics/web-vitals',
   '/api/assignments',
   '/api/assignments/[id]',
   '/api/assignments/[id]/expertise-matrix',
@@ -30,10 +26,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/engagement-verifications/[id]',
   '/api/expertise/jd-to-l4',
   '/api/expertise/taxonomy',
-  '/api/expertise/cv-import/wizard-apply',
-  '/api/expertise/cv-import/wizard-extract',
-  '/api/expertise/cv-import/wizard-extract/status',
-  '/api/expertise/cv-import/wizard-suggest',
   '/api/expertise/user-skills',
   '/api/expertise/user-skills/[id]',
   '/api/expertise/user-skills/[id]/proofs',
@@ -58,7 +50,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/match/interest',
   '/api/match/profile',
   '/api/match/snoozed',
-  '/api/match/test',
   '/api/match/visible-fields/[matchId]',
   '/api/matches/[id]/snooze',
   '/api/matching-profile',
@@ -72,7 +63,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/organizations/[orgId]/candidate-invites/[inviteId]',
   '/api/organizations/[orgId]/team',
   '/api/organizations/[orgId]/visibility',
-  '/api/performance/track',
   '/api/portfolio/export',
   '/api/portfolio/org/[slug]/export',
   '/api/portfolio/public/[handle]/export',
@@ -128,12 +118,17 @@ const REQUIRED_INTERNAL_ONLY_ROUTES = [
   '/api/cron/refresh-matches',
   '/api/cron/refresh-matches-worker',
   '/api/cron/sla-enforcement',
+  '/api/monitoring/health-diagnostics',
   '/api/monitoring/launch-status',
   '/api/monitoring/perf-status',
   '/api/organizations/[orgId]/audit/export',
 ] as const;
 
 const REQUIRED_ARCHIVED_COMPAT_PATHS = [
+  '/api/analytics/events',
+  '/api/analytics/track',
+  '/api/analytics/tour-event',
+  '/api/analytics/web-vitals',
   '/api/auth/google/callback',
   '/api/auth/linkedin',
   '/api/auth/linkedin/callback',
@@ -158,8 +153,14 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/notifications',
   '/api/moderation/report',
   '/api/data-import',
+  '/api/expertise/cv-import/wizard-apply',
+  '/api/expertise/cv-import/wizard-extract',
+  '/api/expertise/cv-import/wizard-extract/status',
+  '/api/expertise/cv-import/wizard-suggest',
   '/api/matching/profile',
   '/api/matching/profile/[id]',
+  '/api/match/test',
+  '/api/performance/track',
   '/api/profile/snippet',
   '/api/expertise/profile',
   '/api/expertise/auto-suggest',
@@ -241,14 +242,15 @@ describe('launch surface inventory', () => {
     }
   });
 
-  it('keeps every compiled API route inside the explicit launch, internal-only, or archived compatibility corridor', async () => {
+  it('keeps every compiled API route inside an explicit launch, internal-only, or decided archived route list', async () => {
     const routes = await collectRoutePaths(API_ROOT);
+    const decidedArchivedRoutes = new Set<string>(REQUIRED_ARCHIVED_COMPAT_PATHS);
     const disallowedRoutes = routes.filter((route) => {
       const classification = classifyLaunchApiPath(route);
       return (
         classification !== 'active_launch_path' &&
         classification !== 'internal_only_launch_ops' &&
-        classification !== 'archived'
+        !(classification === 'archived' && decidedArchivedRoutes.has(route))
       );
     });
 

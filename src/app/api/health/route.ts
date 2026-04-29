@@ -7,29 +7,37 @@
 
 import { NextResponse } from 'next/server';
 import { checkDatabaseHealth } from '@/lib/db-health-check';
-import { getEnv } from '@/lib/env';
+import { getEnv, isMockSupabaseEnabled } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
+type PublicHealthStatus = 'ok' | 'degraded';
+
+async function getPublicHealthStatus(): Promise<PublicHealthStatus> {
+  const env = getEnv(false);
+  const mockMode = isMockSupabaseEnabled();
+  const dbHealthy = mockMode ? true : await checkDatabaseHealth();
+  const configured = Boolean(env.SUPABASE_URL && env.SITE_URL && (env.DATABASE_URL || mockMode));
+
+  return dbHealthy && configured ? 'ok' : 'degraded';
+}
+
 export async function GET() {
   try {
-    const env = getEnv(false);
-    const dbHealthy = await checkDatabaseHealth();
+    const status = await getPublicHealthStatus();
 
-    const allHealthy = dbHealthy && !!env.SUPABASE_URL && !!env.DATABASE_URL && !!env.SITE_URL;
-
-    return NextResponse.json({
-      status: allHealthy ? 'healthy' : 'degraded',
-      timestamp: new Date().toISOString(),
-      version: process.env.VERCEL_GIT_COMMIT_SHA || 'local',
-    });
-  } catch (error) {
-    // If health check itself fails, return error status
     return NextResponse.json(
       {
-        status: 'error',
+        status,
         timestamp: new Date().toISOString(),
-        version: process.env.VERCEL_GIT_COMMIT_SHA || 'local',
+      },
+      { status: status === 'ok' ? 200 : 503 }
+    );
+  } catch {
+    return NextResponse.json(
+      {
+        status: 'degraded',
+        timestamp: new Date().toISOString(),
       },
       { status: 503 }
     );

@@ -21,6 +21,11 @@ describe('middleware launch archive behavior', () => {
       ['http://localhost/api/moderation/report', 'Moderation API'],
       ['http://localhost/api/feedback/why-not-shortlisted', 'Feedback API'],
       ['http://localhost/api/verification/veriff/session', 'Legacy Verification API'],
+      ['http://localhost/api/match/test', 'Core Matching API'],
+      ['http://localhost/api/expertise/cv-import/wizard-suggest', 'Legacy Expertise API'],
+      ['http://localhost/api/analytics/track', 'Analytics API'],
+      ['http://localhost/api/analytics/web-vitals', 'Analytics API'],
+      ['http://localhost/api/performance/track', 'Performance API'],
       ['http://localhost/api/organizations/org-1/projects/project-1', 'Organization Suite API'],
       ['http://localhost/api/admin/organizations', 'Admin API'],
       ['http://localhost/api/admin/verification/linkedin/queue', 'Admin API'],
@@ -105,12 +110,8 @@ describe('middleware launch archive behavior', () => {
     }
   });
 
-  it('still passes through preserved launch telemetry and corridor endpoints', async () => {
+  it('still passes through preserved launch corridor endpoints', async () => {
     const preservedPaths = [
-      'http://localhost/api/analytics/events',
-      'http://localhost/api/analytics/track',
-      'http://localhost/api/analytics/tour-event',
-      'http://localhost/api/analytics/web-vitals',
       'http://localhost/api/assignments',
       'http://localhost/api/candidate-invites/token',
       'http://localhost/api/conversations',

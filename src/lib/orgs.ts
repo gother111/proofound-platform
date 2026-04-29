@@ -14,7 +14,7 @@ function toSlug(input: string): string {
 }
 
 export type MembershipWithOrganization = {
-  status: string | null;
+  state: string | null;
   organization: {
     id: string;
     slug: string | null;
@@ -84,13 +84,13 @@ export async function ensureOrgContextForUser(
 
   const { data: membership } = await admin
     .from('organization_members')
-    .select('status, role, organization:organizations(id, slug, display_name)')
+    .select('state, role, organization:organizations(id, slug, display_name)')
     .eq('user_id', userId)
     .order('joined_at', { ascending: false })
     .limit(1)
     .maybeSingle<MembershipWithOrganization>();
 
-  if (membership?.status === 'active' && membership.organization) {
+  if (membership?.state === 'active' && membership.organization) {
     return ensureOrgSlugForId(
       membership.organization.id,
       membership.organization.display_name,

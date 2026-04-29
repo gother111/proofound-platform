@@ -8,6 +8,7 @@
 import { db } from '@/db';
 import { purposeEditLog } from '@/db/schema';
 import { log } from '@/lib/log';
+import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import { and, desc, eq } from 'drizzle-orm';
 
 /**
@@ -44,7 +45,7 @@ export async function logPurposeEdit(
     });
   } catch (error) {
     log.error('purpose_edit.log_failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: sanitizeErrorForLog(error),
       userId,
       fieldName,
     });
@@ -76,7 +77,7 @@ export async function getPurposeEditHistory(
     return history;
   } catch (error) {
     log.error('purpose_edit.get_history_failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: sanitizeErrorForLog(error),
       userId,
     });
     return [];
@@ -102,7 +103,7 @@ export async function getPurposeEditStats(userId: string) {
     };
   } catch (error) {
     log.error('purpose_edit.get_stats_failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: sanitizeErrorForLog(error),
       userId,
     });
     return {

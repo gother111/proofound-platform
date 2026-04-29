@@ -169,7 +169,7 @@ async function waitForHealthyServer(baseUrl: string, timeoutMs = 45_000) {
       const text = await response.text();
       const payload = text ? (JSON.parse(text) as Record<string, unknown>) : null;
 
-      if (response.ok && payload?.status === 'healthy') {
+      if (response.ok && payload?.status === 'ok') {
         return {
           ok: true,
           payload,
@@ -177,7 +177,7 @@ async function waitForHealthyServer(baseUrl: string, timeoutMs = 45_000) {
       }
 
       lastError = response.ok
-        ? 'Health endpoint responded without healthy status.'
+        ? 'Health endpoint responded without ok status.'
         : `Health endpoint returned HTTP ${response.status}.`;
     } catch (error) {
       lastError = error instanceof Error ? error.message : String(error);
@@ -239,7 +239,7 @@ async function startProductionServer(workspaceRoot: string, outputDir: string, n
     id: 'prod_boot',
     status: health.ok ? 'PASS' : 'FAIL',
     summary: health.ok
-      ? '`npm run start` booted successfully and `/api/health` returned healthy.'
+      ? '`npm run start` booted successfully and `/api/health` returned ok.'
       : `Production boot failed or never became healthy. ${health.error ?? ''}`.trim(),
     evidence: [
       path.relative(workspaceRoot, logPath).replace(/\\/g, '/'),

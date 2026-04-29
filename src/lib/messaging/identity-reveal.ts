@@ -5,10 +5,10 @@
  */
 
 import { db } from '@/db';
-import { conversations, profiles } from '@/db/schema';
+import { conversations, matchReviewStates, organizations, profiles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { sendIdentityRevealedEmail } from '@/lib/email';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { unlockFullIdentityForMatch } from '@/lib/matching/review-contract';
 
 /**
@@ -41,54 +41,82 @@ export async function triggerIdentityReveal(conversationId: string): Promise<voi
         matchId: conversation.matchId,
         triggerType: 'automatic',
         sourceSurface: 'identity_reveal_service',
-        reasonCode: 'reveal_full_identity',
+        reasonCode: 'reveal_unlocked',
         unlockTrigger: 'interview_scheduled',
         context: {
           conversationId,
+          auditEvent: 'reveal_unlocked',
         },
       });
     }
 
     // Send email notifications to both parties
     try {
-      // Get both participant profiles
-      const participant1Profile = await db.query.profiles.findFirst({
-        where: eq(profiles.id, conversation.participantOneId),
-      });
+      const revealContext = conversation.matchId
+        ? await db.query.matchReviewStates.findFirst({
+            where: eq(matchReviewStates.matchId, conversation.matchId),
+          })
+        : null;
+      const candidateParticipantId = revealContext?.profileId ?? null;
+      const organizationParticipantId =
+        candidateParticipantId && conversation.participantOneId === candidateParticipantId
+          ? conversation.participantTwoId
+          : candidateParticipantId && conversation.participantTwoId === candidateParticipantId
+            ? conversation.participantOneId
+            : null;
 
-      const participant2Profile = await db.query.profiles.findFirst({
-        where: eq(profiles.id, conversation.participantTwoId),
-      });
+      if (!revealContext || !candidateParticipantId || !organizationParticipantId) {
+        console.error('Failed to resolve role-safe identity reveal email context');
+        return;
+      }
 
-      // Get emails from Supabase auth
-      const supabase = await createClient();
-      const { data: auth1 } = await supabase.auth.admin.getUserById(conversation.participantOneId);
-      const { data: auth2 } = await supabase.auth.admin.getUserById(conversation.participantTwoId);
+      const [candidateProfile, organizationProfile, organization] = await Promise.all([
+        db.query.profiles.findFirst({
+          where: eq(profiles.id, candidateParticipantId),
+        }),
+        db.query.profiles.findFirst({
+          where: eq(profiles.id, organizationParticipantId),
+        }),
+        db.query.organizations.findFirst({
+          where: eq(organizations.id, revealContext.orgId),
+        }),
+      ]);
 
-      // Send to participant 1 (reveal participant 2)
-      if (participant1Profile && auth1?.user?.email && participant2Profile) {
+      if (!organization?.slug) {
+        console.error('Failed to resolve organization route for identity reveal email');
+        return;
+      }
+
+      // Resolve participant emails directly by id.
+      const adminClient = createAdminClient();
+      const { data: candidateAuth } =
+        await adminClient.auth.admin.getUserById(candidateParticipantId);
+      const { data: organizationAuth } =
+        await adminClient.auth.admin.getUserById(organizationParticipantId);
+
+      if (candidateProfile && candidateAuth?.user?.email && organization) {
         await sendIdentityRevealedEmail(
-          auth1.user.email,
-          participant1Profile.displayName || 'User',
-          'candidate', // Default role
+          candidateAuth.user.email,
+          candidateProfile.displayName || 'User',
+          'candidate',
           {
-            revealedName: participant2Profile.displayName || 'User',
+            revealedName: organization.displayName || 'the organization',
             conversationId,
-            profileId: participant2Profile.id,
+            profileId: organization.id,
           }
         );
       }
 
-      // Send to participant 2 (reveal participant 1)
-      if (participant2Profile && auth2?.user?.email && participant1Profile) {
+      if (organizationProfile && organizationAuth?.user?.email && candidateProfile) {
         await sendIdentityRevealedEmail(
-          auth2.user.email,
-          participant2Profile.displayName || 'User',
-          'candidate', // Default role
+          organizationAuth.user.email,
+          organizationProfile.displayName || 'User',
+          'organization',
           {
-            revealedName: participant1Profile.displayName || 'User',
+            revealedName: candidateProfile.displayName || 'the candidate',
+            orgSlug: organization.slug,
             conversationId,
-            profileId: participant1Profile.id,
+            profileId: candidateProfile.id,
           }
         );
       }

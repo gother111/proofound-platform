@@ -357,6 +357,7 @@ test.describe('Strict Authenticated Org Corridor', () => {
       page.request,
       `/api/assignments/${assignmentId}/outcomes`,
       {
+        orgId: organization.id,
         outcomes: [
           {
             outcomeType: 'continuous',

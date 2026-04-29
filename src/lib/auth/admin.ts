@@ -13,6 +13,7 @@ import { eq, and } from 'drizzle-orm';
 import { createClient } from '@/lib/supabase/server';
 import { isActiveMembershipState, normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { redirect } from 'next/navigation';
+import { assertMockDatabaseAllowed, isMockSupabaseEnabled } from '@/lib/env';
 
 export type AdminLevel = 'super_admin' | 'platform_admin' | 'org_admin' | 'none';
 
@@ -24,7 +25,9 @@ export interface AdminUser {
 }
 
 function getMockPlatformRoleForTests(): 'super_admin' | 'platform_admin' | null {
-  if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE !== 'true') {
+  assertMockDatabaseAllowed('Admin authorization mock role');
+
+  if (!isMockSupabaseEnabled()) {
     return null;
   }
 

@@ -42,8 +42,63 @@ import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical
 import { isQuarantinedProofPack, validateProofPackAnchor } from '@/lib/proofs/pack-anchor';
 import { buildPortableUploadManifest } from '@/lib/uploads/export';
 import { buildUserExportDownloadFilename } from '@/lib/privacy/export-download';
+import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 
 export const dynamic = 'force-dynamic';
+
+const EXPORT_BLOCKING_DELETION_STATES = new Set([
+  'requested',
+  'processing',
+  'blocked_legal_hold',
+  'deleted',
+  'failed_requires_manual_review',
+]);
+
+const VERIFICATION_LOG_METADATA_REDACTION_KEYS = [
+  'email',
+  'reviewer',
+  'hidden',
+  'private',
+  'internal',
+  'ip',
+  'useragent',
+  'user_agent',
+];
+
+function redactVerificationLogMetadata(value: unknown): unknown {
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => redactVerificationLogMetadata(entry));
+  }
+
+  const redacted: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    const normalizedKey = key.toLowerCase();
+    if (
+      VERIFICATION_LOG_METADATA_REDACTION_KEYS.some((sensitiveKey) =>
+        normalizedKey.includes(sensitiveKey)
+      )
+    ) {
+      redacted[key] = '[redacted_for_owner_export]';
+      continue;
+    }
+
+    redacted[key] = redactVerificationLogMetadata(entry);
+  }
+
+  return redacted;
+}
+
+function redactVerificationLogEntriesForOwnerExport(entries: Array<Record<string, any>>) {
+  return entries.map((entry) => ({
+    ...entry,
+    actorId: null,
+    metadata: redactVerificationLogMetadata(entry.metadata),
+  }));
+}
 
 function toDateOnlyString(value: unknown): string | null {
   if (!value) {
@@ -103,10 +158,7 @@ export async function GET() {
     if (
       profileStatus?.deleted ||
       profileStatus?.deletionRequestedAt ||
-      (deletionRequest &&
-        ['requested', 'processing', 'blocked_legal_hold', 'deleted'].includes(
-          deletionRequest.lifecycleState
-        ))
+      (deletionRequest && EXPORT_BLOCKING_DELETION_STATES.has(deletionRequest.lifecycleState))
     ) {
       return NextResponse.json(
         {
@@ -273,6 +325,9 @@ export async function GET() {
               )
           : Promise.resolve([]),
       ]);
+    const ownerSafeVerificationLogEntries = redactVerificationLogEntriesForOwnerExport(
+      canonicalVerificationLogEntries
+    );
     const exportableProofPacks = canonicalProofPacks.filter((pack) => {
       if (isQuarantinedProofPack(pack)) {
         return false;
@@ -287,7 +342,16 @@ export async function GET() {
 
     const individualProfile = individualProfileData[0] || null;
     const uploadedFilesResult = await db.execute(sql`
-      SELECT id, upload_kind, sanitized_filename, detected_mime, durable_path, public_path, deleted_at
+      SELECT
+        id,
+        upload_kind,
+        original_filename,
+        COALESCE(original_filename_sensitive, true) AS original_filename_sensitive,
+        sanitized_filename,
+        detected_mime,
+        durable_path,
+        public_path,
+        deleted_at
       FROM uploaded_files
       WHERE owner_id = ${user.id}::uuid
       ORDER BY created_at ASC
@@ -365,7 +429,7 @@ export async function GET() {
         submissions: serializeForExport(canonicalSubmissions),
         submissionArtifacts: serializeForExport(canonicalSubmissionArtifacts),
         verificationReferences: serializeForExport(canonicalVerificationRecords),
-        verificationLogEntries: serializeForExport(canonicalVerificationLogEntries),
+        verificationLogEntries: serializeForExport(ownerSafeVerificationLogEntries),
         ownerProjections: serializeForExport(
           canonicalProofAggregates.map((aggregate) => aggregate.ownerFull)
         ),
@@ -421,7 +485,7 @@ export async function GET() {
         submissions: canonicalSubmissions,
         submissionArtifacts: canonicalSubmissionArtifacts,
         verificationRecords: canonicalVerificationRecords,
-        verificationLogEntries: canonicalVerificationLogEntries,
+        verificationLogEntries: ownerSafeVerificationLogEntries,
       },
     };
 
@@ -524,19 +588,18 @@ export async function GET() {
         trigger: 'export_failed',
         failureCode: error instanceof Error ? error.name : 'export_failed',
         metadata: {
-          message: error instanceof Error ? error.message : 'Unknown error',
+          error: sanitizeErrorForLog(error),
         },
       }).catch((transitionError) => {
         log.error('privacy.export.state_update_failed', {
           exportId: exportRecord?.id,
-          error: transitionError instanceof Error ? transitionError.message : 'Unknown error',
+          error: sanitizeErrorForLog(transitionError),
         });
       });
     }
 
     log.error('privacy.export.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
+      error: sanitizeErrorForLog(error),
     });
 
     return NextResponse.json(

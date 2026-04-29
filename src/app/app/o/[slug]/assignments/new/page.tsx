@@ -115,6 +115,7 @@ export default function AssignmentBuilderPage() {
         ? params.slug[0]
         : '';
   const draftId = searchParams?.get('draftId');
+  const assignmentOrgQuery = slug ? `?orgSlug=${encodeURIComponent(slug)}` : '';
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isAdvancing, setIsAdvancing] = useState(false);
@@ -179,7 +180,7 @@ export default function AssignmentBuilderPage() {
 
     const hydrateDraft = async () => {
       try {
-        const response = await fetch(`/api/assignments/${draftId}`);
+        const response = await fetch(`/api/assignments/${draftId}${assignmentOrgQuery}`);
         if (!response.ok) {
           throw new Error('Failed to load draft assignment');
         }
@@ -236,7 +237,7 @@ export default function AssignmentBuilderPage() {
     };
 
     void hydrateDraft();
-  }, [draftId, form, hasHydratedDraft, normalizeDateInput]);
+  }, [assignmentOrgQuery, draftId, form, hasHydratedDraft, normalizeDateInput]);
 
   const buildAssignmentPayload = useCallback(
     (
@@ -301,20 +302,22 @@ export default function AssignmentBuilderPage() {
         successCriteria: `Achieve ${outcome.target} within ${outcome.timeframe}`,
       }));
 
-      await apiFetch(`/api/assignments/${targetAssignmentId}/outcomes`, {
+      await apiFetch(`/api/assignments/${targetAssignmentId}/outcomes${assignmentOrgQuery}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ outcomes: transformedOutcomes }),
       });
     },
-    [form]
+    [assignmentOrgQuery, form]
   );
 
   const saveExpertiseMatrix = useCallback(
     async (targetAssignmentId: string) => {
       const mustHaveSkills = form.getValues('mustHaveSkills') || [];
 
-      const outcomesResponse = await fetch(`/api/assignments/${targetAssignmentId}/outcomes`);
+      const outcomesResponse = await fetch(
+        `/api/assignments/${targetAssignmentId}/outcomes${assignmentOrgQuery}`
+      );
       let outcomes: any[] = [];
       if (outcomesResponse.ok) {
         const outcomesData = await outcomesResponse.json();
@@ -332,13 +335,16 @@ export default function AssignmentBuilderPage() {
             : undefined,
       }));
 
-      await apiFetch(`/api/assignments/${targetAssignmentId}/expertise-matrix`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expertiseMatrix: mustRows }),
-      });
+      await apiFetch(
+        `/api/assignments/${targetAssignmentId}/expertise-matrix${assignmentOrgQuery}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expertiseMatrix: mustRows }),
+        }
+      );
     },
-    [form]
+    [assignmentOrgQuery, form]
   );
 
   const syncRelatedData = useCallback(

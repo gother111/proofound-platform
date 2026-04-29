@@ -568,6 +568,45 @@ describe('Extended RLS Privacy Policies', () => {
       );
     });
 
+    test('❌ Suspended members lose org-member RLS access', async () => {
+      const serviceClient = createServiceRoleClient();
+      await serviceClient
+        .from('organization_members')
+        .update({ state: 'suspended' })
+        .eq('org_id', orgId)
+        .eq('user_id', bob.id);
+
+      const bobClient = await createAuthenticatedClient(bob.email, bob.password);
+
+      const { data: members, error: membersError } = await bobClient
+        .from('organization_members')
+        .select('*')
+        .eq('org_id', orgId);
+
+      expectEmpty(members, membersError, 'Suspended members should not see org member lists');
+
+      const email = `suspended-candidate-invite+${Date.now()}@example.com`;
+      const { data: invite, error: inviteError } = await bobClient
+        .from('org_candidate_invites')
+        .insert({
+          org_id: orgId,
+          invitee_email: email,
+          invitee_email_normalized: email.toLowerCase(),
+          token_hash: `suspended-candidate-invite-${Date.now()}-${Math.random()
+            .toString(36)
+            .slice(2, 8)}`,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        })
+        .select()
+        .single();
+
+      expectUnauthorized(
+        invite,
+        inviteError,
+        'Suspended members should not create candidate invites'
+      );
+    });
+
     test('✅ Org owners can remove team members', async () => {
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
 

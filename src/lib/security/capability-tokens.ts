@@ -425,6 +425,248 @@ function isActorAuthorized(token: CapabilityTokenRow, actor?: CapabilityActorCon
   }
 }
 
+function buildCapabilityTokenClassCondition(tokenClass?: CapabilityTokenClass) {
+  return tokenClass ? sql`AND token_class = ${tokenClass}` : sql``;
+}
+
+function buildCapabilityActorCondition(actor?: CapabilityActorContext) {
+  const emailHash = hashEmail(actor?.email);
+
+  return sql`(
+    actor_binding = ${CAPABILITY_BINDINGS.NONE}
+    OR (
+      actor_binding = ${CAPABILITY_BINDINGS.EMAIL_HASH}
+      AND actor_email_hash IS NOT NULL
+      AND actor_email_hash = ${emailHash}
+    )
+    OR (
+      actor_binding = ${CAPABILITY_BINDINGS.AUTHENTICATED_PROFILE}
+      AND actor_profile_id IS NOT NULL
+      AND actor_profile_id = ${actor?.profileId ?? null}
+    )
+    OR (
+      actor_binding = ${CAPABILITY_BINDINGS.AUTHENTICATED_PRINCIPAL}
+      AND principal_type IS NOT NULL
+      AND principal_type = ${actor?.principalType ?? null}
+      AND (
+        (
+          actor_profile_id IS NOT NULL
+          AND actor_profile_id = ${actor?.profileId ?? null}
+        )
+        OR (
+          actor_org_id IS NOT NULL
+          AND actor_org_id = ${actor?.orgId ?? null}
+        )
+      )
+    )
+    OR (
+      actor_binding = ${CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK}
+      AND (
+        (
+          actor_profile_id IS NOT NULL
+          AND actor_profile_id = ${actor?.profileId ?? null}
+        )
+        OR (
+          actor_profile_id IS NULL
+          AND actor_email_hash IS NOT NULL
+          AND actor_email_hash = ${emailHash}
+        )
+      )
+    )
+  )`;
+}
+
+function buildCapabilityRedeemSessionCondition(params: {
+  requireRedeemSessionNonce?: boolean;
+  redeemSessionNonce?: string | null;
+}) {
+  if (!params.requireRedeemSessionNonce) {
+    return sql`TRUE`;
+  }
+
+  const nonce = params.redeemSessionNonce?.trim() ?? '';
+  const nonceHash = nonce.length > 0 ? hashCapabilityRedeemSessionNonce(nonce) : null;
+
+  return sql`(
+    redeem_session_nonce_hash IS NOT NULL
+    AND redeem_session_nonce_hash = ${nonceHash}
+    AND redeem_session_nonce_expires_at IS NOT NULL
+    AND redeem_session_nonce_expires_at > NOW()
+  )`;
+}
+
+async function consumeCapabilityTokenAtomically(
+  tokenHash: string,
+  params: {
+    tokenClass?: CapabilityTokenClass;
+    actor?: CapabilityActorContext;
+    requireRedeemSessionNonce?: boolean;
+    redeemSessionNonce?: string | null;
+  }
+): Promise<CapabilityTokenRow | null> {
+  const ipHash = hashIp(params.actor?.ip);
+  const userAgentHash = hashUserAgent(params.actor?.userAgent);
+  const actorProfileId = params.actor?.profileId ?? null;
+
+  const result = await db.execute(sql`
+    UPDATE capability_tokens
+    SET
+      state = CASE
+        WHEN single_use OR redeemed_count + 1 >= max_uses THEN ${CAPABILITY_TOKEN_STATES.REDEEMED}
+        ELSE state
+      END,
+      redeemed_count = redeemed_count + 1,
+      actor_profile_id = CASE
+        WHEN actor_binding = ${CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK}
+          AND actor_profile_id IS NULL
+          AND ${actorProfileId}::uuid IS NOT NULL
+          THEN ${actorProfileId}::uuid
+        ELSE actor_profile_id
+      END,
+      first_redeemed_at = COALESCE(first_redeemed_at, NOW()),
+      last_redeemed_at = NOW(),
+      last_seen_at = NOW(),
+      last_seen_ip_hash = COALESCE(${ipHash}, last_seen_ip_hash),
+      last_seen_user_agent_hash = COALESCE(${userAgentHash}, last_seen_user_agent_hash),
+      redeem_session_nonce_hash = NULL,
+      redeem_session_nonce_expires_at = NULL,
+      updated_at = NOW()
+    WHERE token_hash = ${tokenHash}
+      ${buildCapabilityTokenClassCondition(params.tokenClass)}
+      AND state = ${CAPABILITY_TOKEN_STATES.ISSUED}
+      AND revoked_at IS NULL
+      AND expires_at > NOW()
+      AND redeemed_count < max_uses
+      AND (
+        attempt_count < ${CAPABILITY_TOKEN_ATTEMPT_THRESHOLD}
+        OR last_attempt_at IS NULL
+        OR last_attempt_at <= NOW() - INTERVAL '15 minutes'
+      )
+      AND ${buildCapabilityActorCondition(params.actor)}
+      AND ${buildCapabilityRedeemSessionCondition(params)}
+    RETURNING *
+  `);
+
+  const [token] = getRows<CapabilityTokenRow>(result as any);
+  return token ?? null;
+}
+
+async function recordAtomicCapabilityRedemptionFailure(
+  tokenHash: string,
+  params: {
+    tokenClass?: CapabilityTokenClass;
+    actor?: CapabilityActorContext;
+    metadata?: Record<string, unknown>;
+  }
+): Promise<RedeemCapabilityTokenResult> {
+  const result = await db.execute(sql`
+    UPDATE capability_tokens
+    SET
+      attempt_count = CASE
+        WHEN last_attempt_at IS NULL
+          OR last_attempt_at <= NOW() - INTERVAL '15 minutes'
+          THEN 1
+        ELSE attempt_count + 1
+      END,
+      last_attempt_at = NOW(),
+      suspicious_flag = CASE
+        WHEN (
+          CASE
+            WHEN last_attempt_at IS NULL
+              OR last_attempt_at <= NOW() - INTERVAL '15 minutes'
+              THEN 1
+            ELSE attempt_count + 1
+          END
+        ) >= ${CAPABILITY_TOKEN_ATTEMPT_THRESHOLD}
+          THEN TRUE
+        ELSE suspicious_flag
+      END,
+      state = CASE
+        WHEN state = ${CAPABILITY_TOKEN_STATES.ISSUED}
+          AND expires_at <= NOW()
+          THEN ${CAPABILITY_TOKEN_STATES.EXPIRED}
+        ELSE state
+      END,
+      updated_at = NOW()
+    WHERE token_hash = ${tokenHash}
+      ${buildCapabilityTokenClassCondition(params.tokenClass)}
+    RETURNING *
+  `);
+
+  const [token] = getRows<CapabilityTokenRow>(result as any);
+  if (!token) {
+    await trackCapabilityTokenEvent({
+      eventType: 'invalid_blocked',
+      actor: params.actor,
+      metadata: {
+        tokenClass: params.tokenClass ?? null,
+        ...params.metadata,
+      },
+    });
+    return { ok: false, reason: 'invalid' };
+  }
+
+  const baseMetadata = {
+    tokenClass: token.token_class,
+    attemptCount: token.attempt_count,
+    ...params.metadata,
+  };
+
+  if (token.revoked_at || token.state === CAPABILITY_TOKEN_STATES.REVOKED) {
+    await trackCapabilityTokenEvent({
+      capabilityTokenId: token.id,
+      eventType: 'revoked',
+      actor: params.actor,
+      metadata: baseMetadata,
+    });
+    return { ok: false, reason: 'revoked' };
+  }
+
+  if (isExpiredToken(token)) {
+    await trackCapabilityTokenEvent({
+      capabilityTokenId: token.id,
+      eventType: 'expired',
+      actor: params.actor,
+      metadata: baseMetadata,
+    });
+    return { ok: false, reason: 'expired' };
+  }
+
+  if (isReplayBlocked(token)) {
+    await trackCapabilityTokenEvent({
+      capabilityTokenId: token.id,
+      eventType: 'replay_blocked',
+      actor: params.actor,
+      metadata: {
+        ...baseMetadata,
+        redeemedCount: token.redeemed_count,
+      },
+    });
+    return { ok: false, reason: 'replayed' };
+  }
+
+  if (!isActorAuthorized(token, params.actor)) {
+    await trackCapabilityTokenEvent({
+      capabilityTokenId: token.id,
+      eventType: 'actor_mismatch_blocked',
+      actor: params.actor,
+      metadata: {
+        ...baseMetadata,
+        actorBinding: token.actor_binding,
+      },
+    });
+    return { ok: false, reason: 'actor_mismatch' };
+  }
+
+  await trackCapabilityTokenEvent({
+    capabilityTokenId: token.id,
+    eventType: 'invalid_blocked',
+    actor: params.actor,
+    metadata: baseMetadata,
+  });
+  return { ok: false, reason: 'invalid' };
+}
+
 async function maybeLockProfileBoundToken(
   token: CapabilityTokenRow,
   actor?: CapabilityActorContext
@@ -444,31 +686,6 @@ async function maybeLockProfileBoundToken(
       updated_at = NOW()
     WHERE id = ${token.id}
       AND actor_profile_id IS NULL
-  `);
-}
-
-async function consumeCapabilityToken(token: CapabilityTokenRow, actor?: CapabilityActorContext) {
-  const ipHash = hashIp(actor?.ip);
-  const userAgentHash = hashUserAgent(actor?.userAgent);
-  const shouldMarkRedeemed = token.single_use || token.max_uses <= 1;
-
-  await db.execute(sql`
-    UPDATE capability_tokens
-    SET
-      state = CASE
-        WHEN ${shouldMarkRedeemed} THEN ${CAPABILITY_TOKEN_STATES.REDEEMED}
-        ELSE state
-      END,
-      redeemed_count = redeemed_count + 1,
-      first_redeemed_at = COALESCE(first_redeemed_at, NOW()),
-      last_redeemed_at = NOW(),
-      last_seen_at = NOW(),
-      last_seen_ip_hash = COALESCE(${ipHash}, last_seen_ip_hash),
-      last_seen_user_agent_hash = COALESCE(${userAgentHash}, last_seen_user_agent_hash),
-      redeem_session_nonce_hash = NULL,
-      redeem_session_nonce_expires_at = NULL,
-      updated_at = NOW()
-    WHERE id = ${token.id}
   `);
 }
 
@@ -670,61 +887,113 @@ export async function redeemCapabilityToken(
     metadata?: Record<string, unknown>;
   } = {}
 ): Promise<RedeemCapabilityTokenResult> {
-  const inspected = await inspectCapabilityToken(rawToken, params);
-  if (!inspected.ok) {
-    return inspected;
-  }
-
-  const token = inspected.token;
-  const ipThrottleKey = buildCapabilityIpThrottleKey(token.token_class, params.actor?.ip);
-
-  if (!isActorAuthorized(token, params.actor)) {
-    await recordCapabilityTokenFailure(token.id, {
-      tokenClass: token.token_class,
-      reason: 'actor_mismatch',
-      ...params.metadata,
-    });
-    if (ipThrottleKey) {
-      await recordCapabilityIpFailure(ipThrottleKey);
-    }
-    await trackCapabilityTokenEvent({
-      capabilityTokenId: token.id,
-      eventType: 'actor_mismatch_blocked',
-      actor: params.actor,
-      metadata: {
-        tokenClass: token.token_class,
-        actorBinding: token.actor_binding,
-        ...params.metadata,
-      },
-    });
-    return { ok: false, reason: 'actor_mismatch' };
-  }
-
-  await maybeLockProfileBoundToken(token, params.actor);
-
-  if (params.requireRedeemSessionNonce) {
-    const nonce = params.redeemSessionNonce?.trim() ?? '';
-    const nonceValid =
-      nonce.length > 0 &&
-      Boolean(token.redeem_session_nonce_hash) &&
-      Boolean(token.redeem_session_nonce_expires_at) &&
-      new Date(token.redeem_session_nonce_expires_at as string).getTime() > Date.now() &&
-      token.redeem_session_nonce_hash === hashCapabilityRedeemSessionNonce(nonce);
-
-    if (!nonceValid) {
-      await recordCapabilityTokenFailure(token.id, {
-        tokenClass: token.token_class,
-        reason: 'redeem_session_nonce_invalid',
-        ...params.metadata,
+  const tokenHash = hashCapabilityToken(rawToken);
+  const ipThrottleKey = buildCapabilityIpThrottleKey(params.tokenClass, params.actor?.ip);
+  if (ipThrottleKey) {
+    const throttleState = await getCapabilityIpThrottleState(ipThrottleKey);
+    if (throttleState.blocked) {
+      await trackCapabilityTokenEvent({
+        eventType: 'invalid_blocked',
+        actor: params.actor,
+        metadata: {
+          tokenClass: params.tokenClass ?? null,
+          reason: 'ip_rate_limited',
+          ...params.metadata,
+        },
       });
-      if (ipThrottleKey) {
-        await recordCapabilityIpFailure(ipThrottleKey);
-      }
       return { ok: false, reason: 'invalid' };
     }
   }
 
-  const shouldConsume = params.consume ?? token.single_use;
+  const shouldConsume = params.consume ?? true;
+  if (!shouldConsume) {
+    const inspected = await inspectCapabilityToken(rawToken, params);
+    if (!inspected.ok) {
+      return inspected;
+    }
+
+    const token = inspected.token;
+    const classScopedThrottleKey = buildCapabilityIpThrottleKey(
+      token.token_class,
+      params.actor?.ip
+    );
+    if (!isActorAuthorized(token, params.actor)) {
+      await recordCapabilityTokenFailure(token.id, {
+        tokenClass: token.token_class,
+        reason: 'actor_mismatch',
+        ...params.metadata,
+      });
+      if (classScopedThrottleKey) {
+        await recordCapabilityIpFailure(classScopedThrottleKey);
+      }
+      await trackCapabilityTokenEvent({
+        capabilityTokenId: token.id,
+        eventType: 'actor_mismatch_blocked',
+        actor: params.actor,
+        metadata: {
+          tokenClass: token.token_class,
+          actorBinding: token.actor_binding,
+          ...params.metadata,
+        },
+      });
+      return { ok: false, reason: 'actor_mismatch' };
+    }
+
+    await maybeLockProfileBoundToken(token, params.actor);
+    if (params.requireRedeemSessionNonce) {
+      const nonce = params.redeemSessionNonce?.trim() ?? '';
+      const nonceValid =
+        nonce.length > 0 &&
+        Boolean(token.redeem_session_nonce_hash) &&
+        Boolean(token.redeem_session_nonce_expires_at) &&
+        new Date(token.redeem_session_nonce_expires_at as string).getTime() > Date.now() &&
+        token.redeem_session_nonce_hash === hashCapabilityRedeemSessionNonce(nonce);
+
+      if (!nonceValid) {
+        await recordCapabilityTokenFailure(token.id, {
+          tokenClass: token.token_class,
+          reason: 'redeem_session_nonce_invalid',
+          ...params.metadata,
+        });
+        if (classScopedThrottleKey) {
+          await recordCapabilityIpFailure(classScopedThrottleKey);
+        }
+        return { ok: false, reason: 'invalid' };
+      }
+    }
+
+    await trackCapabilityTokenEvent({
+      capabilityTokenId: token.id,
+      eventType: 'redeem_attempted',
+      actor: params.actor,
+      metadata: {
+        tokenClass: token.token_class,
+        shouldConsume,
+        ...params.metadata,
+      },
+    });
+    await updateCapabilityTokenSeen(token.id, params.actor);
+    await trackCapabilityTokenEvent({
+      capabilityTokenId: token.id,
+      eventType: 'redeemed',
+      actor: params.actor,
+      metadata: {
+        tokenClass: token.token_class,
+        consumed: false,
+        ...params.metadata,
+      },
+    });
+    return { ok: true, token };
+  }
+
+  const token = await consumeCapabilityTokenAtomically(tokenHash, params);
+  if (!token) {
+    if (ipThrottleKey) {
+      await recordCapabilityIpFailure(ipThrottleKey);
+    }
+    return recordAtomicCapabilityRedemptionFailure(tokenHash, params);
+  }
+
   await trackCapabilityTokenEvent({
     capabilityTokenId: token.id,
     eventType: 'redeem_attempted',
@@ -736,51 +1005,18 @@ export async function redeemCapabilityToken(
     },
   });
 
-  if (shouldConsume && isReplayBlocked(token)) {
-    await recordCapabilityTokenFailure(token.id, {
-      tokenClass: token.token_class,
-      reason: 'replay_blocked',
-      redeemedCount: token.redeemed_count,
-      ...params.metadata,
-    });
-    if (ipThrottleKey) {
-      await recordCapabilityIpFailure(ipThrottleKey);
-    }
-    await trackCapabilityTokenEvent({
-      capabilityTokenId: token.id,
-      eventType: 'replay_blocked',
-      actor: params.actor,
-      metadata: {
-        tokenClass: token.token_class,
-        redeemedCount: token.redeemed_count,
-        ...params.metadata,
-      },
-    });
-    return { ok: false, reason: 'replayed' };
-  }
-
-  if (shouldConsume) {
-    await consumeCapabilityToken(token, params.actor);
-  } else {
-    await updateCapabilityTokenSeen(token.id, params.actor);
-  }
-
   await trackCapabilityTokenEvent({
     capabilityTokenId: token.id,
     eventType: 'redeemed',
     actor: params.actor,
     metadata: {
       tokenClass: token.token_class,
-      consumed: shouldConsume,
+      consumed: true,
       ...params.metadata,
     },
   });
 
-  const freshToken = await loadCapabilityTokenByHash(
-    hashCapabilityToken(rawToken),
-    params.tokenClass
-  );
-  return { ok: true, token: freshToken ?? token };
+  return { ok: true, token };
 }
 
 export async function beginCapabilityTokenRedeemSession(

@@ -136,7 +136,7 @@ describe('launch synthetic monitor persistence', () => {
       vi.fn(async (input: string | URL) => {
         const url = String(input);
         if (url.endsWith('/api/health')) {
-          return new Response(JSON.stringify({ status: 'healthy' }), { status: 200 });
+          return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
         }
 
         return new Response('ok', { status: 200 });
@@ -193,7 +193,7 @@ describe('launch synthetic monitor persistence', () => {
       vi.fn(async (input: string | URL) => {
         const url = String(input);
         if (url.endsWith('/api/health')) {
-          return new Response(JSON.stringify({ status: 'healthy' }), { status: 200 });
+          return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
         }
 
         return new Response('ok', { status: 200 });
@@ -238,7 +238,7 @@ describe('launch synthetic monitor persistence', () => {
       vi.fn(async (input: string | URL) => {
         const url = String(input);
         if (url.endsWith('/api/health')) {
-          return new Response(JSON.stringify({ status: 'healthy' }), { status: 200 });
+          return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
         }
 
         return new Response('ok', { status: 200 });
@@ -269,7 +269,7 @@ describe('launch synthetic monitor persistence', () => {
       vi.fn(async (input: string | URL) => {
         const url = String(input);
         if (url.endsWith('/api/health')) {
-          return new Response(JSON.stringify({ status: 'healthy' }), { status: 200 });
+          return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
         }
 
         return new Response('ok', { status: 200 });
@@ -400,7 +400,7 @@ describe('launch synthetic monitor persistence', () => {
       vi.fn(async (input: string | URL) => {
         const url = String(input);
         if (url.endsWith('/api/health')) {
-          return new Response(JSON.stringify({ status: 'healthy' }), { status: 200 });
+          return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
         }
 
         throw new Error(`Unexpected selective monitor refresh for ${url}`);
@@ -491,7 +491,7 @@ describe('launch synthetic monitor persistence', () => {
       vi.fn(async (input: string | URL) => {
         const url = String(input);
         if (url.endsWith('/api/health')) {
-          return new Response(JSON.stringify({ status: 'healthy' }), { status: 200 });
+          return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
         }
 
         throw new Error(`Unexpected selective monitor refresh for ${url}`);
@@ -670,7 +670,7 @@ describe('launch synthetic monitor persistence', () => {
       vi.fn(async (input: string | URL) => {
         const url = String(input);
         if (url.endsWith('/api/health')) {
-          return new Response(JSON.stringify({ status: 'healthy' }), { status: 200 });
+          return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
         }
 
         throw new Error(`Unexpected selective monitor refresh for ${url}`);

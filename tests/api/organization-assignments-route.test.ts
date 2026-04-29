@@ -80,6 +80,40 @@ describe('organizations assignments route', () => {
     expect(response.status).toBe(403);
   });
 
+  it.each(['inactive', 'suspended', 'unknown_state', null, undefined])(
+    'returns 403 when caller membership state is %s',
+    async (state) => {
+      vi.mocked(createClient).mockResolvedValue({
+        auth: {
+          getUser: vi.fn().mockResolvedValue({
+            data: { user: { id: 'user-1' } },
+            error: null,
+          }),
+        },
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { role: 'org_manager', state, status: state === null ? 'active' : null },
+                  error: null,
+                }),
+              })),
+            })),
+          })),
+        })),
+      } as any);
+
+      const response = await GET(
+        new NextRequest('http://localhost/api/organizations/org-1/assignments'),
+        params
+      );
+
+      expect(response.status).toBe(403);
+      expect(db.query.assignmentInvitations.findMany).not.toHaveBeenCalled();
+    }
+  );
+
   it('returns 403 when caller role is org reviewer', async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {

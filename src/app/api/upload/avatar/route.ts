@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
+import { safeApiErrorResponse } from '@/lib/api/errors';
 import { deleteUploadedFile, ingestUploadedFile, UPLOAD_KINDS } from '@/lib/uploads/lifecycle';
 
 export async function POST(request: NextRequest) {
@@ -45,11 +46,13 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Profile update error:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update profile', details: updateError.message },
-        { status: 500 }
-      );
+      return safeApiErrorResponse({
+        event: 'upload.avatar_profile_update.failed',
+        error: updateError,
+        status: 500,
+        publicMessage: 'Failed to update profile',
+        context: { userId: user.id },
+      });
     }
 
     return NextResponse.json({
@@ -57,17 +60,14 @@ export async function POST(request: NextRequest) {
       status: 'ready',
       uploadedFileId: upload.uploadedFileId,
       url: upload.url,
-      path: upload.storagePath,
     });
   } catch (error) {
-    console.error('Avatar upload error:', error);
-    return NextResponse.json(
-      {
-        error: 'Upload failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return safeApiErrorResponse({
+      event: 'upload.avatar.failed',
+      error,
+      status: 500,
+      publicMessage: 'Upload failed',
+    });
   }
 }
 
@@ -106,21 +106,22 @@ export async function DELETE(request: NextRequest) {
       .eq('id', user.id);
 
     if (updateError) {
-      return NextResponse.json(
-        { error: 'Failed to update profile', details: updateError.message },
-        { status: 500 }
-      );
+      return safeApiErrorResponse({
+        event: 'upload.avatar_delete_profile_update.failed',
+        error: updateError,
+        status: 500,
+        publicMessage: 'Failed to update profile',
+        context: { userId: user.id },
+      });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Avatar delete error:', error);
-    return NextResponse.json(
-      {
-        error: 'Delete failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return safeApiErrorResponse({
+      event: 'upload.avatar_delete.failed',
+      error,
+      status: 500,
+      publicMessage: 'Delete failed',
+    });
   }
 }

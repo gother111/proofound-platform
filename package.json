@@ -62,6 +62,7 @@
     "monitor:launch": "node --import tsx ./scripts/run-launch-synthetic-monitors.ts",
     "test:launch:smoke": "node --import tsx ./scripts/launch-smoke-runner.ts",
     "launch:checklist": "node --import tsx ./scripts/final-launch-checklist-status.ts",
+    "launch:validate": "node --import tsx ./scripts/final-launch-validation.ts",
     "go:no-go": "node --import tsx ./scripts/go-no-go-check.ts",
     "geo:audit": "node ./scripts/geo-audit.mjs",
     "gates:mvp:strict": "node ./scripts/run-mvp-strict-gates.mjs",

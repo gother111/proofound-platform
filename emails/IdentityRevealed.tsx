@@ -17,18 +17,20 @@ interface IdentityRevealedProps {
   roleTitle?: string;
   organizationName?: string;
   viewConversationUrl: string;
-  viewProfileUrl: string;
+  viewProfileUrl?: string;
 }
 
 export default function IdentityRevealed({
   recipientName,
   role,
   revealedName,
-  roleTitle,
-  organizationName,
   viewConversationUrl,
   viewProfileUrl,
 }: IdentityRevealedProps) {
+  const roleLabel = role === 'organization' ? 'organization' : 'candidate';
+  const visiblePartyLabel =
+    role === 'organization' ? 'Candidate now visible' : 'Organization now visible';
+
   return (
     <Html>
       <Head />
@@ -48,38 +50,30 @@ export default function IdentityRevealed({
             <Text style={paragraph}>Hi {recipientName},</Text>
 
             <Text style={paragraph}>
-              Great news! Following your interview scheduling, both parties&apos; identities have
-              been revealed. You can now communicate directly and view full profiles.
+              Both sides approved the reveal request. Open your {roleLabel} conversation to continue
+              inside the approved reveal stage.
             </Text>
 
             <Section style={revealBox}>
-              <Text style={revealTitle}>Now Connected With:</Text>
+              <Text style={revealTitle}>{visiblePartyLabel}</Text>
               <Text style={revealedNameText}>{revealedName}</Text>
-
-              {role === 'candidate' && organizationName && (
-                <Text style={revealSubtitle}>{organizationName}</Text>
-              )}
-
-              {roleTitle && <Text style={revealSubtitle}>{roleTitle}</Text>}
 
               <Hr style={innerHr} />
 
               <Text style={revealInfo}>
                 You can now:
                 <br />
-                • View their complete profile and verified credentials
+                • Continue the conversation with the approved identity context
                 <br />
-                • See their contact information
-                <br />
-                • Communicate directly without anonymity
-                <br />• Access all shared documents and references
+                • Review reveal-stage details inside Proofound
+                <br />• Keep private notes, files, and contact details inside the authenticated
+                corridor
               </Text>
             </Section>
 
             <Text style={paragraph}>
-              This identity reveal was triggered by scheduling an interview. Both parties now have
-              full visibility into each other&apos;s profiles and can engage in transparent
-              communication.
+              This email only includes reveal-approved context. Proof files, raw uploads, private
+              notes, and contact details stay inside the authenticated workflow.
             </Text>
 
             <Section style={buttonContainer}>
@@ -88,11 +82,13 @@ export default function IdentityRevealed({
               </Button>
             </Section>
 
-            <Section style={buttonContainer}>
-              <Button style={secondaryButton} href={viewProfileUrl}>
-                View Their Profile
-              </Button>
-            </Section>
+            {viewProfileUrl && (
+              <Section style={buttonContainer}>
+                <Button style={secondaryButton} href={viewProfileUrl}>
+                  View Approved Profile
+                </Button>
+              </Section>
+            )}
 
             <Hr style={hr} />
 
@@ -101,20 +97,16 @@ export default function IdentityRevealed({
             </Text>
 
             <Text style={infoText}>
-              1. <strong>Continue the conversation:</strong> Discuss interview details, ask
-              questions, and share relevant information
+              1. <strong>Continue the conversation:</strong> Ask the next workflow question inside
+              the Proofound thread
               <br />
               <br />
-              2. <strong>Prepare for the interview:</strong> Review their profile, work history, and
-              verified skills
+              2. <strong>Stay inside reveal rules:</strong> Use only information shown in the
+              approved workflow
               <br />
               <br />
-              3. <strong>Stay professional:</strong> All communications are part of your Proofound
-              history
-              <br />
-              <br />
-              4. <strong>After the interview:</strong> You can provide feedback and potentially sign
-              a contract attestation
+              3. <strong>Keep a clear record:</strong> Workflow messages remain part of the
+              Proofound conversation history
             </Text>
 
             <Hr style={hr} />
@@ -122,8 +114,8 @@ export default function IdentityRevealed({
             <Text style={footerText}>
               <strong>Privacy Note</strong>
               <br />
-              Identities are only revealed after both parties have committed to an interview. This
-              ensures serious connections and protects your privacy throughout the matching process.
+              Identities are only revealed after both sides approve the request. Proofound keeps
+              earlier review stages blind by default.
             </Text>
           </Section>
 

@@ -109,13 +109,6 @@ describe('MatchingPage soft-gated state', () => {
         };
       }
 
-      if (url === '/api/match/test') {
-        return {
-          ok: true,
-          json: async () => ({ items: [] }),
-        };
-      }
-
       if (url === '/api/match/profile' && init?.method === 'POST') {
         return {
           ok: true,

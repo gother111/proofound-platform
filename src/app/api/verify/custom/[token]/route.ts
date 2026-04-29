@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { safeApiErrorResponse } from '@/lib/api/errors';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   beginCapabilityTokenRedeemSession,
@@ -22,6 +23,8 @@ import {
   type HumanObservedVerdict,
 } from '@/lib/verification/human-attestations';
 import { ensureInternalOpsQueueItem } from '@/lib/internal-ops/queue';
+
+const TOKEN_FAILURE_RESPONSE = { error: 'Verification request not found' };
 
 const RespondSchema = z.object({
   action: z.enum(['accept', 'decline']).optional(),
@@ -214,7 +217,7 @@ export async function GET(
     const { token } = await params;
 
     if (!token || token.length < 32) {
-      return NextResponse.json({ error: 'Invalid verification token' }, { status: 400 });
+      return NextResponse.json(TOKEN_FAILURE_RESPONSE, { status: 404 });
     }
 
     const preview = await beginCapabilityTokenRedeemSession(token, {
@@ -228,13 +231,12 @@ export async function GET(
     });
 
     if (!preview.ok) {
-      const status = preview.reason === 'invalid' ? 404 : 410;
-      return NextResponse.json({ error: 'Verification request not found' }, { status });
+      return NextResponse.json(TOKEN_FAILURE_RESPONSE, { status: 404 });
     }
 
     let bundle = await loadBundleForToken(preview.token);
     if (!bundle) {
-      return NextResponse.json({ error: 'Verification request not found' }, { status: 404 });
+      return NextResponse.json(TOKEN_FAILURE_RESPONSE, { status: 404 });
     }
 
     if (bundle.status === 'pending' && isExpired(bundle.expires_at)) {
@@ -243,7 +245,7 @@ export async function GET(
     }
 
     if (!bundle) {
-      return NextResponse.json({ error: 'Verification request not found' }, { status: 404 });
+      return NextResponse.json(TOKEN_FAILURE_RESPONSE, { status: 404 });
     }
 
     const response = NextResponse.json({
@@ -283,8 +285,12 @@ export async function GET(
 
     return response;
   } catch (error) {
-    console.error('Custom verify GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return safeApiErrorResponse({
+      event: 'verification.custom.preview_failed',
+      error,
+      status: 500,
+      publicMessage: 'Unable to load verification request',
+    });
   }
 }
 
@@ -306,7 +312,7 @@ export async function POST(
     }
 
     if (!token || token.length < 32) {
-      return NextResponse.json({ error: 'Invalid verification token' }, { status: 400 });
+      return NextResponse.json(TOKEN_FAILURE_RESPONSE, { status: 404 });
     }
 
     const redeemSessionNonce =
@@ -326,21 +332,19 @@ export async function POST(
     const redeemed = await redeemCapabilityToken(token, {
       tokenClass: CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE,
       actor: customRedeemActor,
-      consume: false,
+      consume: true,
       requireRedeemSessionNonce: true,
       redeemSessionNonce,
       metadata: customRedeemMetadata,
     });
 
     if (!redeemed.ok) {
-      const status =
-        redeemed.reason === 'replayed' ? 409 : redeemed.reason === 'invalid' ? 404 : 410;
-      return NextResponse.json({ error: 'Verification request not found' }, { status });
+      return NextResponse.json(TOKEN_FAILURE_RESPONSE, { status: 404 });
     }
 
     let bundle = await loadBundleForToken(redeemed.token);
     if (!bundle) {
-      return NextResponse.json({ error: 'Verification request not found' }, { status: 404 });
+      return NextResponse.json(TOKEN_FAILURE_RESPONSE, { status: 404 });
     }
 
     if (bundle.status !== 'pending') {
@@ -432,24 +436,6 @@ export async function POST(
       responseActorEmail: bundle.verifier_email,
     });
 
-    const consumed = await redeemCapabilityToken(token, {
-      tokenClass: CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE,
-      actor: customRedeemActor,
-      consume: true,
-      requireRedeemSessionNonce: true,
-      redeemSessionNonce,
-      metadata: {
-        ...customRedeemMetadata,
-        phase: 'post_update_consume',
-      },
-    });
-    if (!consumed.ok) {
-      console.error('Failed to consume custom verification token after response update:', {
-        reason: consumed.reason,
-        bundleId: bundle.id,
-      });
-    }
-
     if (resolvedAction === 'accept') {
       await applyAcceptedArtifactEffects({
         admin,
@@ -478,7 +464,7 @@ export async function POST(
           metadata: {
             verdict: attestationVerdict,
             requestKind,
-            verifierEmail: bundle.verifier_email,
+            verifierEmailPresent: Boolean(bundle.verifier_email),
           },
         });
       } else if (attestationVerdict === 'no') {
@@ -493,7 +479,7 @@ export async function POST(
           metadata: {
             verdict: attestationVerdict,
             requestKind,
-            verifierEmail: bundle.verifier_email,
+            verifierEmailPresent: Boolean(bundle.verifier_email),
           },
         });
       }
@@ -510,7 +496,11 @@ export async function POST(
           : 'Your response has been recorded.',
     });
   } catch (error) {
-    console.error('Custom verify POST error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return safeApiErrorResponse({
+      event: 'verification.custom.respond_failed',
+      error,
+      status: 500,
+      publicMessage: 'Unable to record verification response',
+    });
   }
 }

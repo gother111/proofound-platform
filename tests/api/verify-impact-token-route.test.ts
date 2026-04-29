@@ -727,7 +727,7 @@ describe('verify token route', () => {
     );
   });
 
-  it('GET returns 410 for expired canonical skill tokens', async () => {
+  it('GET returns the generic missing response for expired canonical skill tokens', async () => {
     createClientMock.mockReturnValue(createClientWithAuth(null));
     createAdminClientMock.mockReturnValue(createAdminClient());
     beginCapabilityTokenRedeemSessionMock.mockResolvedValue({
@@ -745,8 +745,8 @@ describe('verify token route', () => {
     });
     const body = await response.json();
 
-    expect(response.status).toBe(410);
-    expect(body.error).toBe('Verification request has expired');
+    expect(response.status).toBe(404);
+    expect(body.error).toBe('Verification request not found or invalid token');
   });
 
   it('POST returns 404 for revoked canonical skill tokens', async () => {

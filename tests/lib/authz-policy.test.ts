@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AUTHZ_MATRIX,
   AUTHZ_RESOURCE_VALUES,
+  CANONICAL_ORG_ROLE_VALUES,
   assertExplicitPrincipalContext,
   authorize,
   getAuditMetadataVisibility,
@@ -12,6 +13,10 @@ import {
 } from '@/lib/authz';
 
 describe('canonical authz policy', () => {
+  it('keeps the MVP organization roles canonical and narrow', () => {
+    expect(CANONICAL_ORG_ROLE_VALUES).toEqual(['org_owner', 'org_manager', 'org_reviewer']);
+  });
+
   it('defines explicit actions for every protected resource family', () => {
     for (const resource of AUTHZ_RESOURCE_VALUES) {
       expect(Object.keys(AUTHZ_MATRIX[resource]).length).toBeGreaterThan(0);

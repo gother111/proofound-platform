@@ -12,6 +12,7 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('@/lib/env', () => ({
+  assertMockDatabaseAllowed: vi.fn(),
   getEnv: vi.fn(() => ({
     SUPABASE_URL: 'https://example.supabase.co',
     SUPABASE_ANON_KEY: 'anon-key',
@@ -19,6 +20,7 @@ vi.mock('@/lib/env', () => ({
     SITE_URL: 'http://localhost',
     DATABASE_URL: 'postgresql://localhost/proofound_test',
   })),
+  isMockSupabaseEnabled: vi.fn(() => process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true'),
   resolveCanonicalSiteUrl: vi.fn(() => 'http://localhost'),
   resolveSiteUrlFromHeaders: vi.fn(() => 'http://localhost'),
   normalizeSiteUrl: vi.fn(() => 'http://localhost'),

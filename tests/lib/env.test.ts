@@ -57,9 +57,14 @@ describe('production mock database guard', () => {
     process.env['NODE_ENV'] = 'test';
     process.env.VERCEL_ENV = 'production';
     process.env.MOCK_ADMIN_MODE = 'true';
+    process.env.MOBILE_MOCK_AUTH = 'true';
     process.env.MOCK_PLATFORM_ROLE = 'super_admin';
 
-    expect(getEnabledMockDatabaseModes()).toEqual(['MOCK_ADMIN_MODE', 'MOCK_PLATFORM_ROLE']);
+    expect(getEnabledMockDatabaseModes()).toEqual([
+      'MOCK_ADMIN_MODE',
+      'MOBILE_MOCK_AUTH',
+      'MOCK_PLATFORM_ROLE',
+    ]);
     expect(() => assertMockDatabaseAllowed('test')).toThrow(/MOCK_ADMIN_MODE/);
   });
 

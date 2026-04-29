@@ -1409,6 +1409,7 @@ export const uploadedFiles = pgTable(
     sourceSurface: text('source_surface').notNull(),
     uploadKind: text('upload_kind').notNull(),
     originalFilename: text('original_filename').notNull(),
+    originalFilenameSensitive: boolean('original_filename_sensitive').default(true).notNull(),
     sanitizedFilename: text('sanitized_filename').notNull(),
     declaredMime: text('declared_mime'),
     detectedMime: text('detected_mime'),

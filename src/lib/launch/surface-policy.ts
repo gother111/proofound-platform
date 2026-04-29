@@ -20,22 +20,13 @@ export const INTERNAL_OPS_HREF = '/admin';
 export const INTERNAL_OPS_VERIFICATION_HREF = '/admin/verification';
 export const INTERNAL_OPS_AUDIT_HREF = '/admin/audit';
 
-export const ACTIVE_LAUNCH_ANALYTICS_API_PATHS = [
-  '/api/analytics/events',
-  '/api/analytics/track',
-  '/api/analytics/tour-event',
-  '/api/analytics/web-vitals',
-] as const;
-
 const ACTIVE_LAUNCH_EXACT_API_PATHS = [
-  ...ACTIVE_LAUNCH_ANALYTICS_API_PATHS,
   '/api/csrf-token',
   '/api/feature-flags',
   '/api/health',
   '/api/individual/readiness',
   '/api/location/autocomplete',
   '/api/org/readiness',
-  '/api/performance/track',
   '/api/verification/status',
   '/api/verification/work-email/send',
   '/api/verification/work-email/verify',
@@ -138,7 +129,6 @@ const ACTIVE_API_POLICIES = [
       pathname === '/api/match/interest' ||
       pathname === '/api/match/profile' ||
       pathname === '/api/match/snoozed' ||
-      pathname === '/api/match/test' ||
       /^\/api\/match\/explain\/[^/]+$/.test(pathname) ||
       /^\/api\/match\/visible-fields\/[^/]+$/.test(pathname) ||
       /^\/api\/matches\/[^/]+\/snooze$/.test(pathname),
@@ -217,11 +207,10 @@ const ACTIVE_API_POLICIES = [
     classification: 'active_launch_path',
     surfaceLabel: 'Assignment Expertise API',
     detail:
-      'Assignment drafting, CV context import, and proof tagging support remain active inside the launch corridor.',
+      'Assignment drafting, taxonomy lookup, and proof-linked skill tagging remain active inside the launch corridor.',
     matches: (pathname: string) =>
       pathname === '/api/expertise/jd-to-l4' ||
       pathname === '/api/expertise/taxonomy' ||
-      matchExactOrPrefix('/api/expertise/cv-import')(pathname) ||
       matchExactOrPrefix('/api/expertise/user-skills')(pathname),
   },
 ] as const satisfies readonly SurfacePolicy[];
@@ -269,7 +258,9 @@ const INTERNAL_ONLY_API_POLICIES = [
     surfaceLabel: 'Launch Diagnostics API',
     detail: 'Launch readiness and performance diagnostics require internal launch-ops auth.',
     matches: (pathname: string) =>
-      pathname === '/api/monitoring/launch-status' || pathname === '/api/monitoring/perf-status',
+      pathname === '/api/monitoring/health-diagnostics' ||
+      pathname === '/api/monitoring/launch-status' ||
+      pathname === '/api/monitoring/perf-status',
   },
   {
     classification: 'internal_only_launch_ops',
@@ -297,8 +288,13 @@ const ARCHIVED_API_POLICIES = [
     classification: 'archived',
     surfaceLabel: 'Analytics API',
     detail: 'Broad analytics surfaces are archived outside the locked launch MVP.',
-    matches: (pathname: string) =>
-      pathname.startsWith('/api/analytics/') && !ACTIVE_LAUNCH_EXACT_API_PATH_SET.has(pathname),
+    matches: matchExactOrPrefix('/api/analytics'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Performance API',
+    detail: 'Client performance telemetry is archived outside the locked launch MVP corridor.',
+    matches: matchExactOrPrefix('/api/performance'),
   },
   {
     classification: 'archived',
@@ -388,7 +384,6 @@ const ARCHIVED_API_POLICIES = [
       pathname.startsWith('/api/expertise') &&
       !pathname.startsWith('/api/expertise/jd-to-l4') &&
       !pathname.startsWith('/api/expertise/taxonomy') &&
-      !pathname.startsWith('/api/expertise/cv-import') &&
       !pathname.startsWith('/api/expertise/user-skills'),
   },
   {
@@ -411,7 +406,8 @@ const ARCHIVED_API_POLICIES = [
     matches: (pathname: string) =>
       pathname.startsWith('/api/core/') ||
       pathname === '/api/match/decision' ||
-      pathname === '/api/match/snooze',
+      pathname === '/api/match/snooze' ||
+      pathname === '/api/match/test',
   },
   {
     classification: 'archived',

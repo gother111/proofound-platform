@@ -90,13 +90,7 @@ export async function POST(
         state: 'invite_claim_token_rejected',
         failureClass: redeemed.reason,
       });
-      const status =
-        redeemed.reason === 'replayed'
-          ? 409
-          : redeemed.reason === 'expired' || redeemed.reason === 'revoked'
-            ? 410
-            : 404;
-      return NextResponse.json({ error: 'Invite not found' }, { status });
+      return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
 
     const [invite] = await db
@@ -141,7 +135,7 @@ export async function POST(
           })
           .where(eq(orgCandidateInvites.id, invite.id));
       }
-      return NextResponse.json({ error: 'Invite has expired' }, { status: 410 });
+      return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
 
     if (invite.status === CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED) {
@@ -271,10 +265,11 @@ export async function POST(
         .select({
           userId: organizationMembers.userId,
           role: organizationMembers.role,
+          state: organizationMembers.state,
         })
         .from(organizationMembers)
         .where(
-          and(eq(organizationMembers.orgId, invite.orgId), eq(organizationMembers.status, 'active'))
+          and(eq(organizationMembers.orgId, invite.orgId), eq(organizationMembers.state, 'active'))
         )
         .limit(10);
 

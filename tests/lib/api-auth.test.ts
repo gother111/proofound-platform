@@ -36,7 +36,7 @@ describe('api auth org membership boundary', () => {
     await expect(
       getCanonicalActiveOrgMembership(
         createSupabaseMembershipStub({
-          data: { role: 'org_manager', status: 'active' },
+          data: { role: 'org_manager', state: 'active', status: 'active' },
           error: null,
         }),
         'user-1',
@@ -65,10 +65,36 @@ describe('api auth org membership boundary', () => {
   });
 
   it('rejects inactive, legacy, or unknown memberships at the API boundary', async () => {
+    for (const state of [
+      'inactive',
+      'suspended',
+      'invited_pending',
+      'ownership_transfer_pending',
+      'removed',
+      'declined',
+      'expired',
+      'revoked',
+      'unknown_state',
+      '',
+      null,
+      undefined,
+    ]) {
+      await expect(
+        getCanonicalActiveOrgMembership(
+          createSupabaseMembershipStub({
+            data: { role: 'org_owner', state },
+            error: null,
+          }),
+          'user-1',
+          'org-1'
+        )
+      ).resolves.toBeNull();
+    }
+
     await expect(
       getCanonicalActiveOrgMembership(
         createSupabaseMembershipStub({
-          data: { role: 'org_owner', state: 'inactive' },
+          data: { role: 'owner', state: 'active' },
           error: null,
         }),
         'user-1',
@@ -79,7 +105,7 @@ describe('api auth org membership boundary', () => {
     await expect(
       getCanonicalActiveOrgMembership(
         createSupabaseMembershipStub({
-          data: { role: 'owner', state: 'active' },
+          data: { role: 'org_owner', state: null, status: 'active' },
           error: null,
         }),
         'user-1',

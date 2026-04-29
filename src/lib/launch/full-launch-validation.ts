@@ -199,8 +199,8 @@ export async function runFullLaunchValidationBundle(options: FullLaunchValidatio
       status: repoGates.get('prod_boot')?.status === 'PASS' ? 'PASS' : 'BLOCKED',
       summary:
         repoGates.get('prod_boot')?.status === 'PASS'
-          ? 'Local production boot reached a healthy `/api/health` response during repo-ready validation.'
-          : 'Skipped because local production boot did not become healthy.',
+          ? 'Local production boot reached an ok `/api/health` response during repo-ready validation.'
+          : 'Skipped because local production boot did not become ok.',
       evidence: repoGates.get('prod_boot')?.evidence ?? [],
     },
     gateFromRepoReadyGate(repoGates.get('route_surface_and_archived_routes'), {
@@ -332,11 +332,11 @@ export async function runFullLaunchValidationBundle(options: FullLaunchValidatio
     gates.push(
       {
         id: 'live_api_health',
-        status: healthResult.ok && healthResult.payload?.status === 'healthy' ? 'PASS' : 'FAIL',
+        status: healthResult.ok && healthResult.payload?.status === 'ok' ? 'PASS' : 'FAIL',
         summary:
-          healthResult.ok && healthResult.payload?.status === 'healthy'
-            ? 'Live `/api/health` returned healthy.'
-            : `Live \`/api/health\` did not return healthy.${
+          healthResult.ok && healthResult.payload?.status === 'ok'
+            ? 'Live `/api/health` returned ok.'
+            : `Live \`/api/health\` did not return ok.${
                 healthResult.error ? ` ${healthResult.error}` : ''
               }`.trim(),
         evidence: [path.relative(workspaceRoot, healthPath).replace(/\\/g, '/')],

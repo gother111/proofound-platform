@@ -11,16 +11,21 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { safeApiErrorResponse } from '@/lib/api/errors';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { db, conversations, profiles } from '@/db';
+import { db, conversations, organizations, profiles } from '@/db';
 import { matchReviewStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import { Resend } from 'resend';
-import IdentityRevealed from '@/../emails/IdentityRevealed';
 import { EMAIL_CONFIG } from '@/lib/email/config';
-import { applyWorkflowEmailPrivacy } from '@/lib/email/privacy';
+import {
+  buildRevealConversationUrl,
+  buildRevealNotificationEmail,
+  type RevealNotificationRole,
+} from '@/lib/email/privacy';
 import { getHiringCorridorRecordForMatch } from '@/lib/hiring-corridor/service';
 import { buildHiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 import { recordRevealEvent, unlockFullIdentityForMatch } from '@/lib/matching/review-contract';
@@ -37,6 +42,22 @@ interface RouteParams {
     conversationId: string;
   }>;
 }
+
+type ConversationRow = typeof conversations.$inferSelect;
+type MatchReviewStateRow = typeof matchReviewStates.$inferSelect;
+
+type RevealNotificationRecipient = {
+  id: string;
+  role: RevealNotificationRole;
+  recipientName: string;
+  revealedName: string | null;
+  conversationUrl: string;
+};
+
+type RevealNotificationContext = {
+  candidate: RevealNotificationRecipient;
+  organization: RevealNotificationRecipient;
+};
 
 async function getCorridorPayload(matchId: string | null | undefined, userId: string) {
   if (!matchId) {
@@ -55,6 +76,112 @@ async function getCorridorPayload(matchId: string | null | undefined, userId: st
     viewerUserId: userId,
     perspective,
   });
+}
+
+async function resolveRevealNotificationContext(
+  conversation: ConversationRow,
+  revealContext: MatchReviewStateRow | null,
+  conversationId: string
+): Promise<RevealNotificationContext | null> {
+  if (!revealContext) {
+    log.error('reveal_notification.role_context_missing', {
+      conversationId,
+      hasMatchId: Boolean(conversation.matchId),
+    });
+    return null;
+  }
+
+  const candidateParticipantId = revealContext.profileId;
+  const organizationParticipantId =
+    conversation.participantOneId === candidateParticipantId
+      ? conversation.participantTwoId
+      : conversation.participantTwoId === candidateParticipantId
+        ? conversation.participantOneId
+        : null;
+
+  if (!organizationParticipantId) {
+    log.error('reveal_notification.participant_role_mismatch', {
+      conversationId,
+      matchId: revealContext.matchId,
+    });
+    return null;
+  }
+
+  const [candidateProfile, organizationProfile, organization] = await Promise.all([
+    db.query.profiles.findFirst({
+      where: eq(profiles.id, candidateParticipantId),
+      columns: {
+        id: true,
+        displayName: true,
+      },
+    }),
+    db.query.profiles.findFirst({
+      where: eq(profiles.id, organizationParticipantId),
+      columns: {
+        id: true,
+        displayName: true,
+      },
+    }),
+    db.query.organizations.findFirst({
+      where: eq(organizations.id, revealContext.orgId),
+      columns: {
+        id: true,
+        slug: true,
+        displayName: true,
+      },
+    }),
+  ]);
+
+  const candidateUrl = buildRevealConversationUrl({
+    baseUrl: process.env.NEXT_PUBLIC_SITE_URL,
+    conversationId,
+    role: 'candidate',
+  });
+  const organizationUrl = buildRevealConversationUrl({
+    baseUrl: process.env.NEXT_PUBLIC_SITE_URL,
+    conversationId,
+    role: 'organization',
+    orgSlug: organization?.slug,
+  });
+
+  if (!candidateUrl || !organizationUrl) {
+    log.error('reveal_notification.url_unavailable', {
+      conversationId,
+      hasSiteUrl: Boolean(process.env.NEXT_PUBLIC_SITE_URL),
+      hasOrgSlug: Boolean(organization?.slug),
+    });
+    return null;
+  }
+
+  return {
+    candidate: {
+      id: candidateParticipantId,
+      role: 'candidate',
+      recipientName: candidateProfile?.displayName || 'there',
+      revealedName: organization?.displayName ?? null,
+      conversationUrl: candidateUrl,
+    },
+    organization: {
+      id: organizationParticipantId,
+      role: 'organization',
+      recipientName: organizationProfile?.displayName || 'there',
+      revealedName: candidateProfile?.displayName ?? null,
+      conversationUrl: organizationUrl,
+    },
+  };
+}
+
+function getOtherRevealRecipient(
+  notificationContext: RevealNotificationContext,
+  requesterId: string
+) {
+  if (notificationContext.candidate.id === requesterId) {
+    return notificationContext.organization;
+  }
+  if (notificationContext.organization.id === requesterId) {
+    return notificationContext.candidate;
+  }
+  return null;
 }
 
 /**
@@ -109,10 +236,10 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       conversation,
     });
 
-    let revealContext = syncedConversation.matchId
-      ? await db.query.matchReviewStates.findFirst({
+    let revealContext: MatchReviewStateRow | null = syncedConversation.matchId
+      ? ((await db.query.matchReviewStates.findFirst({
           where: eq(matchReviewStates.matchId, syncedConversation.matchId),
-        })
+        })) ?? null)
       : null;
 
     if (revealRequestExpired && revealContext) {
@@ -125,10 +252,11 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
         triggerType: 'policy',
         requestedScope: 'full_identity',
         grantedScope: revealContext.revealScope,
-        reasonCode: 'reveal_request_expired',
+        reasonCode: 'reveal_timed_out',
         sourceSurface: 'conversation_reveal_route',
         context: {
           conversationId,
+          auditEvent: 'reveal_timed_out',
           requestedBy: revealTimeout.requestedBy,
           requestedAt: revealTimeout.requestedAt?.toISOString() ?? null,
           expiresAt: revealTimeout.expiresAt?.toISOString() ?? null,
@@ -202,6 +330,36 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       }
 
       if (revealedConversation.matchId) {
+        if (!revealContext || revealContext.matchId !== revealedConversation.matchId) {
+          revealContext =
+            (await db.query.matchReviewStates.findFirst({
+              where: eq(matchReviewStates.matchId, revealedConversation.matchId),
+            })) ?? null;
+        }
+
+        if (revealContext) {
+          await recordRevealEvent({
+            matchId: revealContext.matchId,
+            assignmentId: revealContext.assignmentId,
+            profileId: revealContext.profileId,
+            orgId: revealContext.orgId,
+            actorId: user.id,
+            actorRole: 'conversation_participant',
+            actorType: 'user_account',
+            triggerType: 'user',
+            requestedScope: 'full_identity',
+            grantedScope: revealContext.revealScope,
+            reasonCode: 'reveal_approved',
+            sourceSurface: 'conversation_reveal_route',
+            context: {
+              conversationId,
+              auditEvent: 'reveal_approved',
+              consentApprovedByBothParticipants: true,
+            },
+            outcome: 'no_op',
+          });
+        }
+
         await unlockFullIdentityForMatch({
           matchId: revealedConversation.matchId,
           actorId: user.id,
@@ -209,10 +367,11 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
           actorType: 'user_account',
           triggerType: 'user',
           sourceSurface: 'conversation_reveal_route',
-          reasonCode: 'reveal_full_identity',
+          reasonCode: 'reveal_unlocked',
           unlockTrigger: 'conversation_reveal',
           context: {
             conversationId,
+            auditEvent: 'reveal_unlocked',
             consentApprovedByBothParticipants: true,
             participantOneApprovedAt:
               revealedConversation.participantOneRevealRequestedAt?.toISOString?.() ?? null,
@@ -231,18 +390,14 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       });
 
       // Send IdentityRevealed emails to both participants
-      await sendIdentityRevealedEmails(
-        revealedConversation.participantOneId,
-        revealedConversation.participantTwoId,
-        conversationId
-      );
+      await sendIdentityRevealedEmails(revealedConversation, revealContext, conversationId);
 
       const corridor = await getCorridorPayload(revealedConversation.matchId, user.id);
 
       return NextResponse.json({
         success: true,
         revealed: true,
-        message: "Identities revealed! You can now see each other's full profiles.",
+        message: 'Reveal approved. Continue in the approved conversation stage.',
         conversation: {
           id: revealedConversation.id,
           stage: revealedConversation.stage,
@@ -261,9 +416,10 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
 
       if (updated.matchId) {
         if (!revealContext || revealContext.matchId !== updated.matchId) {
-          revealContext = await db.query.matchReviewStates.findFirst({
-            where: eq(matchReviewStates.matchId, updated.matchId),
-          });
+          revealContext =
+            (await db.query.matchReviewStates.findFirst({
+              where: eq(matchReviewStates.matchId, updated.matchId),
+            })) ?? null;
         }
 
         if (revealContext) {
@@ -278,16 +434,33 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
             triggerType: 'user',
             requestedScope: 'full_identity',
             grantedScope: revealContext.revealScope,
-            reasonCode: 'reveal_full_identity',
+            reasonCode: 'reveal_requested',
             sourceSurface: 'conversation_reveal_route',
             context: {
               conversationId,
+              auditEvent: 'reveal_requested',
               waitingForOther: true,
               expiredAndReset: revealRequestExpired,
             },
             outcome: 'no_op',
           });
         }
+      }
+
+      const notificationContext = await resolveRevealNotificationContext(
+        updated,
+        revealContext,
+        conversationId
+      );
+      const requestRecipient = notificationContext
+        ? getOtherRevealRecipient(notificationContext, user.id)
+        : null;
+      if (requestRecipient) {
+        await sendRevealNotificationEmail({
+          recipient: requestRecipient,
+          conversationId,
+          kind: 'request',
+        });
       }
 
       const corridor = await getCorridorPayload(updated.matchId, user.id);
@@ -302,141 +475,114 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       });
     }
   } catch (error) {
-    console.error('Error processing reveal request:', error);
-    log.error('conversation.reveal_failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      conversationId: (await params).conversationId,
+    return safeApiErrorResponse({
+      event: 'conversation.reveal_failed',
+      error,
+      status: 500,
+      publicMessage: 'Unable to process reveal request',
+      context: {
+        conversationId: (await params).conversationId,
+      },
     });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
+async function getParticipantEmail(userId: string, conversationId: string) {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.auth.admin.getUserById(userId);
+
+  if (error) {
+    log.error('reveal_notification.email_lookup_failed', {
+      conversationId,
+      participantId: userId,
+    });
+    return null;
+  }
+
+  return data.user?.email ?? null;
+}
+
+async function sendRevealNotificationEmail(input: {
+  recipient: RevealNotificationRecipient;
+  conversationId: string;
+  kind: 'request' | 'approved';
+}) {
+  const resend = getResendClient();
+  if (!resend) {
+    log.error('reveal_notification.missing_resend_api_key', {
+      conversationId: input.conversationId,
+      kind: input.kind,
+      recipientRole: input.recipient.role,
+    });
+    return;
+  }
+
+  const recipientEmail = await getParticipantEmail(input.recipient.id, input.conversationId);
+  if (!recipientEmail) {
+    log.error('reveal_notification.missing_email', {
+      conversationId: input.conversationId,
+      kind: input.kind,
+      recipientRole: input.recipient.role,
+      hasEmail: false,
+    });
+    return;
+  }
+
+  const email = buildRevealNotificationEmail({
+    kind: input.kind,
+    recipientRole: input.recipient.role,
+    conversationUrl: input.recipient.conversationUrl,
+    revealedName: input.kind === 'approved' ? input.recipient.revealedName : null,
+  });
+
+  await resend.emails.send({
+    from: EMAIL_CONFIG.from,
+    to: recipientEmail,
+    subject: email.subject,
+    html: email.html,
+    text: email.text,
+  });
+}
+
 /**
- * Send IdentityRevealed emails to both participants
+ * Send role-safe reveal-approved emails to both participants.
  */
 async function sendIdentityRevealedEmails(
-  participantOneId: string,
-  participantTwoId: string,
+  conversation: ConversationRow,
+  revealContext: MatchReviewStateRow | null,
   conversationId: string
 ): Promise<void> {
   try {
-    const resend = getResendClient();
-    if (!resend) {
-      log.error('identity_revealed_email.missing_resend_api_key', { conversationId });
+    const notificationContext = await resolveRevealNotificationContext(
+      conversation,
+      revealContext,
+      conversationId
+    );
+    if (!notificationContext) {
       return;
     }
 
-    const emailFrom = EMAIL_CONFIG.from;
-
-    // Fetch participant profiles
-    const participantOne = await db.query.profiles.findFirst({
-      where: eq(profiles.id, participantOneId),
-      columns: {
-        id: true,
-        displayName: true,
-      },
-    });
-
-    const participantTwo = await db.query.profiles.findFirst({
-      where: eq(profiles.id, participantTwoId),
-      columns: {
-        id: true,
-        displayName: true,
-      },
-    });
-
-    // Resolve participant emails directly by id so reveal delivery does not depend on a
-    // paginated auth user listing.
-    const adminClient = createAdminClient();
-    const [
-      { data: participantOneAuth, error: participantOneAuthError },
-      { data: participantTwoAuth, error: participantTwoAuthError },
-    ] = await Promise.all([
-      adminClient.auth.admin.getUserById(participantOneId),
-      adminClient.auth.admin.getUserById(participantTwoId),
+    await Promise.all([
+      sendRevealNotificationEmail({
+        recipient: notificationContext.candidate,
+        conversationId,
+        kind: 'approved',
+      }),
+      sendRevealNotificationEmail({
+        recipient: notificationContext.organization,
+        conversationId,
+        kind: 'approved',
+      }),
     ]);
-
-    if (participantOneAuthError || participantTwoAuthError) {
-      log.error('identity_revealed_email.lookup_failed', {
-        conversationId,
-        participantOneLookupFailed: Boolean(participantOneAuthError),
-        participantTwoLookupFailed: Boolean(participantTwoAuthError),
-      });
-      return;
-    }
-
-    const userOneEmail = participantOneAuth.user?.email;
-    const userTwoEmail = participantTwoAuth.user?.email;
-
-    if (!userOneEmail || !userTwoEmail) {
-      log.error('identity_revealed_email.missing_email', {
-        conversationId,
-        hasUserOneEmail: !!userOneEmail,
-        hasUserTwoEmail: !!userTwoEmail,
-      });
-      return;
-    }
-
-    const conversationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/messages/${conversationId}`;
-    const participantOneEmail = applyWorkflowEmailPrivacy(
-      {
-        subject: 'Identities Revealed - Continue Your Conversation',
-        revealedName: participantTwo?.displayName || 'your match',
-      },
-      {
-        stage: 'revealed',
-        neutralSubject: 'Proofound workflow update',
-        identityVisible: true,
-      }
-    );
-    const participantTwoEmail = applyWorkflowEmailPrivacy(
-      {
-        subject: 'Identities Revealed - Continue Your Conversation',
-        revealedName: participantOne?.displayName || 'your match',
-      },
-      {
-        stage: 'revealed',
-        neutralSubject: 'Proofound workflow update',
-        identityVisible: true,
-      }
-    );
-
-    // Send to participant one
-    await resend.emails.send({
-      from: emailFrom,
-      to: userOneEmail,
-      subject: participantOneEmail.subject,
-      react: IdentityRevealed({
-        recipientName: participantOne?.displayName || 'there',
-        role: 'candidate',
-        revealedName: participantOneEmail.revealedName ?? 'your match',
-        viewConversationUrl: conversationUrl,
-        viewProfileUrl: conversationUrl,
-      }),
-    });
-
-    // Send to participant two
-    await resend.emails.send({
-      from: emailFrom,
-      to: userTwoEmail,
-      subject: participantTwoEmail.subject,
-      react: IdentityRevealed({
-        recipientName: participantTwo?.displayName || 'there',
-        role: 'candidate',
-        revealedName: participantTwoEmail.revealedName ?? 'your match',
-        viewConversationUrl: conversationUrl,
-        viewProfileUrl: conversationUrl,
-      }),
-    });
 
     log.info('identity_revealed_emails.sent', {
       conversationId,
-      participantOneId,
-      participantTwoId,
+      candidateParticipantId: notificationContext.candidate.id,
+      organizationParticipantId: notificationContext.organization.id,
     });
   } catch (error) {
     log.error('identity_revealed_emails.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: sanitizeErrorForLog(error),
       conversationId,
     });
     // Don't throw - email failure shouldn't block reveal

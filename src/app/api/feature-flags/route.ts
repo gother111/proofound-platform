@@ -31,9 +31,7 @@ export async function GET() {
         role: organizationMembers.role,
       })
       .from(organizationMembers)
-      .where(
-        and(eq(organizationMembers.userId, user.id), eq(organizationMembers.status, 'active'))
-      );
+      .where(and(eq(organizationMembers.userId, user.id), eq(organizationMembers.state, 'active')));
 
     const orgIds = memberships.map((item) => item.orgId);
     const roles = memberships.map((item) => item.role);

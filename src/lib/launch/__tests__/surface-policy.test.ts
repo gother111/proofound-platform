@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  ACTIVE_LAUNCH_ANALYTICS_API_PATHS,
   INTERNAL_OPS_AUDIT_HREF,
   INTERNAL_OPS_HREF,
   INTERNAL_OPS_VERIFICATION_HREF,
@@ -36,8 +35,23 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/matching/profile/profile-1')).toMatchObject({
       surfaceLabel: 'Matching API',
     });
+    expect(getArchivedApiPolicy('/api/match/test')).toMatchObject({
+      surfaceLabel: 'Core Matching API',
+    });
     expect(getArchivedApiPolicy('/api/skill-gaps/overview')).toMatchObject({
       surfaceLabel: 'Skill Gap API',
+    });
+    expect(getArchivedApiPolicy('/api/analytics/track')).toMatchObject({
+      surfaceLabel: 'Analytics API',
+    });
+    expect(getArchivedApiPolicy('/api/analytics/web-vitals')).toMatchObject({
+      surfaceLabel: 'Analytics API',
+    });
+    expect(getArchivedApiPolicy('/api/performance/track')).toMatchObject({
+      surfaceLabel: 'Performance API',
+    });
+    expect(getArchivedApiPolicy('/api/expertise/cv-import/wizard-suggest')).toMatchObject({
+      surfaceLabel: 'Legacy Expertise API',
     });
     expect(getArchivedApiPolicy('/api/assignments/invite')).toMatchObject({
       surfaceLabel: 'Assignments API',
@@ -77,6 +91,9 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/admin/organizations/org-1/audit')).toBeNull();
     expect(getArchivedApiPolicy('/api/admin/organizations/org-1/verify')).toBeNull();
     expect(getArchivedApiPolicy('/api/cron/launch-synthetic-checks')).toBeNull();
+    expect(classifyLaunchApiPath('/api/monitoring/health-diagnostics')).toBe(
+      'internal_only_launch_ops'
+    );
     expect(classifyLaunchApiPath('/api/monitoring/launch-status')).toBe('internal_only_launch_ops');
     expect(classifyLaunchApiPath('/api/monitoring/perf-status')).toBe('internal_only_launch_ops');
   });
@@ -103,11 +120,6 @@ describe('launch surface policy', () => {
   });
 
   it('keeps representative corridor APIs active', () => {
-    for (const path of ACTIVE_LAUNCH_ANALYTICS_API_PATHS) {
-      expect(classifyLaunchApiPath(path)).toBe('active_launch_path');
-      expect(getArchivedApiPolicy(path)).toBeNull();
-    }
-
     const activePaths = [
       '/api/assignments',
       '/api/candidate-invites/token',

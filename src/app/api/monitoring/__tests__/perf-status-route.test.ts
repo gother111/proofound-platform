@@ -78,7 +78,7 @@ describe('/api/monitoring/perf-status', () => {
     mockSelectRows([{ duration: null }]);
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(new Response(JSON.stringify({ status: 'healthy' }), { status: 200 }));
+      .mockResolvedValue(new Response(JSON.stringify({ status: 'ok' }), { status: 200 }));
 
     const response = await GET(authenticatedRequest());
     const body = await response.json();

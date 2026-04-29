@@ -12,6 +12,7 @@
  */
 
 import { AsyncLocalStorage } from 'async_hooks';
+import { sanitizeLogPayload } from '@/lib/privacy/log-redaction';
 
 // Global context storage for request-scoped data
 export const logContext = new AsyncLocalStorage<LogContext>();
@@ -36,11 +37,6 @@ interface LogEntry {
   [key: string]: unknown;
 }
 
-const REDACTED_FILE_VALUE = '[REDACTED_FILE]';
-const SENSITIVE_META_KEY_PATTERN =
-  /(email|name|displayname|filename|originalfilename|filepath|storagepath|sourceurl)/i;
-const FILE_VALUE_PATTERN = /\b[\w./-]+\.(pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)\b/i;
-
 /**
  * Check if we should log at this level
  */
@@ -62,30 +58,6 @@ function shouldLog(
   const messageLevel = levels[level];
 
   return messageLevel >= currentLevel;
-}
-
-function sanitizeMetaValue(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((entry) => sanitizeMetaValue(entry));
-  }
-
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([key, entry]) => {
-        if (SENSITIVE_META_KEY_PATTERN.test(key)) {
-          return [key, REDACTED_FILE_VALUE];
-        }
-
-        return [key, sanitizeMetaValue(entry)];
-      })
-    );
-  }
-
-  if (typeof value === 'string' && FILE_VALUE_PATTERN.test(value)) {
-    return REDACTED_FILE_VALUE;
-  }
-
-  return value;
 }
 
 /**
@@ -112,7 +84,7 @@ function writeLog(
     ...(context?.userId && { userId: context.userId }),
     ...(context?.path && { path: context.path }),
     ...(context?.method && { method: context.method }),
-    ...(meta ? (sanitizeMetaValue(meta) as Record<string, unknown>) : {}),
+    ...(meta ? sanitizeLogPayload(meta) : {}),
   };
 
   // Remove any PII that might have been accidentally included

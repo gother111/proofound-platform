@@ -765,12 +765,8 @@ function normalizeSkillVerificationRecord(verification: any) {
 }
 
 function toCanonicalLookupErrorResponse(
-  reason: 'invalid' | 'expired' | 'revoked' | null | undefined
+  _reason: 'invalid' | 'expired' | 'revoked' | null | undefined
 ) {
-  if (reason === 'expired') {
-    return NextResponse.json({ error: 'Verification request has expired' }, { status: 410 });
-  }
-
   return NextResponse.json(
     { error: 'Verification request not found or invalid token' },
     { status: 404 }
@@ -832,21 +828,11 @@ function sanitizeSkillProofForResponse(proof: SkillProofContext) {
   };
 }
 
-function toNeutralCapabilityTokenError(reason: unknown) {
-  switch (reason) {
-    case 'expired':
-      return NextResponse.json({ error: 'Verification request has expired' }, { status: 410 });
-    case 'replayed':
-      return NextResponse.json(
-        { error: 'Verification request has already been used' },
-        { status: 409 }
-      );
-    default:
-      return NextResponse.json(
-        { error: 'Verification request not found or invalid token' },
-        { status: 404 }
-      );
-  }
+function toNeutralCapabilityTokenError(_reason: unknown) {
+  return NextResponse.json(
+    { error: 'Verification request not found or invalid token' },
+    { status: 404 }
+  );
 }
 
 /**
@@ -1659,7 +1645,7 @@ export async function POST(
     const redeemedSkillToken = await redeemCapabilityToken(token, {
       tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
       actor: skillRedeemActor,
-      consume: false,
+      consume: true,
       requireRedeemSessionNonce: true,
       redeemSessionNonce: skillRedeemSessionNonce,
       metadata: skillRedeemMetadata,
@@ -1726,24 +1712,6 @@ export async function POST(
 
     if (!updatedCanonicalRecord) {
       return NextResponse.json({ error: 'Failed to update verification status' }, { status: 500 });
-    }
-
-    const consumedSkillToken = await redeemCapabilityToken(token, {
-      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
-      actor: skillRedeemActor,
-      consume: true,
-      requireRedeemSessionNonce: true,
-      redeemSessionNonce: skillRedeemSessionNonce,
-      metadata: {
-        ...skillRedeemMetadata,
-        phase: 'post_update_consume',
-      },
-    });
-    if (!consumedSkillToken.ok) {
-      console.error('Failed to consume skill verification token after response update:', {
-        reason: consumedSkillToken.reason,
-        requestId: normalizedVerification.id,
-      });
     }
 
     if (resolvedAction === 'accept' && mergedIntegrity.integrityStatus === 'clear') {

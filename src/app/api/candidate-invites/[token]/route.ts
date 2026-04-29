@@ -35,8 +35,7 @@ export async function GET(
     });
 
     if (!preview.ok) {
-      const status = preview.reason === 'expired' ? 410 : preview.reason === 'revoked' ? 410 : 404;
-      return NextResponse.json({ error: 'Invite not found' }, { status });
+      return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
 
     const [invite] = await db
@@ -73,11 +72,11 @@ export async function GET(
         })
         .where(eq(orgCandidateInvites.id, invite.id));
 
-      return NextResponse.json({ error: 'Invite has expired' }, { status: 410 });
+      return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
 
     if (invite.status === CANDIDATE_INVITE_STATUS.EXPIRED) {
-      return NextResponse.json({ error: 'Invite has expired' }, { status: 410 });
+      return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
 
     const {

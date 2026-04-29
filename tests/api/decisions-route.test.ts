@@ -179,6 +179,28 @@ describe('POST /api/decisions', () => {
     expect(mocks.recordDecisionTransition).not.toHaveBeenCalled();
   });
 
+  it.each(['inactive', 'suspended', 'unknown_state'])(
+    'rejects final decisions when owner membership access resolves as non-active for %s state',
+    async () => {
+      mocks.isActiveOrgMember.mockResolvedValue(false);
+
+      const response = await POST(
+        buildRequest({
+          interviewId: 'interview-1',
+          decision: 'hire',
+        })
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.error).toMatch(/unauthorized/i);
+      expect(mocks.isActiveOrgMember).toHaveBeenCalledWith(expect.anything(), 'user-1', 'org-1', [
+        'org_owner',
+      ]);
+      expect(mocks.recordDecisionTransition).not.toHaveBeenCalled();
+    }
+  );
+
   it('rejects non-canonical decision aliases so hire remains explicit', async () => {
     mocks.isActiveOrgMember.mockResolvedValue(true);
 

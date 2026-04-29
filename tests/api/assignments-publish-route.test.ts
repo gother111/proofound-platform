@@ -130,6 +130,29 @@ describe('assignment publish route', () => {
     expect(payload.assignment.creationStatus).toBe('review_ready');
   });
 
+  it.each(['inactive', 'suspended', 'unknown_state'])(
+    'blocks publish when membership access resolves as non-active for %s state',
+    async () => {
+      (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
+        status: 'membership_not_found',
+      });
+
+      const req = new NextRequest(`http://localhost/api/assignments/${assignmentId}/publish`, {
+        method: 'POST',
+        body: JSON.stringify({
+          principalContext: { principalType: 'organization', orgId },
+        }),
+      });
+
+      const res = await POST(req, { params: Promise.resolve({ id: assignmentId }) });
+      const payload = await res.json();
+
+      expect(res.status).toBe(404);
+      expect(payload.error).toBe('Assignment not found or access denied');
+      expect(db.query.assignments.findFirst).not.toHaveBeenCalled();
+    }
+  );
+
   it('returns explicit block reasons for missing launch requirements', async () => {
     (db.query.assignments.findFirst as any).mockResolvedValue({
       id: assignmentId,

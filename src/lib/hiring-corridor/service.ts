@@ -233,7 +233,7 @@ export async function listAccessibleHiringCorridorRecords(userId: string) {
     LEFT JOIN organization_members om
       ON om.org_id = a.org_id
       AND om.user_id = ${userId}
-      AND om.status = 'active'
+      AND om.state = 'active'
       AND om.role IN ('org_owner', 'org_manager')
     WHERE m.profile_id = ${userId}
        OR om.user_id IS NOT NULL

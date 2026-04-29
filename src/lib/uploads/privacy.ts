@@ -2,16 +2,25 @@ import path from 'path';
 
 export type UploadPrivacyReviewReason =
   | 'filename_sanitized'
+  | 'filename_identity_signal'
   | 'metadata_exif'
   | 'metadata_gps'
   | 'metadata_author'
-  | 'metadata_hidden_properties';
+  | 'metadata_title'
+  | 'metadata_creator'
+  | 'metadata_company'
+  | 'metadata_hidden_properties'
+  | 'malware_scanner_unavailable'
+  | 'metadata_stripping_unavailable';
 
 export type UploadMetadataFlags = {
   detectedMime: string | null;
   hasExif: boolean;
   hasGps: boolean;
   hasAuthorMetadata: boolean;
+  hasTitleMetadata: boolean;
+  hasCreatorMetadata: boolean;
+  hasCompanyMetadata: boolean;
   hasHiddenDocumentProperties: boolean;
   publicSafeEligible: boolean;
 };
@@ -20,6 +29,7 @@ export type UploadFilenameAssessment = {
   originalFilename: string;
   sanitizedFilename: string;
   materiallyChanged: boolean;
+  containsIdentitySignal: boolean;
   requiresReview: boolean;
   reasons: UploadPrivacyReviewReason[];
 };
@@ -55,6 +65,33 @@ const PRIVACY_REVIEW_REASON_PREFIX = 'privacy_review_required:';
 const SENSITIVE_ENGAGEMENT_DOCUMENT_PATTERN =
   /\b(invoice|contract|agreement|statement[\s_-]*of[\s_-]*work|sow|offer[\s_-]*letter)\b/i;
 const COMMON_UPLOAD_EXTENSION_PATTERN = /\.(pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)$/i;
+const EMAIL_PATTERN = /\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/i;
+const PHONE_PATTERN = /(?:\+?\d[\s().-]*){7,}\d/;
+const ADDRESS_PATTERN =
+  /\b\d{1,6}\s+[a-z][a-z\s.'-]{2,}\s+(street|st|road|rd|avenue|ave|lane|ln|drive|dr|boulevard|blvd|väg|gatan|gata|gränd|allé|allee)\b/i;
+const COMPANY_PATTERN =
+  /\b([a-z0-9][\w&.'-]*\s+){0,4}(inc|llc|ltd|limited|corp|corporation|company|co|ab|oy|gmbh|sarl|sas|as|bv)\b/i;
+const HUMAN_NAME_FILENAME_PATTERN = /\b[A-Z][a-z]{1,}(?:[_\s.-]+[A-Z][a-z]{1,}){1,3}\b/;
+const GENERIC_FILENAME_WORDS = new Set([
+  'proof',
+  'portfolio',
+  'artifact',
+  'document',
+  'case',
+  'study',
+  'sample',
+  'work',
+  'project',
+  'credential',
+  'certificate',
+  'resume',
+  'cv',
+  'invoice',
+  'contract',
+  'agreement',
+  'statement',
+  'letter',
+]);
 
 export function sanitizeUploadFilename(fileName: string): string {
   const ext = path.extname(fileName).toLowerCase();
@@ -109,6 +146,25 @@ function normalizeStoredSanitizedFilename(fileName: string | null | undefined) {
   return normalized.trim().length > 0 ? normalized : null;
 }
 
+function containsIdentityBearingFilenameSignal(fileName: string) {
+  const basename = path.basename(fileName.trim());
+  const withoutExtension = basename.replace(COMMON_UPLOAD_EXTENSION_PATTERN, '');
+  const normalizedWords = withoutExtension
+    .replace(/[_-]+/g, ' ')
+    .split(/\s+/)
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean);
+  const meaningfulWords = normalizedWords.filter((word) => !GENERIC_FILENAME_WORDS.has(word));
+
+  return (
+    EMAIL_PATTERN.test(basename) ||
+    PHONE_PATTERN.test(basename) ||
+    ADDRESS_PATTERN.test(withoutExtension) ||
+    COMPANY_PATTERN.test(withoutExtension) ||
+    (meaningfulWords.length >= 2 && HUMAN_NAME_FILENAME_PATTERN.test(withoutExtension))
+  );
+}
+
 export function resolveArtifactDisplayNameForSurface(
   input: ArtifactDisplayNameInput,
   surface: ArtifactDisplaySurface = 'owner'
@@ -116,6 +172,13 @@ export function resolveArtifactDisplayNameForSurface(
   const fallbackLabel = resolveTypedArtifactFallbackLabel(input);
 
   if (surface !== 'owner') {
+    return fallbackLabel;
+  }
+
+  if (
+    containsIdentityBearingFilenameSignal(input.originalFilename ?? '') ||
+    containsIdentityBearingFilenameSignal(input.sanitizedFilename ?? '')
+  ) {
     return fallbackLabel;
   }
 
@@ -190,35 +253,64 @@ export function collectUploadMetadataFlags(
   buffer: Buffer,
   detectedMime: string | null
 ): UploadMetadataFlags {
-  const utf8Preview = buffer.subarray(0, Math.min(buffer.length, 16384)).toString('utf8');
-  const asciiPreview = buffer.subarray(0, Math.min(buffer.length, 16384)).toString('latin1');
+  const utf8Preview = buffer.subarray(0, Math.min(buffer.length, 65536)).toString('utf8');
+  const asciiPreview = buffer.subarray(0, Math.min(buffer.length, 65536)).toString('latin1');
 
-  const hasExif = asciiPreview.includes('Exif');
-  const hasGps = /GPS|gps/i.test(asciiPreview);
-  const hasAuthorMetadata = /\/Author|author[:=]/i.test(utf8Preview);
-  const hasHiddenDocumentProperties = /xmp:|<rdf:|photoshop|icc_profile/i.test(utf8Preview);
+  const hasExif = /Exif|exif:/i.test(asciiPreview);
+  const hasGps = /GPSLatitude|GPSLongitude|\bGPS\b|gps:/i.test(asciiPreview);
+  const hasAuthorMetadata =
+    /\/Author\b|author[:=]|<dc:creator\b|<cp:lastModifiedBy\b|<Manager\b/i.test(utf8Preview);
+  const hasTitleMetadata = /\/Title\b|<dc:title\b|<Title\b/i.test(utf8Preview);
+  const hasCreatorMetadata = /\/Creator\b|\/Producer\b|creator[:=]|<Application\b/i.test(
+    utf8Preview
+  );
+  const hasCompanyMetadata = /\bCompany\b|<Company\b|company[:=]/i.test(utf8Preview);
+  const hasHiddenDocumentProperties =
+    /xmp:|<rdf:|photoshop|icc_profile|docProps\/(core|app)\.xml/i.test(utf8Preview);
 
   return {
     detectedMime,
     hasExif,
     hasGps,
     hasAuthorMetadata,
+    hasTitleMetadata,
+    hasCreatorMetadata,
+    hasCompanyMetadata,
     hasHiddenDocumentProperties,
-    publicSafeEligible: !hasExif && !hasGps && !hasAuthorMetadata && !hasHiddenDocumentProperties,
+    publicSafeEligible:
+      !hasExif &&
+      !hasGps &&
+      !hasAuthorMetadata &&
+      !hasTitleMetadata &&
+      !hasCreatorMetadata &&
+      !hasCompanyMetadata &&
+      !hasHiddenDocumentProperties,
   };
 }
 
 export function assessUploadFilenamePrivacy(fileName: string): UploadFilenameAssessment {
   const sanitizedFilename = sanitizeUploadFilename(fileName);
   const materiallyChanged = sanitizedFilename !== fileName.trim();
-  const requiresReview = materiallyChanged && FILENAME_REVIEW_PATTERN.test(fileName);
+  const containsIdentitySignal = containsIdentityBearingFilenameSignal(fileName);
+  const requiresReview =
+    (materiallyChanged && FILENAME_REVIEW_PATTERN.test(fileName)) || containsIdentitySignal;
+  const reasons: UploadPrivacyReviewReason[] = [];
+
+  if (materiallyChanged && FILENAME_REVIEW_PATTERN.test(fileName)) {
+    reasons.push('filename_sanitized');
+  }
+
+  if (containsIdentitySignal) {
+    reasons.push('filename_identity_signal');
+  }
 
   return {
     originalFilename: fileName,
     sanitizedFilename,
     materiallyChanged,
+    containsIdentitySignal,
     requiresReview,
-    reasons: requiresReview ? ['filename_sanitized'] : [],
+    reasons,
   };
 }
 
@@ -242,6 +334,15 @@ export function assessEvidenceUploadPrivacy(input: {
   }
   if (input.metadataFlags.hasAuthorMetadata) {
     reasons.push('metadata_author');
+  }
+  if (input.metadataFlags.hasTitleMetadata) {
+    reasons.push('metadata_title');
+  }
+  if (input.metadataFlags.hasCreatorMetadata) {
+    reasons.push('metadata_creator');
+  }
+  if (input.metadataFlags.hasCompanyMetadata) {
+    reasons.push('metadata_company');
   }
   if (input.metadataFlags.hasHiddenDocumentProperties) {
     reasons.push('metadata_hidden_properties');
@@ -274,10 +375,16 @@ export function parseUploadPrivacyReviewReasons(
     .filter((value): value is UploadPrivacyReviewReason =>
       [
         'filename_sanitized',
+        'filename_identity_signal',
         'metadata_exif',
         'metadata_gps',
         'metadata_author',
+        'metadata_title',
+        'metadata_creator',
+        'metadata_company',
         'metadata_hidden_properties',
+        'malware_scanner_unavailable',
+        'metadata_stripping_unavailable',
       ].includes(value)
     );
 }

@@ -76,7 +76,7 @@ export async function getCanonicalActiveOrgMembership(
   }
 
   const role = normalizeAuthorizedOrgRole(data.role as string | null | undefined);
-  const state = (data.state ?? data.status ?? null) as string | null;
+  const state = (data.state ?? null) as string | null;
 
   if (!role || !isActiveMembershipState(state)) {
     return null;

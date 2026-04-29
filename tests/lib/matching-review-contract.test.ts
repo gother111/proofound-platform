@@ -16,6 +16,74 @@ import {
   shouldSuppressExactRank,
 } from '@/lib/matching/review-contract';
 
+type ReviewCardProofPack = NonNullable<
+  Parameters<typeof buildProofFirstReviewCard>[0]['proofPack']
+>;
+
+function buildReviewProofPack(overrides: Partial<ReviewCardProofPack> = {}): ReviewCardProofPack {
+  const contract = {
+    id: 'pack-1',
+    packKind: 'verification_bundle',
+    status: 'published',
+    title: 'Proof Pack',
+    primaryClaim: {
+      type: 'outcome_statement',
+      statement: 'Evidence shows the result.',
+    },
+    primaryAnchor: {
+      subjectType: 'experience',
+      subjectId: 'experience-1',
+      label: 'Prior work',
+    },
+    roleContext: null,
+    ownershipStatement: 'Owned the shared document and delivery.',
+    timeframe: {
+      start: null,
+      end: null,
+      label: null,
+    },
+    outcomeSummary: 'Captured the shipped outcome.',
+    linkedSkills: [],
+    linkedEvidenceItems: [],
+    verificationSummary: {
+      summary: 'Scoped verification supports this Proof Pack.',
+      evidenceCount: 1,
+      verifiedEvidenceCount: 1,
+      verificationTypes: ['platform_manual_review'],
+      badges: [],
+    },
+    proofQualityScore: 0.9,
+    visibilityState: 'matched_org',
+    freshnessState: 'fresh',
+    lastVerifiedAt: null,
+    schemaVersion: 'proof_pack/v2',
+  } as ReviewCardProofPack['contract'];
+
+  return {
+    ownerId: 'profile-1',
+    primarySubjectType: 'experience',
+    lifecycleState: 'published',
+    title: 'Proof Pack',
+    summary: null,
+    contextJson: {},
+    ownershipStatement: 'Owned the shared document and shipped it with the team.',
+    evidenceSummary: null,
+    outcomesSummary: 'Captured the shipped outcome.',
+    verificationSummary: 'Scoped verification supports this Proof Pack.',
+    verificationStatus: 'verified',
+    freshnessState: 'fresh',
+    proofQualityScore: 0.9,
+    updatedAt: new Date('2026-03-18T10:00:00Z'),
+    publishedAt: new Date('2026-03-18T10:00:00Z'),
+    contract,
+    ...overrides,
+    contract: {
+      ...contract,
+      ...(overrides.contract ?? {}),
+    },
+  };
+}
+
 describe('matching review contract', () => {
   it('keeps identity hidden in blind review and contextual reveal', () => {
     const blind = buildCandidateReviewProjection(
@@ -24,15 +92,21 @@ describe('matching review contract', () => {
         displayName: 'Casey Candidate',
         handle: 'casey',
         avatarUrl: 'https://example.com/avatar.png',
+        email: 'casey@example.com',
         headline: 'Backend engineer',
         tagline: 'Proof-first builder',
         workMode: 'remote',
         city: 'Stockholm',
         country: 'Sweden',
+        exactLocation: 'Sankt Eriksgatan 10, Stockholm',
+        portfolioUrl: 'https://casey.example',
+        employerNames: ['Acme Climate AB'],
+        schoolNames: ['Stockholm University'],
         desiredRoles: ['Staff backend engineer'],
         valuesTags: ['privacy'],
         causeTags: ['climate'],
         verified: { work_email: true },
+        publicPortfolioPublished: true,
       },
       'blind'
     );
@@ -40,6 +114,11 @@ describe('matching review contract', () => {
     expect(blind.displayName).toBeNull();
     expect(blind.handle).toBeNull();
     expect(blind.avatarUrl).toBeNull();
+    expect(blind.email).toBeNull();
+    expect(blind.portfolioUrl).toBeNull();
+    expect(blind.employerNames).toBeNull();
+    expect(blind.schoolNames).toBeNull();
+    expect(blind.exactLocation).toBeNull();
     expect(blind.locationSummary).toBe('Location hidden');
 
     const contextualReveal = buildCandidateReviewProjection(
@@ -48,11 +127,16 @@ describe('matching review contract', () => {
         displayName: 'Casey Candidate',
         handle: 'casey',
         avatarUrl: 'https://example.com/avatar.png',
+        email: 'casey@example.com',
         headline: 'Backend engineer',
         tagline: 'Proof-first builder',
         workMode: 'remote',
         city: 'Stockholm',
         country: 'Sweden',
+        exactLocation: 'Sankt Eriksgatan 10, Stockholm',
+        portfolioUrl: 'https://casey.example',
+        employerNames: ['Acme Climate AB'],
+        schoolNames: ['Stockholm University'],
         desiredRoles: ['Staff backend engineer'],
         valuesTags: ['privacy'],
         causeTags: ['climate'],
@@ -64,8 +148,64 @@ describe('matching review contract', () => {
     expect(contextualReveal.displayName).toBeNull();
     expect(contextualReveal.handle).toBeNull();
     expect(contextualReveal.avatarUrl).toBeNull();
+    expect(contextualReveal.email).toBeNull();
+    expect(contextualReveal.portfolioUrl).toBeNull();
+    expect(contextualReveal.employerNames).toBeNull();
+    expect(contextualReveal.schoolNames).toBeNull();
     expect(getVisibleIdentityFields('shortlist_identity')).not.toContain('displayName');
     expect(getVisibleIdentityFields('shortlist_identity')).not.toContain('handle');
+    expect(getVisibleIdentityFields('shortlist_identity')).not.toContain('email');
+    expect(getVisibleIdentityFields('shortlist_identity')).not.toContain('portfolioUrl');
+  });
+
+  it('allows approved identity fields only after full reveal consent', () => {
+    const projected = buildCandidateReviewProjection(
+      {
+        profileId: 'profile-1',
+        displayName: 'Casey Candidate',
+        handle: 'casey',
+        avatarUrl: 'https://example.com/avatar.png',
+        email: 'casey@example.com',
+        headline: 'Backend engineer',
+        tagline: 'Proof-first builder',
+        workMode: 'remote',
+        city: 'Stockholm',
+        country: 'Sweden',
+        exactLocation: 'Sankt Eriksgatan 10, Stockholm',
+        portfolioUrl: 'https://casey.example',
+        employerNames: ['Acme Climate AB'],
+        schoolNames: ['Stockholm University'],
+        verified: { work_email: true },
+      },
+      'full_identity'
+    );
+
+    expect(projected.displayName).toBe('Casey Candidate');
+    expect(projected.email).toBe('casey@example.com');
+    expect(projected.portfolioUrl).toBe('https://casey.example');
+    expect(projected.employerNames).toEqual(['Acme Climate AB']);
+    expect(projected.schoolNames).toEqual(['Stockholm University']);
+    expect(projected.locationSummary).toBe('Sankt Eriksgatan 10, Stockholm');
+  });
+
+  it('does not let public portfolio publication override blind review hiding', () => {
+    const blind = buildCandidateReviewProjection(
+      {
+        profileId: 'profile-1',
+        displayName: 'Public Portfolio Candidate',
+        handle: 'public-candidate',
+        email: 'public@example.com',
+        portfolioUrl: 'https://proofound.example/portfolio/public-candidate',
+        publicPortfolioPublished: true,
+        workMode: 'remote',
+      },
+      'blind'
+    );
+
+    expect(blind.displayName).toBeNull();
+    expect(blind.handle).toBeNull();
+    expect(blind.email).toBeNull();
+    expect(blind.portfolioUrl).toBeNull();
   });
 
   it('keeps reviewer shortlist access below full identity', () => {
@@ -283,6 +423,104 @@ describe('matching review contract', () => {
     expect(reviewCard.strongestProof.summary).toContain('shared document');
     expect(reviewCard.strongestProof.summary).not.toContain('safe_name.pdf');
     expect(reviewCard.strongestProof.outcome).not.toContain('safe_name.pdf');
+  });
+
+  it('redacts contact handles and raw links from blind proof text', () => {
+    const reviewCard = buildProofFirstReviewCard({
+      profileId: 'profile-1',
+      reasonCodes: ['skills_strong'],
+      fairnessStatus: 'pass',
+      proofPack: buildReviewProofPack({
+        contract: {
+          primaryClaim: {
+            type: 'outcome_statement',
+            statement:
+              'Delivered the proof. Contact candidate@example.com, +46 70 123 45 67, @candidate, https://linkedin.com/in/candidate, https://github.com/candidate/repo, or https://casey.example.',
+          },
+          outcomeSummary:
+            'Evidence included https://github.com/candidate/private and portfolio https://casey.example.',
+        } as Partial<ReviewCardProofPack['contract']> as ReviewCardProofPack['contract'],
+      }),
+    });
+    const serialized = JSON.stringify(reviewCard);
+
+    expect(reviewCard.privacy.reviewState).toBe('visible');
+    expect(serialized).not.toContain('candidate@example.com');
+    expect(serialized).not.toContain('+46 70 123 45 67');
+    expect(serialized).not.toContain('@candidate');
+    expect(serialized).not.toContain('linkedin.com');
+    expect(serialized).not.toContain('github.com');
+    expect(serialized).not.toContain('casey.example');
+    expect(reviewCard.privacy.reasons).toEqual(
+      expect.arrayContaining([
+        'redacted_email',
+        'redacted_phone',
+        'redacted_url',
+        'redacted_handle',
+      ])
+    );
+  });
+
+  it('hides exact employer and school names from blind proof text when context is private', () => {
+    const reviewCard = buildProofFirstReviewCard({
+      profileId: 'profile-1',
+      reasonCodes: ['skills_strong'],
+      fairnessStatus: 'pass',
+      proofPack: buildReviewProofPack({
+        contextJson: {
+          contextOrganizationName: 'Acme Climate AB',
+          contextSchoolName: 'Stockholm University',
+          contextLocation: 'Stockholm, Sweden',
+          contextOrganizationVisibility: 'owner_only',
+          contextSchoolVisibility: 'owner_only',
+        },
+        contract: {
+          primaryClaim: {
+            type: 'outcome_statement',
+            statement:
+              'Shipped privacy work at Acme Climate AB after research with Stockholm University in Stockholm, Sweden.',
+          },
+          outcomeSummary: 'Acme Climate AB and Stockholm University both validated the result.',
+          ownershipStatement: 'Owned implementation for Acme Climate AB.',
+        } as Partial<ReviewCardProofPack['contract']> as ReviewCardProofPack['contract'],
+      }),
+    });
+    const serialized = JSON.stringify(reviewCard);
+
+    expect(reviewCard.privacy.reviewState).toBe('visible');
+    expect(serialized).not.toContain('Acme Climate AB');
+    expect(serialized).not.toContain('Stockholm University');
+    expect(serialized).not.toContain('Stockholm, Sweden');
+    expect(serialized).toContain('the organization');
+    expect(serialized).toContain('the institution');
+  });
+
+  it('holds risky proof text for manual review instead of leaking uncertain identity', () => {
+    const reviewCard = buildProofFirstReviewCard({
+      profileId: 'profile-1',
+      reasonCodes: ['skills_strong'],
+      fairnessStatus: 'pass',
+      proofPack: buildReviewProofPack({
+        contract: {
+          primaryClaim: {
+            type: 'outcome_statement',
+            statement: 'Jane Doe delivered the system from 221B Baker Street.',
+          },
+          outcomeSummary: 'Jane Doe later presented the results.',
+          ownershipStatement: 'Jane Doe owned the delivery.',
+        } as Partial<ReviewCardProofPack['contract']> as ReviewCardProofPack['contract'],
+      }),
+    });
+    const serialized = JSON.stringify(reviewCard);
+
+    expect(reviewCard.privacy.reviewState).toBe('held_for_manual_review');
+    expect(reviewCard.strongestProof.summary).toBe('Proof summary held for manual privacy review.');
+    expect(reviewCard.strongestProof.outcome).toBeNull();
+    expect(serialized).not.toContain('Jane Doe');
+    expect(serialized).not.toContain('221B Baker Street');
+    expect(reviewCard.privacy.reasons).toEqual(
+      expect.arrayContaining(['manual_review_possible_full_name', 'manual_review_precise_location'])
+    );
   });
 
   it('keeps fairness cohort checks separate from Zen opt-in state', () => {

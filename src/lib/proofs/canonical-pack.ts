@@ -975,6 +975,10 @@ function resolveEffectivePolicyCeiling(input: {
     return 'owner_only' as const;
   }
 
+  if (input.uploadedFile && input.uploadedFile.safeForPublic !== true) {
+    return 'matched_org' as const;
+  }
+
   const uploadMetadata = toRecord(input.uploadedFile?.metadata);
   const sensitivity = toRecord(uploadMetadata.sensitivity);
   if (sensitivity.sensitiveDocument === true) {
@@ -1237,6 +1241,9 @@ export function buildCanonicalPublicProofPackProjection(input: {
         return false;
       }
       if (uploadedFile && isUploadHeldForPrivacyReview(uploadedFile)) {
+        return false;
+      }
+      if (uploadedFile && uploadedFile.safeForPublic !== true) {
         return false;
       }
       return true;

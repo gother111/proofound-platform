@@ -65,8 +65,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!inspected.ok) {
-        const status = inspected.reason === 'invalid' ? 404 : 410;
-        return NextResponse.json({ error: `Token ${inspected.reason}` }, { status });
+        return NextResponse.json({ error: 'Invalid token' }, { status: 404 });
       }
 
       const { data: tokenRow, error: tokenError } = await admin
@@ -80,11 +79,11 @@ export async function POST(request: NextRequest) {
       }
 
       if (tokenRow.used_at) {
-        return NextResponse.json({ error: 'Token already used' }, { status: 410 });
+        return NextResponse.json({ error: 'Invalid token' }, { status: 404 });
       }
 
       if (new Date(tokenRow.expires_at) < new Date()) {
-        return NextResponse.json({ error: 'Token expired' }, { status: 410 });
+        return NextResponse.json({ error: 'Invalid token' }, { status: 404 });
       }
 
       interviewId = tokenRow.interview_id;
@@ -263,13 +262,7 @@ export async function POST(request: NextRequest) {
         redeemSessionNonce,
       });
       if (!markUsed.ok) {
-        const status =
-          markUsed.reason === 'replayed'
-            ? 409
-            : markUsed.reason === 'expired' || markUsed.reason === 'revoked'
-              ? 410
-              : 404;
-        return NextResponse.json({ error: 'Invalid token' }, { status });
+        return NextResponse.json({ error: 'Invalid token' }, { status: 404 });
       }
     }
 

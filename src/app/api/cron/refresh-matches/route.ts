@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { safeApiErrorResponse } from '@/lib/api/errors';
 import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
 import { log } from '@/lib/log';
 import {
@@ -71,17 +72,14 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const duration = Date.now() - startTime;
 
-    log.error('cron.refresh-matches.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      durationMs: duration,
-    });
-
-    return NextResponse.json(
-      {
-        error: 'Refresh queue enqueue failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
+    return safeApiErrorResponse({
+      event: 'cron.refresh-matches.failed',
+      error,
+      status: 500,
+      publicMessage: 'Refresh queue enqueue failed',
+      context: {
+        durationMs: duration,
       },
-      { status: 500 }
-    );
+    });
   }
 }

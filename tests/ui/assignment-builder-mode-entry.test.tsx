@@ -79,9 +79,11 @@ type FetchFixture = {
 function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
-    const isAssignmentDetailRequest = /^\/api\/assignments\/[^/]+$/.test(url);
+    const requestUrl = new URL(url, 'http://localhost');
+    const requestPath = requestUrl.pathname;
+    const isAssignmentDetailRequest = /^\/api\/assignments\/[^/]+$/.test(requestPath);
 
-    if (url.startsWith('/api/csrf-token')) {
+    if (requestPath === '/api/csrf-token') {
       return {
         ok: true,
         json: async () => ({ token: 'csrf-token' }),
@@ -90,7 +92,7 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
 
     if (
       mockDraftId &&
-      url === `/api/assignments/${mockDraftId}` &&
+      requestPath === `/api/assignments/${mockDraftId}` &&
       (!init || init.method === undefined)
     ) {
       return {
@@ -99,7 +101,10 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
       };
     }
 
-    if (url === '/api/assignments' || (isAssignmentDetailRequest && init?.method === 'PUT')) {
+    if (
+      requestPath === '/api/assignments' ||
+      (isAssignmentDetailRequest && init?.method === 'PUT')
+    ) {
       const requestBody =
         typeof init?.body === 'string' ? JSON.parse(init.body) : (init?.body ?? {});
       return {
@@ -116,8 +121,8 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
     }
 
     if (
-      (mockDraftId && url === `/api/assignments/${mockDraftId}/outcomes`) ||
-      url === '/api/assignments/draft-1/outcomes'
+      (mockDraftId && requestPath === `/api/assignments/${mockDraftId}/outcomes`) ||
+      requestPath === '/api/assignments/draft-1/outcomes'
     ) {
       return {
         ok: true,
@@ -126,8 +131,8 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
     }
 
     if (
-      (mockDraftId && url === `/api/assignments/${mockDraftId}/expertise-matrix`) ||
-      url === '/api/assignments/draft-1/expertise-matrix'
+      (mockDraftId && requestPath === `/api/assignments/${mockDraftId}/expertise-matrix`) ||
+      requestPath === '/api/assignments/draft-1/expertise-matrix'
     ) {
       return {
         ok: true,
@@ -345,7 +350,9 @@ describe('Assignment builder lean corridor', () => {
 
     await waitFor(() => {
       const outcomesCall = fetchMock.mock.calls.find(
-        ([url, init]) => url === '/api/assignments/active-1/outcomes' && init?.method === 'POST'
+        ([url, init]) =>
+          new URL(String(url), 'http://localhost').pathname ===
+            '/api/assignments/active-1/outcomes' && init?.method === 'POST'
       );
       expect(outcomesCall).toBeTruthy();
       expect(JSON.parse(String(outcomesCall?.[1]?.body)).outcomes).toHaveLength(1);
@@ -418,8 +425,9 @@ describe('Assignment builder lean corridor', () => {
 
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
+      const requestPath = new URL(url, 'http://localhost').pathname;
 
-      if (url === '/api/assignments/draft-1' && (!init || init.method === undefined)) {
+      if (requestPath === '/api/assignments/draft-1' && (!init || init.method === undefined)) {
         return new Promise(() => {});
       }
 
@@ -440,7 +448,7 @@ describe('Assignment builder lean corridor', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(fetchMock).toHaveBeenCalledWith('/api/assignments/draft-1');
+    expect(fetchMock).toHaveBeenCalledWith('/api/assignments/draft-1?orgSlug=acme');
 
     act(() => {
       vi.advanceTimersByTime(30000);

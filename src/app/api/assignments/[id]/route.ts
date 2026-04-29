@@ -15,12 +15,14 @@ import {
 } from '@/lib/assignments/expertise-matrix';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
 import {
-  verifyAssignmentAccess,
+  verifyExplicitAssignmentAccess,
   verifyExplicitAssignmentMutationAccess,
 } from '@/lib/assignments/access';
 import { requireApiAuthContext } from '@/lib/auth';
+import { safeApiErrorResponse, safeValidationErrorResponse } from '@/lib/api/errors';
 import { ensureOrganizationPrincipal, PrincipalContextSchema } from '@/lib/authz';
 import { log } from '@/lib/log';
+import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 
 export const dynamic = 'force-dynamic';
 
@@ -132,7 +134,7 @@ function buildAssignmentResponse(
 /**
  * GET /api/assignments/[id]
  */
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   let assignmentId: string | undefined;
 
   try {
@@ -144,9 +146,20 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
-    const hasAccess = await verifyAssignmentAccess(user.id, assignmentId);
-    if (!hasAccess) {
+    const orgId = request.nextUrl.searchParams.get('orgId');
+    const orgSlug = request.nextUrl.searchParams.get('orgSlug');
+    const access = await verifyExplicitAssignmentAccess(user.id, assignmentId, {
+      orgId,
+      orgSlug,
+    });
+    if (access.status === 'missing_org_context') {
+      return NextResponse.json({ error: 'Organization context is required' }, { status: 400 });
+    }
+    if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
+    }
+    if (access.status === 'insufficient_role') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const assignment = await db.query.assignments.findFirst({
@@ -198,9 +211,15 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     log.error('assignment.get.failed', {
       assignmentId,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: sanitizeErrorForLog(error),
     });
-    return NextResponse.json({ error: 'Failed to fetch assignment' }, { status: 500 });
+    return safeApiErrorResponse({
+      event: 'assignment.get.response_failed',
+      error,
+      status: 500,
+      publicMessage: 'Failed to fetch assignment',
+      context: { assignmentId },
+    });
   }
 }
 
@@ -278,6 +297,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       orgId: principal?.ok ? principal.context.orgId : validatedData.orgId,
       orgSlug: validatedData.orgSlug,
     });
+    if (access.status === 'missing_org_context') {
+      return NextResponse.json({ error: 'Organization context is required' }, { status: 400 });
+    }
     if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
     }
@@ -395,15 +417,19 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });
+      return safeValidationErrorResponse({
+        error,
+        message: 'Invalid input',
+      });
     }
 
-    log.error('assignment.update.failed', {
-      assignmentId,
-      error: error instanceof Error ? error.message : 'Unknown error',
+    return safeApiErrorResponse({
+      event: 'assignment.update.failed',
+      error,
+      status: 500,
+      publicMessage: 'Failed to update assignment',
+      context: { assignmentId },
     });
-
-    return NextResponse.json({ error: 'Failed to update assignment' }, { status: 500 });
   }
 }
 
@@ -446,6 +472,9 @@ export async function DELETE(
     const access = await verifyExplicitAssignmentMutationAccess(user.id, assignmentId, {
       orgId: principal.context.orgId,
     });
+    if (access.status === 'missing_org_context') {
+      return NextResponse.json({ error: 'Organization context is required' }, { status: 400 });
+    }
     if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
     }
@@ -470,11 +499,12 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    log.error('assignment.delete.failed', {
-      assignmentId,
-      error: error instanceof Error ? error.message : 'Unknown error',
+    return safeApiErrorResponse({
+      event: 'assignment.delete.failed',
+      error,
+      status: 500,
+      publicMessage: 'Failed to delete assignment',
+      context: { assignmentId },
     });
-
-    return NextResponse.json({ error: 'Failed to delete assignment' }, { status: 500 });
   }
 }

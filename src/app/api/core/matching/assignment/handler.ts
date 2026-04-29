@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       where: and(
         eq(organizationMembers.userId, user.id),
         eq(organizationMembers.orgId, assignment.orgId),
-        eq(organizationMembers.status, 'active')
+        eq(organizationMembers.state, 'active')
       ),
     });
 

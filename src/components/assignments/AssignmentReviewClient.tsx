@@ -71,7 +71,9 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
     const fetchClient = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/assignments/${assignmentId}`);
+        const res = await fetch(
+          `/api/assignments/${assignmentId}?orgSlug=${encodeURIComponent(slug)}`
+        );
         if (res.ok) {
           const data = await res.json();
           setAssignment(data.assignment);
@@ -88,7 +90,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
     };
 
     fetchClient();
-  }, [assignment, assignmentId, hasFetched]);
+  }, [assignment, assignmentId, hasFetched, slug]);
 
   const handlePublish = async () => {
     if (!confirm('Are you ready to publish this assignment and start matching?')) return;

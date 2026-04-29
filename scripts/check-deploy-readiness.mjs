@@ -7,31 +7,48 @@ const missing = [];
 const failures = [];
 const warnings = [];
 
-const truthy = (value) => ['true', '1', 'yes', 'on'].includes(String(value ?? '').trim().toLowerCase());
+const truthy = (value) =>
+  ['true', '1', 'yes', 'on'].includes(
+    String(value ?? '')
+      .trim()
+      .toLowerCase()
+  );
 const productionDeployDetected =
-  String(env.NODE_ENV ?? '').trim().toLowerCase() === 'production' ||
-  String(env.VERCEL_ENV ?? '').trim().toLowerCase() === 'production' ||
-  String(env.NEXT_PUBLIC_APP_ENV ?? '').trim().toLowerCase() === 'production' ||
-  String(env.APP_ENV ?? '').trim().toLowerCase() === 'production';
+  String(env.NODE_ENV ?? '')
+    .trim()
+    .toLowerCase() === 'production' ||
+  String(env.VERCEL_ENV ?? '')
+    .trim()
+    .toLowerCase() === 'production' ||
+  String(env.NEXT_PUBLIC_APP_ENV ?? '')
+    .trim()
+    .toLowerCase() === 'production' ||
+  String(env.APP_ENV ?? '')
+    .trim()
+    .toLowerCase() === 'production';
 const strict = env.FORCE_STRICT_DEPLOY_CHECK === 'true' || productionDeployDetected;
 
 const enabledMockModes = [];
-if (truthy(env.NEXT_PUBLIC_USE_MOCK_SUPABASE)) enabledMockModes.push('NEXT_PUBLIC_USE_MOCK_SUPABASE');
+if (truthy(env.NEXT_PUBLIC_USE_MOCK_SUPABASE))
+  enabledMockModes.push('NEXT_PUBLIC_USE_MOCK_SUPABASE');
 if (truthy(env.MOCK_ADMIN_MODE)) enabledMockModes.push('MOCK_ADMIN_MODE');
+if (truthy(env.MOBILE_MOCK_AUTH)) enabledMockModes.push('MOBILE_MOCK_AUTH');
 const mockPlatformRole = String(env.MOCK_PLATFORM_ROLE ?? '').trim();
 if (mockPlatformRole === 'platform_admin' || mockPlatformRole === 'super_admin') {
   enabledMockModes.push('MOCK_PLATFORM_ROLE');
 }
 
-if (!(env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL)) missing.push('NEXT_PUBLIC_SUPABASE_URL/SUPABASE_URL');
-if (!(env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY)) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY/SUPABASE_ANON_KEY');
+if (!(env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL))
+  missing.push('NEXT_PUBLIC_SUPABASE_URL/SUPABASE_URL');
+if (!(env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY))
+  missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY/SUPABASE_ANON_KEY');
 if (!env.SUPABASE_SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY');
 if (!(env.NEXT_PUBLIC_SITE_URL || env.SITE_URL)) missing.push('NEXT_PUBLIC_SITE_URL/SITE_URL');
 if (!env.DATABASE_URL) missing.push('DATABASE_URL');
 
 if (productionDeployDetected && enabledMockModes.length) {
   failures.push(
-    `Production deploys must not enable mock database/admin modes: ${enabledMockModes.join(', ')}`
+    `Production deploys must not enable mock database/admin/auth modes: ${enabledMockModes.join(', ')}`
   );
 }
 

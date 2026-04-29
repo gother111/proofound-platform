@@ -223,6 +223,142 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(mocks.getOrCreateIntroWorkflow).not.toHaveBeenCalled();
   });
 
+  it.each(['inactive', 'suspended', 'unknown_state'])(
+    'blocks review mutation when membership access resolves as non-active for %s state',
+    async () => {
+      mocks.getOrgMembershipRole.mockResolvedValue(null);
+      mocks.select.mockReset();
+
+      const orgLimit = vi.fn().mockResolvedValue([{ id: 'org-1', slug: 'proofound' }]);
+      const orgWhere = vi.fn().mockReturnValue({ limit: orgLimit });
+      const orgFrom = vi.fn().mockReturnValue({ where: orgWhere });
+      mocks.select.mockReturnValueOnce({ from: orgFrom });
+
+      const response = await POST(
+        new NextRequest('https://example.com/api/org/proofound/matches/match-1/review', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'shortlist' }),
+        }),
+        {
+          params: Promise.resolve({ id: 'proofound', matchId: 'match-1' }),
+        } as any
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.error).toBe('Access denied');
+      expect(mocks.ensureMatchReviewState).not.toHaveBeenCalled();
+      expect(mocks.getOrCreateIntroWorkflow).not.toHaveBeenCalled();
+    }
+  );
+
+  it('allows active org reviewers to update candidate review state', async () => {
+    mocks.getOrgMembershipRole.mockResolvedValue('org_reviewer');
+    mocks.select.mockReset();
+
+    const orgLimit = vi.fn().mockResolvedValue([{ id: 'org-1', slug: 'proofound' }]);
+    const orgWhere = vi.fn().mockReturnValue({ limit: orgLimit });
+    const orgFrom = vi.fn().mockReturnValue({ where: orgWhere });
+
+    const matchLimit = vi.fn().mockResolvedValue([
+      {
+        matchId: 'match-1',
+        assignmentId: 'assignment-1',
+        profileId: 'profile-1',
+        orgId: 'org-1',
+        reviewStage: 'blind_review',
+        revealScope: 'blind',
+        reviewOperationalFallbackMode: null,
+        assignmentOperationalFallbackMode: null,
+        fairnessStatus: 'pass',
+      },
+    ]);
+    const matchWhere = vi.fn().mockReturnValue({ limit: matchLimit });
+    const matchInnerJoin2 = vi.fn().mockReturnValue({ where: matchWhere });
+    const matchInnerJoin1 = vi.fn().mockReturnValue({ innerJoin: matchInnerJoin2 });
+    const matchFrom = vi.fn().mockReturnValue({ innerJoin: matchInnerJoin1 });
+
+    mocks.select.mockReturnValueOnce({ from: orgFrom }).mockReturnValueOnce({ from: matchFrom });
+
+    const response = await POST(
+      new NextRequest('https://example.com/api/org/proofound/matches/match-1/review', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'shortlist', annotation: 'Strong proof packet.' }),
+      }),
+      {
+        params: Promise.resolve({ id: 'proofound', matchId: 'match-1' }),
+      } as any
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.matchId).toBe('match-1');
+    expect(mocks.setMatchReviewStage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorRole: 'org_reviewer',
+        reviewStage: 'shortlisted',
+      })
+    );
+  });
+
+  it('redacts blind review-card free text at the route boundary before reveal', async () => {
+    mocks.buildProofFirstReviewCard.mockReturnValue({
+      candidateLabel: 'Candidate A7F2',
+      strongestProof: {
+        summary:
+          'Jane Doe shipped this at Acme Climate AB. Email jane@example.com, call +46 70 123 45 67, see https://linkedin.com/in/janedoe and Jane_Doe_CV.pdf.',
+        outcome: 'Portfolio: https://jane.example and GitHub https://github.com/janedoe/private.',
+        ownership: 'Jane Doe owned delivery from 221B Baker Street.',
+        anchorContext: 'Anchored at Stockholm University',
+        freshnessLabel: 'Fresh',
+      },
+      verification: {
+        summaryLabel: 'Verified by jane@example.com at Acme Climate AB.',
+        count: 1,
+      },
+      trustLabels: ['Acme Climate AB proof'],
+      fitBand: null,
+      fitSummary: {
+        headline: 'Jane Doe is a fit',
+        bullets: ['See @janedoe and https://github.com/janedoe/private'],
+        reasonCodes: ['skills_strong'],
+      },
+      privacy: {
+        reviewState: 'visible',
+        reasons: [],
+      },
+    });
+
+    const response = await POST(
+      new NextRequest('https://example.com/api/org/proofound/matches/match-1/review', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'pass' }),
+      }),
+      {
+        params: Promise.resolve({ id: 'proofound', matchId: 'match-1' }),
+      } as any
+    );
+    const body = await response.json();
+    const serialized = JSON.stringify(body);
+
+    expect(response.status).toBe(200);
+    expect(body.revealScope).toBe('blind');
+    expect(body.reviewCard.privacy.reviewState).toBe('held_for_manual_review');
+    expect(body.reviewCard.strongestProof.summary).toBe(
+      'Proof summary held for manual privacy review.'
+    );
+    expect(serialized).not.toContain('Jane Doe');
+    expect(serialized).not.toContain('jane@example.com');
+    expect(serialized).not.toContain('+46 70 123 45 67');
+    expect(serialized).not.toContain('linkedin.com');
+    expect(serialized).not.toContain('github.com');
+    expect(serialized).not.toContain('jane.example');
+    expect(serialized).not.toContain('Jane_Doe_CV.pdf');
+    expect(serialized).not.toContain('Acme Climate AB');
+    expect(serialized).not.toContain('Stockholm University');
+    expect(serialized).not.toContain('221B Baker Street');
+  });
+
   it('approves intro, keeps identity masked, and opens messaging when candidate interest already exists', async () => {
     mocks.resolveCanonicalCorridor.mockReturnValue({
       progressiveRevealStage: 'stage2_contextual_reveal',

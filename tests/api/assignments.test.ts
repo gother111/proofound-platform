@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET, POST } from '@/app/api/assignments/route';
 import { NextRequest } from 'next/server';
 import { db } from '@/db';
@@ -110,6 +110,10 @@ vi.mock('@/lib/surveys/sus-triggers', () => ({
 }));
 
 describe('Assignment API', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     (requireApiAuthContext as any).mockImplementation(async () => {
@@ -163,6 +167,37 @@ describe('Assignment API', () => {
       expect(res.status).toBe(201);
       expect(data.assignment).toBeDefined();
       expect(db.insert).toHaveBeenCalled();
+    });
+
+    it('returns a generic production response when assignment persistence fails', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+        orgId: TEST_ORG_ID,
+        role: 'org_owner',
+      });
+      (db.transaction as any).mockRejectedValueOnce(
+        new Error('insert into assignments violates constraint assignments_org_id_fkey')
+      );
+
+      const req = new NextRequest('http://localhost/api/assignments', {
+        method: 'POST',
+        body: JSON.stringify({
+          orgId: TEST_ORG_ID,
+          role: 'Software Engineer',
+          status: 'draft',
+          mustHaveSkills: [],
+        }),
+      });
+
+      const res = await POST(req);
+      const data = await res.json();
+      const serialized = JSON.stringify(data);
+
+      expect(res.status).toBe(500);
+      expect(data.error).toBe('Failed to create assignment');
+      expect(serialized).not.toContain('assignments');
+      expect(serialized).not.toContain('constraint');
+      expect(serialized).not.toContain('org_id');
     });
 
     it('should normalize empty date strings from builder drafts before persistence', async () => {
@@ -346,7 +381,42 @@ describe('Assignment API', () => {
   });
 
   describe('GET', () => {
-    it('should fetch assignments', async () => {
+    it('requires explicit organization context', async () => {
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+        orgId: TEST_ORG_ID,
+        role: 'org_reviewer',
+      });
+
+      const req = new NextRequest('http://localhost/api/assignments');
+      const res = await GET(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(data.error).toBe('Organization context is required');
+    });
+
+    it('denies a wrong organization slug instead of falling back to another active org', async () => {
+      (db.query.organizations.findFirst as any).mockResolvedValue({ id: TEST_ORG_ID });
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue(null);
+
+      const req = new NextRequest('http://localhost/api/assignments?orgSlug=org-a');
+      const res = await GET(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(403);
+      expect(data.error).toBe('Organization not found or access denied');
+    });
+
+    it('denies pending or inactive members for explicit organization context', async () => {
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue(null);
+
+      const req = new NextRequest(`http://localhost/api/assignments?orgId=${TEST_ORG_ID}`);
+      const res = await GET(req);
+
+      expect(res.status).toBe(403);
+    });
+
+    it('should fetch assignments with an explicit organization id', async () => {
       // Mock org membership
       (db.query.organizationMembers.findFirst as any).mockResolvedValue({
         orgId: TEST_ORG_ID,
@@ -365,12 +435,38 @@ describe('Assignment API', () => {
 
       (db.select as any).mockImplementation(selectMock);
 
-      const req = new NextRequest('http://localhost/api/assignments');
+      const req = new NextRequest(`http://localhost/api/assignments?orgId=${TEST_ORG_ID}`);
       const res = await GET(req);
       const data = await res.json();
 
       expect(data.items).toHaveLength(1);
       expect(data.items[0].role).toBe('Dev');
+    });
+
+    it('preserves the single-org frontend flow when it passes an explicit slug', async () => {
+      (db.query.organizations.findFirst as any).mockResolvedValue({ id: TEST_ORG_ID });
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+        orgId: TEST_ORG_ID,
+        role: 'org_owner',
+      });
+
+      const mockAssignments = [{ id: '1', role: 'Dev' }];
+      const offsetMock = vi.fn().mockResolvedValue(mockAssignments);
+      const limitMock = vi.fn().mockReturnValue({ offset: offsetMock });
+      const orderByMock = vi.fn().mockReturnValue({ limit: limitMock });
+      const dynamicMock = vi.fn().mockReturnValue({ orderBy: orderByMock });
+      const whereMock = vi.fn().mockReturnValue({ $dynamic: dynamicMock });
+      const fromMock = vi.fn().mockReturnValue({ where: whereMock });
+      const selectMock = vi.fn().mockReturnValue({ from: fromMock });
+
+      (db.select as any).mockImplementation(selectMock);
+
+      const req = new NextRequest('http://localhost/api/assignments?orgSlug=proofound-org');
+      const res = await GET(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items).toHaveLength(1);
     });
   });
 });

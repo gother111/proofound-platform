@@ -445,6 +445,24 @@ describe('canonical custom verification routes', () => {
     });
   });
 
+  it('uses the same generic response for malformed and unknown custom verification tokens', async () => {
+    const malformed = await getVerifyCustom(
+      new NextRequest('http://localhost/api/verify/custom/short'),
+      { params: Promise.resolve({ token: 'short' }) }
+    );
+
+    vi.mocked(getCanonicalBundleById).mockResolvedValue(null as any);
+    const unknown = await getVerifyCustom(
+      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+      { params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }) }
+    );
+
+    expect(malformed.status).toBe(404);
+    expect(unknown.status).toBe(404);
+    await expect(malformed.json()).resolves.toEqual({ error: 'Verification request not found' });
+    await expect(unknown.json()).resolves.toEqual({ error: 'Verification request not found' });
+  });
+
   it('records partial custom attestation responses and queues them for manual review', async () => {
     vi.mocked(getCanonicalBundleById).mockResolvedValue(
       makeCanonicalBundle({
@@ -538,7 +556,13 @@ describe('canonical custom verification routes', () => {
         queueType: 'verification',
         linkedEntityType: 'verification_bundle',
         linkedEntityId: 'bundle-1',
+        metadata: expect.not.objectContaining({
+          verifierEmail: expect.anything(),
+        }),
       })
+    );
+    expect(JSON.stringify(ensureInternalOpsQueueItemMock.mock.calls)).not.toContain(
+      'verifier@example.com'
     );
   });
 });

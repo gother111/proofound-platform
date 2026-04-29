@@ -26,8 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     });
 
     if (!preview.ok) {
-      const status = preview.reason === 'invalid' ? 404 : 410;
-      return NextResponse.json({ error: `Token ${preview.reason}` }, { status });
+      return NextResponse.json({ error: 'Invalid token' }, { status: 404 });
     }
 
     const { data: tokenRow, error: tokenError } = await admin
@@ -42,11 +41,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
 
     const isExpired = new Date(tokenRow.expires_at) < new Date();
     if (tokenRow.used_at) {
-      return NextResponse.json({ error: 'Token already used' }, { status: 410 });
+      return NextResponse.json({ error: 'Invalid token' }, { status: 404 });
     }
 
     if (isExpired) {
-      return NextResponse.json({ error: 'Token expired' }, { status: 410 });
+      return NextResponse.json({ error: 'Invalid token' }, { status: 404 });
     }
 
     const [{ data: template }, { data: questions }, { data: interview }, { data: responses }] =

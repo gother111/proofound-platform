@@ -121,7 +121,7 @@ export async function POST(
           })
           .where(eq(orgCandidateInvites.id, invite.id));
       }
-      return NextResponse.json({ error: 'Invite has expired' }, { status: 410 });
+      return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
 
     if (!invite.claimedByProfileId || invite.claimedByProfileId !== user.id) {

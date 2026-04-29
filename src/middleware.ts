@@ -5,52 +5,66 @@ import { getArchivedApiPolicy, getArchivedPagePolicy } from '@/lib/launch/surfac
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit/index';
 import { sendDebugIngest } from '@/lib/debug-ingest';
 
+const TRUE_ENV_VALUES = new Set(['1', 'true', 'yes', 'on']);
+
+function isEnabled(value: string | undefined): boolean {
+  return value ? TRUE_ENV_VALUES.has(value.trim().toLowerCase()) : false;
+}
+
+function shouldSendHstsHeader(): boolean {
+  const explicitHstsSetting = process.env.PROOFOUND_ENABLE_HSTS ?? process.env.ENABLE_HSTS;
+
+  if (explicitHstsSetting !== undefined) {
+    return isEnabled(explicitHstsSetting);
+  }
+
+  return process.env.VERCEL_ENV === 'production';
+}
+
 // Apply consistent security headers for both page and API responses.
 const applySecurityHeaders = (response: NextResponse, request: NextRequest) => {
-  const host = request.headers.get('host') || '';
-  const isProd = host.includes('proofound.io');
-  const isDev = process.env.NODE_ENV !== 'production';
-  const pathname = request.nextUrl.pathname;
-  const isSnippetEmbedRoute = /^\/p\/[^/]+\/embed\/?$/.test(pathname);
+  const isDev = process.env.NODE_ENV !== 'production' && process.env.VERCEL_ENV !== 'production';
 
   // Note: Next dev uses eval-like codepaths (React Refresh / Webpack runtime). If CSP blocks
   // unsafe-eval in development, the app may never hydrate, breaking interactive flows.
   const scriptSrc = isDev
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:"
-    : "script-src 'self' 'unsafe-inline' https:";
+    : [
+        // TODO(security): Replace production 'unsafe-inline' with Next.js nonce/hash CSP and add
+        // a production app-shell smoke test that proves hydration still works without inline scripts.
+        "script-src 'self' 'unsafe-inline'",
+        'https://client.crisp.chat',
+      ].join(' ');
 
   const connectSrc = isDev
     ? "connect-src 'self' https: wss: ws:"
     : "connect-src 'self' https: wss:";
 
   const cspDirectives = [
-    "default-src 'self' https:",
+    "default-src 'self'",
     // Allow inline boot scripts from Next.js; safer nonce/hashes could be added later.
     scriptSrc,
-    "style-src 'self' 'unsafe-inline' https:",
+    "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data: https:",
     connectSrc,
-    "frame-src 'self' https:",
+    "frame-src 'self'",
     "object-src 'none'",
-    isSnippetEmbedRoute ? 'frame-ancestors *' : "frame-ancestors 'none'",
+    "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
   ].join('; ');
 
   response.headers.set('Content-Security-Policy', cspDirectives);
-  if (isSnippetEmbedRoute) {
-    response.headers.delete('X-Frame-Options');
-  } else {
-    response.headers.set('X-Frame-Options', 'DENY');
-  }
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set(
     'Permissions-Policy',
     'accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=()'
   );
 
-  if (isProd) {
+  if (shouldSendHstsHeader()) {
     response.headers.set(
       'Strict-Transport-Security',
       'max-age=63072000; includeSubDomains; preload'

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   conversationFindFirst: vi.fn(),
   matchReviewStateFindFirst: vi.fn(),
   profileFindFirst: vi.fn(),
+  organizationFindFirst: vi.fn(),
   update: vi.fn(),
   recordRevealEvent: vi.fn(),
   syncRevealRequestTimeoutState: vi.fn(),
@@ -48,6 +49,9 @@ vi.mock('@/db', () => ({
       profiles: {
         findFirst: mocks.profileFindFirst,
       },
+      organizations: {
+        findFirst: mocks.organizationFindFirst,
+      },
     },
     update: mocks.update,
   },
@@ -55,6 +59,9 @@ vi.mock('@/db', () => ({
     id: 'id',
   },
   profiles: {
+    id: 'id',
+  },
+  organizations: {
     id: 'id',
   },
 }));
@@ -102,6 +109,10 @@ function mockConversationUpdateReturning(rows: Array<Record<string, unknown>>) {
 }
 
 describe('POST /api/conversations/[conversationId]/reveal', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.RESEND_API_KEY = 'test-resend-key';
@@ -124,10 +135,22 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
       error: null,
     }));
     const profileRows = [
-      { id: 'user-1', displayName: 'Alex' },
       { id: 'candidate-1', displayName: 'Jordan' },
+      { id: 'user-1', displayName: 'Alex' },
     ];
     mocks.profileFindFirst.mockImplementation(async () => profileRows.shift() ?? null);
+    mocks.organizationFindFirst.mockResolvedValue({
+      id: 'org-1',
+      slug: 'acme',
+      displayName: 'Acme Org',
+    });
+    mocks.matchReviewStateFindFirst.mockResolvedValue({
+      matchId: 'match-1',
+      assignmentId: 'assignment-1',
+      profileId: 'candidate-1',
+      orgId: 'org-1',
+      revealScope: 'shortlist_identity',
+    });
     mocks.resendSend.mockResolvedValue({ data: { id: 'email-1' }, error: null });
     mocks.getHiringCorridorRecordForMatch.mockResolvedValue(null);
     mocks.buildHiringCorridorSnapshot.mockReturnValue(null);
@@ -145,7 +168,7 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
     }));
   });
 
-  it('keeps reveal pending after the first participant requests it', async () => {
+  it('keeps reveal pending after the first participant requests it and emails the candidate URL', async () => {
     mocks.conversationFindFirst.mockResolvedValue({
       id: 'conversation-1',
       matchId: 'match-1',
@@ -195,10 +218,25 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
         matchId: 'match-1',
         outcome: 'no_op',
         grantedScope: 'shortlist_identity',
+        reasonCode: 'reveal_requested',
       })
     );
     expect(mocks.unlockFullIdentityForMatch).not.toHaveBeenCalled();
-    expect(mocks.resendSend).not.toHaveBeenCalled();
+    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+    expect(mocks.resendSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'candidate-1@example.com',
+        subject: 'Reveal request waiting in Proofound',
+        html: expect.stringContaining('/app/i/messages?conversation=conversation-1'),
+        text: expect.stringContaining('/app/i/messages?conversation=conversation-1'),
+      })
+    );
+    const emailPayload = mocks.resendSend.mock.calls[0]?.[0];
+    const renderedEmail = `${emailPayload.html}\n${emailPayload.text}`;
+    expect(renderedEmail).not.toContain('Jordan');
+    expect(renderedEmail).not.toContain('candidate-1@example.com');
+    expect(renderedEmail).not.toContain('Stockholm');
+    expect(renderedEmail).not.toContain('jordan_resume.pdf');
   });
 
   it('completes reveal only after the second participant approves', async () => {
@@ -263,14 +301,30 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
       expect.objectContaining({
         matchId: 'match-1',
         unlockTrigger: 'conversation_reveal',
+        reasonCode: 'reveal_unlocked',
       })
     );
     expect(mocks.resendSend).toHaveBeenCalledTimes(2);
-    expect(mocks.resendSend).toHaveBeenNthCalledWith(
-      1,
+    expect(mocks.recordRevealEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reasonCode: 'reveal_approved',
+        outcome: 'no_op',
+      })
+    );
+    expect(mocks.resendSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'user-1@example.com',
-        subject: 'Identities Revealed - Continue Your Conversation',
+        subject: 'Reveal approved in Proofound',
+        html: expect.stringContaining('/app/o/acme/messages?conversation=conversation-1'),
+        text: expect.stringContaining('/app/o/acme/messages?conversation=conversation-1'),
+      })
+    );
+    expect(mocks.resendSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'candidate-1@example.com',
+        subject: 'Reveal approved in Proofound',
+        html: expect.stringContaining('/app/i/messages?conversation=conversation-1'),
+        text: expect.stringContaining('/app/i/messages?conversation=conversation-1'),
       })
     );
   });
@@ -358,7 +412,7 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
       expect.objectContaining({
         actorType: 'system',
         triggerType: 'policy',
-        reasonCode: 'reveal_request_expired',
+        reasonCode: 'reveal_timed_out',
         outcome: 'denied',
       })
     );
@@ -431,14 +485,47 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
 
     expect(response.status).toBe(200);
     expect(body.revealed).toBe(true);
-    expect(mocks.resendSend).not.toHaveBeenCalled();
-    expect(mocks.logError).toHaveBeenCalledWith(
-      'identity_revealed_email.missing_email',
+    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+    expect(mocks.resendSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        conversationId: 'conversation-1',
-        hasUserOneEmail: true,
-        hasUserTwoEmail: false,
+        to: 'user-1@example.com',
+        subject: 'Reveal approved in Proofound',
+        html: expect.stringContaining('/app/o/acme/messages?conversation=conversation-1'),
       })
     );
+    expect(mocks.logError).toHaveBeenCalledWith(
+      'reveal_notification.missing_email',
+      expect.objectContaining({
+        conversationId: 'conversation-1',
+        kind: 'approved',
+        recipientRole: 'candidate',
+        hasEmail: false,
+      })
+    );
+  });
+
+  it('returns a generic production error without exposing participant identity details', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    mocks.conversationFindFirst.mockRejectedValue(
+      new Error('select * from profiles where email = candidate-1@example.com and name = Jordan')
+    );
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/conversations/conversation-1/reveal', {
+        method: 'POST',
+      }),
+      {
+        params: Promise.resolve({ conversationId: 'conversation-1' }),
+      }
+    );
+    const body = await response.json();
+    const serialized = JSON.stringify(body);
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Unable to process reveal request' });
+    expect(serialized).not.toContain('candidate-1@example.com');
+    expect(serialized).not.toContain('Jordan');
+    expect(JSON.stringify(mocks.logError.mock.calls)).not.toContain('candidate-1@example.com');
+    expect(JSON.stringify(mocks.logError.mock.calls)).not.toContain('Jordan');
   });
 });

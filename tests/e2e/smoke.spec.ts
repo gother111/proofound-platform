@@ -19,7 +19,10 @@ test.describe('Public launch smoke', () => {
 
     const payload = await response.json();
     expect(payload).toHaveProperty('status');
-    expect(['healthy', 'degraded']).toContain(payload.status);
+    expect(['ok', 'degraded']).toContain(payload.status);
     expect(payload).toHaveProperty('timestamp');
+    expect(payload).not.toHaveProperty('database');
+    expect(payload).not.toHaveProperty('version');
+    expect(payload).not.toHaveProperty('commit');
   });
 });

@@ -15,6 +15,7 @@ import {
   resolveArtifactDisplayNameForSurface,
   sanitizeUploadFilename,
 } from '@/lib/uploads/privacy';
+import { scanAndPrepareUpload } from '@/lib/uploads/security-adapter';
 
 export const UPLOAD_BUCKETS = {
   QUARANTINE: 'user-uploads-quarantine',
@@ -44,14 +45,17 @@ type UploadOwner = {
 
 type UploadedFileRow = {
   id: string;
+  owner_type: string;
   upload_kind: string;
   lifecycle_state: string;
   safety_status: string;
   safety_reason: string | null;
   original_filename?: string;
+  original_filename_sensitive?: boolean;
   sanitized_filename?: string;
   detected_mime?: string | null;
   metadata_status: string;
+  safe_for_public?: boolean;
   attach_status: string;
   public_bucket: string | null;
   public_path: string | null;
@@ -92,6 +96,10 @@ const PRIVATE_ALLOWED_MIMES = new Set([
   'image/webp',
   'text/plain',
   'text/markdown',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
+const OFFICE_DOCUMENT_MIMES = new Set([
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]);
 const EVIDENCE_UPLOAD_KINDS = new Set<UploadKind>([
   UPLOAD_KINDS.PROOF,
@@ -127,7 +135,7 @@ function sha256Buffer(buffer: Buffer): string {
   return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
-function detectMimeFromBuffer(buffer: Buffer): string | null {
+function detectMimeFromBuffer(buffer: Buffer, declaredMime: string | null): string | null {
   if (buffer.length >= 5 && buffer.subarray(0, 5).toString('utf8') === '%PDF-') {
     return 'application/pdf';
   }
@@ -156,6 +164,18 @@ function detectMimeFromBuffer(buffer: Buffer): string | null {
     buffer.subarray(8, 12).toString('ascii') === 'WEBP'
   ) {
     return 'image/webp';
+  }
+
+  if (
+    buffer.length >= 4 &&
+    buffer[0] === 0x50 &&
+    buffer[1] === 0x4b &&
+    buffer[2] === 0x03 &&
+    buffer[3] === 0x04 &&
+    declaredMime &&
+    OFFICE_DOCUMENT_MIMES.has(declaredMime)
+  ) {
+    return declaredMime;
   }
 
   if (looksLikeTextBuffer(buffer)) {
@@ -251,19 +271,60 @@ async function recordUploadEvent(
   `);
 }
 
+async function recordUploadDeletionAudit(input: {
+  actorId: string | null;
+  targetId: string;
+  targetType?: string;
+  outcome: 'requested' | 'denied' | 'failed' | 'succeeded';
+  reason?: string;
+  row?: UploadedFileRow | null;
+  requestedVia: 'uploaded_file_id' | 'storage_path' | 'system_cleanup';
+}) {
+  const row = input.row;
+  const metadata = {
+    outcome: input.outcome,
+    reason: input.reason ?? null,
+    requestedVia: input.requestedVia,
+    uploadKind: row?.upload_kind ?? null,
+    lifecycleState: row?.lifecycle_state ?? null,
+    safetyStatus: row?.safety_status ?? null,
+    attachStatus: row?.attach_status ?? null,
+    ownerType: row?.owner_type ?? null,
+    sensitiveFile:
+      row?.original_filename_sensitive === true ||
+      row?.safety_status === 'manual_review' ||
+      Boolean(row?.safety_reason?.startsWith('privacy_review_required')) ||
+      Boolean((row?.metadata as any)?.sensitivity?.sensitiveDocument),
+  };
+
+  await db.execute(sql`
+    INSERT INTO audit_logs (actor_id, action, target_type, target_id, meta)
+    VALUES (
+      ${input.actorId ?? null}::uuid,
+      ${`uploaded_file.delete_${input.outcome}`},
+      ${input.targetType ?? 'uploaded_file'},
+      ${input.targetId},
+      ${JSON.stringify(metadata)}::jsonb
+    )
+  `);
+}
+
 async function loadUploadedFile(uploadedFileId: string): Promise<UploadedFileRow | null> {
   const result = await db.execute(sql`
     SELECT
       id,
+      owner_type,
       upload_kind,
       size_bytes,
       lifecycle_state,
       safety_status,
       safety_reason,
       original_filename,
+      original_filename_sensitive,
       sanitized_filename,
       detected_mime,
       metadata_status,
+      safe_for_public,
       attach_status,
       public_bucket,
       public_path,
@@ -276,6 +337,46 @@ async function loadUploadedFile(uploadedFileId: string): Promise<UploadedFileRow
       metadata
     FROM uploaded_files
     WHERE id = ${uploadedFileId}
+    LIMIT 1
+  `);
+
+  const [row] = getRows<UploadedFileRow>(result as any);
+  return row ?? null;
+}
+
+async function loadUploadedFileByStoragePath(storagePath: string): Promise<UploadedFileRow | null> {
+  const result = await db.execute(sql`
+    SELECT
+      id,
+      owner_type,
+      upload_kind,
+      size_bytes,
+      lifecycle_state,
+      safety_status,
+      safety_reason,
+      original_filename,
+      original_filename_sensitive,
+      sanitized_filename,
+      detected_mime,
+      metadata_status,
+      safe_for_public,
+      attach_status,
+      public_bucket,
+      public_path,
+      quarantine_bucket,
+      quarantine_path,
+      durable_bucket,
+      durable_path,
+      owner_id,
+      proof_pack_id,
+      metadata
+    FROM uploaded_files
+    WHERE deleted_at IS NULL
+      AND (
+        quarantine_path = ${storagePath}
+        OR durable_path = ${storagePath}
+        OR public_path = ${storagePath}
+      )
     LIMIT 1
   `);
 
@@ -379,7 +480,10 @@ export async function ingestUploadedFile(
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const detectedMime = normalizeDetectedMime(declaredMime, detectMimeFromBuffer(buffer));
+  const detectedMime = normalizeDetectedMime(
+    declaredMime,
+    detectMimeFromBuffer(buffer, declaredMime)
+  );
   const validation = validateMimeForKind(context.uploadKind, declaredMime, detectedMime);
   const isEvidenceUpload = EVIDENCE_UPLOAD_KINDS.has(context.uploadKind);
   const sanitizedFilename = sanitizeUploadFilename(file.name);
@@ -401,6 +505,7 @@ export async function ingestUploadedFile(
       source_surface,
       upload_kind,
       original_filename,
+      original_filename_sensitive,
       sanitized_filename,
       declared_mime,
       detected_mime,
@@ -419,6 +524,7 @@ export async function ingestUploadedFile(
       ${context.sourceSurface},
       ${context.uploadKind},
       ${file.name},
+      true,
       ${sanitizedFilename},
       ${declaredMime},
       ${detectedMime},
@@ -536,6 +642,11 @@ export async function ingestUploadedFile(
       safe_for_public = ${validation.promotePublic && metadataFlags.publicSafeEligible},
       metadata_extracted_at = NOW(),
       metadata = COALESCE(metadata, '{}'::jsonb) || ${JSON.stringify({
+        originalFilename: {
+          stored: true,
+          sensitive: true,
+          ownerExportOnly: true,
+        },
         metadataFlags,
         filenameAssessment: privacyAssessment.filename,
         privacyReview: {
@@ -589,22 +700,52 @@ export async function ingestUploadedFile(
     });
   }
 
-  if (isEvidenceUpload && privacyAssessment.requiresReview) {
+  const securityReview = await scanAndPrepareUpload({
+    metadataFlags,
+    isEvidenceUpload,
+    promotePublic: validation.promotePublic,
+  });
+  const securityReviewReasons = securityReview.reviewReasons.filter(
+    (reason) => !privacyAssessment.reasons.includes(reason)
+  );
+  const combinedReviewReasons = [...privacyAssessment.reasons, ...securityReviewReasons];
+  const combinedSafetyReason =
+    combinedReviewReasons.length > 0
+      ? `privacy_review_required:${combinedReviewReasons.join(',')}`
+      : null;
+
+  await db.execute(sql`
+    UPDATE uploaded_files
+    SET
+      scan_engine = ${securityReview.scannerEngine},
+      scan_completed_at = CASE
+        WHEN ${securityReview.malwareScanStatus} = 'clean' THEN NOW()
+        ELSE NULL
+      END,
+      metadata = COALESCE(metadata, '{}'::jsonb) || ${JSON.stringify({
+        securityAdapter: securityReview,
+      })}::jsonb,
+      updated_at = NOW()
+    WHERE id = ${inserted.id}
+  `);
+
+  if (isEvidenceUpload && combinedReviewReasons.length > 0) {
     await db.execute(sql`
       UPDATE uploaded_files
       SET
         lifecycle_state = 'quarantined',
         safety_status = 'manual_review',
-        safety_reason = ${privacyAssessment.safetyReason},
+        safety_reason = ${combinedSafetyReason},
         attach_status = 'pending',
         safe_for_public = false,
         updated_at = NOW()
       WHERE id = ${inserted.id}
     `);
     await recordUploadEvent(inserted.id, 'privacy_review_required', {
-      reasons: privacyAssessment.reasons,
+      reasons: combinedReviewReasons,
       metadataFlags,
       filenameAssessment: privacyAssessment.filename,
+      securityAdapter: securityReview,
     });
     const queueActor = resolveUploadQueueActor(context);
 
@@ -621,8 +762,8 @@ export async function ingestUploadedFile(
         uploadKind: context.uploadKind,
         sourceSurface: context.sourceSurface,
         sanitizedFilename,
-        reviewReasons: privacyAssessment.reasons,
-        safetyReason: privacyAssessment.safetyReason,
+        reviewReasons: combinedReviewReasons,
+        safetyReason: combinedSafetyReason,
         sensitivityReason: privacyAssessment.sensitivity.sensitivityReason,
         recommendedVisibility: privacyAssessment.sensitivity.recommendedVisibility,
         recommendedRevealGate: privacyAssessment.sensitivity.recommendedRevealGate,
@@ -634,8 +775,8 @@ export async function ingestUploadedFile(
       uploadedFileId: inserted.id,
       status: 'manual_review',
       url: null,
-      storagePath: quarantinePath,
-      safetyReason: privacyAssessment.safetyReason,
+      storagePath: null,
+      safetyReason: combinedSafetyReason,
       detectedMime,
       artifactDisplayName,
     };
@@ -647,6 +788,7 @@ export async function ingestUploadedFile(
     SET
         lifecycle_state = 'ready_private',
         attach_status = 'attachable',
+        safe_for_public = false,
         updated_at = NOW()
       WHERE id = ${inserted.id}
     `);
@@ -658,7 +800,7 @@ export async function ingestUploadedFile(
       uploadedFileId: inserted.id,
       status: 'ready',
       url: null,
-      storagePath: quarantinePath,
+      storagePath: null,
       safetyReason: null,
       detectedMime,
       artifactDisplayName,
@@ -717,7 +859,7 @@ export async function ingestUploadedFile(
       lifecycle_state = ${validation.promotePublic ? 'ready_public' : 'ready_private'},
       promoted_at = NOW(),
       attach_status = 'attachable',
-      safe_for_public = ${metadataFlags.publicSafeEligible},
+      safe_for_public = ${securityReview.safeForPublic},
       updated_at = NOW()
     WHERE id = ${inserted.id}
   `);
@@ -746,15 +888,46 @@ export async function ingestUploadedFile(
   };
 }
 
-export async function deleteUploadedFile(uploadedFileId: string, ownerId?: string) {
+export async function deleteUploadedFile(
+  uploadedFileId: string,
+  ownerId?: string,
+  requestedVia: 'uploaded_file_id' | 'storage_path' | 'system_cleanup' = ownerId
+    ? 'uploaded_file_id'
+    : 'system_cleanup'
+) {
   const row = await loadUploadedFile(uploadedFileId);
   if (!row) {
+    if (ownerId) {
+      await recordUploadDeletionAudit({
+        actorId: ownerId,
+        targetId: uploadedFileId,
+        outcome: 'denied',
+        reason: 'missing_uploaded_file_row',
+        requestedVia,
+      });
+    }
     return false;
   }
 
   if (ownerId && row.owner_id !== ownerId) {
+    await recordUploadDeletionAudit({
+      actorId: ownerId,
+      targetId: row.id,
+      outcome: 'denied',
+      reason: 'owner_mismatch',
+      row,
+      requestedVia,
+    });
     return false;
   }
+
+  await recordUploadDeletionAudit({
+    actorId: ownerId ?? null,
+    targetId: row.id,
+    outcome: 'requested',
+    row,
+    requestedVia,
+  });
 
   const admin = createAdminClient();
   const paths: Array<{ bucket: string | null; path: string | null }> = [
@@ -776,20 +949,60 @@ export async function deleteUploadedFile(uploadedFileId: string, ownerId?: strin
     if (!candidate.bucket || !candidate.path) {
       continue;
     }
-    await admin.storage.from(candidate.bucket).remove([candidate.path]);
+    const removeResult = await admin.storage.from(candidate.bucket).remove([candidate.path]);
+    if (removeResult.error) {
+      await recordUploadDeletionAudit({
+        actorId: ownerId ?? null,
+        targetId: row.id,
+        outcome: 'failed',
+        reason: 'storage_remove_failed',
+        row,
+        requestedVia,
+      });
+      await db.execute(sql`
+        UPDATE uploaded_files
+        SET
+          lifecycle_state = 'delete_pending',
+          safety_reason = ${removeResult.error.message},
+          updated_at = NOW()
+        WHERE id = ${uploadedFileId}
+      `);
+      return false;
+    }
   }
 
-  await db.execute(sql`
-    UPDATE uploaded_files
-    SET
-      lifecycle_state = 'deleted',
-      deleted_at = NOW(),
-      updated_at = NOW()
-    WHERE id = ${uploadedFileId}
-  `);
   await recordUploadEvent(uploadedFileId, 'deleted');
+  await recordUploadDeletionAudit({
+    actorId: ownerId ?? null,
+    targetId: row.id,
+    outcome: 'succeeded',
+    row,
+    requestedVia,
+  });
+  await db.execute(sql`
+    DELETE FROM uploaded_files
+    WHERE id = ${uploadedFileId}
+      AND (${ownerId ?? null}::uuid IS NULL OR owner_id = ${ownerId ?? null}::uuid)
+  `);
 
   return true;
+}
+
+export async function deleteUploadedFileByOwnedStoragePath(storagePath: string, ownerId: string) {
+  const row = await loadUploadedFileByStoragePath(storagePath);
+  if (!row) {
+    await recordUploadDeletionAudit({
+      actorId: ownerId,
+      targetType: 'storage_path',
+      targetId: crypto.createHash('sha256').update(storagePath).digest('hex'),
+      outcome: 'denied',
+      reason: 'missing_owned_uploaded_file_row',
+      requestedVia: 'storage_path',
+    });
+    return false;
+  }
+
+  return deleteUploadedFile(row.id, ownerId, 'storage_path');
 }
 
 export async function getUploadedFileStatus(uploadedFileId: string, ownerId: string) {

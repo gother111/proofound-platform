@@ -35,7 +35,7 @@ export function pickPrioritizedOrgRepresentative<T extends ConversationParticipa
 ): string | null {
   const eligibleMembers = members.filter((member) => {
     const role = normalizeAuthorizedOrgRole(member.role ?? null);
-    const isActive = member.state == null ? true : isActiveMembershipState(member.state ?? null);
+    const isActive = isActiveMembershipState(member.state ?? null);
 
     return isActive && (role === 'org_owner' || role === 'org_manager');
   });

@@ -21,9 +21,27 @@ import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 
 export const dynamic = 'force-dynamic';
 
+const DELETION_REASON_ALLOWLIST = new Set([
+  'No longer need the service',
+  'Privacy concerns',
+  'Found a better alternative',
+  'Too many emails/notifications',
+  'Difficult to use',
+  'Not enough matches',
+  'Account security concern',
+  'Other',
+]);
+
+const ACTIVE_DELETION_STATES = new Set([
+  'requested',
+  'processing',
+  'blocked_legal_hold',
+  'failed_requires_manual_review',
+]);
+
 // Validation schema for deletion request
 const AccountDeletionSchema = z.object({
-  password: z.string().min(1, 'Password is required to confirm deletion'),
+  password: z.string().optional(),
   confirmPhrase: z.literal('DELETE MY ACCOUNT', {
     errorMap: () => ({
       message: 'You must type the confirmation phrase exactly: DELETE MY ACCOUNT',
@@ -31,6 +49,57 @@ const AccountDeletionSchema = z.object({
   }),
   reason: z.string().max(500).optional(),
 });
+
+function normalizeDeletionReason(reason?: string | null) {
+  const trimmed = reason?.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  return DELETION_REASON_ALLOWLIST.has(trimmed) ? trimmed : 'Other';
+}
+
+function getAuthProviders(authUser: { app_metadata?: Record<string, unknown> } | null) {
+  const metadata = authUser?.app_metadata ?? {};
+  const providers = new Set<string>();
+  const metadataProviders = metadata.providers;
+
+  if (Array.isArray(metadataProviders)) {
+    for (const provider of metadataProviders) {
+      if (typeof provider === 'string') {
+        providers.add(provider);
+      }
+    }
+  }
+
+  if (typeof metadata.provider === 'string') {
+    providers.add(metadata.provider);
+  }
+
+  return providers;
+}
+
+function deletionStatusResponse(input: {
+  status: 'deletion_in_progress' | 'deleted';
+  deletionRequest?: { id?: string | null; lifecycleState?: string | null } | null;
+  operationId?: string | null;
+}) {
+  const statusCode = input.status === 'deleted' ? 200 : 202;
+
+  return NextResponse.json(
+    {
+      status: input.status,
+      accountStatus: input.deletionRequest?.lifecycleState ?? input.status,
+      deletionRequestId: input.deletionRequest?.id ?? null,
+      operationId: input.operationId ?? null,
+      message:
+        input.status === 'deleted'
+          ? 'Your account has already been deleted.'
+          : 'Account deletion is already in progress.',
+    },
+    { status: statusCode }
+  );
+}
 
 /**
  * DELETE /api/user/account
@@ -74,6 +143,26 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
+    const existingDeletionRequest = await getLatestProfileDeletionRequest(user.id);
+    if (profile.deleted || existingDeletionRequest?.lifecycleState === 'deleted') {
+      return deletionStatusResponse({
+        status: 'deleted',
+        deletionRequest: existingDeletionRequest,
+        operationId: existingDeletionRequest?.lifecycleOperationId ?? null,
+      });
+    }
+
+    if (
+      existingDeletionRequest &&
+      ACTIVE_DELETION_STATES.has(existingDeletionRequest.lifecycleState)
+    ) {
+      return deletionStatusResponse({
+        status: 'deletion_in_progress',
+        deletionRequest: existingDeletionRequest,
+        operationId: existingDeletionRequest.lifecycleOperationId ?? null,
+      });
+    }
+
     // Get the user's email from Supabase auth (not from profile)
     const supabase = await createClient();
     const {
@@ -84,26 +173,42 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'User email not found' }, { status: 400 });
     }
 
-    // Verify password by attempting to sign in with the correct email
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: authUser.email, // Use actual email, not user.id
-      password: parsed.password,
-    });
+    const authProviders = getAuthProviders(authUser);
+    const isEmailPasswordAccount = authProviders.size === 0 || authProviders.has('email');
+    const normalizedReason = normalizeDeletionReason(parsed.reason);
 
-    if (signInError) {
-      // Log failed password attempt for security monitoring
-      log.warn('privacy.account_deletion.invalid_password', {
-        userId: user.id,
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
+    if (isEmailPasswordAccount) {
+      if (!parsed.password) {
+        return NextResponse.json(
+          {
+            error: 'Password required',
+            message: 'Password confirmation is required to delete an email/password account.',
+          },
+          { status: 400 }
+        );
+      }
+
+      // Verify password by attempting to sign in with the correct email.
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: authUser.email, // Use actual email, not user.id
+        password: parsed.password,
       });
 
-      return NextResponse.json(
-        {
-          error: 'Invalid password',
-          message: 'The password you entered is incorrect. Please try again.',
-        },
-        { status: 401 }
-      );
+      if (signInError) {
+        // Log failed password attempt for security monitoring.
+        log.warn('privacy.account_deletion.invalid_password', {
+          userId: user.id,
+          ip: request.headers.get('x-forwarded-for') || 'unknown',
+        });
+
+        return NextResponse.json(
+          {
+            error: 'Invalid password',
+            message: 'The password you entered is incorrect. Please try again.',
+          },
+          { status: 401 }
+        );
+      }
     }
 
     lifecycleOperation = await createLifecycleOperation({
@@ -113,7 +218,9 @@ export async function DELETE(request: NextRequest) {
       requestedBy: user.id,
       visibleStatus: 'processing',
       metadata: {
-        reason: parsed.reason || null,
+        reason: normalizedReason,
+        reasonMinimized: parsed.reason ? normalizedReason !== parsed.reason.trim() : false,
+        authProviderClass: isEmailPasswordAccount ? 'email_password' : 'oauth',
       },
       targets: [
         { targetType: 'db_record', targetRef: `profiles:${user.id}`, desiredState: 'deleted' },
@@ -141,9 +248,11 @@ export async function DELETE(request: NextRequest) {
       profileId: user.id,
       requestedBy: user.id,
       lifecycleOperationId: lifecycleOperation.id,
-      reason: parsed.reason || null,
+      reason: normalizedReason,
       metadata: {
         confirmPhraseVerified: true,
+        reasonMinimized: parsed.reason ? normalizedReason !== parsed.reason.trim() : false,
+        authProviderClass: isEmailPasswordAccount ? 'email_password' : 'oauth',
       },
     });
     await updateProfileDeletionRequestState({
@@ -265,7 +374,7 @@ export async function DELETE(request: NextRequest) {
 
     await executeAccountDeletionLifecycle({
       userId: user.id,
-      reason: parsed.reason || null,
+      reason: normalizedReason,
       operationId: lifecycleOperation.id,
     });
     await updateProfileDeletionRequestState({
@@ -285,7 +394,7 @@ export async function DELETE(request: NextRequest) {
 
     log.info('privacy.account_deletion.completed', {
       userId: user.id,
-      reason: parsed.reason || 'Not provided',
+      reason: normalizedReason || 'Not provided',
     });
     emitLaunchTrace(trace, {
       outcome: 'success',

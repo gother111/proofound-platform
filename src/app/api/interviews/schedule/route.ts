@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN organization_members om
         ON om.org_id = a.org_id
         AND om.user_id = ${user.id}
-        AND om.status = 'active'
+        AND om.state = 'active'
         AND om.role IN ('org_owner', 'org_manager')
       WHERE m.profile_id = ${user.id}
          OR om.user_id IS NOT NULL

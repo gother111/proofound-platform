@@ -196,6 +196,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       page.request,
       `/api/assignments/${assignmentId}/outcomes`,
       {
+        orgId: organization.id,
         outcomes: [
           {
             outcomeType: 'continuous',
@@ -249,6 +250,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       page.request,
       `/api/assignments/${assignmentId}/pipeline`,
       {
+        orgId: organization.id,
         stepOrder: 1,
         stepName: 'Define role',
         stakeholderRole: 'owner',
@@ -258,7 +260,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     expect(pipelineStepResponse.ok()).toBeTruthy();
 
     const pipelineStateResponse = await page.request.get(
-      `/api/assignments/${assignmentId}/pipeline`
+      `/api/assignments/${assignmentId}/pipeline?orgId=${organization.id}`
     );
     expect(pipelineStateResponse.ok()).toBeTruthy();
     const pipelineStatePayload = (await pipelineStateResponse.json()) as {
@@ -270,10 +272,14 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       )
     ).toBeTruthy();
 
-    const assignmentDetailResponse = await page.request.get(`/api/assignments/${assignmentId}`);
+    const assignmentDetailResponse = await page.request.get(
+      `/api/assignments/${assignmentId}?orgId=${organization.id}`
+    );
     expect(assignmentDetailResponse.ok()).toBeTruthy();
 
-    const assignmentsListResponse = await page.request.get('/api/assignments?limit=50');
+    const assignmentsListResponse = await page.request.get(
+      `/api/assignments?limit=50&orgId=${organization.id}`
+    );
     expect(assignmentsListResponse.ok()).toBeTruthy();
     const assignmentsListPayload = (await assignmentsListResponse.json()) as {
       items?: Array<{ id?: string }>;
@@ -441,7 +447,9 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     await expect
       .poll(
         async () => {
-          const assignmentResponse = await page.request.get(`/api/assignments/${draftId}`);
+          const assignmentResponse = await page.request.get(
+            `/api/assignments/${draftId}?orgId=${organization.id}`
+          );
           if (!assignmentResponse.ok()) {
             return null;
           }
@@ -487,6 +495,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       page.request,
       `/api/assignments/${draftId}/outcomes`,
       {
+        orgId: organization.id,
         outcomes: [
           {
             outcomeType: 'continuous',
@@ -588,11 +597,10 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     expect(healthResponse.ok()).toBeTruthy();
     const healthPayload = (await healthResponse.json()) as {
       status?: string;
-      warnings?: unknown[];
     };
-    expect(['healthy', 'degraded']).toContain(healthPayload.status);
-    if (healthPayload.status === 'degraded') {
-      expect(Array.isArray(healthPayload.warnings)).toBeTruthy();
-    }
+    expect(healthPayload.status).toBe('ok');
+    expect(healthPayload).not.toHaveProperty('warnings');
+    expect(healthPayload).not.toHaveProperty('database');
+    expect(healthPayload).not.toHaveProperty('version');
   });
 });

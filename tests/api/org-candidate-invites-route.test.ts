@@ -129,6 +129,28 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
     expect(response.status).toBe(403);
   });
 
+  it.each(['inactive', 'suspended', 'unknown_state', null, undefined])(
+    'returns 403 when manager membership state is %s',
+    async (state) => {
+      mockAuthenticatedUser({
+        role: 'org_manager',
+        state,
+        status: state === null ? 'active' : null,
+      });
+
+      const request = new NextRequest('http://localhost/api/organizations/org/candidate-invites', {
+        method: 'POST',
+        body: JSON.stringify({
+          emails: ['candidate@example.com'],
+        }),
+      });
+
+      const response = await POST(request, { params: Promise.resolve({ orgId }) });
+      expect(response.status).toBe(403);
+      expect(sendCandidateInviteEmail).not.toHaveBeenCalled();
+    }
+  );
+
   it('returns 409 when all recipients already have active invites', async () => {
     mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
     mockSelectWithWhere([{ inviteeEmailNormalized: 'candidate@example.com' }]); // existing invite

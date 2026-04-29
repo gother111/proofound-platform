@@ -4,7 +4,6 @@ import { db } from '@/db';
 import { organizationMembers } from '@/db/schema';
 import {
   getIndividualActivityEvents,
-  getLatestOrgIdForUser,
   getOrganizationActivityEvents,
   getUnreadNotificationCount,
 } from '@/lib/momentum/activity';
@@ -53,22 +52,20 @@ export async function getMomentumSummaryForOrganization(
   userId: string,
   orgRef?: string
 ): Promise<MomentumSummary> {
-  const resolvedOrgId = orgRef
-    ? await resolveOrganizationId(orgRef)
-    : await getLatestOrgIdForUser(userId);
+  const resolvedOrgId = orgRef ? await resolveOrganizationId(orgRef) : null;
 
   if (!resolvedOrgId) {
     return {
       persona: 'organization',
       marketActivityLow: true,
       summary:
-        'No active organization context found. Join or create an organization to unlock hiring readiness insights.',
+        'No explicit organization context found. Open a specific organization to view hiring readiness insights.',
       topActions: [
         {
-          id: 'open-org-setup',
-          title: 'Create or join an organization',
+          id: 'open-org-context',
+          title: 'Open an organization',
           description:
-            'Organization setup unlocks assignment readiness and candidate pipeline insights.',
+            'Organization readiness and candidate pipeline insights require an explicit organization context.',
           priority: 'high',
           category: 'assignment',
           actionUrl: '/app/o',
@@ -91,7 +88,7 @@ export async function getMomentumSummaryForOrganization(
       and(
         eq(organizationMembers.userId, userId),
         eq(organizationMembers.orgId, resolvedOrgId),
-        eq(organizationMembers.status, 'active')
+        eq(organizationMembers.state, 'active')
       )
     );
 
@@ -165,9 +162,7 @@ export async function getMomentumUpdatesForPersona(
   orgRef?: string
 ): Promise<MomentumUpdatesPayload> {
   if (persona === 'organization') {
-    const resolvedOrgId = orgRef
-      ? await resolveOrganizationId(orgRef)
-      : await getLatestOrgIdForUser(userId);
+    const resolvedOrgId = orgRef ? await resolveOrganizationId(orgRef) : null;
 
     if (!resolvedOrgId) {
       return { persona, updates: [] };

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
 import * as Sentry from '@sentry/nextjs';
 import { log, logContext } from '@/lib/log';
+import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import { withPerformanceMonitoring } from '@/lib/performance/api-monitor';
 
 export type ApiObservabilityContext = {
@@ -89,7 +90,7 @@ export async function withApiObservability<T extends NextResponse>(
         requestId,
         path: context.path,
         method: context.method,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: sanitizeErrorForLog(error),
       });
 
       Sentry.withScope((scope) => {

@@ -1,122 +1,116 @@
 -- Storage Setup for Proofound
--- This script creates storage buckets and policies for file uploads
+-- Canonical MVP posture: proof/artifact uploads use private or quarantine buckets only.
 
 -- ============================================================================
 -- STORAGE BUCKETS
 -- ============================================================================
 
--- Create user-uploads bucket (if it doesn't exist)
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-  'user-uploads',
-  'user-uploads',
-  true, -- Public bucket for user profile images, etc.
-  10485760, -- 10MB limit
-  ARRAY[
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/webp',
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  ]
-)
+VALUES
+  (
+    'user-uploads-quarantine',
+    'user-uploads-quarantine',
+    false,
+    26214400,
+    ARRAY[
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'text/plain',
+      'text/markdown',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ]::text[]
+  ),
+  (
+    'user-uploads-private',
+    'user-uploads-private',
+    false,
+    26214400,
+    ARRAY[
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'text/plain',
+      'text/markdown',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ]::text[]
+  )
 ON CONFLICT (id) DO UPDATE SET
   public = EXCLUDED.public,
   file_size_limit = EXCLUDED.file_size_limit,
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
+-- Archive legacy public bucket behavior if this script is run against older projects.
+UPDATE storage.buckets
+SET public = false
+WHERE id = 'user-uploads';
+
 -- ============================================================================
 -- STORAGE POLICIES
 -- ============================================================================
 
--- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Users can upload their own files" ON storage.objects;
 DROP POLICY IF EXISTS "Users can view their own files" ON storage.objects;
 DROP POLICY IF EXISTS "Users can update their own files" ON storage.objects;
 DROP POLICY IF EXISTS "Users can delete their own files" ON storage.objects;
 DROP POLICY IF EXISTS "Public files are viewable by everyone" ON storage.objects;
 
--- Policy: Users can upload their own files
-CREATE POLICY "Users can upload their own files"
+DROP POLICY IF EXISTS "Proofound quarantine service select" ON storage.objects;
+CREATE POLICY "Proofound quarantine service select"
+ON storage.objects
+FOR SELECT
+USING (bucket_id = 'user-uploads-quarantine' AND auth.role() = 'service_role');
+
+DROP POLICY IF EXISTS "Proofound quarantine service insert" ON storage.objects;
+CREATE POLICY "Proofound quarantine service insert"
 ON storage.objects
 FOR INSERT
-TO authenticated
-WITH CHECK (
-  bucket_id = 'user-uploads' AND
-  auth.uid()::text = (storage.foldername(name))[1]
-);
+WITH CHECK (bucket_id = 'user-uploads-quarantine' AND auth.role() = 'service_role');
 
--- Policy: Users can view their own files
-CREATE POLICY "Users can view their own files"
-ON storage.objects
-FOR SELECT
-TO authenticated
-USING (
-  bucket_id = 'user-uploads' AND
-  auth.uid()::text = (storage.foldername(name))[1]
-);
-
--- Policy: Public files in user-uploads are viewable by everyone
--- (This allows viewing avatars, cover images, etc.)
-CREATE POLICY "Public files are viewable by everyone"
-ON storage.objects
-FOR SELECT
-TO public
-USING (
-  bucket_id = 'user-uploads' AND
-  (
-    (storage.foldername(name))[2] IN ('avatars', 'covers')
-  )
-);
-
--- Policy: Users can update their own files
-CREATE POLICY "Users can update their own files"
+DROP POLICY IF EXISTS "Proofound quarantine service update" ON storage.objects;
+CREATE POLICY "Proofound quarantine service update"
 ON storage.objects
 FOR UPDATE
-TO authenticated
-USING (
-  bucket_id = 'user-uploads' AND
-  auth.uid()::text = (storage.foldername(name))[1]
-)
-WITH CHECK (
-  bucket_id = 'user-uploads' AND
-  auth.uid()::text = (storage.foldername(name))[1]
-);
+USING (bucket_id = 'user-uploads-quarantine' AND auth.role() = 'service_role')
+WITH CHECK (bucket_id = 'user-uploads-quarantine' AND auth.role() = 'service_role');
 
--- Policy: Users can delete their own files
-CREATE POLICY "Users can delete their own files"
+DROP POLICY IF EXISTS "Proofound quarantine service delete" ON storage.objects;
+CREATE POLICY "Proofound quarantine service delete"
 ON storage.objects
 FOR DELETE
-TO authenticated
-USING (
-  bucket_id = 'user-uploads' AND
-  auth.uid()::text = (storage.foldername(name))[1]
-);
+USING (bucket_id = 'user-uploads-quarantine' AND auth.role() = 'service_role');
 
--- ============================================================================
--- HELPER FUNCTIONS
--- ============================================================================
+DROP POLICY IF EXISTS "Proofound private uploads service select" ON storage.objects;
+CREATE POLICY "Proofound private uploads service select"
+ON storage.objects
+FOR SELECT
+USING (bucket_id = 'user-uploads-private' AND auth.role() = 'service_role');
 
--- Note: storage.foldername() is a Supabase function that extracts folder names
--- from a file path. For example:
---   storage.foldername('avatars/user-123/file.jpg') returns ['avatars', 'user-123', 'file.jpg']
---
--- Our naming convention:
---   avatars/{user_id}-{timestamp}.{ext}
---   covers/{user_id}-{timestamp}.{ext}
---   proof/{user_id}-{timestamp}-{filename}.{ext}
---   certificate/{user_id}-{timestamp}-{filename}.{ext}
---   artifact/{user_id}-{timestamp}-{filename}.{ext}
---   documents/{user_id}-{timestamp}-{filename}.{ext}
+DROP POLICY IF EXISTS "Proofound private uploads service insert" ON storage.objects;
+CREATE POLICY "Proofound private uploads service insert"
+ON storage.objects
+FOR INSERT
+WITH CHECK (bucket_id = 'user-uploads-private' AND auth.role() = 'service_role');
+
+DROP POLICY IF EXISTS "Proofound private uploads service update" ON storage.objects;
+CREATE POLICY "Proofound private uploads service update"
+ON storage.objects
+FOR UPDATE
+USING (bucket_id = 'user-uploads-private' AND auth.role() = 'service_role')
+WITH CHECK (bucket_id = 'user-uploads-private' AND auth.role() = 'service_role');
+
+DROP POLICY IF EXISTS "Proofound private uploads service delete" ON storage.objects;
+CREATE POLICY "Proofound private uploads service delete"
+ON storage.objects
+FOR DELETE
+USING (bucket_id = 'user-uploads-private' AND auth.role() = 'service_role');
 
 -- ============================================================================
 -- VERIFICATION
 -- ============================================================================
 
--- Check bucket was created
-SELECT * FROM storage.buckets WHERE id = 'user-uploads';
-
--- Check policies were created
-SELECT * FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects';
+SELECT id, public, file_size_limit, allowed_mime_types
+FROM storage.buckets
+WHERE id IN ('user-uploads-quarantine', 'user-uploads-private', 'user-uploads');

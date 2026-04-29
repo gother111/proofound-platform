@@ -98,7 +98,7 @@ async function waitForHealthy(baseUrl, timeoutMs = 120000) {
       const response = await fetch(`${baseUrl}/api/health`, { cache: 'no-store' });
       if (response.ok) {
         const payload = await response.json();
-        if (payload?.status === 'healthy' && payload?.database?.connected === true) {
+        if (payload?.status === 'ok') {
           return;
         }
       }
@@ -109,7 +109,7 @@ async function waitForHealthy(baseUrl, timeoutMs = 120000) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
-  throw new Error(`App did not become healthy within ${timeoutMs}ms`);
+  throw new Error(`App did not return public health status ok within ${timeoutMs}ms`);
 }
 
 function startApp(baseUrlPort) {

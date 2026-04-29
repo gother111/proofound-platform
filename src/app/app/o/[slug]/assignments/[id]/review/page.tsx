@@ -3,7 +3,7 @@ import { AssignmentReviewClient } from '@/components/assignments/AssignmentRevie
 
 export const dynamic = 'force-dynamic';
 
-async function fetchAssignmentServer(id: string) {
+async function fetchAssignmentServer(id: string, orgSlug: string) {
   // Build base URL for server-side fetch (works in dev/prod)
   const hdrs = await headers();
   const host = hdrs.get('host') || 'localhost:3000';
@@ -18,10 +18,13 @@ async function fetchAssignmentServer(id: string) {
     .join('; ');
 
   try {
-    const res = await fetch(`${base}/api/assignments/${id}`, {
-      cache: 'no-store',
-      headers: cookieHeader ? { cookie: cookieHeader } : {},
-    });
+    const res = await fetch(
+      `${base}/api/assignments/${id}?orgSlug=${encodeURIComponent(orgSlug)}`,
+      {
+        cache: 'no-store',
+        headers: cookieHeader ? { cookie: cookieHeader } : {},
+      }
+    );
     if (!res.ok) return null;
     const data = await res.json();
     return data.assignment || null;
@@ -37,7 +40,7 @@ export default async function AssignmentReviewPage({
   params: Promise<{ slug: string; id: string }>;
 }) {
   const { slug, id } = await params;
-  const assignment = await fetchAssignmentServer(id);
+  const assignment = await fetchAssignmentServer(id, slug);
 
   return <AssignmentReviewClient initialAssignment={assignment} assignmentId={id} slug={slug} />;
 }

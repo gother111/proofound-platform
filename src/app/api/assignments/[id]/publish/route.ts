@@ -12,6 +12,7 @@ import { ensureOrganizationPrincipal } from '@/lib/authz';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
 import { log } from '@/lib/log';
+import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const access = await verifyExplicitAssignmentMutationAccess(user.id, assignmentId, {
       orgId: principal.context.orgId,
     });
+    if (access.status === 'missing_org_context') {
+      return NextResponse.json({ error: 'Organization context is required' }, { status: 400 });
+    }
     if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
     }
@@ -206,7 +210,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     log.error('assignment.publish.failed', {
       assignmentId,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: sanitizeErrorForLog(error),
     });
     return NextResponse.json({ error: 'Failed to publish assignment' }, { status: 500 });
   }

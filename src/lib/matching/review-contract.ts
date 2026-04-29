@@ -21,6 +21,7 @@ import {
   getEffectiveReviewRevealScope,
   getEffectiveShortlistRevealScope,
   getVerificationSummaryVisibility,
+  isActiveMembershipState,
   normalizeAuthorizedOrgRole,
   type OrgRole,
 } from '@/lib/authz';
@@ -115,15 +116,21 @@ type CandidateProjectionInput = {
   displayName?: string | null;
   handle?: string | null;
   avatarUrl?: string | null;
+  email?: string | null;
   headline?: string | null;
   tagline?: string | null;
   workMode?: string | null;
   country?: string | null;
   city?: string | null;
+  exactLocation?: string | null;
+  portfolioUrl?: string | null;
+  employerNames?: string[] | null;
+  schoolNames?: string[] | null;
   desiredRoles?: string[] | null;
   valuesTags?: string[] | null;
   causeTags?: string[] | null;
   verified?: Record<string, unknown> | null;
+  publicPortfolioPublished?: boolean | null;
 };
 
 type ReviewCardProofPackSnapshot = {
@@ -164,6 +171,10 @@ export type ProofFirstReviewCard = {
     headline: string;
     bullets: string[];
     reasonCodes: string[];
+  };
+  privacy: {
+    reviewState: 'visible' | 'held_for_manual_review';
+    reasons: string[];
   };
 };
 
@@ -322,10 +333,15 @@ const ALWAYS_BLIND_FIELDS = [
   'displayName',
   'handle',
   'avatarUrl',
+  'email',
   'headline',
   'tagline',
   'city',
   'country',
+  'exactLocation',
+  'portfolioUrl',
+  'employerNames',
+  'schoolNames',
 ] as const;
 
 const SHORTLIST_VISIBLE_FIELDS = [
@@ -340,8 +356,13 @@ const SHORTLIST_VISIBLE_FIELDS = [
 
 const FULL_VISIBLE_FIELDS = [
   ...SHORTLIST_VISIBLE_FIELDS,
+  'displayName',
   'handle',
   'avatarUrl',
+  'email',
+  'portfolioUrl',
+  'employerNames',
+  'schoolNames',
   'locationSummary',
 ] as const;
 
@@ -423,38 +444,233 @@ function getAnchorContextLabel(
   return focusArea ? `${baseLabel} around ${focusArea}` : baseLabel;
 }
 
-function redactReviewText(
-  input: string | null | undefined,
-  contextJson: Record<string, unknown>
-): string | null {
-  if (!input) {
-    return null;
+type BlindReviewTextPrivacyState = {
+  reviewState: 'visible' | 'held_for_manual_review';
+  reasons: string[];
+};
+
+type BlindReviewTextResult = BlindReviewTextPrivacyState & {
+  text: string | null;
+};
+
+const BLIND_REVIEW_REDACTED_TOKEN = '[redacted]';
+const FILE_NAME_PATTERN = /\b[\w .+-]+\.(pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)\b/gi;
+const EMAIL_PATTERN = /\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/gi;
+const URL_PATTERN = /\b(?:https?:\/\/|www\.)\S+/gi;
+const PHONE_PATTERN = /(?:\+?\d[\s().-]*){7,}\d/g;
+const HANDLE_PATTERN = /(?<![\w.+-])@[a-z0-9_][a-z0-9_.-]{1,30}\b/gi;
+const COMPANY_PATTERN =
+  /\b(?:[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4}\s+)?(?:Inc|LLC|Ltd|Limited|Corp|Corporation|Company|Co|AB|Oy|GmbH|SARL|SAS|AS|BV)\b/g;
+const SCHOOL_PATTERN =
+  /\b(?:[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,6}\s+)?(?:University|College|School|Institute|Academy|Gymnasium|Universitet|Högskola)\b/g;
+const PRECISE_ADDRESS_PATTERN =
+  /\b\d{1,6}[A-Z]?\s+[A-ZÅÄÖa-zåäö][\wÅÄÖåäö\s.'-]{2,}\s+(?:Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Drive|Dr|Boulevard|Blvd|Way|Place|Pl|Court|Ct|Väg|Vägen|Gatan|Gata|Gränd|Allé|Allee)\b/i;
+const GEO_COORDINATE_PATTERN = /\b-?\d{1,2}\.\d{4,}\s*,\s*-?\d{1,3}\.\d{4,}\b/;
+const FULL_NAME_PATTERN = /\b[A-ZÅÄÖ][a-zåäö]{1,}(?:\s+(?:[A-ZÅÄÖ][a-zåäö]{1,}|[A-Z]\.)){1,3}\b/g;
+const GENERIC_CAPITALIZED_PHRASES = new Set([
+  'Proof Pack',
+  'Proof Packs',
+  'Proofound',
+  'Stage 0',
+  'Stage 1',
+  'Stage 2',
+  'Stage 3',
+  'Stage 4',
+]);
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function addReason(reasons: Set<string>, reason: string) {
+  reasons.add(reason);
+}
+
+function readContextString(contextJson: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = contextJson[key];
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+  return null;
+}
+
+function readContextStringList(contextJson: Record<string, unknown>, keys: string[]) {
+  const values = new Set<string>();
+
+  for (const key of keys) {
+    const value = contextJson[key];
+    if (typeof value === 'string' && value.trim().length > 0) {
+      values.add(value.trim());
+    } else if (Array.isArray(value)) {
+      for (const entry of value) {
+        if (typeof entry === 'string' && entry.trim().length > 0) {
+          values.add(entry.trim());
+        }
+      }
+    }
   }
 
-  const redactions = [
-    typeof contextJson.contextOrganizationName === 'string'
-      ? contextJson.contextOrganizationName
-      : null,
-    typeof contextJson.contextTitle === 'string' ? contextJson.contextTitle : null,
-  ]
-    .filter((value): value is string => Boolean(value))
-    .map((value) => value.trim())
-    .filter(Boolean);
+  return [...values];
+}
+
+function replacePattern(
+  input: string,
+  pattern: RegExp,
+  replacement: string,
+  reasons: Set<string>,
+  reason: string
+) {
+  let matched = false;
+  const output = input.replace(pattern, () => {
+    matched = true;
+    return replacement;
+  });
+  if (matched) {
+    addReason(reasons, reason);
+  }
+  return output;
+}
+
+function redactExactTerms(input: string, terms: string[], label: string, reasons: Set<string>) {
+  let output = input;
+
+  for (const term of terms) {
+    const normalized = term.trim();
+    if (normalized.length < 2) {
+      continue;
+    }
+    const pattern = new RegExp(`\\b${escapeRegExp(normalized)}\\b`, 'gi');
+    output = replacePattern(output, pattern, label, reasons, `redacted_exact_${label}`);
+  }
+
+  return output;
+}
+
+function likelyFullNameMatches(input: string) {
+  return [...input.matchAll(FULL_NAME_PATTERN)]
+    .map((match) => match[0].trim())
+    .filter((match) => !GENERIC_CAPITALIZED_PHRASES.has(match))
+    .filter(
+      (match) => !/(Proof|Review|Candidate|Stage|Organization|University|College)$/i.test(match)
+    );
+}
+
+export function redactBlindReviewText(
+  input: string | null | undefined,
+  contextJson: Record<string, unknown>
+): BlindReviewTextResult {
+  if (!input) {
+    return { text: null, reviewState: 'visible', reasons: [] };
+  }
+
+  const reasons = new Set<string>();
+  const holdReasons = new Set<string>();
+  const organizationNames = readContextStringList(contextJson, [
+    'contextOrganizationName',
+    'organizationName',
+    'employerName',
+    'employerNames',
+    'companyName',
+    'companyNames',
+  ]);
+  const schoolNames = readContextStringList(contextJson, [
+    'contextSchoolName',
+    'contextInstitutionName',
+    'schoolName',
+    'schoolNames',
+    'institutionName',
+    'institutionNames',
+  ]);
+  const locations = readContextStringList(contextJson, [
+    'contextLocation',
+    'location',
+    'exactLocation',
+    'city',
+    'country',
+  ]);
+  const roleTitle = readContextString(contextJson, ['contextTitle']);
 
   let output = input
-    .replace(/https?:\/\/\S+/gi, '')
-    .replace(/\b[\w.+-]+@[\w.-]+\.\w+\b/g, '')
-    .replace(/\b[\w.-]+\.(pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)\b/gi, 'shared document')
-    .replace(/@\w+/g, '')
+    .replace(FILE_NAME_PATTERN, () => {
+      addReason(reasons, 'redacted_original_filename');
+      return 'shared document';
+    })
     .trim();
 
-  for (const redaction of redactions) {
-    output = output.replaceAll(redaction, 'this context');
+  output = replacePattern(
+    output,
+    URL_PATTERN,
+    BLIND_REVIEW_REDACTED_TOKEN,
+    reasons,
+    'redacted_url'
+  );
+  output = replacePattern(
+    output,
+    EMAIL_PATTERN,
+    BLIND_REVIEW_REDACTED_TOKEN,
+    reasons,
+    'redacted_email'
+  );
+  output = replacePattern(
+    output,
+    PHONE_PATTERN,
+    BLIND_REVIEW_REDACTED_TOKEN,
+    reasons,
+    'redacted_phone'
+  );
+  output = replacePattern(
+    output,
+    HANDLE_PATTERN,
+    BLIND_REVIEW_REDACTED_TOKEN,
+    reasons,
+    'redacted_handle'
+  );
+  output = replacePattern(
+    output,
+    COMPANY_PATTERN,
+    'the organization',
+    reasons,
+    'redacted_company_name'
+  );
+  output = replacePattern(
+    output,
+    SCHOOL_PATTERN,
+    'the institution',
+    reasons,
+    'redacted_school_name'
+  );
+
+  output = redactExactTerms(output, organizationNames, 'the organization', reasons);
+  output = redactExactTerms(output, schoolNames, 'the institution', reasons);
+  output = redactExactTerms(output, locations, 'the location', reasons);
+  if (roleTitle) {
+    output = redactExactTerms(output, [roleTitle], 'the role', reasons);
+  }
+
+  if (PRECISE_ADDRESS_PATTERN.test(output) || GEO_COORDINATE_PATTERN.test(output)) {
+    addReason(holdReasons, 'manual_review_precise_location');
+  }
+
+  if (likelyFullNameMatches(output).length > 0) {
+    addReason(holdReasons, 'manual_review_possible_full_name');
   }
 
   output = output.replace(/\s+/g, ' ').trim();
+  if (!output || output === BLIND_REVIEW_REDACTED_TOKEN) {
+    return {
+      text: null,
+      reviewState: holdReasons.size > 0 ? 'held_for_manual_review' : 'visible',
+      reasons: [...reasons, ...holdReasons],
+    };
+  }
 
-  return output.length > 0 ? output : null;
+  return {
+    text: holdReasons.size > 0 ? null : output,
+    reviewState: holdReasons.size > 0 ? 'held_for_manual_review' : 'visible',
+    reasons: [...reasons, ...holdReasons],
+  };
 }
 
 function resolveReviewSafePackTitle(aggregate: CanonicalProofPackAggregate) {
@@ -1111,14 +1327,19 @@ export async function getOrgMembershipRole(
     where: and(
       eq(organizationMembers.userId, userId),
       eq(organizationMembers.orgId, orgId),
-      eq(organizationMembers.status, 'active')
+      eq(organizationMembers.state, 'active')
     ),
     columns: {
       role: true,
+      state: true,
     },
   });
 
-  return (membership?.role as OrgReviewRole | undefined) ?? null;
+  if (!membership || !isActiveMembershipState(membership.state)) {
+    return null;
+  }
+
+  return normalizeAuthorizedOrgRole(membership.role) as OrgReviewRole | null;
 }
 
 export function canMutateReview(role: OrgReviewRole | null): boolean {
@@ -1170,9 +1391,14 @@ export function buildCandidateReviewProjection(
     valuesTags: source.valuesTags ?? [],
     causeTags: source.causeTags ?? [],
     verificationSummary,
+    email: null,
+    portfolioUrl: null,
+    employerNames: null,
+    schoolNames: null,
+    exactLocation: null,
     locationSummary:
       scope === 'full_identity'
-        ? [source.city, source.country].filter(Boolean).join(', ') || null
+        ? source.exactLocation || [source.city, source.country].filter(Boolean).join(', ') || null
         : source.workMode
           ? 'Location hidden'
           : null,
@@ -1198,7 +1424,18 @@ export function buildCandidateReviewProjection(
       tagline: source.tagline ?? null,
       handle: null,
       avatarUrl: null,
-      hiddenFields: ['displayName', 'handle', 'avatarUrl', 'city', 'country'],
+      hiddenFields: [
+        'displayName',
+        'handle',
+        'avatarUrl',
+        'email',
+        'city',
+        'country',
+        'exactLocation',
+        'portfolioUrl',
+        'employerNames',
+        'schoolNames',
+      ],
     };
   }
 
@@ -1209,6 +1446,11 @@ export function buildCandidateReviewProjection(
     tagline: source.tagline ?? null,
     handle: source.handle ?? null,
     avatarUrl: source.avatarUrl ?? null,
+    email: source.email ?? null,
+    portfolioUrl: source.portfolioUrl ?? null,
+    employerNames: source.employerNames ?? [],
+    schoolNames: source.schoolNames ?? [],
+    exactLocation: source.exactLocation ?? null,
     hiddenFields: [],
   };
 }
@@ -1725,19 +1967,31 @@ export function buildProofFirstReviewCard(input: {
 
   const proofPack = input.proofPack ?? null;
   const contextJson = proofPack?.contextJson ?? {};
+  const privacyReasons = new Set<string>();
+  const privacyState: { reviewState: ProofFirstReviewCard['privacy']['reviewState'] } = {
+    reviewState: 'visible',
+  };
+  const applyBlindSafeText = (value: string | null | undefined) => {
+    const result = redactBlindReviewText(value, contextJson);
+    for (const reason of result.reasons) {
+      privacyReasons.add(reason);
+    }
+    if (result.reviewState === 'held_for_manual_review') {
+      privacyState.reviewState = 'held_for_manual_review';
+    }
+    return result.text;
+  };
   const strongestProofSummary =
-    redactReviewText(proofPack?.contract.primaryClaim.statement, contextJson) ??
-    redactReviewText(proofPack?.title, contextJson) ??
+    applyBlindSafeText(proofPack?.contract.primaryClaim.statement) ??
+    applyBlindSafeText(proofPack?.title) ??
     rendered.sections.positive_match[0] ??
     null;
-  const strongestProofOutcome = redactReviewText(
-    proofPack?.contract.outcomeSummary ?? proofPack?.outcomesSummary,
-    contextJson
+  const strongestProofOutcome = applyBlindSafeText(
+    proofPack?.contract.outcomeSummary ?? proofPack?.outcomesSummary
   );
   const ownership =
-    redactReviewText(
-      proofPack?.contract.ownershipStatement ?? proofPack?.ownershipStatement ?? null,
-      contextJson
+    applyBlindSafeText(
+      proofPack?.contract.ownershipStatement ?? proofPack?.ownershipStatement ?? null
     ) ?? 'Ownership statement available after deeper review.';
 
   const fitBullets = [
@@ -1750,7 +2004,7 @@ export function buildProofFirstReviewCard(input: {
 
   const verificationCount = input.verificationCount ?? null;
   const verificationSummaryLabel =
-    proofPack?.contract.verificationSummary.summary ??
+    applyBlindSafeText(proofPack?.contract.verificationSummary.summary) ??
     (proofPack?.verificationStatus === 'verified'
       ? 'Verified proof signal present'
       : proofPack?.verificationStatus === 'partially_verified'
@@ -1764,16 +2018,24 @@ export function buildProofFirstReviewCard(input: {
     proofPack,
     verificationCount,
   });
+  const fallbackHeadline = applyBlindSafeText(input.fallbackHeadline);
+  const anchorContext =
+    applyBlindSafeText(proofPack?.contract.primaryAnchor.label) ??
+    getAnchorContextLabel(proofPack?.primarySubjectType ?? null, contextJson);
 
   return {
     candidateLabel: getStableCandidateLabel(input.profileId),
     strongestProof: {
-      summary: strongestProofSummary,
-      outcome: strongestProofOutcome,
-      ownership,
-      anchorContext:
-        proofPack?.contract.primaryAnchor.label ??
-        getAnchorContextLabel(proofPack?.primarySubjectType ?? null, contextJson),
+      summary:
+        privacyState.reviewState === 'held_for_manual_review'
+          ? 'Proof summary held for manual privacy review.'
+          : strongestProofSummary,
+      outcome: privacyState.reviewState === 'held_for_manual_review' ? null : strongestProofOutcome,
+      ownership:
+        privacyState.reviewState === 'held_for_manual_review'
+          ? 'Ownership statement held for manual privacy review.'
+          : ownership,
+      anchorContext,
       freshnessLabel: getFreshnessLabel(proofPack?.freshnessState),
     },
     verification: {
@@ -1784,15 +2046,19 @@ export function buildProofFirstReviewCard(input: {
     fitBand: input.fitBand ?? null,
     fitSummary: {
       headline:
-        input.fallbackHeadline?.trim() ||
+        fallbackHeadline ||
         fitBullets[0] ||
-        strongestProofSummary ||
+        (privacyState.reviewState === 'held_for_manual_review' ? null : strongestProofSummary) ||
         'Proof-backed fit available for review.',
       bullets:
         fitBullets.length > 0
           ? fitBullets
           : ['Review the strongest proof summary and corridor state for this candidate.'],
       reasonCodes: input.reasonCodes,
+    },
+    privacy: {
+      reviewState: privacyState.reviewState,
+      reasons: [...privacyReasons].sort(),
     },
   };
 }

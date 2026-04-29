@@ -132,7 +132,7 @@ export default async function OrganizationPortfolioPage({
         .select('user_id', { count: 'exact', head: true })
         .eq('org_id', data.organizationId)
         .eq('user_id', user.id)
-        .eq('status', 'active')
+        .eq('state', 'active')
     : { count: 0 };
 
   const viewerIsMember = Boolean(membershipResult.count && membershipResult.count > 0);

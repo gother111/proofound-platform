@@ -330,7 +330,7 @@ export async function acceptInvitation(token: string) {
     });
 
     if (!redeemed.ok) {
-      return { error: `Invitation ${redeemed.reason}` };
+      return { error: 'Invitation unavailable' };
     }
 
     const invitationQuery = await adminClient

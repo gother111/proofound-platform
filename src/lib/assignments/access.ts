@@ -14,6 +14,7 @@ type MembershipContext = {
 
 type AssignmentAccessStatus =
   | 'ok'
+  | 'missing_org_context'
   | 'assignment_not_found'
   | 'membership_not_found'
   | 'insufficient_role';
@@ -191,14 +192,14 @@ export async function resolveExplicitUserOrgContext(
   return resolveUserOrgContext(userId, context, requiredRoles);
 }
 
-export async function verifyExplicitAssignmentMutationAccess(
+export async function verifyExplicitAssignmentAccess(
   userId: string,
   assignmentId: string,
   context?: MembershipContext,
-  requiredRoles: readonly OrgRole[] = ASSIGNMENT_MUTATION_ROLES
+  requiredRoles?: readonly OrgRole[]
 ): Promise<AssignmentMutationAccessResult> {
   if (!context?.orgId && !context?.orgSlug) {
-    return { status: 'membership_not_found' };
+    return { status: 'missing_org_context' };
   }
 
   const assignment = await db.query.assignments.findFirst({
@@ -210,12 +211,40 @@ export async function verifyExplicitAssignmentMutationAccess(
     return { status: 'assignment_not_found' };
   }
 
-  const explicitOrgId = await resolveExplicitUserOrgContext(userId, context, requiredRoles);
+  const explicitOrgId = await resolveExplicitUserOrgContext(userId, context);
   if (!explicitOrgId || explicitOrgId !== assignment.orgId) {
     return { status: 'membership_not_found' };
   }
 
-  return verifyAssignmentMutationAccess(userId, assignmentId, requiredRoles);
+  const membership = await findActiveMembership(userId, assignment.orgId);
+  if (!membership) {
+    return { status: 'membership_not_found' };
+  }
+
+  if (!hasRequiredRole(membership.role, requiredRoles)) {
+    return {
+      status: 'insufficient_role',
+      orgId: membership.orgId,
+      role: membership.role,
+      membershipId: membership.id,
+    };
+  }
+
+  return {
+    status: 'ok',
+    orgId: membership.orgId,
+    role: membership.role,
+    membershipId: membership.id,
+  };
+}
+
+export async function verifyExplicitAssignmentMutationAccess(
+  userId: string,
+  assignmentId: string,
+  context?: MembershipContext,
+  requiredRoles: readonly OrgRole[] = ASSIGNMENT_MUTATION_ROLES
+): Promise<AssignmentMutationAccessResult> {
+  return verifyExplicitAssignmentAccess(userId, assignmentId, context, requiredRoles);
 }
 
 export function isCanonicalOrgRole(value: string | null | undefined): value is OrgRole {

@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
+import { safeApiErrorResponse } from '@/lib/api/errors';
 import { deleteUploadedFile, ingestUploadedFile, UPLOAD_KINDS } from '@/lib/uploads/lifecycle';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
           success: true,
           status: 'manual_review',
           uploadedFileId: upload.uploadedFileId,
-          path: upload.storagePath,
           artifactDisplayName: upload.artifactDisplayName,
           fileName: upload.artifactDisplayName,
           fileSize: file.size,
@@ -82,26 +81,34 @@ export async function POST(request: NextRequest) {
       success: true,
       status: 'attachable',
       uploadedFileId: upload.uploadedFileId,
-      url: upload.url,
-      path: upload.storagePath,
       artifactDisplayName: upload.artifactDisplayName,
       fileName: upload.artifactDisplayName,
       fileSize: file.size,
       fileType: TYPE_LABELS[upload.detectedMime || file.type] || upload.detectedMime || file.type,
     });
   } catch (error) {
-    console.error('Document upload error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
+    const isFileSizeError = message.includes('File size exceeds');
     const isValidationError =
-      message.includes('File size exceeds') ||
-      message.includes('batch') ||
-      message.includes('limit');
+      isFileSizeError || message.includes('batch') || message.includes('limit');
+
+    if (!isValidationError) {
+      return safeApiErrorResponse({
+        event: 'upload.document.failed',
+        error,
+        status: 500,
+        publicMessage: 'Upload failed',
+      });
+    }
+
     return NextResponse.json(
       {
-        error: isValidationError ? 'Upload rejected' : 'Upload failed',
-        message,
+        error: 'Upload rejected',
+        message: isFileSizeError
+          ? 'The uploaded file is too large for this upload flow.'
+          : 'The upload could not be accepted for this flow.',
       },
-      { status: isValidationError ? 400 : 500 }
+      { status: 400 }
     );
   }
 }
@@ -115,47 +122,23 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const filePath = searchParams.get('path');
-
-    if (!filePath) {
-      return NextResponse.json({ error: 'File path required' }, { status: 400 });
-    }
-
     const fileId = searchParams.get('fileId');
-    if (fileId) {
-      const deleted = await deleteUploadedFile(fileId, user.id);
-      if (!deleted) {
-        return NextResponse.json({ error: 'Not found' }, { status: 404 });
-      }
-      return NextResponse.json({ success: true });
+    if (!fileId) {
+      return NextResponse.json({ error: 'File id required' }, { status: 400 });
     }
 
-    if (!filePath.includes(user.id)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const supabase = await createClient();
-    const { error: deleteError } = await supabase.storage
-      .from('user-uploads-private')
-      .remove([filePath]);
-
-    if (deleteError) {
-      console.error('Delete error:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to delete file', details: deleteError.message },
-        { status: 500 }
-      );
+    const deleted = await deleteUploadedFile(fileId, user.id);
+    if (!deleted) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Document delete error:', error);
-    return NextResponse.json(
-      {
-        error: 'Delete failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return safeApiErrorResponse({
+      event: 'upload.document_delete.failed',
+      error,
+      status: 500,
+      publicMessage: 'Delete failed',
+    });
   }
 }

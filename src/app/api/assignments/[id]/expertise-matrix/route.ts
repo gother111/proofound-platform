@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
-import {
-  assignmentExpertiseMatrix,
-  assignments,
-  organizationMembers,
-  assignmentOutcomes,
-} from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { assignmentExpertiseMatrix, assignments } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { deriveRequirementsFromMatrix } from '@/lib/assignments/expertise-matrix';
 import { log } from '@/lib/log';
+import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
+import {
+  verifyExplicitAssignmentAccess,
+  verifyExplicitAssignmentMutationAccess,
+} from '@/lib/assignments/access';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,25 +24,34 @@ const ExpertiseMatrixItemSchema = z.object({
 
 const ExpertiseMatrixArraySchema = z.array(ExpertiseMatrixItemSchema);
 
-/**
- * Helper to verify user owns the assignment
- */
-async function verifyAssignmentOwnership(userId: string, assignmentId: string): Promise<boolean> {
-  const assignment = await db.query.assignments.findFirst({
-    where: eq(assignments.id, assignmentId),
-  });
+function orgContextFromRequest(request: NextRequest, body?: Record<string, unknown>) {
+  return {
+    orgId:
+      request.nextUrl.searchParams.get('orgId') ??
+      (typeof body?.orgId === 'string' ? body.orgId : null),
+    orgSlug:
+      request.nextUrl.searchParams.get('orgSlug') ??
+      (typeof body?.orgSlug === 'string' ? body.orgSlug : null),
+  };
+}
 
-  if (!assignment) return false;
+function assignmentAccessResponse(
+  access: Awaited<ReturnType<typeof verifyExplicitAssignmentAccess>>
+) {
+  if (access.status === 'missing_org_context') {
+    return NextResponse.json({ error: 'Organization context is required' }, { status: 400 });
+  }
+  if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
+    return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
+  }
+  if (access.status === 'insufficient_role') {
+    return NextResponse.json(
+      { error: 'Forbidden. Organization manager or owner role is required.' },
+      { status: 403 }
+    );
+  }
 
-  const membership = await db.query.organizationMembers.findFirst({
-    where: and(
-      eq(organizationMembers.userId, userId),
-      eq(organizationMembers.orgId, assignment.orgId),
-      eq(organizationMembers.status, 'active')
-    ),
-  });
-
-  return !!membership;
+  return null;
 }
 
 /**
@@ -58,17 +67,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
     const { user } = authContext;
     const { id: assignmentId } = await params;
+    const body = await request.json();
 
-    // Verify ownership
-    const hasAccess = await verifyAssignmentOwnership(user.id, assignmentId);
-    if (!hasAccess) {
-      return NextResponse.json(
-        { error: 'You do not have permission to modify this assignment' },
-        { status: 403 }
-      );
+    const access = await verifyExplicitAssignmentMutationAccess(
+      user.id,
+      assignmentId,
+      orgContextFromRequest(request, body)
+    );
+    const accessResponse = assignmentAccessResponse(access);
+    if (accessResponse) {
+      return accessResponse;
     }
 
-    const body = await request.json();
     const validatedMatrix = ExpertiseMatrixArraySchema.parse(body.expertiseMatrix);
 
     // Delete existing expertise matrix entries for this assignment
@@ -125,7 +135,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     log.error('assignment.expertise-matrix.save.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: sanitizeErrorForLog(error),
     });
 
     return NextResponse.json({ error: 'Failed to save expertise matrix' }, { status: 500 });
@@ -146,13 +156,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const { user } = authContext;
     const { id: assignmentId } = await params;
 
-    // Verify ownership
-    const hasAccess = await verifyAssignmentOwnership(user.id, assignmentId);
-    if (!hasAccess) {
-      return NextResponse.json(
-        { error: 'You do not have permission to view this assignment' },
-        { status: 403 }
-      );
+    const access = await verifyExplicitAssignmentAccess(
+      user.id,
+      assignmentId,
+      orgContextFromRequest(request)
+    );
+    const accessResponse = assignmentAccessResponse(access);
+    if (accessResponse) {
+      return accessResponse;
     }
 
     const matrix = await db.query.assignmentExpertiseMatrix.findMany({
@@ -162,7 +173,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ expertiseMatrix: matrix });
   } catch (error) {
     log.error('assignment.expertise-matrix.get.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: sanitizeErrorForLog(error),
     });
 
     return NextResponse.json({ error: 'Failed to retrieve expertise matrix' }, { status: 500 });

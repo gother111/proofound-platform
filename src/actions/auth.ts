@@ -1,6 +1,10 @@
 'use server';
 
-import { resolveCanonicalSiteUrl } from '@/lib/env';
+import {
+  assertMockDatabaseAllowed,
+  isMockSupabaseEnabled,
+  resolveCanonicalSiteUrl,
+} from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -127,7 +131,7 @@ export async function signUp(
     }
 
     const supabase = await createClient({ allowCookieWrite: true });
-    const isMockAuth = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+    const isMockAuth = isMockSupabaseEnabled();
 
     let { data: signUpResult, error } = await supabase.auth.signUp({
       email: result.data.email,
@@ -533,7 +537,8 @@ export async function requestPasswordReset(formData: FormData) {
     return { error: 'Invalid email' };
   }
 
-  if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
+  if (isMockSupabaseEnabled()) {
+    assertMockDatabaseAllowed('Password reset');
     return { success: true };
   }
 

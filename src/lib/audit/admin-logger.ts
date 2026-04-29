@@ -7,6 +7,8 @@
 
 import { db } from '@/db';
 import { adminAuditLog } from '@/db/schema';
+import { log } from '@/lib/log';
+import { sanitizeErrorForLog, sanitizeLogPayload } from '@/lib/privacy/log-redaction';
 import { headers } from 'next/headers';
 
 export interface AdminActionLogParams {
@@ -25,7 +27,8 @@ export interface AdminActionLogParams {
 export async function logAdminAction(params: AdminActionLogParams): Promise<void> {
   try {
     const headersList = await headers();
-    const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
+    const ipAddress =
+      headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
     const userAgent = headersList.get('user-agent') || 'unknown';
 
     await db.insert(adminAuditLog).values({
@@ -33,16 +36,25 @@ export async function logAdminAction(params: AdminActionLogParams): Promise<void
       action: params.action,
       targetType: params.targetType || null,
       targetId: params.targetId || null,
-      changes: params.changes || null,
+      changes: params.changes ? sanitizeLogPayload(params.changes) : null,
       reason: params.reason || null,
       ipAddress,
       userAgent,
-      metadata: params.metadata || null,
+      metadata: params.metadata ? sanitizeLogPayload(params.metadata) : null,
     });
 
-    console.log(`[ADMIN AUDIT] ${params.action} by ${params.adminId}${params.targetId ? ` on ${params.targetType}:${params.targetId}` : ''}`);
+    log.info('admin_audit.logged', {
+      adminId: params.adminId,
+      action: params.action,
+      targetType: params.targetType || null,
+      targetId: params.targetId || null,
+    });
   } catch (error) {
-    console.error('Failed to log admin action:', error);
+    log.error('admin_audit.log_failed', {
+      adminId: params.adminId,
+      action: params.action,
+      error: sanitizeErrorForLog(error),
+    });
     // Don't throw - logging failure shouldn't block the action
   }
 }

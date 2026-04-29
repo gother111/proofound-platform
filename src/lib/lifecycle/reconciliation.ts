@@ -250,6 +250,40 @@ export async function executeAccountDeletionLifecycle(params: {
   }
   await resolveLifecycleTarget(params.operationId, 'proof_pack', 'proof_packs', 'revoked');
 
+  await db.execute(sql`
+    UPDATE proof_artifacts
+    SET
+      lifecycle_state = 'deleted',
+      visibility = 'owner_only',
+      deleted_at = COALESCE(deleted_at, NOW()),
+      delete_reason = ${params.reason ?? 'account_deleted'},
+      public_surface_disabled_at = NOW(),
+      cleanup_started_at = COALESCE(cleanup_started_at, NOW()),
+      cleanup_completed_at = NOW(),
+      updated_at = NOW()
+    WHERE owner_type = 'individual_profile'
+      AND owner_id = ${params.userId}::uuid
+      AND deleted_at IS NULL
+  `);
+
+  await db.execute(sql`
+    UPDATE verification_records
+    SET
+      status = 'revoked',
+      verifier_profile_id = NULL,
+      verifier_org_id = NULL,
+      verifier_email_hash = NULL,
+      verifier_domain_snapshot = NULL,
+      risk_signals = '{}'::jsonb,
+      claim_snapshot = '{}'::jsonb,
+      metadata = jsonb_build_object('retention', 'account_deleted_minimized'),
+      revoked_at = COALESCE(revoked_at, NOW()),
+      updated_at = NOW()
+    WHERE owner_type = 'individual_profile'
+      AND owner_id = ${params.userId}::uuid
+      AND revoked_at IS NULL
+  `);
+
   const uploadedFilesResult = await db.execute(sql`
     SELECT id
     FROM uploaded_files
@@ -258,15 +292,88 @@ export async function executeAccountDeletionLifecycle(params: {
       AND deleted_at IS NULL
   `);
   const uploadedFiles = getRows<{ id: string }>(uploadedFilesResult as any);
+  const failedStorageDeletes: string[] = [];
   for (const file of uploadedFiles) {
-    await deleteUploadedFile(file.id);
+    const deleted = await deleteUploadedFile(file.id, params.userId, 'system_cleanup');
+    if (!deleted) {
+      failedStorageDeletes.push(file.id);
+    }
+  }
+
+  if (failedStorageDeletes.length > 0) {
+    await failLifecycleTarget(
+      params.operationId,
+      'storage_object',
+      'uploaded_files',
+      'storage_delete_failed',
+      `${failedStorageDeletes.length} uploaded file(s) failed storage deletion`
+    );
+    throw new Error('Account deletion storage cleanup failed');
   }
   await resolveLifecycleTarget(params.operationId, 'storage_object', 'uploaded_files', 'deleted');
+
+  await db.execute(sql`
+    DELETE FROM evidence
+    WHERE profile_id = ${params.userId}::uuid
+  `);
+
+  await db.execute(sql`
+    DELETE FROM capabilities
+    WHERE profile_id = ${params.userId}::uuid
+  `);
+
+  await db.execute(sql`
+    DELETE FROM skill_proofs
+    WHERE profile_id = ${params.userId}::uuid
+  `);
+
+  await db.execute(sql`
+    DELETE FROM skills
+    WHERE profile_id = ${params.userId}::uuid
+  `);
+
+  await db.execute(sql`
+    DELETE FROM impact_stories
+    WHERE user_id = ${params.userId}::uuid
+  `);
+
+  await db.execute(sql`
+    DELETE FROM experiences
+    WHERE user_id = ${params.userId}::uuid
+  `);
+
+  await db.execute(sql`
+    DELETE FROM education
+    WHERE user_id = ${params.userId}::uuid
+  `);
+
+  await db.execute(sql`
+    DELETE FROM volunteering
+    WHERE user_id = ${params.userId}::uuid
+  `);
+
+  await db.execute(sql`
+    DELETE FROM projects
+    WHERE user_id = ${params.userId}::uuid
+  `);
+
+  await db.execute(sql`
+    DELETE FROM individual_profiles
+    WHERE user_id = ${params.userId}::uuid
+  `);
+
+  await db.execute(sql`
+    DELETE FROM matching_profiles
+    WHERE profile_id = ${params.userId}::uuid
+  `);
 
   await db
     .update(profiles)
     .set({
       lifecycleState: 'deleted',
+      publicPortfolioState: 'unavailable',
+      searchIndexingEnabledAt: null,
+      matchingEnabled: false,
       deleted: true,
       deletionRequestedAt: new Date(),
       deletionReason: params.reason ?? null,

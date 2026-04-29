@@ -28,6 +28,11 @@ vi.mock('@/lib/portfolio/public-invalidation', () => ({
   revalidatePublicPortfolioByProfileId: vi.fn(),
 }));
 
+vi.mock('@/lib/uploads/lifecycle', () => ({
+  deleteUploadedFile: vi.fn(),
+  deleteUploadedFileByOwnedStoragePath: vi.fn(),
+}));
+
 import { DELETE } from '@/app/api/expertise/user-skills/[id]/proofs/[proofId]/route';
 import { requireApiAuthContext } from '@/lib/auth';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
@@ -36,11 +41,14 @@ import {
   deleteCanonicalProofArtifactById,
   deleteCanonicalProofArtifactForSkillProof,
 } from '@/lib/canonical/repository';
+import { deleteUploadedFile, deleteUploadedFileByOwnedStoragePath } from '@/lib/uploads/lifecycle';
 
 describe('expertise user-skill proof delete route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(db.query.proofArtifacts.findFirst as any).mockResolvedValue(null);
+    vi.mocked(deleteUploadedFile).mockResolvedValue(true);
+    vi.mocked(deleteUploadedFileByOwnedStoragePath).mockResolvedValue(false);
   });
 
   it('prefers canonical proof deletion when a canonical artifact exists', async () => {
@@ -68,6 +76,7 @@ describe('expertise user-skill proof delete route', () => {
       title: 'Canonical proof',
       artifactKind: 'link',
       storagePath: null,
+      uploadedFileId: 'uploaded-file-1',
     });
 
     vi.mocked(requireApiAuthContext).mockResolvedValue({
@@ -90,6 +99,7 @@ describe('expertise user-skill proof delete route', () => {
     );
 
     expect(response.status).toBe(200);
+    expect(deleteUploadedFile).toHaveBeenCalledWith('uploaded-file-1', 'user-1');
     expect(deleteCanonicalProofArtifactById).toHaveBeenCalledWith('artifact-1');
     expect(deleteCanonicalProofArtifactForSkillProof).not.toHaveBeenCalled();
     expect(revalidatePublicPortfolioByProfileId).toHaveBeenCalledWith('user-1');
@@ -180,6 +190,50 @@ describe('expertise user-skill proof delete route', () => {
 
     expect(response.status).toBe(200);
     expect(deleteCanonicalProofArtifactById).not.toHaveBeenCalled();
+    expect(deleteCanonicalProofArtifactForSkillProof).toHaveBeenCalledWith('proof-legacy');
+  });
+
+  it('does not delete archived legacy storage paths without uploaded-file ownership proof', async () => {
+    const proofLookup = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: {
+          id: 'proof-legacy',
+          skill_id: 'skill-1',
+          profile_id: 'user-1',
+          title: 'Legacy proof',
+          proof_type: 'document',
+          file_path: 'individual_profile/user-1/proof/forged-but-unowned.pdf',
+        },
+        error: null,
+      }),
+      delete: vi.fn().mockReturnThis(),
+    };
+
+    vi.mocked(db.query.proofArtifacts.findFirst as any).mockResolvedValue(null);
+    vi.mocked(deleteUploadedFileByOwnedStoragePath).mockResolvedValue(false);
+
+    vi.mocked(requireApiAuthContext).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase: {
+        from: vi.fn(() => proofLookup),
+      },
+    } as any);
+
+    const response = await DELETE(
+      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs/proof-legacy', {
+        method: 'DELETE',
+      }),
+      { params: Promise.resolve({ id: 'skill-1', proofId: 'proof-legacy' }) }
+    );
+
+    expect(response.status).toBe(200);
+    expect(deleteUploadedFileByOwnedStoragePath).toHaveBeenCalledWith(
+      'individual_profile/user-1/proof/forged-but-unowned.pdf',
+      'user-1'
+    );
+    expect(deleteUploadedFile).not.toHaveBeenCalled();
     expect(deleteCanonicalProofArtifactForSkillProof).toHaveBeenCalledWith('proof-legacy');
   });
 });

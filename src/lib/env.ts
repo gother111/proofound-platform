@@ -129,6 +129,10 @@ export function getEnabledMockDatabaseModes(env: EnvSource = process.env): strin
     enabled.push('MOCK_ADMIN_MODE');
   }
 
+  if (isEnabledFlag(env.MOBILE_MOCK_AUTH)) {
+    enabled.push('MOBILE_MOCK_AUTH');
+  }
+
   const mockPlatformRole = env.MOCK_PLATFORM_ROLE?.trim();
   if (mockPlatformRole === 'platform_admin' || mockPlatformRole === 'super_admin') {
     enabled.push('MOCK_PLATFORM_ROLE');
@@ -148,7 +152,7 @@ export function assertMockDatabaseAllowed(context: string, env: EnvSource = proc
   }
 
   const err = new Error(
-    `ENV_MISCONFIG: ${context} refused to use mock database/admin mode in production. ` +
+    `ENV_MISCONFIG: ${context} refused to use mock database/admin/auth mode in production. ` +
       `Disable: ${enabledMockModes.join(', ')}.`
   ) as Error & { code?: string };
   err.code = 'ENV_MISCONFIG';

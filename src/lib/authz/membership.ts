@@ -45,25 +45,25 @@ export function normalizeAuthorizedOrgRole(value: string | null | undefined): Or
     : null;
 }
 
-export function normalizeMembershipState(
-  value: string | null | undefined
-): CanonicalOrgMembershipState {
-  if (!value) {
-    return 'active';
+export function normalizeMembershipState(value: unknown): CanonicalOrgMembershipState {
+  if (typeof value !== 'string' || value.length === 0) {
+    return 'inactive';
   }
 
   if (canonicalOrgMembershipStates.includes(value as CanonicalOrgMembershipState)) {
     return value as CanonicalOrgMembershipState;
   }
 
-  return LEGACY_MEMBERSHIP_STATE_MAP[value as keyof typeof LEGACY_MEMBERSHIP_STATE_MAP] ?? 'active';
+  return (
+    LEGACY_MEMBERSHIP_STATE_MAP[value as keyof typeof LEGACY_MEMBERSHIP_STATE_MAP] ?? 'inactive'
+  );
 }
 
-export function isActiveMembershipState(value: string | null | undefined): boolean {
+export function isActiveMembershipState(value: unknown): boolean {
   const normalized = normalizeMembershipState(value);
   return ORG_ACTIVE_MEMBERSHIP_STATES[0] === normalized;
 }
 
-export function membershipGrantsOrgAccess(value: string | null | undefined): boolean {
+export function membershipGrantsOrgAccess(value: unknown): boolean {
   return isActiveMembershipState(value);
 }
