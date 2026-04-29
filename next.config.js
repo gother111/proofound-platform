@@ -78,6 +78,10 @@ const nextConfig = {
   // Silence multiple-lockfile root inference; set explicit tracing root to this app.
   // Use process.cwd() so it works both locally and on Vercel (no absolute machine path).
   outputFileTracingRoot: process.cwd(),
+  outputFileTracingIncludes: {
+    '/api/cron/launch-synthetic-checks': ['.artifacts/launch-smoke-report.json'],
+    '/api/monitoring/launch-status': ['.artifacts/launch-smoke-report.json'],
+  },
   images: {
     remotePatterns: [
       {
