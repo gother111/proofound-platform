@@ -3,7 +3,7 @@ import { eq, sql } from 'drizzle-orm';
 import { db, matches, messages } from '@/db';
 import { isActiveOrgMember } from '@/lib/api/auth';
 import { getRows } from '@/lib/db/rows';
-import { toIsoOrNull as toIso } from '@/lib/datetime/normalize';
+import { toDateOrNull, toIsoOrNull as toIso } from '@/lib/datetime/normalize';
 import { log } from '@/lib/log';
 import { ensureConversationForMatch as ensureCanonicalConversationForMatch } from '@/lib/messaging/conversation-access';
 import { createClient } from '@/lib/supabase/server';
@@ -109,7 +109,7 @@ export async function getInterviewAccessContext(
     org_id: string;
     candidate_id: string;
     status: string | null;
-    scheduled_at: Date | null;
+    scheduled_at: Date | string | null;
     reschedule_count: number | null;
     platform: string | null;
     meeting_url: string | null;
@@ -125,7 +125,7 @@ export async function getInterviewAccessContext(
     orgId: row.org_id,
     candidateId: row.candidate_id,
     status: row.status,
-    scheduledAt: row.scheduled_at,
+    scheduledAt: toDateOrNull(row.scheduled_at),
     platform: row.platform,
     meetingUrl: row.meeting_url,
     timezone: row.timezone,

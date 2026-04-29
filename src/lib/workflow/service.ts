@@ -18,7 +18,7 @@ import {
   workflowAsyncJobs,
 } from '@/db/schema';
 import { emitLifecycleEvent } from '@/lib/analytics/lifecycle-events';
-import { toIsoOrNull as toIso } from '@/lib/datetime/normalize';
+import { toDateOrNull, toIsoOrNull as toIso } from '@/lib/datetime/normalize';
 import { getRows } from '@/lib/db/rows';
 import { emitDecisionMade, emitInterviewCompleted } from '@/lib/analytics/events';
 import {
@@ -68,13 +68,13 @@ async function getInterviewWorkflowRow(interviewId: string) {
   const rows = getRows(result) as Array<{
     id: string;
     status: string | null;
-    completed_at: Date | null;
-    cancelled_at: Date | null;
+    completed_at: Date | string | null;
+    cancelled_at: Date | string | null;
     cancelled_by: string | null;
     cancel_reason: string | null;
-    no_show_at: Date | null;
+    no_show_at: Date | string | null;
     no_show_recorded_by: string | null;
-    updated_at: Date | null;
+    updated_at: Date | string | null;
   }>;
 
   const row = rows[0];
@@ -85,13 +85,13 @@ async function getInterviewWorkflowRow(interviewId: string) {
   return {
     id: row.id,
     status: row.status,
-    completedAt: row.completed_at,
-    cancelledAt: row.cancelled_at,
+    completedAt: toDateOrNull(row.completed_at),
+    cancelledAt: toDateOrNull(row.cancelled_at),
     cancelledBy: row.cancelled_by,
     cancelReason: row.cancel_reason,
-    noShowAt: row.no_show_at,
+    noShowAt: toDateOrNull(row.no_show_at),
     noShowRecordedBy: row.no_show_recorded_by,
-    updatedAt: row.updated_at,
+    updatedAt: toDateOrNull(row.updated_at),
   };
 }
 
@@ -338,15 +338,26 @@ function inferNoShowParticipantRole(
 }
 
 function isMissingLegacyInterviewDecisionColumnError(error: unknown) {
-  const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === 'object' && error && 'message' in error
-        ? String((error as { message?: unknown }).message ?? '')
-        : '';
+  const messages: string[] = [];
+  let current: unknown = error;
 
-  return /column "(decision|decided_by|decided_at|feedback)" of relation "interviews" does not exist/.test(
-    message
+  while (current) {
+    if (current instanceof Error) {
+      messages.push(current.message);
+      current = (current as Error & { cause?: unknown }).cause;
+      continue;
+    }
+
+    if (typeof current === 'object' && 'message' in current) {
+      messages.push(String((current as { message?: unknown }).message ?? ''));
+    }
+    break;
+  }
+
+  return messages.some((message) =>
+    /column "(decision|decided_by|decided_at|feedback)" of relation "interviews" does not exist/.test(
+      message
+    )
   );
 }
 
@@ -1321,7 +1332,7 @@ export async function recordInterviewTransition(params: {
       interviewId: params.interviewId,
       assignmentId: decision.assignmentId,
       profileId: decision.candidateProfileId,
-      completedAt: updated.completedAt ?? now,
+      completedAt: toDateOrNull(updated.completedAt) ?? now,
     });
 
     try {

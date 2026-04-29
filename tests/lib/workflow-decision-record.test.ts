@@ -78,7 +78,10 @@ vi.mock('@/lib/analytics/lifecycle-events', () => ({
 }));
 
 vi.mock('@/lib/datetime/normalize', () => ({
-  toIsoOrNull: (value: Date | null | undefined) => value?.toISOString() ?? null,
+  toDateOrNull: (value: Date | string | null | undefined) =>
+    value ? (value instanceof Date ? value : new Date(value)) : null,
+  toIsoOrNull: (value: Date | string | null | undefined) =>
+    value ? (value instanceof Date ? value : new Date(value)).toISOString() : null,
 }));
 
 vi.mock('@/lib/db/rows', () => ({

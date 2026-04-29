@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Resend } from 'resend';
 import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 
@@ -1262,32 +1263,32 @@ export async function recordRevealEvent(input: {
   context?: Record<string, unknown>;
   outcome: 'granted' | 'denied' | 'no_op';
 }) {
-  const [saved] = await db
-    .insert(revealEvents)
-    .values({
-      matchId: input.matchId,
-      assignmentId: input.assignmentId,
-      profileId: input.profileId,
-      orgId: input.orgId,
-      actorId: input.actorId ?? null,
-      actorRole: input.actorRole ?? null,
-      actorType: input.actorType,
-      triggerType: input.triggerType,
-      requestedScope: input.requestedScope,
-      grantedScope: input.grantedScope,
-      reasonCode: input.reasonCode,
-      sourceSurface: input.sourceSurface ?? null,
-      contextJson: input.context ?? {},
-      outcome: input.outcome,
-    })
-    .returning();
+  const revealEventId = randomUUID();
+
+  await db.insert(revealEvents).values({
+    id: revealEventId,
+    matchId: input.matchId,
+    assignmentId: input.assignmentId,
+    profileId: input.profileId,
+    orgId: input.orgId,
+    actorId: input.actorId ?? null,
+    actorRole: input.actorRole ?? null,
+    actorType: input.actorType,
+    triggerType: input.triggerType,
+    requestedScope: input.requestedScope,
+    grantedScope: input.grantedScope,
+    reasonCode: input.reasonCode,
+    sourceSurface: input.sourceSurface ?? null,
+    contextJson: input.context ?? {},
+    outcome: input.outcome,
+  });
 
   const lifecycleActorType = mapRevealActorTypeToLifecycleActorType(
     input.actorType,
     input.actorRole
   );
   const basePayload = {
-    reveal_event_id: saved.id,
+    reveal_event_id: revealEventId,
     match_id: input.matchId,
     assignment_id: input.assignmentId,
     profile_id: input.profileId,

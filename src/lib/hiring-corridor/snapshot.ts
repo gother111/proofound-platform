@@ -105,8 +105,17 @@ export type HiringCorridorSource = {
   engagementVerification: EngagementVerificationSummary | null;
 };
 
-function toIso(value: Date | null | undefined) {
-  return value ? value.toISOString() : null;
+function toIso(value: Date | string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 
 function stepLabel(step: HiringCorridorStep) {
