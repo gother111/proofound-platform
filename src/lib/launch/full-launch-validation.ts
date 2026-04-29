@@ -119,10 +119,12 @@ function gateFromRepoReadyGate(
 async function fetchJsonWithTimeout(fetchImpl: typeof fetch, url: string, timeoutMs: number) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const cronSecret = process.env.CRON_SECRET?.trim();
   try {
     const response = await fetchImpl(url, {
       headers: {
         accept: 'application/json',
+        ...(cronSecret ? { authorization: `Bearer ${cronSecret}` } : {}),
       },
       signal: controller.signal,
     });

@@ -51,13 +51,6 @@ export async function GET(request: NextRequest) {
   }
 
   const internalSecret = getInternalApiSecret();
-  if (!internalSecret) {
-    return NextResponse.json(
-      { error: 'Missing INTERNAL_API_SECRET/CRON_SECRET configuration' },
-      { status: 500 }
-    );
-  }
-
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (!baseUrl) {
     return NextResponse.json({ error: 'NEXT_PUBLIC_SITE_URL is not configured' }, { status: 500 });

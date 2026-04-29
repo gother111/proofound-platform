@@ -34,8 +34,6 @@ const ACTIVE_LAUNCH_EXACT_API_PATHS = [
   '/api/health',
   '/api/individual/readiness',
   '/api/location/autocomplete',
-  '/api/monitoring/launch-status',
-  '/api/monitoring/perf-status',
   '/api/org/readiness',
   '/api/performance/track',
   '/api/verification/status',
@@ -258,16 +256,20 @@ const INTERNAL_ONLY_API_POLICIES = [
     surfaceLabel: 'Launch Ops API',
     detail: 'This cron route stays available only for launch monitoring and operational safety.',
     matches: (pathname: string) =>
-      pathname === '/api/cron/account-deletion-workflow' ||
       pathname === '/api/cron/decision-reminders' ||
       pathname === '/api/cron/health-check' ||
       pathname === '/api/cron/launch-synthetic-checks' ||
       pathname === '/api/cron/performance-check' ||
-      pathname === '/api/cron/process-deletions' ||
       pathname === '/api/cron/refresh-matches' ||
       pathname === '/api/cron/refresh-matches-worker' ||
-      pathname === '/api/cron/send-deletion-reminders' ||
       pathname === '/api/cron/sla-enforcement',
+  },
+  {
+    classification: 'internal_only_launch_ops',
+    surfaceLabel: 'Launch Diagnostics API',
+    detail: 'Launch readiness and performance diagnostics require internal launch-ops auth.',
+    matches: (pathname: string) =>
+      pathname === '/api/monitoring/launch-status' || pathname === '/api/monitoring/perf-status',
   },
   {
     classification: 'internal_only_launch_ops',
@@ -303,7 +305,11 @@ const ARCHIVED_API_POLICIES = [
     surfaceLabel: 'Workflow Cron API',
     detail:
       'The standalone workflow queue cron is archived because launch processing now flows through retained internal cron routes.',
-    matches: (pathname: string) => pathname === '/api/cron/workflow-jobs',
+    matches: (pathname: string) =>
+      pathname === '/api/cron/account-deletion-workflow' ||
+      pathname === '/api/cron/process-deletions' ||
+      pathname === '/api/cron/send-deletion-reminders' ||
+      pathname === '/api/cron/workflow-jobs',
   },
   {
     classification: 'archived',

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { User } from '@supabase/supabase-js';
 import type { OrgRole } from '@/lib/authz';
 import { isActiveMembershipState, normalizeAuthorizedOrgRole } from '@/lib/authz';
+import { getPrimaryServerOnlyInternalSecret, isAuthorizedCronRequest } from '@/lib/api/cron-auth';
 import { createClient } from '@/lib/supabase/server';
 
 export type ApiAuthContext = {
@@ -30,7 +31,7 @@ export type CanonicalActiveOrgMembership = {
 };
 
 export function getInternalApiSecret(): string {
-  return (process.env.INTERNAL_API_SECRET || process.env.CRON_SECRET || '').trim();
+  return getPrimaryServerOnlyInternalSecret();
 }
 
 export function hasInternalApiSecret(): boolean {
@@ -38,25 +39,16 @@ export function hasInternalApiSecret(): boolean {
 }
 
 export function isTrustedInternalRequest(request: NextRequest): boolean {
-  const sharedSecret = getInternalApiSecret();
-  if (!sharedSecret) {
-    return false;
-  }
-
-  const internalHeader = request.headers.get('x-internal-api-key');
-  const authorization = request.headers.get('authorization');
-
-  return internalHeader === sharedSecret || authorization === `Bearer ${sharedSecret}`;
+  return isAuthorizedCronRequest(request);
 }
 
 export function requireInternalApiRequest(request: NextRequest): NextResponse | null {
   if (!hasInternalApiSecret()) {
     return NextResponse.json(
       {
-        error: 'Server misconfiguration',
-        message: 'Missing INTERNAL_API_SECRET/CRON_SECRET configuration',
+        error: 'Unauthorized',
       },
-      { status: 500 }
+      { status: 401 }
     );
   }
 

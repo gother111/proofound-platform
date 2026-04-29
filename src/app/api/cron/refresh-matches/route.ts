@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
 import { log } from '@/lib/log';
 import {
   countPendingRefreshJobs,
@@ -18,12 +19,10 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    const unauthorized = requireInternalOpsRequest(request);
+    if (unauthorized) {
       log.error('cron.refresh-matches.unauthorized');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return unauthorized;
     }
 
     if (!isMatchingRefreshQueueEnabled()) {

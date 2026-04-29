@@ -77,7 +77,20 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/admin/organizations/org-1/audit')).toBeNull();
     expect(getArchivedApiPolicy('/api/admin/organizations/org-1/verify')).toBeNull();
     expect(getArchivedApiPolicy('/api/cron/launch-synthetic-checks')).toBeNull();
-    expect(getArchivedApiPolicy('/api/cron/process-deletions')).toBeNull();
+    expect(classifyLaunchApiPath('/api/monitoring/launch-status')).toBe('internal_only_launch_ops');
+    expect(classifyLaunchApiPath('/api/monitoring/perf-status')).toBe('internal_only_launch_ops');
+  });
+
+  it('archives retired cron routes', () => {
+    expect(getArchivedApiPolicy('/api/cron/account-deletion-workflow')).toMatchObject({
+      surfaceLabel: 'Workflow Cron API',
+    });
+    expect(getArchivedApiPolicy('/api/cron/process-deletions')).toMatchObject({
+      surfaceLabel: 'Workflow Cron API',
+    });
+    expect(getArchivedApiPolicy('/api/cron/send-deletion-reminders')).toMatchObject({
+      surfaceLabel: 'Workflow Cron API',
+    });
   });
 
   it('archives stale linkedin-flavored internal queue routes', () => {

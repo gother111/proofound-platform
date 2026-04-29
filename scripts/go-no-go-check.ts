@@ -34,6 +34,24 @@ function fail(message: string): never {
   process.exit(1);
 }
 
+function getCronSecret() {
+  const cronSecret = process.env.CRON_SECRET?.trim();
+  if (
+    !cronSecret ||
+    cronSecret.toLowerCase() === 'undefined' ||
+    cronSecret.toLowerCase() === 'null'
+  ) {
+    fail('CRON_SECRET is required to query authenticated launch-ops endpoints');
+  }
+  return cronSecret;
+}
+
+function internalOpsHeaders() {
+  return {
+    authorization: `Bearer ${getCronSecret()}`,
+  };
+}
+
 function command(name: string) {
   return process.platform === 'win32' ? `${name}.cmd` : name;
 }
@@ -111,7 +129,9 @@ function ensureLaunchSmokeArtifact() {
 }
 
 async function checkPerfStatus() {
-  const response = await fetch(`${BASE_URL}/api/monitoring/perf-status`);
+  const response = await fetch(`${BASE_URL}/api/monitoring/perf-status`, {
+    headers: internalOpsHeaders(),
+  });
   if (!response.ok) {
     fail(`perf-status endpoint returned ${response.status}`);
   }
@@ -123,15 +143,9 @@ async function checkPerfStatus() {
 
 async function maybeRunSynthetics() {
   if (!RUN_SYNTHETICS) return;
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    fail('CRON_SECRET is required to trigger launch synthetic checks');
-  }
 
   const response = await fetch(`${BASE_URL}/api/cron/launch-synthetic-checks`, {
-    headers: {
-      authorization: `Bearer ${cronSecret}`,
-    },
+    headers: internalOpsHeaders(),
   });
 
   if (!response.ok) {
@@ -141,7 +155,9 @@ async function maybeRunSynthetics() {
 }
 
 async function checkLaunchStatus() {
-  const response = await fetch(`${BASE_URL}/api/monitoring/launch-status`);
+  const response = await fetch(`${BASE_URL}/api/monitoring/launch-status`, {
+    headers: internalOpsHeaders(),
+  });
   if (!response.ok && response.status !== 503) {
     fail(`launch-status endpoint returned ${response.status}`);
   }

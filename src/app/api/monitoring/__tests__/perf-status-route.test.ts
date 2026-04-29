@@ -16,20 +16,40 @@ function mockSelectRows(rows: Array<{ duration: number | null }>) {
   });
 }
 
+const CRON_SECRET = 'perf-status-test-secret';
+
+function authenticatedRequest() {
+  return new Request('https://example.com/api/monitoring/perf-status', {
+    headers: { authorization: `Bearer ${CRON_SECRET}` },
+  });
+}
+
 describe('/api/monitoring/perf-status', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('CRON_SECRET', CRON_SECRET);
+    vi.stubEnv('INTERNAL_API_SECRET', '');
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it('requires internal launch-ops auth', async () => {
+    const response = await GET(new Request('https://example.com/api/monitoring/perf-status'));
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body.error).toBe('Unauthorized');
+    expect(db.select).not.toHaveBeenCalled();
   });
 
   it('returns analytics-based payload when api_latency events exist', async () => {
     mockSelectRows([{ duration: 100 }, { duration: 400 }, { duration: 900 }]);
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
-    const response = await GET(new Request('https://example.com/api/monitoring/perf-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -44,7 +64,7 @@ describe('/api/monitoring/perf-status', () => {
     mockSelectRows([{ duration: null }, { duration: 200 }, { duration: 800 }]);
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
-    const response = await GET(new Request('https://example.com/api/monitoring/perf-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -60,7 +80,7 @@ describe('/api/monitoring/perf-status', () => {
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response(JSON.stringify({ status: 'healthy' }), { status: 200 }));
 
-    const response = await GET(new Request('https://example.com/api/monitoring/perf-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -75,7 +95,7 @@ describe('/api/monitoring/perf-status', () => {
     mockSelectRows([]);
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('error', { status: 500 }));
 
-    const response = await GET(new Request('https://example.com/api/monitoring/perf-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(200);

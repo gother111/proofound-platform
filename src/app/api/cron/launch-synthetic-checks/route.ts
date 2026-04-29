@@ -1,36 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getCronAuthStatus } from '@/lib/api/cron-auth';
+import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
 import { log } from '@/lib/log';
 import { runLaunchSyntheticMonitors } from '@/lib/launch/synthetic-monitors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function isAuthorized(request: NextRequest) {
-  const authStatus = getCronAuthStatus(request);
-
-  if (authStatus === 'misconfigured') {
-    return {
-      ok: false as const,
-      response: NextResponse.json({ error: 'Cron misconfigured' }, { status: 500 }),
-    };
-  }
-
-  if (authStatus === 'unauthorized') {
-    return {
-      ok: false as const,
-      response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
-    };
-  }
-
-  return { ok: true as const };
-}
-
 export async function GET(request: NextRequest) {
-  const auth = isAuthorized(request);
-  if (!auth.ok) {
-    return auth.response;
+  const unauthorized = requireInternalOpsRequest(request);
+  if (unauthorized) {
+    return unauthorized;
   }
 
   const baseUrl =

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { matches, interviews } from '@/db/schema';
 import { lt, and, eq, isNull, sql } from 'drizzle-orm';
+import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
 import { getRows } from '@/lib/db/rows';
 import {
   MATCHING_CONSTRAINTS,
@@ -24,13 +25,12 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const unauthorized = requireInternalOpsRequest(request);
+    if (unauthorized) {
       log.warn('sla.cron.unauthorized', {
-        hasAuth: !!authHeader,
+        hasAuth: !!request.headers.get('authorization'),
       });
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return unauthorized;
     }
 
     const results = {

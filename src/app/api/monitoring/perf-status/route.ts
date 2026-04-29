@@ -3,6 +3,7 @@ import { performance } from 'node:perf_hooks';
 import { db } from '@/db';
 import { analyticsEvents } from '@/db/schema';
 import { and, gte, sql } from 'drizzle-orm';
+import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
 import { calculatePercentile, getPerformanceStatus } from '@/lib/monitoring/api-latency';
 
 export const dynamic = 'force-dynamic';
@@ -64,6 +65,11 @@ function buildUnavailablePayload(reason: string) {
 }
 
 export async function GET(request: Request) {
+  const unauthorized = requireInternalOpsRequest(request);
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   try {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000); // last 24h
     let analyticsError: string | null = null;

@@ -41,7 +41,7 @@ import { GET } from '@/app/api/cron/sla-enforcement/route';
 describe('GET /api/cron/sla-enforcement', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.CRON_SECRET = 'cron-secret';
+    process.env.CRON_SECRET = 'cron-secret-value';
 
     mocks.matchLimit.mockResolvedValue([]);
     mocks.matchWhere.mockReturnValue({ limit: mocks.matchLimit });
@@ -79,7 +79,7 @@ describe('GET /api/cron/sla-enforcement', () => {
 
     const response = await GET(
       new NextRequest('https://example.com/api/cron/sla-enforcement', {
-        headers: { authorization: 'Bearer cron-secret' },
+        headers: { authorization: 'Bearer cron-secret-value' },
       })
     );
     const body = await response.json();

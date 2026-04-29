@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
 import { processDecisionReminders } from '@/lib/decisions/automation';
 import { checkPerformanceHealth, sendPerformanceAlert } from '@/lib/analytics/health-check';
 import {
@@ -25,25 +26,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    // Verify cron secret for security
-    const authHeader = req.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (!cronSecret) {
-      log.error('decision.reminders.cron.misconfigured', {
-        reason: 'CRON_SECRET missing',
-      });
-      return NextResponse.json(
-        { error: 'CRON_SECRET is missing. Refusing to run cron job.' },
-        { status: 500 }
-      );
-    }
-
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    const unauthorized = requireInternalOpsRequest(req);
+    if (unauthorized) {
       log.warn('decision.reminders.cron.unauthorized', {
-        authHeader: authHeader ? 'present' : 'missing',
+        authHeader: req.headers.get('authorization') ? 'present' : 'missing',
       });
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return unauthorized;
     }
 
     // ========================================

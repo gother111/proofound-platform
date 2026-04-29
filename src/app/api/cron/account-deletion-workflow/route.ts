@@ -1,5 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { log } from '@/lib/log';
+import { archivedCronResponse } from '@/lib/api/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,63 +9,8 @@ export const dynamic = 'force-dynamic';
  * Account deletion is immediate in /api/user/account, so scheduled reminder/deletion
  * processing is intentionally disabled in the locked launch MVP.
  */
-export async function GET(request: NextRequest) {
-  try {
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (!cronSecret) {
-      log.error('cron.account_deletion_workflow.misconfigured', {
-        message: 'CRON_SECRET is missing. Refusing to run cron job.',
-      });
-      return NextResponse.json({ error: 'Cron misconfigured' }, { status: 500 });
-    }
-
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      log.warn('cron.account_deletion_workflow.unauthorized', {
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
-      });
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const now = new Date();
-
-    log.info('cron.account_deletion_workflow.started', {
-      timestamp: now.toISOString(),
-    });
-
-    log.info('cron.account_deletion_workflow.deletion_model_immediate', {
-      message:
-        'Scheduled reminder/deletion processing skipped because account deletion is immediate in the locked launch MVP.',
-    });
-
-    return NextResponse.json({
-      success: true,
-      timestamp: now.toISOString(),
-      mode: 'legacy_noop',
-      message: 'Account deletion is immediate. This endpoint remains for compatibility only.',
-      reminders: {
-        processed: 0,
-        results: [],
-      },
-      deletions: {
-        processed: 0,
-        results: [],
-        mode: 'immediate',
-      },
-    });
-  } catch (error) {
-    log.error('cron.account_deletion_workflow.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-
-    return NextResponse.json(
-      {
-        error: 'Account deletion workflow failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+export async function GET() {
+  return archivedCronResponse(
+    'Account deletion is immediate in the locked launch MVP; scheduled account-deletion workflow processing is retired.'
+  );
 }

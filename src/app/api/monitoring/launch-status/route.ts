@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
 import { buildLaunchStatusReport } from '@/lib/launch/status-report';
 import {
   getHttpMonitorKeysNeedingRefresh,
@@ -14,6 +15,11 @@ import type {
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  const unauthorized = requireInternalOpsRequest(request);
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   const artifactPath =
     process.env.LAUNCH_SMOKE_ARTIFACT_PATH || '.artifacts/launch-smoke-report.json';
 

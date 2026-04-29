@@ -62,8 +62,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/match/visible-fields/[matchId]',
   '/api/matches/[id]/snooze',
   '/api/matching-profile',
-  '/api/monitoring/launch-status',
-  '/api/monitoring/perf-status',
   '/api/org/[id]/matches/[matchId]/review',
   '/api/org/[id]/shortlist',
   '/api/org/readiness',
@@ -123,16 +121,15 @@ const REQUIRED_INTERNAL_ONLY_ROUTES = [
   '/api/admin/internal-ops/queues/[id]',
   '/api/admin/organizations/[orgId]/audit',
   '/api/admin/organizations/[orgId]/verify',
-  '/api/cron/account-deletion-workflow',
   '/api/cron/decision-reminders',
   '/api/cron/health-check',
   '/api/cron/launch-synthetic-checks',
   '/api/cron/performance-check',
-  '/api/cron/process-deletions',
   '/api/cron/refresh-matches',
   '/api/cron/refresh-matches-worker',
-  '/api/cron/send-deletion-reminders',
   '/api/cron/sla-enforcement',
+  '/api/monitoring/launch-status',
+  '/api/monitoring/perf-status',
   '/api/organizations/[orgId]/audit/export',
 ] as const;
 
@@ -176,6 +173,9 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/verification/veriff/session',
   '/api/cron/python-internal-worker',
   '/api/cron/cv-import-temp-cleanup',
+  '/api/cron/account-deletion-workflow',
+  '/api/cron/process-deletions',
+  '/api/cron/send-deletion-reminders',
   '/api/internal/python-jobs',
   '/api/cron/workflow-jobs',
   '/api/feedback/why-not-shortlisted',
@@ -241,12 +241,14 @@ describe('launch surface inventory', () => {
     }
   });
 
-  it('keeps every compiled API route inside the explicit launch or internal-only corridor', async () => {
+  it('keeps every compiled API route inside the explicit launch, internal-only, or archived compatibility corridor', async () => {
     const routes = await collectRoutePaths(API_ROOT);
     const disallowedRoutes = routes.filter((route) => {
       const classification = classifyLaunchApiPath(route);
       return (
-        classification !== 'active_launch_path' && classification !== 'internal_only_launch_ops'
+        classification !== 'active_launch_path' &&
+        classification !== 'internal_only_launch_ops' &&
+        classification !== 'archived'
       );
     });
 

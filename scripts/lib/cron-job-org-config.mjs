@@ -49,7 +49,6 @@ export function buildManagedJobs(siteUrl, cronSecret) {
       title: 'Proofound – Health Check',
       url: `${siteUrl}/api/cron/health-check`,
       enabled: true,
-      includeAuthHeader: false,
       schedule: {
         hours: [0, 3, 6, 9, 12, 15, 18, 21],
         mdays: [-1],

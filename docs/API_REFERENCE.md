@@ -82,18 +82,18 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### cron
 
-| Methods | Path                                  | Auth Tier | Notes                           | Source                                                |
-| ------- | ------------------------------------- | --------- | ------------------------------- | ----------------------------------------------------- |
-| `GET`   | `/api/cron/account-deletion-workflow` | `cron`    | legacy/compat markers in source | `src/app/api/cron/account-deletion-workflow/route.ts` |
-| `GET`   | `/api/cron/decision-reminders`        | `cron`    | -                               | `src/app/api/cron/decision-reminders/route.ts`        |
-| `GET`   | `/api/cron/health-check`              | `cron`    | -                               | `src/app/api/cron/health-check/route.ts`              |
-| `GET`   | `/api/cron/launch-synthetic-checks`   | `cron`    | -                               | `src/app/api/cron/launch-synthetic-checks/route.ts`   |
-| `GET`   | `/api/cron/performance-check`         | `cron`    | -                               | `src/app/api/cron/performance-check/route.ts`         |
-| `GET`   | `/api/cron/process-deletions`         | `cron`    | legacy/compat markers in source | `src/app/api/cron/process-deletions/route.ts`         |
-| `GET`   | `/api/cron/refresh-matches`           | `cron`    | -                               | `src/app/api/cron/refresh-matches/route.ts`           |
-| `GET`   | `/api/cron/refresh-matches-worker`    | `cron`    | -                               | `src/app/api/cron/refresh-matches-worker/route.ts`    |
-| `GET`   | `/api/cron/send-deletion-reminders`   | `cron`    | legacy/compat markers in source | `src/app/api/cron/send-deletion-reminders/route.ts`   |
-| `GET`   | `/api/cron/sla-enforcement`           | `cron`    | -                               | `src/app/api/cron/sla-enforcement/route.ts`           |
+| Methods | Path                                  | Auth Tier  | Notes                   | Source                                                |
+| ------- | ------------------------------------- | ---------- | ----------------------- | ----------------------------------------------------- |
+| `GET`   | `/api/cron/account-deletion-workflow` | `archived` | returns 410 before work | `src/app/api/cron/account-deletion-workflow/route.ts` |
+| `GET`   | `/api/cron/decision-reminders`        | `cron`     | -                       | `src/app/api/cron/decision-reminders/route.ts`        |
+| `GET`   | `/api/cron/health-check`              | `cron`     | -                       | `src/app/api/cron/health-check/route.ts`              |
+| `GET`   | `/api/cron/launch-synthetic-checks`   | `cron`     | -                       | `src/app/api/cron/launch-synthetic-checks/route.ts`   |
+| `GET`   | `/api/cron/performance-check`         | `cron`     | -                       | `src/app/api/cron/performance-check/route.ts`         |
+| `GET`   | `/api/cron/process-deletions`         | `archived` | returns 410 before work | `src/app/api/cron/process-deletions/route.ts`         |
+| `GET`   | `/api/cron/refresh-matches`           | `cron`     | -                       | `src/app/api/cron/refresh-matches/route.ts`           |
+| `GET`   | `/api/cron/refresh-matches-worker`    | `cron`     | -                       | `src/app/api/cron/refresh-matches-worker/route.ts`    |
+| `GET`   | `/api/cron/send-deletion-reminders`   | `archived` | returns 410 before work | `src/app/api/cron/send-deletion-reminders/route.ts`   |
+| `GET`   | `/api/cron/sla-enforcement`           | `cron`     | -                       | `src/app/api/cron/sla-enforcement/route.ts`           |
 
 ### csrf-token
 
@@ -196,10 +196,10 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### monitoring
 
-| Methods | Path                            | Auth Tier | Notes                           | Source                                          |
-| ------- | ------------------------------- | --------- | ------------------------------- | ----------------------------------------------- |
-| `GET`   | `/api/monitoring/launch-status` | `public`  | -                               | `src/app/api/monitoring/launch-status/route.ts` |
-| `GET`   | `/api/monitoring/perf-status`   | `public`  | legacy/compat markers in source | `src/app/api/monitoring/perf-status/route.ts`   |
+| Methods | Path                            | Auth Tier  | Notes                    | Source                                          |
+| ------- | ------------------------------- | ---------- | ------------------------ | ----------------------------------------------- |
+| `GET`   | `/api/monitoring/launch-status` | `internal` | launch-ops auth required | `src/app/api/monitoring/launch-status/route.ts` |
+| `GET`   | `/api/monitoring/perf-status`   | `internal` | launch-ops auth required | `src/app/api/monitoring/perf-status/route.ts`   |
 
 ### org
 

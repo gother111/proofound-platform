@@ -1,62 +1,35 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NextRequest } from 'next/server';
+import { describe, expect, it } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
-  logInfo: vi.fn(),
-  logWarn: vi.fn(),
-  logError: vi.fn(),
-}));
-
-vi.mock('@/lib/log', () => ({
-  log: {
-    info: mocks.logInfo,
-    warn: mocks.logWarn,
-    error: mocks.logError,
-  },
-}));
-
-import { GET } from '@/app/api/cron/account-deletion-workflow/route';
+import { GET as accountDeletionWorkflowGET } from '@/app/api/cron/account-deletion-workflow/route';
+import { GET as processDeletionsGET } from '@/app/api/cron/process-deletions/route';
+import { GET as sendDeletionRemindersGET } from '@/app/api/cron/send-deletion-reminders/route';
 
 describe('GET /api/cron/account-deletion-workflow', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    process.env.CRON_SECRET = 'cron-secret';
-  });
-
-  it('returns a successful no-op compatibility response', async () => {
-    const response = await GET(
-      new NextRequest('https://example.com/api/cron/account-deletion-workflow', {
-        headers: { authorization: 'Bearer cron-secret' },
-      })
-    );
+  it('returns 410 before performing retired cron work', async () => {
+    const response = await accountDeletionWorkflowGET();
     const body = await response.json();
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(410);
     expect(body).toMatchObject({
-      success: true,
-      mode: 'legacy_noop',
-      reminders: {
-        processed: 0,
-        results: [],
-      },
-      deletions: {
-        processed: 0,
-        results: [],
-        mode: 'immediate',
-      },
+      error: 'Cron route archived',
     });
     expect(body.message).toContain('Account deletion is immediate');
   });
+});
 
-  it('rejects requests with an invalid cron secret', async () => {
-    const response = await GET(
-      new NextRequest('https://example.com/api/cron/account-deletion-workflow', {
-        headers: { authorization: 'Bearer wrong-secret' },
-      })
-    );
-    const body = await response.json();
+describe('retired deletion cron compatibility routes', () => {
+  it('returns archived responses for all retired scheduled deletion routes', async () => {
+    for (const getResponse of [
+      accountDeletionWorkflowGET,
+      processDeletionsGET,
+      sendDeletionRemindersGET,
+    ]) {
+      const response = await getResponse();
+      const body = await response.json();
 
-    expect(response.status).toBe(401);
-    expect(body).toEqual({ error: 'Unauthorized' });
+      expect(response.status).toBe(410);
+      expect(body.error).toBe('Cron route archived');
+      expect(body.message).toMatch(/retired|immediate/i);
+    }
   });
 });

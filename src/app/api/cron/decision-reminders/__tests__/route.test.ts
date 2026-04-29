@@ -70,7 +70,7 @@ describe('/api/cron/decision-reminders', () => {
     vi.unstubAllEnvs();
   });
 
-  it('returns 500 when internal cron secret is not configured', async () => {
+  it('returns 401 when internal cron secret is not configured', async () => {
     vi.stubEnv('INTERNAL_API_SECRET', '');
     vi.stubEnv('CRON_SECRET', '');
 
@@ -79,13 +79,13 @@ describe('/api/cron/decision-reminders', () => {
     );
     const body = await response.json();
 
-    expect(response.status).toBe(500);
-    expect(body.error).toBe('CRON_SECRET is missing. Refusing to run cron job.');
+    expect(response.status).toBe(401);
+    expect(body.error).toBe('Unauthorized');
     expect(mocks.processDecisionReminders).not.toHaveBeenCalled();
   });
 
   it('returns 401 when bearer token does not match configured secret', async () => {
-    vi.stubEnv('CRON_SECRET', 'top-secret');
+    vi.stubEnv('CRON_SECRET', 'top-secret-value');
     vi.stubEnv('INTERNAL_API_SECRET', '');
 
     const response = await GET(
@@ -101,12 +101,12 @@ describe('/api/cron/decision-reminders', () => {
   });
 
   it('runs reminders and health check when bearer token is valid', async () => {
-    vi.stubEnv('CRON_SECRET', 'top-secret');
+    vi.stubEnv('CRON_SECRET', 'top-secret-value');
     vi.stubEnv('INTERNAL_API_SECRET', '');
 
     const response = await GET(
       new Request('https://example.com/api/cron/decision-reminders', {
-        headers: { authorization: 'Bearer top-secret' },
+        headers: { authorization: 'Bearer top-secret-value' },
       }) as any
     );
     const body = await response.json();
@@ -128,7 +128,7 @@ describe('/api/cron/decision-reminders', () => {
 
   it('skips weekly digest when env is unset', async () => {
     vi.unstubAllEnvs();
-    vi.stubEnv('CRON_SECRET', 'top-secret');
+    vi.stubEnv('CRON_SECRET', 'top-secret-value');
     vi.stubEnv('INTERNAL_API_SECRET', '');
     mocks.getWeeklyDigestAvailability.mockReturnValue({
       enabled: false,
@@ -137,7 +137,7 @@ describe('/api/cron/decision-reminders', () => {
 
     const response = await GET(
       new Request('https://example.com/api/cron/decision-reminders', {
-        headers: { authorization: 'Bearer top-secret' },
+        headers: { authorization: 'Bearer top-secret-value' },
       }) as any
     );
     const body = await response.json();
@@ -151,7 +151,7 @@ describe('/api/cron/decision-reminders', () => {
   });
 
   it('still skips weekly digest on Monday even when the env is true', async () => {
-    vi.stubEnv('CRON_SECRET', 'top-secret');
+    vi.stubEnv('CRON_SECRET', 'top-secret-value');
     vi.stubEnv('INTERNAL_API_SECRET', '');
     vi.stubEnv('ENABLE_WEEKLY_DIGEST', 'true');
     mocks.getWeeklyDigestAvailability.mockReturnValue({
@@ -163,7 +163,7 @@ describe('/api/cron/decision-reminders', () => {
 
     const response = await GET(
       new Request('https://example.com/api/cron/decision-reminders', {
-        headers: { authorization: 'Bearer top-secret' },
+        headers: { authorization: 'Bearer top-secret-value' },
       }) as any
     );
     const body = await response.json();

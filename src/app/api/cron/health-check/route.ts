@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { profiles } from '@/db/schema';
 import { sql } from 'drizzle-orm';
+import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
 import { log } from '@/lib/log';
 import { getAllMetrics } from '@/lib/analytics/metrics';
 
@@ -17,7 +18,12 @@ export const dynamic = 'force-dynamic';
  * 1. Vercel Cron (every 5 minutes)
  * 2. Uptime monitoring service (BetterUptime, Pingdom, etc.)
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const unauthorized = requireInternalOpsRequest(request);
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   const startTime = Date.now();
   const checks: Record<string, { status: 'healthy' | 'unhealthy' | 'warning'; message?: string }> =
     {};

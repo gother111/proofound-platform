@@ -11,17 +11,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
 import { checkPerformanceSLAs, sendAlertNotifications } from '@/lib/performance/alerting';
 import { aggregateMetrics } from '@/lib/performance/api-monitor';
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret for security
-  const authHeader = request.headers.get('authorization');
-  const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
-
-  if (!process.env.CRON_SECRET || authHeader !== expectedAuth) {
+  const unauthorized = requireInternalOpsRequest(request);
+  if (unauthorized) {
     console.error('Unauthorized cron job attempt');
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return unauthorized;
   }
 
   try {

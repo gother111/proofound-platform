@@ -1,6 +1,6 @@
 /** @vitest-environment node */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/launch/synthetic-monitors', () => ({
   getPersistedLaunchSyntheticStatus: vi.fn(),
@@ -17,6 +17,13 @@ import {
 
 const INDIVIDUAL_SMOKE_MONITOR_KEY = 'public_individual_portfolio_visible';
 const ORG_SMOKE_MONITOR_KEY = 'full_org_corridor_review_to_engagement_verification';
+const CRON_SECRET = 'launch-status-test-secret';
+
+function authenticatedRequest() {
+  return new Request('https://example.com/api/monitoring/launch-status', {
+    headers: { authorization: `Bearer ${CRON_SECRET}` },
+  });
+}
 
 function buildLiveRefresh(overrides: Record<string, unknown> = {}) {
   return {
@@ -79,7 +86,22 @@ function buildStatus(overrides: Record<string, unknown> = {}) {
 describe('/api/monitoring/launch-status', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('CRON_SECRET', CRON_SECRET);
+    vi.stubEnv('INTERNAL_API_SECRET', '');
     (getHttpMonitorKeysNeedingRefresh as any).mockReturnValue([]);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('requires internal launch-ops auth', async () => {
+    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body.error).toBe('Unauthorized');
+    expect(getPersistedLaunchSyntheticStatus).not.toHaveBeenCalled();
   });
 
   it('returns fresh green readiness with no blocking reasons', async () => {
@@ -99,7 +121,7 @@ describe('/api/monitoring/launch-status', () => {
       })
     );
 
-    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -170,7 +192,7 @@ describe('/api/monitoring/launch-status', () => {
       })
     );
 
-    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -229,7 +251,7 @@ describe('/api/monitoring/launch-status', () => {
       })
     );
 
-    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(503);
@@ -269,7 +291,7 @@ describe('/api/monitoring/launch-status', () => {
       })
     );
 
-    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(503);
@@ -318,7 +340,7 @@ describe('/api/monitoring/launch-status', () => {
       })
     );
 
-    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(503);
@@ -386,7 +408,7 @@ describe('/api/monitoring/launch-status', () => {
       })
     );
 
-    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(503);
@@ -425,7 +447,7 @@ describe('/api/monitoring/launch-status', () => {
       new Error('network exploded')
     );
 
-    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(503);
@@ -451,7 +473,7 @@ describe('/api/monitoring/launch-status', () => {
   it('returns 500 when persisted monitor loading fails', async () => {
     (getPersistedLaunchSyntheticStatus as any).mockRejectedValue(new Error('db exploded'));
 
-    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const response = await GET(authenticatedRequest());
     const body = await response.json();
 
     expect(response.status).toBe(500);

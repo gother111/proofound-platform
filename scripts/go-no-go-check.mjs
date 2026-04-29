@@ -16,18 +16,31 @@ import path from 'node:path';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const SKIP = process.env.SKIP_GO_NOGO === '1';
 
-const requiredFiles = [
-  'RLS_DEPLOYMENT_SUMMARY.md',
-  'ACCESSIBILITY_AUDIT_REPORT.md',
-];
+const requiredFiles = ['RLS_DEPLOYMENT_SUMMARY.md', 'ACCESSIBILITY_AUDIT_REPORT.md'];
 
 function fail(message) {
   console.error(`❌ Go/No-Go check failed: ${message}`);
   process.exit(1);
 }
 
+function getCronSecret() {
+  const cronSecret = process.env.CRON_SECRET?.trim();
+  if (
+    !cronSecret ||
+    cronSecret.toLowerCase() === 'undefined' ||
+    cronSecret.toLowerCase() === 'null'
+  ) {
+    fail('CRON_SECRET is required to query authenticated launch-ops endpoints');
+  }
+  return cronSecret;
+}
+
 async function checkPerfStatus() {
-  const res = await fetch(`${BASE_URL}/api/monitoring/perf-status`);
+  const res = await fetch(`${BASE_URL}/api/monitoring/perf-status`, {
+    headers: {
+      authorization: `Bearer ${getCronSecret()}`,
+    },
+  });
   if (!res.ok) {
     fail(`perf-status endpoint returned ${res.status}`);
   }
@@ -66,4 +79,3 @@ async function main() {
 }
 
 main().catch((err) => fail(err.message || String(err)));
-
