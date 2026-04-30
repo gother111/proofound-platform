@@ -94,9 +94,10 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `VERCEL_PROJECT_ID`
 - If the project has multiple queued or building deployments for the same branch, prune the stale ones before retrying:
   - `npm run vercel:cancel-stale -- --apply --target production --branch master`
-- Validate live commit after pushing to `master`:
+- Validate live production after pushing to `master`:
   - `curl -sS https://proofound.io/api/health`
-  - Expect `version` in response to match the latest `master` commit SHA.
+  - Expect the minimal public contract: `status` is `ok`.
+  - Validate deployed commit/SHA through Vercel deployment metadata or the prebuilt workflow summary, not public health.
 - If production is behind, trigger manual retry once:
   - `gh workflow run "Retry Vercel Deploy Until Synced" --ref master`
 - Confirm latest workflow run:
@@ -193,10 +194,10 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 
 - Health endpoint:
   - `curl -sS https://proofound.io/api/health`
-  - Expect `status=healthy` and current deployed commit in response version.
+  - Expect the minimal public contract: `status` is `ok`; detailed diagnostics and commit metadata stay behind protected ops surfaces.
 - Public snippet route fallback:
   - Open `/p/<invalid-token>` and confirm invalid/expired fallback renders without 500 errors.
-  - Open `/p/<invalid-token>/embed` and confirm response succeeds and includes embed-friendly framing policy (`frame-ancestors *`).
+  - Open `/p/<invalid-token>/embed` and confirm archived embed handling does not loosen anti-framing policy.
 - Auth/CSRF enforcement:
   - `POST /api/profile/snippet` without auth/CSRF should fail (`403` expected for missing CSRF).
 

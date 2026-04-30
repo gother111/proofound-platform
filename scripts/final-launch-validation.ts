@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 
+import { config as loadEnv } from 'dotenv';
+
 import { runFinalLaunchValidation } from '../src/lib/launch/final-launch-validation-runner';
+
+loadEnv({ path: '.env.local', quiet: true });
+loadEnv({ quiet: true });
 
 function readFlag(flag: string) {
   const index = process.argv.indexOf(flag);

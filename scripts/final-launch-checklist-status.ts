@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 
+import { config as loadEnv } from 'dotenv';
+
 import { generateFinalLaunchChecklistReport } from '../src/lib/launch/final-launch-checklist';
 import { writeFullLaunchExecutionChecklist } from '../src/lib/launch/full-launch-execution-checklist';
 import { runFullLaunchValidationBundle } from '../src/lib/launch/full-launch-validation';
 import { runRepoReadyValidationBundle } from '../src/lib/launch/repo-ready-validation';
+
+loadEnv({ path: '.env.local', quiet: true });
+loadEnv({ quiet: true });
 
 function readFlag(flag: string) {
   const index = process.argv.indexOf(flag);
