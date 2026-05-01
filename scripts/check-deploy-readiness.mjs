@@ -31,7 +31,18 @@ const productionDeployDetected =
   String(env.APP_ENV ?? '')
     .trim()
     .toLowerCase() === 'production';
-const strict = env.FORCE_STRICT_DEPLOY_CHECK === 'true' || productionDeployDetected;
+const stagingDeployDetected =
+  String(env.VERCEL_ENV ?? '')
+    .trim()
+    .toLowerCase() === 'preview' ||
+  String(env.NEXT_PUBLIC_APP_ENV ?? '')
+    .trim()
+    .toLowerCase() === 'staging' ||
+  String(env.APP_ENV ?? '')
+    .trim()
+    .toLowerCase() === 'staging';
+const strict =
+  env.FORCE_STRICT_DEPLOY_CHECK === 'true' || productionDeployDetected || stagingDeployDetected;
 
 const enabledMockModes = [];
 if (truthy(env.NEXT_PUBLIC_USE_MOCK_SUPABASE))
@@ -51,9 +62,17 @@ if (!env.SUPABASE_SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY');
 if (!(env.NEXT_PUBLIC_SITE_URL || env.SITE_URL)) missing.push('NEXT_PUBLIC_SITE_URL/SITE_URL');
 if (!env.DATABASE_URL) missing.push('DATABASE_URL');
 
-if (productionDeployDetected && enabledMockModes.length) {
+if ((productionDeployDetected || stagingDeployDetected) && !env.KV_REST_API_URL) {
+  missing.push('KV_REST_API_URL');
+}
+
+if ((productionDeployDetected || stagingDeployDetected) && !env.KV_REST_API_TOKEN) {
+  missing.push('KV_REST_API_TOKEN');
+}
+
+if (strict && enabledMockModes.length) {
   failures.push(
-    `Production deploys must not enable mock database/admin/auth modes: ${enabledMockModes.join(', ')}`
+    `Strict deploy checks must not enable mock database/admin/auth modes: ${enabledMockModes.join(', ')}`
   );
 }
 

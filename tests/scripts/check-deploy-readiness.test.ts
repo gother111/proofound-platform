@@ -7,6 +7,8 @@ const requiredEnv = {
   SUPABASE_SERVICE_ROLE_KEY: 'service-role-key',
   NEXT_PUBLIC_SITE_URL: 'https://proofound.example',
   DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
+  KV_REST_API_URL: 'https://kv.example.test',
+  KV_REST_API_TOKEN: 'kv-token',
 };
 
 function runReadiness(env: NodeJS.ProcessEnv) {
@@ -44,7 +46,31 @@ describe('check-deploy-readiness', () => {
     expect(`${result.stdout}${result.stderr}`).toContain('SUPABASE_SERVICE_ROLE_KEY');
   });
 
-  it('allows mock Supabase during non-production development readiness checks', () => {
+  it('fails production deploy readiness when rate limiting is not configured', () => {
+    const result = runReadiness({
+      ...requiredEnv,
+      NODE_ENV: 'production',
+      KV_REST_API_URL: '',
+      KV_REST_API_TOKEN: '',
+    });
+
+    expect(result.status).toBe(1);
+    expect(`${result.stdout}${result.stderr}`).toContain('KV_REST_API_URL');
+    expect(`${result.stdout}${result.stderr}`).toContain('KV_REST_API_TOKEN');
+  });
+
+  it('fails staging deploy readiness when rate limiting is not configured', () => {
+    const result = runReadiness({
+      ...requiredEnv,
+      VERCEL_ENV: 'preview',
+      KV_REST_API_TOKEN: '',
+    });
+
+    expect(result.status).toBe(1);
+    expect(`${result.stdout}${result.stderr}`).toContain('KV_REST_API_TOKEN');
+  });
+
+  it('fails strict readiness when mock Supabase is enabled', () => {
     const result = runReadiness({
       ...requiredEnv,
       NODE_ENV: 'development',
@@ -52,6 +78,7 @@ describe('check-deploy-readiness', () => {
       NEXT_PUBLIC_USE_MOCK_SUPABASE: 'true',
     });
 
-    expect(result.status).toBe(0);
+    expect(result.status).toBe(1);
+    expect(`${result.stdout}${result.stderr}`).toContain('NEXT_PUBLIC_USE_MOCK_SUPABASE');
   });
 });

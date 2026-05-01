@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `verification.md`
-> Last Verified: `2026-04-29`
+> Last Verified: `2026-05-01`
 
 # Verification Checklist (Before Merging)
 
@@ -11,12 +11,25 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Ensure the diff is scoped and intentional.
 - Clean install: `npm ci` (source: package.json, package-lock.json, .nvmrc, .npmrc)
   - The launch-gate runtime is Node `20.20.0` / npm `10.8.2`; `.npmrc` enables engine-strict so unsupported Node versions fail closed.
+- Dependency audit:
+  - Production threshold: `npm run audit:prod` (source: package.json)
+  - All scopes threshold: `npm run audit:all` (source: package.json)
+  - Both fail on high or critical advisories. Keep `npm audit --omit=dev --json` at zero before treating the launch dependency surface as clean.
 - Lint: `npm run lint` (source: package.json)
   - Note: lint uses `scripts/lint-or-skip.js`; ensure lint actually ran when required. (source: scripts/lint-or-skip.js)
 - Typecheck: `npm run typecheck` (source: package.json)
 - Unit tests: `npm run test` (source: package.json)
   - Default `npm run test` excludes archived/removed non-MVP tests and privacy/E2E harnesses so the release signal stays scoped to the locked MVP corridor.
+  - Default `npm run test` runs through `scripts/run-vitest-with-timeout.mjs` and fails with exit code `124` if Vitest exceeds `PROOFOUND_VITEST_TIMEOUT_MS` (default `120000` ms).
   - Preserved archived or removed non-MVP regressions can be run with `npm run test:archived:non-launch` when that history is relevant.
+  - Slow benchmark/quality suites are explicit non-launch checks: `npm run test:slow:non-launch`.
+  - Launch-focused Vitest groups are explicit:
+    - Upload privacy and lifecycle: `npm run test:launch:upload`
+    - Privacy/RLS real-DB suites: `npm run test:launch:privacy`
+    - Route inventory and archive handlers: `npm run test:launch:routes`
+    - Org corridor coverage: `npm run test:launch:org-corridor`
+    - Portfolio public/export coverage: `npm run test:launch:portfolio`
+    - Workflow route coverage: `npm run test:launch:workflow`
 - Build: `npm run build` (source: package.json)
   - Prebuild cleanup deletes stale generated `.next`, `.next-dev-*`, and `tsconfig.tsbuildinfo` state by default so launch validation does not accumulate large artifact archives.
   - It keeps only a small latest-run summary at `.artifacts/stale-build-state-cleanup-summary.md`.
@@ -120,9 +133,18 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 
 - Strict MVP gate bundle (local parity): `npm run gates:mvp:strict`
 - Current strict required gate stack:
+  - `npm ci`
+  - `npm run audit:prod`
+  - `npm run audit:all`
+  - `npx playwright install --with-deps chromium`
+  - `npm run docs:freshness`
   - `npm run lint`
   - `npm run typecheck`
   - `npm run test`
+  - `npm run test:api:focused`
+  - `npm run test:privacy`
+  - `npm run test:privacy:extended`
+  - `npm run deploy:readiness:strict`
   - `npm run build`
   - `npm run test:launch:smoke`
   - `npm run test:e2e:landing`
@@ -134,7 +156,11 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `npm run test:e2e:privacy:strict`
   - `npm run test:e2e:providers:strict`
   - `BASE_URL=http://localhost:3000 npm run perf:budgets`
+  - `BASE_URL=http://localhost:3000 npm run monitor:launch`
+  - `BASE_URL=http://localhost:3000 npm run launch:status`
   - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+- The strict gate writes per-command logs and status JSON under `.artifacts/mvp-strict-gates/`.
+- Any timeout is a failed gate and must not be treated as launch-ready.
 - CI also runs perf budgets and go/no-go gates after starting the app. (source: .github/workflows/ci.yml)
 - Perf budgets: `BASE_URL=http://localhost:3000 npm run perf:budgets` (source: scripts/perf-budgets.mjs)
 - Launch smoke artifact: `BASE_URL=http://localhost:3000 npm run test:launch:smoke` (source: package.json, scripts/launch-smoke-runner.ts)

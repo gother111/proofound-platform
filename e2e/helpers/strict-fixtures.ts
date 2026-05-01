@@ -432,37 +432,36 @@ export async function createRuntimeMatch(
     );
   }
 
+  const matchPayload = {
+    assignment_id: assignmentId,
+    profile_id: profileId,
+    score: '0.82',
+    vector: {
+      subscores: {
+        skills: 0.9,
+        values: 0.8,
+        location: 1,
+      },
+      contributions: {
+        skills: 0.4,
+        values: 0.3,
+        location: 0.3,
+      },
+      gaps: [],
+      missing: [],
+    },
+    weights: {
+      mission: 0.25,
+      expertise: 0.35,
+      tools: 0.1,
+      logistics: 0.2,
+      recency: 0.1,
+    },
+  };
+
   const { data: match, error: matchError } = await supabase
     .from('matches')
-    .upsert(
-      {
-        assignment_id: assignmentId,
-        profile_id: profileId,
-        score: '0.82',
-        vector: {
-          subscores: {
-            skills: 0.9,
-            values: 0.8,
-            location: 1,
-          },
-          contributions: {
-            skills: 0.4,
-            values: 0.3,
-            location: 0.3,
-          },
-          gaps: [],
-          missing: [],
-        },
-        weights: {
-          mission: 0.25,
-          expertise: 0.35,
-          tools: 0.1,
-          logistics: 0.2,
-          recency: 0.1,
-        },
-      },
-      { onConflict: 'assignment_id,profile_id' }
-    )
+    .upsert(matchPayload, { onConflict: 'assignment_id,profile_id' })
     .select('id, assignment_id, profile_id')
     .single();
 
@@ -526,6 +525,39 @@ export async function createRuntimeMatch(
     );
     if (!isMatchVisibilityRace || attempt === 29) {
       break;
+    }
+
+    const { data: refreshedMatch, error: refreshedMatchError } = await supabase
+      .from('matches')
+      .select('id, assignment_id, profile_id')
+      .eq('assignment_id', assignmentId)
+      .eq('profile_id', profileId)
+      .maybeSingle();
+
+    if (refreshedMatchError && !isTransientRequestError(refreshedMatchError)) {
+      throw new Error(
+        `Failed to refresh strict runtime match before review-state retry: ${refreshedMatchError.message}`
+      );
+    }
+
+    if (refreshedMatch?.id) {
+      persistedMatch = refreshedMatch;
+      fixture.matchIds.add(refreshedMatch.id);
+    } else {
+      const { data: recreatedMatch, error: recreatedMatchError } = await supabase
+        .from('matches')
+        .upsert(matchPayload, { onConflict: 'assignment_id,profile_id' })
+        .select('id, assignment_id, profile_id')
+        .single();
+
+      if (recreatedMatchError || !recreatedMatch?.id) {
+        throw new Error(
+          `Failed to recreate strict runtime match before review-state retry: ${recreatedMatchError?.message ?? 'unknown error'}`
+        );
+      }
+
+      persistedMatch = recreatedMatch;
+      fixture.matchIds.add(recreatedMatch.id);
     }
 
     await wait(250 * (attempt + 1));
@@ -1111,4 +1143,6 @@ export async function cleanupFixtureData(fixture: StrictFixtureState): Promise<v
       console.warn(`[strict-fixtures] failed to delete auth user ${userId}: ${error.message}`);
     }
   }
+
+  await deleteByIds('profiles', 'id', fixtureUserIds);
 }

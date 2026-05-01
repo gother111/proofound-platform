@@ -31,12 +31,15 @@ jobs:
         )
       )
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 180
     env:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       SITE_URL: http://localhost:3000
       NEXT_PUBLIC_APP_ENV: ci
       NODE_OPTIONS: --max-old-space-size=6144
+      FORCE_LINT: 'true'
+      FORCE_STRICT_DEPLOY_CHECK: 'true'
+      npm_config_engine_strict: 'true'
       PLAYWRIGHT_SERVER_MODE: prod
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -44,7 +47,7 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PII_HASH_SALT: ${{ secrets.PII_HASH_SALT || 'ci-playwright-test-salt' }}
       CRON_SECRET: ci-launch-cron-secret
-      SUS_STUDY_COMPLETE: "true"
+      SUS_STUDY_COMPLETE: 'true'
       ZOOM_CLIENT_ID: ${{ secrets.ZOOM_CLIENT_ID }}
       ZOOM_CLIENT_SECRET: ${{ secrets.ZOOM_CLIENT_SECRET }}
       ZOOM_REDIRECT_URI: ${{ secrets.ZOOM_REDIRECT_URI }}
@@ -53,12 +56,13 @@ jobs:
       GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
       LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
       LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+      LINKEDIN_REDIRECT_URI: ${{ secrets.LINKEDIN_REDIRECT_URI }}
       E2E_PROVIDER_USER_ID: ${{ secrets.E2E_PROVIDER_USER_ID }}
       E2E_PROVIDER_USER_EMAIL: ${{ secrets.E2E_PROVIDER_USER_EMAIL }}
       E2E_PROVIDER_USER_PASSWORD: ${{ secrets.E2E_PROVIDER_USER_PASSWORD }}
-      NEXT_PUBLIC_USE_MOCK_SUPABASE: "false"
-      STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: ${{ secrets.E2E_PROVIDER_USER_ID != '' && secrets.E2E_PROVIDER_USER_EMAIL != '' && secrets.E2E_PROVIDER_USER_PASSWORD != '' && 'true' || 'false' }}
-      STRICT_PROVIDER_E2E_REQUIRE_BOTH: ${{ secrets.E2E_PROVIDER_USER_ID != '' && secrets.E2E_PROVIDER_USER_EMAIL != '' && secrets.E2E_PROVIDER_USER_PASSWORD != '' && 'true' || 'false' }}
+      NEXT_PUBLIC_USE_MOCK_SUPABASE: 'false'
+      STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'true'
+      STRICT_PROVIDER_E2E_REQUIRE_BOTH: 'true'
 
     steps:
       - name: Checkout code
@@ -70,7 +74,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20.20.0'
           cache: 'npm'
 
       - name: Enforce shared log PR scope
@@ -88,65 +92,8 @@ jobs:
           touched="$(node ./scripts/check-landing-pr-scope.mjs --print-landing-touched)"
           echo "touched=${touched}" >> "$GITHUB_OUTPUT"
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
-
-      - name: Docs freshness (warning mode)
-        run: npm run docs:freshness
-        continue-on-error: true
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run type check
-        run: npm run typecheck
-
-      - name: Check migration drift
-        run: npm run db:drift-check
-
-      - name: Run unit tests
-        run: npm run test
-
-      - name: Run launch smoke contract
-        run: npm run test:launch:smoke
-
-      - name: Build application
-        run: npm run build
-
-      - name: Start application for go/no-go
-        run: |
-          npm run start > /tmp/proofound-go-no-go.log 2>&1 &
-          echo $! > /tmp/proofound-go-no-go.pid
-          for attempt in $(seq 1 60); do
-            if curl -fsS http://localhost:3000/api/health >/dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "App failed to start for go/no-go"
-          cat /tmp/proofound-go-no-go.log
-          exit 1
-
-      - name: Run go/no-go gate
-        run: npm run go:no-go
-        env:
-          BASE_URL: http://localhost:3000
-
-      - name: Stop go/no-go application
-        if: always()
-        run: |
-          if [ -f /tmp/proofound-go-no-go.pid ]; then
-            kill $(cat /tmp/proofound-go-no-go.pid) || true
-          fi
-
-      - name: Run auth E2E real contract
-        run: npm run test:e2e:auth:real
-
-      - name: Run landing page contract
-        run: npm run test:e2e:landing
+      - name: Run strict MVP release gate
+        run: node ./scripts/run-mvp-strict-gates.mjs --artifact-dir .artifacts/mvp-strict-gates/ci
 
       - name: Run landing visual baseline contract
         if: github.event_name != 'push' && steps.landing_changes.outputs.touched == 'true'
@@ -161,5 +108,5 @@ jobs:
             playwright-report/
             test-results/
             .artifacts/launch-smoke-report.json
-            /tmp/proofound-go-no-go.log
+            .artifacts/mvp-strict-gates/
           retention-days: 14

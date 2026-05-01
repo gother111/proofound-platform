@@ -52,6 +52,8 @@ export default defineConfig({
     globals: true,
     // Increase timeout for integration tests (Supabase API calls can be slow)
     testTimeout: 30000,
+    hookTimeout: 60000,
+    teardownTimeout: 60000,
     // Run tests sequentially to avoid race conditions with test data
     sequence: {
       concurrent: false,

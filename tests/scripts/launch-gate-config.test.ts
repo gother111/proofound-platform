@@ -29,20 +29,59 @@ describe('launch gate package configuration', () => {
     const scripts = packageJson.scripts ?? {};
 
     expect(scripts.lint).toBeTruthy();
-    expect(scripts.typecheck).toBeTruthy();
+    expect(scripts['audit:prod']).toBe('npm audit --omit=dev --audit-level=high');
+    expect(scripts['audit:all']).toBe('npm audit --audit-level=high');
+    expect(scripts.typecheck).toContain('--max-old-space-size=6144');
     expect(scripts.build).toBeTruthy();
-    expect(scripts.test).toBe('vitest run');
+    expect(scripts.test).toBe('node ./scripts/run-vitest-with-timeout.mjs');
+    expect(scripts['test:api:focused']).toContain('tests/api');
     expect(scripts['test:privacy']).toContain('tests/privacy/rls-policies.test.ts');
     expect(scripts['test:privacy:extended']).toContain(
       'tests/privacy/rls-policies-extended.test.ts'
+    );
+    expect(scripts['test:launch:upload']).toContain('tests/api/upload-document-route.test.ts');
+    expect(scripts['test:launch:privacy']).toContain('test:privacy:extended');
+    expect(scripts['test:launch:routes']).toContain('tests/api/launch-surface-inventory.test.ts');
+    expect(scripts['test:launch:org-corridor']).toContain(
+      'tests/api/org-match-review-route.test.ts'
+    );
+    expect(scripts['test:launch:portfolio']).toContain(
+      'tests/ui/public-portfolio-access-consistency.test.tsx'
+    );
+    expect(scripts['test:launch:workflow']).toContain(
+      'tests/api/interviews-schedule-route.test.ts'
+    );
+    expect(scripts['test:slow:non-launch']).toContain(
+      'tests/lib/cv-import-suggest-1000-benchmark.test.ts'
     );
     expect(scripts['test:launch:smoke']).toBe('node --import tsx ./scripts/launch-smoke-runner.ts');
     expect(scripts['monitor:launch']).toBe(
       'node --import tsx ./scripts/run-launch-synthetic-monitors.ts'
     );
+    expect(scripts['launch:status']).toBe('node ./scripts/check-launch-status.mjs');
+    expect(scripts['deploy:readiness:strict']).toContain('FORCE_STRICT_DEPLOY_CHECK=true');
     expect(scripts['launch:validate']).toBe(
       'node --import tsx ./scripts/final-launch-validation.ts'
     );
+  });
+
+  it('keeps the strict MVP gate wired to timeout-aware release commands', () => {
+    const gateScript = fs.readFileSync(
+      path.join(repoRoot, 'scripts/run-mvp-strict-gates.mjs'),
+      'utf8'
+    );
+
+    expect(gateScript).toContain("commandArgs: ['ci']");
+    expect(gateScript).toContain("'prod-dependency-audit'");
+    expect(gateScript).toContain("'all-dependency-audit'");
+    expect(gateScript).toContain("commandArgs: ['run', 'audit:prod']");
+    expect(gateScript).toContain("commandArgs: ['run', 'audit:all']");
+    expect(gateScript).toContain("'deploy-readiness-strict'");
+    expect(gateScript).toContain("'focused-api-tests'");
+    expect(gateScript).toContain("'privacy-tests'");
+    expect(gateScript).toContain("'launch-status'");
+    expect(gateScript).toContain("'timed_out'");
+    expect(gateScript).toContain('commands.json');
   });
 
   it('keeps archived and removed non-MVP tests out of the default release signal', () => {
@@ -53,6 +92,8 @@ describe('launch gate package configuration', () => {
     );
 
     expect(vitestConfig).toContain("'**/src/archive/**'");
+    expect(vitestConfig).toContain("'**/tests/api/analytics-track-route.test.ts'");
+    expect(vitestConfig).toContain("'**/tests/lib/cv-import-suggest-1000-benchmark.test.ts'");
     expect(vitestConfig).toContain("'**/tests/api/messages-legacy-route.test.ts'");
     expect(vitestConfig).toContain("'**/tests/ui/organization-settings-integrations.test.tsx'");
     expect(archivedConfig).toContain('src/archive/**/*.test.ts');

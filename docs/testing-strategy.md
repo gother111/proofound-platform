@@ -168,24 +168,26 @@ Supabase settings and must not set `NEXT_PUBLIC_USE_MOCK_SUPABASE=true`.
 
 Default sequence for high-confidence release validation:
 
-1. `npm run lint`
-2. `npm run typecheck`
-3. `npm run test`
-4. `npm run build`
-5. `npm run test:launch:smoke`
-6. `npm run seed:public-org-trust-fixture`
-7. `npm run test:e2e:org-trust:smoke`
-8. `npm run test:e2e:landing`
-9. `npm run test:e2e:auth:real`
-10. `npm run test:a11y:strict`
-11. `npm run test:strict:quality`
-12. `npm run test:e2e:individual:strict`
-13. `npm run test:e2e:org:strict`
-14. `npm run test:e2e:privacy:strict`
-15. `npm run test:e2e:providers:strict`
-16. `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
-17. `BASE_URL=http://localhost:3000 npm run perf:budgets`
-18. `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+1. `npm run audit:prod`
+2. `npm run audit:all`
+3. `npm run lint`
+4. `npm run typecheck`
+5. `npm run test`
+6. `npm run build`
+7. `npm run test:launch:smoke`
+8. `npm run seed:public-org-trust-fixture`
+9. `npm run test:e2e:org-trust:smoke`
+10. `npm run test:e2e:landing`
+11. `npm run test:e2e:auth:real`
+12. `npm run test:a11y:strict`
+13. `npm run test:strict:quality`
+14. `npm run test:e2e:individual:strict`
+15. `npm run test:e2e:org:strict`
+16. `npm run test:e2e:privacy:strict`
+17. `npm run test:e2e:providers:strict`
+18. `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
+19. `BASE_URL=http://localhost:3000 npm run perf:budgets`
+20. `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 
 ## Environment Requirements for Strict Flows
 

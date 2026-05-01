@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `verification.md`
-> Last Verified: `2026-04-29`
+> Last Verified: `2026-05-01`
 
 # Verification Checklist (Before Merging)
 
@@ -13,6 +13,10 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - Note: lint uses `scripts/lint-or-skip.js`; ensure lint actually ran when required. (source: scripts/lint-or-skip.js)
 - Typecheck: `npm run typecheck` (source: package.json)
 - Unit tests: `npm run test` (source: package.json)
+  - Default `npm run test` runs through `scripts/run-vitest-with-timeout.mjs` and fails with exit code `124` if Vitest exceeds `PROOFOUND_VITEST_TIMEOUT_MS` (default `120000` ms).
+  - Archived/removed non-MVP tests stay out of the default gate; run `npm run test:archived:non-launch` when that history is relevant.
+  - Slow benchmark/quality suites are explicit non-launch checks: `npm run test:slow:non-launch`.
+  - Launch-focused Vitest groups: `npm run test:launch:upload`, `npm run test:launch:privacy`, `npm run test:launch:routes`, `npm run test:launch:org-corridor`, `npm run test:launch:portfolio`, and `npm run test:launch:workflow`.
 - Build: `npm run build` (source: package.json)
 - If changes touch `/api/mobile/v1/*` routes, run focused contract tests in addition to full unit tests:
   - `npm run test -- tests/api/mobile-bootstrap-route.test.ts tests/api/mobile-device-token-route.test.ts`

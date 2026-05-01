@@ -16,12 +16,16 @@ jobs:
       SITE_URL: http://localhost:3000
       NEXT_PUBLIC_APP_ENV: ci
       NODE_OPTIONS: --max-old-space-size=6144
+      FORCE_LINT: 'true'
+      FORCE_STRICT_DEPLOY_CHECK: 'true'
+      npm_config_engine_strict: 'true'
       PLAYWRIGHT_SERVER_MODE: prod
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PII_HASH_SALT: ${{ secrets.PII_HASH_SALT || 'ci-playwright-test-salt' }}
+      CRON_SECRET: ci-launch-cron-secret
       ZOOM_CLIENT_ID: ${{ secrets.ZOOM_CLIENT_ID }}
       ZOOM_CLIENT_SECRET: ${{ secrets.ZOOM_CLIENT_SECRET }}
       ZOOM_REDIRECT_URI: ${{ secrets.ZOOM_REDIRECT_URI }}
@@ -30,12 +34,13 @@ jobs:
       GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
       LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
       LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+      LINKEDIN_REDIRECT_URI: ${{ secrets.LINKEDIN_REDIRECT_URI }}
       E2E_PROVIDER_USER_ID: ${{ secrets.E2E_PROVIDER_USER_ID }}
       E2E_PROVIDER_USER_EMAIL: ${{ secrets.E2E_PROVIDER_USER_EMAIL }}
       E2E_PROVIDER_USER_PASSWORD: ${{ secrets.E2E_PROVIDER_USER_PASSWORD }}
-      NEXT_PUBLIC_USE_MOCK_SUPABASE: "false"
-      STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: ${{ secrets.E2E_PROVIDER_USER_ID != '' && secrets.E2E_PROVIDER_USER_EMAIL != '' && secrets.E2E_PROVIDER_USER_PASSWORD != '' && 'true' || 'false' }}
-      STRICT_PROVIDER_E2E_REQUIRE_BOTH: ${{ secrets.E2E_PROVIDER_USER_ID != '' && secrets.E2E_PROVIDER_USER_EMAIL != '' && secrets.E2E_PROVIDER_USER_PASSWORD != '' && 'true' || 'false' }}
+      NEXT_PUBLIC_USE_MOCK_SUPABASE: 'false'
+      STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'true'
+      STRICT_PROVIDER_E2E_REQUIRE_BOTH: 'true'
 
     steps:
       - name: Checkout code
@@ -44,44 +49,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20.20.0'
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run type check
-        run: npm run typecheck
-
-      - name: Check migration drift
-        run: npm run db:drift-check
-
-      - name: Build application
-        run: npm run build
-
-      - name: Enforce strict E2E quality guard
-        run: npm run test:strict:quality
-
-      - name: Run accessibility strict contract
-        run: npm run test:a11y:strict
-
-      - name: Run individual strict flow suite
-        run: npm run test:e2e:individual:strict
-
-      - name: Run organization strict flow suite
-        run: npm run test:e2e:org:strict
-
-      - name: Run privacy strict flow suite
-        run: npm run test:e2e:privacy:strict
-
-      - name: Run providers strict flow suite
-        run: npm run test:e2e:providers:strict
+      - name: Run strict MVP release gate
+        run: node ./scripts/run-mvp-strict-gates.mjs --artifact-dir .artifacts/mvp-strict-gates/strict-quality
 
       - name: Upload strict test artifacts
         if: always()
@@ -91,4 +63,5 @@ jobs:
           path: |
             playwright-report/
             test-results/
+            .artifacts/mvp-strict-gates/
           retention-days: 30

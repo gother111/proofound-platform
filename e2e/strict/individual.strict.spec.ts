@@ -9,6 +9,7 @@ import {
   createRuntimeMatch,
   createRuntimeOrganization,
   createRuntimeUser,
+  apiDeleteJson,
   loginWithUi,
   seedPortfolioReadyCandidate,
   type StrictFixtureState,
@@ -507,12 +508,67 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     const dataExportResponse = await page.request.get('/api/data-export');
     expect(dataExportResponse.ok()).toBeTruthy();
-    const dataExportPayload = (await dataExportResponse.json()) as { userId?: string };
+    const dataExportPayload = (await dataExportResponse.json()) as {
+      userId?: string;
+      proof?: {
+        packs?: unknown[];
+        artifacts?: unknown[];
+        verificationReferences?: unknown[];
+        publicSafeProjections?: unknown[];
+      };
+    };
     expect(dataExportPayload.userId).toBe(individualUser.id);
+    expect((dataExportPayload.proof?.packs ?? []).length).toBeGreaterThan(0);
+    expect((dataExportPayload.proof?.artifacts ?? []).length).toBeGreaterThan(0);
+    expect((dataExportPayload.proof?.verificationReferences ?? []).length).toBeGreaterThan(0);
+    expect((dataExportPayload.proof?.publicSafeProjections ?? []).length).toBeGreaterThan(0);
+
+    if (!individualUser.handle) {
+      throw new Error('Strict individual fixture did not receive a public handle');
+    }
+    const publicPortfolioExportResponse = await page.request.get(
+      `/api/portfolio/public/${individualUser.handle}/export?format=json`
+    );
+    expect(publicPortfolioExportResponse.ok()).toBeTruthy();
+    const publicPortfolioPayload = (await publicPortfolioExportResponse.json()) as {
+      profile?: { handle?: string };
+      proofPacks?: unknown[];
+    };
+    expect(publicPortfolioPayload.profile?.handle).toBe(individualUser.handle);
+    expect((publicPortfolioPayload.proofPacks ?? []).length).toBeGreaterThan(0);
 
     const accountStatusResponse = await page.request.get('/api/user/account');
     expect(accountStatusResponse.ok()).toBeTruthy();
     const accountStatusPayload = (await accountStatusResponse.json()) as { accountStatus?: string };
     expect(typeof accountStatusPayload.accountStatus).toBe('string');
+
+    const deleteAccountResponse = await apiDeleteJson(page.request, '/api/user/account', {
+      password: individualUser.password,
+      confirmPhrase: 'DELETE MY ACCOUNT',
+      reason: 'Privacy concerns',
+    });
+    const deleteAccountRaw = await deleteAccountResponse.text();
+    expect(
+      deleteAccountResponse.ok(),
+      `Account deletion failed with HTTP ${deleteAccountResponse.status()}: ${deleteAccountRaw}`
+    ).toBeTruthy();
+    const deleteAccountPayload = JSON.parse(deleteAccountRaw) as {
+      status?: string;
+      deletionRequestId?: string | null;
+      operationId?: string | null;
+    };
+    expect(deleteAccountPayload.status).toBe('deleted');
+    expect(deleteAccountPayload.deletionRequestId).toBeTruthy();
+    expect(deleteAccountPayload.operationId).toBeTruthy();
+
+    const supabase = adminClient();
+    const { data: deletedProfile, error: deletedProfileError } = await supabase
+      .from('profiles')
+      .select('deleted, public_portfolio_state')
+      .eq('id', individualUser.id)
+      .maybeSingle();
+    expect(deletedProfileError).toBeNull();
+    expect(deletedProfile?.deleted).toBe(true);
+    expect(deletedProfile?.public_portfolio_state).not.toBe('public_noindex');
   });
 });
