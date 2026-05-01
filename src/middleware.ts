@@ -85,6 +85,20 @@ const SUSPICIOUS_PREFIXES = [
   '/cgi-bin',
 ];
 
+function buildFailClosedApiResponse(request: NextRequest, requestId: string) {
+  const response = NextResponse.json(
+    {
+      error: 'Internal server error',
+      message: 'Request failed',
+      requestId,
+    },
+    { status: 500 }
+  );
+  response.headers.set('x-request-id', requestId);
+  applySecurityHeaders(response, request);
+  return response;
+}
+
 function buildArchivedApiResponse(
   request: NextRequest,
   requestId: string,
@@ -182,14 +196,15 @@ function buildArchivedPageResponse(
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const requestId = request.headers.get('x-request-id') || nanoid(12);
+  const isApiRoute = pathname.startsWith('/api');
+  const isStaticAsset =
+    pathname.startsWith('/_next') ||
+    pathname.match(
+      /\.(ico|png|jpg|jpeg|gif|svg|css|js|webp|mp4|m4v|webm|mov|woff2?|ttf|otf|map|txt|xml|webmanifest)$/
+    );
 
   try {
     const isDev = process.env.NODE_ENV !== 'production';
-    const isStaticAsset =
-      pathname.startsWith('/_next') ||
-      pathname.match(
-        /\.(ico|png|jpg|jpeg|gif|svg|css|js|webp|mp4|m4v|webm|mov|woff2?|ttf|otf|map|txt|xml|webmanifest)$/
-      );
 
     // Short-circuit obvious scanner paths before heavier logic.
     if (SUSPICIOUS_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
@@ -197,6 +212,18 @@ export async function middleware(request: NextRequest) {
       blocked.headers.set('x-request-id', requestId);
       applySecurityHeaders(blocked, request);
       return blocked;
+    }
+
+    if (isApiRoute) {
+      const archivedApiPolicy = getArchivedApiPolicy(pathname);
+      if (archivedApiPolicy) {
+        return buildArchivedApiResponse(
+          request,
+          requestId,
+          archivedApiPolicy.surfaceLabel,
+          archivedApiPolicy.detail
+        );
+      }
     }
 
     // Skip edge rate limiting if Vercel KV is not configured to avoid runtime errors.
@@ -236,6 +263,14 @@ export async function middleware(request: NextRequest) {
           return limited;
         }
       } catch (error) {
+        if (isApiRoute) {
+          console.error(
+            '[middleware] rate limit check failed; failing closed for API route',
+            error
+          );
+          return buildFailClosedApiResponse(request, requestId);
+        }
+
         console.error('[middleware] rate limit check failed; continuing without throttle', error);
       }
     }
@@ -256,22 +291,12 @@ export async function middleware(request: NextRequest) {
         hypothesisId: 'H-edge',
         location: 'middleware.ts:entry',
         message: 'Middleware entry',
-        data: { path: pathname, method: request.method, isApi: pathname.startsWith('/api') },
+        data: { path: pathname, method: request.method, isApi: isApiRoute },
       });
     }
 
     // CSRF protection for API routes (allowlist some public endpoints)
-    if (pathname.startsWith('/api')) {
-      const archivedApiPolicy = getArchivedApiPolicy(pathname);
-      if (archivedApiPolicy) {
-        return buildArchivedApiResponse(
-          request,
-          requestId,
-          archivedApiPolicy.surfaceLabel,
-          archivedApiPolicy.detail
-        );
-      }
-
+    if (isApiRoute) {
       // Allow anonymous web-vitals posts without CSRF blocking
       if (pathname.startsWith('/api/analytics/web-vitals')) {
         const response = NextResponse.next();
@@ -347,6 +372,11 @@ export async function middleware(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('[middleware] unexpected error', error);
+
+    if (isApiRoute) {
+      return buildFailClosedApiResponse(request, requestId);
+    }
+
     const response = NextResponse.next();
     response.headers.set('x-request-id', requestId);
     applySecurityHeaders(response, request);
