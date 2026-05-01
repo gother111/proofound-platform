@@ -188,9 +188,9 @@ describe('internal ops queue compatibility fallback', () => {
       queueType: 'correction_revocation',
       status: 'in_progress',
       priority: 'high',
-      linkedEntityType: 'uploaded_file',
-      linkedEntityId: 'upload-1',
-      summary: 'Risky evidence upload held for privacy-safe review.',
+      linkedEntityType: 'verification_request',
+      linkedEntityId: '11111111-1111-4111-8111-111111111111',
+      summary: 'Verification request needs manual review.',
       metadata: { reviewReasons: ['metadata_exif'] },
       createdAt: new Date('2026-03-21T10:00:00.000Z'),
       updatedAt: new Date('2026-03-21T11:00:00.000Z'),
@@ -203,9 +203,9 @@ describe('internal ops queue compatibility fallback', () => {
         queueType: 'correction_revocation',
         status: 'resolved',
         priority: 'high',
-        linkedEntityType: 'uploaded_file',
-        linkedEntityId: 'upload-1',
-        summary: 'Risky evidence upload held for privacy-safe review.',
+        linkedEntityType: 'verification_request',
+        linkedEntityId: '11111111-1111-4111-8111-111111111111',
+        summary: 'Verification request needs manual review.',
         metadata: {
           reviewReasons: ['metadata_exif'],
           latestOperatorAction: 'resolved',
@@ -242,5 +242,35 @@ describe('internal ops queue compatibility fallback', () => {
     expect(result.current.status).toBe('resolved');
     expect(result.current.resolvedAt).toBe('2026-03-21T12:00:00.000Z');
     expect(result.note).toBe('Safe after review.');
+  });
+
+  it('rejects generic resolution for uploaded file queue items', async () => {
+    mocks.findFirst.mockResolvedValue({
+      id: 'queue-1',
+      queueType: 'correction_revocation',
+      status: 'in_progress',
+      priority: 'high',
+      linkedEntityType: 'uploaded_file',
+      linkedEntityId: '11111111-1111-4111-8111-111111111111',
+      summary: 'Risky evidence upload held for privacy-safe review.',
+      metadata: { reviewReasons: ['malware_scanner_unavailable'] },
+      createdAt: new Date('2026-03-21T10:00:00.000Z'),
+      updatedAt: new Date('2026-03-21T11:00:00.000Z'),
+      resolvedAt: null,
+    });
+
+    await expect(
+      transitionInternalOpsQueueItem({
+        id: 'queue-1',
+        nextStatus: 'resolved',
+        actorId: 'admin-1',
+        note: 'Safe after review.',
+      })
+    ).rejects.toMatchObject({
+      code: 'invalid_transition',
+      message: expect.stringContaining('upload review action'),
+    });
+
+    expect(mocks.update).not.toHaveBeenCalled();
   });
 });

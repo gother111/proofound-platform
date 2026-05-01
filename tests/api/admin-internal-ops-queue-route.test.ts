@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => {
     requirePlatformAdminJsonMock: vi.fn(),
     listInternalOpsQueueItemsMock: vi.fn(),
     transitionInternalOpsQueueItemMock: vi.fn(),
+    reviewUploadedFileQueueItemMock: vi.fn(),
     logAdminActionMock: vi.fn(),
     MockInternalOpsQueueMutationError,
   };
@@ -41,6 +42,19 @@ vi.mock('@/lib/internal-ops/queue', () => ({
   transitionInternalOpsQueueItem: (...args: any[]) =>
     mocks.transitionInternalOpsQueueItemMock(...args),
   InternalOpsQueueMutationError: mocks.MockInternalOpsQueueMutationError,
+}));
+
+vi.mock('@/lib/uploads/review', () => ({
+  reviewUploadedFileQueueItem: (...args: any[]) => mocks.reviewUploadedFileQueueItemMock(...args),
+  UploadReviewError: class UploadReviewError extends Error {
+    constructor(
+      readonly code: string,
+      message: string
+    ) {
+      super(message);
+      this.name = 'UploadReviewError';
+    }
+  },
 }));
 
 vi.mock('@/lib/audit/admin-logger', () => ({
@@ -143,7 +157,7 @@ describe('internal ops queue admin routes', () => {
     expect(mocks.listInternalOpsQueueItemsMock).not.toHaveBeenCalled();
   });
 
-  it('updates queue status through the generic PATCH route and emits an audit event', async () => {
+  it('updates non-upload queue status through the generic PATCH route and emits an audit event', async () => {
     mocks.requirePlatformAdminJsonMock.mockResolvedValue({
       adminLevel: 'platform_admin',
       userId: 'admin-1',
@@ -156,9 +170,9 @@ describe('internal ops queue admin routes', () => {
         queueType: 'correction_revocation',
         status: 'in_progress',
         priority: 'high',
-        linkedEntityType: 'uploaded_file',
+        linkedEntityType: 'verification_request',
         linkedEntityId: '22222222-2222-2222-2222-222222222222',
-        summary: 'Risky evidence upload held for privacy-safe review.',
+        summary: 'Verifier response needs manual follow-up.',
         metadata: {},
         createdAt: '2026-03-21T10:00:00.000Z',
         updatedAt: '2026-03-21T11:00:00.000Z',
@@ -169,9 +183,9 @@ describe('internal ops queue admin routes', () => {
         queueType: 'correction_revocation',
         status: 'resolved',
         priority: 'high',
-        linkedEntityType: 'uploaded_file',
+        linkedEntityType: 'verification_request',
         linkedEntityId: '22222222-2222-2222-2222-222222222222',
-        summary: 'Risky evidence upload held for privacy-safe review.',
+        summary: 'Verifier response needs manual follow-up.',
         metadata: { latestOperatorNote: 'Safe after review.' },
         createdAt: '2026-03-21T10:00:00.000Z',
         updatedAt: '2026-03-21T12:00:00.000Z',
@@ -211,6 +225,90 @@ describe('internal ops queue admin routes', () => {
         reason: 'Safe after review.',
       })
     );
+    expect(body.item.status).toBe('resolved');
+  });
+
+  it('approves uploaded-file queue items through the explicit upload review action', async () => {
+    mocks.requirePlatformAdminJsonMock.mockResolvedValue({
+      adminLevel: 'platform_admin',
+      userId: 'admin-1',
+      email: 'ops@proofound.io',
+      platformRole: 'platform_admin',
+    });
+    mocks.reviewUploadedFileQueueItemMock.mockResolvedValue({
+      previous: {
+        id: '33333333-3333-4333-8333-333333333333',
+        queueType: 'correction_revocation',
+        status: 'in_progress',
+        priority: 'high',
+        linkedEntityType: 'uploaded_file',
+        linkedEntityId: '22222222-2222-2222-2222-222222222222',
+        summary: 'Risky evidence upload held for privacy-safe review.',
+        metadata: {},
+        createdAt: '2026-03-21T10:00:00.000Z',
+        updatedAt: '2026-03-21T11:00:00.000Z',
+        resolvedAt: null,
+      },
+      current: {
+        id: '33333333-3333-4333-8333-333333333333',
+        queueType: 'correction_revocation',
+        status: 'resolved',
+        priority: 'high',
+        linkedEntityType: 'uploaded_file',
+        linkedEntityId: '22222222-2222-2222-2222-222222222222',
+        summary: 'Risky evidence upload held for privacy-safe review.',
+        metadata: {
+          uploadReviewAction: 'approved',
+          uploadedFileLifecycleState: 'ready_private',
+          uploadedFileAttachStatus: 'attachable',
+        },
+        createdAt: '2026-03-21T10:00:00.000Z',
+        updatedAt: '2026-03-21T12:00:00.000Z',
+        resolvedAt: '2026-03-21T12:00:00.000Z',
+      },
+      note: 'Audited internally and safe for private evidence attachment.',
+      uploadReviewAction: 'approve',
+    });
+
+    const response = await PATCH(
+      new NextRequest(
+        'https://proofound.io/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            status: 'resolved',
+            uploadReviewAction: 'approve',
+            note: 'Audited internally and safe for private evidence attachment.',
+          }),
+        }
+      ),
+      { params: Promise.resolve({ id: '33333333-3333-4333-8333-333333333333' }) }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mocks.reviewUploadedFileQueueItemMock).toHaveBeenCalledWith({
+      queueItemId: '33333333-3333-4333-8333-333333333333',
+      action: 'approve',
+      note: 'Audited internally and safe for private evidence attachment.',
+      actorId: 'admin-1',
+    });
+    expect(mocks.transitionInternalOpsQueueItemMock).not.toHaveBeenCalled();
+    expect(mocks.logAdminActionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        adminId: 'admin-1',
+        action: 'internal_ops_queue_upload_reviewed',
+        targetType: 'internal_ops_queue_item',
+        reason: 'Audited internally and safe for private evidence attachment.',
+        changes: expect.objectContaining({
+          fromStatus: 'in_progress',
+          toStatus: 'resolved',
+          uploadReviewAction: 'approve',
+        }),
+      })
+    );
+    expect(JSON.stringify(body)).not.toContain('user-uploads-private');
+    expect(JSON.stringify(body)).not.toContain('Jane Doe Resume.pdf');
     expect(body.item.status).toBe('resolved');
   });
 

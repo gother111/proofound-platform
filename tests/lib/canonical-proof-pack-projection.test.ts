@@ -195,4 +195,73 @@ describe('buildCanonicalPublicProofPackProjection', () => {
 
     expect(projection).toBeNull();
   });
+
+  it('keeps manually approved private evidence off public projection without leaking filenames', () => {
+    const projection = buildCanonicalPublicProofPackProjection({
+      pack: {
+        id: 'pack-4',
+        visibility: 'public',
+        revealGate: 'none',
+        packKind: 'verification_bundle',
+        primarySubjectType: 'experience',
+        primarySubjectId: 'experience-1',
+        lifecycleState: 'published',
+        title: 'Jane Doe Resume.pdf',
+        summary: null,
+        evidenceSummary: null,
+        outcomesSummary: 'Private evidence outcome',
+        lastVerifiedAt: null,
+        lastRefreshedAt: null,
+        portabilityMeta: {},
+      } as any,
+      items: [
+        {
+          item: { position: 1, itemClass: 'file_upload', subtypeMetadata: {} } as any,
+          effectiveVisibility: 'public',
+          artifact: {
+            id: 'artifact-4',
+            uploadedFileId: 'upload-4',
+            artifactKind: 'document',
+            title: 'Jane Doe Resume.pdf',
+            description: 'Approved for private attachment, not public rendering.',
+            sourceUrl: null,
+            storagePath: 'individual_profile/user/proof/upload-4.pdf',
+            issuedAt: null,
+            expiresAt: null,
+            deletedAt: null,
+            revokedAt: null,
+            lifecycleState: 'active',
+            metadata: {},
+            revealGate: 'none',
+          } as any,
+          uploadedFile: {
+            id: 'upload-4',
+            uploadKind: 'document',
+            originalFilename: 'Jane Doe Resume.pdf',
+            sanitizedFilename: 'Jane_Doe_Resume.pdf',
+            detectedMime: 'application/pdf',
+            lifecycleState: 'ready_private',
+            safetyStatus: 'approved_after_manual_review',
+            safetyReason: null,
+            attachStatus: 'attached',
+            safeForPublic: false,
+            metadata: {
+              surfaceLabels: {
+                public: 'Uploaded PDF document',
+                review: 'Uploaded PDF document',
+              },
+            },
+          },
+        },
+      ],
+      verificationReferences: [],
+      verificationStatus: 'verified',
+      freshnessState: 'fresh',
+      latestEvidenceAt: null,
+    });
+
+    expect(projection).toBeNull();
+    expect(JSON.stringify(projection)).not.toContain('Jane Doe Resume.pdf');
+    expect(JSON.stringify(projection)).not.toContain('individual_profile/user/proof');
+  });
 });

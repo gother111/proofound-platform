@@ -7,15 +7,22 @@ import {
   transitionInternalOpsQueueItem,
 } from '@/lib/internal-ops/queue';
 import { logAdminAction } from '@/lib/audit/admin-logger';
+import { reviewUploadedFileQueueItem, UploadReviewError } from '@/lib/uploads/review';
 
 const paramsSchema = z.object({
   id: z.string().uuid(),
 });
 
-const patchBodySchema = z.object({
-  status: z.enum(['open', 'in_progress', 'resolved', 'cancelled']),
-  note: z.string().trim().max(2000).optional(),
-});
+const patchBodySchema = z
+  .object({
+    status: z.enum(['open', 'in_progress', 'resolved', 'cancelled']),
+    note: z.string().trim().max(2000).optional(),
+    uploadReviewAction: z.enum(['approve', 'reject']).optional(),
+  })
+  .refine((body) => !body.uploadReviewAction || body.status === 'resolved', {
+    message: 'Upload review actions must resolve the queue item.',
+    path: ['uploadReviewAction'],
+  });
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -34,21 +41,33 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return jsonError('Invalid queue update payload', 400, payload.error.flatten());
     }
 
-    const transition = await transitionInternalOpsQueueItem({
-      id: parsedParams.data.id,
-      nextStatus: payload.data.status,
-      note: payload.data.note,
-      actorId: adminUser.userId,
-    });
+    const transition = payload.data.uploadReviewAction
+      ? await reviewUploadedFileQueueItem({
+          queueItemId: parsedParams.data.id,
+          action: payload.data.uploadReviewAction,
+          note: payload.data.note,
+          actorId: adminUser.userId,
+        })
+      : await transitionInternalOpsQueueItem({
+          id: parsedParams.data.id,
+          nextStatus: payload.data.status,
+          note: payload.data.note,
+          actorId: adminUser.userId,
+        });
 
     await logAdminAction({
       adminId: adminUser.userId,
-      action: 'internal_ops_queue_status_changed',
+      action: payload.data.uploadReviewAction
+        ? 'internal_ops_queue_upload_reviewed'
+        : 'internal_ops_queue_status_changed',
       targetType: 'internal_ops_queue_item',
       targetId: transition.current.id,
       changes: {
         fromStatus: transition.previous.status,
         toStatus: transition.current.status,
+        ...(payload.data.uploadReviewAction
+          ? { uploadReviewAction: payload.data.uploadReviewAction }
+          : {}),
       },
       reason: transition.note ?? undefined,
       metadata: {
@@ -72,6 +91,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             ? 503
             : error.code === 'invalid_transition'
               ? 409
+              : 400;
+
+      return jsonError(error.message, status);
+    }
+
+    if (error instanceof UploadReviewError) {
+      const status =
+        error.code === 'not_found'
+          ? 404
+          : error.code === 'invalid_transition' || error.code === 'invalid_upload_state'
+            ? 409
+            : error.code === 'storage_copy_failed' || error.code === 'storage_cleanup_failed'
+              ? 502
               : 400;
 
       return jsonError(error.message, status);

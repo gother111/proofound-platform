@@ -69,6 +69,8 @@ type UploadedFileRow = {
   metadata?: Record<string, unknown> | null;
 };
 
+export type { UploadedFileRow };
+
 type UploadLifecycleResult = {
   uploadedFileId: string;
   status: 'ready' | 'manual_review' | 'rejected';
@@ -244,10 +246,11 @@ function validateMimeForKind(
   return { ok: true, safetyReason: null, promotePublic: false };
 }
 
-async function recordUploadEvent(
+export async function recordUploadEvent(
   uploadedFileId: string,
   eventType: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  executor: { execute: typeof db.execute } = db
 ) {
   const allowedEventType =
     eventType === 'scan_passed'
@@ -265,7 +268,7 @@ async function recordUploadEvent(
       ? (metadata ?? {})
       : { ...(metadata ?? {}), originalEventType: eventType };
 
-  await db.execute(sql`
+  await executor.execute(sql`
     INSERT INTO uploaded_file_events (uploaded_file_id, event_type, metadata)
     VALUES (${uploadedFileId}, ${allowedEventType}, ${JSON.stringify(normalizedMetadata)}::jsonb)
   `);
@@ -344,6 +347,47 @@ async function loadUploadedFile(uploadedFileId: string): Promise<UploadedFileRow
   return row ?? null;
 }
 
+export async function recordUploadReviewAudit(
+  input: {
+    actorId: string;
+    targetId: string;
+    outcome: 'approved' | 'rejected' | 'denied' | 'failed';
+    reason?: string | null;
+    row?: UploadedFileRow | null;
+    queueItemId?: string | null;
+    priorState?: string | null;
+    nextState?: string | null;
+  },
+  executor: { execute: typeof db.execute } = db
+) {
+  const row = input.row;
+  const metadata = {
+    outcome: input.outcome,
+    reason: input.reason ?? null,
+    queueItemId: input.queueItemId ?? null,
+    priorState: input.priorState ?? row?.lifecycle_state ?? null,
+    nextState: input.nextState ?? null,
+    uploadKind: row?.upload_kind ?? null,
+    lifecycleState: row?.lifecycle_state ?? null,
+    safetyStatus: row?.safety_status ?? null,
+    attachStatus: row?.attach_status ?? null,
+    ownerType: row?.owner_type ?? null,
+    safeForPublic: row?.safe_for_public ?? false,
+    originalFilenameOwnerExportOnly: row?.original_filename_sensitive !== false,
+  };
+
+  await executor.execute(sql`
+    INSERT INTO audit_logs (actor_id, action, target_type, target_id, meta)
+    VALUES (
+      ${input.actorId}::uuid,
+      ${`uploaded_file.review_${input.outcome}`},
+      'uploaded_file',
+      ${input.targetId},
+      ${JSON.stringify(metadata)}::jsonb
+    )
+  `);
+}
+
 async function loadUploadedFileByStoragePath(storagePath: string): Promise<UploadedFileRow | null> {
   const result = await db.execute(sql`
     SELECT
@@ -396,7 +440,7 @@ export async function getAttachableUploadedFile(uploadedFileId: string, ownerId:
 
   if (
     !hasAttachableLifecycle ||
-    row.safety_status !== 'clean' ||
+    !['clean', 'approved_after_manual_review'].includes(row.safety_status) ||
     row.metadata_status !== 'extracted' ||
     row.attach_status !== 'attachable'
   ) {

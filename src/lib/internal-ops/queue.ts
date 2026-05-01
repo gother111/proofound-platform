@@ -308,9 +308,8 @@ export async function transitionInternalOpsQueueItem(params: {
       throw new InternalOpsQueueMutationError('not_found', 'Queue item not found.');
     }
 
-    const allowedTransitions = INTERNAL_OPS_QUEUE_ALLOWED_TRANSITIONS[
-      existing.status as InternalOpsQueueStatus
-    ];
+    const allowedTransitions =
+      INTERNAL_OPS_QUEUE_ALLOWED_TRANSITIONS[existing.status as InternalOpsQueueStatus];
 
     if (!allowedTransitions.includes(params.nextStatus)) {
       throw new InternalOpsQueueMutationError(
@@ -333,13 +332,18 @@ export async function transitionInternalOpsQueueItem(params: {
       );
     }
 
+    if (existing.linkedEntityType === 'uploaded_file' && params.nextStatus === 'resolved') {
+      throw new InternalOpsQueueMutationError(
+        'invalid_transition',
+        'Uploaded file queue items must be approved or rejected through the upload review action.'
+      );
+    }
+
     const now = new Date();
     const nextMetadata = {
       ...((existing.metadata as Record<string, unknown> | null) ?? {}),
       latestOperatorAction:
-        params.nextStatus === 'open' && existing.status !== 'open'
-          ? 'reopened'
-          : params.nextStatus,
+        params.nextStatus === 'open' && existing.status !== 'open' ? 'reopened' : params.nextStatus,
       latestOperatorActionAt: now.toISOString(),
       latestOperatorActorId: params.actorId,
       ...(trimmedNote ? { latestOperatorNote: trimmedNote } : {}),
