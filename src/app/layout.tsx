@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { Toaster as LegacyToaster } from '@/components/ui/toaster';
@@ -52,6 +53,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Nonce-based CSP needs request-time rendering so Next can apply the nonce to framework scripts.
+  await connection();
+
   // Safely load messages with fallback to prevent crashes
   let messages = {};
   try {

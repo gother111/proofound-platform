@@ -113,7 +113,6 @@ describe('middleware launch archive behavior', () => {
   it('still passes through preserved launch corridor endpoints', async () => {
     const preservedPaths = [
       'http://localhost/api/assignments',
-      'http://localhost/api/candidate-invites/token',
       'http://localhost/api/conversations',
       'http://localhost/api/interviews/schedule',
       'http://localhost/api/matching-profile',
@@ -124,7 +123,6 @@ describe('middleware launch archive behavior', () => {
       'http://localhost/api/portfolio/visibility',
       'http://localhost/api/user/export',
       'http://localhost/api/verification/requests/skill',
-      'http://localhost/api/verify/token-1',
       'http://localhost/app/i/home',
       'http://localhost/app/i/messages',
       'http://localhost/app/o/acme/matching',

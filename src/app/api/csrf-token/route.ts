@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   // Get existing token or generate new one
-  const token = getOrGenerateCSRFToken(request);
+  const token = await getOrGenerateCSRFToken(request);
 
   // Create response with token
   const response = NextResponse.json(

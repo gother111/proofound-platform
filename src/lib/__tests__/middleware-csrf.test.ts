@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { NextRequest } from 'next/server';
 
 import { middleware } from '@/middleware';
+import { generateSignedCSRFToken } from '@/lib/csrf';
 
 describe('middleware CSRF behavior', () => {
   const cookieAuthMutationRoutes = [
@@ -15,6 +16,7 @@ describe('middleware CSRF behavior', () => {
   ] as const;
 
   beforeEach(() => {
+    process.env.CSRF_SECRET = 'csrf-signing-secret-value';
     delete process.env.KV_REST_API_URL;
     delete process.env.KV_REST_API_TOKEN;
     delete process.env.KV_REST_API_READ_ONLY_TOKEN;
@@ -67,11 +69,19 @@ describe('middleware CSRF behavior', () => {
   it.each(cookieAuthMutationRoutes)(
     '%s %s with valid CSRF reaches the route layer',
     async (method, path) => {
+      const sessionCookie = 'sb-localhost-auth-token=session-value';
+      const csrfToken = await generateSignedCSRFToken(
+        new NextRequest(`http://localhost${path}`, {
+          headers: {
+            Cookie: sessionCookie,
+          },
+        })
+      );
       const request = new NextRequest(`http://localhost${path}`, {
         method,
         headers: {
-          'x-csrf-token': 'valid-token',
-          Cookie: 'csrf_token=valid-token; sb-localhost-auth-token=session-value',
+          'x-csrf-token': csrfToken,
+          Cookie: `csrf_token=${csrfToken}; ${sessionCookie}`,
         },
       });
 
@@ -81,6 +91,46 @@ describe('middleware CSRF behavior', () => {
       expect(response.headers.get('x-middleware-next')).toBe('1');
     }
   );
+
+  it('rejects unsigned fixed CSRF values on cookie-auth mutation routes', async () => {
+    const token = 'fixed-token';
+    const request = new NextRequest('http://localhost/api/assignments', {
+      method: 'POST',
+      headers: {
+        'x-csrf-token': token,
+        Cookie: `csrf_token=${token}; sb-localhost-auth-token=session-value`,
+      },
+    });
+
+    const response = await middleware(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error).toBe('CSRF validation failed');
+  });
+
+  it('rejects signed CSRF values replayed under a different auth session', async () => {
+    const token = await generateSignedCSRFToken(
+      new NextRequest('http://localhost/api/assignments', {
+        headers: {
+          Cookie: 'sb-localhost-auth-token=session-value',
+        },
+      })
+    );
+    const request = new NextRequest('http://localhost/api/assignments', {
+      method: 'POST',
+      headers: {
+        'x-csrf-token': token,
+        Cookie: `csrf_token=${token}; sb-localhost-auth-token=other-session-value`,
+      },
+    });
+
+    const response = await middleware(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error).toBe('CSRF validation failed');
+  });
 
   it('allows verified internal cron calls without cookie CSRF', async () => {
     process.env.CRON_SECRET = 'server-only-cron-secret';

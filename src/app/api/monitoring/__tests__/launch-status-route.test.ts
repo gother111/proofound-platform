@@ -88,6 +88,7 @@ describe('/api/monitoring/launch-status', () => {
     vi.clearAllMocks();
     vi.stubEnv('CRON_SECRET', CRON_SECRET);
     vi.stubEnv('INTERNAL_API_SECRET', '');
+    vi.stubEnv('RESEND_API_KEY', 're_launch_status_test');
     (getHttpMonitorKeysNeedingRefresh as any).mockReturnValue([]);
   });
 
@@ -140,6 +141,63 @@ describe('/api/monitoring/launch-status', () => {
     );
     expect(body.lastSuccessfulRuns.byMonitorKey.api_health).toBe('2026-03-10T10:00:00.000Z');
     expect(getLaunchSyntheticStatusWithFreshHttpRevalidation).not.toHaveBeenCalled();
+  });
+
+  it('blocks launch status when production rate limiting dependency is missing', async () => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+    vi.stubEnv('KV_REST_API_URL', '');
+    vi.stubEnv('KV_REST_API_TOKEN', '');
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.ok).toBe(false);
+    expect(body.readinessState).toBe('blocked');
+    expect(body.dependencies.rateLimit).toEqual(
+      expect.objectContaining({
+        ok: false,
+        required: true,
+        configured: false,
+        missing: ['KV_REST_API_URL', 'KV_REST_API_TOKEN'],
+      })
+    );
+    expect(body.notReadyReasons).toEqual([
+      expect.objectContaining({
+        code: 'missing_rate_limit_dependency',
+        source: 'dependency',
+        monitorKeys: ['rate_limit_dependency'],
+      }),
+    ]);
+  });
+
+  it('blocks launch status when transactional email provider config is missing', async () => {
+    vi.stubEnv('RESEND_API_KEY', '');
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.ok).toBe(false);
+    expect(body.readinessState).toBe('blocked');
+    expect(body.dependencies.emailProvider).toEqual(
+      expect.objectContaining({
+        ok: false,
+        required: true,
+        configured: false,
+        missing: ['RESEND_API_KEY'],
+        provider: 'resend',
+      })
+    );
+    expect(body.notReadyReasons).toEqual([
+      expect.objectContaining({
+        code: 'missing_email_provider_dependency',
+        source: 'dependency',
+        monitorKeys: ['email_provider_dependency'],
+      }),
+    ]);
   });
 
   it('refreshes stale persisted endpoint rows and returns ready when live checks recover', async () => {

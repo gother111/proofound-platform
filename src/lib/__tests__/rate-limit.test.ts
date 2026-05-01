@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NextRequest } from 'next/server';
 
 describe('Rate Limiting', () => {
   beforeEach(() => {
@@ -7,6 +8,17 @@ describe('Rate Limiting', () => {
       | Map<unknown, unknown>
       | undefined;
     store?.clear();
+    vi.resetModules();
+    delete process.env.KV_REST_API_URL;
+    delete process.env.KV_REST_API_TOKEN;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.resetModules();
+    vi.doUnmock('@vercel/kv');
+    delete process.env.KV_REST_API_URL;
+    delete process.env.KV_REST_API_TOKEN;
   });
 
   describe('Rate limit configuration', () => {
@@ -32,6 +44,79 @@ describe('Rate Limiting', () => {
       // Should allow at least some requests
       expect(maxRequests).toBeGreaterThanOrEqual(10);
       expect(maxRequests).toBeLessThan(1000); // Sanity check
+    });
+
+    it('requires the write-capable KV token for launch environments', async () => {
+      const { getRateLimitDependencyStatus } = await import('@/lib/rate-limit/index');
+
+      expect(
+        getRateLimitDependencyStatus({
+          VERCEL_ENV: 'preview',
+          KV_REST_API_URL: 'https://kv.example.test',
+          KV_REST_API_TOKEN: '',
+        })
+      ).toEqual({
+        ok: false,
+        required: true,
+        configured: false,
+        missing: ['KV_REST_API_TOKEN'],
+      });
+    });
+
+    it('assigns strict endpoint-specific profiles to high-risk routes', async () => {
+      const { RATE_LIMITS, getRateLimitProfileForPathname } = await import(
+        '@/lib/rate-limit/index'
+      );
+
+      expect(getRateLimitProfileForPathname('/api/verify/secret-token')).toBe(
+        RATE_LIMITS.publicToken
+      );
+      expect(getRateLimitProfileForPathname('/api/verification/work-email/send', 'POST')).toBe(
+        RATE_LIMITS.workEmail
+      );
+      expect(getRateLimitProfileForPathname('/api/upload/document', 'POST')).toBe(
+        RATE_LIMITS.upload
+      );
+      expect(getRateLimitProfileForPathname('/api/conversations/abc/reveal', 'POST')).toBe(
+        RATE_LIMITS.revealIntro
+      );
+      expect(getRateLimitProfileForPathname('/api/user/password', 'POST')).toBe(RATE_LIMITS.auth);
+      expect(getRateLimitProfileForPathname('/api/health')).toBeNull();
+    });
+
+    it('does not include token path values in limiter keys', async () => {
+      const incr = vi.fn().mockResolvedValue(1);
+      const expire = vi.fn().mockResolvedValue(1);
+      const ttl = vi.fn().mockResolvedValue(60);
+
+      vi.doMock('@vercel/kv', () => ({
+        kv: { incr, expire, ttl },
+      }));
+      process.env.KV_REST_API_URL = 'https://kv.example.test';
+      process.env.KV_REST_API_TOKEN = 'kv-token';
+
+      const { RATE_LIMITS, rateLimit } = await import('@/lib/rate-limit/index');
+      await rateLimit(
+        new NextRequest('https://proofound.io/api/verify/sensitive-token-value', {
+          headers: { 'x-forwarded-for': '203.0.113.7' },
+        }),
+        RATE_LIMITS.publicToken
+      );
+
+      expect(incr).toHaveBeenCalledWith('ratelimit:public-token:203.0.113.7');
+      expect(String(incr.mock.calls[0][0])).not.toContain('sensitive-token-value');
+    });
+
+    it('fails closed for required profiles when KV is missing', async () => {
+      const { RATE_LIMITS, checkRateLimit } = await import('@/lib/rate-limit/index');
+      const { allowed, result } = await checkRateLimit(
+        new NextRequest('https://proofound.io/api/verify/token-value'),
+        RATE_LIMITS.publicToken
+      );
+
+      expect(allowed).toBe(false);
+      expect(result.unavailable).toBe(true);
+      expect(result.failureReason).toBe('missing_configuration');
     });
   });
 

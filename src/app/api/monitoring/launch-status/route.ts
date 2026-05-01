@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 
 import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
+import { getEmailProviderDependencyStatus } from '@/lib/email/config';
 import { buildLaunchStatusReport } from '@/lib/launch/status-report';
+import { getRateLimitDependencyStatus } from '@/lib/rate-limit/index';
 import {
   getHttpMonitorKeysNeedingRefresh,
   getLaunchSyntheticStatusWithFreshHttpRevalidation,
@@ -55,9 +57,69 @@ export async function GET(request: Request) {
     const report = buildLaunchStatusReport(latest, {
       liveRefresh: liveRefreshOverride,
     });
+    const rateLimitDependency = getRateLimitDependencyStatus();
+    const emailProviderDependency = getEmailProviderDependencyStatus();
+    const dependencyReasons = [];
+    const dependencies: Record<string, unknown> = {};
 
-    return NextResponse.json(report, {
-      status: report.readinessState === 'blocked' ? 503 : 200,
+    if (!rateLimitDependency.ok) {
+      dependencies.rateLimit = {
+        ok: false,
+        required: rateLimitDependency.required,
+        configured: rateLimitDependency.configured,
+        missing: rateLimitDependency.missing,
+      };
+      dependencyReasons.push({
+        code: 'missing_rate_limit_dependency' as const,
+        message:
+          'Launch readiness is blocked because the required rate-limit KV dependency is not configured.',
+        monitorKeys: ['rate_limit_dependency'],
+        source: 'dependency' as const,
+        freshnessState: 'missing' as const,
+        checkedAt: [report.generatedAt],
+        lastSuccessfulCheckedAt: [null],
+        liveRefreshAttempted: report.liveRefresh.attempted,
+      });
+    }
+
+    if (!emailProviderDependency.ok) {
+      dependencies.emailProvider = {
+        ok: false,
+        required: emailProviderDependency.required,
+        configured: emailProviderDependency.configured,
+        missing: emailProviderDependency.missing,
+        provider: emailProviderDependency.provider,
+      };
+      dependencyReasons.push({
+        code: 'missing_email_provider_dependency' as const,
+        message:
+          'Launch readiness is blocked because the transactional email provider is not configured.',
+        monitorKeys: ['email_provider_dependency'],
+        source: 'dependency' as const,
+        freshnessState: 'missing' as const,
+        checkedAt: [report.generatedAt],
+        lastSuccessfulCheckedAt: [null],
+        liveRefreshAttempted: report.liveRefresh.attempted,
+      });
+    }
+
+    const responseBody =
+      dependencyReasons.length === 0
+        ? report
+        : {
+            ...report,
+            ok: false,
+            readinessState: 'blocked' as const,
+            dependencies,
+            summary: {
+              ...report.summary,
+              blockedMonitors: report.summary.blockedMonitors + dependencyReasons.length,
+            },
+            notReadyReasons: [...report.notReadyReasons, ...dependencyReasons],
+          };
+
+    return NextResponse.json(responseBody, {
+      status: responseBody.readinessState === 'blocked' ? 503 : 200,
     });
   } catch (error) {
     return NextResponse.json(

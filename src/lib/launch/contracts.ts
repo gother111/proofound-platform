@@ -23,6 +23,7 @@ export const LAUNCH_NOT_READY_REASON_CODE_VALUES = [
   'live_endpoint_failure',
   'stale_persisted_monitor_evidence',
   'missing_persisted_monitor_evidence',
+  'missing_rate_limit_dependency',
 ] as const;
 export type LaunchNotReadyReasonCode = (typeof LAUNCH_NOT_READY_REASON_CODE_VALUES)[number];
 
@@ -30,6 +31,7 @@ export const LAUNCH_NOT_READY_REASON_SOURCE_VALUES = [
   'smoke_artifact',
   'persisted_http',
   'live_http',
+  'dependency',
 ] as const;
 export type LaunchNotReadyReasonSource = (typeof LAUNCH_NOT_READY_REASON_SOURCE_VALUES)[number];
 

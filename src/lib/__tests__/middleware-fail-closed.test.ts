@@ -132,6 +132,90 @@ describe('middleware fail-closed behavior', () => {
     await expectFailClosedApiResponse(response, 'req-rate-limit-failure');
   });
 
+  it('returns 429 with safe retry metadata when an endpoint profile is exhausted', async () => {
+    process.env.KV_REST_API_URL = 'https://kv.example.test';
+    process.env.KV_REST_API_TOKEN = 'kv-token';
+
+    vi.doMock('@/lib/rate-limit/index', async () => {
+      const actual =
+        await vi.importActual<typeof import('@/lib/rate-limit/index')>('@/lib/rate-limit/index');
+
+      return {
+        ...actual,
+        checkRateLimit: vi.fn(() => ({
+          allowed: false,
+          result: {
+            success: false,
+            limit: 5,
+            remaining: 0,
+            reset: Date.now() + 30_000,
+          },
+        })),
+      };
+    });
+
+    const { middleware } = await loadMiddleware();
+    const response = await middleware(
+      new NextRequest('http://localhost/api/verification/work-email/send', {
+        method: 'POST',
+        headers: {
+          'x-request-id': 'req-rate-limited',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get('Retry-After')).toMatch(/^\d+$/);
+    expect(response.headers.get('X-RateLimit-Limit')).toBe('5');
+    expect(response.headers.get('X-RateLimit-Remaining')).toBe('0');
+    expect(response.headers.get('x-request-id')).toBe('req-rate-limited');
+    expect(body).toEqual({
+      error: 'Too many requests',
+      message: 'Please slow down and try again shortly.',
+      retryAfter: expect.any(Number),
+    });
+  });
+
+  it('degrades high-risk public token routes when the limiter dependency is missing', async () => {
+    const { middleware } = await loadMiddleware();
+    const response = await middleware(
+      new NextRequest('http://localhost/api/verify/sensitive-token-value', {
+        method: 'GET',
+        headers: {
+          'x-request-id': 'req-missing-rate-limit',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get('Retry-After')).toMatch(/^\d+$/);
+    expect(response.headers.get('x-request-id')).toBe('req-missing-rate-limit');
+    expect(JSON.stringify(body)).not.toContain('sensitive-token-value');
+    expect(body).toEqual({
+      error: 'Service temporarily unavailable',
+      message: 'Request protection is temporarily unavailable. Please try again shortly.',
+      retryAfter: expect.any(Number),
+    });
+  });
+
+  it('does not block static assets when rate limiting is unavailable', async () => {
+    const { middleware } = await loadMiddleware();
+    const response = await middleware(
+      new NextRequest('http://localhost/proofound-logo.png', {
+        method: 'GET',
+        headers: {
+          'x-request-id': 'req-static-asset',
+        },
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+    expect(response.headers.get('x-request-id')).toBe('req-static-asset');
+  });
+
   it('fails closed for mutating API routes when CSRF enforcement code throws', async () => {
     vi.doMock('@/lib/csrf', async () => {
       const actual = await vi.importActual<typeof import('@/lib/csrf')>('@/lib/csrf');

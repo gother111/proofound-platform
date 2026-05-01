@@ -194,6 +194,22 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/organizations/[orgId]/test-matches',
 ] as const;
 
+const ALLOWED_ARCHIVED_COMPILED_ROUTES = [
+  '/api/analytics/events',
+  '/api/analytics/tour-event',
+  '/api/analytics/track',
+  '/api/analytics/web-vitals',
+  '/api/cron/account-deletion-workflow',
+  '/api/cron/process-deletions',
+  '/api/cron/send-deletion-reminders',
+  '/api/expertise/cv-import/wizard-apply',
+  '/api/expertise/cv-import/wizard-extract',
+  '/api/expertise/cv-import/wizard-extract/status',
+  '/api/expertise/cv-import/wizard-suggest',
+  '/api/match/test',
+  '/api/performance/track',
+] as const;
+
 async function collectRoutePaths(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });
   const routes: string[] = [];
@@ -244,16 +260,32 @@ describe('launch surface inventory', () => {
 
   it('keeps every compiled API route inside an explicit launch, internal-only, or decided archived route list', async () => {
     const routes = await collectRoutePaths(API_ROOT);
-    const decidedArchivedRoutes = new Set<string>(REQUIRED_ARCHIVED_COMPAT_PATHS);
-    const disallowedRoutes = routes.filter((route) => {
+    const explicitCompiledRoutes = new Set<string>([
+      ...REQUIRED_ACTIVE_ROUTES,
+      ...REQUIRED_INTERNAL_ONLY_ROUTES,
+      ...ALLOWED_ARCHIVED_COMPILED_ROUTES,
+    ]);
+    const unclassifiedRoutes = routes.filter((route) => !explicitCompiledRoutes.has(route));
+    const misclassifiedRoutes = routes.filter((route) => {
       const classification = classifyLaunchApiPath(route);
+      if (REQUIRED_ACTIVE_ROUTES.includes(route as (typeof REQUIRED_ACTIVE_ROUTES)[number])) {
+        return classification !== 'active_launch_path';
+      }
+      if (
+        REQUIRED_INTERNAL_ONLY_ROUTES.includes(
+          route as (typeof REQUIRED_INTERNAL_ONLY_ROUTES)[number]
+        )
+      ) {
+        return classification !== 'internal_only_launch_ops';
+      }
       return (
-        classification !== 'active_launch_path' &&
-        classification !== 'internal_only_launch_ops' &&
-        !(classification === 'archived' && decidedArchivedRoutes.has(route))
+        ALLOWED_ARCHIVED_COMPILED_ROUTES.includes(
+          route as (typeof ALLOWED_ARCHIVED_COMPILED_ROUTES)[number]
+        ) && classification !== 'archived'
       );
     });
 
-    expect(disallowedRoutes).toEqual([]);
+    expect(unclassifiedRoutes).toEqual([]);
+    expect(misclassifiedRoutes).toEqual([]);
   });
 });

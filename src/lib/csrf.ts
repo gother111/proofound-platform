@@ -14,6 +14,9 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const MIN_INTERNAL_SECRET_LENGTH = 16;
 const INVALID_INTERNAL_SECRET_VALUES = new Set(['undefined', 'null']);
 const SUPABASE_SESSION_COOKIE_PATTERN = /^sb-[a-z0-9]+-auth-token(?:\.\d+)?$/i;
+const CSRF_TOKEN_VERSION = 'csrf-v1';
+const TEXT_ENCODER = new TextEncoder();
+let developmentSigningSecret: string | null = null;
 
 function normalizeInternalSecret(value: string | undefined): string | null {
   const secret = value?.trim();
@@ -34,6 +37,35 @@ function getConfiguredInternalSecrets(): string[] {
   });
 }
 
+function getConfiguredCsrfSigningSecret(): string | null {
+  return [
+    process.env.CSRF_SECRET,
+    process.env.INTERNAL_API_SECRET,
+    process.env.CRON_SECRET,
+    process.env.CRON_SECRET_PREVIEW,
+  ].reduce<string | null>((selectedSecret, value) => {
+    if (selectedSecret) {
+      return selectedSecret;
+    }
+
+    return normalizeInternalSecret(value);
+  }, null);
+}
+
+function getCsrfSigningSecret(): string {
+  const configuredSecret = getConfiguredCsrfSigningSecret();
+  if (configuredSecret) {
+    return configuredSecret;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('CSRF signing secret is not configured');
+  }
+
+  developmentSigningSecret ||= generateCSRFToken();
+  return developmentSigningSecret;
+}
+
 function constantTimeEquals(left: string, right: string): boolean {
   if (left.length !== right.length) {
     return false;
@@ -44,6 +76,82 @@ function constantTimeEquals(left: string, right: string): boolean {
     diff |= left.charCodeAt(index) ^ right.charCodeAt(index);
   }
   return diff === 0;
+}
+
+function base64UrlEncode(bytes: Uint8Array): string {
+  let binary = '';
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+async function hmacSha256(value: string): Promise<string> {
+  const secret = getCsrfSigningSecret();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    TEXT_ENCODER.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, TEXT_ENCODER.encode(value));
+  return base64UrlEncode(new Uint8Array(signature));
+}
+
+function getSessionBindingMaterial(request: NextRequest): string {
+  const sessionCookies = request.cookies
+    .getAll()
+    .filter(({ name }) => SUPABASE_SESSION_COOKIE_PATTERN.test(name))
+    .sort((left, right) => left.name.localeCompare(right.name))
+    .map(({ name, value }) => `${name}=${value}`);
+
+  return sessionCookies.length > 0 ? sessionCookies.join(';') : 'anonymous';
+}
+
+async function getSessionBinding(request: NextRequest): Promise<string> {
+  return hmacSha256(`csrf-session:${getSessionBindingMaterial(request)}`);
+}
+
+async function signToken(binding: string, nonce: string): Promise<string> {
+  return hmacSha256(`${CSRF_TOKEN_VERSION}.${binding}.${nonce}`);
+}
+
+function parseSignedToken(token: string): {
+  version: string;
+  binding: string;
+  nonce: string;
+  signature: string;
+} | null {
+  const [version, binding, nonce, signature, ...extraParts] = token.split('.');
+  if (extraParts.length > 0 || !version || !binding || !nonce || !signature) {
+    return null;
+  }
+
+  if (version !== CSRF_TOKEN_VERSION) {
+    return null;
+  }
+
+  return { version, binding, nonce, signature };
+}
+
+async function isSignedCSRFTokenValidForRequest(
+  request: NextRequest,
+  token: string
+): Promise<boolean> {
+  const parsedToken = parseSignedToken(token);
+  if (!parsedToken) {
+    return false;
+  }
+
+  const expectedBinding = await getSessionBinding(request);
+  if (!constantTimeEquals(parsedToken.binding, expectedBinding)) {
+    return false;
+  }
+
+  const expectedSignature = await signToken(parsedToken.binding, parsedToken.nonce);
+  return constantTimeEquals(parsedToken.signature, expectedSignature);
 }
 
 function getPresentedInternalSecrets(request: NextRequest): string[] {
@@ -110,12 +218,22 @@ export function generateCSRFToken(): string {
 }
 
 /**
+ * Generate a signed CSRF token bound to the current auth-cookie session fingerprint.
+ */
+export async function generateSignedCSRFToken(request: NextRequest): Promise<string> {
+  const nonce = generateCSRFToken();
+  const binding = await getSessionBinding(request);
+  const signature = await signToken(binding, nonce);
+  return `${CSRF_TOKEN_VERSION}.${binding}.${nonce}.${signature}`;
+}
+
+/**
  * Verify CSRF token from request
  *
  * @param request - The incoming request
  * @returns true if token is valid, false otherwise
  */
-export function verifyCSRFToken(request: NextRequest): boolean {
+export async function verifyCSRFToken(request: NextRequest): Promise<boolean> {
   // GET, HEAD, OPTIONS requests don't need CSRF protection
   const method = request.method.toUpperCase();
   if (SAFE_METHODS.has(method)) {
@@ -134,14 +252,17 @@ export function verifyCSRFToken(request: NextRequest): boolean {
     return false;
   }
 
-  // Compare tokens directly (double-submit cookie pattern)
-  return headerToken === cookieToken;
+  // Preserve double-submit ergonomics, then require the shared value to be signed and session-bound.
+  return (
+    constantTimeEquals(headerToken, cookieToken) &&
+    (await isSignedCSRFTokenValidForRequest(request, cookieToken))
+  );
 }
 
 /**
  * Middleware to check CSRF tokens on mutating requests
  */
-export function csrfProtection(request: NextRequest): NextResponse | null {
+export async function csrfProtection(request: NextRequest): Promise<NextResponse | null> {
   // Skip CSRF check for safe methods
   const method = request.method.toUpperCase();
   if (SAFE_METHODS.has(method)) {
@@ -165,7 +286,7 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
   }
 
   // Verify CSRF token
-  if (!verifyCSRFToken(request)) {
+  if (!(await verifyCSRFToken(request))) {
     return NextResponse.json(
       {
         error: 'CSRF validation failed',
@@ -181,9 +302,13 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
 /**
  * Get CSRF token from request or generate a new one
  */
-export function getOrGenerateCSRFToken(request: NextRequest): string {
+export async function getOrGenerateCSRFToken(request: NextRequest): Promise<string> {
   const existingToken = request.cookies.get(CSRF_TOKEN_COOKIE)?.value;
-  return existingToken || generateCSRFToken();
+  if (existingToken && (await isSignedCSRFTokenValidForRequest(request, existingToken))) {
+    return existingToken;
+  }
+
+  return generateSignedCSRFToken(request);
 }
 
 /**
@@ -203,7 +328,7 @@ export function setCSRFTokenCookie(response: NextResponse, token: string): void 
  * API route helper to validate CSRF token
  */
 export async function requireValidCSRF(request: NextRequest): Promise<void> {
-  if (!verifyCSRFToken(request)) {
+  if (!(await verifyCSRFToken(request))) {
     throw new Error('CSRF token validation failed');
   }
 }

@@ -2,7 +2,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { nanoid } from 'nanoid';
 import { csrfProtection, getOrGenerateCSRFToken, setCSRFTokenCookie } from '@/lib/csrf';
 import { getArchivedApiPolicy, getArchivedPagePolicy } from '@/lib/launch/surface-policy';
-import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit/index';
+import {
+  checkRateLimit,
+  getRateLimitHeaders,
+  getRateLimitProfileForPathname,
+} from '@/lib/rate-limit/index';
 import { sendDebugIngest } from '@/lib/debug-ingest';
 
 const TRUE_ENV_VALUES = new Set(['1', 'true', 'yes', 'on']);
@@ -21,28 +25,32 @@ function shouldSendHstsHeader(): boolean {
   return process.env.VERCEL_ENV === 'production';
 }
 
-// Apply consistent security headers for both page and API responses.
-const applySecurityHeaders = (response: NextResponse, request: NextRequest) => {
-  const isDev = process.env.NODE_ENV !== 'production' && process.env.VERCEL_ENV !== 'production';
+function generateCspNonce(): string {
+  return btoa(crypto.randomUUID());
+}
+
+function buildContentSecurityPolicy(nonce?: string): string {
+  const isDev = process.env.NODE_ENV === 'development' && process.env.VERCEL_ENV !== 'production';
 
   // Note: Next dev uses eval-like codepaths (React Refresh / Webpack runtime). If CSP blocks
   // unsafe-eval in development, the app may never hydrate, breaking interactive flows.
   const scriptSrc = isDev
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:"
     : [
-        // TODO(security): Replace production 'unsafe-inline' with Next.js nonce/hash CSP and add
-        // a production app-shell smoke test that proves hydration still works without inline scripts.
-        "script-src 'self' 'unsafe-inline'",
+        "script-src 'self'",
+        nonce ? `'nonce-${nonce}'` : null,
+        nonce ? "'strict-dynamic'" : null,
         'https://client.crisp.chat',
-      ].join(' ');
+      ]
+        .filter(Boolean)
+        .join(' ');
 
   const connectSrc = isDev
     ? "connect-src 'self' https: wss: ws:"
     : "connect-src 'self' https: wss:";
 
-  const cspDirectives = [
+  return [
     "default-src 'self'",
-    // Allow inline boot scripts from Next.js; safer nonce/hashes could be added later.
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
@@ -54,8 +62,29 @@ const applySecurityHeaders = (response: NextResponse, request: NextRequest) => {
     "base-uri 'self'",
     "form-action 'self'",
   ].join('; ');
+}
 
-  response.headers.set('Content-Security-Policy', cspDirectives);
+function buildNonceRequestHeaders(request: NextRequest, nonce: string): Headers {
+  const requestHeaders = new Headers(request.headers);
+  const csp = buildContentSecurityPolicy(nonce);
+
+  requestHeaders.set('x-nonce', nonce);
+  requestHeaders.set('Content-Security-Policy', csp);
+
+  return requestHeaders;
+}
+
+function buildNextResponseForPage(request: NextRequest, nonce: string): NextResponse {
+  return NextResponse.next({
+    request: {
+      headers: buildNonceRequestHeaders(request, nonce),
+    },
+  });
+}
+
+// Apply consistent security headers for both page and API responses.
+const applySecurityHeaders = (response: NextResponse, request: NextRequest, nonce?: string) => {
+  response.headers.set('Content-Security-Policy', buildContentSecurityPolicy(nonce));
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -93,6 +122,56 @@ function buildFailClosedApiResponse(request: NextRequest, requestId: string) {
       requestId,
     },
     { status: 500 }
+  );
+  response.headers.set('x-request-id', requestId);
+  applySecurityHeaders(response, request);
+  return response;
+}
+
+function buildRateLimitUnavailableResponse(
+  request: NextRequest,
+  requestId: string,
+  rateLimitHeaders: Record<string, string>,
+  retryAfter: number
+) {
+  const response = NextResponse.json(
+    {
+      error: 'Service temporarily unavailable',
+      message: 'Request protection is temporarily unavailable. Please try again shortly.',
+      retryAfter,
+    },
+    {
+      status: 503,
+      headers: {
+        ...rateLimitHeaders,
+        'Retry-After': retryAfter.toString(),
+      },
+    }
+  );
+  response.headers.set('x-request-id', requestId);
+  applySecurityHeaders(response, request);
+  return response;
+}
+
+function buildRateLimitedResponse(
+  request: NextRequest,
+  requestId: string,
+  rateLimitHeaders: Record<string, string>,
+  retryAfter: number
+) {
+  const response = NextResponse.json(
+    {
+      error: 'Too many requests',
+      message: 'Please slow down and try again shortly.',
+      retryAfter,
+    },
+    {
+      status: 429,
+      headers: {
+        ...rateLimitHeaders,
+        'Retry-After': retryAfter.toString(),
+      },
+    }
   );
   response.headers.set('x-request-id', requestId);
   applySecurityHeaders(response, request);
@@ -202,6 +281,7 @@ export async function middleware(request: NextRequest) {
     pathname.match(
       /\.(ico|png|jpg|jpeg|gif|svg|css|js|webp|mp4|m4v|webm|mov|woff2?|ttf|otf|map|txt|xml|webmanifest)$/
     );
+  const pageNonce = !isApiRoute && !isStaticAsset ? generateCspNonce() : undefined;
 
   try {
     const isDev = process.env.NODE_ENV !== 'production';
@@ -226,41 +306,29 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Skip edge rate limiting if Vercel KV is not configured to avoid runtime errors.
-    const kvReady =
-      Boolean(process.env.KV_REST_API_URL) &&
-      (Boolean(process.env.KV_REST_API_TOKEN) || Boolean(process.env.KV_REST_API_READ_ONLY_TOKEN));
-
-    // Gentle edge rate limiting to slow down bursts without affecting normal users.
     let rateLimitHeaders: Record<string, string> | null = null;
-    if (!isStaticAsset && kvReady) {
+    if (!isStaticAsset) {
       try {
-        const rateLimitConfig = pathname.startsWith('/api')
-          ? { limit: 120, windowSeconds: 60, identifier: 'edge-api' }
-          : { limit: 240, windowSeconds: 60, identifier: 'edge-site' };
+        const rateLimitConfig = getRateLimitProfileForPathname(pathname, request.method);
 
-        const { allowed, result } = await checkRateLimit(request, rateLimitConfig);
-        rateLimitHeaders = getRateLimitHeaders(result);
+        if (rateLimitConfig) {
+          const { allowed, result } = await checkRateLimit(request, rateLimitConfig);
+          rateLimitHeaders = getRateLimitHeaders(result);
 
-        if (!allowed) {
-          const retryAfter = Math.max(1, Math.ceil((result.reset - Date.now()) / 1000));
-          const limited = NextResponse.json(
-            {
-              error: 'Too many requests',
-              message: 'Please slow down and try again shortly.',
-              retryAfter,
-            },
-            {
-              status: 429,
-              headers: {
-                ...rateLimitHeaders,
-                'Retry-After': retryAfter.toString(),
-              },
+          if (!allowed) {
+            const retryAfter = Math.max(1, Math.ceil((result.reset - Date.now()) / 1000));
+
+            if (result.unavailable) {
+              return buildRateLimitUnavailableResponse(
+                request,
+                requestId,
+                rateLimitHeaders,
+                retryAfter
+              );
             }
-          );
-          limited.headers.set('x-request-id', requestId);
-          applySecurityHeaders(limited, request);
-          return limited;
+
+            return buildRateLimitedResponse(request, requestId, rateLimitHeaders, retryAfter);
+          }
         }
       } catch (error) {
         if (isApiRoute) {
@@ -306,7 +374,7 @@ export async function middleware(request: NextRequest) {
         return response;
       }
 
-      const csrfError = csrfProtection(request);
+      const csrfError = await csrfProtection(request);
       if (csrfError) {
         csrfError.headers.set('x-request-id', requestId);
         attachRateLimitHeaders(csrfError);
@@ -324,7 +392,7 @@ export async function middleware(request: NextRequest) {
         return response;
       }
 
-      const csrfToken = getOrGenerateCSRFToken(request);
+      const csrfToken = await getOrGenerateCSRFToken(request);
       const response = NextResponse.next();
       response.headers.set('x-request-id', requestId);
       setCSRFTokenCookie(response, csrfToken);
@@ -363,12 +431,12 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    const csrfToken = getOrGenerateCSRFToken(request);
-    const response = NextResponse.next();
+    const csrfToken = await getOrGenerateCSRFToken(request);
+    const response = pageNonce ? buildNextResponseForPage(request, pageNonce) : NextResponse.next();
     response.headers.set('x-request-id', requestId);
     setCSRFTokenCookie(response, csrfToken);
     attachRateLimitHeaders(response);
-    applySecurityHeaders(response, request);
+    applySecurityHeaders(response, request, pageNonce);
     return response;
   } catch (error) {
     console.error('[middleware] unexpected error', error);
@@ -377,9 +445,9 @@ export async function middleware(request: NextRequest) {
       return buildFailClosedApiResponse(request, requestId);
     }
 
-    const response = NextResponse.next();
+    const response = pageNonce ? buildNextResponseForPage(request, pageNonce) : NextResponse.next();
     response.headers.set('x-request-id', requestId);
-    applySecurityHeaders(response, request);
+    applySecurityHeaders(response, request, pageNonce);
     return response;
   }
 }

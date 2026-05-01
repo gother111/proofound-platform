@@ -1,9 +1,19 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { generateCSRFToken, verifyCSRFToken, csrfProtection } from '../csrf';
+import {
+  csrfProtection,
+  generateCSRFToken,
+  generateSignedCSRFToken,
+  getOrGenerateCSRFToken,
+  verifyCSRFToken,
+} from '../csrf';
 
 describe('CSRF Protection', () => {
+  const sessionCookie = 'sb-localhost-auth-token=session-value';
+  const otherSessionCookie = 'sb-localhost-auth-token=other-session-value';
+
   beforeEach(() => {
+    process.env.CSRF_SECRET = 'csrf-signing-secret-value';
     delete process.env.INTERNAL_API_SECRET;
     delete process.env.CRON_SECRET;
     delete process.env.CRON_SECRET_PREVIEW;
@@ -24,35 +34,35 @@ describe('CSRF Protection', () => {
   });
 
   describe('verifyCSRFToken', () => {
-    it('should allow GET requests without token', () => {
+    it('should allow GET requests without token', async () => {
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'GET',
       });
-      expect(verifyCSRFToken(request)).toBe(true);
+      await expect(verifyCSRFToken(request)).resolves.toBe(true);
     });
 
-    it('should allow HEAD requests without token', () => {
+    it('should allow HEAD requests without token', async () => {
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'HEAD',
       });
-      expect(verifyCSRFToken(request)).toBe(true);
+      await expect(verifyCSRFToken(request)).resolves.toBe(true);
     });
 
-    it('should allow OPTIONS requests without token', () => {
+    it('should allow OPTIONS requests without token', async () => {
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'OPTIONS',
       });
-      expect(verifyCSRFToken(request)).toBe(true);
+      await expect(verifyCSRFToken(request)).resolves.toBe(true);
     });
 
-    it('should reject POST requests without token', () => {
+    it('should reject POST requests without token', async () => {
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'POST',
       });
-      expect(verifyCSRFToken(request)).toBe(false);
+      await expect(verifyCSRFToken(request)).resolves.toBe(false);
     });
 
-    it('should reject POST requests with only header token', () => {
+    it('should reject POST requests with only header token', async () => {
       const token = generateCSRFToken();
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'POST',
@@ -60,10 +70,10 @@ describe('CSRF Protection', () => {
           'x-csrf-token': token,
         },
       });
-      expect(verifyCSRFToken(request)).toBe(false);
+      await expect(verifyCSRFToken(request)).resolves.toBe(false);
     });
 
-    it('should reject POST requests with mismatched tokens', () => {
+    it('should reject POST requests with mismatched tokens', async () => {
       const token1 = generateCSRFToken();
       const token2 = generateCSRFToken();
       const request = new NextRequest('http://localhost:3000/api/test', {
@@ -73,11 +83,11 @@ describe('CSRF Protection', () => {
           Cookie: `csrf_token=${token2}`,
         },
       });
-      expect(verifyCSRFToken(request)).toBe(false);
+      await expect(verifyCSRFToken(request)).resolves.toBe(false);
     });
 
-    it('should accept POST requests with matching tokens', () => {
-      const token = generateCSRFToken();
+    it('should reject unsigned fixed tokens even when header and cookie match', async () => {
+      const token = 'fixed-token';
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'POST',
         headers: {
@@ -85,60 +95,181 @@ describe('CSRF Protection', () => {
           Cookie: `csrf_token=${token}`,
         },
       });
-      expect(verifyCSRFToken(request)).toBe(true);
+      await expect(verifyCSRFToken(request)).resolves.toBe(false);
     });
 
-    it('should accept PATCH requests with matching tokens', () => {
-      const token = generateCSRFToken();
+    it('should accept POST requests with matching signed tokens', async () => {
+      const token = await generateSignedCSRFToken(
+        new NextRequest('http://localhost:3000/api/test', {
+          headers: {
+            Cookie: sessionCookie,
+          },
+        })
+      );
+      const request = new NextRequest('http://localhost:3000/api/test', {
+        method: 'POST',
+        headers: {
+          'x-csrf-token': token,
+          Cookie: `csrf_token=${token}; ${sessionCookie}`,
+        },
+      });
+      await expect(verifyCSRFToken(request)).resolves.toBe(true);
+    });
+
+    it('should accept PATCH requests with matching signed tokens', async () => {
+      const token = await generateSignedCSRFToken(
+        new NextRequest('http://localhost:3000/api/test', {
+          headers: {
+            Cookie: sessionCookie,
+          },
+        })
+      );
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'PATCH',
         headers: {
           'x-csrf-token': token,
-          Cookie: `csrf_token=${token}`,
+          Cookie: `csrf_token=${token}; ${sessionCookie}`,
         },
       });
-      expect(verifyCSRFToken(request)).toBe(true);
+      await expect(verifyCSRFToken(request)).resolves.toBe(true);
     });
 
-    it('should accept DELETE requests with matching tokens', () => {
-      const token = generateCSRFToken();
+    it('should accept DELETE requests with matching signed tokens', async () => {
+      const token = await generateSignedCSRFToken(
+        new NextRequest('http://localhost:3000/api/test', {
+          headers: {
+            Cookie: sessionCookie,
+          },
+        })
+      );
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'DELETE',
         headers: {
           'x-csrf-token': token,
-          Cookie: `csrf_token=${token}`,
+          Cookie: `csrf_token=${token}; ${sessionCookie}`,
         },
       });
-      expect(verifyCSRFToken(request)).toBe(true);
+      await expect(verifyCSRFToken(request)).resolves.toBe(true);
+    });
+
+    it('should reject session-mismatched tokens', async () => {
+      const token = await generateSignedCSRFToken(
+        new NextRequest('http://localhost:3000/api/test', {
+          headers: {
+            Cookie: sessionCookie,
+          },
+        })
+      );
+      const request = new NextRequest('http://localhost:3000/api/test', {
+        method: 'POST',
+        headers: {
+          'x-csrf-token': token,
+          Cookie: `csrf_token=${token}; ${otherSessionCookie}`,
+        },
+      });
+
+      await expect(verifyCSRFToken(request)).resolves.toBe(false);
+    });
+
+    it('should reject replayed tokens from a previous auth session', async () => {
+      const firstSessionRequest = new NextRequest('http://localhost:3000/api/test', {
+        headers: {
+          Cookie: sessionCookie,
+        },
+      });
+      const replayedToken = await generateSignedCSRFToken(firstSessionRequest);
+      const secondSessionRequest = new NextRequest('http://localhost:3000/api/test', {
+        method: 'POST',
+        headers: {
+          'x-csrf-token': replayedToken,
+          Cookie: `csrf_token=${replayedToken}; ${otherSessionCookie}`,
+        },
+      });
+
+      await expect(verifyCSRFToken(secondSessionRequest)).resolves.toBe(false);
+    });
+
+    it('should allow same-session token reuse for double-submit ergonomics', async () => {
+      const token = await generateSignedCSRFToken(
+        new NextRequest('http://localhost:3000/api/test', {
+          headers: {
+            Cookie: sessionCookie,
+          },
+        })
+      );
+      const firstRequest = new NextRequest('http://localhost:3000/api/test', {
+        method: 'POST',
+        headers: {
+          'x-csrf-token': token,
+          Cookie: `csrf_token=${token}; ${sessionCookie}`,
+        },
+      });
+      const secondRequest = new NextRequest('http://localhost:3000/api/test', {
+        method: 'PATCH',
+        headers: {
+          'x-csrf-token': token,
+          Cookie: `csrf_token=${token}; ${sessionCookie}`,
+        },
+      });
+
+      await expect(verifyCSRFToken(firstRequest)).resolves.toBe(true);
+      await expect(verifyCSRFToken(secondRequest)).resolves.toBe(true);
+    });
+
+    it('should rotate stale tokens when auth cookies change', async () => {
+      const staleToken = await generateSignedCSRFToken(
+        new NextRequest('http://localhost:3000/api/test', {
+          headers: {
+            Cookie: sessionCookie,
+          },
+        })
+      );
+      const requestAfterAuthChange = new NextRequest('http://localhost:3000/api/test', {
+        headers: {
+          Cookie: `csrf_token=${staleToken}; ${otherSessionCookie}`,
+        },
+      });
+
+      const rotatedToken = await getOrGenerateCSRFToken(requestAfterAuthChange);
+
+      expect(rotatedToken).not.toBe(staleToken);
+      const verifiedRequest = new NextRequest('http://localhost:3000/api/test', {
+        method: 'POST',
+        headers: {
+          'x-csrf-token': rotatedToken,
+          Cookie: `csrf_token=${rotatedToken}; ${otherSessionCookie}`,
+        },
+      });
+      await expect(verifyCSRFToken(verifiedRequest)).resolves.toBe(true);
     });
   });
 
   describe('csrfProtection', () => {
-    it('should return null for GET requests', () => {
+    it('should return null for GET requests', async () => {
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'GET',
       });
-      expect(csrfProtection(request)).toBeNull();
+      await expect(csrfProtection(request)).resolves.toBeNull();
     });
 
-    it('should return null for webhook endpoints', () => {
+    it('should return null for webhook endpoints', async () => {
       const request = new NextRequest('http://localhost:3000/api/webhook/test', {
         method: 'POST',
       });
-      expect(csrfProtection(request)).toBeNull();
+      await expect(csrfProtection(request)).resolves.toBeNull();
     });
 
-    it('should require a verified internal secret for cron endpoints', () => {
+    it('should require a verified internal secret for cron endpoints', async () => {
       const request = new NextRequest('http://localhost:3000/api/cron/test', {
         method: 'POST',
       });
-      const response = csrfProtection(request);
+      const response = await csrfProtection(request);
 
       expect(response).not.toBeNull();
       expect(response?.status).toBe(403);
     });
 
-    it('should return null for verified internal cron endpoints without cookie auth', () => {
+    it('should return null for verified internal cron endpoints without cookie auth', async () => {
       process.env.CRON_SECRET = 'server-only-cron-secret';
       const request = new NextRequest('http://localhost:3000/api/cron/test', {
         method: 'POST',
@@ -146,10 +277,10 @@ describe('CSRF Protection', () => {
           authorization: 'Bearer server-only-cron-secret',
         },
       });
-      expect(csrfProtection(request)).toBeNull();
+      await expect(csrfProtection(request)).resolves.toBeNull();
     });
 
-    it('should require CSRF when a cron request also has a browser auth cookie', () => {
+    it('should require CSRF when a cron request also has a browser auth cookie', async () => {
       process.env.CRON_SECRET = 'server-only-cron-secret';
       const request = new NextRequest('http://localhost:3000/api/cron/test', {
         method: 'POST',
@@ -158,23 +289,23 @@ describe('CSRF Protection', () => {
           Cookie: 'sb-localhost-auth-token=session-value',
         },
       });
-      const response = csrfProtection(request);
+      const response = await csrfProtection(request);
 
       expect(response).not.toBeNull();
       expect(response?.status).toBe(403);
     });
 
-    it('should return null for pure bearer-token mobile API requests', () => {
+    it('should return null for pure bearer-token mobile API requests', async () => {
       const request = new NextRequest('http://localhost:3000/api/mobile/v1/bootstrap', {
         method: 'POST',
         headers: {
           authorization: 'Bearer mobile-token',
         },
       });
-      expect(csrfProtection(request)).toBeNull();
+      await expect(csrfProtection(request)).resolves.toBeNull();
     });
 
-    it('should require CSRF for bearer API requests that also include browser auth cookies', () => {
+    it('should require CSRF for bearer API requests that also include browser auth cookies', async () => {
       const request = new NextRequest('http://localhost:3000/api/mobile/v1/bootstrap', {
         method: 'POST',
         headers: {
@@ -182,44 +313,50 @@ describe('CSRF Protection', () => {
           Cookie: 'sb-localhost-auth-token=session-value',
         },
       });
-      const response = csrfProtection(request);
+      const response = await csrfProtection(request);
 
       expect(response).not.toBeNull();
       expect(response?.status).toBe(403);
     });
 
-    it('should reject cookie-auth assignment mutations without CSRF', () => {
+    it('should reject cookie-auth assignment mutations without CSRF', async () => {
       const request = new NextRequest('http://localhost:3000/api/assignments', {
         method: 'POST',
         headers: {
           Cookie: 'sb-localhost-auth-token=session-value',
         },
       });
-      const response = csrfProtection(request);
+      const response = await csrfProtection(request);
 
       expect(response).not.toBeNull();
       expect(response?.status).toBe(403);
     });
 
-    it('should return 403 response for POST without token', () => {
+    it('should return 403 response for POST without token', async () => {
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'POST',
       });
-      const response = csrfProtection(request);
+      const response = await csrfProtection(request);
       expect(response).not.toBeNull();
       expect(response?.status).toBe(403);
     });
 
-    it('should return null for POST with valid token', () => {
-      const token = generateCSRFToken();
+    it('should return null for POST with valid signed token', async () => {
+      const token = await generateSignedCSRFToken(
+        new NextRequest('http://localhost:3000/api/test', {
+          headers: {
+            Cookie: sessionCookie,
+          },
+        })
+      );
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'POST',
         headers: {
           'x-csrf-token': token,
-          Cookie: `csrf_token=${token}`,
+          Cookie: `csrf_token=${token}; ${sessionCookie}`,
         },
       });
-      expect(csrfProtection(request)).toBeNull();
+      await expect(csrfProtection(request)).resolves.toBeNull();
     });
   });
 });

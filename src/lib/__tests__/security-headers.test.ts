@@ -12,6 +12,25 @@ function cspDirective(csp: string, directive: string): string {
   );
 }
 
+function cspTokens(csp: string, directive: string): string[] {
+  return cspDirective(csp, directive).split(/\s+/).filter(Boolean);
+}
+
+function expectProductionScriptCsp(csp: string | null) {
+  const scriptSrc = cspTokens(csp ?? '', 'script-src');
+
+  expect(csp).toBeTruthy();
+  expect(scriptSrc[0]).toBe('script-src');
+  expect(scriptSrc).toContain("'self'");
+  expect(scriptSrc).toContain("'strict-dynamic'");
+  expect(scriptSrc.some((token) => /^'nonce-[A-Za-z0-9+/]+=*'$/.test(token))).toBe(true);
+  expect(scriptSrc).not.toContain("'unsafe-inline'");
+  expect(scriptSrc).not.toContain('https:');
+  expect(scriptSrc.filter((token) => token.startsWith('https://'))).toEqual([
+    'https://client.crisp.chat',
+  ]);
+}
+
 async function getMiddlewareResponse(url: string) {
   return middleware(new NextRequest(url, { method: 'GET' }));
 }
@@ -52,15 +71,14 @@ describe('security headers middleware', () => {
     expect(response.headers.get('Strict-Transport-Security')).toBeNull();
   });
 
-  it('sets a production CSP without broad script, default, or frame origins', async () => {
+  it('sets a nonce-based production CSP without inline or broad script origins', async () => {
     vi.stubEnv('VERCEL_ENV', 'production');
 
     const response = await getMiddlewareResponse('https://proofound.io/app/i/home');
     const csp = response.headers.get('Content-Security-Policy');
 
-    expect(csp).toBeTruthy();
+    expectProductionScriptCsp(csp);
     expect(cspDirective(csp ?? '', 'default-src')).toBe("default-src 'self'");
-    expect(cspDirective(csp ?? '', 'script-src').split(/\s+/)).not.toContain('https:');
     expect(cspDirective(csp ?? '', 'frame-src')).toBe("frame-src 'self'");
     expect(cspDirective(csp ?? '', 'frame-ancestors')).toBe("frame-ancestors 'none'");
     expect(csp).not.toContain('frame-ancestors *');
@@ -78,24 +96,43 @@ describe('security headers middleware', () => {
     expect(response.headers.get('X-Frame-Options')).toBe('DENY');
   });
 
-  it('keeps baseline headers on key MVP routes', async () => {
+  it('keeps nonce-based CSP headers on key MVP page routes', async () => {
     const routes = [
+      'https://proofound.io/',
       'https://proofound.io/app/i/home',
+      'https://proofound.io/app/i/messages',
+      'https://proofound.io/app/o/acme/assignments/assignment-1/review',
       'https://proofound.io/app/o/acme/matching',
       'https://proofound.io/portfolio/alex',
       'https://proofound.io/verify/token-1',
-      'https://proofound.io/api/health',
     ];
 
     for (const route of routes) {
+      vi.stubEnv('VERCEL_ENV', 'production');
       const response = await getMiddlewareResponse(route);
 
       expect(response.status).toBe(200);
-      expect(response.headers.get('Content-Security-Policy')).toBeTruthy();
+      expectProductionScriptCsp(response.headers.get('Content-Security-Policy'));
       expect(response.headers.get('X-Frame-Options')).toBe('DENY');
       expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
       expect(response.headers.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
       expect(response.headers.get('Permissions-Policy')).toContain('camera=()');
     }
+  });
+
+  it('keeps baseline headers on API routes without allowing inline scripts', async () => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+
+    const response = await getMiddlewareResponse('https://proofound.io/api/health');
+    const csp = response.headers.get('Content-Security-Policy');
+    const scriptSrc = cspTokens(csp ?? '', 'script-src');
+
+    expect(response.status).toBe(200);
+    expect(csp).toBeTruthy();
+    expect(scriptSrc).toContain("'self'");
+    expect(scriptSrc).not.toContain("'unsafe-inline'");
+    expect(scriptSrc).not.toContain('https:');
+    expect(response.headers.get('X-Frame-Options')).toBe('DENY');
+    expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
   });
 });

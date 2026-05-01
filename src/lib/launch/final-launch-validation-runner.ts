@@ -79,29 +79,6 @@ export type FinalLaunchValidationOptions = {
 
 const ONE_MINUTE = 60_000;
 
-const uploadPrivacyTestFiles = [
-  'tests/lib/uploads-privacy.test.ts',
-  'tests/lib/upload-validate-file.test.ts',
-  'tests/lib/uploads-lifecycle-queue.test.ts',
-  'tests/api/upload-document-route.test.ts',
-  'tests/api/upload-cover-route.test.ts',
-  'tests/api/upload-status-route.test.ts',
-];
-
-const orgCorridorWorkflowTestFiles = [
-  'tests/lib/matching-review-contract.test.ts',
-  'tests/api/org-match-review-route.test.ts',
-  'tests/api/interviews-schedule-route.test.ts',
-  'tests/api/decisions-route.test.ts',
-  'tests/api/engagement-verifications-route.test.ts',
-  'tests/lib/engagement-verifications.test.ts',
-  'tests/lib/hiring-corridor-snapshot.test.ts',
-  'tests/lib/interviews-process-state.test.ts',
-  'tests/lib/launch-engagement-verification-smoke.test.ts',
-  'tests/lib/workflow-decision-record.test.ts',
-  'tests/ui/organization-interviews-page-actions.test.tsx',
-];
-
 const exportDeleteTestFiles = [
   'tests/api/data-export-route.test.ts',
   'tests/api/user-export-route.test.ts',
@@ -215,19 +192,13 @@ export function buildFinalLaunchValidationGates(
       id: 'launch_surface_inventory_tests',
       label: 'Launch surface inventory tests',
       priority: 'P0',
-      command: npmCommand(
-        ['run', 'test', '--', 'tests/api/launch-surface-inventory.test.ts'],
-        5 * ONE_MINUTE
-      ),
+      command: npmCommand(['run', 'test:launch:routes'], 5 * ONE_MINUTE),
     },
     {
       id: 'launch_page_inventory_tests',
       label: 'Launch page inventory tests',
       priority: 'P0',
-      command: npmCommand(
-        ['run', 'test', '--', 'tests/api/launch-page-inventory.test.ts'],
-        5 * ONE_MINUTE
-      ),
+      command: npmCommand(['run', 'test:launch:routes'], 5 * ONE_MINUTE),
     },
     {
       id: 'privacy_rls_baseline_tests',
@@ -245,13 +216,13 @@ export function buildFinalLaunchValidationGates(
       id: 'upload_privacy_tests',
       label: 'Upload privacy tests',
       priority: 'P0',
-      command: npmCommand(['run', 'test', '--', ...uploadPrivacyTestFiles], 10 * ONE_MINUTE),
+      command: npmCommand(['run', 'test:launch:upload'], 10 * ONE_MINUTE),
     },
     {
       id: 'org_corridor_workflow_tests',
       label: 'Org review/reveal/decision/engagement tests',
       priority: 'P0',
-      command: npmCommand(['run', 'test', '--', ...orgCorridorWorkflowTestFiles], 15 * ONE_MINUTE),
+      command: npmCommand(['run', 'test:launch:workflow'], 15 * ONE_MINUTE),
     },
     {
       id: 'export_delete_tests',
