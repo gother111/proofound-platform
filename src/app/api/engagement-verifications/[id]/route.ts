@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { db } from '@/db';
 import { engagementVerifications } from '@/db/schema';
+import { withWorkflowMutationIdempotency } from '@/lib/api/workflow-idempotency';
 import {
   confirmEngagementVerification,
   normalizeEngagementType,
@@ -81,28 +82,41 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
-    const updated = await confirmEngagementVerification({
-      engagementVerificationId: record.id,
-      actorType,
-      actorId: auth.user.id,
-      engagementType: parsed.data.engagementType,
-      uploadedFileId: parsed.data.uploadedFileId,
-      evidenceNote: parsed.data.evidenceNote,
-    });
+    return await withWorkflowMutationIdempotency(
+      request,
+      {
+        userId: auth.user.id,
+        orgId: record.orgId,
+        action: `engagement_verification.confirm.${actorType}`,
+        resourceType: 'engagement_verification',
+        resourceId: record.id,
+      },
+      parsed.data,
+      async () => {
+        const updated = await confirmEngagementVerification({
+          engagementVerificationId: record.id,
+          actorType,
+          actorId: auth.user.id,
+          engagementType: parsed.data.engagementType,
+          uploadedFileId: parsed.data.uploadedFileId,
+          evidenceNote: parsed.data.evidenceNote,
+        });
 
-    log.info('engagement_verification.updated', {
-      engagementVerificationId: record.id,
-      decisionId: record.decisionId,
-      actorType,
-      actorId: auth.user.id,
-      status: updated.status,
-      uploadedEvidencePresent: updated.uploadedEvidencePresent,
-    });
+        log.info('engagement_verification.updated', {
+          engagementVerificationId: record.id,
+          decisionId: record.decisionId,
+          actorType,
+          actorId: auth.user.id,
+          status: updated.status,
+          uploadedEvidencePresent: updated.uploadedEvidencePresent,
+        });
 
-    return NextResponse.json({
-      success: true,
-      engagementVerification: updated,
-    });
+        return NextResponse.json({
+          success: true,
+          engagementVerification: updated,
+        });
+      }
+    );
   } catch (error) {
     log.error('engagement_verification.patch.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',

@@ -42,6 +42,8 @@ export const EMAIL_CONFIG = {
   apiKey: process.env.RESEND_API_KEY,
 };
 
+const EMAIL_PROVIDER_REQUIRED_ENV = ['RESEND_API_KEY'] as const;
+
 export const EMAIL_TEMPLATES = {
   ASSIGNMENT_INVITATION: 'assignment-invitation',
   INTERVIEW_SCHEDULED: 'interview-scheduled',
@@ -55,7 +57,7 @@ export const EMAIL_TEMPLATES = {
  * Check if email service is configured
  */
 export function isEmailConfigured(): boolean {
-  return !!EMAIL_CONFIG.apiKey;
+  return !!process.env.RESEND_API_KEY?.trim();
 }
 
 /**
@@ -66,6 +68,18 @@ export function getEmailStatus() {
     configured: isEmailConfigured(),
     from: EMAIL_CONFIG.from,
     replyTo: EMAIL_CONFIG.replyTo,
-    hasApiKey: !!EMAIL_CONFIG.apiKey,
+    hasApiKey: isEmailConfigured(),
+  };
+}
+
+export function getEmailProviderDependencyStatus() {
+  const missing = EMAIL_PROVIDER_REQUIRED_ENV.filter((envName) => !process.env[envName]?.trim());
+
+  return {
+    ok: missing.length === 0,
+    required: true,
+    configured: missing.length === 0,
+    missing: [...missing],
+    provider: 'resend' as const,
   };
 }

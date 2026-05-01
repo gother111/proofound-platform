@@ -7,6 +7,13 @@ const CSRF_FAILURE_PATTERNS = [
   'invalid or missing csrf token',
   'csrf',
 ];
+const WORKFLOW_MUTATION_PATHS = [
+  /^\/api\/org\/[^/]+\/matches\/[^/]+\/review$/,
+  /^\/api\/conversations\/[^/]+\/reveal$/,
+  /^\/api\/interviews\/(?:schedule|edit|cancel|complete|no-show)$/,
+  /^\/api\/decisions$/,
+  /^\/api\/engagement-verifications\/[^/]+$/,
+];
 
 let cachedTokenByOrigin = new Map<string, string>();
 let pendingTokenByOrigin = new Map<string, Promise<string>>();
@@ -39,6 +46,66 @@ function toOriginCacheKey(input: RequestInfo | URL): string {
 function resetCsrfCacheForOrigin(originKey: string): void {
   cachedTokenByOrigin.delete(originKey);
   pendingTokenByOrigin.delete(originKey);
+}
+
+function getPathname(input: RequestInfo | URL): string | null {
+  const fallbackOrigin =
+    typeof window !== 'undefined' && window.location?.origin ? window.location.origin : '';
+
+  try {
+    if (input instanceof URL) {
+      return input.pathname;
+    }
+
+    if (typeof input === 'string') {
+      return new URL(input, fallbackOrigin || 'http://localhost').pathname;
+    }
+
+    if (typeof Request !== 'undefined' && input instanceof Request) {
+      return new URL(input.url, fallbackOrigin || 'http://localhost').pathname;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function shouldAttachWorkflowIdempotencyKey(input: RequestInfo | URL, method: string): boolean {
+  if (SAFE_METHODS.has(method)) {
+    return false;
+  }
+
+  const pathname = getPathname(input);
+  return Boolean(pathname && WORKFLOW_MUTATION_PATHS.some((pattern) => pattern.test(pathname)));
+}
+
+function createWorkflowIdempotencyKey(): string {
+  const random =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `wf-${random}`;
+}
+
+function withWorkflowIdempotencyHeader(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  method: string
+) {
+  if (!shouldAttachWorkflowIdempotencyKey(input, method)) {
+    return init;
+  }
+
+  const headers = new Headers(init.headers || {});
+  if (!headers.has('Idempotency-Key') && !headers.has('X-Idempotency-Key')) {
+    headers.set('Idempotency-Key', createWorkflowIdempotencyKey());
+  }
+
+  return {
+    ...init,
+    headers,
+  };
 }
 
 async function fetchCsrfToken(originKey: string, forceRefresh = false): Promise<string> {
@@ -151,29 +218,30 @@ async function fetchWithCsrfToken(
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit) {
   const method = (init?.method || 'GET').toUpperCase();
   const needsCsrf = !SAFE_METHODS.has(method);
+  const requestInit = withWorkflowIdempotencyHeader(input, init ?? {}, method);
 
   if (needsCsrf) {
     const originKey = toOriginCacheKey(input);
     const token = await fetchCsrfToken(originKey);
 
-    let response = await fetchWithCsrfToken(input, init, method, token);
+    let response = await fetchWithCsrfToken(input, requestInit, method, token);
     if (!(await isCsrfFailureResponse(response))) {
       return response;
     }
 
-    if (!isRetriableBody(init?.body)) {
+    if (!isRetriableBody(requestInit.body)) {
       return response;
     }
 
     const refreshedToken = await fetchCsrfToken(originKey, true);
-    response = await fetchWithCsrfToken(input, init, method, refreshedToken);
+    response = await fetchWithCsrfToken(input, requestInit, method, refreshedToken);
     return response;
   }
 
   return fetch(input, {
-    ...init,
+    ...requestInit,
     method,
-    credentials: init?.credentials ?? 'include',
+    credentials: requestInit.credentials ?? 'include',
   });
 }
 

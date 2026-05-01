@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   isActiveOrgMember: vi.fn(),
   findEngagementVerification: vi.fn(),
   confirmEngagementVerification: vi.fn(),
+  withWorkflowMutationIdempotency: vi.fn(),
   logInfo: vi.fn(),
   logError: vi.fn(),
 }));
@@ -51,6 +52,10 @@ vi.mock('@/lib/engagement-verifications/service', () => ({
   },
 }));
 
+vi.mock('@/lib/api/workflow-idempotency', () => ({
+  withWorkflowMutationIdempotency: mocks.withWorkflowMutationIdempotency,
+}));
+
 vi.mock('@/lib/log', () => ({
   log: {
     info: mocks.logInfo,
@@ -90,6 +95,14 @@ describe('PATCH /api/engagement-verifications/[id]', () => {
         allowedActions: ['verified'],
       },
     });
+    mocks.withWorkflowMutationIdempotency.mockImplementation(
+      async (
+        _request: unknown,
+        _scope: unknown,
+        _payload: unknown,
+        handler: () => Promise<Response>
+      ) => handler()
+    );
   });
 
   it('allows the matched candidate to confirm engagement', async () => {
@@ -163,6 +176,45 @@ describe('PATCH /api/engagement-verifications/[id]', () => {
     expect(response.status).toBe(400);
     expect(body.error).toBe('Unsupported engagement type');
     expect(mocks.findEngagementVerification).not.toHaveBeenCalled();
+    expect(mocks.confirmEngagementVerification).not.toHaveBeenCalled();
+  });
+
+  it('replays duplicate engagement confirmations without recording another transition', async () => {
+    mocks.withWorkflowMutationIdempotency.mockResolvedValue(
+      Response.json(
+        {
+          success: true,
+          engagementVerification: {
+            id: 'engagement-1',
+            status: 'pending_organization_confirmation',
+          },
+        },
+        {
+          headers: {
+            'Idempotency-Replayed': 'true',
+          },
+        }
+      )
+    );
+
+    const response = await PATCH(
+      new NextRequest('https://example.com/api/engagement-verifications/engagement-1', {
+        method: 'PATCH',
+        headers: { 'Idempotency-Key': 'wf-engagement-duplicate-1' },
+        body: JSON.stringify({
+          confirm: true,
+          engagementType: 'contract',
+        }),
+      }),
+      {
+        params: Promise.resolve({ id: 'engagement-1' }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Idempotency-Replayed')).toBe('true');
+    expect(body.engagementVerification.id).toBe('engagement-1');
     expect(mocks.confirmEngagementVerification).not.toHaveBeenCalled();
   });
 });

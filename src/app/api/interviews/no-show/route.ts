@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { createClient } from '@/lib/supabase/server';
 import { canManageInterviewAsOrgAdmin } from '@/lib/interviews/messaging';
+import { withWorkflowMutationIdempotency } from '@/lib/api/workflow-idempotency';
 import { buildWorkflowView, recordInterviewTransition } from '@/lib/workflow/service';
 
 const NoShowSchema = z.object({
@@ -40,36 +41,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (context.status !== 'scheduled') {
-      return NextResponse.json(
-        { error: 'Only scheduled interviews can be marked as no-show' },
-        { status: 400 }
-      );
-    }
+    return await withWorkflowMutationIdempotency(
+      request,
+      {
+        userId: user.id,
+        orgId: context.orgId,
+        action: 'interview.no_show',
+        resourceType: 'interview',
+        resourceId: body.interviewId,
+      },
+      body,
+      async () => {
+        if (context.status !== 'scheduled') {
+          return NextResponse.json(
+            { error: 'Only scheduled interviews can be marked as no-show' },
+            { status: 400 }
+          );
+        }
 
-    const updatedInterview = await recordInterviewTransition({
-      interviewId: body.interviewId,
-      toState: 'no_show',
-      actorType: 'organization_member',
-      actorId: user.id,
-      trigger: 'org_marked_no_show',
-      reasonCode: body.reason?.trim() || 'candidate_no_show',
-    });
+        const updatedInterview = await recordInterviewTransition({
+          interviewId: body.interviewId,
+          toState: 'no_show',
+          actorType: 'organization_member',
+          actorId: user.id,
+          trigger: 'org_marked_no_show',
+          reasonCode: body.reason?.trim() || 'candidate_no_show',
+        });
 
-    return NextResponse.json({
-      success: true,
-      workflow: buildWorkflowView({
-        machine: 'interview',
-        state: updatedInterview.status,
-        reasonCode: updatedInterview.cancelReason,
-        timestamps: {
-          completedAt: updatedInterview.completedAt?.toISOString(),
-          cancelledAt: updatedInterview.cancelledAt?.toISOString(),
-          noShowAt: updatedInterview.noShowAt?.toISOString(),
-          updatedAt: updatedInterview.updatedAt?.toISOString(),
-        },
-      }),
-    });
+        return NextResponse.json({
+          success: true,
+          workflow: buildWorkflowView({
+            machine: 'interview',
+            state: updatedInterview.status,
+            reasonCode: updatedInterview.cancelReason,
+            timestamps: {
+              completedAt: updatedInterview.completedAt?.toISOString(),
+              cancelledAt: updatedInterview.cancelledAt?.toISOString(),
+              noShowAt: updatedInterview.noShowAt?.toISOString(),
+              updatedAt: updatedInterview.updatedAt?.toISOString(),
+            },
+          }),
+        });
+      }
+    );
   } catch (error: any) {
     if (error.name === 'ZodError') {
       return NextResponse.json(

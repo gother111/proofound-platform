@@ -21,6 +21,10 @@ import LinkedInVerificationPendingReview from '../../emails/LinkedInVerification
 import { sendDebugIngest } from '@/lib/debug-ingest';
 import { EMAIL_CONFIG } from './email/config';
 import {
+  recordEmailDeliveryFailure,
+  type TransactionalEmailWorkflow,
+} from './email/delivery-observability';
+import {
   applyWorkflowEmailPrivacy,
   buildRevealConversationUrl,
   type WorkflowEmailPrivacyOptions,
@@ -29,6 +33,15 @@ import {
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
 const fromEmail = EMAIL_CONFIG.from;
+
+function recordLegacyEmailFailure(workflow: TransactionalEmailWorkflow, error: unknown) {
+  recordEmailDeliveryFailure({
+    workflow,
+    error,
+    provider: 'resend',
+    reason: 'exception',
+  });
+}
 
 export async function sendVerificationEmail(email: string, token: string, persona?: string) {
   const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?token=${token}`;
@@ -56,7 +69,7 @@ export async function sendVerificationEmail(email: string, token: string, person
       react: template,
     });
   } catch (error) {
-    console.error('Failed to send verification email:', error);
+    recordLegacyEmailFailure('verification', error);
     throw new Error('Failed to send verification email');
   }
 }
@@ -72,7 +85,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
       react: ResetPassword({ resetUrl }),
     });
   } catch (error) {
-    console.error('Failed to send password reset email:', error);
+    recordLegacyEmailFailure('password_reset', error);
     throw new Error('Failed to send password reset email');
   }
 }
@@ -95,7 +108,7 @@ export async function sendOrgInviteEmail(
       react: OrgInvite({ orgName, role, inviteUrl }),
     });
   } catch (error) {
-    console.error('Failed to send org invite email:', error);
+    recordLegacyEmailFailure('organization_invite', error);
     throw new Error('Failed to send org invite email');
   }
 }
@@ -118,7 +131,7 @@ export async function sendCandidateInviteEmail(
       }),
     });
   } catch (error) {
-    console.error('Failed to send candidate invite email:', error);
+    recordLegacyEmailFailure('candidate_invite', error);
     throw new Error('Failed to send candidate invite email');
   }
 }
@@ -138,7 +151,7 @@ export async function sendDeletionScheduledEmail(
       react: DeletionScheduled({ scheduledDate, cancellationUrl }),
     });
   } catch (error) {
-    console.error('Failed to send deletion scheduled email:', error);
+    recordLegacyEmailFailure('deletion', error);
     throw new Error('Failed to send deletion scheduled email');
   }
 }
@@ -159,7 +172,7 @@ export async function sendDeletionReminderEmail(
       react: DeletionReminder({ scheduledDate, daysRemaining, cancellationUrl }),
     });
   } catch (error) {
-    console.error('Failed to send deletion reminder email:', error);
+    recordLegacyEmailFailure('deletion', error);
     throw new Error('Failed to send deletion reminder email');
   }
 }
@@ -173,7 +186,7 @@ export async function sendDeletionCompleteEmail(email: string, userId: string): 
       react: DeletionComplete({ userId }),
     });
   } catch (error) {
-    console.error('Failed to send deletion complete email:', error);
+    recordLegacyEmailFailure('deletion', error);
     throw new Error('Failed to send deletion complete email');
   }
 }
@@ -201,7 +214,7 @@ export async function sendWorkEmailVerification(
       throw new Error(errorMessage);
     }
   } catch (error) {
-    console.error('Failed to send work email verification:', error);
+    recordLegacyEmailFailure('verification', error);
     throw new Error('Failed to send work email verification');
   }
 }
@@ -232,7 +245,7 @@ export async function sendSkillVerificationRequest(
       }),
     });
   } catch (error) {
-    console.error('Failed to send skill verification request:', error);
+    recordLegacyEmailFailure('verification', error);
     throw new Error('Failed to send skill verification request');
   }
 }
@@ -267,7 +280,7 @@ export async function sendMatchNotification(
       }),
     });
   } catch (error) {
-    console.error('Failed to send match notification:', error);
+    recordLegacyEmailFailure('match', error);
     throw new Error('Failed to send match notification');
   }
 }
@@ -290,6 +303,7 @@ export async function sendContractSignedEmail(
   privacy?: WorkflowEmailPrivacyOptions
 ): Promise<void> {
   const viewContractUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/contracts/${contractData.contractId}`;
+  const maskedStage = privacy?.stage === 'masked';
   const emailPrivacy = applyWorkflowEmailPrivacy(
     {
       subject: 'Contract Successfully Signed - Proofound',
@@ -312,7 +326,7 @@ export async function sendContractSignedEmail(
       react: ContractSigned({
         recipientName,
         role,
-        roleTitle: contractData.roleTitle,
+        roleTitle: maskedStage ? undefined : contractData.roleTitle,
         organizationName: emailPrivacy.organizationName ?? undefined,
         candidateName: emailPrivacy.candidateName ?? undefined,
         contractType: contractData.contractType,
@@ -324,7 +338,7 @@ export async function sendContractSignedEmail(
       }),
     });
   } catch (error) {
-    console.error('Failed to send contract signed email:', error);
+    recordLegacyEmailFailure('contract', error);
     throw new Error('Failed to send contract signed email');
   }
 }
@@ -347,6 +361,7 @@ export async function sendInterviewScheduledEmail(
   privacy?: WorkflowEmailPrivacyOptions
 ): Promise<void> {
   const viewInterviewUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/interviews/${interviewData.interviewId}`;
+  const maskedStage = privacy?.stage === 'masked';
   const emailPrivacy = applyWorkflowEmailPrivacy(
     {
       subject: 'Interview Confirmed - Proofound',
@@ -369,7 +384,7 @@ export async function sendInterviewScheduledEmail(
       react: InterviewScheduled({
         recipientName,
         role,
-        roleTitle: interviewData.roleTitle,
+        roleTitle: maskedStage ? undefined : interviewData.roleTitle,
         organizationName: emailPrivacy.organizationName ?? undefined,
         candidateName: emailPrivacy.candidateName ?? undefined,
         scheduledAt: interviewData.scheduledAt,
@@ -381,7 +396,7 @@ export async function sendInterviewScheduledEmail(
       }),
     });
   } catch (error) {
-    console.error('Failed to send interview scheduled email:', error);
+    recordLegacyEmailFailure('interview', error);
     throw new Error('Failed to send interview scheduled email');
   }
 }
@@ -438,7 +453,7 @@ export async function sendIdentityRevealedEmail(
       }),
     });
   } catch (error) {
-    console.error('Failed to send identity revealed email:', error);
+    recordLegacyEmailFailure('reveal_approved', error);
     throw new Error('Failed to send identity revealed email');
   }
 }
@@ -478,7 +493,7 @@ export async function sendFeedbackRequestEmail(params: {
       react: FeedbackRequest({ direction, feedbackUrl, expiresAt, interviewTime }),
     });
   } catch (error) {
-    console.error('Failed to send feedback request email', error);
+    recordLegacyEmailFailure('feedback', error);
     throw new Error('Failed to send feedback request email');
   }
 }
@@ -503,7 +518,7 @@ export async function sendVerificationApprovedEmail(
       }),
     });
   } catch (error) {
-    console.error('Failed to send verification approved email:', error);
+    recordLegacyEmailFailure('verification', error);
     throw new Error('Failed to send verification approved email');
   }
 }
@@ -546,9 +561,13 @@ export async function sendLinkedInVerificationPendingReviewEmail(params: {
   const recipients = resolveLinkedInVerificationAdminRecipients();
 
   if (recipients.length === 0) {
-    console.warn(
-      'Skipping LinkedIn verification pending-review notification: no admin recipients configured'
-    );
+    recordEmailDeliveryFailure({
+      workflow: 'admin_verification',
+      error: new Error('LinkedIn verification admin recipients are not configured'),
+      provider: 'resend',
+      recipientCount: 0,
+      reason: 'missing_recipient',
+    });
     return;
   }
 
@@ -571,7 +590,7 @@ export async function sendLinkedInVerificationPendingReviewEmail(params: {
       }),
     });
   } catch (error) {
-    console.error('Failed to send LinkedIn pending review notification email:', error);
+    recordLegacyEmailFailure('admin_verification', error);
     throw new Error('Failed to send LinkedIn pending review notification email');
   }
 }
@@ -597,7 +616,7 @@ export async function sendVerificationRejectedEmail(
       }),
     });
   } catch (error) {
-    console.error('Failed to send verification rejected email:', error);
+    recordLegacyEmailFailure('verification', error);
     throw new Error('Failed to send verification rejected email');
   }
 }

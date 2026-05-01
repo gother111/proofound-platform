@@ -9,6 +9,7 @@ type EffectiveStateOptions = {
   redactMode?: boolean | null;
   hasLinkOnlyContent?: boolean;
   hasRevealGatedContent?: boolean;
+  hasPrivateContent?: boolean;
 };
 
 export const INDEX_VISIBLE_LEVELS = new Set(['public', 'public_indexable']);
@@ -44,6 +45,7 @@ export function deriveEffectivePublicPortfolioState({
   redactMode = false,
   hasLinkOnlyContent = false,
   hasRevealGatedContent = false,
+  hasPrivateContent = false,
 }: EffectiveStateOptions): PublicPortfolioState {
   const requested = resolveRequestedPublicPortfolioState(requestedState);
 
@@ -59,7 +61,13 @@ export function deriveEffectivePublicPortfolioState({
     return 'public_noindex';
   }
 
-  if (!searchIndexingEnabled || redactMode || hasLinkOnlyContent || hasRevealGatedContent) {
+  if (
+    !searchIndexingEnabled ||
+    redactMode ||
+    hasLinkOnlyContent ||
+    hasRevealGatedContent ||
+    hasPrivateContent
+  ) {
     return 'public_noindex';
   }
 

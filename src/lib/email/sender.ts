@@ -6,6 +6,10 @@
 
 import { Resend } from 'resend';
 import { EMAIL_CONFIG, isEmailConfigured } from './config';
+import {
+  recordEmailDeliveryFailure,
+  type TransactionalEmailWorkflow,
+} from './delivery-observability';
 
 // Initialize Resend client
 const resend = EMAIL_CONFIG.apiKey ? new Resend(EMAIL_CONFIG.apiKey) : null;
@@ -18,6 +22,7 @@ export interface SendEmailParams {
   replyTo?: string;
   cc?: string[];
   bcc?: string[];
+  workflow?: TransactionalEmailWorkflow;
 }
 
 /**
@@ -28,9 +33,13 @@ export async function sendEmail(
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   // Check if email is configured
   if (!isEmailConfigured() || !resend) {
-    console.warn('[Email] Email service not configured. Set RESEND_API_KEY environment variable.');
-    console.warn('[Email] Would have sent email to:', params.to);
-    console.warn('[Email] Subject:', params.subject);
+    recordEmailDeliveryFailure({
+      workflow: params.workflow ?? 'unknown',
+      error: new Error('Email service not configured'),
+      provider: 'resend',
+      recipientCount: Array.isArray(params.to) ? params.to.length : 1,
+      reason: 'missing_provider_config',
+    });
 
     // In development, log the email instead of sending
     if (process.env.NODE_ENV === 'development') {
@@ -53,14 +62,25 @@ export async function sendEmail(
     });
 
     if (result.error) {
-      console.error('[Email] Failed to send email:', result.error);
+      recordEmailDeliveryFailure({
+        workflow: params.workflow ?? 'unknown',
+        error: result.error,
+        provider: 'resend',
+        recipientCount: Array.isArray(params.to) ? params.to.length : 1,
+        reason: 'provider_error',
+      });
       return { success: false, error: result.error.message };
     }
 
-    console.log('[Email] Email sent successfully:', result.data?.id);
     return { success: true, id: result.data?.id };
   } catch (error) {
-    console.error('[Email] Error sending email:', error);
+    recordEmailDeliveryFailure({
+      workflow: params.workflow ?? 'unknown',
+      error,
+      provider: 'resend',
+      recipientCount: Array.isArray(params.to) ? params.to.length : 1,
+      reason: 'exception',
+    });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -75,7 +95,13 @@ export async function sendBatchEmails(
   emails: SendEmailParams[]
 ): Promise<{ success: boolean; results: any[] }> {
   if (!isEmailConfigured() || !resend) {
-    console.warn('[Email] Email service not configured. Batch send skipped.');
+    recordEmailDeliveryFailure({
+      workflow: 'batch',
+      error: new Error('Email service not configured'),
+      provider: 'resend',
+      recipientCount: emails.length,
+      reason: 'missing_provider_config',
+    });
     return { success: false, results: [] };
   }
 
@@ -85,8 +111,6 @@ export async function sendBatchEmails(
     const successful = results.filter((r) => r.status === 'fulfilled').length;
     const failed = results.filter((r) => r.status === 'rejected').length;
 
-    console.log(`[Email] Batch send complete: ${successful} successful, ${failed} failed`);
-
     return {
       success: failed === 0,
       results: results.map((r) =>
@@ -94,7 +118,13 @@ export async function sendBatchEmails(
       ),
     };
   } catch (error) {
-    console.error('[Email] Error sending batch emails:', error);
+    recordEmailDeliveryFailure({
+      workflow: 'batch',
+      error,
+      provider: 'resend',
+      recipientCount: emails.length,
+      reason: 'exception',
+    });
     return { success: false, results: [] };
   }
 }

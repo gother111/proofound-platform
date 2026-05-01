@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   getInterviewAccessContext: vi.fn(),
   buildWorkflowView: vi.fn(),
   recordDecisionTransition: vi.fn(),
+  withWorkflowMutationIdempotency: vi.fn(),
   logInfo: vi.fn(),
   logWarn: vi.fn(),
   logError: vi.fn(),
@@ -27,6 +28,10 @@ vi.mock('@/lib/interviews/messaging', () => ({
 vi.mock('@/lib/workflow/service', () => ({
   buildWorkflowView: mocks.buildWorkflowView,
   recordDecisionTransition: mocks.recordDecisionTransition,
+}));
+
+vi.mock('@/lib/api/workflow-idempotency', () => ({
+  withWorkflowMutationIdempotency: mocks.withWorkflowMutationIdempotency,
 }));
 
 vi.mock('@/lib/log', () => ({
@@ -95,6 +100,14 @@ describe('POST /api/decisions', () => {
         createdAt: '2026-03-12T10:00:00.000Z',
       },
     });
+    mocks.withWorkflowMutationIdempotency.mockImplementation(
+      async (
+        _request: unknown,
+        _scope: unknown,
+        _payload: unknown,
+        handler: () => Promise<Response>
+      ) => handler()
+    );
   });
 
   it('allows org owners to record final decisions', async () => {
@@ -257,6 +270,68 @@ describe('POST /api/decisions', () => {
         }),
       })
     );
+    expect(mocks.recordDecisionTransition).not.toHaveBeenCalled();
+  });
+
+  it('replays duplicate decision requests without recording another transition', async () => {
+    mocks.isActiveOrgMember.mockResolvedValue(true);
+    mocks.withWorkflowMutationIdempotency.mockResolvedValue(
+      Response.json(
+        {
+          success: true,
+          decision: {
+            id: 'decision-1',
+            interviewId: 'interview-1',
+            decision: 'hire',
+            workflow: { state: 'hire' },
+          },
+          engagementVerification: { id: 'engagement-1' },
+        },
+        {
+          headers: {
+            'Idempotency-Replayed': 'true',
+          },
+        }
+      )
+    );
+
+    const response = await POST(
+      buildRequest({
+        interviewId: 'interview-1',
+        decision: 'hire',
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Idempotency-Replayed')).toBe('true');
+    expect(body.decision.id).toBe('decision-1');
+    expect(mocks.recordDecisionTransition).not.toHaveBeenCalled();
+  });
+
+  it('rejects same-key decision replay with a changed body before mutation', async () => {
+    mocks.isActiveOrgMember.mockResolvedValue(true);
+    mocks.withWorkflowMutationIdempotency.mockResolvedValue(
+      Response.json(
+        {
+          error: 'Idempotency-Key replay used a different payload',
+          code: 'IDEMPOTENCY_REPLAY_MISMATCH',
+        },
+        { status: 409 }
+      )
+    );
+
+    const response = await POST(
+      buildRequest({
+        interviewId: 'interview-1',
+        decision: 'reject',
+        feedback: 'Changed payload',
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.code).toBe('IDEMPOTENCY_REPLAY_MISMATCH');
     expect(mocks.recordDecisionTransition).not.toHaveBeenCalled();
   });
 });

@@ -125,6 +125,7 @@ type PublicProofOverview = {
   publicSkillIds: string[];
   hasLinkOnlyContent: boolean;
   hasRevealGatedContent: boolean;
+  hasPrivateContent: boolean;
 };
 
 export type PublicIndividualPortfolioProjection = {
@@ -371,8 +372,8 @@ function resolvePublicProofBadge(input: {
 }
 
 function resolvePublicEvidenceTitle(input: { title: string; artifactDisplayName?: string | null }) {
-  const safeDisplayName = input.artifactDisplayName?.trim() || null;
-  const title = input.title.trim();
+  const safeDisplayName = sanitizePublicEvidenceLabel(input.artifactDisplayName) || null;
+  const title = sanitizePublicEvidenceLabel(input.title) || '';
 
   if (!safeDisplayName) {
     return title;
@@ -387,6 +388,40 @@ function resolvePublicEvidenceTitle(input: { title: string; artifactDisplayName?
   }
 
   return title;
+}
+
+function fallbackPublicEvidenceLabel(value: string) {
+  if (/\.pdf\b/i.test(value)) {
+    return 'Uploaded PDF document';
+  }
+
+  if (/\.(png|jpe?g|webp)\b/i.test(value)) {
+    return 'Uploaded image';
+  }
+
+  if (/\.(docx?|txt|md)\b/i.test(value)) {
+    return 'Uploaded document';
+  }
+
+  return 'Uploaded document';
+}
+
+function sanitizePublicEvidenceLabel(value: string | null | undefined) {
+  const label = value?.trim() ?? '';
+  if (!label) {
+    return '';
+  }
+
+  if (
+    /[\\/]/.test(label) ||
+    /^https?:\/\//i.test(label) ||
+    /\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/i.test(label) ||
+    /\b\S+\.(pdf|docx?|txt|md|png|jpe?g|webp|csv|xlsx?)\b/i.test(label)
+  ) {
+    return fallbackPublicEvidenceLabel(label);
+  }
+
+  return label;
 }
 
 function resolvePublicPortfolioName(
@@ -559,6 +594,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
 
   let hasLinkOnlyContent = false;
   let hasRevealGatedContent = false;
+  let hasPrivateContent = false;
 
   for (const aggregate of aggregates) {
     if (aggregate.pack.packKind !== 'verification_bundle') {
@@ -581,6 +617,12 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
       }
       if (item.effectiveVisibility === 'matched_org' || item.artifact.revealGate !== 'none') {
         hasRevealGatedContent = true;
+      }
+      if (
+        item.effectiveVisibility === 'owner_only' ||
+        item.effectiveVisibility === 'internal_only'
+      ) {
+        hasPrivateContent = true;
       }
     }
 
@@ -618,7 +660,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
           title: item.title,
           artifactDisplayName: item.artifactDisplayName ?? null,
         }),
-        artifactDisplayName: item.artifactDisplayName ?? null,
+        artifactDisplayName: sanitizePublicEvidenceLabel(item.artifactDisplayName) || null,
         href: resolveSafeEvidenceUrl({ sourceUrl: item.sourceUrl }),
         artifactKind: item.artifactKind ?? null,
         issuedAt: item.issuedAt ?? null,
@@ -657,6 +699,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
     publicSkillIds: [...publicSkillIds],
     hasLinkOnlyContent,
     hasRevealGatedContent,
+    hasPrivateContent,
   };
 }
 
@@ -875,6 +918,7 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
     redactMode: Boolean(profile.redact_mode),
     hasLinkOnlyContent: proofOverview.hasLinkOnlyContent,
     hasRevealGatedContent: proofOverview.hasRevealGatedContent,
+    hasPrivateContent: proofOverview.hasPrivateContent,
   });
 
   const verifiedSkillIds = new Set(
@@ -926,7 +970,7 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
     featuredProofs: proofOverview.featuredProofs,
     visibility,
     individual: {
-      work_email: profile.work_email,
+      work_email: visibility.contact && visibility.workEmail ? profile.work_email : null,
     },
     signals: exportData.signals,
     verificationSummary,

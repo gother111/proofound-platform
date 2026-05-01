@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { getRows } from '@/lib/db/rows';
+import { withWorkflowMutationIdempotency } from '@/lib/api/workflow-idempotency';
 import { isActiveOrgMember } from '@/lib/api/auth';
 import {
   InterviewPlatformSchema,
@@ -368,448 +369,465 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const corridorSource = await getHiringCorridorRecordForMatch(data.matchId);
-    const corridor = corridorSource
-      ? buildHiringCorridorSnapshot({
-          source: corridorSource,
-          viewerUserId: user.id,
-          perspective: 'organization',
-        })
-      : null;
-
-    const canScheduleFromCorridor =
-      corridor &&
-      (corridor.nextAction.id === 'schedule_interview' ||
-        corridor.nextAction.id === 'advance_to_next_interview');
-    const allowCompletedInterviewReplacement =
-      corridor?.nextAction.id === 'advance_to_next_interview';
-
-    if (!canScheduleFromCorridor) {
-      return NextResponse.json(
-        {
-          error: 'Interview scheduling is not available from the current corridor stage',
-          code: 'INTERVIEW_HANDOFF_NOT_READY',
-          corridor,
-          nextAction:
-            corridor?.nextAction ??
-            ({
-              id: 'request_intro',
-              label: 'Request intro',
-              description: 'The corridor must reach reveal approval before interview scheduling.',
-            } as const),
-        },
-        { status: 409 }
-      );
-    }
-
-    // 2. Check if a non-cancelled interview already exists for this match.
-    const duplicateCheckStartedAt = Date.now();
-    const { data: interviewsForMatch, error: interviewsForMatchError } = await supabase
-      .from('interviews')
-      .select('id, status')
-      .eq('match_id', data.matchId)
-      .limit(10);
-
-    let hasBlockingInterview = false;
-
-    if (interviewsForMatchError) {
-      if (!isMissingColumnError(interviewsForMatchError, 'status')) {
-        throw interviewsForMatchError;
-      }
-
-      // Legacy fallback when status is not present: preserve existing behavior.
-      const { data: legacyExistingInterview, error: legacyExistingInterviewError } = await supabase
-        .from('interviews')
-        .select('id')
-        .eq('match_id', data.matchId)
-        .maybeSingle();
-
-      if (legacyExistingInterviewError) {
-        throw legacyExistingInterviewError;
-      }
-
-      hasBlockingInterview = Boolean(legacyExistingInterview);
-    } else {
-      hasBlockingInterview = (interviewsForMatch ?? []).some(
-        (interview: { status?: string | null }) =>
-          interview.status !== 'cancelled' &&
-          interview.status !== 'no_show' &&
-          !(allowCompletedInterviewReplacement && interview.status === 'completed')
-      );
-    }
-
-    if (hasBlockingInterview) {
-      recordStepDuration('duplicate_check', duplicateCheckStartedAt);
-      return NextResponse.json(
-        { error: 'Interview already exists for this match' },
-        { status: 400 }
-      );
-    }
-    recordStepDuration('duplicate_check', duplicateCheckStartedAt);
-
-    // 3. Validate scheduling window by active policy preset.
-    const scheduledDate = new Date(data.scheduledAt);
-    const now = new Date();
-    const maxScheduleDate = new Date(
-      now.getTime() + activePolicy.scheduleWithinDays * 24 * 60 * 60 * 1000
-    );
-
-    if (scheduledDate < now || scheduledDate > maxScheduleDate) {
-      return NextResponse.json(
-        { error: `Interview must be scheduled within ${activePolicy.scheduleWithinDays} days` },
-        { status: 400 }
-      );
-    }
-
-    if (durationMinutes > activePolicy.maxDurationMinutes) {
-      return NextResponse.json(
-        {
-          error: `Interview duration cannot exceed ${activePolicy.maxDurationMinutes} minutes for ${data.policyPreset} policy`,
-        },
-        { status: 400 }
-      );
-    }
-
-    if (normalizedPlatform === 'zoom') {
-      return NextResponse.json(
-        {
-          error:
-            'Zoom is outside the launch interview surface. Use Google Meet or a manual meeting link.',
-          code: 'NON_LAUNCH_PROVIDER',
-          message:
-            'Zoom is archived for launch. Please select Google Meet or schedule with a manual meeting link.',
-        },
-        { status: 400 }
-      );
-    }
-
-    // 4. Handle meeting link based on platform.
-    let meetingLink = '';
-    let meetingId = '';
-
-    if (normalizedPlatform === 'manual') {
-      if (!data.manualMeetingLink) {
-        return NextResponse.json(
-          { error: 'Meeting link is required when using manual platform' },
-          { status: 400 }
-        );
-      }
-      meetingLink = data.manualMeetingLink;
-      meetingId = `manual-${Date.now()}`;
-    } else {
-      const provider: 'google_meet' = 'google_meet';
-      scheduleFailureContext.provider = provider;
-      scheduleFailureContext.step = 'integration_lookup';
-
-      const { data: videoIntegration, error: integrationError } = await supabase
-        .from('user_video_integrations')
-        .select('access_token, refresh_token, token_expiry')
-        .eq('user_id', user.id)
-        .eq('provider', provider)
-        .single();
-
-      if (integrationError || !videoIntegration) {
-        return NextResponse.json(
-          {
-            error:
-              'Google Meet not connected. Please connect your account first, or use "manual" to provide your own meeting link.',
-          },
-          { status: 400 }
-        );
-      }
-
-      let accessToken = videoIntegration.access_token;
-      if (new Date(videoIntegration.token_expiry) < new Date()) {
-        scheduleFailureContext.step = 'token_refresh';
-        try {
-          const { refreshGoogleToken } = await import('@/lib/integrations/google-meet');
-          const newTokens = await refreshGoogleToken(videoIntegration.refresh_token);
-          accessToken = newTokens.access_token;
-
-          await supabase
-            .from('user_video_integrations')
-            .update({
-              access_token: newTokens.access_token,
-              token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
+    return await withWorkflowMutationIdempotency(
+      request,
+      {
+        userId: user.id,
+        orgId: match.org_id,
+        action: 'interview.schedule',
+        resourceType: 'match',
+        resourceId: data.matchId,
+      },
+      data,
+      async () => {
+        const corridorSource = await getHiringCorridorRecordForMatch(data.matchId);
+        const corridor = corridorSource
+          ? buildHiringCorridorSnapshot({
+              source: corridorSource,
+              viewerUserId: user.id,
+              perspective: 'organization',
             })
-            .eq('user_id', user.id)
-            .eq('provider', 'google_meet');
-        } catch (refreshError) {
-          const knownFailureResponse = await handleKnownGoogleFailure({
-            supabase,
-            userId: user.id,
-            matchId: data.matchId,
-            step: 'token_refresh',
-            error: refreshError,
-          });
+          : null;
 
-          if (knownFailureResponse) {
-            return knownFailureResponse;
+        const canScheduleFromCorridor =
+          corridor &&
+          (corridor.nextAction.id === 'schedule_interview' ||
+            corridor.nextAction.id === 'advance_to_next_interview');
+        const allowCompletedInterviewReplacement =
+          corridor?.nextAction.id === 'advance_to_next_interview';
+
+        if (!canScheduleFromCorridor) {
+          return NextResponse.json(
+            {
+              error: 'Interview scheduling is not available from the current corridor stage',
+              code: 'INTERVIEW_HANDOFF_NOT_READY',
+              corridor,
+              nextAction:
+                corridor?.nextAction ??
+                ({
+                  id: 'request_intro',
+                  label: 'Request intro',
+                  description:
+                    'The corridor must reach reveal approval before interview scheduling.',
+                } as const),
+            },
+            { status: 409 }
+          );
+        }
+
+        // 2. Check if a non-cancelled interview already exists for this match.
+        const duplicateCheckStartedAt = Date.now();
+        const { data: interviewsForMatch, error: interviewsForMatchError } = await supabase
+          .from('interviews')
+          .select('id, status')
+          .eq('match_id', data.matchId)
+          .limit(10);
+
+        let hasBlockingInterview = false;
+
+        if (interviewsForMatchError) {
+          if (!isMissingColumnError(interviewsForMatchError, 'status')) {
+            throw interviewsForMatchError;
           }
 
-          throw refreshError;
-        }
-      }
+          // Legacy fallback when status is not present: preserve existing behavior.
+          const { data: legacyExistingInterview, error: legacyExistingInterviewError } =
+            await supabase
+              .from('interviews')
+              .select('id')
+              .eq('match_id', data.matchId)
+              .maybeSingle();
 
-      const { createGoogleMeet } = await import('@/lib/integrations/google-meet');
+          if (legacyExistingInterviewError) {
+            throw legacyExistingInterviewError;
+          }
 
-      const participantSet = new Set<string>([
-        match.profile_id,
-        user.id,
-        ...data.participantUserIds,
-      ]);
-      const participantEmails: string[] = [];
-
-      for (const participantId of participantSet) {
-        const { data: profile } = await supabase.auth.admin.getUserById(participantId);
-        if (profile.user?.email) {
-          participantEmails.push(profile.user.email);
-        }
-      }
-
-      scheduleFailureContext.step = 'meeting_create';
-      const meetingCreateStartedAt = Date.now();
-      let meeting: Awaited<ReturnType<typeof createGoogleMeet>>;
-      try {
-        meeting = await createGoogleMeet(accessToken, {
-          summary: `Interview - ${match.role || 'Proofound Match'}`,
-          start_time: data.scheduledAt,
-          duration: durationMinutes,
-          timezone: data.timezone,
-          description: 'Interview session via Proofound',
-          attendees: participantEmails,
-        });
-      } catch (meetingError) {
-        const knownFailureResponse = await handleKnownGoogleFailure({
-          supabase,
-          userId: user.id,
-          matchId: data.matchId,
-          step: 'meeting_create',
-          error: meetingError,
-        });
-
-        if (knownFailureResponse) {
-          return knownFailureResponse;
+          hasBlockingInterview = Boolean(legacyExistingInterview);
+        } else {
+          hasBlockingInterview = (interviewsForMatch ?? []).some(
+            (interview: { status?: string | null }) =>
+              interview.status !== 'cancelled' &&
+              interview.status !== 'no_show' &&
+              !(allowCompletedInterviewReplacement && interview.status === 'completed')
+          );
         }
 
-        throw meetingError;
-      }
-      recordStepDuration('meeting_create', meetingCreateStartedAt);
-
-      meetingLink = meeting.hangoutLink;
-      meetingId = meeting.id;
-    }
-
-    // 5. Create interview record.
-    const persistedPlatform = normalizedPlatform;
-
-    const participantUserIds = Array.from(
-      new Set<string>([match.profile_id, user.id, ...data.participantUserIds])
-    );
-
-    const baseInterviewInsert = {
-      match_id: data.matchId,
-      scheduled_at: data.scheduledAt,
-      platform: persistedPlatform,
-      meeting_id: meetingId,
-      timezone: data.timezone,
-      status: 'scheduled',
-      host_user_id: user.id,
-      participant_user_ids: participantUserIds,
-    };
-
-    const recoverySourceInterviewId =
-      (interviewsForMatch ?? [])
-        .filter(
-          (interview: { status?: string | null; id: string }) => interview.status === 'no_show'
-        )
-        .map((interview: { id: string }) => interview.id)
-        .at(-1) ?? null;
-
-    let interview: any = null;
-
-    const insertPayload: Record<string, unknown> = {
-      ...baseInterviewInsert,
-      duration_minutes: durationMinutes,
-      meeting_link: meetingLink,
-      manual_meeting_provider:
-        normalizedPlatform === 'manual' ? (data.manualMeetingProvider ?? null) : null,
-    };
-    scheduleFailureContext.step = 'interview_insert';
-    const interviewInsertStartedAt = Date.now();
-
-    let lastInsertError: any = null;
-
-    for (let attempt = 0; attempt < 8; attempt += 1) {
-      const insertResult = await supabase
-        .from('interviews')
-        .insert(insertPayload)
-        .select()
-        .single();
-
-      if (!insertResult.error) {
-        interview = insertResult.data;
-        break;
-      }
-
-      lastInsertError = insertResult.error;
-
-      const missingColumn = extractMissingColumn(insertResult.error);
-      if (!missingColumn) {
-        const isLegacyPlatformEnumError =
-          insertResult.error?.code === '22P02' &&
-          typeof insertResult.error?.message === 'string' &&
-          insertResult.error.message.toLowerCase().includes('platform');
-
-        if (isLegacyPlatformEnumError && insertPayload.platform === 'manual') {
-          insertPayload.platform = 'zoom';
-          continue;
+        if (hasBlockingInterview) {
+          recordStepDuration('duplicate_check', duplicateCheckStartedAt);
+          return NextResponse.json(
+            { error: 'Interview already exists for this match' },
+            { status: 400 }
+          );
         }
+        recordStepDuration('duplicate_check', duplicateCheckStartedAt);
 
-        throw insertResult.error;
-      }
-
-      switch (missingColumn) {
-        case 'duration_minutes':
-          insertPayload.duration = insertPayload.duration_minutes ?? 30;
-          delete insertPayload.duration_minutes;
-          continue;
-        case 'duration':
-          delete insertPayload.duration;
-          continue;
-        case 'meeting_link':
-          insertPayload.meeting_url = insertPayload.meeting_link ?? meetingLink;
-          delete insertPayload.meeting_link;
-          continue;
-        case 'meeting_url':
-          delete insertPayload.meeting_url;
-          continue;
-        case 'timezone':
-        case 'host_user_id':
-        case 'participant_user_ids':
-        case 'manual_meeting_provider':
-          delete insertPayload[missingColumn];
-          continue;
-        default:
-          throw insertResult.error;
-      }
-    }
-
-    if (!interview) {
-      throw lastInsertError ?? new Error('Failed to insert interview after compatibility retries');
-    }
-    recordStepDuration('interview_insert', interviewInsertStartedAt);
-
-    const workflowRegistrationStartedAt = Date.now();
-    void registerScheduledInterviewWorkflow({
-      interviewId: interview.id,
-      matchId: data.matchId,
-      actorType: 'organization_member',
-      actorId: user.id,
-      metadata: {
-        platform: persistedPlatform,
-        scheduledAt: data.scheduledAt,
-        timezone: data.timezone,
-        recoveryFromInterviewId: recoverySourceInterviewId,
-      },
-    })
-      .then(() => {
-        log.info('interview.schedule.workflow_registered', {
-          interviewId: interview.id,
-          matchId: data.matchId,
-          durationMs: Date.now() - workflowRegistrationStartedAt,
-        });
-      })
-      .catch((workflowError) => {
-        log.error('interview.schedule.workflow_register_failed', {
-          interviewId: interview.id,
-          matchId: data.matchId,
-          durationMs: Date.now() - workflowRegistrationStartedAt,
-          error: workflowError instanceof Error ? workflowError.message : 'Unknown error',
-        });
-      });
-
-    const analyticsEmitStartedAt = Date.now();
-    void (async () => {
-      try {
-        const { emitInterviewScheduledAsync } = await import('@/lib/analytics/events');
-
-        const matchDate = new Date(match.created_at);
-        const interviewDate = new Date(data.scheduledAt);
-        const daysSinceMatch = Math.floor(
-          (interviewDate.getTime() - matchDate.getTime()) / (1000 * 60 * 60 * 24)
+        // 3. Validate scheduling window by active policy preset.
+        const scheduledDate = new Date(data.scheduledAt);
+        const now = new Date();
+        const maxScheduleDate = new Date(
+          now.getTime() + activePolicy.scheduleWithinDays * 24 * 60 * 60 * 1000
         );
 
-        await emitInterviewScheduledAsync(user.id, interview.id, {
-          interview_id: interview.id,
-          assignment_id: match.assignment_id,
+        if (scheduledDate < now || scheduledDate > maxScheduleDate) {
+          return NextResponse.json(
+            { error: `Interview must be scheduled within ${activePolicy.scheduleWithinDays} days` },
+            { status: 400 }
+          );
+        }
+
+        if (durationMinutes > activePolicy.maxDurationMinutes) {
+          return NextResponse.json(
+            {
+              error: `Interview duration cannot exceed ${activePolicy.maxDurationMinutes} minutes for ${data.policyPreset} policy`,
+            },
+            { status: 400 }
+          );
+        }
+
+        if (normalizedPlatform === 'zoom') {
+          return NextResponse.json(
+            {
+              error:
+                'Zoom is outside the launch interview surface. Use Google Meet or a manual meeting link.',
+              code: 'NON_LAUNCH_PROVIDER',
+              message:
+                'Zoom is archived for launch. Please select Google Meet or schedule with a manual meeting link.',
+            },
+            { status: 400 }
+          );
+        }
+
+        // 4. Handle meeting link based on platform.
+        let meetingLink = '';
+        let meetingId = '';
+
+        if (normalizedPlatform === 'manual') {
+          if (!data.manualMeetingLink) {
+            return NextResponse.json(
+              { error: 'Meeting link is required when using manual platform' },
+              { status: 400 }
+            );
+          }
+          meetingLink = data.manualMeetingLink;
+          meetingId = `manual-${Date.now()}`;
+        } else {
+          const provider: 'google_meet' = 'google_meet';
+          scheduleFailureContext.provider = provider;
+          scheduleFailureContext.step = 'integration_lookup';
+
+          const { data: videoIntegration, error: integrationError } = await supabase
+            .from('user_video_integrations')
+            .select('access_token, refresh_token, token_expiry')
+            .eq('user_id', user.id)
+            .eq('provider', provider)
+            .single();
+
+          if (integrationError || !videoIntegration) {
+            return NextResponse.json(
+              {
+                error:
+                  'Google Meet not connected. Please connect your account first, or use "manual" to provide your own meeting link.',
+              },
+              { status: 400 }
+            );
+          }
+
+          let accessToken = videoIntegration.access_token;
+          if (new Date(videoIntegration.token_expiry) < new Date()) {
+            scheduleFailureContext.step = 'token_refresh';
+            try {
+              const { refreshGoogleToken } = await import('@/lib/integrations/google-meet');
+              const newTokens = await refreshGoogleToken(videoIntegration.refresh_token);
+              accessToken = newTokens.access_token;
+
+              await supabase
+                .from('user_video_integrations')
+                .update({
+                  access_token: newTokens.access_token,
+                  token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
+                })
+                .eq('user_id', user.id)
+                .eq('provider', 'google_meet');
+            } catch (refreshError) {
+              const knownFailureResponse = await handleKnownGoogleFailure({
+                supabase,
+                userId: user.id,
+                matchId: data.matchId,
+                step: 'token_refresh',
+                error: refreshError,
+              });
+
+              if (knownFailureResponse) {
+                return knownFailureResponse;
+              }
+
+              throw refreshError;
+            }
+          }
+
+          const { createGoogleMeet } = await import('@/lib/integrations/google-meet');
+
+          const participantSet = new Set<string>([
+            match.profile_id,
+            user.id,
+            ...data.participantUserIds,
+          ]);
+          const participantEmails: string[] = [];
+
+          for (const participantId of participantSet) {
+            const { data: profile } = await supabase.auth.admin.getUserById(participantId);
+            if (profile.user?.email) {
+              participantEmails.push(profile.user.email);
+            }
+          }
+
+          scheduleFailureContext.step = 'meeting_create';
+          const meetingCreateStartedAt = Date.now();
+          let meeting: Awaited<ReturnType<typeof createGoogleMeet>>;
+          try {
+            meeting = await createGoogleMeet(accessToken, {
+              summary: `Interview - ${match.role || 'Proofound Match'}`,
+              start_time: data.scheduledAt,
+              duration: durationMinutes,
+              timezone: data.timezone,
+              description: 'Interview session via Proofound',
+              attendees: participantEmails,
+            });
+          } catch (meetingError) {
+            const knownFailureResponse = await handleKnownGoogleFailure({
+              supabase,
+              userId: user.id,
+              matchId: data.matchId,
+              step: 'meeting_create',
+              error: meetingError,
+            });
+
+            if (knownFailureResponse) {
+              return knownFailureResponse;
+            }
+
+            throw meetingError;
+          }
+          recordStepDuration('meeting_create', meetingCreateStartedAt);
+
+          meetingLink = meeting.hangoutLink;
+          meetingId = meeting.id;
+        }
+
+        // 5. Create interview record.
+        const persistedPlatform = normalizedPlatform;
+
+        const participantUserIds = Array.from(
+          new Set<string>([match.profile_id, user.id, ...data.participantUserIds])
+        );
+
+        const baseInterviewInsert = {
           match_id: data.matchId,
-          duration_minutes: durationMinutes,
-          policy_preset: data.policyPreset,
+          scheduled_at: data.scheduledAt,
           platform: persistedPlatform,
-          days_since_match: daysSinceMatch,
+          meeting_id: meetingId,
+          timezone: data.timezone,
+          status: 'scheduled',
+          host_user_id: user.id,
+          participant_user_ids: participantUserIds,
+        };
+
+        const recoverySourceInterviewId =
+          (interviewsForMatch ?? [])
+            .filter(
+              (interview: { status?: string | null; id: string }) => interview.status === 'no_show'
+            )
+            .map((interview: { id: string }) => interview.id)
+            .at(-1) ?? null;
+
+        let interview: any = null;
+
+        const insertPayload: Record<string, unknown> = {
+          ...baseInterviewInsert,
+          duration_minutes: durationMinutes,
+          meeting_link: meetingLink,
+          manual_meeting_provider:
+            normalizedPlatform === 'manual' ? (data.manualMeetingProvider ?? null) : null,
+        };
+        scheduleFailureContext.step = 'interview_insert';
+        const interviewInsertStartedAt = Date.now();
+
+        let lastInsertError: any = null;
+
+        for (let attempt = 0; attempt < 8; attempt += 1) {
+          const insertResult = await supabase
+            .from('interviews')
+            .insert(insertPayload)
+            .select()
+            .single();
+
+          if (!insertResult.error) {
+            interview = insertResult.data;
+            break;
+          }
+
+          lastInsertError = insertResult.error;
+
+          const missingColumn = extractMissingColumn(insertResult.error);
+          if (!missingColumn) {
+            const isLegacyPlatformEnumError =
+              insertResult.error?.code === '22P02' &&
+              typeof insertResult.error?.message === 'string' &&
+              insertResult.error.message.toLowerCase().includes('platform');
+
+            if (isLegacyPlatformEnumError && insertPayload.platform === 'manual') {
+              insertPayload.platform = 'zoom';
+              continue;
+            }
+
+            throw insertResult.error;
+          }
+
+          switch (missingColumn) {
+            case 'duration_minutes':
+              insertPayload.duration = insertPayload.duration_minutes ?? 30;
+              delete insertPayload.duration_minutes;
+              continue;
+            case 'duration':
+              delete insertPayload.duration;
+              continue;
+            case 'meeting_link':
+              insertPayload.meeting_url = insertPayload.meeting_link ?? meetingLink;
+              delete insertPayload.meeting_link;
+              continue;
+            case 'meeting_url':
+              delete insertPayload.meeting_url;
+              continue;
+            case 'timezone':
+            case 'host_user_id':
+            case 'participant_user_ids':
+            case 'manual_meeting_provider':
+              delete insertPayload[missingColumn];
+              continue;
+            default:
+              throw insertResult.error;
+          }
+        }
+
+        if (!interview) {
+          throw (
+            lastInsertError ?? new Error('Failed to insert interview after compatibility retries')
+          );
+        }
+        recordStepDuration('interview_insert', interviewInsertStartedAt);
+
+        const workflowRegistrationStartedAt = Date.now();
+        void registerScheduledInterviewWorkflow({
+          interviewId: interview.id,
+          matchId: data.matchId,
+          actorType: 'organization_member',
+          actorId: user.id,
+          metadata: {
+            platform: persistedPlatform,
+            scheduledAt: data.scheduledAt,
+            timezone: data.timezone,
+            recoveryFromInterviewId: recoverySourceInterviewId,
+          },
+        })
+          .then(() => {
+            log.info('interview.schedule.workflow_registered', {
+              interviewId: interview.id,
+              matchId: data.matchId,
+              durationMs: Date.now() - workflowRegistrationStartedAt,
+            });
+          })
+          .catch((workflowError) => {
+            log.error('interview.schedule.workflow_register_failed', {
+              interviewId: interview.id,
+              matchId: data.matchId,
+              durationMs: Date.now() - workflowRegistrationStartedAt,
+              error: workflowError instanceof Error ? workflowError.message : 'Unknown error',
+            });
+          });
+
+        const analyticsEmitStartedAt = Date.now();
+        void (async () => {
+          try {
+            const { emitInterviewScheduledAsync } = await import('@/lib/analytics/events');
+
+            const matchDate = new Date(match.created_at);
+            const interviewDate = new Date(data.scheduledAt);
+            const daysSinceMatch = Math.floor(
+              (interviewDate.getTime() - matchDate.getTime()) / (1000 * 60 * 60 * 24)
+            );
+
+            await emitInterviewScheduledAsync(user.id, interview.id, {
+              interview_id: interview.id,
+              assignment_id: match.assignment_id,
+              match_id: data.matchId,
+              duration_minutes: durationMinutes,
+              policy_preset: data.policyPreset,
+              platform: persistedPlatform,
+              days_since_match: daysSinceMatch,
+            });
+
+            log.info('interview.schedule.analytics_dispatched', {
+              interviewId: interview.id,
+              matchId: data.matchId,
+              durationMs: Date.now() - analyticsEmitStartedAt,
+            });
+          } catch (analyticsError) {
+            log.error('interview.schedule.analytics_failed', {
+              interviewId: interview.id,
+              matchId: data.matchId,
+              durationMs: Date.now() - analyticsEmitStartedAt,
+              error: analyticsError instanceof Error ? analyticsError.message : 'Unknown error',
+            });
+          }
+        })();
+
+        const interviewMessagingStartedAt = Date.now();
+        void Promise.resolve(
+          postInterviewUpdateMessageBestEffort({
+            action: 'scheduled',
+            actorUserId: user.id,
+            interviewId: interview.id,
+            matchId: data.matchId,
+            next: {
+              scheduledAt: data.scheduledAt,
+              platform: persistedPlatform,
+              meetingUrl: meetingLink,
+              timezone: data.timezone,
+            },
+          })
+        )
+          .then(() => {
+            log.info('interview.schedule.message_dispatched', {
+              interviewId: interview.id,
+              matchId: data.matchId,
+              durationMs: Date.now() - interviewMessagingStartedAt,
+            });
+          })
+          .catch((messageError) => {
+            log.error('interview.schedule.message_failed', {
+              interviewId: interview.id,
+              matchId: data.matchId,
+              durationMs: Date.now() - interviewMessagingStartedAt,
+              error: messageError instanceof Error ? messageError.message : 'Unknown error',
+            });
+          });
+
+        log.info('interview.schedule.completed', {
+          interviewId: interview.id,
+          matchId: data.matchId,
+          userId: user.id,
+          platform: persistedPlatform,
+          totalDurationMs: Date.now() - scheduleStartedAt,
+          stepDurationsMs,
         });
 
-        log.info('interview.schedule.analytics_dispatched', {
-          interviewId: interview.id,
-          matchId: data.matchId,
-          durationMs: Date.now() - analyticsEmitStartedAt,
-        });
-      } catch (analyticsError) {
-        log.error('interview.schedule.analytics_failed', {
-          interviewId: interview.id,
-          matchId: data.matchId,
-          durationMs: Date.now() - analyticsEmitStartedAt,
-          error: analyticsError instanceof Error ? analyticsError.message : 'Unknown error',
+        return NextResponse.json({
+          success: true,
+          interview,
+          message: 'Interview scheduled successfully',
         });
       }
-    })();
-
-    const interviewMessagingStartedAt = Date.now();
-    void Promise.resolve(
-      postInterviewUpdateMessageBestEffort({
-        action: 'scheduled',
-        actorUserId: user.id,
-        interviewId: interview.id,
-        matchId: data.matchId,
-        next: {
-          scheduledAt: data.scheduledAt,
-          platform: persistedPlatform,
-          meetingUrl: meetingLink,
-          timezone: data.timezone,
-        },
-      })
-    )
-      .then(() => {
-        log.info('interview.schedule.message_dispatched', {
-          interviewId: interview.id,
-          matchId: data.matchId,
-          durationMs: Date.now() - interviewMessagingStartedAt,
-        });
-      })
-      .catch((messageError) => {
-        log.error('interview.schedule.message_failed', {
-          interviewId: interview.id,
-          matchId: data.matchId,
-          durationMs: Date.now() - interviewMessagingStartedAt,
-          error: messageError instanceof Error ? messageError.message : 'Unknown error',
-        });
-      });
-
-    log.info('interview.schedule.completed', {
-      interviewId: interview.id,
-      matchId: data.matchId,
-      userId: user.id,
-      platform: persistedPlatform,
-      totalDurationMs: Date.now() - scheduleStartedAt,
-      stepDurationsMs,
-    });
-
-    return NextResponse.json({
-      success: true,
-      interview,
-      message: 'Interview scheduled successfully',
-    });
+    );
   } catch (error: any) {
     log.error('interview.schedule.failed', {
       matchId: scheduleFailureContext.matchId,

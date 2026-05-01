@@ -3371,6 +3371,44 @@ export const cvImportAiBudgets = pgTable(
   })
 );
 
+export const workflowIdempotencyRecords = pgTable(
+  'workflow_idempotency_records',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
+    action: text('action').notNull(),
+    resourceType: text('resource_type').notNull(),
+    resourceId: text('resource_id').notNull(),
+    idempotencyKey: text('idempotency_key').notNull(),
+    scopeKey: text('scope_key').notNull(),
+    requestHash: text('request_hash').notNull(),
+    state: text('state', {
+      enum: ['processing', 'completed', 'failed'],
+    })
+      .default('processing')
+      .notNull(),
+    responseStatus: integer('response_status'),
+    responseBody: jsonb('response_body'),
+    errorMessage: text('error_message'),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    scopeUnique: unique().on(table.scopeKey),
+    userActionResourceIdx: index('workflow_idempotency_user_action_resource_idx').on(
+      table.userId,
+      table.action,
+      table.resourceType,
+      table.resourceId
+    ),
+    orgActionIdx: index('workflow_idempotency_org_action_idx').on(table.orgId, table.action),
+  })
+);
+
 // CV import AI usage/cost logs (with idempotency replay support)
 export const cvImportAiUsageLogs = pgTable(
   'cv_import_ai_usage_logs',

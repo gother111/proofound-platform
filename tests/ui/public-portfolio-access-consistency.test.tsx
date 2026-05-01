@@ -22,6 +22,16 @@ vi.mock('@/lib/portfolio/pdf', () => ({
   generateTrustPdf: vi.fn(),
 }));
 
+vi.mock('@/components/seo/JsonLdScripts', () => ({
+  JsonLdScripts: ({ items }: { items: unknown[] }) => (
+    <>
+      {items.map((_, index) => (
+        <script key={index} data-testid="json-ld" type="application/ld+json" />
+      ))}
+    </>
+  ),
+}));
+
 import PortfolioPage from '@/app/portfolio/[handle]/page';
 import { GET as summaryGET } from '@/app/api/portfolio/public/[handle]/summary/route';
 import { GET as exportGET } from '@/app/api/portfolio/public/[handle]/export/route';

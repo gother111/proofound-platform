@@ -104,6 +104,37 @@ describe('apiFetch', () => {
     expect(retriedProtectedHeaders.get('x-csrf-token')).toBe('fresh-token');
   });
 
+  it('adds a stable Idempotency-Key across CSRF retry for workflow mutations', async () => {
+    const fetchMock = vi.fn();
+    fetchMock
+      .mockResolvedValueOnce(okJson({ token: 'stale-token' }))
+      .mockResolvedValueOnce(
+        forbiddenJson({
+          error: 'CSRF validation failed',
+          message: 'Invalid or missing CSRF token',
+        })
+      )
+      .mockResolvedValueOnce(okJson({ token: 'fresh-token' }))
+      .mockResolvedValueOnce(okJson({ success: true }));
+
+    vi.stubGlobal('fetch', fetchMock);
+    const { apiFetch, __resetCsrfCacheForTests } = await import('@/lib/api/fetch');
+    __resetCsrfCacheForTests();
+
+    const response = await apiFetch('/api/decisions', {
+      method: 'POST',
+      body: JSON.stringify({ interviewId: 'interview-1', decision: 'hire' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    expect(response.status).toBe(200);
+    const firstProtectedHeaders = new Headers(fetchMock.mock.calls[1][1]?.headers as HeadersInit);
+    const retriedProtectedHeaders = new Headers(fetchMock.mock.calls[3][1]?.headers as HeadersInit);
+    const key = firstProtectedHeaders.get('Idempotency-Key');
+    expect(key).toMatch(/^wf-/);
+    expect(retriedProtectedHeaders.get('Idempotency-Key')).toBe(key);
+  });
+
   it('does not retry indefinitely when CSRF mismatch persists after refresh', async () => {
     const fetchMock = vi.fn();
     fetchMock

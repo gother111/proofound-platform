@@ -237,7 +237,7 @@ describe('Extended RLS Privacy Policies', () => {
       expect(data?.org_id).toBe(orgId);
     });
 
-    test('✅ Active assignments are visible to authenticated users', async () => {
+    test('❌ Active assignments are not visible outside organization membership', async () => {
       const serviceClient = createServiceRoleClient();
       const orgId = await createOrgForUser(alice.id);
 
@@ -255,18 +255,15 @@ describe('Extended RLS Privacy Policies', () => {
 
       expectAuthorized(activeAssignment, createError, 'Setup should create an active assignment');
 
-      // Active assignments remain discoverable to authenticated users.
+      // Active assignments are still private to the owning organization.
       const bobClient = await createAuthenticatedClient(bob.email, bob.password);
 
       const { data, error } = await bobClient
         .from('assignments')
         .select('id, status')
-        .eq('id', activeAssignment!.id)
-        .maybeSingle();
+        .eq('id', activeAssignment!.id);
 
-      expectAuthorized(data, error, 'Bob should see active assignments');
-      expect(data?.id).toBe(activeAssignment!.id);
-      expect(data?.status).toBe('active');
+      expectUnauthorized(data, error, 'Bob should not see another org active assignment');
     });
 
     test('❌ Draft assignments are not visible to other users', async () => {

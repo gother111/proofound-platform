@@ -49,6 +49,7 @@ export async function sendAssignmentInvitationEmail(params: {
     subject: `${params.organizationName} invited you to contribute to their profile`,
     html,
     text,
+    workflow: 'assignment_invitation',
   });
 }
 
@@ -118,6 +119,7 @@ export async function sendInterviewScheduledEmail(params: {
     subject: emailPrivacy.subject,
     html,
     text,
+    workflow: 'interview',
   });
 }
 
@@ -194,6 +196,7 @@ You can view your contract details in your Proofound dashboard.
     subject: emailPrivacy.subject,
     html,
     text,
+    workflow: 'contract',
   });
 }
 
@@ -210,6 +213,9 @@ export async function sendDecisionFeedbackEmail(params: {
   privacy?: WorkflowEmailPrivacyOptions;
 }) {
   const isAccepted = params.decision === 'accepted';
+  const maskedStage = params.privacy?.stage === 'masked';
+  const safeAssignmentTitle = maskedStage ? undefined : params.assignmentTitle;
+  const safeFeedback = maskedStage ? undefined : params.feedback;
   const emailPrivacy = applyWorkflowEmailPrivacy(
     {
       subject: `Application update from ${params.organizationName}`,
@@ -239,14 +245,14 @@ export async function sendDecisionFeedbackEmail(params: {
   <div style="padding: 40px 30px; background-color: white; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
     <p style="font-size: 18px; margin-bottom: 20px;">Hi ${emailPrivacy.candidateName || 'there'},</p>
 
-    <p>Thank you for your interest in ${params.assignmentTitle ? `the <strong>${params.assignmentTitle}</strong> opportunity with` : ''} <strong>${emailPrivacy.organizationName || 'the organization'}</strong>.</p>
+    <p>Thank you for your interest in ${safeAssignmentTitle ? `the <strong>${safeAssignmentTitle}</strong> opportunity with` : ''} <strong>${emailPrivacy.organizationName || 'the organization'}</strong>.</p>
 
     ${
-      params.feedback
+      safeFeedback
         ? `
     <div style="background-color: #F7F6F1; border-left: 4px solid #1C4D3A; border-radius: 6px; padding: 16px; margin: 24px 0;">
       <h3 style="margin: 0 0 12px 0; color: #1C4D3A;">Feedback from ${emailPrivacy.organizationName || 'the organization'}:</h3>
-      <p style="margin: 0;">${params.feedback}</p>
+      <p style="margin: 0;">${safeFeedback}</p>
     </div>
     `
         : ''
@@ -265,9 +271,9 @@ Application Update
 
 Hi ${emailPrivacy.candidateName || 'there'},
 
-Thank you for your interest in ${params.assignmentTitle ? `the ${params.assignmentTitle} opportunity with` : ''} ${emailPrivacy.organizationName || 'the organization'}.
+Thank you for your interest in ${safeAssignmentTitle ? `the ${safeAssignmentTitle} opportunity with` : ''} ${emailPrivacy.organizationName || 'the organization'}.
 
-${params.feedback ? `Feedback from ${emailPrivacy.organizationName || 'the organization'}:\n${params.feedback}\n\n` : ''}
+${safeFeedback ? `Feedback from ${emailPrivacy.organizationName || 'the organization'}:\n${safeFeedback}\n\n` : ''}
 
 ${isAccepted ? 'You will receive next steps shortly.' : 'We encourage you to continue exploring opportunities on Proofound.'}
   `.trim();
@@ -277,5 +283,6 @@ ${isAccepted ? 'You will receive next steps shortly.' : 'We encourage you to con
     subject: emailPrivacy.subject,
     html,
     text,
+    workflow: 'decision',
   });
 }

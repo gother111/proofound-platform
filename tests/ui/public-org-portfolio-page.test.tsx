@@ -22,6 +22,16 @@ vi.mock('@/lib/portfolio/public-projection', () => ({
   getHistoricalOrganizationPublicSlugRedirect: vi.fn(),
 }));
 
+vi.mock('@/components/seo/JsonLdScripts', () => ({
+  JsonLdScripts: ({ items }: { items: unknown[] }) => (
+    <>
+      {items.map((_, index) => (
+        <script key={index} data-testid="json-ld" type="application/ld+json" />
+      ))}
+    </>
+  ),
+}));
+
 import { createClient } from '@/lib/supabase/server';
 import {
   getHistoricalOrganizationPublicSlugRedirect,

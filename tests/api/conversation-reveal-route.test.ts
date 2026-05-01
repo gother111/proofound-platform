@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   logError: vi.fn(),
   getHiringCorridorRecordForMatch: vi.fn(),
   buildHiringCorridorSnapshot: vi.fn(),
+  withWorkflowMutationIdempotency: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -73,6 +74,10 @@ vi.mock('@/lib/matching/review-contract', () => ({
 
 vi.mock('@/lib/workflow/service', () => ({
   syncRevealRequestTimeoutState: mocks.syncRevealRequestTimeoutState,
+}));
+
+vi.mock('@/lib/api/workflow-idempotency', () => ({
+  withWorkflowMutationIdempotency: mocks.withWorkflowMutationIdempotency,
 }));
 
 vi.mock('@/lib/hiring-corridor/service', () => ({
@@ -154,6 +159,14 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
     mocks.resendSend.mockResolvedValue({ data: { id: 'email-1' }, error: null });
     mocks.getHiringCorridorRecordForMatch.mockResolvedValue(null);
     mocks.buildHiringCorridorSnapshot.mockReturnValue(null);
+    mocks.withWorkflowMutationIdempotency.mockImplementation(
+      async (
+        _request: unknown,
+        _scope: unknown,
+        _payload: unknown,
+        handler: () => Promise<Response>
+      ) => handler()
+    );
     mocks.syncRevealRequestTimeoutState.mockImplementation(async ({ conversation }: any) => ({
       conversation,
       timeout: {
@@ -494,12 +507,12 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
       })
     );
     expect(mocks.logError).toHaveBeenCalledWith(
-      'reveal_notification.missing_email',
+      'transactional_email.delivery_failed',
       expect.objectContaining({
-        conversationId: 'conversation-1',
-        kind: 'approved',
-        recipientRole: 'candidate',
-        hasEmail: false,
+        route: 'conversation_reveal_route',
+        workflow: 'reveal_approved',
+        reason: 'missing_recipient',
+        provider: 'resend',
       })
     );
   });
@@ -527,5 +540,99 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
     expect(serialized).not.toContain('Jordan');
     expect(JSON.stringify(mocks.logError.mock.calls)).not.toContain('candidate-1@example.com');
     expect(JSON.stringify(mocks.logError.mock.calls)).not.toContain('Jordan');
+  });
+
+  it('replays duplicate reveal approval without unlocking identity or sending emails again', async () => {
+    mocks.getUser.mockResolvedValue({
+      data: {
+        user: {
+          id: 'candidate-1',
+        },
+      },
+      error: null,
+    });
+    mocks.conversationFindFirst.mockResolvedValue({
+      id: 'conversation-1',
+      matchId: 'match-1',
+      participantOneId: 'user-1',
+      participantTwoId: 'candidate-1',
+      participantOneWantsReveal: true,
+      participantTwoWantsReveal: true,
+      stage: 'revealed',
+      revealedAt: new Date('2026-03-14T12:00:00Z'),
+    });
+    mocks.withWorkflowMutationIdempotency.mockResolvedValue(
+      Response.json(
+        {
+          success: true,
+          revealed: true,
+          conversation: {
+            id: 'conversation-1',
+            stage: 'revealed',
+            revealedAt: '2026-03-14T12:00:00.000Z',
+          },
+        },
+        {
+          headers: {
+            'Idempotency-Replayed': 'true',
+          },
+        }
+      )
+    );
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/conversations/conversation-1/reveal', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': 'wf-reveal-duplicate-1' },
+      }),
+      {
+        params: Promise.resolve({ conversationId: 'conversation-1' }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Idempotency-Replayed')).toBe('true');
+    expect(body.revealed).toBe(true);
+    expect(mocks.unlockFullIdentityForMatch).not.toHaveBeenCalled();
+    expect(mocks.resendSend).not.toHaveBeenCalled();
+  });
+
+  it('rejects same-key reveal replay with a changed payload before side effects', async () => {
+    mocks.conversationFindFirst.mockResolvedValue({
+      id: 'conversation-1',
+      matchId: 'match-1',
+      participantOneId: 'user-1',
+      participantTwoId: 'candidate-1',
+      participantOneWantsReveal: false,
+      participantTwoWantsReveal: false,
+      stage: 'masked',
+      revealedAt: null,
+    });
+    mocks.withWorkflowMutationIdempotency.mockResolvedValue(
+      Response.json(
+        {
+          error: 'Idempotency-Key replay used a different payload',
+          code: 'IDEMPOTENCY_REPLAY_MISMATCH',
+        },
+        { status: 409 }
+      )
+    );
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/conversations/conversation-1/reveal', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': 'wf-reveal-replay-1' },
+      }),
+      {
+        params: Promise.resolve({ conversationId: 'conversation-1' }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.code).toBe('IDEMPOTENCY_REPLAY_MISMATCH');
+    expect(mocks.unlockFullIdentityForMatch).not.toHaveBeenCalled();
+    expect(mocks.resendSend).not.toHaveBeenCalled();
   });
 });

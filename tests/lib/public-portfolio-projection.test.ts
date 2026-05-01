@@ -61,7 +61,7 @@ function mockVerificationSummary() {
   };
 }
 
-function profileRow() {
+function profileRow(overrides: Record<string, unknown> = {}) {
   return {
     rows: [
       {
@@ -99,8 +99,89 @@ function profileRow() {
         display_name_visibility: 'public',
         headline_visibility: 'public',
         skills_visibility: 'public',
+        ...overrides,
       },
     ],
+  };
+}
+
+function publicReadyAggregate(overrides: Record<string, any> = {}) {
+  const item = {
+    effectiveVisibility: 'public',
+    artifact: {
+      id: 'artifact-public',
+      subjectType: 'experience',
+      subjectId: 'experience-1',
+      revealGate: 'none',
+    },
+    ...(overrides.item ?? {}),
+  };
+  const publicItem = {
+    artifactId: 'artifact-public',
+    artifactKind: 'link',
+    title: 'Launch memo',
+    artifactDisplayName: 'Launch memo',
+    description: 'Visible evidence',
+    sourceUrl: 'https://example.com/public-proof',
+    issuedAt: '2026-01-15T00:00:00.000Z',
+    expiresAt: null,
+    semanticsNote: 'Supporting evidence only, not full verification.',
+    ...(overrides.publicItem ?? {}),
+  };
+
+  return {
+    pack: {
+      id: 'pack-public',
+      ownerId: 'user-1',
+      packKind: 'verification_bundle',
+      primarySubjectType: 'experience',
+      primarySubjectId: 'experience-1',
+      title: 'Public pack',
+      summary: null,
+      evidenceSummary: null,
+      outcomesSummary: 'Shipped a proof-first launch.',
+      contextJson: {},
+      metadata: {},
+      ...(overrides.pack ?? {}),
+    },
+    items: [item, ...(overrides.items ?? [])],
+    verificationReferences: [
+      {
+        id: 'verification-public',
+        status: 'verified',
+        integrityStatus: 'clear',
+        disputeState: 'none',
+        verificationKind: 'impact_attestation',
+        subjectType: 'experience',
+        subjectId: 'experience-1',
+        proofArtifactId: null,
+      },
+      ...(overrides.verificationReferences ?? []),
+    ],
+    publicSafe: {
+      contract: {
+        status: 'published',
+        title: 'Public pack',
+        primaryClaim: { statement: 'Public pack claim' },
+        ownershipStatement: 'Owned the public contribution.',
+        verificationSummary: {
+          summary: 'Scoped verification supports this Proof Pack.',
+        },
+        proofQualityScore: 0.8,
+        schemaVersion: 'proof_pack/v2',
+        ...(overrides.contract ?? {}),
+      },
+      title: 'Public pack',
+      summary: null,
+      evidenceSummary: null,
+      outcomesSummary: 'Shipped a proof-first launch.',
+      items: [publicItem, ...(overrides.publicItems ?? [])],
+      ...(overrides.publicSafe ?? {}),
+    },
+    verificationStatus: 'verified',
+    freshnessState: 'fresh',
+    latestEvidenceAt: new Date('2026-01-15T00:00:00.000Z'),
+    ...overrides.aggregate,
   };
 }
 
@@ -420,5 +501,177 @@ describe('public portfolio projection', () => {
     expect(projection?.verifiedPublicProofPackCount).toBe(0);
     expect(projection?.minimumContentMet).toBe(false);
     expect(projection?.effectiveState).toBe('unavailable');
+  });
+
+  it('allows search indexing only for explicit eligible public-safe portfolios', async () => {
+    vi.mocked(db.execute as any).mockResolvedValueOnce(
+      profileRow({
+        public_portfolio_state: 'public_indexable',
+        search_indexing_enabled_at: '2026-03-20T10:00:00.000Z',
+      })
+    );
+    vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([
+      publicReadyAggregate(),
+    ]);
+
+    const projection = await getPublicIndividualPortfolioProjectionByHandle('jane');
+
+    expect(projection).not.toBeNull();
+    expect(projection?.effectiveState).toBe('public_indexable');
+    expect(projection?.metadata.useGenericPreview).toBe(false);
+    expect(projection?.exportData.publication).toMatchObject({
+      requestedState: 'public_indexable',
+      effectiveState: 'public_indexable',
+      searchIndexingEnabled: true,
+    });
+  });
+
+  it.each([
+    [
+      'link-only',
+      publicReadyAggregate({
+        items: [
+          {
+            effectiveVisibility: 'link_only',
+            artifact: {
+              id: 'artifact-link-only',
+              subjectType: 'experience',
+              subjectId: 'experience-1',
+              revealGate: 'none',
+            },
+          },
+        ],
+      }),
+      { hasLinkOnlyContent: true, hasRevealGatedContent: false },
+    ],
+    [
+      'reveal-gated',
+      publicReadyAggregate({
+        items: [
+          {
+            effectiveVisibility: 'public',
+            artifact: {
+              id: 'artifact-reveal-gated',
+              subjectType: 'experience',
+              subjectId: 'experience-1',
+              revealGate: 'conversation_started',
+            },
+          },
+        ],
+      }),
+      { hasLinkOnlyContent: false, hasRevealGatedContent: true },
+    ],
+    [
+      'private',
+      publicReadyAggregate({
+        items: [
+          {
+            effectiveVisibility: 'owner_only',
+            artifact: {
+              id: 'artifact-private',
+              subjectType: 'experience',
+              subjectId: 'experience-1',
+              revealGate: 'none',
+            },
+          },
+        ],
+      }),
+      { hasLinkOnlyContent: false, hasRevealGatedContent: false },
+    ],
+  ])(
+    'downgrades explicit search indexing when %s evidence is present',
+    async (_, aggregate, flags) => {
+      vi.clearAllMocks();
+      vi.mocked(summarizeVerificationPolicy as any).mockReturnValue(mockVerificationSummary());
+      vi.mocked(listVerificationRecordsForOwner as any).mockResolvedValue([]);
+      vi.mocked(db.execute as any).mockResolvedValueOnce(
+        profileRow({
+          public_portfolio_state: 'public_indexable',
+          search_indexing_enabled_at: '2026-03-20T10:00:00.000Z',
+        })
+      );
+      vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([aggregate]);
+
+      const projection = await getPublicIndividualPortfolioProjectionByHandle('jane');
+
+      expect(projection).not.toBeNull();
+      expect(projection?.effectiveState).toBe('public_noindex');
+      expect(projection).toMatchObject(flags);
+      expect(projection?.publicProofCount).toBe(1);
+    }
+  );
+
+  it('keeps hidden review-stage fields and filename labels out of the public projection', async () => {
+    vi.mocked(db.execute as any).mockResolvedValueOnce(
+      profileRow({
+        display_name: 'Jane Secret',
+        public_portfolio_state: 'public_indexable',
+        search_indexing_enabled_at: '2026-03-20T10:00:00.000Z',
+        headline: 'Hidden headline',
+        bio: 'Hidden bio',
+        work_email: 'jane.secret@example.com',
+        field_visibility: {
+          bio: false,
+          contact: false,
+          workEmail: false,
+          skills: false,
+          counts: true,
+          proofBar: true,
+          header: true,
+          identity: false,
+          linkedin: false,
+        },
+        display_name_visibility: 'private',
+        headline_visibility: 'private',
+        skills_visibility: 'private',
+      })
+    );
+    vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([
+      publicReadyAggregate({
+        pack: {
+          contextJson: {
+            exactLocation: 'Sankt Eriksgatan 10, Stockholm',
+            employerNames: ['Acme Climate AB'],
+            schoolNames: ['Stockholm University'],
+          },
+          metadata: {
+            topic_label: 'Public Strategy',
+            hiddenReviewerNote: 'private reviewer note',
+          },
+        },
+        publicItem: {
+          title: 'Jane_Doe_Resume.pdf',
+          artifactDisplayName: 'Jane Doe Resume.pdf',
+          description: 'Public-safe description',
+        },
+      }),
+    ]);
+
+    const projection = await getPublicIndividualPortfolioProjectionByHandle('jane');
+    const serialized = JSON.stringify(projection);
+
+    expect(projection).not.toBeNull();
+    expect(projection?.effectiveState).toBe('public_indexable');
+    expect(projection?.publicDisplayName).toBe('jane');
+    expect(projection?.publicHeadline).toBe('');
+    expect(projection?.publicBio).toBeNull();
+    expect(projection?.individual.work_email).toBeNull();
+    expect(projection?.exportData.profile.contactEmail).toBeUndefined();
+    expect(projection?.exportData.proofPacks).toHaveLength(1);
+    expect(projection?.exportData.proofPacks[0]?.selectedEvidence[0]).toMatchObject({
+      title: 'Uploaded PDF document',
+      artifactDisplayName: 'Uploaded PDF document',
+    });
+    expect(projection?.featuredProofs[0]?.title).toBe('Uploaded PDF document');
+    expect(serialized).not.toContain('Jane Secret');
+    expect(serialized).not.toContain('Hidden headline');
+    expect(serialized).not.toContain('Hidden bio');
+    expect(serialized).not.toContain('jane.secret@example.com');
+    expect(serialized).not.toContain('Jane Doe Resume.pdf');
+    expect(serialized).not.toContain('Jane_Doe_Resume.pdf');
+    expect(serialized).not.toContain('Sankt Eriksgatan 10');
+    expect(serialized).not.toContain('Acme Climate AB');
+    expect(serialized).not.toContain('Stockholm University');
+    expect(serialized).not.toContain('private reviewer note');
   });
 });

@@ -15,6 +15,7 @@ import {
 } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
 import { safeApiErrorResponse } from '@/lib/api/errors';
+import { withWorkflowMutationIdempotency } from '@/lib/api/workflow-idempotency';
 import { emitFirstQualifiedIntroAsync, emitMatchActioned } from '@/lib/analytics/events';
 import { log } from '@/lib/log';
 import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
@@ -321,618 +322,632 @@ export async function POST(
 
     const payload = parsed.data;
 
-    if (payload.action === 'reveal_request') {
-      const requestedScope = payload.requestedScope ?? 'full_identity';
-      const fairnessStatus = normalizeFairnessStatus(matchRow.fairnessStatus);
-      const [activeConversation] = await db
-        .select({
-          id: conversations.id,
-          matchId: conversations.matchId,
-          stage: conversations.stage,
-          participantOneRevealRequestedAt: conversations.participantOneRevealRequestedAt,
-          participantTwoRevealRequestedAt: conversations.participantTwoRevealRequestedAt,
-          participantOneId: conversations.participantOneId,
-          participantTwoId: conversations.participantTwoId,
-          participantOneWantsReveal: conversations.participantOneWantsReveal,
-          participantTwoWantsReveal: conversations.participantTwoWantsReveal,
-        })
-        .from(conversations)
-        .where(eq(conversations.matchId, matchRow.matchId))
-        .limit(1);
-
-      if (!activeConversation) {
-        return NextResponse.json(
-          {
-            error:
-              'Reveal requests only open after introduction approval creates a masked conversation.',
-            matchId: matchRow.matchId,
-            reviewStage: matchRow.reviewStage,
-            revealScope: matchRow.revealScope,
-            visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
-          },
-          { status: 409 }
-        );
-      }
-
-      const {
-        conversation: syncedConversation,
-        timeout: revealTimeout,
-        reset: revealRequestExpired,
-      } = await syncRevealRequestTimeoutState({
-        conversation: activeConversation,
-      });
-
-      if (revealRequestExpired) {
-        await recordRevealEvent({
-          matchId: matchRow.matchId,
-          assignmentId: matchRow.assignmentId,
-          profileId: matchRow.profileId,
-          orgId: org.id,
-          actorType: 'system',
-          triggerType: 'policy',
-          requestedScope: requestedScope,
-          grantedScope: matchRow.revealScope,
-          reasonCode: 'reveal_request_expired',
-          sourceSurface: 'org_review_route',
-          context: {
-            conversationId: syncedConversation.id,
-            requestedBy: revealTimeout.requestedBy,
-            requestedAt: revealTimeout.requestedAt?.toISOString() ?? null,
-            expiresAt: revealTimeout.expiresAt?.toISOString() ?? null,
-          },
-          outcome: 'denied',
-        });
-      }
-
-      if (syncedConversation.stage === 'revealed' || matchRow.revealScope === 'full_identity') {
-        const corridor = resolveCanonicalCorridor({
-          reviewStage: matchRow.reviewStage,
-          revealScope: 'full_identity',
-          surface: 'review_detail',
-          fairnessStatus,
-          operationalFallbackMode:
-            matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
-          introApproved: true,
-        });
-        const reviewCard = await buildReviewCardPayload({
-          profileId: matchRow.profileId,
-          reasonCodes: ['reveal_full_identity'],
-          fairnessStatus,
-          revealScope: 'full_identity',
-        });
-
-        return NextResponse.json({
-          matchId: matchRow.matchId,
-          reviewStage: matchRow.reviewStage,
-          revealScope: 'full_identity',
-          visibleIdentityFields: getVisibleIdentityFields('full_identity'),
-          conversationId: syncedConversation.id,
-          reviewCard,
-          ...corridor,
-          why: buildVisibilitySafeWhy({
-            reasonCodes: ['reveal_full_identity'],
-            fairnessStatus,
-            fallbackState: corridor.fallbackState,
-          }),
-          message: 'Identity is already revealed for this introduction.',
-        });
-      }
-
-      const orgParticipantIsOne = syncedConversation.participantOneId !== matchRow.profileId;
-      const orgRevealAlreadyRequested = orgParticipantIsOne
-        ? syncedConversation.participantOneWantsReveal
-        : syncedConversation.participantTwoWantsReveal;
-
-      if (!orgRevealAlreadyRequested) {
-        const now = new Date();
-        await db
-          .update(conversations)
-          .set(
-            orgParticipantIsOne
-              ? {
-                  participantOneWantsReveal: true,
-                  participantOneRevealRequestedAt: now,
-                  updatedAt: now,
-                }
-              : {
-                  participantTwoWantsReveal: true,
-                  participantTwoRevealRequestedAt: now,
-                  updatedAt: now,
-                }
-          )
-          .where(eq(conversations.id, syncedConversation.id));
-      }
-
-      await recordRevealEvent({
-        matchId: matchRow.matchId,
-        assignmentId: matchRow.assignmentId,
-        profileId: matchRow.profileId,
+    return await withWorkflowMutationIdempotency(
+      request,
+      {
+        userId: user.id,
         orgId: org.id,
-        actorId: user.id,
-        actorRole: role,
-        actorType: 'user_account',
-        triggerType: 'user',
-        requestedScope,
-        grantedScope: matchRow.revealScope,
-        reasonCode: 'org_reveal_request_pending',
-        sourceSurface: 'org_review_route',
-        context: {
-          pending: true,
-          conversationId: syncedConversation.id,
-          expiredAndReset: revealRequestExpired,
-        },
-        outcome: 'no_op',
-      });
+        action: `org_review.${payload.action}`,
+        resourceType: 'match',
+        resourceId: matchRow.matchId,
+      },
+      payload,
+      async () => {
+        if (payload.action === 'reveal_request') {
+          const requestedScope = payload.requestedScope ?? 'full_identity';
+          const fairnessStatus = normalizeFairnessStatus(matchRow.fairnessStatus);
+          const [activeConversation] = await db
+            .select({
+              id: conversations.id,
+              matchId: conversations.matchId,
+              stage: conversations.stage,
+              participantOneRevealRequestedAt: conversations.participantOneRevealRequestedAt,
+              participantTwoRevealRequestedAt: conversations.participantTwoRevealRequestedAt,
+              participantOneId: conversations.participantOneId,
+              participantTwoId: conversations.participantTwoId,
+              participantOneWantsReveal: conversations.participantOneWantsReveal,
+              participantTwoWantsReveal: conversations.participantTwoWantsReveal,
+            })
+            .from(conversations)
+            .where(eq(conversations.matchId, matchRow.matchId))
+            .limit(1);
 
-      const corridor = resolveCanonicalCorridor({
-        reviewStage: matchRow.reviewStage,
-        revealScope: matchRow.revealScope,
-        surface: 'review_detail',
-        fairnessStatus,
-        operationalFallbackMode:
-          matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
-        revealRequestPending: true,
-      });
-      const reviewCard = await buildReviewCardPayload({
-        profileId: matchRow.profileId,
-        reasonCodes: ['org_reveal_request_pending'],
-        fairnessStatus,
-        revealScope: matchRow.revealScope,
-      });
+          if (!activeConversation) {
+            return NextResponse.json(
+              {
+                error:
+                  'Reveal requests only open after introduction approval creates a masked conversation.',
+                matchId: matchRow.matchId,
+                reviewStage: matchRow.reviewStage,
+                revealScope: matchRow.revealScope,
+                visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
+              },
+              { status: 409 }
+            );
+          }
 
-      return NextResponse.json({
-        matchId: matchRow.matchId,
-        reviewStage: matchRow.reviewStage,
-        revealScope: matchRow.revealScope,
-        visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
-        conversationId: syncedConversation.id,
-        waitingForCandidateApproval: true,
-        reviewCard,
-        ...corridor,
-        why: buildVisibilitySafeWhy({
-          reasonCodes: ['org_reveal_request_pending'],
-          fairnessStatus,
-          fallbackState: corridor.fallbackState,
-        }),
-        message:
-          requestedScope === 'full_identity'
-            ? 'Reveal request sent. Full identity remains locked until the candidate approves.'
-            : 'Reveal request recorded.',
-      });
-    }
+          const {
+            conversation: syncedConversation,
+            timeout: revealTimeout,
+            reset: revealRequestExpired,
+          } = await syncRevealRequestTimeoutState({
+            conversation: activeConversation,
+          });
 
-    if (payload.action === 'request_intro') {
-      const fairnessStatus = normalizeFairnessStatus(matchRow.fairnessStatus);
-      const fallbackState = resolveCanonicalFallbackState({
-        operationalFallbackMode:
-          matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
-        fairnessStatus,
-      });
-      const stage2Ready =
-        matchRow.reviewStage === 'shortlisted' && matchRow.revealScope === 'shortlist_identity';
+          if (revealRequestExpired) {
+            await recordRevealEvent({
+              matchId: matchRow.matchId,
+              assignmentId: matchRow.assignmentId,
+              profileId: matchRow.profileId,
+              orgId: org.id,
+              actorType: 'system',
+              triggerType: 'policy',
+              requestedScope: requestedScope,
+              grantedScope: matchRow.revealScope,
+              reasonCode: 'reveal_request_expired',
+              sourceSurface: 'org_review_route',
+              context: {
+                conversationId: syncedConversation.id,
+                requestedBy: revealTimeout.requestedBy,
+                requestedAt: revealTimeout.requestedAt?.toISOString() ?? null,
+                expiresAt: revealTimeout.expiresAt?.toISOString() ?? null,
+              },
+              outcome: 'denied',
+            });
+          }
 
-      if (!stage2Ready || fallbackState === 'intro_hold') {
-        const fallbackMode =
-          matchRow.reviewOperationalFallbackMode ??
-          matchRow.assignmentOperationalFallbackMode ??
-          (fallbackState === 'fairness_suppressed_ranking'
-            ? 'fairness_suppressed_ranking'
-            : 'intro_hold_insufficient_qualified_intros');
+          if (syncedConversation.stage === 'revealed' || matchRow.revealScope === 'full_identity') {
+            const corridor = resolveCanonicalCorridor({
+              reviewStage: matchRow.reviewStage,
+              revealScope: 'full_identity',
+              surface: 'review_detail',
+              fairnessStatus,
+              operationalFallbackMode:
+                matchRow.reviewOperationalFallbackMode ??
+                matchRow.assignmentOperationalFallbackMode,
+              introApproved: true,
+            });
+            const reviewCard = await buildReviewCardPayload({
+              profileId: matchRow.profileId,
+              reasonCodes: ['reveal_full_identity'],
+              fairnessStatus,
+              revealScope: 'full_identity',
+            });
 
-        await db
-          .update(matchReviewStates)
-          .set({
-            operationalFallbackMode: fallbackMode,
-            updatedAt: new Date(),
-          })
-          .where(eq(matchReviewStates.matchId, matchRow.matchId));
+            return NextResponse.json({
+              matchId: matchRow.matchId,
+              reviewStage: matchRow.reviewStage,
+              revealScope: 'full_identity',
+              visibleIdentityFields: getVisibleIdentityFields('full_identity'),
+              conversationId: syncedConversation.id,
+              reviewCard,
+              ...corridor,
+              why: buildVisibilitySafeWhy({
+                reasonCodes: ['reveal_full_identity'],
+                fairnessStatus,
+                fallbackState: corridor.fallbackState,
+              }),
+              message: 'Identity is already revealed for this introduction.',
+            });
+          }
 
-        const corridor = resolveCanonicalCorridor({
-          reviewStage: matchRow.reviewStage,
-          revealScope: matchRow.revealScope,
-          surface: 'review_detail',
-          fairnessStatus,
-          operationalFallbackMode: fallbackMode,
-          introRequested: true,
-        });
-        const reviewCard = await buildReviewCardPayload({
-          profileId: matchRow.profileId,
-          reasonCodes: ['fairness_ranking_suppressed'],
-          fairnessStatus,
-          revealScope: matchRow.revealScope,
-        });
+          const orgParticipantIsOne = syncedConversation.participantOneId !== matchRow.profileId;
+          const orgRevealAlreadyRequested = orgParticipantIsOne
+            ? syncedConversation.participantOneWantsReveal
+            : syncedConversation.participantTwoWantsReveal;
 
-        return NextResponse.json(
-          {
-            error: !stage2Ready
-              ? 'Intro requests are only allowed after contextual reveal at Stage 2.'
-              : 'Intro request is on hold while fallback protections are active.',
+          if (!orgRevealAlreadyRequested) {
+            const now = new Date();
+            await db
+              .update(conversations)
+              .set(
+                orgParticipantIsOne
+                  ? {
+                      participantOneWantsReveal: true,
+                      participantOneRevealRequestedAt: now,
+                      updatedAt: now,
+                    }
+                  : {
+                      participantTwoWantsReveal: true,
+                      participantTwoRevealRequestedAt: now,
+                      updatedAt: now,
+                    }
+              )
+              .where(eq(conversations.id, syncedConversation.id));
+          }
+
+          await recordRevealEvent({
+            matchId: matchRow.matchId,
+            assignmentId: matchRow.assignmentId,
+            profileId: matchRow.profileId,
+            orgId: org.id,
+            actorId: user.id,
+            actorRole: role,
+            actorType: 'user_account',
+            triggerType: 'user',
+            requestedScope,
+            grantedScope: matchRow.revealScope,
+            reasonCode: 'org_reveal_request_pending',
+            sourceSurface: 'org_review_route',
+            context: {
+              pending: true,
+              conversationId: syncedConversation.id,
+              expiredAndReset: revealRequestExpired,
+            },
+            outcome: 'no_op',
+          });
+
+          const corridor = resolveCanonicalCorridor({
+            reviewStage: matchRow.reviewStage,
+            revealScope: matchRow.revealScope,
+            surface: 'review_detail',
+            fairnessStatus,
+            operationalFallbackMode:
+              matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
+            revealRequestPending: true,
+          });
+          const reviewCard = await buildReviewCardPayload({
+            profileId: matchRow.profileId,
+            reasonCodes: ['org_reveal_request_pending'],
+            fairnessStatus,
+            revealScope: matchRow.revealScope,
+          });
+
+          return NextResponse.json({
             matchId: matchRow.matchId,
             reviewStage: matchRow.reviewStage,
             revealScope: matchRow.revealScope,
             visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
+            conversationId: syncedConversation.id,
+            waitingForCandidateApproval: true,
             reviewCard,
             ...corridor,
             why: buildVisibilitySafeWhy({
-              reasonCodes: ['fairness_ranking_suppressed'],
+              reasonCodes: ['org_reveal_request_pending'],
               fairnessStatus,
               fallbackState: corridor.fallbackState,
             }),
-          },
-          { status: 409 }
-        );
-      }
+            message:
+              requestedScope === 'full_identity'
+                ? 'Reveal request sent. Full identity remains locked until the candidate approves.'
+                : 'Reveal request recorded.',
+          });
+        }
 
-      const [candidateInterest] = await db
-        .select({
-          actorProfileId: matchInterest.actorProfileId,
-        })
-        .from(matchInterest)
-        .where(
-          and(
-            eq(matchInterest.assignmentId, matchRow.assignmentId),
-            eq(matchInterest.actorProfileId, matchRow.profileId),
-            sql`${matchInterest.targetProfileId} IS NULL`
-          )
-        )
-        .limit(1);
-
-      if (!candidateInterest) {
-        const intro = await getOrCreateIntroWorkflow({
-          assignmentId: matchRow.assignmentId,
-          candidateProfileId: matchRow.profileId,
-          orgId: org.id,
-          actorType: 'organization_member',
-          actorId: user.id,
-          initialState: 'pending_candidate_interest',
-          matchId: matchRow.matchId,
-          metadata: {
-            sourceSurface: 'org_review_route',
-            requestedFromStage: 'stage2_contextual_reveal',
-          },
-        });
-
-        const corridor = resolveCanonicalCorridor({
-          reviewStage: matchRow.reviewStage,
-          revealScope: matchRow.revealScope,
-          surface: 'review_detail',
-          fairnessStatus,
-          operationalFallbackMode: null,
-          introRequested: true,
-        });
-        const reviewCard = await buildReviewCardPayload({
-          profileId: matchRow.profileId,
-          reasonCodes: ['shortlist_selected'],
-          fairnessStatus,
-          revealScope: matchRow.revealScope,
-        });
-
-        return NextResponse.json({
-          matchId: matchRow.matchId,
-          reviewStage: matchRow.reviewStage,
-          revealScope: matchRow.revealScope,
-          visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
-          introWorkflowId: intro.id,
-          introWorkflowState: intro.state,
-          introApproved: false,
-          requiresCandidateInterest: true,
-          reviewCard,
-          ...corridor,
-          why: buildVisibilitySafeWhy({
-            reasonCodes: ['shortlist_selected'],
+        if (payload.action === 'request_intro') {
+          const fairnessStatus = normalizeFairnessStatus(matchRow.fairnessStatus);
+          const fallbackState = resolveCanonicalFallbackState({
+            operationalFallbackMode:
+              matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
             fairnessStatus,
-            fallbackState: corridor.fallbackState,
-          }),
-          message:
-            'Intro request recorded. Proofound will approve the introduction after the candidate reciprocates interest.',
-        });
-      }
+          });
+          const stage2Ready =
+            matchRow.reviewStage === 'shortlisted' && matchRow.revealScope === 'shortlist_identity';
 
-      const intro = await syncIntroWorkflowFromInterest({
-        assignmentId: matchRow.assignmentId,
-        candidateProfileId: matchRow.profileId,
-        orgId: org.id,
-        actorType: 'organization_member',
-        actorId: user.id,
-        mutual: true,
-        matchId: matchRow.matchId,
-      });
+          if (!stage2Ready || fallbackState === 'intro_hold') {
+            const fallbackMode =
+              matchRow.reviewOperationalFallbackMode ??
+              matchRow.assignmentOperationalFallbackMode ??
+              (fallbackState === 'fairness_suppressed_ranking'
+                ? 'fairness_suppressed_ranking'
+                : 'intro_hold_insufficient_qualified_intros');
 
-      let resolvedConversationId = intro.conversationId ?? null;
-      const [existingConversation] = await db
-        .select({
-          id: conversations.id,
-        })
-        .from(conversations)
-        .where(
-          or(
-            eq(conversations.matchId, matchRow.matchId),
-            and(
-              eq(conversations.assignmentId, matchRow.assignmentId),
-              eq(conversations.participantOneId, matchRow.profileId),
-              eq(conversations.participantTwoId, user.id)
-            ),
-            and(
-              eq(conversations.assignmentId, matchRow.assignmentId),
-              eq(conversations.participantOneId, user.id),
-              eq(conversations.participantTwoId, matchRow.profileId)
+            await db
+              .update(matchReviewStates)
+              .set({
+                operationalFallbackMode: fallbackMode,
+                updatedAt: new Date(),
+              })
+              .where(eq(matchReviewStates.matchId, matchRow.matchId));
+
+            const corridor = resolveCanonicalCorridor({
+              reviewStage: matchRow.reviewStage,
+              revealScope: matchRow.revealScope,
+              surface: 'review_detail',
+              fairnessStatus,
+              operationalFallbackMode: fallbackMode,
+              introRequested: true,
+            });
+            const reviewCard = await buildReviewCardPayload({
+              profileId: matchRow.profileId,
+              reasonCodes: ['fairness_ranking_suppressed'],
+              fairnessStatus,
+              revealScope: matchRow.revealScope,
+            });
+
+            return NextResponse.json(
+              {
+                error: !stage2Ready
+                  ? 'Intro requests are only allowed after contextual reveal at Stage 2.'
+                  : 'Intro request is on hold while fallback protections are active.',
+                matchId: matchRow.matchId,
+                reviewStage: matchRow.reviewStage,
+                revealScope: matchRow.revealScope,
+                visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
+                reviewCard,
+                ...corridor,
+                why: buildVisibilitySafeWhy({
+                  reasonCodes: ['fairness_ranking_suppressed'],
+                  fairnessStatus,
+                  fallbackState: corridor.fallbackState,
+                }),
+              },
+              { status: 409 }
+            );
+          }
+
+          const [candidateInterest] = await db
+            .select({
+              actorProfileId: matchInterest.actorProfileId,
+            })
+            .from(matchInterest)
+            .where(
+              and(
+                eq(matchInterest.assignmentId, matchRow.assignmentId),
+                eq(matchInterest.actorProfileId, matchRow.profileId),
+                sql`${matchInterest.targetProfileId} IS NULL`
+              )
             )
-          )
-        )
-        .limit(1);
+            .limit(1);
 
-      if (!resolvedConversationId && existingConversation?.id) {
-        resolvedConversationId = existingConversation.id;
-      }
+          if (!candidateInterest) {
+            const intro = await getOrCreateIntroWorkflow({
+              assignmentId: matchRow.assignmentId,
+              candidateProfileId: matchRow.profileId,
+              orgId: org.id,
+              actorType: 'organization_member',
+              actorId: user.id,
+              initialState: 'pending_candidate_interest',
+              matchId: matchRow.matchId,
+              metadata: {
+                sourceSurface: 'org_review_route',
+                requestedFromStage: 'stage2_contextual_reveal',
+              },
+            });
 
-      if (!resolvedConversationId) {
-        const [insertedConversation] = await db
-          .insert(conversations)
-          .values({
-            matchId: matchRow.matchId,
+            const corridor = resolveCanonicalCorridor({
+              reviewStage: matchRow.reviewStage,
+              revealScope: matchRow.revealScope,
+              surface: 'review_detail',
+              fairnessStatus,
+              operationalFallbackMode: null,
+              introRequested: true,
+            });
+            const reviewCard = await buildReviewCardPayload({
+              profileId: matchRow.profileId,
+              reasonCodes: ['shortlist_selected'],
+              fairnessStatus,
+              revealScope: matchRow.revealScope,
+            });
+
+            return NextResponse.json({
+              matchId: matchRow.matchId,
+              reviewStage: matchRow.reviewStage,
+              revealScope: matchRow.revealScope,
+              visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
+              introWorkflowId: intro.id,
+              introWorkflowState: intro.state,
+              introApproved: false,
+              requiresCandidateInterest: true,
+              reviewCard,
+              ...corridor,
+              why: buildVisibilitySafeWhy({
+                reasonCodes: ['shortlist_selected'],
+                fairnessStatus,
+                fallbackState: corridor.fallbackState,
+              }),
+              message:
+                'Intro request recorded. Proofound will approve the introduction after the candidate reciprocates interest.',
+            });
+          }
+
+          const intro = await syncIntroWorkflowFromInterest({
             assignmentId: matchRow.assignmentId,
-            participantOneId: matchRow.profileId,
-            participantTwoId: user.id,
-            stage: 'masked',
-            maskedHandleOne: `Candidate #${nanoid(6).toUpperCase()}`,
-            maskedHandleTwo: `Organization #${nanoid(6).toUpperCase()}`,
-            lastMessageAt: new Date(),
-          })
-          .returning({
-            id: conversations.id,
+            candidateProfileId: matchRow.profileId,
+            orgId: org.id,
+            actorType: 'organization_member',
+            actorId: user.id,
+            mutual: true,
+            matchId: matchRow.matchId,
           });
 
-        resolvedConversationId = insertedConversation?.id ?? null;
-      }
+          let resolvedConversationId = intro.conversationId ?? null;
+          const [existingConversation] = await db
+            .select({
+              id: conversations.id,
+            })
+            .from(conversations)
+            .where(
+              or(
+                eq(conversations.matchId, matchRow.matchId),
+                and(
+                  eq(conversations.assignmentId, matchRow.assignmentId),
+                  eq(conversations.participantOneId, matchRow.profileId),
+                  eq(conversations.participantTwoId, user.id)
+                ),
+                and(
+                  eq(conversations.assignmentId, matchRow.assignmentId),
+                  eq(conversations.participantOneId, user.id),
+                  eq(conversations.participantTwoId, matchRow.profileId)
+                )
+              )
+            )
+            .limit(1);
 
-      if (intro.state === 'conversation_open' && resolvedConversationId) {
-        const corridor = resolveCanonicalCorridor({
-          reviewStage: matchRow.reviewStage,
-          revealScope: 'shortlist_identity',
-          surface: 'review_detail',
-          fairnessStatus,
-          operationalFallbackMode: null,
-          introApproved: true,
+          if (!resolvedConversationId && existingConversation?.id) {
+            resolvedConversationId = existingConversation.id;
+          }
+
+          if (!resolvedConversationId) {
+            const [insertedConversation] = await db
+              .insert(conversations)
+              .values({
+                matchId: matchRow.matchId,
+                assignmentId: matchRow.assignmentId,
+                participantOneId: matchRow.profileId,
+                participantTwoId: user.id,
+                stage: 'masked',
+                maskedHandleOne: `Candidate #${nanoid(6).toUpperCase()}`,
+                maskedHandleTwo: `Organization #${nanoid(6).toUpperCase()}`,
+                lastMessageAt: new Date(),
+              })
+              .returning({
+                id: conversations.id,
+              });
+
+            resolvedConversationId = insertedConversation?.id ?? null;
+          }
+
+          if (intro.state === 'conversation_open' && resolvedConversationId) {
+            const corridor = resolveCanonicalCorridor({
+              reviewStage: matchRow.reviewStage,
+              revealScope: 'shortlist_identity',
+              surface: 'review_detail',
+              fairnessStatus,
+              operationalFallbackMode: null,
+              introApproved: true,
+            });
+            const reviewCard = await buildReviewCardPayload({
+              profileId: matchRow.profileId,
+              reasonCodes: ['intro_accepted_masked'],
+              fairnessStatus,
+              revealScope: 'shortlist_identity',
+            });
+
+            return NextResponse.json({
+              matchId: matchRow.matchId,
+              reviewStage: matchRow.reviewStage,
+              revealScope: 'shortlist_identity',
+              visibleIdentityFields: getVisibleIdentityFields('shortlist_identity'),
+              introWorkflowId: intro.id,
+              introWorkflowState: 'conversation_open',
+              introApproved: true,
+              conversationId: resolvedConversationId,
+              reviewCard,
+              ...corridor,
+              why: buildVisibilitySafeWhy({
+                reasonCodes: ['intro_accepted_masked'],
+                fairnessStatus,
+                fallbackState: corridor.fallbackState,
+              }),
+              message:
+                'Introduction already approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
+            });
+          }
+
+          if (existingConversation) {
+            await db
+              .update(conversations)
+              .set({
+                matchId: matchRow.matchId,
+                assignmentId: matchRow.assignmentId,
+                stage: 'masked',
+                revealedAt: null,
+                participantOneWantsReveal: false,
+                participantTwoWantsReveal: false,
+                participantOneRevealRequestedAt: null,
+                participantTwoRevealRequestedAt: null,
+                lastMessageAt: new Date(),
+                updatedAt: new Date(),
+              })
+              .where(eq(conversations.id, existingConversation.id));
+          }
+
+          await openIntroConversation({
+            introWorkflowId: intro.id,
+            conversationId: resolvedConversationId,
+            actorType: 'organization_member',
+            actorId: user.id,
+            matchId: matchRow.matchId,
+          });
+
+          await emitMatchActioned(user.id, matchRow.matchId, { action: 'introduce' });
+          await emitMatchActioned(matchRow.profileId, matchRow.matchId, { action: 'introduce' });
+          emitFirstQualifiedIntroAsync(user.id, matchRow.matchId, matchRow.assignmentId);
+
+          try {
+            const [candidateProfile, orgProfile] = await Promise.all([
+              db.query.profiles.findFirst({
+                where: eq(profiles.id, matchRow.profileId),
+                columns: { displayName: true, handle: true },
+              }),
+              db.query.profiles.findFirst({
+                where: eq(profiles.id, user.id),
+                columns: { displayName: true, handle: true },
+              }),
+            ]);
+
+            const candidateName =
+              candidateProfile?.displayName || candidateProfile?.handle || 'The candidate';
+            const orgName = orgProfile?.displayName || orgProfile?.handle || 'The organization';
+
+            await notifyIntroAccepted(user.id, matchRow.matchId, candidateName);
+            await notifyIntroAccepted(matchRow.profileId, matchRow.matchId, orgName);
+          } catch (error) {
+            log.error('org_review.request_intro.notification_failed', {
+              error: sanitizeErrorForLog(error),
+              matchId: matchRow.matchId,
+            });
+          }
+
+          const corridor = resolveCanonicalCorridor({
+            reviewStage: matchRow.reviewStage,
+            revealScope: 'shortlist_identity',
+            surface: 'review_detail',
+            fairnessStatus,
+            operationalFallbackMode: null,
+            introApproved: true,
+          });
+          const reviewCard = await buildReviewCardPayload({
+            profileId: matchRow.profileId,
+            reasonCodes: ['intro_accepted_masked'],
+            fairnessStatus,
+            revealScope: 'shortlist_identity',
+          });
+
+          return NextResponse.json({
+            matchId: matchRow.matchId,
+            reviewStage: matchRow.reviewStage,
+            revealScope: 'shortlist_identity',
+            visibleIdentityFields: getVisibleIdentityFields('shortlist_identity'),
+            introWorkflowId: intro.id,
+            introWorkflowState: 'conversation_open',
+            introApproved: true,
+            conversationId: resolvedConversationId,
+            reviewCard,
+            ...corridor,
+            why: buildVisibilitySafeWhy({
+              reasonCodes: ['intro_accepted_masked'],
+              fairnessStatus,
+              fallbackState: corridor.fallbackState,
+            }),
+            message:
+              'Introduction approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
+          });
+        }
+
+        if (payload.action === 'manual_override') {
+          if (!payload.reasonCode) {
+            return NextResponse.json(
+              { error: 'reasonCode is required for manual overrides' },
+              { status: 400 }
+            );
+          }
+
+          await appendManualOverrideReason({
+            matchId: matchRow.matchId,
+            assignmentId: matchRow.assignmentId,
+            profileId: matchRow.profileId,
+            orgId: org.id,
+            actorId: user.id,
+            reasonCode: payload.reasonCode,
+            annotation: payload.annotation ?? null,
+            reviewStage: matchRow.reviewStage,
+            revealScope: matchRow.revealScope,
+            payload: {
+              reviewStage: matchRow.reviewStage,
+            },
+          });
+        } else {
+          const actionToStage = {
+            shortlist: { reviewStage: 'shortlisted', reasonCode: 'shortlist_selected' },
+            unshortlist: { reviewStage: 'blind_review', reasonCode: 'passed_for_now' },
+            pass: { reviewStage: 'passed', reasonCode: 'passed_for_now' },
+            reject: { reviewStage: 'rejected', reasonCode: 'rejected_constraints' },
+          } as const;
+
+          const next = actionToStage[payload.action as keyof typeof actionToStage];
+          await setMatchReviewStage({
+            matchId: matchRow.matchId,
+            actorId: user.id,
+            actorRole: role,
+            sourceSurface: 'org_review_route',
+            reviewStage: next.reviewStage,
+            reasonCode: next.reasonCode,
+            annotation: payload.annotation ?? null,
+          });
+        }
+
+        let fairnessEvaluation:
+          | {
+              id: string | null;
+              status: 'pass' | 'unavailable' | 'elevated' | 'breach';
+            }
+          | undefined;
+
+        try {
+          const persisted = await persistFairnessEvaluationForAssignment({
+            assignmentId: matchRow.assignmentId,
+            actorId: user.id,
+            actorType: 'user_account',
+          });
+          fairnessEvaluation = {
+            id: persisted.id,
+            status: persisted.status,
+          };
+        } catch (error) {
+          log.error('org_review.fairness_persistence_failed', {
+            matchId: matchRow.matchId,
+            assignmentId: matchRow.assignmentId,
+            error: sanitizeErrorForLog(error),
+          });
+          fairnessEvaluation = {
+            id: null,
+            status: normalizeFairnessStatus(matchRow.fairnessStatus),
+          };
+        }
+
+        const updated = await db.query.matchReviewStates.findFirst({
+          where: eq(matchReviewStates.matchId, matchRow.matchId),
+          columns: {
+            reviewStage: true,
+            revealScope: true,
+          },
         });
+
+        const nextReviewStage = updated?.reviewStage ?? matchRow.reviewStage;
+        const nextRevealScope = updated?.revealScope ?? matchRow.revealScope;
+        const nextFairnessStatus = normalizeFairnessStatus(fairnessEvaluation.status);
+        const corridor = resolveCanonicalCorridor({
+          reviewStage: nextReviewStage,
+          revealScope: nextRevealScope,
+          surface: 'review_detail',
+          fairnessStatus: nextFairnessStatus,
+          operationalFallbackMode:
+            matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
+        });
+        const reasonCodes: string[] =
+          payload.action === 'manual_override'
+            ? payload.reasonCode
+              ? [payload.reasonCode]
+              : []
+            : getReviewMutationReasonCodes(payload.action);
         const reviewCard = await buildReviewCardPayload({
           profileId: matchRow.profileId,
-          reasonCodes: ['intro_accepted_masked'],
-          fairnessStatus,
-          revealScope: 'shortlist_identity',
+          reasonCodes,
+          fairnessStatus: nextFairnessStatus,
+          revealScope: nextRevealScope,
         });
 
         return NextResponse.json({
           matchId: matchRow.matchId,
-          reviewStage: matchRow.reviewStage,
-          revealScope: 'shortlist_identity',
-          visibleIdentityFields: getVisibleIdentityFields('shortlist_identity'),
-          introWorkflowId: intro.id,
-          introWorkflowState: 'conversation_open',
-          introApproved: true,
-          conversationId: resolvedConversationId,
+          reviewStage: nextReviewStage,
+          revealScope: nextRevealScope,
+          visibleIdentityFields: getVisibleIdentityFields(nextRevealScope),
           reviewCard,
           ...corridor,
           why: buildVisibilitySafeWhy({
-            reasonCodes: ['intro_accepted_masked'],
-            fairnessStatus,
+            reasonCodes,
+            fairnessStatus: nextFairnessStatus,
             fallbackState: corridor.fallbackState,
           }),
-          message:
-            'Introduction already approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
+          fairness: {
+            status: fairnessEvaluation.status,
+            evaluationId: fairnessEvaluation.id,
+          },
         });
       }
-
-      if (existingConversation) {
-        await db
-          .update(conversations)
-          .set({
-            matchId: matchRow.matchId,
-            assignmentId: matchRow.assignmentId,
-            stage: 'masked',
-            revealedAt: null,
-            participantOneWantsReveal: false,
-            participantTwoWantsReveal: false,
-            participantOneRevealRequestedAt: null,
-            participantTwoRevealRequestedAt: null,
-            lastMessageAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .where(eq(conversations.id, existingConversation.id));
-      }
-
-      await openIntroConversation({
-        introWorkflowId: intro.id,
-        conversationId: resolvedConversationId,
-        actorType: 'organization_member',
-        actorId: user.id,
-        matchId: matchRow.matchId,
-      });
-
-      await emitMatchActioned(user.id, matchRow.matchId, { action: 'introduce' });
-      await emitMatchActioned(matchRow.profileId, matchRow.matchId, { action: 'introduce' });
-      emitFirstQualifiedIntroAsync(user.id, matchRow.matchId, matchRow.assignmentId);
-
-      try {
-        const [candidateProfile, orgProfile] = await Promise.all([
-          db.query.profiles.findFirst({
-            where: eq(profiles.id, matchRow.profileId),
-            columns: { displayName: true, handle: true },
-          }),
-          db.query.profiles.findFirst({
-            where: eq(profiles.id, user.id),
-            columns: { displayName: true, handle: true },
-          }),
-        ]);
-
-        const candidateName =
-          candidateProfile?.displayName || candidateProfile?.handle || 'The candidate';
-        const orgName = orgProfile?.displayName || orgProfile?.handle || 'The organization';
-
-        await notifyIntroAccepted(user.id, matchRow.matchId, candidateName);
-        await notifyIntroAccepted(matchRow.profileId, matchRow.matchId, orgName);
-      } catch (error) {
-        log.error('org_review.request_intro.notification_failed', {
-          error: sanitizeErrorForLog(error),
-          matchId: matchRow.matchId,
-        });
-      }
-
-      const corridor = resolveCanonicalCorridor({
-        reviewStage: matchRow.reviewStage,
-        revealScope: 'shortlist_identity',
-        surface: 'review_detail',
-        fairnessStatus,
-        operationalFallbackMode: null,
-        introApproved: true,
-      });
-      const reviewCard = await buildReviewCardPayload({
-        profileId: matchRow.profileId,
-        reasonCodes: ['intro_accepted_masked'],
-        fairnessStatus,
-        revealScope: 'shortlist_identity',
-      });
-
-      return NextResponse.json({
-        matchId: matchRow.matchId,
-        reviewStage: matchRow.reviewStage,
-        revealScope: 'shortlist_identity',
-        visibleIdentityFields: getVisibleIdentityFields('shortlist_identity'),
-        introWorkflowId: intro.id,
-        introWorkflowState: 'conversation_open',
-        introApproved: true,
-        conversationId: resolvedConversationId,
-        reviewCard,
-        ...corridor,
-        why: buildVisibilitySafeWhy({
-          reasonCodes: ['intro_accepted_masked'],
-          fairnessStatus,
-          fallbackState: corridor.fallbackState,
-        }),
-        message:
-          'Introduction approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
-      });
-    }
-
-    if (payload.action === 'manual_override') {
-      if (!payload.reasonCode) {
-        return NextResponse.json(
-          { error: 'reasonCode is required for manual overrides' },
-          { status: 400 }
-        );
-      }
-
-      await appendManualOverrideReason({
-        matchId: matchRow.matchId,
-        assignmentId: matchRow.assignmentId,
-        profileId: matchRow.profileId,
-        orgId: org.id,
-        actorId: user.id,
-        reasonCode: payload.reasonCode,
-        annotation: payload.annotation ?? null,
-        reviewStage: matchRow.reviewStage,
-        revealScope: matchRow.revealScope,
-        payload: {
-          reviewStage: matchRow.reviewStage,
-        },
-      });
-    } else {
-      const actionToStage = {
-        shortlist: { reviewStage: 'shortlisted', reasonCode: 'shortlist_selected' },
-        unshortlist: { reviewStage: 'blind_review', reasonCode: 'passed_for_now' },
-        pass: { reviewStage: 'passed', reasonCode: 'passed_for_now' },
-        reject: { reviewStage: 'rejected', reasonCode: 'rejected_constraints' },
-      } as const;
-
-      const next = actionToStage[payload.action as keyof typeof actionToStage];
-      await setMatchReviewStage({
-        matchId: matchRow.matchId,
-        actorId: user.id,
-        actorRole: role,
-        sourceSurface: 'org_review_route',
-        reviewStage: next.reviewStage,
-        reasonCode: next.reasonCode,
-        annotation: payload.annotation ?? null,
-      });
-    }
-
-    let fairnessEvaluation:
-      | {
-          id: string | null;
-          status: 'pass' | 'unavailable' | 'elevated' | 'breach';
-        }
-      | undefined;
-
-    try {
-      const persisted = await persistFairnessEvaluationForAssignment({
-        assignmentId: matchRow.assignmentId,
-        actorId: user.id,
-        actorType: 'user_account',
-      });
-      fairnessEvaluation = {
-        id: persisted.id,
-        status: persisted.status,
-      };
-    } catch (error) {
-      log.error('org_review.fairness_persistence_failed', {
-        matchId: matchRow.matchId,
-        assignmentId: matchRow.assignmentId,
-        error: sanitizeErrorForLog(error),
-      });
-      fairnessEvaluation = {
-        id: null,
-        status: normalizeFairnessStatus(matchRow.fairnessStatus),
-      };
-    }
-
-    const updated = await db.query.matchReviewStates.findFirst({
-      where: eq(matchReviewStates.matchId, matchRow.matchId),
-      columns: {
-        reviewStage: true,
-        revealScope: true,
-      },
-    });
-
-    const nextReviewStage = updated?.reviewStage ?? matchRow.reviewStage;
-    const nextRevealScope = updated?.revealScope ?? matchRow.revealScope;
-    const nextFairnessStatus = normalizeFairnessStatus(fairnessEvaluation.status);
-    const corridor = resolveCanonicalCorridor({
-      reviewStage: nextReviewStage,
-      revealScope: nextRevealScope,
-      surface: 'review_detail',
-      fairnessStatus: nextFairnessStatus,
-      operationalFallbackMode:
-        matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
-    });
-    const reasonCodes: string[] =
-      payload.action === 'manual_override'
-        ? payload.reasonCode
-          ? [payload.reasonCode]
-          : []
-        : getReviewMutationReasonCodes(payload.action);
-    const reviewCard = await buildReviewCardPayload({
-      profileId: matchRow.profileId,
-      reasonCodes,
-      fairnessStatus: nextFairnessStatus,
-      revealScope: nextRevealScope,
-    });
-
-    return NextResponse.json({
-      matchId: matchRow.matchId,
-      reviewStage: nextReviewStage,
-      revealScope: nextRevealScope,
-      visibleIdentityFields: getVisibleIdentityFields(nextRevealScope),
-      reviewCard,
-      ...corridor,
-      why: buildVisibilitySafeWhy({
-        reasonCodes,
-        fairnessStatus: nextFairnessStatus,
-        fallbackState: corridor.fallbackState,
-      }),
-      fairness: {
-        status: fairnessEvaluation.status,
-        evaluationId: fairnessEvaluation.id,
-      },
-    });
+    );
   } catch (error) {
     const routeParams = await params.catch(() => ({ id: 'unknown', matchId: 'unknown' }));
     return safeApiErrorResponse({

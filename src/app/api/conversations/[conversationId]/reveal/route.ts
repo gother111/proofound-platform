@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { safeApiErrorResponse } from '@/lib/api/errors';
+import { withWorkflowMutationIdempotency } from '@/lib/api/workflow-idempotency';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { db, conversations, organizations, profiles } from '@/db';
@@ -21,6 +22,7 @@ import { log } from '@/lib/log';
 import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import { Resend } from 'resend';
 import { EMAIL_CONFIG } from '@/lib/email/config';
+import { recordEmailDeliveryFailure } from '@/lib/email/delivery-observability';
 import {
   buildRevealConversationUrl,
   buildRevealNotificationEmail,
@@ -196,7 +198,7 @@ function getOtherRevealRecipient(
  * 4. Trigger fires → stage = 'revealed', revealed_at = NOW()
  * 5. Both users receive IdentityRevealed email
  */
-export async function POST(_request: NextRequest, { params }: RouteParams) {
+export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { conversationId } = await params;
 
@@ -265,215 +267,228 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       });
     }
 
-    // Check if already revealed
-    if (syncedConversation.stage === 'revealed') {
-      return NextResponse.json(
-        { error: 'Identities already revealed', alreadyRevealed: true },
-        { status: 400 }
-      );
-    }
+    return await withWorkflowMutationIdempotency(
+      request,
+      {
+        userId: user.id,
+        orgId: revealContext?.orgId ?? null,
+        action: 'conversation.reveal',
+        resourceType: 'conversation',
+        resourceId: conversationId,
+      },
+      {},
+      async () => {
+        // Check if already revealed
+        if (syncedConversation.stage === 'revealed') {
+          return NextResponse.json(
+            { error: 'Identities already revealed', alreadyRevealed: true },
+            { status: 400 }
+          );
+        }
 
-    // Determine which participant is making the request
-    const isParticipantOne = syncedConversation.participantOneId === user.id;
+        // Determine which participant is making the request
+        const isParticipantOne = syncedConversation.participantOneId === user.id;
 
-    // Check if user already requested reveal
-    const alreadyRequested = isParticipantOne
-      ? syncedConversation.participantOneWantsReveal
-      : syncedConversation.participantTwoWantsReveal;
+        // Check if user already requested reveal
+        const alreadyRequested = isParticipantOne
+          ? syncedConversation.participantOneWantsReveal
+          : syncedConversation.participantTwoWantsReveal;
 
-    if (alreadyRequested) {
-      return NextResponse.json(
-        { error: 'You have already requested to reveal identities', waitingForOther: true },
-        { status: 400 }
-      );
-    }
+        if (alreadyRequested) {
+          return NextResponse.json(
+            { error: 'You have already requested to reveal identities', waitingForOther: true },
+            { status: 400 }
+          );
+        }
 
-    // Update reveal status
-    const updatedConversation = await db
-      .update(conversations)
-      .set(
-        isParticipantOne
-          ? {
-              participantOneWantsReveal: true,
-              participantOneRevealRequestedAt: new Date(),
-              updatedAt: new Date(),
-            }
-          : {
-              participantTwoWantsReveal: true,
-              participantTwoRevealRequestedAt: new Date(),
-              updatedAt: new Date(),
-            }
-      )
-      .where(eq(conversations.id, syncedConversation.id))
-      .returning();
-
-    const updated = updatedConversation[0];
-
-    // Check if both participants now want to reveal
-    const bothAgree = updated.participantOneWantsReveal && updated.participantTwoWantsReveal;
-
-    if (bothAgree) {
-      // Some environments apply reveal transition via DB trigger.
-      // If trigger already flipped stage, use that row; otherwise perform explicit transition.
-      let revealedConversation = updated;
-      if (updated.stage !== 'revealed') {
-        const [explicitlyRevealedConversation] = await db
+        // Update reveal status
+        const updatedConversation = await db
           .update(conversations)
-          .set({
-            stage: 'revealed',
-            revealedAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .where(eq(conversations.id, conversationId))
+          .set(
+            isParticipantOne
+              ? {
+                  participantOneWantsReveal: true,
+                  participantOneRevealRequestedAt: new Date(),
+                  updatedAt: new Date(),
+                }
+              : {
+                  participantTwoWantsReveal: true,
+                  participantTwoRevealRequestedAt: new Date(),
+                  updatedAt: new Date(),
+                }
+          )
+          .where(eq(conversations.id, syncedConversation.id))
           .returning();
-        revealedConversation = explicitlyRevealedConversation;
-      }
 
-      if (revealedConversation.matchId) {
-        if (!revealContext || revealContext.matchId !== revealedConversation.matchId) {
-          revealContext =
-            (await db.query.matchReviewStates.findFirst({
-              where: eq(matchReviewStates.matchId, revealedConversation.matchId),
-            })) ?? null;
-        }
+        const updated = updatedConversation[0];
 
-        if (revealContext) {
-          await recordRevealEvent({
-            matchId: revealContext.matchId,
-            assignmentId: revealContext.assignmentId,
-            profileId: revealContext.profileId,
-            orgId: revealContext.orgId,
-            actorId: user.id,
-            actorRole: 'conversation_participant',
-            actorType: 'user_account',
-            triggerType: 'user',
-            requestedScope: 'full_identity',
-            grantedScope: revealContext.revealScope,
-            reasonCode: 'reveal_approved',
-            sourceSurface: 'conversation_reveal_route',
-            context: {
-              conversationId,
-              auditEvent: 'reveal_approved',
-              consentApprovedByBothParticipants: true,
-            },
-            outcome: 'no_op',
-          });
-        }
+        // Check if both participants now want to reveal
+        const bothAgree = updated.participantOneWantsReveal && updated.participantTwoWantsReveal;
 
-        await unlockFullIdentityForMatch({
-          matchId: revealedConversation.matchId,
-          actorId: user.id,
-          actorRole: 'conversation_participant',
-          actorType: 'user_account',
-          triggerType: 'user',
-          sourceSurface: 'conversation_reveal_route',
-          reasonCode: 'reveal_unlocked',
-          unlockTrigger: 'conversation_reveal',
-          context: {
+        if (bothAgree) {
+          // Some environments apply reveal transition via DB trigger.
+          // If trigger already flipped stage, use that row; otherwise perform explicit transition.
+          let revealedConversation = updated;
+          if (updated.stage !== 'revealed') {
+            const [explicitlyRevealedConversation] = await db
+              .update(conversations)
+              .set({
+                stage: 'revealed',
+                revealedAt: new Date(),
+                updatedAt: new Date(),
+              })
+              .where(eq(conversations.id, conversationId))
+              .returning();
+            revealedConversation = explicitlyRevealedConversation;
+          }
+
+          if (revealedConversation.matchId) {
+            if (!revealContext || revealContext.matchId !== revealedConversation.matchId) {
+              revealContext =
+                (await db.query.matchReviewStates.findFirst({
+                  where: eq(matchReviewStates.matchId, revealedConversation.matchId),
+                })) ?? null;
+            }
+
+            if (revealContext) {
+              await recordRevealEvent({
+                matchId: revealContext.matchId,
+                assignmentId: revealContext.assignmentId,
+                profileId: revealContext.profileId,
+                orgId: revealContext.orgId,
+                actorId: user.id,
+                actorRole: 'conversation_participant',
+                actorType: 'user_account',
+                triggerType: 'user',
+                requestedScope: 'full_identity',
+                grantedScope: revealContext.revealScope,
+                reasonCode: 'reveal_approved',
+                sourceSurface: 'conversation_reveal_route',
+                context: {
+                  conversationId,
+                  auditEvent: 'reveal_approved',
+                  consentApprovedByBothParticipants: true,
+                },
+                outcome: 'no_op',
+              });
+            }
+
+            await unlockFullIdentityForMatch({
+              matchId: revealedConversation.matchId,
+              actorId: user.id,
+              actorRole: 'conversation_participant',
+              actorType: 'user_account',
+              triggerType: 'user',
+              sourceSurface: 'conversation_reveal_route',
+              reasonCode: 'reveal_unlocked',
+              unlockTrigger: 'conversation_reveal',
+              context: {
+                conversationId,
+                auditEvent: 'reveal_unlocked',
+                consentApprovedByBothParticipants: true,
+                participantOneApprovedAt:
+                  revealedConversation.participantOneRevealRequestedAt?.toISOString?.() ?? null,
+                participantTwoApprovedAt:
+                  revealedConversation.participantTwoRevealRequestedAt?.toISOString?.() ?? null,
+              },
+            });
+          }
+
+          // Log reveal event
+          log.info('conversation.revealed', {
             conversationId,
-            auditEvent: 'reveal_unlocked',
-            consentApprovedByBothParticipants: true,
-            participantOneApprovedAt:
-              revealedConversation.participantOneRevealRequestedAt?.toISOString?.() ?? null,
-            participantTwoApprovedAt:
-              revealedConversation.participantTwoRevealRequestedAt?.toISOString?.() ?? null,
-          },
-        });
-      }
+            participantOneId: revealedConversation.participantOneId,
+            participantTwoId: revealedConversation.participantTwoId,
+            revealedAt: revealedConversation.revealedAt,
+          });
 
-      // Log reveal event
-      log.info('conversation.revealed', {
-        conversationId,
-        participantOneId: revealedConversation.participantOneId,
-        participantTwoId: revealedConversation.participantTwoId,
-        revealedAt: revealedConversation.revealedAt,
-      });
+          // Send IdentityRevealed emails to both participants
+          await sendIdentityRevealedEmails(revealedConversation, revealContext, conversationId);
 
-      // Send IdentityRevealed emails to both participants
-      await sendIdentityRevealedEmails(revealedConversation, revealContext, conversationId);
+          const corridor = await getCorridorPayload(revealedConversation.matchId, user.id);
 
-      const corridor = await getCorridorPayload(revealedConversation.matchId, user.id);
-
-      return NextResponse.json({
-        success: true,
-        revealed: true,
-        message: 'Reveal approved. Continue in the approved conversation stage.',
-        conversation: {
-          id: revealedConversation.id,
-          stage: revealedConversation.stage,
-          revealedAt: revealedConversation.revealedAt,
-        },
-        corridor,
-        nextAction: corridor?.nextAction ?? null,
-      });
-    } else {
-      // Waiting for other participant
-      log.info('conversation.reveal_requested', {
-        conversationId,
-        requesterId: user.id,
-        waitingForOther: true,
-      });
-
-      if (updated.matchId) {
-        if (!revealContext || revealContext.matchId !== updated.matchId) {
-          revealContext =
-            (await db.query.matchReviewStates.findFirst({
-              where: eq(matchReviewStates.matchId, updated.matchId),
-            })) ?? null;
-        }
-
-        if (revealContext) {
-          await recordRevealEvent({
-            matchId: revealContext.matchId,
-            assignmentId: revealContext.assignmentId,
-            profileId: revealContext.profileId,
-            orgId: revealContext.orgId,
-            actorId: user.id,
-            actorRole: 'conversation_participant',
-            actorType: 'user_account',
-            triggerType: 'user',
-            requestedScope: 'full_identity',
-            grantedScope: revealContext.revealScope,
-            reasonCode: 'reveal_requested',
-            sourceSurface: 'conversation_reveal_route',
-            context: {
-              conversationId,
-              auditEvent: 'reveal_requested',
-              waitingForOther: true,
-              expiredAndReset: revealRequestExpired,
+          return NextResponse.json({
+            success: true,
+            revealed: true,
+            message: 'Reveal approved. Continue in the approved conversation stage.',
+            conversation: {
+              id: revealedConversation.id,
+              stage: revealedConversation.stage,
+              revealedAt: revealedConversation.revealedAt,
             },
-            outcome: 'no_op',
+            corridor,
+            nextAction: corridor?.nextAction ?? null,
+          });
+        } else {
+          // Waiting for other participant
+          log.info('conversation.reveal_requested', {
+            conversationId,
+            requesterId: user.id,
+            waitingForOther: true,
+          });
+
+          if (updated.matchId) {
+            if (!revealContext || revealContext.matchId !== updated.matchId) {
+              revealContext =
+                (await db.query.matchReviewStates.findFirst({
+                  where: eq(matchReviewStates.matchId, updated.matchId),
+                })) ?? null;
+            }
+
+            if (revealContext) {
+              await recordRevealEvent({
+                matchId: revealContext.matchId,
+                assignmentId: revealContext.assignmentId,
+                profileId: revealContext.profileId,
+                orgId: revealContext.orgId,
+                actorId: user.id,
+                actorRole: 'conversation_participant',
+                actorType: 'user_account',
+                triggerType: 'user',
+                requestedScope: 'full_identity',
+                grantedScope: revealContext.revealScope,
+                reasonCode: 'reveal_requested',
+                sourceSurface: 'conversation_reveal_route',
+                context: {
+                  conversationId,
+                  auditEvent: 'reveal_requested',
+                  waitingForOther: true,
+                  expiredAndReset: revealRequestExpired,
+                },
+                outcome: 'no_op',
+              });
+            }
+          }
+
+          const notificationContext = await resolveRevealNotificationContext(
+            updated,
+            revealContext,
+            conversationId
+          );
+          const requestRecipient = notificationContext
+            ? getOtherRevealRecipient(notificationContext, user.id)
+            : null;
+          if (requestRecipient) {
+            await sendRevealNotificationEmail({
+              recipient: requestRecipient,
+              conversationId,
+              kind: 'request',
+            });
+          }
+
+          const corridor = await getCorridorPayload(updated.matchId, user.id);
+
+          return NextResponse.json({
+            success: true,
+            revealed: false,
+            waitingForOther: true,
+            message: 'Reveal request sent. Waiting for the other participant to agree.',
+            corridor,
+            nextAction: corridor?.nextAction ?? null,
           });
         }
       }
-
-      const notificationContext = await resolveRevealNotificationContext(
-        updated,
-        revealContext,
-        conversationId
-      );
-      const requestRecipient = notificationContext
-        ? getOtherRevealRecipient(notificationContext, user.id)
-        : null;
-      if (requestRecipient) {
-        await sendRevealNotificationEmail({
-          recipient: requestRecipient,
-          conversationId,
-          kind: 'request',
-        });
-      }
-
-      const corridor = await getCorridorPayload(updated.matchId, user.id);
-
-      return NextResponse.json({
-        success: true,
-        revealed: false,
-        waitingForOther: true,
-        message: 'Reveal request sent. Waiting for the other participant to agree.',
-        corridor,
-        nextAction: corridor?.nextAction ?? null,
-      });
-    }
+    );
   } catch (error) {
     return safeApiErrorResponse({
       event: 'conversation.reveal_failed',
@@ -509,21 +524,24 @@ async function sendRevealNotificationEmail(input: {
 }) {
   const resend = getResendClient();
   if (!resend) {
-    log.error('reveal_notification.missing_resend_api_key', {
-      conversationId: input.conversationId,
-      kind: input.kind,
-      recipientRole: input.recipient.role,
+    recordEmailDeliveryFailure({
+      workflow: input.kind === 'request' ? 'reveal_request' : 'reveal_approved',
+      error: new Error('Email service not configured'),
+      provider: 'resend',
+      route: 'conversation_reveal_route',
+      reason: 'missing_provider_config',
     });
     return;
   }
 
   const recipientEmail = await getParticipantEmail(input.recipient.id, input.conversationId);
   if (!recipientEmail) {
-    log.error('reveal_notification.missing_email', {
-      conversationId: input.conversationId,
-      kind: input.kind,
-      recipientRole: input.recipient.role,
-      hasEmail: false,
+    recordEmailDeliveryFailure({
+      workflow: input.kind === 'request' ? 'reveal_request' : 'reveal_approved',
+      error: new Error('Reveal notification recipient email unavailable'),
+      provider: 'resend',
+      route: 'conversation_reveal_route',
+      reason: 'missing_recipient',
     });
     return;
   }
@@ -535,13 +553,23 @@ async function sendRevealNotificationEmail(input: {
     revealedName: input.kind === 'approved' ? input.recipient.revealedName : null,
   });
 
-  await resend.emails.send({
+  const result = await resend.emails.send({
     from: EMAIL_CONFIG.from,
     to: recipientEmail,
     subject: email.subject,
     html: email.html,
     text: email.text,
   });
+
+  if (result && typeof result === 'object' && 'error' in result && result.error) {
+    recordEmailDeliveryFailure({
+      workflow: input.kind === 'request' ? 'reveal_request' : 'reveal_approved',
+      error: result.error,
+      provider: 'resend',
+      route: 'conversation_reveal_route',
+      reason: 'provider_error',
+    });
+  }
 }
 
 /**
