@@ -1,0 +1,11 @@
+{
+  "url": "https://proofound.io/api/health",
+  "ok": true,
+  "status": 200,
+  "payload": {
+    "status": "ok",
+    "timestamp": "2026-04-30T20:58:40.001Z"
+  },
+  "error": null,
+  "observedAt": "2026-04-30T20:58:39.700Z"
+}

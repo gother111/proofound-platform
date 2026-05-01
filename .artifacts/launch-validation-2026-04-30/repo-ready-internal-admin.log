@@ -1,0 +1,23 @@
+> proofound@0.1.0 test
+> vitest run tests/api/admin-internal-ops-queue-route.test.ts tests/ui/admin-dashboard-launch-links.test.tsx src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/admin-internal-ops-queue-route.test.ts  (5 tests) 14ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 35ms
+ ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 83ms
+
+ Test Files  3 passed (3)
+      Tests  13 passed (13)
+   Start at  22:55:54
+   Duration  992ms (transform 168ms, setup 361ms, collect 311ms, tests 132ms, environment 644ms, prepare 172ms)

@@ -90,9 +90,10 @@ The recommendation is `NO-GO`.
 Proofound has fresh evidence that the live site can still serve key public and corridor flows, but launch authority has to follow the live readiness contract, not the workspace monitor view. Until the deployed runtime can see the required smoke artifact, the local prod build/boot pair is stable again, and the remaining out-of-corridor API routes are archived or reclassified inside the locked MVP, launch should stay blocked.
 
 <!-- final-launch-checklist:start -->
+
 ## Final Launch Checklist Artifact
 
-- Latest operational checklist: `.artifacts/launch-validation-2026-04-27/final-launch-checklist-status.md`
-- Latest machine-readable bundle: `.artifacts/launch-validation-2026-04-27/final-launch-checklist-status.json`
-- Generated at: `2026-04-27T18:45:07.397Z`
+- Latest operational checklist: `.artifacts/launch-validation-2026-04-30/final-launch-checklist-status.md`
+- Latest machine-readable bundle: `.artifacts/launch-validation-2026-04-30/final-launch-checklist-status.json`
+- Generated at: `2026-04-30T20:58:39.700Z`
 <!-- final-launch-checklist:end -->

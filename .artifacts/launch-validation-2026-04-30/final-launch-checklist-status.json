@@ -1,0 +1,1036 @@
+{
+  "scope": "full",
+  "generatedAt": "2026-04-30T20:58:39.700Z",
+  "currentDate": "2026-04-30",
+  "workspaceRoot": "/Users/yuriibakurov/proofound",
+  "gitHead": "2cae9e4f675a036e53ec7c069b67720df6e40438",
+  "gitBranch": "master",
+  "verdict": "READY",
+  "includeStateful": false,
+  "liveBaseUrl": "https://proofound.io",
+  "latestLaunchBundleDir": ".artifacts/launch-validation-2026-04-30",
+  "statusCounts": {
+    "PASS": 40,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "UNVERIFIED": 0
+  },
+  "items": [
+    {
+      "id": "product_proof_pack_canonical",
+      "section": "Product",
+      "label": "Proof Pack is canonical across launch-visible surfaces",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/proofound-current-state-reality-check.md",
+        "docs/verification-checklist.md"
+      ],
+      "status": "PASS",
+      "summary": "Focused verification status, verification options UI, decision, engagement verification, and workflow decision packs all passed.",
+      "evidence": [
+        {
+          "label": "Current-state reality check: Proof Pack canonicality",
+          "path": ".artifacts/proofound-current-state-reality-check.md",
+          "note": "Focused verification status, verification options UI, decision, engagement verification, and workflow decision packs all passed."
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Current-state reality check",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "product_portfolio_vs_intro_distinct",
+      "section": "Product",
+      "label": "Portfolio-ready and intro-eligible are clearly distinct",
+      "authorityRefs": [
+        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md",
+        "LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"
+      ],
+      "evidenceSources": [
+        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md",
+        "PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md",
+        "Proofound_Project_Specification_2026-03-11.md",
+        "LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"
+      ],
+      "status": "PASS",
+      "summary": "Launch runbook keeps portfolio-ready verified and intro-eligible stricter.",
+      "evidence": [
+        {
+          "label": "Launch runbook",
+          "path": "LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Launch runbook",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "product_private_context_scaffolding",
+      "section": "Product",
+      "label": "Private context scaffolding works for work / volunteering / education",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md",
+        "tests/ui/education-form-skill-picker.test.tsx",
+        "tests/ui/profile-dialogs-edit-routing.test.tsx",
+        "tests/actions/onboarding-private-context-scaffolding.test.ts"
+      ],
+      "status": "PASS",
+      "summary": "Private work, education, and volunteering context scaffolding tests passed.",
+      "evidence": [
+        {
+          "label": "Latest launch bundle private context validation evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/repo-ready-private-context.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Latest launch bundle private context validation",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "product_public_portfolio_safe_and_separate",
+      "section": "Product",
+      "label": "Public portfolio is calm, safe, and separate from review reveal",
+      "authorityRefs": [
+        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md",
+        "LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"
+      ],
+      "evidenceSources": [
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        ".artifacts/proofound-current-state-reality-check.md",
+        "docs/verification-checklist.md"
+      ],
+      "status": "PASS",
+      "summary": "Fresh smoke, blind-review coverage, and consented reveal evidence all point to a privacy-safe public portfolio that stays separate from reveal.",
+      "evidence": [
+        {
+          "label": "Launch smoke gate",
+          "path": ".artifacts/launch-validation-2026-04-30/24_gate_summary.json"
+        },
+        {
+          "label": "Verification checklist: blind review",
+          "path": "docs/verification-checklist.md"
+        },
+        {
+          "label": "Verification checklist: consented reveal",
+          "path": "docs/verification-checklist.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Launch bundle plus verification evidence",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "product_org_trust_page_live",
+      "section": "Product",
+      "label": "Org trust page is minimal and live",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        ".artifacts/proofound-route-inventory.md"
+      ],
+      "status": "PASS",
+      "summary": "Read-only public org trust smoke passed against the live site.",
+      "evidence": [
+        {
+          "label": "Latest launch bundle org trust smoke evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/21_live_launch_smoke.log"
+        },
+        {
+          "label": "Latest launch bundle org trust smoke evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/21_live_launch_smoke_report.json"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Latest launch bundle org trust smoke",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "product_assignment_builder_enforces_core_fields",
+      "section": "Product",
+      "label": "Assignment builder enforces why / work / proof / constraints",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "docs/internal-ops/assignment-quality-checklist.md",
+        "tests/api/assignments-publish-route.test.ts"
+      ],
+      "status": "PASS",
+      "summary": "Assignment publish tests assert hard publish blocks for missing work summary, proof expectations, and constraints, with business-value coverage in the route fixture.",
+      "evidence": [
+        {
+          "label": "Assignment publish route test",
+          "path": "tests/api/assignments-publish-route.test.ts",
+          "note": "Assertions include work_summary_required, proof_expectations_required, and constraints_required."
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [
+        "Assignment quality checklist disagrees with the selected PASS status for this checklist line."
+      ],
+      "sourceLabel": "Assignment publish route test",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "product_review_queue_blind_and_reason_coded",
+      "section": "Product",
+      "label": "Review queue is blind-by-default and reason-coded",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "docs/verification-checklist.md",
+        "tests/api/org-match-review-route.test.ts",
+        "src/app/api/org/[id]/matches/[matchId]/review/route.ts"
+      ],
+      "status": "PASS",
+      "summary": "2026-03-25 focused org-review route tests passed, and the isolated prod-mode strict corridor rerun completed successfully.",
+      "evidence": [
+        {
+          "label": "Verification checklist: blind-by-default review",
+          "path": "docs/verification-checklist.md",
+          "note": "2026-03-25 focused org-review route tests passed, and the isolated prod-mode strict corridor rerun completed successfully."
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Verification checklist",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "product_hire_and_engagement_distinct",
+      "section": "Product",
+      "label": "Hire and engagement verification remain distinct",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/proofound-current-state-reality-check.md",
+        "docs/proofound-hard-verification-rerun-final.md"
+      ],
+      "status": "PASS",
+      "summary": "Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario.",
+      "evidence": [
+        {
+          "label": "Current-state reality check: review -> intro -> reveal -> interview -> decision -> hire -> engagement verification",
+          "path": ".artifacts/proofound-current-state-reality-check.md",
+          "note": "Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario."
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Current-state reality check",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "engineering_build_clean",
+      "section": "Engineering",
+      "label": "`npm run build` passes cleanly under launch Node version",
+      "authorityRefs": ["agent/checklists/verification.md"],
+      "evidenceSources": [
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        ".artifacts/proofound-implementation-status-snapshot.md",
+        ".artifacts/launch-readiness-summary.md"
+      ],
+      "status": "PASS",
+      "summary": "`npm run build` passed under the launch Node/runtime configuration.",
+      "evidence": [
+        {
+          "label": "Latest launch bundle prod build evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/repo-ready-build.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Latest launch bundle prod build",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "engineering_next_start_stable",
+      "section": "Engineering",
+      "label": "`next start` is stable",
+      "authorityRefs": ["agent/checklists/verification.md"],
+      "evidenceSources": [
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        ".artifacts/proofound-master-audit-2026-03-22.md"
+      ],
+      "status": "PASS",
+      "summary": "`npm run start` booted successfully and `/api/health` returned ok.",
+      "evidence": [
+        {
+          "label": "Latest launch bundle prod boot evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/repo-ready-prod-start.log"
+        },
+        {
+          "label": "Latest launch bundle prod boot evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/repo-ready-prod-health.json"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Latest launch bundle prod boot",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "engineering_route_allowlist_reduced",
+      "section": "Engineering",
+      "label": "Route surface is reduced to the launch allowlist",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/proofound-route-inventory.md",
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        "tests/api/launch-surface-inventory.test.ts",
+        "tests/api/launch-page-inventory.test.ts"
+      ],
+      "status": "PASS",
+      "summary": "Launch route and page inventory tests passed against the current repo state.",
+      "evidence": [
+        {
+          "label": "Latest launch bundle route-surface gate evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/repo-ready-route-surface.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [
+        "Route inventory disagrees with the selected PASS status for this checklist line."
+      ],
+      "sourceLabel": "Latest launch bundle route-surface gate",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "engineering_three_role_model_canonical",
+      "section": "Engineering",
+      "label": "Canonical 3-role model is true across code, DB, and API",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/proofound-current-state-reality-check.md",
+        "tests/lib/authz-policy.test.ts",
+        "src/lib/authz/policy.ts"
+      ],
+      "status": "PASS",
+      "summary": "tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.",
+      "evidence": [
+        {
+          "label": "Current-state reality check: canonical role and RLS truth",
+          "path": ".artifacts/proofound-current-state-reality-check.md",
+          "note": "tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target."
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Current-state reality check",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "engineering_verification_status_canonical",
+      "section": "Engineering",
+      "label": "Verification status semantics are canonical and freshness-aware",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/proofound-current-state-reality-check.md",
+        "docs/verification-checklist.md",
+        "src/app/api/monitoring/launch-status/route.ts"
+      ],
+      "status": "PASS",
+      "summary": "Launch-status route tests passed, .artifacts/launch-smoke-report.json refreshed at 2026-03-25T08:00:27.400Z with overallStatus: pass, and live synthetic monitors passed 10/10 at 2026-03-25T08:00:31.808Z.",
+      "evidence": [
+        {
+          "label": "Current-state reality check: launch ops / smoke freshness / launch-status truth",
+          "path": ".artifacts/proofound-current-state-reality-check.md",
+          "note": "Launch-status route tests passed, .artifacts/launch-smoke-report.json refreshed at 2026-03-25T08:00:27.400Z with overallStatus: pass, and live synthetic monitors passed 10/10 at 2026-03-25T08:00:31.808Z."
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Current-state reality check",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "engineering_upload_filename_leaks_closed",
+      "section": "Engineering",
+      "label": "Upload metadata/original filename leaks are closed",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        "docs/internal-ops/redaction-risky-upload-sop.md",
+        "tests/lib/uploads-privacy.test.ts",
+        "tests/lib/uploads-lifecycle-queue.test.ts"
+      ],
+      "status": "PASS",
+      "summary": "Upload privacy tests cover filename sanitization, metadata review flags, generic public/review display labels, and queue handoff with sanitized filenames.",
+      "evidence": [
+        {
+          "label": "Upload privacy helpers test",
+          "path": "tests/lib/uploads-privacy.test.ts",
+          "note": "Covers sanitized filenames, metadata review flags, and generic display names."
+        },
+        {
+          "label": "Upload lifecycle queue test",
+          "path": "tests/lib/uploads-lifecycle-queue.test.ts",
+          "note": "Asserts correction_revocation queue metadata includes sanitizedFilename and reviewReasons."
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Upload privacy tests",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "engineering_legacy_decision_and_route_drift_removed",
+      "section": "Engineering",
+      "label": "Legacy decision and non-MVP route drift are removed or hard-gated",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/proofound-route-inventory.md",
+        ".artifacts/launch-validation-*/24_gate_summary.json"
+      ],
+      "status": "PASS",
+      "summary": "Launch route and page inventory tests passed against the current repo state.",
+      "evidence": [
+        {
+          "label": "Latest launch bundle route-surface gate evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/repo-ready-route-surface.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Latest launch bundle route-surface gate",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "engineering_launch_status_fresh_evidence",
+      "section": "Engineering",
+      "label": "Launch-status and smoke-artifact logic run on fresh evidence",
+      "authorityRefs": ["agent/checklists/verification.md"],
+      "evidenceSources": [
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        ".artifacts/launch-readiness-summary.md",
+        "src/app/api/monitoring/launch-status/route.ts"
+      ],
+      "status": "PASS",
+      "summary": "Live launch-status endpoint responded successfully during this checklist run.",
+      "evidence": [
+        {
+          "label": "Live launch-status endpoint",
+          "url": "https://proofound.io/api/monitoring/launch-status",
+          "path": ".artifacts/launch-validation-2026-04-30/final-launch-checklist-live-launch-status.json"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Live launch-status endpoint",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "qa_strict_org_corridor_fresh",
+      "section": "QA",
+      "label": "Fresh strict org corridor passes in prod mode",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/proofound-current-state-reality-check.md",
+        "docs/verification-checklist.md",
+        ".artifacts/launch-validation-*/24_gate_summary.json"
+      ],
+      "status": "PASS",
+      "summary": "Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario.",
+      "evidence": [
+        {
+          "label": "Current-state reality check: review -> intro -> reveal -> interview -> decision -> hire -> engagement verification",
+          "path": ".artifacts/proofound-current-state-reality-check.md",
+          "note": "Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario."
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Current-state reality check",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "qa_public_org_trust_smoke",
+      "section": "QA",
+      "label": "Public-org trust smoke passes",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        "e2e/public-org-trust.smoke.spec.ts"
+      ],
+      "status": "PASS",
+      "summary": "Read-only public org trust smoke passed against the live site.",
+      "evidence": [
+        {
+          "label": "Latest launch bundle public org trust smoke evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/21_live_launch_smoke.log"
+        },
+        {
+          "label": "Latest launch bundle public org trust smoke evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/21_live_launch_smoke_report.json"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Latest launch bundle public org trust smoke",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "qa_privacy_rls_actual_db",
+      "section": "QA",
+      "label": "RLS/privacy tests pass against actual DB state",
+      "authorityRefs": ["agent/checklists/verification.md"],
+      "evidenceSources": [
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        ".artifacts/proofound-current-state-reality-check.md"
+      ],
+      "status": "PASS",
+      "summary": "tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.",
+      "evidence": [
+        {
+          "label": "Current-state reality check: canonical role and RLS truth",
+          "path": ".artifacts/proofound-current-state-reality-check.md",
+          "note": "tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target."
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Current-state reality check",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "qa_manual_privacy_sweep",
+      "section": "QA",
+      "label": "Manual privacy leak sweep passes",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/launch-validation-*/21_live_launch_smoke_report.json",
+        "docs/internal-ops/reveal-privacy-dispute-sop.md"
+      ],
+      "status": "PASS",
+      "summary": "Privacy-sensitive review, uploads, and launch archive protection tests passed.",
+      "evidence": [
+        {
+          "label": "Latest launch bundle manual privacy validation evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/repo-ready-manual-privacy.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Latest launch bundle manual privacy validation",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "qa_workflow_email_privacy_sweep",
+      "section": "QA",
+      "label": "Workflow email privacy sweep passes",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        "agent/checklists/verification.md",
+        "docs/internal-ops/workflow-comms-templates.md"
+      ],
+      "status": "PASS",
+      "summary": "Workflow email privacy tests passed for masked and pre-reveal flows.",
+      "evidence": [
+        {
+          "label": "Latest launch bundle workflow email privacy validation evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/repo-ready-workflow-email-privacy.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Latest launch bundle workflow email privacy validation",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "qa_archived_route_and_surface_tests",
+      "section": "QA",
+      "label": "Archived-route and launch-surface tests pass",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        "tests/api/launch-surface-inventory.test.ts",
+        "tests/api/launch-page-inventory.test.ts",
+        "tests/ui/archived-mvp-routes.test.ts"
+      ],
+      "status": "PASS",
+      "summary": "Launch route and page inventory tests passed against the current repo state.",
+      "evidence": [
+        {
+          "label": "Latest launch bundle route-surface gate evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/repo-ready-route-surface.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Latest launch bundle route-surface gate",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "qa_assignment_publish_smoke",
+      "section": "QA",
+      "label": "Assignment publish smoke passes",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        "docs/verification-checklist.md",
+        ".artifacts/proofound-current-state-reality-check.md",
+        "tests/api/assignments-publish-route.test.ts"
+      ],
+      "status": "PASS",
+      "summary": "PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict passed 7/7, including the narrowed org assignment lifecycle checks.",
+      "evidence": [
+        {
+          "label": "Current-state reality check: assignment create / edit / publish",
+          "path": ".artifacts/proofound-current-state-reality-check.md",
+          "note": "PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict passed 7/7, including the narrowed org assignment lifecycle checks."
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Current-state reality check",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "qa_final_evidence_packet",
+      "section": "QA",
+      "label": "Final evidence packet is assembled and dated",
+      "authorityRefs": ["agent/checklists/verification.md"],
+      "evidenceSources": [
+        ".artifacts/launch-validation-YYYY-MM-DD/final-launch-checklist-status.md",
+        ".artifacts/launch-validation-YYYY-MM-DD/final-launch-checklist-status.json"
+      ],
+      "status": "PASS",
+      "summary": "This checklist run generated a dated Markdown report and JSON bundle.",
+      "evidence": [
+        {
+          "label": "Generated Markdown report",
+          "path": ".artifacts/launch-validation-2026-04-30/final-launch-checklist-status.md"
+        },
+        {
+          "label": "Generated JSON bundle",
+          "path": ".artifacts/launch-validation-2026-04-30/final-launch-checklist-status.json"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Final checklist generator",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "ops_verification_queue_owner_sop",
+      "section": "Ops",
+      "label": "Verification queue has owner and SOP",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        "docs/internal-ops/index.md",
+        "docs/internal-ops/verification-review-sop.md"
+      ],
+      "status": "PASS",
+      "summary": "Internal ops index assigns an owner and queue mapping for verification review.",
+      "evidence": [
+        {
+          "label": "Internal ops SOP index",
+          "path": "docs/internal-ops/index.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Internal ops SOP index",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "ops_redaction_queue_owner_sop",
+      "section": "Ops",
+      "label": "Redaction / risky-upload queue has owner and SOP",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        "docs/internal-ops/index.md",
+        "docs/internal-ops/redaction-risky-upload-sop.md"
+      ],
+      "status": "PASS",
+      "summary": "Internal ops index maps the redaction / risky upload queue to an owner and SOP.",
+      "evidence": [
+        {
+          "label": "Internal ops SOP index",
+          "path": "docs/internal-ops/index.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Internal ops SOP index",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "ops_reveal_privacy_dispute_path",
+      "section": "Ops",
+      "label": "Reveal/privacy dispute path exists",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        "docs/internal-ops/reveal-privacy-dispute-sop.md",
+        "docs/internal-ops/workflow-comms-templates.md"
+      ],
+      "status": "PASS",
+      "summary": "A dedicated reveal/privacy dispute SOP exists for live corridor handling.",
+      "evidence": [
+        {
+          "label": "Reveal / privacy dispute SOP",
+          "path": "docs/internal-ops/reveal-privacy-dispute-sop.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Reveal / privacy dispute SOP",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "ops_engagement_verification_checklist",
+      "section": "Ops",
+      "label": "Engagement verification evidence checklist exists",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": ["docs/internal-ops/engagement-verification-evidence-checklist.md"],
+      "status": "PASS",
+      "summary": "A dedicated engagement-verification evidence checklist exists for pilot ops.",
+      "evidence": [
+        {
+          "label": "Engagement verification evidence checklist",
+          "path": "docs/internal-ops/engagement-verification-evidence-checklist.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Engagement verification evidence checklist",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "ops_incident_roles_assigned",
+      "section": "Ops",
+      "label": "Incident owner / support lead roles are assigned",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        "LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md",
+        "docs/internal-ops/index.md",
+        "docs/internal-ops/launch-owner-roster-2026-04-27.md"
+      ],
+      "status": "PASS",
+      "summary": "The dated launch owner roster assigns named humans to founder, incident, technical, product/ops, and support/verification roles.",
+      "evidence": [
+        {
+          "label": "Production launch owner roster",
+          "path": "docs/internal-ops/launch-owner-roster-2026-04-27.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Production launch owner roster",
+      "blocksVerdict": true,
+      "blockingScope": "full"
+    },
+    {
+      "id": "ops_critical_alerts_configured",
+      "section": "Ops",
+      "label": "Critical alerts are configured",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        "docs/monitoring-alerting.md",
+        "LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md",
+        "docs/internal-ops/production-launch-evidence-2026-04-27.md"
+      ],
+      "status": "PASS",
+      "summary": "The dated launch evidence pack records green live launch monitoring for health, status, auth-adjacent, email/privacy, upload/privacy, workflow, and privacy-leak categories.",
+      "evidence": [
+        {
+          "label": "Production launch evidence pack",
+          "path": "docs/internal-ops/production-launch-evidence-2026-04-27.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Production launch evidence pack",
+      "blocksVerdict": true,
+      "blockingScope": "full"
+    },
+    {
+      "id": "ops_backup_restore_verified",
+      "section": "Ops",
+      "label": "Backups and restore discipline are verified",
+      "authorityRefs": [
+        "LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md",
+        "agent/checklists/verification.md"
+      ],
+      "evidenceSources": [
+        "docs/launch-restore-drill.md",
+        "agent/checklists/verification.md",
+        "README.md",
+        "docs/internal-ops/production-launch-evidence-2026-04-27.md"
+      ],
+      "status": "PASS",
+      "summary": "The dated launch evidence pack records a successful isolated restore drill.",
+      "evidence": [
+        {
+          "label": "Production launch evidence pack",
+          "path": "docs/internal-ops/production-launch-evidence-2026-04-27.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Production launch evidence pack",
+      "blocksVerdict": true,
+      "blockingScope": "full"
+    },
+    {
+      "id": "ops_internal_admin_surfaces",
+      "section": "Ops",
+      "label": "Internal ops/admin surfaces are protected and usable",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "docs/internal-ops/index.md",
+        "src/lib/launch/surface-policy.ts",
+        "tests/api/launch-page-inventory.test.ts"
+      ],
+      "status": "PASS",
+      "summary": "Internal admin surface tests passed for route protection, queue APIs, and dashboard links.",
+      "evidence": [
+        {
+          "label": "Latest launch bundle internal admin surface validation evidence",
+          "path": ".artifacts/launch-validation-2026-04-30/repo-ready-internal-admin.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Latest launch bundle internal admin surface validation",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "founder_first_corridor_chosen",
+      "section": "Founder / GTM",
+      "label": "First corridor is explicitly chosen",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md",
+        "PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md"
+      ],
+      "status": "PASS",
+      "summary": "The locked MVP explicitly chooses a proof-first hiring corridor centered on Proof Packs.",
+      "evidence": [
+        {
+          "label": "Locked MVP source of truth",
+          "path": "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Locked MVP source of truth",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "founder_icp_design_partner_locked",
+      "section": "Founder / GTM",
+      "label": "ICP and design-partner target list are locked",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md",
+        "Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md"
+      ],
+      "status": "PASS",
+      "summary": "The GTM plan locks the launch ICP and first-wave design-partner target list for the current proof-first corridor.",
+      "evidence": [
+        {
+          "label": "GTM and initial marketing plan",
+          "path": "Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "GTM and initial marketing plan",
+      "blocksVerdict": true,
+      "blockingScope": "full"
+    },
+    {
+      "id": "founder_pilot_package_documented",
+      "section": "Founder / GTM",
+      "label": "Pilot package, scope, and case-study terms are documented",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": ["Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md"],
+      "status": "PASS",
+      "summary": "The GTM plan documents pilot scope, timeline, pricing posture, terms, and case-study expectations.",
+      "evidence": [
+        {
+          "label": "GTM and initial marketing plan",
+          "path": "Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "GTM and initial marketing plan",
+      "blocksVerdict": true,
+      "blockingScope": "full"
+    },
+    {
+      "id": "founder_outbound_and_homepage_match",
+      "section": "Founder / GTM",
+      "label": "Founder outbound and homepage messaging match the wedge",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "README.md",
+        "src/app/page.tsx",
+        "Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md"
+      ],
+      "status": "PASS",
+      "summary": "The GTM plan pins outbound copy to the same proof-over-CV wedge used by the production homepage.",
+      "evidence": [
+        {
+          "label": "GTM and initial marketing plan",
+          "path": "Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "GTM and initial marketing plan",
+      "blocksVerdict": true,
+      "blockingScope": "full"
+    },
+    {
+      "id": "founder_public_story_signal_over_cvs",
+      "section": "Founder / GTM",
+      "label": "Public story sells stronger signal than CVs, not broad platform vision",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "README.md",
+        "docs/scope-compliance-report-2026-03-24.md",
+        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
+      ],
+      "status": "PASS",
+      "summary": "Current authority docs frame Proofound as stronger signal than CV theater, but founder-outbound proof remains outside repo scope.",
+      "evidence": [
+        {
+          "label": "Locked MVP source of truth",
+          "path": "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md",
+          "note": "Product promise: proof instead of profile theater."
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Locked MVP source of truth",
+      "blocksVerdict": true,
+      "blockingScope": "full"
+    },
+    {
+      "id": "founder_candidate_supply_plan",
+      "section": "Founder / GTM",
+      "label": "Candidate supply-seeding plan exists for the chosen corridor",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": ["Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md"],
+      "status": "PASS",
+      "summary": "The GTM plan defines the first-wave candidate supply channels, volume assumptions, readiness criteria, and operating loop.",
+      "evidence": [
+        {
+          "label": "GTM and initial marketing plan",
+          "path": "Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "GTM and initial marketing plan",
+      "blocksVerdict": true,
+      "blockingScope": "full"
+    },
+    {
+      "id": "founder_org_onboarding_playbook",
+      "section": "Founder / GTM",
+      "label": "Org onboarding playbook exists",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "docs/internal-ops/index.md",
+        "docs/internal-ops/assignment-quality-checklist.md",
+        "Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md"
+      ],
+      "status": "PASS",
+      "summary": "The GTM plan contains a repeatable org onboarding playbook for the pilot motion.",
+      "evidence": [
+        {
+          "label": "GTM and initial marketing plan",
+          "path": "Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "GTM and initial marketing plan",
+      "blocksVerdict": true,
+      "blockingScope": "full"
+    },
+    {
+      "id": "founder_go_no_go_signed_after_green",
+      "section": "Founder / GTM",
+      "label": "Go/no-go is signed only after fresh evidence is green",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/launch-readiness-summary.md",
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        "docs/launch-signoff-2026-04-27.md"
+      ],
+      "status": "PASS",
+      "summary": "The dated launch signoff memo records a GO decision after fresh launch evidence turned green.",
+      "evidence": [
+        {
+          "label": "Production launch signoff memo",
+          "path": "docs/launch-signoff-2026-04-27.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "Production launch signoff memo",
+      "blocksVerdict": true,
+      "blockingScope": "full"
+    }
+  ],
+  "trueBlockers": [],
+  "externalPrerequisites": [],
+  "missingEvidence": [],
+  "retiredStaleClaims": [
+    "`The persisted smoke artifact is stale and still blocking launch readiness.`",
+    "Retire this as current truth. The smoke artifact was refreshed at `2026-03-25T08:00:27.400Z` and expires at `2026-03-25T09:00:27.400Z`.",
+    "`No safe strict org-corridor rerun was attempted in this block.`",
+    "Retire this as current truth. Fresh isolated and full org strict reruns both passed in prod mode.",
+    "`The active route surface is still 187 APIs and 91 pages.`",
+    "Retire this as current truth. Fresh current-state counts are `138` APIs and `50` pages.",
+    "`The org settings surface remains a live gate page.`",
+    "Retire this as current truth. `/app/o/[slug]/settings` is now archived and returns the launch-archive not-found copy.",
+    "`The contracts API remains a live launch surface.`",
+    "Retire this as current truth. `/api/contracts` is archived and returns `410`.",
+    "`Google, LinkedIn, and video integrations remain live launch compatibility flows.`",
+    "Retire this as current truth. Those non-launch integration routes are now removed from the active launch surface, and interview scheduling is manual-link only in the active MVP UI.",
+    "The earlier repo memo that treated the local build blocker as retired is stale for this workspace state. The current clean local `next build` run still ends in `PageNotFoundError: Cannot find module for page: /_document`, and `next start` cannot find a usable production build.",
+    "The earlier live `missing_smoke_artifact` conclusion is only partly stale. Fresh workspace smoke and monitor runs are green, but the authoritative live `/api/monitoring/launch-status` endpoint still reports `missing_smoke_artifact`, so the deployed runtime still cannot see the required smoke evidence.",
+    "Assignment quality checklist disagrees with the selected PASS status for this checklist line.",
+    "Route inventory disagrees with the selected PASS status for this checklist line."
+  ],
+  "outputs": {
+    "markdownPath": ".artifacts/launch-validation-2026-04-30/final-launch-checklist-status.md",
+    "jsonPath": ".artifacts/launch-validation-2026-04-30/final-launch-checklist-status.json"
+  }
+}

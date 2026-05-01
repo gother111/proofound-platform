@@ -1,0 +1,137 @@
+{
+  "generatedAt": "2026-04-30T20:53:44.525Z",
+  "workspace": "/Users/yuriibakurov/proofound",
+  "branch": "master",
+  "head": "2cae9e4f675a036e53ec7c069b67720df6e40438",
+  "authoritativeBaseUrl": "https://proofound.io",
+  "verdict": "GO",
+  "recommendation": "GO because repo-owned gates and live launch smoke/status evidence are green.",
+  "blockingGateIds": [],
+  "gates": [
+    {
+      "id": "prod_build",
+      "status": "PASS",
+      "summary": "`npm run build` passed under the launch Node/runtime configuration.",
+      "evidence": [".artifacts/launch-validation-2026-04-30/repo-ready-build.log"],
+      "command": "npm run build"
+    },
+    {
+      "id": "prod_boot",
+      "status": "PASS",
+      "summary": "`npm run start` booted successfully and `/api/health` returned ok.",
+      "evidence": [
+        ".artifacts/launch-validation-2026-04-30/repo-ready-prod-start.log",
+        ".artifacts/launch-validation-2026-04-30/repo-ready-prod-health.json"
+      ],
+      "command": "npm run start -- -p <dynamic-port> && curl /api/health"
+    },
+    {
+      "id": "local_api_health",
+      "status": "PASS",
+      "summary": "Local production boot reached an ok `/api/health` response during repo-ready validation.",
+      "evidence": [
+        ".artifacts/launch-validation-2026-04-30/repo-ready-prod-start.log",
+        ".artifacts/launch-validation-2026-04-30/repo-ready-prod-health.json"
+      ]
+    },
+    {
+      "id": "route_surface_and_archived_routes",
+      "status": "PASS",
+      "summary": "Launch route and page inventory tests passed against the current repo state.",
+      "evidence": [".artifacts/launch-validation-2026-04-30/repo-ready-route-surface.log"],
+      "command": "npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts"
+    },
+    {
+      "id": "private_context_scaffolding",
+      "status": "PASS",
+      "summary": "Private work, education, and volunteering context scaffolding tests passed.",
+      "evidence": [".artifacts/launch-validation-2026-04-30/repo-ready-private-context.log"],
+      "command": "npm run test -- tests/ui/profile-dialogs-edit-routing.test.tsx tests/ui/education-form-skill-picker.test.tsx tests/actions/onboarding-private-context-scaffolding.test.ts"
+    },
+    {
+      "id": "manual_privacy_sweep",
+      "status": "PASS",
+      "summary": "Privacy-sensitive review, uploads, and launch archive protection tests passed.",
+      "evidence": [".artifacts/launch-validation-2026-04-30/repo-ready-manual-privacy.log"],
+      "command": "npm run test -- tests/api/org-match-review-route.test.ts tests/lib/uploads-privacy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts"
+    },
+    {
+      "id": "workflow_email_privacy",
+      "status": "PASS",
+      "summary": "Workflow email privacy tests passed for masked and pre-reveal flows.",
+      "evidence": [".artifacts/launch-validation-2026-04-30/repo-ready-workflow-email-privacy.log"],
+      "command": "npm run test -- tests/lib/workflow-email-privacy.test.ts"
+    },
+    {
+      "id": "internal_admin_surfaces",
+      "status": "PASS",
+      "summary": "Internal admin surface tests passed for route protection, queue APIs, and dashboard links.",
+      "evidence": [".artifacts/launch-validation-2026-04-30/repo-ready-internal-admin.log"],
+      "command": "npm run test -- tests/api/admin-internal-ops-queue-route.test.ts tests/ui/admin-dashboard-launch-links.test.tsx src/lib/__tests__/middleware-launch-archive.test.ts"
+    },
+    {
+      "id": "public_org_trust_smoke",
+      "status": "PASS",
+      "summary": "Read-only public org trust smoke passed against the live site.",
+      "evidence": [
+        ".artifacts/launch-validation-2026-04-30/21_live_launch_smoke.log",
+        ".artifacts/launch-validation-2026-04-30/21_live_launch_smoke_report.json"
+      ]
+    },
+    {
+      "id": "live_launch_smoke_artifact_refresh",
+      "status": "PASS",
+      "summary": "Live-targeted full launch smoke artifact refreshed successfully.",
+      "evidence": [
+        ".artifacts/launch-validation-2026-04-30/21_live_launch_smoke.log",
+        ".artifacts/launch-validation-2026-04-30/21_live_launch_smoke_report.json"
+      ],
+      "smokeChecks": [
+        {
+          "id": "public_individual_portfolio_visible",
+          "status": "pass",
+          "durationMs": 1506
+        },
+        {
+          "id": "proof_creation_case",
+          "status": "pass",
+          "durationMs": 1361
+        },
+        {
+          "id": "public_org_trust_fixture_live",
+          "status": "pass",
+          "durationMs": 7721
+        },
+        {
+          "id": "full_org_corridor_review_to_engagement_verification",
+          "status": "pass",
+          "durationMs": 134099
+        },
+        {
+          "id": "hidden_portfolio_protected",
+          "status": "pass",
+          "durationMs": 1484
+        },
+        {
+          "id": "privacy_no_leak_case",
+          "status": "pass",
+          "durationMs": 1517
+        }
+      ]
+    },
+    {
+      "id": "live_api_health",
+      "status": "PASS",
+      "summary": "Live `/api/health` returned ok.",
+      "evidence": [".artifacts/launch-validation-2026-04-30/20_live_health.json"]
+    },
+    {
+      "id": "live_launch_status",
+      "status": "PASS",
+      "summary": "Live `/api/monitoring/launch-status` reported ready.",
+      "evidence": [".artifacts/launch-validation-2026-04-30/23_live_launch_status.json"],
+      "readinessState": "ready",
+      "notReadyReasonCodes": []
+    }
+  ]
+}

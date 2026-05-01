@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "scope": "full",
+  "generatedAt": "2026-04-30T20:58:38.500Z",
+  "targetBaseUrl": "https://proofound.io",
+  "executionMode": "live",
+  "freshnessThresholdMinutes": 60,
+  "expiresAt": "2026-04-30T21:58:38.500Z",
+  "overallStatus": "pass",
+  "corridors": [
+    {
+      "id": "individual",
+      "label": "Individual corridor",
+      "status": "pass",
+      "checkIds": ["public_individual_portfolio_visible", "proof_creation_case"],
+      "generatedAt": "2026-04-30T20:58:38.500Z"
+    },
+    {
+      "id": "organization",
+      "label": "Organization corridor",
+      "status": "pass",
+      "checkIds": [
+        "public_org_trust_fixture_live",
+        "full_org_corridor_review_to_engagement_verification"
+      ],
+      "generatedAt": "2026-04-30T20:58:38.500Z"
+    },
+    {
+      "id": "trust_privacy",
+      "label": "Trust / privacy corridor",
+      "status": "pass",
+      "checkIds": ["hidden_portfolio_protected", "privacy_no_leak_case"],
+      "generatedAt": "2026-04-30T20:58:38.500Z"
+    }
+  ],
+  "checks": [
+    {
+      "id": "public_individual_portfolio_visible",
+      "corridor": "individual",
+      "label": "Public individual portfolio visible case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": ["tests/ui/public-portfolio-access-consistency.test.tsx"]
+      },
+      "status": "pass",
+      "expectedState": "public_individual_portfolio_visible",
+      "durationMs": 1506,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 83ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  22:56:11\n   Duration  1.03s (transform 108ms, setup 115ms, collect 177ms, tests 83ms, environment 205ms, prepare 41ms)",
+      "generatedAt": "2026-04-30T20:56:12.316Z"
+    },
+    {
+      "id": "proof_creation_case",
+      "corridor": "individual",
+      "label": "Proof creation case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": ["tests/api/expertise-user-skill-proofs-route.test.ts"]
+      },
+      "status": "pass",
+      "expectedState": "proof_creation_case_live",
+      "durationMs": 1361,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (4 tests) 17ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  22:56:12\n   Duration  847ms (transform 57ms, setup 114ms, collect 59ms, tests 17ms, environment 208ms, prepare 45ms)",
+      "generatedAt": "2026-04-30T20:56:13.678Z"
+    },
+    {
+      "id": "public_org_trust_fixture_live",
+      "corridor": "organization",
+      "label": "Seeded public org trust fixture live",
+      "runner": {
+        "kind": "command",
+        "label": "seeded_public_org_trust_smoke",
+        "preCommands": [
+          {
+            "label": "seed_public_org_trust_fixture",
+            "command": ["npm", "run", "seed:public-org-trust-fixture"]
+          }
+        ],
+        "command": ["npm", "run", "test:e2e:org-trust:smoke"]
+      },
+      "status": "pass",
+      "expectedState": "public_org_trust_fixture_live",
+      "durationMs": 7721,
+      "outputSnippet": "[seed_public_org_trust_fixture]\n> proofound@0.1.0 seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-04-30T20:56:14.002Z\",\n  \"verificationUrl\": \"https://proofound.io/portfolio/org/proofound-labs\",\n  \"verifiedAt\": \"2026-04-30T20:56:18.060Z\",\n  \"httpStatus\": 200\n}\n\n[seeded_public_org_trust_smoke]\n> proofound@0.1.0 test:e2e:org-trust:smoke\n> node ./scripts/playwright-node20.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:44:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\u001b[1A\u001b[2K  1 passed (2.8s)",
+      "generatedAt": "2026-04-30T20:56:21.399Z",
+      "evidence": {
+        "fixtureSlug": "proofound-labs",
+        "fixturePath": "/portfolio/org/proofound-labs"
+      }
+    },
+    {
+      "id": "full_org_corridor_review_to_engagement_verification",
+      "corridor": "organization",
+      "label": "Full org corridor review to engagement verification case",
+      "runner": {
+        "kind": "command",
+        "label": "strict_org_corridor_smoke",
+        "command": [
+          "node",
+          "./scripts/playwright-node20.mjs",
+          "test",
+          "e2e/strict/org-corridor.strict.spec.ts",
+          "--project=chromium",
+          "--reporter=line",
+          "--workers=1"
+        ],
+        "env": {
+          "NEXT_PUBLIC_USE_MOCK_SUPABASE": "false"
+        }
+      },
+      "status": "pass",
+      "expectedState": "full_org_corridor_review_to_engagement_verification_live",
+      "durationMs": 134099,
+      "outputSnippet": "[strict_org_corridor_smoke]\n[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops\n\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/strict/org-corridor.strict.spec.ts:276:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end\n\u001b[1A\u001b[2K  1 passed (2.2m)\n\n\u001b[1A\u001b[2K(node:83516) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-04-30T20:58:35.499Z"
+    },
+    {
+      "id": "hidden_portfolio_protected",
+      "corridor": "trust_privacy",
+      "label": "Hidden portfolio protected case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": ["tests/ui/public-portfolio-access-consistency.test.tsx"]
+      },
+      "status": "pass",
+      "expectedState": "hidden_portfolio_protected",
+      "durationMs": 1484,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 84ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  22:58:35\n   Duration  1.01s (transform 110ms, setup 112ms, collect 179ms, tests 84ms, environment 206ms, prepare 53ms)",
+      "generatedAt": "2026-04-30T20:58:36.983Z"
+    },
+    {
+      "id": "privacy_no_leak_case",
+      "corridor": "trust_privacy",
+      "label": "Privacy no-leak case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": [
+          "tests/api/org-match-review-route.test.ts",
+          "tests/lib/effective-visibility.test.ts",
+          "tests/api/conversation-reveal-route.test.ts"
+        ]
+      },
+      "status": "pass",
+      "expectedState": "privacy_no_leak_enforced",
+      "durationMs": 1517,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 2ms\n ✓ tests/api/conversation-reveal-route.test.ts  (5 tests) 18ms\n ✓ tests/api/org-match-review-route.test.ts  (17 tests) 41ms\n\n Test Files  3 passed (3)\n      Tests  27 passed (27)\n   Start at  22:58:37\n   Duration  1.03s (transform 265ms, setup 361ms, collect 546ms, tests 61ms, environment 644ms, prepare 165ms)",
+      "generatedAt": "2026-04-30T20:58:38.500Z"
+    }
+  ]
+}

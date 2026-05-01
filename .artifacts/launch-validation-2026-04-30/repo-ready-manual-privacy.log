@@ -1,0 +1,23 @@
+> proofound@0.1.0 test
+> vitest run tests/api/org-match-review-route.test.ts tests/lib/uploads-privacy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/lib/uploads-privacy.test.ts  (11 tests) 5ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 37ms
+ ✓ tests/api/org-match-review-route.test.ts  (17 tests) 39ms
+
+ Test Files  3 passed (3)
+      Tests  34 passed (34)
+   Start at  22:55:52
+   Duration  1.06s (transform 256ms, setup 367ms, collect 423ms, tests 81ms, environment 650ms, prepare 162ms)
