@@ -1,0 +1,12 @@
+
+> proofound@0.1.0 test:launch:smoke
+> node --import tsx ./scripts/launch-smoke-runner.ts
+
+Running full launch smoke checks against http://127.0.0.1:33117 (local)
+PASS public_individual_portfolio_visible
+PASS proof_creation_case
+PASS public_org_trust_fixture_live
+PASS full_org_corridor_review_to_engagement_verification
+PASS hidden_portfolio_protected
+PASS privacy_no_leak_case
+Launch smoke artifact written to .artifacts/strict-launch-evidence-2026-05-01/launch-smoke-report.json

@@ -1,0 +1,31 @@
+[1A[2K[2m[WebServer] [22m(node:78540) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[dotenv@17.2.3] injecting env (39) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+Running 1 test using 1 worker
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (193kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+[1A[2K(node:78598) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[1/1] [chromium] › e2e/strict/org-corridor.strict.spec.ts:276:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end
+[1A[2K  Slow test file: [chromium] › e2e/strict/org-corridor.strict.spec.ts (5.8m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 passed (6.2m)

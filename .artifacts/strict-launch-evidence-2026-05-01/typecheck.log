@@ -1,0 +1,4 @@
+
+> proofound@0.1.0 typecheck
+> node --max-old-space-size=6144 ./node_modules/typescript/bin/tsc --noEmit --incremental false
+

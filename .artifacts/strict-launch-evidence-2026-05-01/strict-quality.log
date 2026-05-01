@@ -1,0 +1,5 @@
+
+> proofound@0.1.0 test:strict:quality
+> node ./scripts/check-strict-e2e-quality.mjs
+
+Strict E2E quality guard passed for 8 file(s).

@@ -1,0 +1,39 @@
+
+> proofound@0.1.0 test:e2e:privacy:strict
+> NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node20.mjs test e2e/strict/privacy.strict.spec.ts --project=chromium --reporter=line --workers=1
+
+[1A[2K[2m[WebServer] [22m(node:58800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[dotenv@17.2.3] injecting env (39) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+Running 5 tests using 1 worker
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (193kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+[1A[2K(node:59752) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[1/5] [chromium] › e2e/strict/privacy.strict.spec.ts:75:3 › Strict MVP Privacy and Security Flows › RLS: non-participant cannot access private conversation resources
+[1A[2K[2/5] [chromium] › e2e/strict/privacy.strict.spec.ts:87:3 › Strict MVP Privacy and Security Flows › Visibility controls: participant can persist and read field visibility settings
+[1A[2K[3/5] [chromium] › e2e/strict/privacy.strict.spec.ts:134:3 › Strict MVP Privacy and Security Flows › CSRF: mutating request without token is rejected
+[1A[2K[4/5] [chromium] › e2e/strict/privacy.strict.spec.ts:150:3 › Strict MVP Privacy and Security Flows › Stage-based identity reveal transitions masked conversation to revealed only after two-party consent
+[1A[2K[5/5] [chromium] › e2e/strict/privacy.strict.spec.ts:210:3 › Strict MVP Privacy and Security Flows › Privacy gate keeps CSRF token issuance deterministic for authenticated sessions
+[1A[2K[2m[WebServer] [22m ⨯ [Error: aborted] { code: [32m'ECONNRESET'[39m, digest: [32m'3419021255'[39m }
+
+[1A[2K  5 passed (1.9m)

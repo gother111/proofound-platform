@@ -1,0 +1,42 @@
+
+> proofound@0.1.0 test:e2e:individual:strict
+> NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node20.mjs test e2e/strict/individual.strict.spec.ts --project=chromium --reporter=line --workers=1
+
+[1A[2K[2m[WebServer] [22m(node:31660) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[dotenv@17.2.3] injecting env (39) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+Running 5 tests using 1 worker
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (193kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+[1A[2K(node:31760) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K[1/5] [chromium] › e2e/strict/individual.strict.spec.ts:104:3 › Strict MVP Individual Flows (I-01..I-20) › I-03 guided onboarding is reachable and actionable for unknown persona
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K[2/5] [chromium] › e2e/strict/individual.strict.spec.ts:115:3 › Strict MVP Individual Flows (I-01..I-20) › I-04..I-09 profile, expertise, proofs, verification contracts persist
+[1A[2K[3/5] [chromium] › e2e/strict/individual.strict.spec.ts:187:3 › Strict MVP Individual Flows (I-01..I-20) › I-10..I-14 matching preferences, overview, and interest action are real
+[1A[2K[4/5] [chromium] › e2e/strict/individual.strict.spec.ts:317:3 › Strict MVP Individual Flows (I-01..I-20) › I-15..I-17 messaging, interview scheduling, and offer attestation work
+[1A[2K[5/5] [chromium] › e2e/strict/individual.strict.spec.ts:467:3 › Strict MVP Individual Flows (I-01..I-20) › I-18..I-20 privacy-safe settings, account controls, and archived routes are real
+[1A[2K[2m[WebServer] [22m ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+
+[1A[2K[chromium] › e2e/strict/individual.strict.spec.ts:467:3 › Strict MVP Individual Flows (I-01..I-20) › I-18..I-20 privacy-safe settings, account controls, and archived routes are real
+[strict-fixtures] failed to delete auth user 96a9593b-5a4c-434c-b407-d5db0bba1da6: User not found
+
+[1A[2K  5 passed (4.9m)

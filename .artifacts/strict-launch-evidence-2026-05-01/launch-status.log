@@ -1,0 +1,5 @@
+
+> proofound@0.1.0 launch:status
+> node ./scripts/check-launch-status.mjs
+
+Launch status is ready.

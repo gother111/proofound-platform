@@ -1,0 +1,18 @@
+{
+  "before": {
+    "strictAuthUsers": 0,
+    "profiles": 32,
+    "organizations": 0,
+    "assignments": 0
+  },
+  "cleanup": {
+    "strictProfilesBefore": 32,
+    "anonymizedProfiles": 32
+  },
+  "after": {
+    "strictAuthUsers": 0,
+    "profiles": 0,
+    "organizations": 0,
+    "assignments": 0
+  }
+}
