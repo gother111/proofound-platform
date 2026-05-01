@@ -18,6 +18,9 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - Default `npm run test` excludes archived/removed non-MVP tests and privacy/E2E harnesses so the release signal stays scoped to the locked MVP corridor.
   - Preserved archived or removed non-MVP regressions can be run with `npm run test:archived:non-launch` when that history is relevant.
 - Build: `npm run build` (source: package.json)
+  - Prebuild cleanup deletes stale generated `.next`, `.next-dev-*`, and `tsconfig.tsbuildinfo` state by default so launch validation does not accumulate large artifact archives.
+  - It keeps only a small latest-run summary at `.artifacts/stale-build-state-cleanup-summary.md`.
+  - If a failing generated build state must be preserved for debugging, opt in for that run with `PROOFOUND_ARCHIVE_STALE_BUILD_STATE=1 npm run build`.
 - Practical sequencing note:
   - Run `npm run typecheck` and `npm run build` sequentially, not in parallel, because both write under `.next/` and parallel runs can create avoidable verification noise.
 - If changes touch `/api/mobile/v1/*` routes, run focused contract tests in addition to full unit tests:

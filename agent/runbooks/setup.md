@@ -138,6 +138,9 @@ Strict provider E2E deterministic account:
 
 - Dev server: `npm run dev` (source: package.json)
 - Build: `npm run build` (source: package.json)
+  - The prebuild cleanup removes stale generated `.next`, `.next-dev-*`, and `tsconfig.tsbuildinfo` state by default to avoid multi-GB artifact buildup.
+  - It keeps only a small latest-run summary at `.artifacts/stale-build-state-cleanup-summary.md`.
+  - Use `PROOFOUND_ARCHIVE_STALE_BUILD_STATE=1 npm run build` only when preserving a generated build snapshot is intentionally needed for debugging.
 - Start (prod-like): `npm run start` (source: package.json)
 - Lint: `npm run lint` (wrapper is `scripts/lint-or-skip.js`) (source: package.json, scripts/lint-or-skip.js)
 - Typecheck: `npm run typecheck` (source: package.json)
