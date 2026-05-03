@@ -383,6 +383,45 @@ test.describe('Strict Authenticated Org Corridor', () => {
     );
     expect(assignmentUpdateResponse.ok()).toBeTruthy();
 
+    const clarityResponse = await apiPostJson(page.request, '/api/ai/assignments/clarify', {
+      assignmentId,
+      orgId: organization.id,
+      title: 'Strict Corridor Assignment',
+      outcomeSummary: 'Make an impact.',
+      proofExpectations: '',
+      engagementType: 'contract_consulting',
+      constraints: {
+        locationMode: 'remote',
+        compMin: 110000,
+        compMax: 150000,
+        currency: 'USD',
+      },
+      mustHaveSkills: skillRequirements,
+      verificationRequirements: [],
+    });
+    expect(clarityResponse.ok()).toBeTruthy();
+    const clarityPayload = (await clarityResponse.json()) as {
+      ambiguityFlags?: string[];
+      suggestedRewrite?: Record<string, unknown>;
+    };
+    expect(clarityPayload.ambiguityFlags ?? []).toEqual(
+      expect.arrayContaining([
+        'Outcome summary is vague or missing concrete deliverables.',
+        'Proof expectations are missing or too generic.',
+      ])
+    );
+    expect(JSON.stringify(clarityPayload).toLowerCase()).not.toContain('fit score');
+
+    const clarityDraftStateResponse = await browserGetJson(
+      page,
+      `/api/assignments/${assignmentId}?orgId=${organization.id}`
+    );
+    expect(clarityDraftStateResponse.ok()).toBeTruthy();
+    const clarityDraftStatePayload = (await clarityDraftStateResponse.json()) as {
+      assignment?: { status?: string };
+    };
+    expect(clarityDraftStatePayload.assignment?.status).toBe('draft');
+
     const publishResponse = await apiPostJson(
       page.request,
       `/api/assignments/${assignmentId}/publish`,

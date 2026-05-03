@@ -642,7 +642,8 @@ describe('public portfolio projection', () => {
         publicItem: {
           title: 'Jane_Doe_Resume.pdf',
           artifactDisplayName: 'Jane Doe Resume.pdf',
-          description: 'Public-safe description',
+          description:
+            'Public-safe description for Acme Climate AB near Sankt Eriksgatan 10, Stockholm.',
         },
       }),
     ]);

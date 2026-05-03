@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 
 import { VerificationsClient } from '@/app/app/i/verifications/VerificationsClient';
@@ -185,6 +185,95 @@ describe('VerificationsClient', () => {
       screen.queryByRole('button', { name: 'Trigger custom request created' })
     ).not.toBeInTheDocument();
     expect(refreshMock).not.toHaveBeenCalled();
+  });
+
+  it('drafts a claim-scoped verification request without sending until explicit review', async () => {
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/ai/verifications/compose') {
+        return {
+          ok: true,
+          json: async () => ({
+            subject: 'Can you confirm this TypeScript claim?',
+            message: 'Please confirm this one TypeScript claim from direct observation.',
+            claimScope: 'I used TypeScript in a production migration.',
+            verificationQuestions: ['Can you confirm this specific TypeScript claim?'],
+            privacyNotes: ['Uses selected public-safe fields only.'],
+            tooBroadWarnings: [],
+          }),
+        };
+      }
+
+      if (url === '/api/verification/requests/skill') {
+        return {
+          ok: true,
+          json: async () => ({ request: { id: 'request-1' } }),
+        };
+      }
+
+      throw new Error(`Unexpected API call: ${url}`);
+    });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+        composerProofPacks={[
+          {
+            proofPackId: '11111111-1111-4111-8111-111111111111',
+            claimId: '22222222-2222-4222-8222-222222222222',
+            title: 'TypeScript migration proof',
+            claimStatement: 'I used TypeScript in a production migration.',
+            ownershipStatement: 'I owned the migration plan.',
+            outcomeSummary: 'The migration shipped.',
+            timeframe: '2026 Q1',
+            evidenceTitles: ['Migration checklist'],
+            primarySubjectType: 'skill',
+            primarySubjectId: '22222222-2222-4222-8222-222222222222',
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /^Draft verification request$/i }));
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft verification request$/i }));
+
+    await screen.findByDisplayValue(
+      'Please confirm this one TypeScript claim from direct observation.'
+    );
+
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
+    expect(apiFetchMock).toHaveBeenCalledWith(
+      '/api/ai/verifications/compose',
+      expect.objectContaining({ method: 'POST' })
+    );
+    expect(JSON.stringify(apiFetchMock.mock.calls)).not.toContain(
+      '/api/verification/requests/skill'
+    );
+
+    fireEvent.change(within(dialog).getByLabelText(/Verifier email address/i), {
+      target: { value: 'mentor@example.com' },
+    });
+    fireEvent.click(within(dialog).getByRole('checkbox', { name: /I reviewed this/i }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Send request$/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/verification/requests/skill',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+
+    const sendCall = apiFetchMock.mock.calls.find(
+      (call) => call[0] === '/api/verification/requests/skill'
+    );
+    expect(JSON.parse(sendCall?.[1]?.body as string)).toMatchObject({
+      skillId: '22222222-2222-4222-8222-222222222222',
+      verifierEmail: 'mentor@example.com',
+      message: 'Please confirm this one TypeScript claim from direct observation.',
+    });
   });
 
   it('deletes a non-bundled pending sent request', async () => {

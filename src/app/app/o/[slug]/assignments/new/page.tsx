@@ -11,6 +11,7 @@ import {
   Step3WeightMatrix,
   Step4Practicals,
 } from '@/components/matching/assignment-steps';
+import { AssignmentClarityAssistant } from '@/components/assignments/AssignmentClarityAssistant';
 import { Card } from '@/components/ui/card';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
@@ -512,6 +513,24 @@ export default function AssignmentBuilderPage() {
     }
   };
 
+  const ensureClarityDraft = useCallback(async () => {
+    if (transitionLockRef.current || isAdvancing || isSaving) {
+      throw new Error('Wait for the current draft save to finish.');
+    }
+
+    transitionLockRef.current = true;
+    try {
+      const persisted = await persistDraft({
+        status: 'draft',
+        creationStatus: 'draft',
+      });
+      await syncRelatedData(persisted.assignmentId);
+      return persisted;
+    } finally {
+      transitionLockRef.current = false;
+    }
+  }, [isAdvancing, isSaving, persistDraft, syncRelatedData]);
+
   let renderedStep;
   switch (currentStep) {
     case 1:
@@ -603,6 +622,14 @@ export default function AssignmentBuilderPage() {
         </div>
 
         <Card className="p-8">{renderedStep}</Card>
+
+        <AssignmentClarityAssistant
+          form={form}
+          assignmentId={assignmentId}
+          orgId={orgId}
+          orgSlug={slug}
+          onEnsureDraft={ensureClarityDraft}
+        />
 
         <div className="text-center text-sm text-muted-foreground">
           <p>

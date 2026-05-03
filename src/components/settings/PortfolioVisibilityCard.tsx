@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldCheck } from 'lucide-react';
 
 type VisibilityFlags = {
   header: boolean;
@@ -35,6 +35,8 @@ export function PortfolioVisibilityCard() {
   const [searchIndexingEnabled, setSearchIndexingEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [preflightMessage, setPreflightMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const run = async () => {
@@ -78,6 +80,35 @@ export function PortfolioVisibilityCard() {
       alert('Could not save visibility. Please try again.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const checkPrivacy = async () => {
+    setChecking(true);
+    setPreflightMessage(null);
+    try {
+      const res = await fetch('/api/ai/privacy-preflight/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          surface: 'public_portfolio',
+          includeModelReview: false,
+        }),
+      });
+      const payload = await res.json();
+      if (!res.ok) {
+        throw new Error(payload?.error || 'Privacy check failed');
+      }
+      setPreflightMessage(
+        payload.riskLevel === 'high'
+          ? 'Privacy review is required before publishing. This is not a privacy guarantee.'
+          : 'No high-risk deterministic flags were found. This is not a privacy guarantee.'
+      );
+    } catch (e) {
+      console.error(e);
+      setPreflightMessage('Could not run the privacy check. This is not a privacy guarantee.');
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -163,15 +194,34 @@ export function PortfolioVisibilityCard() {
                 : 'Public page is off. The public route will be unavailable.'}
             </p>
 
-            <Button size="sm" onClick={save} disabled={saving}>
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-                </>
-              ) : (
-                'Save visibility'
-              )}
-            </Button>
+            {preflightMessage ? (
+              <p className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                {preflightMessage}
+              </p>
+            ) : null}
+
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={checkPrivacy} disabled={checking}>
+                {checking ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Checking...
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="mr-2 h-4 w-4" /> Check privacy before publishing
+                  </>
+                )}
+              </Button>
+              <Button size="sm" onClick={save} disabled={saving}>
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                  </>
+                ) : (
+                  'Save visibility'
+                )}
+              </Button>
+            </div>
           </>
         )}
       </CardContent>

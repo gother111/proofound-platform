@@ -21,6 +21,7 @@ import { buildTrustSignals } from '@/lib/portfolio/trust-signals';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { getPublicSiteUrl } from '@/lib/seo/public-metadata';
 import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
+import { sanitizePrivacyPreflightTextForPublic } from '@/lib/privacy/preflight-rules';
 import {
   hasPrimaryAnchorContext,
   listCanonicalProofPackAggregatesForOwner,
@@ -424,6 +425,49 @@ function sanitizePublicEvidenceLabel(value: string | null | undefined) {
   return label;
 }
 
+function collectHiddenContextTerms(value: unknown): string[] {
+  const record = toRecord(value);
+  const terms: string[] = [];
+
+  for (const key of [
+    'exactLocation',
+    'exact_location',
+    'clientName',
+    'client_name',
+    'employerName',
+    'employer_name',
+  ]) {
+    const entry = record[key];
+    if (typeof entry === 'string' && entry.trim()) {
+      terms.push(entry.trim());
+    }
+  }
+
+  for (const key of [
+    'employerNames',
+    'employer_names',
+    'clientNames',
+    'client_names',
+    'schoolNames',
+    'school_names',
+  ]) {
+    const entry = record[key];
+    if (Array.isArray(entry)) {
+      for (const term of entry) {
+        if (typeof term === 'string' && term.trim()) {
+          terms.push(term.trim());
+        }
+      }
+    }
+  }
+
+  return terms;
+}
+
+function sanitizePublicText(value: string | null | undefined, hiddenTerms: string[] = []) {
+  return sanitizePrivacyPreflightTextForPublic(value, hiddenTerms);
+}
+
 function resolvePublicPortfolioName(
   profile: IndividualProfileRow,
   displayNameVisible: boolean
@@ -630,6 +674,10 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
     if (!publicSafePack) {
       continue;
     }
+    const hiddenContextTerms = [
+      ...collectHiddenContextTerms(aggregate.pack.contextJson),
+      ...collectHiddenContextTerms(aggregate.pack.metadata),
+    ];
 
     if (hasAcceptedPublicReadyVerification(aggregate)) {
       verifiedPublicProofPackCount += 1;
@@ -640,16 +688,29 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
       scope: 'public_safe',
       status: publicSafePack.contract.status,
       title:
-        publicSafePack.contract.title ||
-        publicSafePack.title ||
-        aggregate.pack.title ||
+        sanitizePublicText(publicSafePack.contract.title, hiddenContextTerms) ||
+        sanitizePublicText(publicSafePack.title, hiddenContextTerms) ||
+        sanitizePublicText(aggregate.pack.title, hiddenContextTerms) ||
         'Proof Pack',
-      summary: publicSafePack.contract.primaryClaim.statement,
-      ownershipStatement: publicSafePack.contract.ownershipStatement,
-      evidenceSummary: publicSafePack.evidenceSummary ?? aggregate.pack.evidenceSummary ?? null,
-      outcomesSummary: publicSafePack.outcomesSummary ?? aggregate.pack.outcomesSummary ?? null,
+      summary:
+        sanitizePublicText(publicSafePack.contract.primaryClaim.statement, hiddenContextTerms) ||
+        '',
+      ownershipStatement:
+        sanitizePublicText(publicSafePack.contract.ownershipStatement, hiddenContextTerms) || '',
+      evidenceSummary: sanitizePublicText(
+        publicSafePack.evidenceSummary ?? aggregate.pack.evidenceSummary ?? null,
+        hiddenContextTerms
+      ),
+      outcomesSummary: sanitizePublicText(
+        publicSafePack.outcomesSummary ?? aggregate.pack.outcomesSummary ?? null,
+        hiddenContextTerms
+      ),
       verificationStatus: aggregate.verificationStatus,
-      verificationSummary: publicSafePack.contract.verificationSummary.summary,
+      verificationSummary:
+        sanitizePublicText(
+          publicSafePack.contract.verificationSummary.summary,
+          hiddenContextTerms
+        ) || '',
       freshnessState: aggregate.freshnessState,
       proofQualityScore: publicSafePack.contract.proofQualityScore,
       schemaVersion: publicSafePack.contract.schemaVersion,
@@ -664,8 +725,8 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
         href: resolveSafeEvidenceUrl({ sourceUrl: item.sourceUrl }),
         artifactKind: item.artifactKind ?? null,
         issuedAt: item.issuedAt ?? null,
-        description: item.description ?? null,
-        semanticsNote: item.semanticsNote,
+        description: sanitizePublicText(item.description, hiddenContextTerms),
+        semanticsNote: sanitizePublicText(item.semanticsNote, hiddenContextTerms) || '',
       })),
     });
 
@@ -681,6 +742,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
           item,
           verificationStatus: aggregate.verificationStatus,
           latestEvidenceAt: aggregate.latestEvidenceAt?.toISOString() ?? null,
+          hiddenContextTerms,
         })
       );
     }
@@ -708,6 +770,7 @@ function buildPublicFeaturedProof(input: {
   item: CanonicalPublicSafeProofPackProjection['items'][number];
   verificationStatus: string;
   latestEvidenceAt: string | null;
+  hiddenContextTerms?: string[];
 }): FeaturedProof & { sortKey: string } {
   const evidenceUrl = resolveSafeEvidenceUrl({ sourceUrl: input.item.sourceUrl });
   const timeframeSource =
@@ -722,7 +785,12 @@ function buildPublicFeaturedProof(input: {
     title: proofTitle,
     role: prettifyProofType(input.item.artifactKind),
     timeframe: formatDate(timeframeSource),
-    outcomes: toOutcomeLines(input.item.description || input.pack.outcomesSummary),
+    outcomes: toOutcomeLines(
+      sanitizePublicText(
+        input.item.description || input.pack.outcomesSummary,
+        input.hiddenContextTerms ?? []
+      )
+    ),
     evidence: evidenceUrl ? [{ label: 'Open evidence', href: evidenceUrl }] : [],
     verifiedBy:
       input.verificationStatus === 'verified' || input.verificationStatus === 'partially_verified'

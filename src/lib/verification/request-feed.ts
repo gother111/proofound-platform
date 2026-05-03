@@ -60,6 +60,19 @@ type CanonicalRequestContext = {
   canonicalEvidenceTitles?: string[];
 };
 
+export type VerificationComposerProofPackOption = {
+  proofPackId: string;
+  claimId: string;
+  title: string;
+  claimStatement: string;
+  ownershipStatement?: string | null;
+  outcomeSummary?: string | null;
+  timeframe?: string | null;
+  evidenceTitles: string[];
+  primarySubjectType: 'skill';
+  primarySubjectId: string;
+};
+
 export type VerificationRequestView = {
   id: string;
   subjectType: 'skill' | 'impact_story' | 'custom_bundle';
@@ -162,6 +175,54 @@ function buildCanonicalRequestContext(
     canonicalVerificationStatus: aggregate.verificationStatus,
     canonicalEvidenceTitles: evidenceTitles,
   };
+}
+
+function compactComposerTimeframe(aggregate: CanonicalProofPackAggregate): string | null {
+  const timeframe = aggregate.ownerFull.contract?.timeframe;
+  if (!timeframe) {
+    return null;
+  }
+  return timeframe.label || [timeframe.start, timeframe.end].filter(Boolean).join(' to ') || null;
+}
+
+function buildComposerProofPackOptions(
+  aggregates: CanonicalProofPackAggregate[]
+): VerificationComposerProofPackOption[] {
+  return aggregates
+    .filter(
+      (aggregate) =>
+        aggregate.pack.primarySubjectType === 'skill' &&
+        typeof aggregate.pack.primarySubjectId === 'string' &&
+        aggregate.pack.primarySubjectId.length > 0
+    )
+    .map((aggregate) => {
+      const contract = aggregate.ownerFull.contract;
+      const title = aggregate.ownerFull.title || aggregate.pack.title;
+      return {
+        proofPackId: aggregate.pack.id,
+        claimId: aggregate.pack.primarySubjectId,
+        title,
+        claimStatement:
+          contract?.primaryClaim?.statement ||
+          aggregate.ownerFull.summary ||
+          aggregate.pack.summary ||
+          title,
+        ownershipStatement: contract?.ownershipStatement ?? null,
+        outcomeSummary:
+          contract?.outcomeSummary ??
+          aggregate.ownerFull.outcomesSummary ??
+          aggregate.pack.outcomesSummary ??
+          null,
+        timeframe: compactComposerTimeframe(aggregate),
+        evidenceTitles: aggregate.ownerFull.items
+          .map((item) => item.artifact.artifactDisplayName || item.artifact.title)
+          .filter((title): title is string => typeof title === 'string' && title.trim().length > 0)
+          .slice(0, 5),
+        primarySubjectType: 'skill' as const,
+        primarySubjectId: aggregate.pack.primarySubjectId,
+      };
+    })
+    .sort((left, right) => left.title.localeCompare(right.title));
 }
 
 function toAttestationRequestShape(
@@ -652,5 +713,6 @@ export async function loadVerificationRequestFeed(params: {
   return {
     incomingRequests,
     sentRequests,
+    composerProofPacks: buildComposerProofPackOptions(canonicalAggregates),
   };
 }

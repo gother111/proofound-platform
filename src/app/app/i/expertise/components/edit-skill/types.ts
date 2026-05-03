@@ -8,6 +8,10 @@ export interface Proof {
   issued_date?: string;
   expires_date?: string;
   created_at?: string;
+  canonicalPackId?: string;
+  canonical_pack_id?: string;
+  canonicalPackTitle?: string;
+  canonical_pack_title?: string;
 }
 
 export type ProofDraft = {

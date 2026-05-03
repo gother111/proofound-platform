@@ -1,6 +1,8 @@
-import { FileText, Loader2, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, Loader2, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+import { apiFetch } from '@/lib/api/fetch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -34,6 +36,64 @@ type ProofsSectionProps = {
   onDeleteProof: (proofId: string) => void;
 };
 
+type ProofPackAssistantSuggestion = {
+  suggestionId?: string | null;
+  missingContext: string[];
+  suggestedRewrite: {
+    title?: string | null;
+    claimStatement?: string | null;
+    ownershipStatement?: string | null;
+    outcomeSummary?: string | null;
+    timeframe?: string | null;
+  };
+  privacyFlags: string[];
+  verificationSuggestions: string[];
+  warnings: string[];
+};
+
+type AssistantState = {
+  loading: boolean;
+  error: string | null;
+  suggestion: ProofPackAssistantSuggestion | null;
+  draft: NonNullable<ProofPackAssistantSuggestion['suggestedRewrite']>;
+  acceptedFields: Record<string, boolean>;
+};
+
+const ASSISTANT_FIELDS: Array<{
+  key: keyof ProofPackAssistantSuggestion['suggestedRewrite'];
+  label: string;
+}> = [
+  { key: 'title', label: 'Title' },
+  { key: 'claimStatement', label: 'Claim' },
+  { key: 'ownershipStatement', label: 'Ownership' },
+  { key: 'outcomeSummary', label: 'Outcome' },
+  { key: 'timeframe', label: 'Timeframe' },
+];
+
+function resolveProofPackId(proof: Proof) {
+  return proof.canonicalPackId || proof.canonical_pack_id || null;
+}
+
+function recordAssistantEvent(
+  suggestionId: string | null | undefined,
+  eventType: 'accepted' | 'edited' | 'dismissed',
+  field: string,
+  edited?: boolean
+) {
+  if (!suggestionId) return;
+  void apiFetch('/api/ai/suggestions/events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      suggestionId,
+      eventType,
+      field,
+      fields: [{ field, edited, applied: eventType === 'accepted' }],
+      metadata: { uiSurface: 'proof_pack_assistant' },
+    }),
+  }).catch(() => undefined);
+}
+
 export function ProofsSection({
   proofs,
   loadingProofs,
@@ -52,6 +112,146 @@ export function ProofsSection({
   const router = useRouter();
   const recoveryActions = getIndividualRecoveryActions('proofs-empty');
   const isProofLimitReached = proofs.length >= MAX_PROOFS_PER_SKILL;
+  const [assistantByPackId, setAssistantByPackId] = useState<Record<string, AssistantState>>({});
+
+  const requestAssistant = async (proofPackId: string) => {
+    setAssistantByPackId((current) => ({
+      ...current,
+      [proofPackId]: {
+        loading: true,
+        error: null,
+        suggestion: current[proofPackId]?.suggestion ?? null,
+        draft: current[proofPackId]?.draft ?? {},
+        acceptedFields: current[proofPackId]?.acceptedFields ?? {},
+      },
+    }));
+
+    try {
+      const response = await apiFetch('/api/ai/proof-pack/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          proofPackId,
+          idempotencyKey:
+            typeof crypto !== 'undefined' && 'randomUUID' in crypto
+              ? crypto.randomUUID()
+              : `${proofPackId}:${Date.now()}`,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as {
+          error?: string;
+          message?: string;
+        };
+        throw new Error(payload.message || payload.error || 'Suggestion failed.');
+      }
+
+      const suggestion = (await response.json()) as ProofPackAssistantSuggestion;
+      setAssistantByPackId((current) => ({
+        ...current,
+        [proofPackId]: {
+          loading: false,
+          error: null,
+          suggestion,
+          draft: suggestion.suggestedRewrite || {},
+          acceptedFields: {},
+        },
+      }));
+    } catch (error) {
+      setAssistantByPackId((current) => ({
+        ...current,
+        [proofPackId]: {
+          loading: false,
+          error: error instanceof Error ? error.message : 'Suggestion failed.',
+          suggestion: current[proofPackId]?.suggestion ?? null,
+          draft: current[proofPackId]?.draft ?? {},
+          acceptedFields: current[proofPackId]?.acceptedFields ?? {},
+        },
+      }));
+    }
+  };
+
+  const updateAssistantDraft = (
+    proofPackId: string,
+    field: keyof ProofPackAssistantSuggestion['suggestedRewrite'],
+    value: string
+  ) => {
+    setAssistantByPackId((current) => ({
+      ...current,
+      [proofPackId]: {
+        ...(current[proofPackId] ?? {
+          loading: false,
+          error: null,
+          suggestion: null,
+          draft: {},
+          acceptedFields: {},
+        }),
+        draft: {
+          ...(current[proofPackId]?.draft ?? {}),
+          [field]: value,
+        },
+        acceptedFields: {
+          ...(current[proofPackId]?.acceptedFields ?? {}),
+          [field]: false,
+        },
+      },
+    }));
+  };
+
+  const recordAssistantEdit = (
+    proofPackId: string,
+    field: keyof ProofPackAssistantSuggestion['suggestedRewrite']
+  ) => {
+    const current = assistantByPackId[proofPackId];
+    if (!current?.suggestion?.suggestionId) return;
+    if ((current.draft?.[field] || '') === (current.suggestion.suggestedRewrite?.[field] || '')) {
+      return;
+    }
+    recordAssistantEvent(current.suggestion.suggestionId, 'edited', field, true);
+  };
+
+  const acceptAssistantField = (
+    proofPackId: string,
+    field: keyof ProofPackAssistantSuggestion['suggestedRewrite']
+  ) => {
+    setAssistantByPackId((current) => ({
+      ...current,
+      [proofPackId]: {
+        ...(current[proofPackId] ?? {
+          loading: false,
+          error: null,
+          suggestion: null,
+          draft: {},
+          acceptedFields: {},
+        }),
+        acceptedFields: {
+          ...(current[proofPackId]?.acceptedFields ?? {}),
+          [field]: true,
+        },
+      },
+    }));
+    const current = assistantByPackId[proofPackId];
+    recordAssistantEvent(
+      current?.suggestion?.suggestionId,
+      'accepted',
+      field,
+      (current?.draft?.[field] || '') !== (current?.suggestion?.suggestedRewrite?.[field] || '')
+    );
+  };
+
+  const dismissAssistant = (proofPackId: string) => {
+    recordAssistantEvent(
+      assistantByPackId[proofPackId]?.suggestion?.suggestionId,
+      'dismissed',
+      'assistant'
+    );
+    setAssistantByPackId((current) => {
+      const next = { ...current };
+      delete next[proofPackId];
+      return next;
+    });
+  };
 
   return (
     <div>
@@ -270,6 +470,8 @@ export function ProofsSection({
           {proofs.map((proof) => (
             <Card key={proof.id} className="p-3 border-proofound-stone">
               {(() => {
+                const proofPackId = resolveProofPackId(proof);
+                const assistant = proofPackId ? assistantByPackId[proofPackId] : null;
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const expiresDate = proof.expires_date ? new Date(proof.expires_date) : null;
@@ -281,55 +483,190 @@ export function ProofsSection({
                 );
 
                 return (
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className="text-xs capitalize">
-                          {proofTypeLabel(proof.proof_type)}
-                        </Badge>
-                        <h4 className="font-medium text-foreground">{proof.title}</h4>
-                        {isExpired && (
-                          <Badge className="bg-[#FFF0F0] text-[#8B4A36] border border-[#F5D6CD]">
-                            Expired
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline" className="text-xs capitalize">
+                            {proofTypeLabel(proof.proof_type)}
                           </Badge>
+                          <h4 className="font-medium text-foreground">{proof.title}</h4>
+                          {isExpired && (
+                            <Badge className="bg-[#FFF0F0] text-[#8B4A36] border border-[#F5D6CD]">
+                              Expired
+                            </Badge>
+                          )}
+                        </div>
+                        {proof.url && (
+                          <a
+                            href={proof.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-proofound-forest hover:underline"
+                          >
+                            {proof.url}
+                          </a>
+                        )}
+                        {proof.file_path && (
+                          <p className="text-xs text-muted-foreground mt-1">Document attached</p>
+                        )}
+                        {proof.description && (
+                          <p className="text-sm text-muted-foreground mt-1">{proof.description}</p>
+                        )}
+                        {proof.issued_date && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Issued: {new Date(proof.issued_date).toLocaleDateString()}
+                          </p>
+                        )}
+                        {proof.expires_date && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Expires: {new Date(proof.expires_date).toLocaleDateString()}
+                          </p>
+                        )}
+                        {proofPackId && (
+                          <div className="mt-3 space-y-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => requestAssistant(proofPackId)}
+                              disabled={assistant?.loading}
+                              className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
+                            >
+                              {assistant?.loading ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : (
+                                <Sparkles className="h-4 w-4 mr-2" />
+                              )}
+                              Improve this proof
+                            </Button>
+                            <p className="text-xs text-muted-foreground">
+                              Sends selected Proof Pack text only. Does not review full files by
+                              default.
+                            </p>
+                          </div>
                         )}
                       </div>
-                      {proof.url && (
-                        <a
-                          href={proof.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-proofound-forest hover:underline"
-                        >
-                          {proof.url}
-                        </a>
-                      )}
-                      {proof.file_path && (
-                        <p className="text-xs text-muted-foreground mt-1">Document attached</p>
-                      )}
-                      {proof.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{proof.description}</p>
-                      )}
-                      {proof.issued_date && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Issued: {new Date(proof.issued_date).toLocaleDateString()}
-                        </p>
-                      )}
-                      {proof.expires_date && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Expires: {new Date(proof.expires_date).toLocaleDateString()}
-                        </p>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDeleteProof(proof.id)}
+                        aria-label={`Remove proof ${proof.title}`}
+                        className="text-proofound-terracotta hover:text-[#8B4A36] hover:bg-[#FFF0F0]"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDeleteProof(proof.id)}
-                      aria-label={`Remove proof ${proof.title}`}
-                      className="text-proofound-terracotta hover:text-[#8B4A36] hover:bg-[#FFF0F0]"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+
+                    {assistant?.error && (
+                      <p className="rounded-md border border-[#F5D6CD] bg-[#FFF0F0] px-3 py-2 text-sm text-[#8B4A36]">
+                        {assistant.error}
+                      </p>
+                    )}
+
+                    {assistant?.suggestion && proofPackId && (
+                      <div className="rounded-lg border border-proofound-stone bg-japandi-bg/50 p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              Suggested improvements
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Review, edit, accept individual fields, or dismiss. Nothing is saved
+                              automatically.
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => dismissAssistant(proofPackId)}
+                          >
+                            Dismiss
+                          </Button>
+                        </div>
+
+                        <div className="mt-3 space-y-3">
+                          {ASSISTANT_FIELDS.map(({ key, label }) => {
+                            const value = assistant.draft[key] ?? '';
+                            if (!value && !assistant.suggestion?.suggestedRewrite?.[key]) {
+                              return null;
+                            }
+                            return (
+                              <div key={key} className="space-y-1">
+                                <Label htmlFor={`${proofPackId}-${key}`}>{label}</Label>
+                                <Textarea
+                                  id={`${proofPackId}-${key}`}
+                                  value={value}
+                                  onChange={(event) =>
+                                    updateAssistantDraft(proofPackId, key, event.target.value)
+                                  }
+                                  onBlur={() => recordAssistantEdit(proofPackId, key)}
+                                  rows={key === 'title' || key === 'timeframe' ? 2 : 3}
+                                  className="bg-white"
+                                />
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => acceptAssistantField(proofPackId, key)}
+                                  >
+                                    Accept {label.toLowerCase()}
+                                  </Button>
+                                  {assistant.acceptedFields[key] && (
+                                    <span className="text-xs text-proofound-forest">Accepted</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {assistant.suggestion.missingContext.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-xs font-medium text-foreground">Missing context</p>
+                            <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                              {assistant.suggestion.missingContext.map((item) => (
+                                <li key={item}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {assistant.suggestion.privacyFlags.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-xs font-medium text-foreground">Privacy flags</p>
+                            <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                              {assistant.suggestion.privacyFlags.map((item) => (
+                                <li key={item}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {assistant.suggestion.verificationSuggestions.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-xs font-medium text-foreground">
+                              Verification suggestions
+                            </p>
+                            <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                              {assistant.suggestion.verificationSuggestions.map((item) => (
+                                <li key={item}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {assistant.suggestion.warnings.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-xs font-medium text-foreground">Warnings</p>
+                            <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                              {assistant.suggestion.warnings.map((item) => (
+                                <li key={item}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })()}

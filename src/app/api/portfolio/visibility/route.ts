@@ -8,6 +8,7 @@ import { computePortfolioPublicationState } from '@/lib/proof-trust/snapshots';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { resolveRequestedPublicPortfolioState } from '@/lib/portfolio/public-contract';
+import { runPrivacyPreflightCheck } from '@/lib/ai/privacy-preflight';
 import { and, eq } from 'drizzle-orm';
 
 const VisibilitySchema = z.object({
@@ -89,8 +90,13 @@ export async function POST(request: Request) {
 
     const current = await supabase
       .from('individual_profiles')
-      .select('field_visibility')
+      .select('field_visibility, headline, bio, tagline, work_email')
       .eq('user_id', user.id)
+      .maybeSingle();
+    const profileBeforeUpdate = await supabase
+      .from('profiles')
+      .select('display_name, handle')
+      .eq('id', user.id)
       .maybeSingle();
 
     const merged = mergeVisibilityFlags((current.data as any)?.field_visibility);
@@ -113,6 +119,58 @@ export async function POST(request: Request) {
         ? 'public_indexable'
         : 'public_link_only'
       : 'unavailable';
+
+    if (publicPageEnabled) {
+      const currentProfile = (current.data as any) ?? {};
+      const publicProfile = (profileBeforeUpdate.data as any) ?? {};
+      const hiddenTerms = [
+        !next.identity ? publicProfile.display_name : null,
+        !(next.contact && next.workEmail) ? currentProfile.work_email : null,
+      ].filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+      const preflight = await runPrivacyPreflightCheck({
+        requestId: crypto.randomUUID(),
+        userId: user.id,
+        input: {
+          surface: 'public_portfolio',
+          includeModelReview: false,
+          hiddenTerms,
+          fields: [
+            next.header
+              ? {
+                  label: 'public headline',
+                  value: currentProfile.headline || currentProfile.tagline || '',
+                  visibility: 'visible',
+                }
+              : null,
+            next.bio
+              ? {
+                  label: 'public bio',
+                  value: currentProfile.bio || '',
+                  visibility: 'visible',
+                }
+              : null,
+          ].filter(
+            (
+              field
+            ): field is {
+              label: string;
+              value: string;
+              visibility: 'visible';
+            } => Boolean(field)
+          ),
+        },
+      });
+
+      if (preflight.flags.some((flag) => flag.deterministic && flag.requiresReview)) {
+        return NextResponse.json(
+          {
+            error: 'Privacy review required',
+            privacyPreflight: preflight,
+          },
+          { status: 409 }
+        );
+      }
+    }
 
     const { error } = await supabase
       .from('individual_profiles')

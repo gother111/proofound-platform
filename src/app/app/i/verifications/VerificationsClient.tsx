@@ -14,6 +14,7 @@ import {
   Mail,
   Send,
   Trash2,
+  Wand2,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
-import type { VerificationRequestView } from '@/lib/verification/request-feed';
+import type {
+  VerificationComposerProofPackOption,
+  VerificationRequestView,
+} from '@/lib/verification/request-feed';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { verificationStatusLabel } from '@/lib/copy/labels';
@@ -31,12 +35,14 @@ import {
 } from '@/lib/verification/custom-verification';
 import { RespondDialog } from './components/RespondDialog';
 import { BundleCancelDialog } from './components/BundleCancelDialog';
+import { VerificationRequestComposerDialog } from './components/VerificationRequestComposerDialog';
 
 type VerificationRequest = VerificationRequestView;
 
 interface VerificationsClientProps {
   incomingRequests: VerificationRequest[];
   sentRequests: VerificationRequest[];
+  composerProofPacks?: VerificationComposerProofPackOption[];
   userEmail: string;
 }
 
@@ -70,6 +76,7 @@ function filterByStatus(
 export function VerificationsClient({
   incomingRequests: initialIncomingRequests,
   sentRequests: initialSentRequests,
+  composerProofPacks = [],
 }: VerificationsClientProps) {
   const router = useRouter();
   const [incomingRequests, setIncomingRequests] = useState(initialIncomingRequests);
@@ -79,6 +86,7 @@ export function VerificationsClient({
   const [respondAction, setRespondAction] = useState<'accept' | 'decline'>('accept');
   const [bundleDialogOpen, setBundleDialogOpen] = useState(false);
   const [bundleRequestId, setBundleRequestId] = useState<string | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
   const [deletingRequestIds, setDeletingRequestIds] = useState<Record<string, boolean>>({});
   const [resendingRequestIds, setResendingRequestIds] = useState<Record<string, boolean>>({});
 
@@ -810,6 +818,14 @@ export function VerificationsClient({
               Follow which proof, claim, verifier, and bounded outcome each request is tied to.
             </p>
           </div>
+          <Button
+            type="button"
+            onClick={() => setComposerOpen(true)}
+            className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 md:w-auto"
+          >
+            <Wand2 className="mr-2 h-4 w-4" />
+            Draft verification request
+          </Button>
         </div>
 
         <Tabs defaultValue="incoming" className="w-full">
@@ -858,6 +874,12 @@ export function VerificationsClient({
         onOpenChange={handleBundleDialogOpenChange}
         requestId={bundleRequestId}
         onCanceled={handleBundleItemsCanceled}
+      />
+      <VerificationRequestComposerDialog
+        open={composerOpen}
+        onOpenChange={setComposerOpen}
+        proofPacks={composerProofPacks}
+        onSent={() => router.refresh()}
       />
     </AppSurface>
   );

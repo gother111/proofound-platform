@@ -13,7 +13,7 @@ export default async function VerificationsPage() {
   const userEmail = normalizeEmail(authUser.user?.email || null) || '';
   const hasVerifiedEmail = Boolean(authUser.user?.email_confirmed_at);
 
-  const { incomingRequests, sentRequests } = await loadVerificationRequestFeed({
+  const { incomingRequests, sentRequests, composerProofPacks } = await loadVerificationRequestFeed({
     userId: user.id,
     userEmail,
     hasVerifiedEmail,
@@ -24,6 +24,7 @@ export default async function VerificationsPage() {
     <VerificationsClient
       incomingRequests={incomingRequests}
       sentRequests={sentRequests}
+      composerProofPacks={composerProofPacks}
       userEmail={userEmail}
     />
   );
