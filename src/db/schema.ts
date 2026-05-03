@@ -3472,6 +3472,208 @@ export const cvImportAiUsageLogs = pgTable(
   })
 );
 
+export const aiMonthlyBudgets = pgTable(
+  'ai_monthly_budgets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    provider: text('provider', { enum: ['gemini'] })
+      .default('gemini')
+      .notNull(),
+    scopeType: text('scope_type', {
+      enum: ['global', 'production', 'feature', 'organization', 'user'],
+    }).notNull(),
+    scopeKey: text('scope_key').notNull(),
+    monthStart: date('month_start').notNull(),
+    currency: text('currency').default('SEK').notNull(),
+    monthlyLimitOre: integer('monthly_limit_ore').notNull(),
+    spentOre: integer('spent_ore').default(0).notNull(),
+    reservedOre: integer('reserved_ore').default(0).notNull(),
+    status: text('status', { enum: ['active', 'exhausted', 'disabled'] })
+      .default('active')
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    providerScopeMonthUnique: unique().on(
+      table.provider,
+      table.scopeType,
+      table.scopeKey,
+      table.monthStart
+    ),
+    monthStartIdx: index('idx_ai_monthly_budgets_month_start').on(table.monthStart),
+    scopeStatusIdx: index('idx_ai_monthly_budgets_scope_status').on(
+      table.provider,
+      table.scopeType,
+      table.scopeKey,
+      table.status
+    ),
+  })
+);
+
+export const aiUsageLogs = pgTable(
+  'ai_usage_logs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    requestId: text('request_id').notNull(),
+    idempotencyKey: text('idempotency_key').notNull(),
+    userId: uuid('user_id').references(() => profiles.id, { onDelete: 'set null' }),
+    orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'set null' }),
+    feature: text('feature').notNull(),
+    entityType: text('entity_type'),
+    entityId: text('entity_id'),
+    provider: text('provider', { enum: ['gemini'] })
+      .default('gemini')
+      .notNull(),
+    model: text('model'),
+    promptVersion: text('prompt_version').notNull(),
+    inputHash: text('input_hash').notNull(),
+    outputHash: text('output_hash'),
+    status: text('status', {
+      enum: [
+        'in_progress',
+        'success',
+        'cache_hit',
+        'budget_blocked',
+        'rate_limited',
+        'model_error',
+        'invalid_json',
+        'validation_failed',
+        'failed',
+      ],
+    })
+      .default('in_progress')
+      .notNull(),
+    promptTokens: integer('prompt_tokens'),
+    outputTokens: integer('output_tokens'),
+    totalTokens: integer('total_tokens'),
+    estimatedCostOre: integer('estimated_cost_ore').default(0).notNull(),
+    reservedOre: integer('reserved_ore').default(0).notNull(),
+    costOre: integer('cost_ore').default(0).notNull(),
+    currency: text('currency').default('SEK').notNull(),
+    redactionSummary: jsonb('redaction_summary')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    safeMetadata: jsonb('safe_metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    errorCode: text('error_code'),
+    latencyMs: integer('latency_ms'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    idempotencyIdx: index('idx_ai_usage_logs_idempotency_lookup').on(
+      table.userId,
+      table.orgId,
+      table.feature,
+      table.entityType,
+      table.entityId,
+      table.idempotencyKey
+    ),
+    createdAtIdx: index('idx_ai_usage_logs_created_at').on(table.createdAt),
+    userCreatedAtIdx: index('idx_ai_usage_logs_user_created_at').on(table.userId, table.createdAt),
+    orgCreatedAtIdx: index('idx_ai_usage_logs_org_created_at').on(table.orgId, table.createdAt),
+    featureCreatedAtIdx: index('idx_ai_usage_logs_feature_created_at').on(
+      table.feature,
+      table.createdAt
+    ),
+    inputHashIdx: index('idx_ai_usage_logs_input_hash').on(table.inputHash),
+  })
+);
+
+export const aiSuggestionCache = pgTable(
+  'ai_suggestion_cache',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    cacheKey: text('cache_key').notNull().unique(),
+    userId: uuid('user_id').references(() => profiles.id, { onDelete: 'set null' }),
+    orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'set null' }),
+    feature: text('feature').notNull(),
+    entityType: text('entity_type'),
+    entityId: text('entity_id'),
+    provider: text('provider', { enum: ['gemini'] })
+      .default('gemini')
+      .notNull(),
+    model: text('model').notNull(),
+    promptVersion: text('prompt_version').notNull(),
+    inputHash: text('input_hash').notNull(),
+    outputHash: text('output_hash').notNull(),
+    responsePayload: jsonb('response_payload').notNull(),
+    tokenUsage: jsonb('token_usage')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    costOre: integer('cost_ore').default(0).notNull(),
+    currency: text('currency').default('SEK').notNull(),
+    redactionSummary: jsonb('redaction_summary')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    featureInputIdx: index('idx_ai_suggestion_cache_feature_input').on(
+      table.feature,
+      table.promptVersion,
+      table.inputHash
+    ),
+    orgFeatureIdx: index('idx_ai_suggestion_cache_org_feature').on(
+      table.orgId,
+      table.feature,
+      table.createdAt
+    ),
+  })
+);
+
+export const aiSuggestionEvents = pgTable(
+  'ai_suggestion_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    usageLogId: uuid('usage_log_id').references(() => aiUsageLogs.id, { onDelete: 'set null' }),
+    cacheId: uuid('cache_id').references(() => aiSuggestionCache.id, { onDelete: 'set null' }),
+    eventType: text('event_type', {
+      enum: [
+        'cache_hit',
+        'cache_miss',
+        'reservation_created',
+        'reservation_released',
+        'finalized',
+        'generated',
+        'viewed',
+        'accepted',
+        'edited',
+        'dismissed',
+        'published',
+        'budget_blocked',
+        'rate_limited',
+        'provider_failed',
+      ],
+    }).notNull(),
+    userId: uuid('user_id').references(() => profiles.id, { onDelete: 'set null' }),
+    orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'set null' }),
+    feature: text('feature').notNull(),
+    entityType: text('entity_type'),
+    entityId: text('entity_id'),
+    inputHash: text('input_hash').notNull(),
+    safeMetadata: jsonb('safe_metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    usageLogIdx: index('idx_ai_suggestion_events_usage_log').on(table.usageLogId),
+    featureCreatedAtIdx: index('idx_ai_suggestion_events_feature_created_at').on(
+      table.feature,
+      table.createdAt
+    ),
+    userCreatedAtIdx: index('idx_ai_suggestion_events_user_created_at').on(
+      table.userId,
+      table.createdAt
+    ),
+  })
+);
+
 // Match interest - tracks "Interested" actions for mutual reveal
 export const matchInterest = pgTable(
   'match_interest',

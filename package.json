@@ -61,7 +61,7 @@
     "test:a11y": "node ./scripts/playwright-node20.mjs test --config playwright.a11y.config.ts --project=chromium",
     "test:a11y:strict": "NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node20.mjs test --config playwright.a11y.strict.config.ts --project=chromium",
     "test:strict:quality": "node ./scripts/check-strict-e2e-quality.mjs",
-    "test:privacy": "PROOFOUND_VITEST_TIMEOUT_MS=120000 node ./scripts/run-vitest-with-timeout.mjs --config vitest.supabase.config.ts tests/privacy/rls-policies.test.ts",
+    "test:privacy": "PROOFOUND_VITEST_TIMEOUT_MS=120000 node ./scripts/run-vitest-with-timeout.mjs --config vitest.supabase.config.ts tests/privacy/rls-policies.test.ts tests/privacy/ai-redaction.test.ts",
     "test:privacy:all": "vitest run --config vitest.supabase.config.ts tests/privacy",
     "test:privacy:watch": "vitest watch --config vitest.supabase.config.ts tests/privacy",
     "test:privacy:coverage": "vitest run --coverage --config vitest.supabase.config.ts tests/privacy",

@@ -9,8 +9,8 @@ type GeminiPricingFamily = 'flash-lite' | 'flash';
 
 const DEFAULT_FAMILY_PRICING_USD: Record<GeminiPricingFamily, GeminiTokenPricingUsd> = {
   'flash-lite': {
-    inputPerMillion: 0.1,
-    outputPerMillion: 0.4,
+    inputPerMillion: 0.25,
+    outputPerMillion: 1.5,
   },
   flash: {
     inputPerMillion: 0.3,

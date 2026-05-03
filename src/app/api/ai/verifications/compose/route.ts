@@ -1,0 +1,86 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
+import { requireApiAuthContext } from '@/lib/auth';
+import {
+  VERIFICATION_COMPOSER_FIELDS,
+  VERIFICATION_SCOPES,
+  composeVerificationRequestForUser,
+} from '@/lib/ai/verification-composer';
+
+const VerificationComposerRequestSchema = z
+  .object({
+    proofPackId: z.string().uuid().optional(),
+    claimId: z.string().uuid().optional(),
+    verifierEmail: z.string().trim().email().max(254).optional(),
+    verifierRelationshipType: z.string().trim().min(1).max(80),
+    verificationScope: z.enum(VERIFICATION_SCOPES),
+    selectedPublicSafeProofFields: z
+      .array(z.enum(VERIFICATION_COMPOSER_FIELDS))
+      .min(1)
+      .max(VERIFICATION_COMPOSER_FIELDS.length)
+      .optional(),
+    selectedProofFields: z
+      .array(z.enum(VERIFICATION_COMPOSER_FIELDS))
+      .min(1)
+      .max(VERIFICATION_COMPOSER_FIELDS.length)
+      .optional(),
+    idempotencyKey: z.string().trim().max(128).optional(),
+  })
+  .strict()
+  .refine((value) => Boolean(value.proofPackId || value.claimId), {
+    message: 'proofPackId or claimId is required',
+    path: ['proofPackId'],
+  })
+  .refine((value) => Boolean(value.selectedPublicSafeProofFields || value.selectedProofFields), {
+    message: 'selected public-safe proof fields are required',
+    path: ['selectedPublicSafeProofFields'],
+  });
+
+export async function POST(request: NextRequest) {
+  try {
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const payload = VerificationComposerRequestSchema.parse(body);
+    const requestId = crypto.randomUUID();
+
+    const draft = await composeVerificationRequestForUser({
+      proofPackId: payload.proofPackId ?? null,
+      claimId: payload.claimId ?? null,
+      userId: authContext.user.id,
+      requestId,
+      verifierRelationshipType: payload.verifierRelationshipType,
+      verificationScope: payload.verificationScope,
+      selectedPublicSafeProofFields:
+        payload.selectedPublicSafeProofFields ?? payload.selectedProofFields ?? [],
+      idempotencyKey: payload.idempotencyKey ?? null,
+    });
+
+    return NextResponse.json(draft);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          message: error.issues[0]?.message || 'Invalid verification composer request.',
+          details: error.issues,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      error instanceof Error &&
+      (error.message === 'PROOF_PACK_NOT_FOUND' || error.message === 'PROOF_PACK_OR_CLAIM_REQUIRED')
+    ) {
+      return NextResponse.json({ error: 'Proof Pack or claim not found' }, { status: 404 });
+    }
+
+    console.error('Verification request composer failed:', error);
+    return NextResponse.json({ error: 'Failed to draft verification request' }, { status: 500 });
+  }
+}

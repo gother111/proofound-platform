@@ -101,6 +101,16 @@ export const CvImportWizardMetadataSchema = z.object({
   ai_model: z.string().optional().nullable(),
   ai_key_slot: z.enum(['primary', 'secondary']).optional().nullable(),
   ai_fallback_reason: z.string().optional().nullable(),
+  ai_request_id: z.string().optional(),
+  ai_prompt_version: z.string().optional(),
+  ai_feature: z.string().optional(),
+  ai_token_usage: z
+    .object({
+      input_tokens: z.number().int().min(0),
+      output_tokens: z.number().int().min(0),
+      total_tokens: z.number().int().min(0),
+    })
+    .optional(),
   partial_results: z.boolean().optional(),
   atlas_verification_fallback_triggered: z.boolean().optional(),
   wizard_stage_failed: z

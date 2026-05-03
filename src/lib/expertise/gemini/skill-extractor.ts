@@ -1,34 +1,26 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 
+import { generateJson, resolveAiAssistantsEnabled } from '@/lib/ai/provider';
+import { AiProviderError } from '@/lib/ai/provider/types';
 import type { CvImportContext } from '@/lib/expertise/cv-import-suggest';
 import type { CvImportSuggestResponse } from '@/lib/expertise/cv-import-suggest';
 import {
   buildCvImportIdempotencyKey,
   ensureInProgressUsageLog,
-  finalizeBudgetReservation,
-  releaseBudgetReservation,
-  reserveBudgetForSlot,
   updateUsageLog,
   type CvImportUsageStatus,
 } from '@/lib/expertise/gemini/budget-ledger';
 import {
-  callGeminiStructuredJson,
-  GeminiClientError,
-  isGeminiQuotaExceededError,
-} from '@/lib/expertise/gemini/client';
-import {
   resolveConfiguredKeySlots,
   resolveGeminiAdaptiveMaxOutputTokens,
-  resolveGeminiApiKey,
   resolveGeminiModelDefault,
   resolveGeminiModelFallback,
   resolveGeminiTemperature,
   resolveGeminiTaxonomyGuidedEnabled,
-  resolveGeminiTimeoutMs,
   type GeminiKeySlot,
 } from '@/lib/expertise/gemini/config';
-import { computeGeminiCostOre, estimateReservationCostOre } from '@/lib/expertise/gemini/pricing';
+import { computeGeminiCostOre } from '@/lib/expertise/gemini/pricing';
 import {
   GEMINI_DOCUMENTS_EXTRACTION_JSON_SCHEMA,
   GeminiDocumentsExtractionSchema,
@@ -44,6 +36,8 @@ import { mapGeminiCandidatesToCvImportCandidates } from '@/lib/expertise/gemini/
 import { log } from '@/lib/log';
 
 const DEFAULT_SUGGESTIONS_LIMIT = 8;
+const SKILL_EXTRACTION_PROMPT_VERSION = 'cv_import_skill_extraction_v1';
+const AI_FEATURE_CV_IMPORT = 'cv_import';
 
 function normalizeSuggestionsLimit(value: number | undefined): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
@@ -156,11 +150,20 @@ function normalizeUsageStatusFromFailure(error: unknown): CvImportUsageStatus {
   if (error instanceof z.ZodError) {
     return 'invalid_json';
   }
-  if (error instanceof GeminiClientError && error.code === 'invalid_json') {
+  if (
+    error instanceof AiProviderError &&
+    (error.code === 'invalid_json' || error.code === 'validation_failed')
+  ) {
     return 'invalid_json';
   }
-  if (error instanceof GeminiClientError && error.code === 'quota_exceeded') {
+  if (error instanceof AiProviderError && error.code === 'quota_exceeded') {
     return 'quota_failover';
+  }
+  if (error instanceof AiProviderError && error.code === 'budget_exceeded') {
+    return 'budget_blocked';
+  }
+  if (error instanceof AiProviderError && error.code === 'rate_limited') {
+    return 'budget_blocked';
   }
   return 'model_error';
 }
@@ -169,12 +172,24 @@ function normalizeFailureCode(error: unknown): string {
   if (error instanceof z.ZodError) {
     return 'CV_IMPORT_GEMINI_INVALID_JSON';
   }
-  if (error instanceof GeminiClientError) {
+  if (error instanceof AiProviderError) {
     if (error.code === 'quota_exceeded') {
       return 'CV_IMPORT_GEMINI_QUOTA_EXCEEDED';
     }
-    if (error.code === 'invalid_json') {
+    if (error.code === 'invalid_json' || error.code === 'validation_failed') {
       return 'CV_IMPORT_GEMINI_INVALID_JSON';
+    }
+    if (error.code === 'assistants_disabled') {
+      return 'CV_IMPORT_AI_ASSISTANTS_DISABLED';
+    }
+    if (error.code === 'missing_api_key') {
+      return 'CV_IMPORT_GEMINI_KEYS_MISSING';
+    }
+    if (error.code === 'budget_exceeded') {
+      return 'CV_IMPORT_BUDGET_EXCEEDED';
+    }
+    if (error.code === 'rate_limited') {
+      return 'CV_IMPORT_AI_RATE_LIMITED';
     }
   }
   return 'CV_IMPORT_GEMINI_MODEL_ERROR';
@@ -184,8 +199,8 @@ function shouldRetryWithFallbackModel(error: unknown): boolean {
   if (error instanceof z.ZodError) {
     return true;
   }
-  if (error instanceof GeminiClientError) {
-    return error.code === 'invalid_json';
+  if (error instanceof AiProviderError) {
+    return error.code === 'invalid_json' || error.code === 'validation_failed';
   }
   return false;
 }
@@ -194,36 +209,72 @@ function isInvalidJsonLikeError(error: unknown): boolean {
   if (error instanceof z.ZodError) {
     return true;
   }
-  return error instanceof GeminiClientError && error.code === 'invalid_json';
+  return (
+    error instanceof AiProviderError &&
+    (error.code === 'invalid_json' || error.code === 'validation_failed')
+  );
 }
 
 async function extractSkillCandidates(params: {
   model: string;
-  apiKey: string;
+  keySlot: GeminiKeySlot;
   prompt: string;
   requestId: string;
   maxOutputTokens: number;
+  userId: string;
+  sourceHash: string;
+  aggregateChars: number;
+  documentsCount: number;
+  suggestionsLimit: number;
 }): Promise<{
   extracted: z.infer<typeof GeminiDocumentsExtractionSchema>;
   usage: { promptTokenCount: number; candidatesTokenCount: number; totalTokenCount: number };
   modelUsed: string;
+  provider: 'gemini';
+  promptVersion: string;
+  feature: string;
 }> {
-  const response = await callGeminiStructuredJson({
-    apiKey: params.apiKey,
+  const response = await generateJson({
     model: params.model,
     prompt: params.prompt,
     responseJsonSchema: GEMINI_DOCUMENTS_EXTRACTION_JSON_SCHEMA,
+    schema: GeminiDocumentsExtractionSchema,
     maxOutputTokens: params.maxOutputTokens,
     temperature: resolveGeminiTemperature(),
-    timeoutMs: resolveGeminiTimeoutMs(),
     requestId: params.requestId,
+    promptVersion: SKILL_EXTRACTION_PROMPT_VERSION,
+    feature: AI_FEATURE_CV_IMPORT,
+    keySlot: params.keySlot,
+    usage: {
+      userId: params.userId,
+      entityType: 'cv_import_batch',
+      entityId: params.sourceHash.slice(0, 64),
+      inputHash: params.sourceHash,
+      sanitizedInputChars: params.aggregateChars,
+      redactionSummary: {
+        raw_prompt_stored: false,
+        input_hash_only: true,
+        documents_count: params.documentsCount,
+      },
+      safeMetadata: {
+        documents_count: params.documentsCount,
+        suggestions_limit: params.suggestionsLimit,
+        key_slot: params.keySlot,
+      },
+    },
   });
 
-  const parsed = GeminiDocumentsExtractionSchema.parse(response.json);
   return {
-    extracted: parsed,
-    usage: response.usage,
-    modelUsed: trimModelName(response.modelVersion || params.model),
+    extracted: response.data,
+    usage: {
+      promptTokenCount: response.tokenUsage.inputTokens,
+      candidatesTokenCount: response.tokenUsage.outputTokens,
+      totalTokenCount: response.tokenUsage.totalTokens,
+    },
+    modelUsed: trimModelName(response.model || params.model),
+    provider: response.provider,
+    promptVersion: response.promptVersion,
+    feature: response.feature,
   };
 }
 
@@ -306,6 +357,14 @@ export type GeminiSuggestSuccess = {
       ai_model: string;
       ai_key_slot: GeminiKeySlot;
       ai_fallback_reason: string | null;
+      ai_request_id: string;
+      ai_prompt_version: string;
+      ai_feature: string;
+      ai_token_usage: {
+        input_tokens: number;
+        output_tokens: number;
+        total_tokens: number;
+      };
       cost_ore: number;
       currency: 'SEK';
       idempotency_key: string;
@@ -388,6 +447,16 @@ export async function suggestSkillsWithGemini(params: {
     explicitKey: params.idempotencyKeyHeader,
   });
 
+  if (!resolveAiAssistantsEnabled()) {
+    throw new GeminiSuggestError(
+      'AI assistants are disabled.',
+      'CV_IMPORT_AI_ASSISTANTS_DISABLED',
+      503,
+      'assistants_disabled',
+      { idempotencyKey }
+    );
+  }
+
   const inProgress = await ensureInProgressUsageLog({
     requestId: params.requestId,
     userId: params.userId,
@@ -441,42 +510,9 @@ export async function suggestSkillsWithGemini(params: {
     taxonomyGuided,
     suggestionsLimit,
   });
-  const estimatedReservation = estimateReservationCostOre({
-    model: resolveGeminiModelDefault(),
-    aggregateTextChars: aggregateChars,
-    maxOutputTokens: adaptiveMaxOutputTokens,
-  });
   const shortlistDurationMs = Date.now() - startedAt;
 
   for (const keySlot of keySlots) {
-    const apiKey = resolveGeminiApiKey(keySlot);
-    if (!apiKey) {
-      continue;
-    }
-
-    const reservationResult = await reserveBudgetForSlot({
-      keySlot,
-      estimatedCostOre: estimatedReservation,
-    });
-
-    if (!reservationResult.ok) {
-      const budgetErrorCode =
-        reservationResult.reason === 'disabled'
-          ? 'CV_IMPORT_BUDGET_DISABLED'
-          : 'CV_IMPORT_BUDGET_EXCEEDED';
-      lastError = new GeminiSuggestError(
-        reservationResult.reason === 'disabled'
-          ? 'Gemini budget slot is disabled.'
-          : 'Monthly Gemini budget exceeded.',
-        budgetErrorCode,
-        429,
-        'budget_exceeded',
-        { logId: inProgress.logId, idempotencyKey }
-      );
-      continue;
-    }
-
-    let reservationFinalized = false;
     try {
       const fallbackModel = resolveGeminiModelFallback();
       const defaultModel = resolveGeminiModelDefault();
@@ -492,10 +528,15 @@ export async function suggestSkillsWithGemini(params: {
         try {
           return await extractSkillCandidates({
             model,
-            apiKey,
+            keySlot,
             prompt,
             requestId: params.requestId,
             maxOutputTokens: adaptiveMaxOutputTokens,
+            userId: params.userId,
+            sourceHash,
+            aggregateChars,
+            documentsCount: params.documents.length,
+            suggestionsLimit,
           });
         } catch (error) {
           if (!isInvalidJsonLikeError(error) || boostedMaxOutputTokens <= adaptiveMaxOutputTokens) {
@@ -504,10 +545,15 @@ export async function suggestSkillsWithGemini(params: {
 
           return await extractSkillCandidates({
             model,
-            apiKey,
+            keySlot,
             prompt,
             requestId: params.requestId,
             maxOutputTokens: boostedMaxOutputTokens,
+            userId: params.userId,
+            sourceHash,
+            aggregateChars,
+            documentsCount: params.documents.length,
+            suggestionsLimit,
           });
         }
       };
@@ -617,12 +663,6 @@ export async function suggestSkillsWithGemini(params: {
       });
       const geminiDurationMs = Date.now() - geminiStartedAt;
       const totalDurationMs = Date.now() - startedAt;
-      await finalizeBudgetReservation({
-        reservation: reservationResult.reservation,
-        actualCostOre,
-      });
-      reservationFinalized = true;
-
       const aiFallbackReason =
         quotaFailoverCount > 0 ? 'quota_failover' : usedFallbackModel ? 'model_retry' : null;
       const quality: QualityMetadata = {
@@ -663,6 +703,14 @@ export async function suggestSkillsWithGemini(params: {
           ai_model: extraction.modelUsed,
           ai_key_slot: keySlot,
           ai_fallback_reason: aiFallbackReason,
+          ai_request_id: params.requestId,
+          ai_prompt_version: extraction.promptVersion,
+          ai_feature: extraction.feature,
+          ai_token_usage: {
+            input_tokens: promptTokens,
+            output_tokens: outputTokens,
+            total_tokens: totalTokens,
+          },
           cost_ore: actualCostOre,
           currency: 'SEK',
           idempotency_key: idempotencyKey,
@@ -684,7 +732,7 @@ export async function suggestSkillsWithGemini(params: {
         outputTokens,
         totalTokens,
         costOre: actualCostOre,
-        reservedOre: reservationResult.reservation.estimatedCostOre,
+        reservedOre: 0,
         latencyMs: Date.now() - startedAt,
         responsePayload: payload,
         metadata: {
@@ -710,21 +758,8 @@ export async function suggestSkillsWithGemini(params: {
       };
     } catch (error) {
       lastError = error;
-      try {
-        if (!reservationFinalized) {
-          await releaseBudgetReservation(reservationResult.reservation);
-        }
-      } catch (releaseError) {
-        log.warn('cv_import.gemini.release_reservation_failed', {
-          requestId: params.requestId,
-          route: params.route,
-          userId: params.userId,
-          keySlot,
-          error: releaseError instanceof Error ? releaseError.message : 'Unknown release error',
-        });
-      }
 
-      if (isGeminiQuotaExceededError(error)) {
+      if (error instanceof AiProviderError && error.code === 'quota_exceeded') {
         quotaFailoverCount += 1;
         continue;
       }
@@ -764,6 +799,13 @@ export async function suggestSkillsWithGemini(params: {
 
   if (errorCode === 'CV_IMPORT_BUDGET_DISABLED') {
     throw new GeminiSuggestError(errorMessage, errorCode, 429, 'budget_exceeded', {
+      logId: inProgress.logId,
+      idempotencyKey,
+    });
+  }
+
+  if (errorCode === 'CV_IMPORT_AI_RATE_LIMITED') {
+    throw new GeminiSuggestError(errorMessage, errorCode, 429, 'rate_limited', {
       logId: inProgress.logId,
       idempotencyKey,
     });

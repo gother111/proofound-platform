@@ -203,6 +203,15 @@ export const RATE_LIMITS = {
     failClosedOnProviderError: true,
   },
 
+  /** Assistive AI endpoints: 12 req/min */
+  aiAssistive: {
+    limit: 12,
+    windowSeconds: 60,
+    identifier: 'ai-assistive',
+    requiresLimiter: true,
+    failClosedOnProviderError: true,
+  },
+
   /** Auth endpoints: 10 req/min (prevent brute force) */
   auth: {
     limit: 10,
@@ -338,6 +347,10 @@ export function getRateLimitProfileForPathname(
     pathname === '/api/verification/status'
   ) {
     return RATE_LIMITS.verification;
+  }
+
+  if (pathname.startsWith('/api/expertise/cv-import/') || pathname.startsWith('/api/ai/')) {
+    return RATE_LIMITS.aiAssistive;
   }
 
   if (

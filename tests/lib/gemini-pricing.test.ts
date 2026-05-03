@@ -39,8 +39,8 @@ describe('gemini pricing resolution', () => {
     delete process.env.CV_IMPORT_GEMINI_FLASH_LITE_OUTPUT_USD_PER_MILLION;
 
     expect(resolveModelPricingUsd('gemini-3.1-flash-lite')).toEqual({
-      inputPerMillion: 0.1,
-      outputPerMillion: 0.4,
+      inputPerMillion: 0.25,
+      outputPerMillion: 1.5,
     });
   });
 

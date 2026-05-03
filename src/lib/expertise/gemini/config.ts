@@ -12,7 +12,7 @@ const DEFAULT_SHORT_TEXT_MAX_OUTPUT_TOKENS = 1000;
 const DEFAULT_PRIMARY_BUDGET_SEK = 85;
 const DEFAULT_SECONDARY_BUDGET_SEK = 85;
 const DEFAULT_USD_TO_SEK_RATE = 10.5;
-const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
+const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview';
 const DEFAULT_FALLBACK_MODEL = 'gemini-2.5-flash';
 const DEFAULT_TAXONOMY_SHORTLIST_MAX_ENTRIES = 120;
 const DEFAULT_TAXONOMY_SHORTLIST_MAX_TOKENS = 1200;
@@ -62,7 +62,11 @@ export function parseCvImportEngineMode(rawMode: string | undefined): CvImportEn
 }
 
 export function resolveGeminiModelDefault(): string {
-  return process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT?.trim() || DEFAULT_MODEL;
+  return (
+    process.env.AI_MODEL_DEFAULT?.trim() ||
+    process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT?.trim() ||
+    DEFAULT_MODEL
+  );
 }
 
 export function resolveGeminiModelFallback(): string {
@@ -112,7 +116,10 @@ export function resolveGeminiTimeoutMs(): number {
 }
 
 export function resolveUsdToSekRate(): number {
-  return parsePositiveNumber(process.env.CV_IMPORT_GEMINI_USD_TO_SEK_RATE, DEFAULT_USD_TO_SEK_RATE);
+  return parsePositiveNumber(
+    process.env.AI_USD_TO_SEK_RATE || process.env.CV_IMPORT_GEMINI_USD_TO_SEK_RATE,
+    DEFAULT_USD_TO_SEK_RATE
+  );
 }
 
 export function resolveMonthlyBudgetSek(slot: GeminiKeySlot): number {
@@ -133,13 +140,28 @@ export function resolveMonthlyBudgetOre(slot: GeminiKeySlot): number {
 }
 
 export function resolveGeminiApiKey(slot: GeminiKeySlot): string | null {
-  const value =
+  const candidates =
     slot === 'primary'
-      ? process.env.CV_IMPORT_GEMINI_PRIMARY_API_KEY
-      : process.env.CV_IMPORT_GEMINI_SECONDARY_API_KEY;
+      ? [
+          process.env.AI_GEMINI_PROD_API_KEY,
+          process.env.AI_GEMINI_API_KEY,
+          process.env.GEMINI_API_KEY,
+          process.env.CV_IMPORT_GEMINI_PRIMARY_API_KEY,
+        ]
+      : [
+          process.env.AI_GEMINI_STAGING_API_KEY,
+          process.env.AI_GEMINI_QA_API_KEY,
+          process.env.CV_IMPORT_GEMINI_SECONDARY_API_KEY,
+        ];
 
-  const key = value?.trim();
-  return key && key.length > 0 ? key : null;
+  for (const candidate of candidates) {
+    const key = candidate?.trim();
+    if (key) {
+      return key;
+    }
+  }
+
+  return null;
 }
 
 export function resolveConfiguredKeySlots(): GeminiKeySlot[] {

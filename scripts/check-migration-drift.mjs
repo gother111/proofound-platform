@@ -53,9 +53,14 @@ function getChangedFilesBetween(base, extraArgs = []) {
 function getWorkingTreeChangedFiles() {
   const unstaged = parseNameStatus(runGit(['diff', '--name-status', 'HEAD']));
   const staged = parseNameStatus(runGit(['diff', '--name-status', '--cached']));
+  const untracked = runGit(['ls-files', '--others', '--exclude-standard'])
+    .split('\n')
+    .map((file) => file.trim())
+    .filter(Boolean)
+    .map((file) => ({ status: 'A', file }));
   const byPath = new Map();
 
-  [...unstaged, ...staged].forEach((entry) => {
+  [...unstaged, ...staged, ...untracked].forEach((entry) => {
     const existing = byPath.get(entry.file);
     if (!existing || entry.status === 'D') {
       byPath.set(entry.file, entry);

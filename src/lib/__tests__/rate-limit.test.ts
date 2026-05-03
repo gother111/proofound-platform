@@ -77,6 +77,9 @@ describe('Rate Limiting', () => {
       expect(getRateLimitProfileForPathname('/api/upload/document', 'POST')).toBe(
         RATE_LIMITS.upload
       );
+      expect(
+        getRateLimitProfileForPathname('/api/expertise/cv-import/wizard-suggest', 'POST')
+      ).toBe(RATE_LIMITS.aiAssistive);
       expect(getRateLimitProfileForPathname('/api/conversations/abc/reveal', 'POST')).toBe(
         RATE_LIMITS.revealIntro
       );

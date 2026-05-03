@@ -11,6 +11,7 @@ import {
   resolveArtifactDisplayNameForSurface,
   sanitizeUploadFilename,
 } from '@/lib/uploads/privacy';
+import { evaluatePrivacyPreflightRules } from '@/lib/privacy/preflight-rules';
 
 describe('upload privacy helpers', () => {
   it('sanitizes risky filenames and marks path-like names for manual review', () => {
@@ -170,5 +171,40 @@ describe('upload privacy helpers', () => {
     expect(metadataFlags.hasCompanyMetadata).toBe(true);
     expect(metadataFlags.hasHiddenDocumentProperties).toBe(true);
     expect(metadataFlags.publicSafeEligible).toBe(false);
+  });
+
+  it('deterministically redacts common PII, secrets, filenames, and hidden terms before publication', () => {
+    const result = evaluatePrivacyPreflightRules({
+      fields: [
+        {
+          label: 'public proof summary',
+          value:
+            'Contact jane@example.com or +46701234567. Visit https://example.com/file?token=secret. Passport-like id 19900101-1234. See Jane_Doe_resume.pdf and sk_test_1234567890abcdefghijklmnop. Confidential Acme Climate AB work at 221B Baker Street.',
+          visibility: 'visible',
+        },
+      ],
+      hiddenTerms: ['Acme Climate AB'],
+    });
+
+    expect(result.riskLevel).toBe('high');
+    expect(result.flags.map((flag) => flag.code)).toEqual(
+      expect.arrayContaining([
+        'email',
+        'phone',
+        'tokenized_url',
+        'filename',
+        'national_id',
+        'api_key_or_access_token',
+        'confidential_marker',
+        'hidden_visibility_term',
+        'exact_address',
+      ])
+    );
+    expect(result.redactedText).not.toContain('jane@example.com');
+    expect(result.redactedText).not.toContain('+46701234567');
+    expect(result.redactedText).not.toContain('Jane_Doe_resume.pdf');
+    expect(result.redactedText).not.toContain('sk_test_1234567890abcdefghijklmnop');
+    expect(result.redactedText).not.toContain('Acme Climate AB');
+    expect(result.redactedText).not.toContain('221B Baker Street');
   });
 });
