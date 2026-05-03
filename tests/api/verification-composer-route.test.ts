@@ -123,6 +123,20 @@ describe('Verification Request Composer route', () => {
     expect(mocks.composeVerificationRequestForUser).not.toHaveBeenCalled();
   });
 
+  it('rejects signed URLs and tokenized links before composer service access', async () => {
+    const response = await POST(
+      request({
+        proofPackId: '11111111-1111-4111-8111-111111111111',
+        verifierRelationshipType: 'Peer https://example.com/proof.pdf?access_token=private-token',
+        verificationScope: 'observed_behavior',
+        selectedPublicSafeProofFields: ['claim_statement'],
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.composeVerificationRequestForUser).not.toHaveBeenCalled();
+  });
+
   it('strips verifier email before calling the composer service', async () => {
     const response = await POST(
       request({

@@ -181,7 +181,7 @@ describe('Proof Pack Assistant privacy controls', () => {
         warnings: [],
       },
       outputHash: 'output-hash',
-      model: 'gemini-3.1-flash-lite-preview',
+      model: 'gemini-2.5-flash-lite',
       costOre: 0,
       tokenUsage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
     });

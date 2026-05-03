@@ -72,6 +72,18 @@ describe('Proof Pack Assistant route', () => {
     expect(mocks.suggestProofPackForUser).not.toHaveBeenCalled();
   });
 
+  it('rejects tokenized links before assistant service access', async () => {
+    const response = await POST(
+      request({
+        proofPackId: '11111111-1111-4111-8111-111111111111',
+        idempotencyKey: 'https://storage.googleapis.com/private/file.pdf?X-Goog-Signature=abc',
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.suggestProofPackForUser).not.toHaveBeenCalled();
+  });
+
   it('returns structured suggestions and does not save them in the route', async () => {
     const response = await POST(
       request({

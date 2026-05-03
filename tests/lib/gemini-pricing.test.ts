@@ -34,21 +34,21 @@ describe('gemini pricing resolution', () => {
     }
   });
 
-  it('maps gemini-3.1-flash-lite to lite pricing family', () => {
+  it('maps gemini-2.5-flash-lite to lite pricing family', () => {
     delete process.env.CV_IMPORT_GEMINI_FLASH_LITE_INPUT_USD_PER_MILLION;
     delete process.env.CV_IMPORT_GEMINI_FLASH_LITE_OUTPUT_USD_PER_MILLION;
 
-    expect(resolveModelPricingUsd('gemini-3.1-flash-lite')).toEqual({
-      inputPerMillion: 0.25,
-      outputPerMillion: 1.5,
+    expect(resolveModelPricingUsd('gemini-2.5-flash-lite')).toEqual({
+      inputPerMillion: 0.1,
+      outputPerMillion: 0.4,
     });
   });
 
-  it('applies lite pricing overrides for gemini-3.1-flash-lite', () => {
+  it('applies lite pricing overrides for gemini-2.5-flash-lite', () => {
     process.env.CV_IMPORT_GEMINI_FLASH_LITE_INPUT_USD_PER_MILLION = '0.17';
     process.env.CV_IMPORT_GEMINI_FLASH_LITE_OUTPUT_USD_PER_MILLION = '0.47';
 
-    expect(resolveModelPricingUsd('gemini-3.1-flash-lite')).toEqual({
+    expect(resolveModelPricingUsd('gemini-2.5-flash-lite')).toEqual({
       inputPerMillion: 0.17,
       outputPerMillion: 0.47,
     });
@@ -58,7 +58,7 @@ describe('gemini pricing resolution', () => {
     process.env.CV_IMPORT_GEMINI_FLASH_INPUT_USD_PER_MILLION = '0.35';
     process.env.CV_IMPORT_GEMINI_FLASH_OUTPUT_USD_PER_MILLION = '2.7';
 
-    expect(resolveModelPricingUsd('gemini-3.1-flash')).toEqual({
+    expect(resolveModelPricingUsd('gemini-3-flash-preview')).toEqual({
       inputPerMillion: 0.35,
       outputPerMillion: 2.7,
     });

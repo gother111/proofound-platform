@@ -154,6 +154,21 @@ describe('assignment clarity assistant route', () => {
     expect(generateJson).not.toHaveBeenCalled();
   });
 
+  it('rejects signed URLs and tokenized links before assignment access or model calls', async () => {
+    const res = await POST(
+      request(
+        baseBody({
+          outcomeSummary:
+            'Review the private attachment https://storage.googleapis.com/cv.pdf?X-Goog-Signature=abc',
+        })
+      )
+    );
+
+    expect(res.status).toBe(400);
+    expect(verifyExplicitAssignmentMutationAccess).not.toHaveBeenCalled();
+    expect(generateJson).not.toHaveBeenCalled();
+  });
+
   it('flags vague outcomes and missing proof expectations with deterministic fallback', async () => {
     const res = await POST(request(baseBody()));
     const payload = await res.json();

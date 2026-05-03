@@ -32,7 +32,7 @@ const ledger = {
 function geminiResponse(text: string) {
   return new Response(
     JSON.stringify({
-      modelVersion: 'gemini-3.1-flash-lite-preview',
+      modelVersion: 'gemini-2.5-flash-lite',
       usageMetadata: {
         promptTokenCount: 1000,
         candidatesTokenCount: 2000,
@@ -216,7 +216,7 @@ describe('Gemini AI provider usage controls', () => {
       cacheId: 'cache-row-1',
       payload: { answer: 'cached' },
       outputHash: 'output-hash',
-      model: 'gemini-3.1-flash-lite-preview',
+      model: 'gemini-2.5-flash-lite',
       costOre: 12,
       tokenUsage: {
         inputTokens: 10,

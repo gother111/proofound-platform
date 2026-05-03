@@ -1,0 +1,11 @@
+Synthetic Proofound Local Extractor Fixture
+
+Work Experience
+Product Engineer at Synthetic Systems, 2022-2025.
+Built privacy-preserving review workflows for a fictional hiring platform.
+
+Skills
+TypeScript, React, data validation, privacy review, document processing.
+
+Education
+Example Institute, Certificate in Secure Product Engineering, 2021.

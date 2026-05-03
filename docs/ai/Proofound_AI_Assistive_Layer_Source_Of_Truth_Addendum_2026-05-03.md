@@ -205,7 +205,7 @@ If introduced later, it must only explain already existing deterministic reason 
 
 ### 3.1 Default model assumption
 
-The MVP AI assistive layer is designed around Gemini 3.1 Flash-Lite through Google AI Studio or the relevant Google Gemini API surface. As of this addendum, the current Gemini 3.1 Flash-Lite API model code is `gemini-3.1-flash-lite-preview`.
+The MVP AI assistive layer is designed around Gemini 2.5 Flash-Lite through Google AI Studio or the relevant Google Gemini API surface. As of this addendum, the current Gemini 2.5 Flash-Lite API model code is `gemini-2.5-flash-lite`.
 
 The exact model identifier must be configured server-side through environment variables. The product must not hardcode the model name in client code.
 
@@ -214,7 +214,7 @@ Recommended environment posture:
 ```bash
 AI_ASSISTANTS_ENABLED=false
 AI_PROVIDER=gemini
-AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
+AI_MODEL_DEFAULT=gemini-2.5-flash-lite
 ```
 
 If the provider exposes a different exact model ID, implementation must update the server-side environment value without changing product behavior.
@@ -232,7 +232,7 @@ Reason:
 
 ### 3.3 Credit use
 
-The current testing budget is 240 SEK per month across three Google AI Studio accounts or projects.
+The current testing budget is approximately 160 SEK per month across two Google AI Studio accounts or projects, with one main key and one secondary key capped at roughly 80 SEK each.
 
 This budget may be used for pilot testing only if:
 

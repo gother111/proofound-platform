@@ -124,6 +124,46 @@ export async function GET(request: Request) {
       });
     }
 
+    if (aiSummary.aiBudgetState === 'cap_not_configured') {
+      dependencies.aiBudget = {
+        ok: false,
+        required: true,
+        configured: false,
+        state: aiSummary.aiBudgetState,
+      };
+      dependencyReasons.push({
+        code: 'ai_budget_cap_not_configured' as const,
+        message:
+          'Launch readiness is blocked because AI assistants are enabled without a configured monthly hard cap.',
+        monitorKeys: ['ai_budget_cap'],
+        source: 'dependency' as const,
+        freshnessState: 'missing' as const,
+        checkedAt: [report.generatedAt],
+        lastSuccessfulCheckedAt: [null],
+        liveRefreshAttempted: report.liveRefresh.attempted,
+      });
+    }
+
+    if (aiSummary.aiBudgetState === 'exhausted') {
+      dependencies.aiBudget = {
+        ok: false,
+        required: true,
+        configured: true,
+        state: aiSummary.aiBudgetState,
+      };
+      dependencyReasons.push({
+        code: 'ai_budget_exhausted' as const,
+        message:
+          'Launch readiness is blocked because the configured AI monthly hard cap is exhausted.',
+        monitorKeys: ['ai_budget_cap'],
+        source: 'dependency' as const,
+        freshnessState: 'fresh' as const,
+        checkedAt: [report.generatedAt],
+        lastSuccessfulCheckedAt: [null],
+        liveRefreshAttempted: report.liveRefresh.attempted,
+      });
+    }
+
     const responseBody =
       dependencyReasons.length === 0
         ? {

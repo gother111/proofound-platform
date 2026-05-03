@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireApiAuthContext } from '@/lib/auth';
+import { addUnsafeAiRequestPayloadIssue } from '@/lib/ai/request-safety';
 import { suggestProofPackForUser } from '@/lib/ai/proof-pack-assistant';
 
 const ProofPackAssistantRequestSchema = z
@@ -9,7 +10,8 @@ const ProofPackAssistantRequestSchema = z
     proofPackId: z.string().uuid(),
     idempotencyKey: z.string().trim().max(128).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine(addUnsafeAiRequestPayloadIssue);
 
 export async function POST(request: NextRequest) {
   try {

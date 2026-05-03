@@ -7,9 +7,14 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
 const requirePlatformAdminMock = vi.fn();
 const usePathnameMock = vi.fn();
+const resolveGcpCvOcrSafeStatusMock = vi.fn();
 
 vi.mock('@/lib/auth/admin', () => ({
   requirePlatformAdmin: () => requirePlatformAdminMock(),
+}));
+
+vi.mock('@/lib/expertise/gcp-cv-ocr-status', () => ({
+  resolveGcpCvOcrSafeStatus: () => resolveGcpCvOcrSafeStatusMock(),
 }));
 
 vi.mock('next/navigation', async () => {
@@ -29,6 +34,7 @@ describe('admin launch links', () => {
       platformRole: 'platform_admin',
       adminLevel: 'platform_admin',
     });
+    resolveGcpCvOcrSafeStatusMock.mockResolvedValue({ status: 'disabled' });
     usePathnameMock.mockReturnValue('/admin');
   });
 
@@ -47,6 +53,9 @@ describe('admin launch links', () => {
     expect(screen.queryByRole('link', { name: /users/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /organizations/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /fairness/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/cv ocr sandbox/i)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(/^disabled$/i);
+    expect(screen.queryByText(/processor|secret|extracted text/i)).not.toBeInTheDocument();
   });
 
   it('keeps the active admin navigation inside the preserved launch corridor', () => {

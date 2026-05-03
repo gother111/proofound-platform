@@ -145,7 +145,7 @@ An optional model check may be used only after deterministic redaction and only 
 ```md
 ### Optional AI assistive layer
 
-The technical architecture may include an optional server-side AI assistive layer using a provider abstraction. Gemini 3.1 Flash-Lite is the default testing assumption, but the exact provider model ID must be environment-configured.
+The technical architecture may include an optional server-side AI assistive layer using a provider abstraction. Gemini 2.5 Flash-Lite is the default testing assumption, but the exact provider model ID must be environment-configured.
 
 The AI layer must be disabled by default, rate limited, spend capped, logged, cacheable, and safe to disable without breaking core MVP flows.
 ```
@@ -308,28 +308,28 @@ Add:
 ```bash
 AI_ASSISTANTS_ENABLED=false
 AI_PROVIDER=gemini
-AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
+AI_MODEL_DEFAULT=gemini-2.5-flash-lite
 AI_MODEL_FALLBACK=
 
 AI_GEMINI_PROD_API_KEY=
 AI_GEMINI_STAGING_API_KEY=
-AI_GEMINI_QA_API_KEY=
 
-AI_MONTHLY_HARD_CAP_SEK=120
-AI_PROD_MONTHLY_HARD_CAP_SEK=80
-AI_STAGING_MONTHLY_HARD_CAP_SEK=40
-AI_QA_MONTHLY_HARD_CAP_SEK=40
-AI_ABSOLUTE_MONTHLY_STOP_SEK=240
+AI_MONTHLY_HARD_CAP_SEK=160
+AI_PROD_MONTHLY_HARD_CAP_SEK=160
+AI_ABSOLUTE_MONTHLY_STOP_SEK=160
 AI_USD_TO_SEK_RATE=10.5
 
 AI_MAX_INPUT_CHARS=8000
 AI_DEFAULT_MAX_OUTPUT_TOKENS=700
 AI_CACHE_TTL_DAYS=30
-AI_LOG_RAW_PROMPTS=false
+AI_RAW_PROMPT_LOGGING_ENABLED=false
 AI_REQUIRE_USER_CONSENT=true
-AI_RATE_LIMIT_USER_DAILY=20
-AI_RATE_LIMIT_USER_FEATURE_DAILY=8
-AI_RATE_LIMIT_ORG_DAILY=50
+AI_USER_DAILY_LIMIT=50
+AI_ORG_DAILY_LIMIT=200
+AI_PROOF_PACK_ASSISTANT_DAILY_LIMIT=500
+AI_ASSIGNMENT_CLARITY_DAILY_LIMIT=500
+AI_VERIFICATION_REQUEST_COMPOSER_DAILY_LIMIT=500
+AI_PRIVACY_PREFLIGHT_DAILY_LIMIT=500
 ```
 ````
 
@@ -356,7 +356,7 @@ If AI assistance is implemented, launch status should expose only safe operator 
 {
   "aiAssistantsEnabled": false,
   "aiProvider": "gemini",
-  "aiModelDefault": "gemini-3.1-flash-lite-preview",
+  "aiModelDefault": "gemini-2.5-flash-lite",
   "aiBudgetState": "disabled",
   "aiSpendThisMonthSek": 0,
   "aiMonthlyCapSek": 120,

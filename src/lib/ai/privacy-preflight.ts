@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { generateJson } from '@/lib/ai/provider';
 import { AiProviderError } from '@/lib/ai/provider/types';
 import { hashAiContent } from '@/lib/ai/usage-ledger';
+import { addUnsafeAiRequestPayloadIssue } from '@/lib/ai/request-safety';
 import {
   PRIVACY_PREFLIGHT_PROMPT_VERSION,
   evaluatePrivacyPreflightRules,
@@ -43,7 +44,8 @@ export const PrivacyPreflightRequestSchema = z
     hiddenTerms: z.array(z.string().trim().min(3).max(160)).max(40).optional(),
     includeModelReview: z.boolean().optional(),
   })
-  .strict();
+  .strict()
+  .superRefine(addUnsafeAiRequestPayloadIssue);
 
 const GeminiPrivacyPreflightSchema = z.object({
   notes: z.array(z.string().trim().max(220)).max(6).default([]),

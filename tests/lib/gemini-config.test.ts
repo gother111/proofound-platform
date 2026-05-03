@@ -18,9 +18,11 @@ describe('gemini config helpers', () => {
   const originalAiModelDefault = process.env.AI_MODEL_DEFAULT;
   const originalAiGeminiProd = process.env.AI_GEMINI_PROD_API_KEY;
   const originalAiGeminiStaging = process.env.AI_GEMINI_STAGING_API_KEY;
-  const originalAiGeminiQa = process.env.AI_GEMINI_QA_API_KEY;
   const originalAiGemini = process.env.AI_GEMINI_API_KEY;
   const originalGemini = process.env.GEMINI_API_KEY;
+  const originalNextPublicGemini = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  const originalNextPublicGcpGemini = process.env.NEXT_PUBLIC_GCP_GEMINI_API_KEY;
+  const originalNextPublicApiSecret = process.env.NEXT_PUBLIC_API_SECRET;
   const originalLegacyPrimary = process.env.CV_IMPORT_GEMINI_PRIMARY_API_KEY;
   const originalLegacySecondary = process.env.CV_IMPORT_GEMINI_SECONDARY_API_KEY;
   const originalDefaultModel = process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT;
@@ -56,9 +58,11 @@ describe('gemini config helpers', () => {
     for (const [key, value] of Object.entries({
       AI_GEMINI_PROD_API_KEY: originalAiGeminiProd,
       AI_GEMINI_STAGING_API_KEY: originalAiGeminiStaging,
-      AI_GEMINI_QA_API_KEY: originalAiGeminiQa,
       AI_GEMINI_API_KEY: originalAiGemini,
       GEMINI_API_KEY: originalGemini,
+      NEXT_PUBLIC_GEMINI_API_KEY: originalNextPublicGemini,
+      NEXT_PUBLIC_GCP_GEMINI_API_KEY: originalNextPublicGcpGemini,
+      NEXT_PUBLIC_API_SECRET: originalNextPublicApiSecret,
       CV_IMPORT_GEMINI_PRIMARY_API_KEY: originalLegacyPrimary,
       CV_IMPORT_GEMINI_SECONDARY_API_KEY: originalLegacySecondary,
     })) {
@@ -111,16 +115,15 @@ describe('gemini config helpers', () => {
     expect(resolveGeminiTaxonomyGuidedEnabled()).toBe(false);
   });
 
-  it('uses gemini-3.1-flash-lite as default model when env override is unset', () => {
+  it('uses gemini-2.5-flash-lite as default model when env override is unset', () => {
     delete process.env.AI_MODEL_DEFAULT;
     delete process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT;
-    expect(resolveGeminiModelDefault()).toBe('gemini-3.1-flash-lite-preview');
+    expect(resolveGeminiModelDefault()).toBe('gemini-2.5-flash-lite');
   });
 
   it('prefers AI-facing Gemini key names and keeps legacy CV import names as fallback', () => {
     delete process.env.AI_GEMINI_PROD_API_KEY;
     delete process.env.AI_GEMINI_STAGING_API_KEY;
-    delete process.env.AI_GEMINI_QA_API_KEY;
     delete process.env.AI_GEMINI_API_KEY;
     delete process.env.GEMINI_API_KEY;
     delete process.env.CV_IMPORT_GEMINI_PRIMARY_API_KEY;
@@ -136,10 +139,23 @@ describe('gemini config helpers', () => {
     expect(resolveGeminiApiKey('primary')).toBe('ai-prod');
     expect(resolveGeminiApiKey('secondary')).toBe('ai-staging');
     expect(resolveConfiguredKeySlots()).toEqual(['primary', 'secondary']);
+  });
 
+  it('does not accept NEXT_PUBLIC Gemini or generic API secret env vars as provider keys', () => {
+    delete process.env.AI_GEMINI_PROD_API_KEY;
     delete process.env.AI_GEMINI_STAGING_API_KEY;
-    process.env.AI_GEMINI_QA_API_KEY = 'ai-qa';
-    expect(resolveGeminiApiKey('secondary')).toBe('ai-qa');
+    delete process.env.AI_GEMINI_API_KEY;
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.CV_IMPORT_GEMINI_PRIMARY_API_KEY;
+    delete process.env.CV_IMPORT_GEMINI_SECONDARY_API_KEY;
+
+    process.env.NEXT_PUBLIC_GEMINI_API_KEY = 'browser-gemini-key';
+    process.env.NEXT_PUBLIC_GCP_GEMINI_API_KEY = 'browser-gcp-gemini-key';
+    process.env.NEXT_PUBLIC_API_SECRET = 'browser-api-secret';
+
+    expect(resolveGeminiApiKey('primary')).toBeNull();
+    expect(resolveGeminiApiKey('secondary')).toBeNull();
+    expect(resolveConfiguredKeySlots()).toEqual([]);
   });
 
   it('uses conservative shortlist defaults and parses explicit timeout/seed overrides', () => {

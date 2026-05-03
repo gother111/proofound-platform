@@ -11,6 +11,7 @@ import {
   hashAiContent,
   recordAiSuggestionEvent,
 } from '@/lib/ai/usage-ledger';
+import { addUnsafeAiRequestPayloadIssue } from '@/lib/ai/request-safety';
 import { verifyExplicitAssignmentMutationAccess } from '@/lib/assignments/access';
 import { skillDisplayLabel } from '@/lib/copy/labels';
 
@@ -71,7 +72,8 @@ const SkillInputSchema = z
     skillName: z.string().trim().max(160).optional(),
     level: z.number().min(0).max(5).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine(addUnsafeAiRequestPayloadIssue);
 
 const ConstraintsInputSchema = z
   .object({
@@ -103,7 +105,8 @@ export const AssignmentClarityRequestSchema = z
     engagementType: EngagementTypeSchema.optional(),
     verificationRequirements: z.array(z.string().trim().max(120)).max(12).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine(addUnsafeAiRequestPayloadIssue);
 
 export const AssignmentClarityConstraintsRewriteSchema = z.object({
   locationMode: z.enum(['remote', 'onsite', 'hybrid']).nullable().optional(),

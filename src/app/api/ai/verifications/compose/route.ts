@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireApiAuthContext } from '@/lib/auth';
+import { addUnsafeAiRequestPayloadIssue } from '@/lib/ai/request-safety';
 import {
   VERIFICATION_COMPOSER_FIELDS,
   VERIFICATION_SCOPES,
@@ -28,6 +29,7 @@ const VerificationComposerRequestSchema = z
     idempotencyKey: z.string().trim().max(128).optional(),
   })
   .strict()
+  .superRefine(addUnsafeAiRequestPayloadIssue)
   .refine((value) => Boolean(value.proofPackId || value.claimId), {
     message: 'proofPackId or claimId is required',
     path: ['proofPackId'],

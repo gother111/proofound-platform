@@ -198,6 +198,70 @@ describe('/api/monitoring/launch-status', () => {
     ]);
   });
 
+  it('blocks launch status when AI assistants are enabled without a monthly hard cap', async () => {
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
+    (getAiLaunchOperationalSummary as any).mockResolvedValueOnce({
+      aiAssistantsEnabled: true,
+      aiMonthlyCapSek: null,
+      aiSpendThisMonthSek: 0,
+      aiBudgetState: 'cap_not_configured',
+      aiRawPromptLoggingEnabled: false,
+    });
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.ok).toBe(false);
+    expect(body.dependencies.aiBudget).toEqual(
+      expect.objectContaining({
+        ok: false,
+        required: true,
+        configured: false,
+        state: 'cap_not_configured',
+      })
+    );
+    expect(body.notReadyReasons).toEqual([
+      expect.objectContaining({
+        code: 'ai_budget_cap_not_configured',
+        source: 'dependency',
+        monitorKeys: ['ai_budget_cap'],
+      }),
+    ]);
+  });
+
+  it('blocks launch status when the AI monthly hard cap is exhausted', async () => {
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
+    (getAiLaunchOperationalSummary as any).mockResolvedValueOnce({
+      aiAssistantsEnabled: true,
+      aiMonthlyCapSek: 160,
+      aiSpendThisMonthSek: 160,
+      aiBudgetState: 'exhausted',
+      aiRawPromptLoggingEnabled: false,
+    });
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.ok).toBe(false);
+    expect(body.dependencies.aiBudget).toEqual(
+      expect.objectContaining({
+        ok: false,
+        required: true,
+        configured: true,
+        state: 'exhausted',
+      })
+    );
+    expect(body.notReadyReasons).toEqual([
+      expect.objectContaining({
+        code: 'ai_budget_exhausted',
+        source: 'dependency',
+        monitorKeys: ['ai_budget_cap'],
+      }),
+    ]);
+  });
+
   it('blocks launch status when production rate limiting dependency is missing', async () => {
     vi.stubEnv('VERCEL_ENV', 'production');
     vi.stubEnv('KV_REST_API_URL', '');

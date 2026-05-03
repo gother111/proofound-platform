@@ -53,14 +53,14 @@ Inspect:
 - package.json
 
 Goal:
-Create a general AI provider abstraction for Proofound assistive features using Gemini 3.1 Flash-Lite as the default model assumption. Do not expose API keys to the client. Do not hard-code Gemini directly inside feature route handlers.
+Create a general AI provider abstraction for Proofound assistive features using Gemini 2.5 Flash-Lite as the default model assumption. Do not expose API keys to the client. Do not hard-code Gemini directly inside feature route handlers.
 
 Implementation requirements:
 - Add src/lib/ai/provider/types.ts with a generic generateJson<T>() interface.
 - Add src/lib/ai/provider/gemini-client.ts.
 - Add src/lib/ai/provider/index.ts.
 - Default model must be env-driven:
-  AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
+  AI_MODEL_DEFAULT=gemini-2.5-flash-lite
 - If the official provider model ID differs, keep the exact ID in env only.
 - Use server-only imports/guards.
 - Support structured JSON outputs.
@@ -86,7 +86,7 @@ Tests:
 
 Acceptance criteria:
 - Feature routes can call a provider-agnostic generateJson<T>() function.
-- Default model is env-driven and points to Gemini 3.1 Flash-Lite for testing.
+- Default model is env-driven and points to Gemini 2.5 Flash-Lite for testing.
 - No Gemini API key appears in client bundles or API responses.
 - Invalid provider output fails closed with a safe error object.
 ```

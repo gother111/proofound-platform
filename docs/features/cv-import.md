@@ -342,6 +342,7 @@ npm run test:e2e -- cv-import
 2. **Upload Guardrails**: Default parser limits are strict (`5MB`, `4` pages) to control latency and spend.
 3. **Budget Enforcement**: Conservative reservation can block near-limit requests even if final token usage would have fit.
 4. **Language Quality Variance**: Non-English CVs can still reduce mapping quality depending on taxonomy coverage.
+5. **GCP OCR Sandbox**: The Cloud Run + Document AI smoke path is internal-only and not connected to the user CV/import review flow until explicitly approved. It uses service account ADC, not browser-created API keys.
 
 ## Future Enhancements
 

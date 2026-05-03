@@ -93,4 +93,21 @@ describe('POST /api/ai/privacy-preflight/check', () => {
     expect(response.status).toBe(400);
     expect(mocks.runPrivacyPreflightCheck).not.toHaveBeenCalled();
   });
+
+  it('rejects signed URLs and tokenized links before privacy preflight service access', async () => {
+    const response = await POST(
+      request({
+        surface: 'proof_publication',
+        fields: [
+          {
+            label: 'proof summary',
+            value: 'Review https://example.com/private.pdf?token=secret before publish.',
+          },
+        ],
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.runPrivacyPreflightCheck).not.toHaveBeenCalled();
+  });
 });

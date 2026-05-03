@@ -26,7 +26,7 @@ import {
 import { computeGeminiCostOre, estimateReservationCostOre } from '@/lib/expertise/gemini/pricing';
 
 const PROVIDER = 'gemini' as const;
-const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview';
+const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
 const DEFAULT_TEMPERATURE = 0;
 const DEFAULT_TIMEOUT_MS = 12000;
 const DEFAULT_FEATURE_MAX_OUTPUT_TOKENS = 1600;
@@ -204,23 +204,20 @@ export function resolveGeminiProviderApiKey(params?: {
   const candidates =
     keySlot === 'secondary' || keySlot === 'staging'
       ? [env.AI_GEMINI_STAGING_API_KEY, env.CV_IMPORT_GEMINI_SECONDARY_API_KEY]
-      : keySlot === 'qa'
-        ? [env.AI_GEMINI_QA_API_KEY]
-        : keySlot === 'primary' || keySlot === 'prod' || keySlot === 'production'
-          ? [
-              env.AI_GEMINI_PROD_API_KEY,
-              env.AI_GEMINI_API_KEY,
-              env.GEMINI_API_KEY,
-              env.CV_IMPORT_GEMINI_PRIMARY_API_KEY,
-            ]
-          : [
-              env.AI_GEMINI_PROD_API_KEY,
-              env.AI_GEMINI_API_KEY,
-              env.GEMINI_API_KEY,
-              env.AI_GEMINI_STAGING_API_KEY,
-              env.AI_GEMINI_QA_API_KEY,
-              env.CV_IMPORT_GEMINI_PRIMARY_API_KEY,
-            ];
+      : keySlot === 'primary' || keySlot === 'prod' || keySlot === 'production'
+        ? [
+            env.AI_GEMINI_PROD_API_KEY,
+            env.AI_GEMINI_API_KEY,
+            env.GEMINI_API_KEY,
+            env.CV_IMPORT_GEMINI_PRIMARY_API_KEY,
+          ]
+        : [
+            env.AI_GEMINI_PROD_API_KEY,
+            env.AI_GEMINI_API_KEY,
+            env.GEMINI_API_KEY,
+            env.AI_GEMINI_STAGING_API_KEY,
+            env.CV_IMPORT_GEMINI_PRIMARY_API_KEY,
+          ];
 
   for (const candidate of candidates) {
     const key = candidate?.trim();

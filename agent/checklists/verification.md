@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `verification.md`
-> Last Verified: `2026-05-01`
+> Last Verified: `2026-05-03`
 
 # Verification Checklist (Before Merging)
 
@@ -218,6 +218,33 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - Supabase admin `generateLink(...)` succeeded
   - Resend API send succeeded for the generated action link
   - Recipient receives a valid Supabase verify/recovery link.
+
+## Manual Smoke Checks (Temporary GCP OCR Sandbox)
+
+Before any staging Cloud Run OCR call:
+
+- Confirm Google Cloud Billing credit expiration was verified live in the Google Cloud Console during this smoke pass.
+- Confirm covered products were verified live for the exact sandbox path: Cloud Run, Document AI or Cloud Vision OCR, Cloud Storage if used, Secret Manager if used, Cloud Logging, and Cloud Monitoring.
+- Confirm budget alerts are configured for the sandbox project before the first billable call, then test the alert route or notification recipient and record the test evidence in local/operator notes.
+- Confirm the GCP project ID is recorded only in local/operator documentation and trusted deployment configuration. Do not hardcode it in product code, public docs, browser env, test fixtures, or committed smoke artifacts if it is sensitive.
+- Confirm production remains disabled: `GCP_CV_OCR_ENABLED=false` in production and no production credential, endpoint, processor, or bucket value is created or changed for this smoke.
+- Confirm staging/preview is enabled only for synthetic PDFs and only after billing, product coverage, budget alert, and cleanup gates are ready.
+
+Required staging smoke:
+
+- Run the internal safe status check: `npm run ocr:sandbox:status`. It must report only one of `disabled`, `configured`, `expired`, `fallback`, or `provider reachable`.
+- For a live sandbox smoke only, temporarily enable staging with a short future `GCP_CV_OCR_EXPIRES_AT`, then run `npm run ocr:sandbox:smoke`. The command submits one generated synthetic PDF and prints only the safe status plus pass/fail.
+- Upload or submit exactly one synthetic one-page PDF with no real names, emails, phone numbers, addresses, employer names, customer names, CV history, pilot data, filenames, or storage paths.
+- Confirm synthetic one-page PDF extraction succeeds through the staging sandbox and returns only schema-valid extracted text plus safe metadata.
+- Set `GCP_CV_OCR_ENABLED=false`, redeploy or refresh staging config as required, and confirm the feature returns the deterministic/browser-side fallback.
+- Set `GCP_CV_OCR_EXPIRES_AT` to a past timestamp in staging, redeploy or refresh config as required, and confirm the feature returns fallback and makes no Cloud Run call.
+- Inspect application logs, Cloud Run logs, Cloud Logging, and any temporary provider logs; confirm they contain no raw extracted text, original filenames, storage paths, bucket/object names, signed URLs, processor IDs, service URLs, user emails, secrets, tokens, or credential material.
+- Confirm the cost dashboard for the sandbox project shows the expected small smoke spend and no unrelated product spend.
+- Test the cleanup path: disable the staging flag, remove temporary staging env values, delete or verify deletion of temp objects, and confirm the fallback path still works after cleanup.
+
+Pass condition: live billing/product eligibility is recorded outside the repo, budget alerting is proved, one synthetic extraction succeeds, disabled and expired states fall back without Cloud Run calls, logs are payload-safe, cost is bounded, and cleanup is verified.
+
+Fail condition: any real or pilot data is processed, production is enabled, a secret or project identifier is hardcoded where it should not be, budget alerting is untested, disabled/expired config still invokes Cloud Run, logs contain sensitive payloads, cost is unexplained, or cleanup leaves billable resources active.
 
 ## Manual Smoke Checks (Profile Sharing)
 

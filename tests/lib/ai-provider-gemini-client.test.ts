@@ -18,7 +18,7 @@ const ResponseSchema = z.object({
 function geminiResponse(text: string) {
   return new Response(
     JSON.stringify({
-      modelVersion: 'gemini-3.1-flash-lite-preview',
+      modelVersion: 'gemini-2.5-flash-lite',
       usageMetadata: {
         promptTokenCount: 11,
         candidatesTokenCount: 7,
@@ -46,11 +46,12 @@ describe('Gemini AI provider', () => {
     AI_CV_IMPORT_MAX_OUTPUT_TOKENS: process.env.AI_CV_IMPORT_MAX_OUTPUT_TOKENS,
     AI_GEMINI_PROD_API_KEY: process.env.AI_GEMINI_PROD_API_KEY,
     AI_GEMINI_STAGING_API_KEY: process.env.AI_GEMINI_STAGING_API_KEY,
-    AI_GEMINI_QA_API_KEY: process.env.AI_GEMINI_QA_API_KEY,
     AI_GEMINI_API_KEY: process.env.AI_GEMINI_API_KEY,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     CV_IMPORT_GEMINI_PRIMARY_API_KEY: process.env.CV_IMPORT_GEMINI_PRIMARY_API_KEY,
     NEXT_PUBLIC_GEMINI_API_KEY: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
+    NEXT_PUBLIC_GCP_GEMINI_API_KEY: process.env.NEXT_PUBLIC_GCP_GEMINI_API_KEY,
+    NEXT_PUBLIC_API_SECRET: process.env.NEXT_PUBLIC_API_SECRET,
   };
 
   afterEach(() => {
@@ -69,7 +70,7 @@ describe('Gemini AI provider', () => {
     delete process.env.AI_MODEL_DEFAULT;
     delete process.env.AI_CV_IMPORT_MAX_OUTPUT_TOKENS;
 
-    expect(resolveAiModelDefault()).toBe('gemini-3.1-flash-lite-preview');
+    expect(resolveAiModelDefault()).toBe('gemini-2.5-flash-lite');
     expect(resolveAiAssistantsEnabled()).toBe(false);
     expect(resolveAiFeatureMaxOutputTokens('cv_import', 5000)).toBe(3200);
 
@@ -127,17 +128,20 @@ describe('Gemini AI provider', () => {
     process.env.AI_ASSISTANTS_ENABLED = 'true';
     delete process.env.AI_GEMINI_PROD_API_KEY;
     delete process.env.AI_GEMINI_STAGING_API_KEY;
-    delete process.env.AI_GEMINI_QA_API_KEY;
     delete process.env.AI_GEMINI_API_KEY;
     delete process.env.GEMINI_API_KEY;
     delete process.env.CV_IMPORT_GEMINI_PRIMARY_API_KEY;
     process.env.NEXT_PUBLIC_GEMINI_API_KEY = 'browser-key';
+    process.env.NEXT_PUBLIC_GCP_GEMINI_API_KEY = 'browser-gcp-key';
+    process.env.NEXT_PUBLIC_API_SECRET = 'browser-api-secret';
     const fetchMock = vi.spyOn(globalThis, 'fetch');
 
     expect(
       resolveGeminiProviderApiKey({
         env: {
           NEXT_PUBLIC_GEMINI_API_KEY: 'browser-key',
+          NEXT_PUBLIC_GCP_GEMINI_API_KEY: 'browser-gcp-key',
+          NEXT_PUBLIC_API_SECRET: 'browser-api-secret',
         },
       })
     ).toBeNull();
@@ -158,13 +162,12 @@ describe('Gemini AI provider', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('resolves the current three Gemini key slots before legacy names', () => {
+  it('resolves the current two Gemini key slots before legacy names', () => {
     expect(
       resolveGeminiProviderApiKey({
         env: {
           AI_GEMINI_PROD_API_KEY: 'prod-key',
           AI_GEMINI_STAGING_API_KEY: 'staging-key',
-          AI_GEMINI_QA_API_KEY: 'qa-key',
           CV_IMPORT_GEMINI_PRIMARY_API_KEY: 'legacy-primary',
           CV_IMPORT_GEMINI_SECONDARY_API_KEY: 'legacy-secondary',
         },
@@ -180,15 +183,6 @@ describe('Gemini AI provider', () => {
         },
       })
     ).toBe('staging-key');
-
-    expect(
-      resolveGeminiProviderApiKey({
-        keySlot: 'qa',
-        env: {
-          AI_GEMINI_QA_API_KEY: 'qa-key',
-        },
-      })
-    ).toBe('qa-key');
   });
 
   it('fails closed when structured output validation fails', async () => {
@@ -238,7 +232,7 @@ describe('Gemini AI provider', () => {
       requestId: 'req-success',
       promptVersion: 'test-v1',
       feature: 'cv_import',
-      model: 'gemini-3.1-flash-lite-preview',
+      model: 'gemini-2.5-flash-lite',
       provider: 'gemini',
       suggestionId: null,
       tokenUsage: {

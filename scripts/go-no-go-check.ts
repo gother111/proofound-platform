@@ -109,6 +109,20 @@ function checkAiLaunchNoGoGuards() {
     fail('AI_RAW_PROMPT_LOGGING_ENABLED must be false for launch');
   }
 
+  if (process.env.AI_ASSISTANTS_ENABLED?.trim().toLowerCase() === 'true') {
+    const configuredCap = [
+      process.env.AI_MONTHLY_HARD_CAP_SEK,
+      process.env.AI_PROD_MONTHLY_HARD_CAP_SEK,
+    ].some((value) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) && parsed >= 0;
+    });
+
+    if (!configuredCap) {
+      fail('AI assistants are enabled but no AI monthly hard cap is configured');
+    }
+  }
+
   const aiRouteRoot = path.join(process.cwd(), 'src/app/api/ai');
   const forbiddenRoutePattern =
     /\b(?:candidate[-_/]?score|candidate[-_/]?rank|scor(?:e|ing)|rank(?:ing)?)\b/i;

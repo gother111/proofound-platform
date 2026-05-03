@@ -9,10 +9,10 @@ const DEFAULT_TIMEOUT_MS = 12000;
 const DEFAULT_TEMPERATURE = 0;
 const DEFAULT_MAX_OUTPUT_TOKENS = 1600;
 const DEFAULT_SHORT_TEXT_MAX_OUTPUT_TOKENS = 1000;
-const DEFAULT_PRIMARY_BUDGET_SEK = 85;
-const DEFAULT_SECONDARY_BUDGET_SEK = 85;
+const DEFAULT_PRIMARY_BUDGET_SEK = 80;
+const DEFAULT_SECONDARY_BUDGET_SEK = 80;
 const DEFAULT_USD_TO_SEK_RATE = 10.5;
-const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview';
+const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
 const DEFAULT_FALLBACK_MODEL = 'gemini-2.5-flash';
 const DEFAULT_TAXONOMY_SHORTLIST_MAX_ENTRIES = 120;
 const DEFAULT_TAXONOMY_SHORTLIST_MAX_TOKENS = 1200;
@@ -148,11 +148,7 @@ export function resolveGeminiApiKey(slot: GeminiKeySlot): string | null {
           process.env.GEMINI_API_KEY,
           process.env.CV_IMPORT_GEMINI_PRIMARY_API_KEY,
         ]
-      : [
-          process.env.AI_GEMINI_STAGING_API_KEY,
-          process.env.AI_GEMINI_QA_API_KEY,
-          process.env.CV_IMPORT_GEMINI_SECONDARY_API_KEY,
-        ];
+      : [process.env.AI_GEMINI_STAGING_API_KEY, process.env.CV_IMPORT_GEMINI_SECONDARY_API_KEY];
 
   for (const candidate of candidates) {
     const key = candidate?.trim();

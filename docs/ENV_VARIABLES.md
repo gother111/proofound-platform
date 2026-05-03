@@ -64,12 +64,11 @@ PYTHON_INTERNAL_WORKER_CONCURRENCY=2
 PYTHON_INTERNAL_WORKER_LEASE_SECONDS=180
 PYTHON_INTERNAL_MAX_ATTEMPTS=3
 AI_ASSISTANTS_ENABLED=false
-AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
+AI_MODEL_DEFAULT=gemini-2.5-flash-lite
 AI_GEMINI_PROD_API_KEY=AIza...
 AI_GEMINI_STAGING_API_KEY=AIza...
-AI_GEMINI_QA_API_KEY=AIza...
-AI_MONTHLY_HARD_CAP_SEK=250
-AI_PROD_MONTHLY_HARD_CAP_SEK=250
+AI_MONTHLY_HARD_CAP_SEK=160
+AI_PROD_MONTHLY_HARD_CAP_SEK=160
 AI_USER_DAILY_LIMIT=50
 AI_ORG_DAILY_LIMIT=200
 AI_RAW_PROMPT_LOGGING_ENABLED=false
@@ -740,7 +739,7 @@ CV_IMPORT_SERVER_TIMEOUT_MS=15000
 
 ---
 
-### AI_GEMINI_PROD_API_KEY / AI_GEMINI_STAGING_API_KEY / AI_GEMINI_QA_API_KEY
+### AI_GEMINI_PROD_API_KEY / AI_GEMINI_STAGING_API_KEY
 
 **Purpose**: Server-only Gemini API keys for the assistive AI layer and CV import Gemini path.
 
@@ -749,14 +748,14 @@ CV_IMPORT_SERVER_TIMEOUT_MS=15000
 ```env
 AI_GEMINI_PROD_API_KEY=AIza...
 AI_GEMINI_STAGING_API_KEY=AIza...
-AI_GEMINI_QA_API_KEY=AIza...
 ```
 
 **Notes**:
 
 - Stored only in server environments (for example Vercel server env vars).
 - Never exposed to the browser.
-- CV import still records spend against its `primary` and `secondary` slots. `AI_GEMINI_PROD_API_KEY` maps to `primary`; `AI_GEMINI_STAGING_API_KEY` maps to `secondary`; `AI_GEMINI_QA_API_KEY` can back the secondary slot when staging is unset and can be selected directly by AI provider code.
+- Not used by the temporary Cloud Run + Document AI CV/OCR sandbox. That path uses the Cloud Run service account / Google ADC.
+- CV import still records spend against its `primary` and `secondary` slots. `AI_GEMINI_PROD_API_KEY` maps to `primary`; `AI_GEMINI_STAGING_API_KEY` maps to `secondary`.
 - `CV_IMPORT_GEMINI_PRIMARY_API_KEY` and `CV_IMPORT_GEMINI_SECONDARY_API_KEY` remain accepted as legacy fallbacks for existing deployments, but new setup should use the `AI_GEMINI_*` names.
 
 ---
@@ -768,14 +767,14 @@ AI_GEMINI_QA_API_KEY=AIza...
 **Format**:
 
 ```env
-CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK=85
-CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK=85
+CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK=80
+CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK=80
 ```
 
 **Default**:
 
-- Primary: `85`
-- Secondary: `85`
+- Primary: `80`
+- Secondary: `80`
 
 ---
 
@@ -846,14 +845,14 @@ GEMINI_API_KEY=AIza...
 **Format**:
 
 ```env
-AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
-CV_IMPORT_GEMINI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
+AI_MODEL_DEFAULT=gemini-2.5-flash-lite
+CV_IMPORT_GEMINI_MODEL_DEFAULT=gemini-2.5-flash-lite
 CV_IMPORT_GEMINI_MODEL_FALLBACK=gemini-2.5-flash
 ```
 
 **Default**:
 
-- Default model: `gemini-3.1-flash-lite-preview`
+- Default model: `gemini-2.5-flash-lite`
 - Fallback model: `gemini-2.5-flash`
 
 **Notes**:
@@ -861,7 +860,7 @@ CV_IMPORT_GEMINI_MODEL_FALLBACK=gemini-2.5-flash
 - `AI_MODEL_DEFAULT` is the provider-wide default for assistive AI calls.
 - `CV_IMPORT_GEMINI_MODEL_DEFAULT` remains accepted for the CV import feature, but `AI_MODEL_DEFAULT` takes precedence.
 - Gemini API keys remain server-only and must not use `NEXT_PUBLIC_` prefixes.
-- The current Gemini 3.1 Flash-Lite API model code is a preview ID; keep the exact provider model identifier environment-driven so it can be updated without product behavior changes.
+- The current default uses the stable `gemini-2.5-flash-lite` model code; keep the exact provider model identifier environment-driven so it can be updated without product behavior changes.
 
 ---
 
@@ -872,8 +871,8 @@ CV_IMPORT_GEMINI_MODEL_FALLBACK=gemini-2.5-flash
 **Format**:
 
 ```env
-AI_MONTHLY_HARD_CAP_SEK=250
-AI_PROD_MONTHLY_HARD_CAP_SEK=250
+AI_MONTHLY_HARD_CAP_SEK=160
+AI_PROD_MONTHLY_HARD_CAP_SEK=160
 ```
 
 **Behavior**:
@@ -1119,6 +1118,41 @@ NEXT_PUBLIC_CV_IMPORT_OCR_LANGUAGE=eng
 - Total timeout: `25000` ms
 - Render scale: `2`
 - OCR language: `eng`
+
+---
+
+### GCP_CV_OCR_ENABLED / GCP_CV_OCR_EXPIRES_AT
+
+**Purpose**: Disabled-by-default server-side switch for the temporary Cloud Run + Document AI CV/OCR sandbox.
+
+**Format**:
+
+```env
+GCP_CV_OCR_ENABLED=false
+GCP_CV_OCR_EXPIRES_AT=
+GCP_CV_OCR_BASE_URL=
+GCP_CV_OCR_AUTH_MODE=hmac
+GCP_CV_OCR_SHARED_SECRET=
+GCP_CV_OCR_PROVIDER=document_ai
+GCP_CV_OCR_PROJECT_ID=
+GCP_CV_OCR_DOCUMENT_AI_LOCATION=
+GCP_CV_OCR_DOCUMENT_AI_PROCESSOR_ID=
+```
+
+**Behavior**:
+
+- Keep `GCP_CV_OCR_ENABLED=false` by default in local, staging, and production.
+- Enable only for a short local/staging synthetic smoke, with a future `GCP_CV_OCR_EXPIRES_AT`.
+- The app status check reports only `disabled`, `configured`, `expired`, `fallback`, or `provider reachable`.
+- The OCR path uses Cloud Run service account / Google ADC inside the service. Do not configure Google API keys, browser-created Gemini keys, or service account JSON for this path.
+- Do not expose base URLs, project IDs, processor IDs, secrets, signed URLs, filenames, or extracted text in status responses, logs, or smoke artifacts.
+
+**Smoke commands**:
+
+```bash
+npm run ocr:sandbox:status
+npm run ocr:sandbox:smoke
+```
 
 ---
 
@@ -1522,21 +1556,22 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
 ## Feature → Variable Matrix
 
-| Feature                 | Required Variables                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Database**            | `DATABASE_URL`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| **Authentication**      | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **Email Sending**       | `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`, `LINKEDIN_VERIFICATION_ADMIN_EMAILS` (or `PLATFORM_ADMIN_EMAILS`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| **Cron Jobs**           | `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **File Uploads**        | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| **Matching System**     | `DATABASE_URL`, `MATCHING_FEATURE_ENABLED` (optional), `MATCHING_TWO_STAGE_ENABLED`, `MATCHING_NEAR_SCAN_LIMIT`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| **Matching Refresh**    | `MATCHING_REFRESH_QUEUE_ENABLED`, `MATCHING_REFRESH_WORKER_BATCH_SIZE`, `MATCHING_REFRESH_WORKER_CONCURRENCY`, `MATCHING_REFRESH_MAX_ATTEMPTS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| **CV Import Engine**    | `CV_IMPORT_ENGINE_MODE`, `CV_IMPORT_WIZARD_TIMEOUT_MS`, `CV_IMPORT_SERVER_TIMEOUT_MS`, `CV_IMPORT_MAX_FILE_SIZE_MB`, `CV_IMPORT_MAX_PDF_PAGES`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| **Assistive AI**        | `AI_ASSISTANTS_ENABLED`, `AI_GEMINI_PROD_API_KEY`, `AI_GEMINI_STAGING_API_KEY`, `AI_GEMINI_QA_API_KEY`, `AI_MODEL_DEFAULT`, `AI_MONTHLY_HARD_CAP_SEK`, `AI_PROD_MONTHLY_HARD_CAP_SEK`, `AI_USER_DAILY_LIMIT`, `AI_ORG_DAILY_LIMIT`, `AI_<FEATURE>_DAILY_LIMIT`, `AI_<FEATURE>_MAX_OUTPUT_TOKENS`, `AI_RAW_PROMPT_LOGGING_ENABLED`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| **CV Import Gemini**    | `AI_ASSISTANTS_ENABLED`, `AI_MODEL_DEFAULT`, `AI_GEMINI_PROD_API_KEY`, `AI_GEMINI_STAGING_API_KEY`, `AI_GEMINI_QA_API_KEY`, `CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_USD_TO_SEK_RATE`, `CV_IMPORT_GEMINI_MODEL_DEFAULT`, `CV_IMPORT_GEMINI_MODEL_FALLBACK`, `CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_SHORT_TEXT_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_TAXONOMY_GUIDED`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_ENTRIES`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_TOKENS`, `CV_IMPORT_GEMINI_SHORTLIST_SEED_LIMIT`, `CV_IMPORT_GEMINI_SHORTLIST_CONCURRENCY`, `CV_IMPORT_GEMINI_SHORTLIST_QUERY_TIMEOUT_MS`, `CV_IMPORT_GEMINI_SHORTLIST_DOCUMENT_TIMEOUT_MS`, `CV_IMPORT_GEMINI_SHORTLIST_CACHE_TTL_MS`, `CV_IMPORT_GEMINI_TAXONOMY_VERSION` |
-| **CV Import OCR**       | `NEXT_PUBLIC_CV_IMPORT_REVIEW_V3`, `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_FILE_SIZE_MB`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES`, `NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS`, `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| **Performance Budgets** | `PERF_API_P95_BUDGET_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **Real-time Messaging** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Feature                 | Required Variables                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Database**            | `DATABASE_URL`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Authentication**      | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Email Sending**       | `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`, `LINKEDIN_VERIFICATION_ADMIN_EMAILS` (or `PLATFORM_ADMIN_EMAILS`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Cron Jobs**           | `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **File Uploads**        | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **Matching System**     | `DATABASE_URL`, `MATCHING_FEATURE_ENABLED` (optional), `MATCHING_TWO_STAGE_ENABLED`, `MATCHING_NEAR_SCAN_LIMIT`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **Matching Refresh**    | `MATCHING_REFRESH_QUEUE_ENABLED`, `MATCHING_REFRESH_WORKER_BATCH_SIZE`, `MATCHING_REFRESH_WORKER_CONCURRENCY`, `MATCHING_REFRESH_MAX_ATTEMPTS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **CV Import Engine**    | `CV_IMPORT_ENGINE_MODE`, `CV_IMPORT_WIZARD_TIMEOUT_MS`, `CV_IMPORT_SERVER_TIMEOUT_MS`, `CV_IMPORT_MAX_FILE_SIZE_MB`, `CV_IMPORT_MAX_PDF_PAGES`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Assistive AI**        | `AI_ASSISTANTS_ENABLED`, `AI_GEMINI_PROD_API_KEY`, `AI_GEMINI_STAGING_API_KEY`, `AI_MODEL_DEFAULT`, `AI_MONTHLY_HARD_CAP_SEK`, `AI_PROD_MONTHLY_HARD_CAP_SEK`, `AI_USER_DAILY_LIMIT`, `AI_ORG_DAILY_LIMIT`, `AI_<FEATURE>_DAILY_LIMIT`, `AI_<FEATURE>_MAX_OUTPUT_TOKENS`, `AI_RAW_PROMPT_LOGGING_ENABLED`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **CV Import Gemini**    | `AI_ASSISTANTS_ENABLED`, `AI_MODEL_DEFAULT`, `AI_GEMINI_PROD_API_KEY`, `AI_GEMINI_STAGING_API_KEY`, `CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_USD_TO_SEK_RATE`, `CV_IMPORT_GEMINI_MODEL_DEFAULT`, `CV_IMPORT_GEMINI_MODEL_FALLBACK`, `CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_SHORT_TEXT_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_TAXONOMY_GUIDED`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_ENTRIES`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_TOKENS`, `CV_IMPORT_GEMINI_SHORTLIST_SEED_LIMIT`, `CV_IMPORT_GEMINI_SHORTLIST_CONCURRENCY`, `CV_IMPORT_GEMINI_SHORTLIST_QUERY_TIMEOUT_MS`, `CV_IMPORT_GEMINI_SHORTLIST_DOCUMENT_TIMEOUT_MS`, `CV_IMPORT_GEMINI_SHORTLIST_CACHE_TTL_MS`, `CV_IMPORT_GEMINI_TAXONOMY_VERSION` |
+| **CV Import OCR**       | `NEXT_PUBLIC_CV_IMPORT_REVIEW_V3`, `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_FILE_SIZE_MB`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES`, `NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS`, `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **GCP CV OCR Sandbox**  | `GCP_CV_OCR_ENABLED`, `GCP_CV_OCR_EXPIRES_AT`, `GCP_CV_OCR_BASE_URL`, `GCP_CV_OCR_AUTH_MODE`, `GCP_CV_OCR_SHARED_SECRET`, `GCP_CV_OCR_PROVIDER`, `GCP_CV_OCR_PROJECT_ID`, `GCP_CV_OCR_DOCUMENT_AI_LOCATION`, `GCP_CV_OCR_DOCUMENT_AI_PROCESSOR_ID`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **Performance Budgets** | `PERF_API_P95_BUDGET_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Real-time Messaging** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ---
 
@@ -1579,7 +1614,6 @@ Use this checklist when setting up a new environment:
 - [ ] `AI_ASSISTANTS_ENABLED` - Server-side AI assistants kill switch
 - [ ] `AI_GEMINI_PROD_API_KEY` - Server-only production Gemini key for assistive AI
 - [ ] `AI_GEMINI_STAGING_API_KEY` - Server-only staging Gemini key for assistive AI
-- [ ] `AI_GEMINI_QA_API_KEY` - Server-only QA Gemini key for assistive AI
 - [ ] `AI_MODEL_DEFAULT` - Provider-wide default AI model
 - [ ] `AI_MONTHLY_HARD_CAP_SEK` - Global monthly assistive AI spend cap
 - [ ] `AI_PROD_MONTHLY_HARD_CAP_SEK` - Production monthly assistive AI spend cap
@@ -1610,6 +1644,8 @@ Use this checklist when setting up a new environment:
 - [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES` - OCR page cap
 - [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS` - OCR per-page timeout
 - [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS` - OCR total timeout
+- [ ] `GCP_CV_OCR_ENABLED=false` - Temporary Cloud Run OCR sandbox stays disabled by default
+- [ ] `GCP_CV_OCR_EXPIRES_AT` - Short future timestamp required for any local/staging synthetic smoke
 - [ ] `MATCHING_TWO_STAGE_ENABLED` - ANN-hybrid matching toggle
 - [ ] `MATCHING_NEAR_SCAN_LIMIT` - Near-match scan cap
 - [ ] `MATCHING_REFRESH_QUEUE_ENABLED` - Refresh queue toggle

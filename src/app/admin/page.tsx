@@ -2,12 +2,15 @@ import { requirePlatformAdmin } from '@/lib/auth/admin';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, BadgeCheck, FileText } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { resolveGcpCvOcrSafeStatus } from '@/lib/expertise/gcp-cv-ocr-status';
+import { ArrowRight, BadgeCheck, FileText, ScanText } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
   await requirePlatformAdmin();
+  const cvOcrStatus = await resolveGcpCvOcrSafeStatus({ probeProvider: true });
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-6">
@@ -18,7 +21,7 @@ export default async function AdminPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -57,6 +60,23 @@ export default async function AdminPage() {
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <ScanText className="h-5 w-5 text-proofound-forest" />
+              CV OCR sandbox
+            </CardTitle>
+            <CardDescription>
+              Internal-only status for the temporary synthetic OCR smoke path.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Badge variant="outline" size="md" role="status" className="capitalize">
+              {cvOcrStatus.status}
+            </Badge>
           </CardContent>
         </Card>
       </div>
