@@ -81,7 +81,7 @@ function buildSyntheticPdf(): Promise<Uint8Array> {
     document.moveDown();
     document.fontSize(12).text('This one-page document contains synthetic test text only.');
     document.text('Skills: TypeScript, React, accessibility, structured review.');
-    document.text('Purpose: verify the temporary OCR sandbox without real user data.');
+    document.text('Purpose: verify the production OCR provider path without real user data.');
     document.end();
   });
 }

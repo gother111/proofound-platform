@@ -1,9 +1,9 @@
 > Doc Class: `reference-spec`
 > Last Verified: `2026-05-03`
 
-# Temporary GCP CV/OCR Sandbox Reference
+# GCP CV/OCR Provider Reference
 
-**Status:** Reference context only. Not an implementation prompt.
+**Status:** Historical sandbox reference, superseded for repo-facing tooling by the internal production provider status/smoke path.
 **Date:** 2026-05-03
 **Audience:** Founder, product, engineering, QA, privacy, ops
 **Authority:** This document is subordinate to `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, the aligned PRD/technical requirements, and the existing launch runbook. It must not broaden the locked MVP.
@@ -18,19 +18,19 @@ The locked MVP defines Proofound as a proof-first, privacy-first hiring credibil
 
 The launch-binding stack is Next.js/Vercel, Supabase/Postgres/Auth/Storage, Resend, and lightweight telemetry. GCP must not replace any of those. `README.md` confirms the current architecture routes traffic through Vercel/Next.js, Supabase, Resend, Sentry, Vercel Cron, and an optional internal document-intelligence/Python service path.
 
-The most important current-code constraint: the named CV import wizard routes are currently archived/non-launch. `wizard-extract`, `wizard-extract/status`, `wizard-suggest`, and `wizard-apply` all return legacy/non-launch responses. The active launch surface policy also classifies broad `/api/expertise` and `/app/i/expertise` surfaces as archived except for narrow retained taxonomy/user-skill/assignment-expertise endpoints. Therefore, the GCP experiment must start as a sandbox/spec/mock/staging path, not as a production dependency or silent reactivation of CV import.
+The most important current-code constraint: the named CV import wizard routes are currently archived/non-launch. `wizard-extract`, `wizard-extract/status`, `wizard-suggest`, and `wizard-apply` all return legacy/non-launch responses. The active launch surface policy also classifies broad `/api/expertise` and `/app/i/expertise` surfaces as archived except for narrow retained taxonomy/user-skill/assignment-expertise endpoints. Therefore, the GCP provider path must remain internal-only unless a separate approved flow connects it through user-clicked, user-reviewed review.
 
 ---
 
 ## 1. Executive Recommendation
 
-Recommendation: Go, but only as a temporary, optional, staging-first GCP-backed document extraction sandbox. Do not wire it into production as a dependency yet.
+Recommendation: Go for the internal production provider status/smoke tooling, but do not wire it into a user-facing production dependency yet.
 
 Best feature candidate:
 
-**Temporary GCP OCR / Document Intelligence Extractor for CV Import Sandbox**
+**GCP OCR / Document Intelligence Provider for Internal Production Smoke**
 
-The first implementation slice should be a synthetic CV/document extraction benchmark and mock provider abstraction, then a staging-only Cloud Run plus Document AI or Cloud Vision OCR service using synthetic PDFs. Only after privacy review, billing verification, and explicit route-surface approval should this connect to any real user-facing CV/import flow.
+The first implementation slice should be a synthetic CV/document extraction benchmark and mock provider abstraction, then an internal production Cloud Run plus Document AI or Cloud Vision OCR service using synthetic PDFs. Only after privacy review, billing verification, and explicit route-surface approval should this connect to any real user-facing CV/import flow.
 
 Why this fits the MVP:
 

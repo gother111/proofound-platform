@@ -78,8 +78,8 @@ export function createGcpCvOcrHandler(options: GcpCvOcrHandlerOptions = {}) {
       );
     }
 
-    if (isSandboxExpired(env.GCP_CV_OCR_EXPIRES_AT, startedAt)) {
-      return safeErrorResponse(503, requestId, 'sandbox_expired');
+    if (isOcrProviderExpired(env.GCP_CV_OCR_EXPIRES_AT, startedAt)) {
+      return safeErrorResponse(503, requestId, 'ocr_expired');
     }
 
     let payload: unknown;
@@ -182,8 +182,8 @@ function safeErrorMessage(code: string): string {
       return 'Request timestamp is outside the allowed window.';
     case 'bad_json':
       return 'Request body must be valid JSON.';
-    case 'sandbox_expired':
-      return 'OCR sandbox has expired.';
+    case 'ocr_expired':
+      return 'OCR provider has expired.';
     default:
       return 'Request could not be processed.';
   }
@@ -221,7 +221,7 @@ function clampConfidence(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
-function isSandboxExpired(expiresAtValue: string | undefined, nowMs: number): boolean {
+function isOcrProviderExpired(expiresAtValue: string | undefined, nowMs: number): boolean {
   const trimmed = expiresAtValue?.trim();
   if (!trimmed) {
     return false;

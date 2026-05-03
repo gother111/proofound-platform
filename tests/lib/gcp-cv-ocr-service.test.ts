@@ -263,7 +263,7 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
     const body = await json(response);
 
     expect(response.status).toBe(503);
-    expect(body.error.code).toBe('sandbox_expired');
+    expect(body.error.code).toBe('ocr_expired');
     expect(extractSpy).not.toHaveBeenCalled();
   });
 
@@ -289,7 +289,7 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
     const body = await json(response);
 
     expect(response.status).toBe(503);
-    expect(body.error.code).toBe('sandbox_expired');
+    expect(body.error.code).toBe('ocr_expired');
     expect(extractSpy).not.toHaveBeenCalled();
   });
 
@@ -443,7 +443,7 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
     );
     const provider = new GoogleDocumentAiOcrProvider({
       env: {
-        GCP_CV_OCR_PROJECT_ID: 'proofound-cv-ocr-sandbox',
+        GCP_CV_OCR_PROJECT_ID: 'proofound-cv-ocr-prod',
         GCP_CV_OCR_DOCUMENT_AI_LOCATION: 'eu',
         GCP_CV_OCR_DOCUMENT_AI_PROCESSOR_ID: 'processor_123',
       },
@@ -465,7 +465,7 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
     });
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(fetchSpy.mock.calls[0][0]).toBe(
-      'https://eu-documentai.googleapis.com/v1/projects/proofound-cv-ocr-sandbox/locations/eu/processors/processor_123:process'
+      'https://eu-documentai.googleapis.com/v1/projects/proofound-cv-ocr-prod/locations/eu/processors/processor_123:process'
     );
     expect(fetchSpy.mock.calls[0][1]).toMatchObject({
       method: 'POST',
@@ -484,7 +484,7 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
       () =>
         new GoogleDocumentAiOcrProvider({
           env: {
-            GCP_CV_OCR_PROJECT_ID: 'proofound-cv-ocr-sandbox',
+            GCP_CV_OCR_PROJECT_ID: 'proofound-cv-ocr-prod',
             GCP_CV_OCR_DOCUMENT_AI_LOCATION: 'eu',
           },
           accessTokenProvider: async () => 'access-token',
@@ -493,7 +493,7 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
 
     const provider = new GoogleDocumentAiOcrProvider({
       env: {
-        GCP_CV_OCR_PROJECT_ID: 'proofound-cv-ocr-sandbox',
+        GCP_CV_OCR_PROJECT_ID: 'proofound-cv-ocr-prod',
         GCP_CV_OCR_DOCUMENT_AI_LOCATION: 'eu',
         GCP_CV_OCR_DOCUMENT_AI_PROCESSOR_ID: 'processor_123',
       },

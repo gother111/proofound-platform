@@ -67,10 +67,10 @@ export default async function AdminPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <ScanText className="h-5 w-5 text-proofound-forest" />
-              CV OCR sandbox
+              CV OCR production
             </CardTitle>
             <CardDescription>
-              Internal-only status for the temporary synthetic OCR smoke path.
+              Internal-only status for the production OCR provider path.
             </CardDescription>
           </CardHeader>
           <CardContent>

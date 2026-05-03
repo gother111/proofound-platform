@@ -3,24 +3,24 @@
 
 # GCP CV/OCR Production Integration Proposal
 
-**Status:** No-go for production integration now. Go only for a proposal/staging-only design pass.
-**Scope:** Connect the temporary GCP CV/OCR extractor to an approved Proofound flow without reactivating archived CV import routes, creating a production dependency, touching production credentials, or exposing secrets.
+**Status:** Go for internal production provider status/smoke tooling. No-go for user-facing production OCR activation until the gates below pass.
+**Scope:** Promote the GCP CV/OCR extractor provider path to production-ready internal tooling without reactivating archived CV import routes, silently creating a user-facing production dependency, exposing secrets, or processing real/pilot documents.
 **Authority:** Subordinate to `AGENTS.md`, `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, and `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`.
 
 ## Executive Decision
 
-**No-go for production activation.**
+**Go for internal production status/smoke tooling. No-go for user-facing production OCR activation.**
 
-The GCP CV/OCR extractor is not ready to connect to production because:
+The GCP CV/OCR extractor can be represented as an internal production provider path, but it is not ready to process real or pilot production documents because:
 
 - the CV import wizard route family is explicitly archived in the launch surface policy;
 - live billing/product eligibility has not been verified in this pass;
 - budget alert evidence and app-level GCP budget enforcement are not complete;
 - privacy review is not passed for real or pilot documents;
 - staging smoke evidence is not present;
-- the current Cloud Run service is still a temporary skeleton with real GCP providers stubbed, not wired.
+- the Cloud Run provider path still requires live production smoke evidence before any user-facing flow can rely on it.
 
-**Conditional go for a future staging-only integration spike** if it uses synthetic documents only, stays behind disabled-by-default server flags, and connects through an existing active proof upload/review surface rather than reactivating CV import.
+**Conditional go for a production synthetic smoke window** if it uses synthetic documents only, stays behind disabled-by-default server flags before and after the smoke, and connects through internal tooling rather than reactivating CV import.
 
 ## Current Route Surface Policy
 
@@ -215,7 +215,7 @@ Routes that must remain archived:
 
 ## Tests Required
 
-Minimum local tests before any staging-only PR:
+Minimum local tests before any production-provider PR:
 
 - `npm run test -- tests/lib/gcp-cv-ocr-config.test.ts tests/lib/document-extraction-provider.test.ts tests/lib/gcp-cv-ocr-service.test.ts`
 - `npm run test:launch:routes`
@@ -230,9 +230,9 @@ Before production consideration:
 - `npm run test:launch:privacy`
 - `npm run test:e2e:privacy:strict`
 - `npm run test:launch:smoke`
-- `BASE_URL=<staging-url> npm run monitor:launch`
-- `BASE_URL=<staging-url> npm run launch:status`
-- manual synthetic GCP OCR staging smoke from `agent/checklists/verification.md`
+- `BASE_URL=<production-url> npm run monitor:launch`
+- `BASE_URL=<production-url> npm run launch:status`
+- manual synthetic GCP OCR production smoke from `agent/checklists/verification.md`
 - manual billing/cost/log review evidence recorded outside the repo
 
 Tests that must not be treated as launch evidence unless rewritten:
@@ -273,16 +273,16 @@ Code rollback:
 - Live billing/product eligibility is unknown.
 - Budget alerts and app-level budget stop are not proven.
 - Privacy/vendor processing review is not complete.
-- Staging smoke evidence is absent.
+- Production synthetic smoke evidence is absent.
 - Legacy CV wizard tests/components still exist and can mislead future implementers.
 - OCR text may contain identity, employer, customer, compensation, health, immigration, or protected-trait information; extraction must remain explicit, user-reviewed, and non-decisional.
 - Any new route or CV wizard reactivation would broaden launch scope and needs explicit approval.
 
 ## Final Recommendation
 
-Do not connect GCP CV/OCR to production now.
+Do not connect GCP CV/OCR to a user-facing production flow now.
 
-The only acceptable next step is a staging-only proposal implementation that:
+The acceptable production-provider implementation must:
 
 - keeps CV import wizard routes archived;
 - uses existing proof upload/proof attachment surfaces;

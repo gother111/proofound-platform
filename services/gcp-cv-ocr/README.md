@@ -1,6 +1,6 @@
-# Temporary GCP CV/OCR Cloud Run Skeleton
+# GCP CV/OCR Cloud Run Service
 
-This directory contains a disabled-by-default service skeleton for the temporary CV/OCR extractor sandbox.
+This directory contains the disabled-by-default Cloud Run service for the production OCR provider path.
 
 It is intentionally not deployment wiring. It contains no GCP project IDs, processor IDs, bucket names, service account JSON, credentials, or secrets.
 
@@ -13,7 +13,7 @@ It is intentionally not deployment wiring. It contains no GCP project IDs, proce
 
 Preferred deployment auth is private Cloud Run invocation through IAM-authenticated OIDC between the Proofound server boundary and Cloud Run. That should be used if the caller can mint short-lived identity tokens without committing long-lived keys.
 
-This runnable skeleton implements the fallback temporary sandbox path: HMAC request verification with timestamp, nonce replay protection, and a request-body SHA-256 hash.
+This runnable service implements the fallback auth path: HMAC request verification with timestamp, nonce replay protection, and a request-body SHA-256 hash.
 
 Required request headers for `POST /extract`:
 
@@ -24,7 +24,7 @@ Required request headers for `POST /extract`:
 
 The shared secret is read from `GCP_CV_OCR_SHARED_SECRET` at runtime only.
 
-## Local Skeleton
+## Local Service
 
 The service accepts JSON with a base64 document body:
 
@@ -37,13 +37,13 @@ The service accepts JSON with a base64 document body:
 
 The service generates opaque `requestId` and `documentId` values. Do not send filenames, storage paths, buckets, processor IDs, headers, or secrets in the payload.
 
-The default provider is a mock Document AI/Vision-style client.
+The default provider is a mock Document AI/Vision-style client. Production deployments should set `GCP_CV_OCR_PROVIDER=document_ai`.
 
 To enable the live Document AI path inside Cloud Run, set these service-only values:
 
 ```text
 GCP_CV_OCR_PROVIDER=document_ai
-GCP_CV_OCR_PROJECT_ID=<sandbox-project-id>
+GCP_CV_OCR_PROJECT_ID=<gcp-project-id>
 GCP_CV_OCR_DOCUMENT_AI_LOCATION=eu
 GCP_CV_OCR_DOCUMENT_AI_PROCESSOR_ID=<processor-id>
 ```

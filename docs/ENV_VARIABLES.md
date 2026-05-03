@@ -754,7 +754,7 @@ AI_GEMINI_STAGING_API_KEY=AIza...
 
 - Stored only in server environments (for example Vercel server env vars).
 - Never exposed to the browser.
-- Not used by the temporary Cloud Run + Document AI CV/OCR sandbox. That path uses the Cloud Run service account / Google ADC.
+- Not used by the Cloud Run + Document AI CV/OCR provider path. That path uses the Cloud Run service account / Google ADC.
 - CV import still records spend against its `primary` and `secondary` slots. `AI_GEMINI_PROD_API_KEY` maps to `primary`; `AI_GEMINI_STAGING_API_KEY` maps to `secondary`.
 - `CV_IMPORT_GEMINI_PRIMARY_API_KEY` and `CV_IMPORT_GEMINI_SECONDARY_API_KEY` remain accepted as legacy fallbacks for existing deployments, but new setup should use the `AI_GEMINI_*` names.
 
@@ -1123,7 +1123,7 @@ NEXT_PUBLIC_CV_IMPORT_OCR_LANGUAGE=eng
 
 ### GCP_CV_OCR_ENABLED / GCP_CV_OCR_EXPIRES_AT
 
-**Purpose**: Disabled-by-default server-side switch for the temporary Cloud Run + Document AI CV/OCR sandbox.
+**Purpose**: Disabled-by-default server-side switch for the Cloud Run + Document AI CV/OCR production provider path.
 
 **Format**:
 
@@ -1142,7 +1142,8 @@ GCP_CV_OCR_DOCUMENT_AI_PROCESSOR_ID=
 **Behavior**:
 
 - Keep `GCP_CV_OCR_ENABLED=false` by default in local, staging, and production.
-- Enable only for a short local/staging synthetic smoke, with a future `GCP_CV_OCR_EXPIRES_AT`.
+- Enable in production only after privacy, billing, budget alert, credential, and operator-review gates pass.
+- Use a future `GCP_CV_OCR_EXPIRES_AT` for any temporary smoke window.
 - The app status check reports only `disabled`, `configured`, `expired`, `fallback`, or `provider reachable`.
 - The OCR path uses Cloud Run service account / Google ADC inside the service. Do not configure Google API keys, browser-created Gemini keys, or service account JSON for this path.
 - Do not expose base URLs, project IDs, processor IDs, secrets, signed URLs, filenames, or extracted text in status responses, logs, or smoke artifacts.
@@ -1150,8 +1151,8 @@ GCP_CV_OCR_DOCUMENT_AI_PROCESSOR_ID=
 **Smoke commands**:
 
 ```bash
-npm run ocr:sandbox:status
-npm run ocr:sandbox:smoke
+npm run ocr:production:status
+npm run ocr:production:smoke
 ```
 
 ---
@@ -1569,7 +1570,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 | **Assistive AI**        | `AI_ASSISTANTS_ENABLED`, `AI_GEMINI_PROD_API_KEY`, `AI_GEMINI_STAGING_API_KEY`, `AI_MODEL_DEFAULT`, `AI_MONTHLY_HARD_CAP_SEK`, `AI_PROD_MONTHLY_HARD_CAP_SEK`, `AI_USER_DAILY_LIMIT`, `AI_ORG_DAILY_LIMIT`, `AI_<FEATURE>_DAILY_LIMIT`, `AI_<FEATURE>_MAX_OUTPUT_TOKENS`, `AI_RAW_PROMPT_LOGGING_ENABLED`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | **CV Import Gemini**    | `AI_ASSISTANTS_ENABLED`, `AI_MODEL_DEFAULT`, `AI_GEMINI_PROD_API_KEY`, `AI_GEMINI_STAGING_API_KEY`, `CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_USD_TO_SEK_RATE`, `CV_IMPORT_GEMINI_MODEL_DEFAULT`, `CV_IMPORT_GEMINI_MODEL_FALLBACK`, `CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_SHORT_TEXT_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_TAXONOMY_GUIDED`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_ENTRIES`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_TOKENS`, `CV_IMPORT_GEMINI_SHORTLIST_SEED_LIMIT`, `CV_IMPORT_GEMINI_SHORTLIST_CONCURRENCY`, `CV_IMPORT_GEMINI_SHORTLIST_QUERY_TIMEOUT_MS`, `CV_IMPORT_GEMINI_SHORTLIST_DOCUMENT_TIMEOUT_MS`, `CV_IMPORT_GEMINI_SHORTLIST_CACHE_TTL_MS`, `CV_IMPORT_GEMINI_TAXONOMY_VERSION` |
 | **CV Import OCR**       | `NEXT_PUBLIC_CV_IMPORT_REVIEW_V3`, `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_FILE_SIZE_MB`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES`, `NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS`, `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **GCP CV OCR Sandbox**  | `GCP_CV_OCR_ENABLED`, `GCP_CV_OCR_EXPIRES_AT`, `GCP_CV_OCR_BASE_URL`, `GCP_CV_OCR_AUTH_MODE`, `GCP_CV_OCR_SHARED_SECRET`, `GCP_CV_OCR_PROVIDER`, `GCP_CV_OCR_PROJECT_ID`, `GCP_CV_OCR_DOCUMENT_AI_LOCATION`, `GCP_CV_OCR_DOCUMENT_AI_PROCESSOR_ID`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **GCP CV OCR Provider** | `GCP_CV_OCR_ENABLED`, `GCP_CV_OCR_EXPIRES_AT`, `GCP_CV_OCR_BASE_URL`, `GCP_CV_OCR_AUTH_MODE`, `GCP_CV_OCR_SHARED_SECRET`, `GCP_CV_OCR_PROVIDER`, `GCP_CV_OCR_PROJECT_ID`, `GCP_CV_OCR_DOCUMENT_AI_LOCATION`, `GCP_CV_OCR_DOCUMENT_AI_PROCESSOR_ID`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | **Performance Budgets** | `PERF_API_P95_BUDGET_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **Real-time Messaging** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
@@ -1644,8 +1645,8 @@ Use this checklist when setting up a new environment:
 - [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES` - OCR page cap
 - [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS` - OCR per-page timeout
 - [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS` - OCR total timeout
-- [ ] `GCP_CV_OCR_ENABLED=false` - Temporary Cloud Run OCR sandbox stays disabled by default
-- [ ] `GCP_CV_OCR_EXPIRES_AT` - Short future timestamp required for any local/staging synthetic smoke
+- [ ] `GCP_CV_OCR_ENABLED=false` - Cloud Run OCR provider stays disabled by default until approved
+- [ ] `GCP_CV_OCR_EXPIRES_AT` - Future timestamp required for any temporary production smoke window
 - [ ] `MATCHING_TWO_STAGE_ENABLED` - ANN-hybrid matching toggle
 - [ ] `MATCHING_NEAR_SCAN_LIMIT` - Near-match scan cap
 - [ ] `MATCHING_REFRESH_QUEUE_ENABLED` - Refresh queue toggle

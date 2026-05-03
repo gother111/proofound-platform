@@ -53,7 +53,7 @@ describe('admin launch links', () => {
     expect(screen.queryByRole('link', { name: /users/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /organizations/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /fairness/i })).not.toBeInTheDocument();
-    expect(screen.getByText(/cv ocr sandbox/i)).toBeInTheDocument();
+    expect(screen.getByText(/cv ocr production/i)).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent(/^disabled$/i);
     expect(screen.queryByText(/processor|secret|extracted text/i)).not.toBeInTheDocument();
   });

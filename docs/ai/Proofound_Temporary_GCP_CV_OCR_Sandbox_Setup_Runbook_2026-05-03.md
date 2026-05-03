@@ -1,28 +1,28 @@
 > Doc Class: `reference-spec`
 > Last Verified: `2026-05-03`
 
-# Temporary GCP CV/OCR Sandbox Setup Runbook
+# GCP CV/OCR Production Provider Setup Runbook
 
-**Status:** Setup runbook for temporary sandbox only
+**Status:** Setup runbook for internal production provider smoke only
 **Date:** 2026-05-03
 **Audience:** Founder, engineering, ops, privacy, QA
 **Authority:** Subordinate to the locked MVP source of truth, aligned PRD/technical requirements, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, and `docs/ai/Proofound_Temporary_GCP_CV_OCR_Sandbox_Reference_2026-05-03.md`.
 
-This runbook is docs-only guidance. It must not be treated as approval to enable production OCR, process pilot data, broaden the CV import surface, or make GCP a launch dependency.
+This runbook is docs-only guidance. It must not be treated as approval to process real/pilot data, broaden the CV import surface, or make GCP a required launch dependency.
 
 ---
 
 ## 0. Non-Negotiable Gates
 
-Do not create or enable the sandbox until all of these are true:
+Do not create or enable the production provider smoke until all of these are true:
 
 - Google Cloud Billing has been checked in the console for exact credit expiration, remaining balance, and eligible products.
 - Billing confirms coverage for the products being used: Cloud Run, Document AI or Cloud Vision OCR, Cloud Storage if used, Secret Manager, Cloud Logging, and Cloud Monitoring.
 - Gemini API / AI Studio spend is not assumed to be covered. Do not route this sandbox through Gemini unless Billing explicitly confirms that specific product coverage.
-- A dedicated sandbox GCP project is used. Do not attach this to the production Proofound project or any unrelated shared project.
+- A dedicated, approved GCP project is used. Do not attach this to any unrelated shared project.
 - Budget alerts are configured before the first billable call.
 - Vercel env vars are disabled by default.
-- Only synthetic staging smoke files are used.
+- Only synthetic production smoke files are used until privacy review and route approval pass.
 - No real pilot data is processed until privacy review passes and explicit product/route approval exists.
 
 If any item cannot be verified, stop at mock/local mode.
@@ -34,10 +34,10 @@ If any item cannot be verified, stop at mock/local mode.
 Use placeholders while following this runbook. Do not paste real credentials into tracked files.
 
 ```bash
-PROJECT_ID=proofound-cv-ocr-sandbox-YYYYMMDD
+PROJECT_ID=proofound-cv-ocr-prod-YYYYMMDD
 BILLING_ACCOUNT_ID=<billing-account-id>
 REGION=europe-west1
-SERVICE_NAME=proofound-cv-ocr-sandbox
+SERVICE_NAME=proofound-cv-ocr
 SERVICE_ACCOUNT_NAME=cv-ocr-runner
 SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 TEMP_BUCKET="${PROJECT_ID}-temp"
@@ -66,12 +66,12 @@ Billing evidence should stay outside the repo because it can include personal bi
 
 ---
 
-## 3. Create Or Select Sandbox Project
+## 3. Create Or Select GCP Project
 
-Create a sandbox project and link billing only after eligibility is confirmed:
+Create or select the approved OCR project and link billing only after eligibility is confirmed:
 
 ```bash
-gcloud projects create "$PROJECT_ID" --name="Proofound CV OCR Sandbox"
+gcloud projects create "$PROJECT_ID" --name="Proofound CV OCR"
 gcloud billing projects link "$PROJECT_ID" --billing-account="$BILLING_ACCOUNT_ID"
 gcloud config set project "$PROJECT_ID"
 ```
@@ -80,10 +80,10 @@ Apply labels for cleanup and cost reporting:
 
 ```bash
 gcloud projects update "$PROJECT_ID" \
-  --update-labels=owner=proofound,purpose=cv-ocr-sandbox,expires=2026-08-03,environment=sandbox
+  --update-labels=owner=proofound,purpose=cv-ocr,expires=2026-08-03,environment=production
 ```
 
-Do not use this project for production traffic, real pilot files, unrelated experiments, or long-lived infrastructure.
+Do not use this project for real pilot files or long-lived infrastructure until privacy, billing, and route approval gates pass.
 
 ---
 
@@ -168,7 +168,7 @@ Create one user-managed service account for Cloud Run:
 
 ```bash
 gcloud iam service-accounts create "$SERVICE_ACCOUNT_NAME" \
-  --display-name="Proofound CV OCR sandbox Cloud Run runner"
+  --display-name="Proofound CV OCR Cloud Run runner"
 ```
 
 Grant only the roles required by the selected processor path.
@@ -204,7 +204,7 @@ Human deployers may need temporary Cloud Run deploy permissions, but runtime per
 
 ## 7. Configure Cloud Run
 
-Cloud Run hosts the temporary extractor service. It must be authenticated/private unless a separate approved ingress/auth design exists.
+Cloud Run hosts the OCR extractor service. It must be authenticated/private unless a separate approved ingress/auth design exists.
 
 Required Cloud Run posture:
 
@@ -228,7 +228,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --no-allow-unauthenticated \
   --max-instances=2 \
   --timeout=20s \
-  --set-env-vars="GCP_CV_OCR_MODE=sandbox,GCP_CV_OCR_RETENTION_HOURS=24"
+  --set-env-vars="GCP_CV_OCR_MODE=production,GCP_CV_OCR_RETENTION_HOURS=24"
 ```
 
 Only a server-side Vercel route or approved staging smoke client may invoke this service. Do not call Cloud Run directly from the browser.
@@ -386,14 +386,14 @@ Rules:
 
 Use a synthetic PDF/image created for testing. It must contain no real names, emails, phone numbers, addresses, CV history, employer names, customer names, or pilot data.
 
-Smoke steps:
+Production smoke steps:
 
-1. Confirm budget alert exists for the sandbox project.
+1. Confirm budget alert exists for the production project.
 2. Confirm Cloud Run service is private/authenticated.
 3. Confirm temp bucket, if used, rejects public access.
-4. Run `npm run ocr:sandbox:status` and confirm the status is only one of `disabled`, `configured`, `expired`, `fallback`, or `provider reachable`.
-5. Enable Vercel staging only: `GCP_CV_OCR_ENABLED=true`.
-6. Run `npm run ocr:sandbox:smoke` to submit exactly one generated synthetic one-page PDF.
+4. Run `npm run ocr:production:status` and confirm the status is only one of `disabled`, `configured`, `expired`, `fallback`, or `provider reachable`.
+5. Enable Vercel production only for the approved synthetic smoke window: `GCP_CV_OCR_ENABLED=true`.
+6. Run `npm run ocr:production:smoke` to submit exactly one generated synthetic one-page PDF.
 7. Confirm OCR response is schema-valid.
 8. Confirm status/smoke command output excludes filename, bucket, object path, signed URL, processor ID, service URL, extracted text, and secrets.
 9. Confirm logs contain only safe metadata.
@@ -401,7 +401,7 @@ Smoke steps:
 11. Set `GCP_CV_OCR_ENABLED=false`, redeploy, and confirm fallback path works.
 12. Set `GCP_CV_OCR_EXPIRES_AT` to a past timestamp in staging, redeploy, and confirm no Cloud Run call is made.
 
-Pass condition: synthetic extraction works once, disabled/expired fallback works, and no private data or secret-bearing value appears in responses/logs.
+Pass condition: synthetic extraction works once, disabled/expired fallback works, production is disabled again after the smoke, and no private data or secret-bearing value appears in responses/logs.
 
 Fail condition: any real/pilot data enters the system, public access is possible, logs include sensitive payloads, budget is missing, or disabled/expired config still calls Cloud Run.
 
