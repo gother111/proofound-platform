@@ -10,7 +10,12 @@ import {
   type UploadedFileRow,
 } from '@/lib/uploads/lifecycle';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { InternalOpsQueueStatus, InternalOpsQueueSummary } from '@/lib/internal-ops/queue';
+import {
+  buildInternalOpsQueueDetail,
+  sanitizeInternalOpsQueueMetadata,
+  type InternalOpsQueueStatus,
+  type InternalOpsQueueSummary,
+} from '@/lib/internal-ops/queue';
 
 export type UploadReviewAction = 'approve' | 'reject';
 
@@ -64,15 +69,19 @@ function toIso(value: Date | string | null | undefined) {
 }
 
 function toQueueSummary(row: InternalOpsQueueRow): InternalOpsQueueSummary {
+  const metadata = sanitizeInternalOpsQueueMetadata(row.metadata);
+  const linkedEntityType = row.linked_entity_type as InternalOpsQueueSummary['linkedEntityType'];
+
   return {
     id: row.id,
     queueType: row.queue_type as InternalOpsQueueSummary['queueType'],
     status: row.status,
     priority: row.priority as InternalOpsQueueSummary['priority'],
-    linkedEntityType: row.linked_entity_type as InternalOpsQueueSummary['linkedEntityType'],
+    linkedEntityType,
     linkedEntityId: row.linked_entity_id,
     summary: row.summary,
-    metadata: row.metadata ?? {},
+    metadata,
+    detail: buildInternalOpsQueueDetail(linkedEntityType, metadata),
     createdAt: toIso(row.created_at) ?? new Date(0).toISOString(),
     updatedAt: toIso(row.updated_at) ?? new Date(0).toISOString(),
     resolvedAt: toIso(row.resolved_at),

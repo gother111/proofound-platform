@@ -186,4 +186,83 @@ describe('AdminVerificationDashboard', () => {
       expect(toastSuccessMock).toHaveBeenCalledWith('Queue item moved to Resolved.');
     });
   });
+
+  it('uses explicit approve and reject actions for uploaded-file queue items', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const uploadQueuePayload = {
+      queues: [queuePayload.queues[2]],
+      stats: queuePayload.stats,
+    };
+
+    apiFetchMock
+      .mockResolvedValueOnce(buildJsonResponse(uploadQueuePayload))
+      .mockResolvedValueOnce(
+        buildJsonResponse({
+          success: true,
+          item: {
+            ...queuePayload.queues[2].items[0],
+            status: 'resolved',
+            resolvedAt: '2026-03-21T12:00:00.000Z',
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        buildJsonResponse({
+          queues: [
+            {
+              ...queuePayload.queues[2],
+              openCount: 0,
+              items: [
+                {
+                  ...queuePayload.queues[2].items[0],
+                  status: 'resolved',
+                  resolvedAt: '2026-03-21T12:00:00.000Z',
+                },
+              ],
+            },
+          ],
+          stats: {
+            total: 1,
+            open: 0,
+          },
+        })
+      );
+
+    render(<AdminVerificationDashboard />);
+
+    await screen.findByText('Risky evidence upload held for privacy-safe review.');
+
+    expect(screen.getByRole('button', { name: /approve private evidence/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /reject upload/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Resolve' })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/operator note/i), {
+      target: { value: 'Inspected metadata flags; safe for private evidence only.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /approve private evidence/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
+        expect.objectContaining({
+          method: 'PATCH',
+        })
+      );
+    });
+
+    const patchCall = apiFetchMock.mock.calls.find(([url]) =>
+      String(url).includes('/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333')
+    );
+    expect(JSON.parse(patchCall?.[1]?.body as string)).toEqual({
+      status: 'resolved',
+      uploadReviewAction: 'approve',
+      note: 'Inspected metadata flags; safe for private evidence only.',
+    });
+    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Approve this upload'));
+    await waitFor(() => {
+      expect(toastSuccessMock).toHaveBeenCalledWith('Upload approved for private evidence.');
+    });
+
+    confirmSpy.mockRestore();
+  });
 });

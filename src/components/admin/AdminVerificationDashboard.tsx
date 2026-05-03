@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Clock3, Loader2, ShieldCheck } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock3, Loader2, ShieldCheck, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
@@ -21,6 +21,18 @@ type QueueItem = {
   linkedEntityId: string;
   summary: string;
   metadata: Record<string, unknown>;
+  detail?: {
+    privacyScope: 'admin_minimum_necessary';
+    recordKind: string;
+    operatorSummary: string;
+    fields: Array<{
+      label: string;
+      value: string;
+      tone?: 'default' | 'warning' | 'danger' | 'success';
+    }>;
+    flags: string[];
+    checklist: string[];
+  };
   createdAt: string;
   updatedAt: string;
   resolvedAt: string | null;
@@ -44,6 +56,15 @@ type QueueResponse = {
 
 type QueueId = QueueGroup['id'];
 type QueueStatus = QueueItem['status'];
+type QueueAction = {
+  id: string;
+  label: string;
+  nextStatus: QueueStatus;
+  variant: 'default' | 'destructive' | 'outline' | 'ghost';
+  uploadReviewAction?: 'approve' | 'reject';
+  confirmationMessage?: string;
+  successMessage?: string;
+};
 
 const PRIORITY_BADGE_CLASS: Record<QueueItem['priority'], string> = {
   low: 'border-slate-300 text-slate-700 bg-slate-50',
@@ -95,21 +116,75 @@ function requiresOperatorNote(currentStatus: QueueStatus, nextStatus: QueueStatu
 }
 
 function getQueueActions(item: QueueItem) {
+  if (item.linkedEntityType === 'uploaded_file') {
+    const uploadReviewActions: QueueAction[] = [
+      {
+        id: 'approve_upload',
+        label: 'Approve private evidence',
+        nextStatus: 'resolved',
+        variant: 'default',
+        uploadReviewAction: 'approve',
+        confirmationMessage:
+          'Approve this upload for private Proof Pack evidence? Raw filenames and storage paths must stay out of notes.',
+        successMessage: 'Upload approved for private evidence.',
+      },
+      {
+        id: 'reject_upload',
+        label: 'Reject upload',
+        nextStatus: 'resolved',
+        variant: 'destructive',
+        uploadReviewAction: 'reject',
+        confirmationMessage:
+          'Reject this upload and keep it out of the Proof Pack corridor? Add the privacy or safety reason in the operator note.',
+        successMessage: 'Upload rejected and held out of the Proof Pack corridor.',
+      },
+    ];
+
+    switch (item.status) {
+      case 'open':
+        return [
+          {
+            id: 'start_review',
+            label: 'Start review',
+            nextStatus: 'in_progress',
+            variant: 'outline',
+          },
+          ...uploadReviewActions,
+        ] satisfies QueueAction[];
+      case 'in_progress':
+        return uploadReviewActions;
+      case 'resolved':
+      case 'cancelled':
+        return [
+          { id: 'reopen', label: 'Reopen', nextStatus: 'open', variant: 'outline' },
+        ] satisfies QueueAction[];
+      default:
+        return [];
+    }
+  }
+
   switch (item.status) {
     case 'open':
       return [
-        { label: 'Start review', nextStatus: 'in_progress' as const, variant: 'outline' as const },
-        { label: 'Resolve', nextStatus: 'resolved' as const, variant: 'default' as const },
-        { label: 'Cancel', nextStatus: 'cancelled' as const, variant: 'ghost' as const },
-      ];
+        {
+          id: 'start_review',
+          label: 'Start review',
+          nextStatus: 'in_progress',
+          variant: 'outline',
+        },
+        { id: 'resolve', label: 'Resolve', nextStatus: 'resolved', variant: 'default' },
+        { id: 'cancel', label: 'Cancel', nextStatus: 'cancelled', variant: 'ghost' },
+      ] satisfies QueueAction[];
     case 'in_progress':
       return [
-        { label: 'Resolve', nextStatus: 'resolved' as const, variant: 'default' as const },
-        { label: 'Cancel', nextStatus: 'cancelled' as const, variant: 'ghost' as const },
-      ];
+        { id: 'resolve', label: 'Resolve', nextStatus: 'resolved', variant: 'default' },
+        { id: 'cancel', label: 'Cancel', nextStatus: 'cancelled', variant: 'ghost' },
+      ] satisfies QueueAction[];
     case 'resolved':
     case 'cancelled':
-      return [{ label: 'Reopen', nextStatus: 'open' as const, variant: 'outline' as const }];
+      return [
+        { id: 'reopen', label: 'Reopen', nextStatus: 'open', variant: 'outline' },
+      ] satisfies QueueAction[];
     default:
       return [];
   }
@@ -168,7 +243,8 @@ export function AdminVerificationDashboard() {
     }
   }, [queueIds, selectedTab]);
 
-  const handleQueueAction = async (item: QueueItem, nextStatus: QueueStatus) => {
+  const handleQueueAction = async (item: QueueItem, action: QueueAction) => {
+    const nextStatus = action.nextStatus;
     const note = notes[item.id]?.trim() ?? '';
 
     if (requiresOperatorNote(item.status, nextStatus) && !note) {
@@ -176,8 +252,17 @@ export function AdminVerificationDashboard() {
       return;
     }
 
+    if (
+      action.confirmationMessage &&
+      typeof window !== 'undefined' &&
+      typeof window.confirm === 'function' &&
+      !window.confirm(action.confirmationMessage)
+    ) {
+      return;
+    }
+
     try {
-      setPendingAction(`${item.id}:${nextStatus}`);
+      setPendingAction(`${item.id}:${action.id}`);
       const response = await apiFetch(`/api/admin/internal-ops/queues/${item.id}`, {
         method: 'PATCH',
         headers: {
@@ -185,6 +270,7 @@ export function AdminVerificationDashboard() {
         },
         body: JSON.stringify({
           status: nextStatus,
+          ...(action.uploadReviewAction ? { uploadReviewAction: action.uploadReviewAction } : {}),
           note: note || undefined,
         }),
       });
@@ -200,7 +286,9 @@ export function AdminVerificationDashboard() {
         ...current,
         [item.id]: '',
       }));
-      toast.success(`Queue item moved to ${formatQueueStatus(nextStatus)}.`);
+      toast.success(
+        action.successMessage ?? `Queue item moved to ${formatQueueStatus(nextStatus)}.`
+      );
     } catch (error) {
       console.error('Failed to update operations queue item:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update queue item');
@@ -290,6 +378,7 @@ export function AdminVerificationDashboard() {
                       const requiresNote = actions.some((action) =>
                         requiresOperatorNote(item.status, action.nextStatus)
                       );
+                      const detail = item.detail;
 
                       return (
                         <div
@@ -325,6 +414,48 @@ export function AdminVerificationDashboard() {
                             </div>
                           </div>
 
+                          {detail && (
+                            <div className="mt-4 rounded-lg border border-proofound-stone/70 bg-[#FBFAF6] p-3">
+                              <div className="space-y-2">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                  Minimum necessary context
+                                </p>
+                                <p className="text-sm text-foreground">{detail.operatorSummary}</p>
+                              </div>
+
+                              {detail.fields.length > 0 && (
+                                <div className="mt-3 grid gap-2 md:grid-cols-2">
+                                  {detail.fields.map((field) => (
+                                    <div key={`${item.id}:${field.label}`} className="text-sm">
+                                      <span className="font-medium text-foreground">
+                                        {field.label}:
+                                      </span>{' '}
+                                      <span className="text-muted-foreground">{field.value}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {detail.flags.length > 0 && (
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  {detail.flags.map((flag) => (
+                                    <Badge key={`${item.id}:flag:${flag}`} variant="outline">
+                                      {internalValueLabel(flag)}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+
+                              {detail.checklist.length > 0 && (
+                                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                                  {detail.checklist.map((entry) => (
+                                    <li key={`${item.id}:checklist:${entry}`}>{entry}</li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )}
+
                           <div className="mt-4 space-y-3 rounded-lg border border-proofound-stone/70 bg-[#FBFAF6] p-3">
                             <div className="space-y-2">
                               <label
@@ -354,12 +485,19 @@ export function AdminVerificationDashboard() {
                             <div className="flex flex-wrap gap-2">
                               {actions.map((action) => (
                                 <Button
-                                  key={action.nextStatus}
+                                  key={action.id}
                                   type="button"
                                   variant={action.variant}
                                   size="sm"
-                                  loading={pendingAction === `${item.id}:${action.nextStatus}`}
-                                  onClick={() => handleQueueAction(item, action.nextStatus)}
+                                  leftIcon={
+                                    action.uploadReviewAction === 'approve' ? (
+                                      <CheckCircle2 className="h-4 w-4" />
+                                    ) : action.uploadReviewAction === 'reject' ? (
+                                      <XCircle className="h-4 w-4" />
+                                    ) : undefined
+                                  }
+                                  loading={pendingAction === `${item.id}:${action.id}`}
+                                  onClick={() => handleQueueAction(item, action)}
                                 >
                                   {action.label}
                                 </Button>

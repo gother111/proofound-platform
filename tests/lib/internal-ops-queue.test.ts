@@ -141,6 +141,70 @@ describe('internal ops queue compatibility fallback', () => {
     warnSpy.mockRestore();
   });
 
+  it('projects only privacy-safe metadata and operator detail for listed queue items', async () => {
+    mocks.findMany.mockResolvedValue([
+      {
+        id: 'queue-upload-1',
+        queueType: 'correction_revocation',
+        status: 'in_progress',
+        priority: 'high',
+        linkedEntityType: 'uploaded_file',
+        linkedEntityId: '11111111-1111-4111-8111-111111111111',
+        summary: 'Risky evidence upload held for privacy-safe review.',
+        metadata: {
+          reviewReasons: ['metadata_exif'],
+          sanitizedFilename: 'evidence-redacted.pdf',
+          uploadKind: 'proof_evidence',
+          sourceSurface: 'proof_pack_upload',
+          safetyReason: 'privacy_review_required:metadata_exif',
+          originalFilename: 'Jane Doe Resume.pdf',
+          privatePath: 'user-uploads-private/candidate-1/Jane Doe Resume.pdf',
+          quarantinePath: 'user-uploads-quarantine/candidate-1/Jane Doe Resume.pdf',
+          candidateEmail: 'jane@example.com',
+        },
+        createdAt: new Date('2026-03-21T10:00:00.000Z'),
+        updatedAt: new Date('2026-03-21T11:00:00.000Z'),
+        resolvedAt: null,
+      },
+    ]);
+
+    const result = await listInternalOpsQueueItems();
+    const uploadItem = result
+      .find((queue) => queue.id === 'correction_revocation')
+      ?.items.find((item) => item.id === 'queue-upload-1');
+
+    expect(uploadItem).toEqual(
+      expect.objectContaining({
+        linkedEntityType: 'uploaded_file',
+        metadata: expect.objectContaining({
+          reviewReasons: ['metadata_exif'],
+          sanitizedFilename: 'evidence-redacted.pdf',
+          uploadKind: 'proof_evidence',
+          sourceSurface: 'proof_pack_upload',
+          safetyReason: 'privacy_review_required:metadata_exif',
+        }),
+        detail: expect.objectContaining({
+          privacyScope: 'admin_minimum_necessary',
+          operatorSummary: expect.stringContaining('raw filenames'),
+          flags: ['metadata_exif'],
+        }),
+      })
+    );
+    expect(uploadItem?.detail.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Filename review label', value: 'evidence-redacted.pdf' }),
+        expect.objectContaining({
+          label: 'Safety status',
+          value: 'privacy_review_required:metadata_exif',
+        }),
+      ])
+    );
+    expect(JSON.stringify(uploadItem)).not.toContain('Jane Doe Resume.pdf');
+    expect(JSON.stringify(uploadItem)).not.toContain('user-uploads-private');
+    expect(JSON.stringify(uploadItem)).not.toContain('user-uploads-quarantine');
+    expect(JSON.stringify(uploadItem)).not.toContain('jane@example.com');
+  });
+
   it('falls back cleanly when uploaded_file is rejected by a pre-migration DB constraint', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mocks.findFirst.mockResolvedValue(null);

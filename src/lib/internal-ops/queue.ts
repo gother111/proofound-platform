@@ -17,6 +17,21 @@ export type InternalOpsQueuePriority = (typeof canonicalInternalOpsQueuePrioriti
 export type InternalOpsQueueEntityType = (typeof canonicalInternalOpsQueueEntityTypes)[number];
 export type InternalOpsQueueActorType = (typeof canonicalWorkflowActorTypes)[number];
 
+export type InternalOpsQueueDetailField = {
+  label: string;
+  value: string;
+  tone?: 'default' | 'warning' | 'danger' | 'success';
+};
+
+export type InternalOpsQueueDetail = {
+  privacyScope: 'admin_minimum_necessary';
+  recordKind: InternalOpsQueueEntityType;
+  operatorSummary: string;
+  fields: InternalOpsQueueDetailField[];
+  flags: string[];
+  checklist: string[];
+};
+
 export type InternalOpsQueueSummary = {
   id: string;
   queueType: InternalOpsQueueType;
@@ -26,6 +41,7 @@ export type InternalOpsQueueSummary = {
   linkedEntityId: string;
   summary: string;
   metadata: Record<string, unknown>;
+  detail: InternalOpsQueueDetail;
   createdAt: string;
   updatedAt: string;
   resolvedAt: string | null;
@@ -80,7 +96,302 @@ export class InternalOpsQueueMutationError extends Error {
   }
 }
 
+const SAFE_METADATA_KEYS = new Set([
+  'assignmentStatus',
+  'candidateConsentStatus',
+  'claimId',
+  'claimLabel',
+  'decisionId',
+  'decisionState',
+  'deletionStatus',
+  'disputeState',
+  'exportStatus',
+  'fallbackSurface',
+  'freshnessState',
+  'latestOperatorAction',
+  'latestOperatorActionAt',
+  'metadataStatus',
+  'monitoringStatus',
+  'organizationConsentStatus',
+  'organizationTrustPageStatus',
+  'pendingParty',
+  'privacyExceptionType',
+  'publicPortfolioStatus',
+  'revealStage',
+  'reviewReasons',
+  'safeForPublic',
+  'sanitizedFilename',
+  'schemaCompatibilityFallback',
+  'safetyReason',
+  'safetyStatus',
+  'smokeStatus',
+  'sourceSurface',
+  'sensitivityReason',
+  'recommendedRevealGate',
+  'recommendedVisibility',
+  'trustTier',
+  'uploadKind',
+  'uploadReviewAction',
+  'attachStatus',
+  'lifecycleState',
+  'uploadedFileAttachStatus',
+  'uploadedFileLifecycleState',
+  'uploadedFileSafeForPublic',
+  'verificationOutcome',
+  'verificationStatus',
+  'verdict',
+  'workflowStatus',
+]);
+
+function toMetadataRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function sanitizeMetadataValue(value: unknown): unknown {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.filter(
+      (item) =>
+        item === null ||
+        typeof item === 'string' ||
+        typeof item === 'number' ||
+        typeof item === 'boolean'
+    );
+  }
+
+  return undefined;
+}
+
+export function sanitizeInternalOpsQueueMetadata(
+  metadata: Record<string, unknown> | null | undefined
+): Record<string, unknown> {
+  const safeMetadata: Record<string, unknown> = {};
+
+  Object.entries(metadata ?? {}).forEach(([key, value]) => {
+    if (!SAFE_METADATA_KEYS.has(key)) {
+      return;
+    }
+
+    const safeValue = sanitizeMetadataValue(value);
+    if (safeValue !== undefined) {
+      safeMetadata[key] = safeValue;
+    }
+  });
+
+  return safeMetadata;
+}
+
+function getString(metadata: Record<string, unknown>, key: string) {
+  const value = metadata[key];
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+}
+
+function getBoolean(metadata: Record<string, unknown>, key: string) {
+  const value = metadata[key];
+  return typeof value === 'boolean' ? value : null;
+}
+
+function getStringList(metadata: Record<string, unknown>, key: string) {
+  const value = metadata[key];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    : [];
+}
+
+function formatBooleanState(value: boolean | null, fallback: string) {
+  if (value === null) {
+    return fallback;
+  }
+
+  return value ? 'Yes' : 'No';
+}
+
+function pushField(
+  fields: InternalOpsQueueDetailField[],
+  label: string,
+  value: string | null,
+  tone: InternalOpsQueueDetailField['tone'] = 'default'
+) {
+  if (!value) {
+    return;
+  }
+
+  fields.push({ label, value, tone });
+}
+
+export function buildInternalOpsQueueDetail(
+  linkedEntityType: InternalOpsQueueEntityType,
+  metadata: Record<string, unknown>
+): InternalOpsQueueDetail {
+  const fields: InternalOpsQueueDetailField[] = [];
+  const flags = getStringList(metadata, 'reviewReasons');
+  let operatorSummary = 'Review the linked launch-critical record using minimum necessary data.';
+  let checklist = [
+    'Open the linked record only when the queue summary is not enough.',
+    'Keep notes factual and free of private user content.',
+  ];
+
+  switch (linkedEntityType) {
+    case 'uploaded_file': {
+      operatorSummary =
+        'Review upload risk without exposing raw filenames, storage paths, or hidden document context.';
+      pushField(
+        fields,
+        'Filename review label',
+        getString(metadata, 'sanitizedFilename') ?? 'Raw filename withheld',
+        getString(metadata, 'sanitizedFilename') ? 'default' : 'warning'
+      );
+      pushField(fields, 'Upload kind', getString(metadata, 'uploadKind'));
+      pushField(fields, 'Source surface', getString(metadata, 'sourceSurface'));
+      pushField(
+        fields,
+        'Lifecycle',
+        getString(metadata, 'uploadedFileLifecycleState') ?? getString(metadata, 'lifecycleState')
+      );
+      pushField(
+        fields,
+        'Safety status',
+        getString(metadata, 'safetyStatus') ?? getString(metadata, 'safetyReason'),
+        'warning'
+      );
+      pushField(
+        fields,
+        'Attach status',
+        getString(metadata, 'uploadedFileAttachStatus') ?? getString(metadata, 'attachStatus')
+      );
+      pushField(fields, 'Metadata status', getString(metadata, 'metadataStatus'));
+      pushField(fields, 'Sensitivity reason', getString(metadata, 'sensitivityReason'), 'warning');
+      pushField(fields, 'Recommended visibility', getString(metadata, 'recommendedVisibility'));
+      pushField(fields, 'Recommended reveal gate', getString(metadata, 'recommendedRevealGate'));
+      pushField(
+        fields,
+        'Public-safe flag',
+        formatBooleanState(
+          getBoolean(metadata, 'uploadedFileSafeForPublic') ??
+            getBoolean(metadata, 'safeForPublic'),
+          'Not public-safe by default'
+        ),
+        (getBoolean(metadata, 'uploadedFileSafeForPublic') ?? getBoolean(metadata, 'safeForPublic'))
+          ? 'success'
+          : 'warning'
+      );
+      checklist = [
+        'Approve only through the upload review action after privacy inspection.',
+        'Reject uploads with unsafe metadata, identity-bearing filenames, or unclear provenance.',
+        'Do not copy raw filename, object path, or document text into notes.',
+      ];
+      break;
+    }
+    case 'verification_request':
+    case 'verification_bundle': {
+      operatorSummary =
+        'Inspect claim-scoped verification progress, corrections, or stale trust signals.';
+      pushField(
+        fields,
+        'Claim',
+        getString(metadata, 'claimLabel') ?? getString(metadata, 'claimId')
+      );
+      pushField(fields, 'Verification status', getString(metadata, 'verificationStatus'));
+      pushField(
+        fields,
+        'Outcome',
+        getString(metadata, 'verificationOutcome') ?? getString(metadata, 'verdict')
+      );
+      pushField(fields, 'Freshness', getString(metadata, 'freshnessState'));
+      pushField(fields, 'Dispute state', getString(metadata, 'disputeState'), 'warning');
+      checklist = [
+        'Keep review claim-scoped.',
+        'Escalate contradictions, stale verification, or revocation signals.',
+        'Avoid adding identity details unless needed for support.',
+      ];
+      break;
+    }
+    case 'conversation':
+    case 'match': {
+      operatorSummary =
+        'Inspect reveal or consent workflow state without exposing candidate identity.';
+      pushField(fields, 'Reveal stage', getString(metadata, 'revealStage'));
+      pushField(fields, 'Candidate consent', getString(metadata, 'candidateConsentStatus'));
+      pushField(fields, 'Organization consent', getString(metadata, 'organizationConsentStatus'));
+      pushField(
+        fields,
+        'Privacy exception',
+        getString(metadata, 'privacyExceptionType'),
+        'warning'
+      );
+      checklist = [
+        'Check consent state before supporting reveal workflow issues.',
+        'Resolve privacy exceptions before identity-bearing support.',
+      ];
+      break;
+    }
+    case 'decision': {
+      operatorSummary = 'Inspect decision workflow state needed for launch support.';
+      pushField(fields, 'Decision state', getString(metadata, 'decisionState'));
+      pushField(fields, 'Candidate consent', getString(metadata, 'candidateConsentStatus'));
+      pushField(fields, 'Export status', getString(metadata, 'exportStatus'));
+      checklist = [
+        'Support stuck decision workflow without exposing private review notes.',
+        'Confirm consent before any reveal-related intervention.',
+      ];
+      break;
+    }
+    case 'engagement_verification': {
+      operatorSummary =
+        'Inspect intro, interview, decision, hire, or engagement verification status.';
+      pushField(fields, 'Workflow status', getString(metadata, 'workflowStatus'));
+      pushField(fields, 'Pending party', getString(metadata, 'pendingParty'));
+      pushField(fields, 'Decision record', getString(metadata, 'decisionId'));
+      checklist = [
+        'Support only stuck pilot workflow steps.',
+        'Keep organization and candidate private context out of notes.',
+      ];
+      break;
+    }
+    case 'organization': {
+      operatorSummary = 'Inspect pilot organization readiness, assignment, and trust page state.';
+      pushField(fields, 'Trust tier', getString(metadata, 'trustTier'));
+      pushField(fields, 'Assignment status', getString(metadata, 'assignmentStatus'));
+      pushField(fields, 'Trust page', getString(metadata, 'organizationTrustPageStatus'));
+      checklist = [
+        'Limit support to pilot readiness and assignment state.',
+        'Do not expand into non-MVP account administration.',
+      ];
+      break;
+    }
+    default:
+      break;
+  }
+
+  pushField(fields, 'Public portfolio', getString(metadata, 'publicPortfolioStatus'));
+  pushField(fields, 'Export status', getString(metadata, 'exportStatus'));
+  pushField(fields, 'Deletion status', getString(metadata, 'deletionStatus'));
+  pushField(fields, 'Smoke status', getString(metadata, 'smokeStatus'));
+  pushField(fields, 'Monitoring status', getString(metadata, 'monitoringStatus'));
+
+  return {
+    privacyScope: 'admin_minimum_necessary',
+    recordKind: linkedEntityType,
+    operatorSummary,
+    fields,
+    flags,
+    checklist,
+  };
+}
+
 function toSummary(row: typeof internalOpsQueueItems.$inferSelect): InternalOpsQueueSummary {
+  const metadata = sanitizeInternalOpsQueueMetadata(toMetadataRecord(row.metadata));
+
   return {
     id: row.id,
     queueType: row.queueType as InternalOpsQueueType,
@@ -89,7 +400,11 @@ function toSummary(row: typeof internalOpsQueueItems.$inferSelect): InternalOpsQ
     linkedEntityType: row.linkedEntityType as InternalOpsQueueEntityType,
     linkedEntityId: row.linkedEntityId,
     summary: row.summary,
-    metadata: (row.metadata as Record<string, unknown> | null) ?? {},
+    metadata,
+    detail: buildInternalOpsQueueDetail(
+      row.linkedEntityType as InternalOpsQueueEntityType,
+      metadata
+    ),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     resolvedAt: row.resolvedAt?.toISOString() ?? null,
@@ -149,6 +464,12 @@ function buildCompatibilityFallbackItem(
   >,
   now: Date
 ): InternalOpsQueueSummary {
+  const metadata = sanitizeInternalOpsQueueMetadata({
+    ...(params.metadata ?? {}),
+    schemaCompatibilityFallback: true,
+    fallbackSurface: 'internal_ops_queue_items',
+  });
+
   return {
     id: `compat-fallback:${params.queueType}:${params.linkedEntityId}`,
     queueType: params.queueType,
@@ -157,11 +478,8 @@ function buildCompatibilityFallbackItem(
     linkedEntityType: params.linkedEntityType,
     linkedEntityId: params.linkedEntityId,
     summary: params.summary,
-    metadata: {
-      ...(params.metadata ?? {}),
-      schemaCompatibilityFallback: true,
-      fallbackSurface: 'internal_ops_queue_items',
-    },
+    metadata,
+    detail: buildInternalOpsQueueDetail(params.linkedEntityType, metadata),
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
     resolvedAt: null,

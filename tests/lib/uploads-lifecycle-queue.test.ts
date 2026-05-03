@@ -24,9 +24,14 @@ vi.mock('@/lib/supabase/admin', () => ({
   }),
 }));
 
-vi.mock('@/lib/internal-ops/queue', () => ({
-  ensureInternalOpsQueueItem: (...args: any[]) => ensureInternalOpsQueueItemMock(...args),
-}));
+vi.mock('@/lib/internal-ops/queue', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/internal-ops/queue')>();
+
+  return {
+    ...actual,
+    ensureInternalOpsQueueItem: (...args: any[]) => ensureInternalOpsQueueItemMock(...args),
+  };
+});
 
 import {
   attachUploadedFile,
