@@ -24,6 +24,8 @@ export const LAUNCH_NOT_READY_REASON_CODE_VALUES = [
   'stale_persisted_monitor_evidence',
   'missing_persisted_monitor_evidence',
   'missing_rate_limit_dependency',
+  'missing_email_provider_dependency',
+  'ai_raw_prompt_logging_enabled',
 ] as const;
 export type LaunchNotReadyReasonCode = (typeof LAUNCH_NOT_READY_REASON_CODE_VALUES)[number];
 

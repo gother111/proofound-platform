@@ -16,6 +16,7 @@ import {
   buildLaunchSmokeCorridors,
   type LaunchSmokeCheckResult,
 } from '../src/lib/launch/smoke-artifact';
+import { buildAiLaunchSmokeState } from '../src/lib/launch/ai-smoke-state';
 
 function readArg(flag: string) {
   const index = process.argv.indexOf(flag);
@@ -73,8 +74,10 @@ async function main() {
   const scenarios = getLaunchSmokeMatrix(scope);
   const checks: LaunchSmokeCheckResult[] = [];
   const sharedEnv = { BASE_URL: baseUrl };
+  const ai = buildAiLaunchSmokeState({ executionMode });
 
   console.log(`Running ${scope} launch smoke checks against ${baseUrl} (${executionMode})`);
+  console.log(`AI assistant smoke state: ${ai.state}`);
 
   for (const scenario of scenarios) {
     const startedAt = Date.now();
@@ -158,6 +161,7 @@ async function main() {
     freshnessThresholdMinutes,
     expiresAt: new Date(Date.now() + freshnessThresholdMinutes * 60_000).toISOString(),
     overallStatus: aggregateLaunchSmokeStatus(checks),
+    ai,
     corridors: buildLaunchSmokeCorridors(checks, generatedAt),
     checks,
   };

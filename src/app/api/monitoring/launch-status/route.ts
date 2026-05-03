@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { getAiLaunchOperationalSummary } from '@/lib/ai/usage-ledger';
 import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
 import { getEmailProviderDependencyStatus } from '@/lib/email/config';
 import { buildLaunchStatusReport } from '@/lib/launch/status-report';
@@ -57,6 +58,7 @@ export async function GET(request: Request) {
     const report = buildLaunchStatusReport(latest, {
       liveRefresh: liveRefreshOverride,
     });
+    const aiSummary = await getAiLaunchOperationalSummary();
     const rateLimitDependency = getRateLimitDependencyStatus();
     const emailProviderDependency = getEmailProviderDependencyStatus();
     const dependencyReasons = [];
@@ -103,9 +105,34 @@ export async function GET(request: Request) {
       });
     }
 
+    if (aiSummary.aiBudgetState === 'raw_prompt_logging_blocked') {
+      dependencies.aiRawPromptLogging = {
+        ok: false,
+        required: false,
+        configured: true,
+      };
+      dependencyReasons.push({
+        code: 'ai_raw_prompt_logging_enabled' as const,
+        message:
+          'Launch readiness is blocked because raw AI prompt logging is enabled in production.',
+        monitorKeys: ['ai_raw_prompt_logging'],
+        source: 'dependency' as const,
+        freshnessState: 'fresh' as const,
+        checkedAt: [report.generatedAt],
+        lastSuccessfulCheckedAt: [null],
+        liveRefreshAttempted: report.liveRefresh.attempted,
+      });
+    }
+
     const responseBody =
       dependencyReasons.length === 0
-        ? report
+        ? {
+            ...report,
+            summary: {
+              ...report.summary,
+              ...aiSummary,
+            },
+          }
         : {
             ...report,
             ok: false,
@@ -113,6 +140,7 @@ export async function GET(request: Request) {
             dependencies,
             summary: {
               ...report.summary,
+              ...aiSummary,
               blockedMonitors: report.summary.blockedMonitors + dependencyReasons.length,
             },
             notReadyReasons: [...report.notReadyReasons, ...dependencyReasons],

@@ -80,6 +80,48 @@ function checkSafeModeFlags() {
   }
 }
 
+function collectRouteFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  const routes: string[] = [];
+
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const absolutePath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      routes.push(...collectRouteFiles(absolutePath));
+      continue;
+    }
+    if (entry.isFile() && entry.name === 'route.ts') {
+      routes.push(absolutePath);
+    }
+  }
+
+  return routes;
+}
+
+function checkAiLaunchNoGoGuards() {
+  for (const [key, value] of Object.entries(process.env)) {
+    if (/^NEXT_PUBLIC_.*GEMINI.*KEY$/i.test(key) && value?.trim()) {
+      fail(`client-exposed Gemini key is configured: ${key}`);
+    }
+  }
+
+  if (process.env.AI_RAW_PROMPT_LOGGING_ENABLED?.trim().toLowerCase() === 'true') {
+    fail('AI_RAW_PROMPT_LOGGING_ENABLED must be false for launch');
+  }
+
+  const aiRouteRoot = path.join(process.cwd(), 'src/app/api/ai');
+  const forbiddenRoutePattern =
+    /\b(?:candidate[-_/]?score|candidate[-_/]?rank|scor(?:e|ing)|rank(?:ing)?)\b/i;
+  for (const routeFile of collectRouteFiles(aiRouteRoot)) {
+    const routePath = `/api/ai/${path
+      .relative(aiRouteRoot, path.dirname(routeFile))
+      .replace(/\\/g, '/')}`;
+    if (forbiddenRoutePattern.test(routePath)) {
+      fail(`forbidden AI scoring/ranking route found: ${routePath}`);
+    }
+  }
+}
+
 function runLaunchSmokeRunner(reason: string) {
   if (!RUN_SMOKE_DIRECT) {
     fail(reason);
@@ -183,6 +225,16 @@ async function checkLaunchStatus() {
       `launch-status reports failing critical monitors (p1=${data.summary?.p1Failures}, p2=${data.summary?.p2Failures})`
     );
   }
+  if (data.summary?.aiRawPromptLoggingEnabled === true) {
+    fail('launch-status reports raw AI prompt logging enabled');
+  }
+  if (data.summary?.aiAssistantsEnabled === false) {
+    console.log('AI assistants disabled; launch-status reports safe fallback mode.');
+  } else {
+    console.log(
+      `AI assistants enabled; launch-status budget state: ${String(data.summary?.aiBudgetState)}`
+    );
+  }
 }
 
 function checkRestoreReadiness() {
@@ -211,6 +263,7 @@ async function main() {
   checkFiles();
   checkSUSFlag();
   checkSafeModeFlags();
+  checkAiLaunchNoGoGuards();
   ensureLaunchSmokeArtifact();
   checkRestoreReadiness();
   await checkPerfStatus();

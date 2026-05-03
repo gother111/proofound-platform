@@ -8,7 +8,12 @@ vi.mock('@/lib/launch/synthetic-monitors', () => ({
   getHttpMonitorKeysNeedingRefresh: vi.fn(),
 }));
 
+vi.mock('@/lib/ai/usage-ledger', () => ({
+  getAiLaunchOperationalSummary: vi.fn(),
+}));
+
 import { GET } from '../launch-status/route';
+import { getAiLaunchOperationalSummary } from '@/lib/ai/usage-ledger';
 import {
   getHttpMonitorKeysNeedingRefresh,
   getPersistedLaunchSyntheticStatus,
@@ -90,6 +95,13 @@ describe('/api/monitoring/launch-status', () => {
     vi.stubEnv('INTERNAL_API_SECRET', '');
     vi.stubEnv('RESEND_API_KEY', 're_launch_status_test');
     (getHttpMonitorKeysNeedingRefresh as any).mockReturnValue([]);
+    (getAiLaunchOperationalSummary as any).mockResolvedValue({
+      aiAssistantsEnabled: false,
+      aiMonthlyCapSek: 250,
+      aiSpendThisMonthSek: 0,
+      aiBudgetState: 'disabled',
+      aiRawPromptLoggingEnabled: false,
+    });
   });
 
   afterEach(() => {
@@ -129,6 +141,15 @@ describe('/api/monitoring/launch-status', () => {
     expect(body.ok).toBe(true);
     expect(body.readinessState).toBe('ready');
     expect(body.summary.blockedMonitors).toBe(0);
+    expect(body.summary).toEqual(
+      expect.objectContaining({
+        aiAssistantsEnabled: false,
+        aiMonthlyCapSek: 250,
+        aiSpendThisMonthSek: 0,
+        aiBudgetState: 'disabled',
+        aiRawPromptLoggingEnabled: false,
+      })
+    );
     expect(body.notReadyReasons).toEqual([]);
     expect(body.freshness).toEqual(
       expect.objectContaining({
@@ -141,6 +162,40 @@ describe('/api/monitoring/launch-status', () => {
     );
     expect(body.lastSuccessfulRuns.byMonitorKey.api_health).toBe('2026-03-10T10:00:00.000Z');
     expect(getLaunchSyntheticStatusWithFreshHttpRevalidation).not.toHaveBeenCalled();
+  });
+
+  it('blocks launch status when raw AI prompt logging is enabled in production', async () => {
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
+    (getAiLaunchOperationalSummary as any).mockResolvedValueOnce({
+      aiAssistantsEnabled: true,
+      aiMonthlyCapSek: 250,
+      aiSpendThisMonthSek: 12.5,
+      aiBudgetState: 'raw_prompt_logging_blocked',
+      aiRawPromptLoggingEnabled: true,
+    });
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.ok).toBe(false);
+    expect(body.readinessState).toBe('blocked');
+    expect(body.summary).toEqual(
+      expect.objectContaining({
+        aiAssistantsEnabled: true,
+        aiMonthlyCapSek: 250,
+        aiSpendThisMonthSek: 12.5,
+        aiBudgetState: 'raw_prompt_logging_blocked',
+        aiRawPromptLoggingEnabled: true,
+      })
+    );
+    expect(body.notReadyReasons).toEqual([
+      expect.objectContaining({
+        code: 'ai_raw_prompt_logging_enabled',
+        source: 'dependency',
+        monitorKeys: ['ai_raw_prompt_logging'],
+      }),
+    ]);
   });
 
   it('blocks launch status when production rate limiting dependency is missing', async () => {

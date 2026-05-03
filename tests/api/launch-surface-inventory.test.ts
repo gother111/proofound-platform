@@ -7,6 +7,11 @@ import { classifyLaunchApiPath } from '@/lib/launch/surface-policy';
 const API_ROOT = path.join(process.cwd(), 'src/app/api');
 
 const REQUIRED_ACTIVE_ROUTES = [
+  '/api/ai/assignments/clarify',
+  '/api/ai/privacy-preflight/check',
+  '/api/ai/proof-pack/suggest',
+  '/api/ai/suggestions/events',
+  '/api/ai/verifications/compose',
   '/api/assignments',
   '/api/assignments/[id]',
   '/api/assignments/[id]/expertise-matrix',

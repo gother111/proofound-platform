@@ -70,6 +70,18 @@ const ACTIVE_API_POLICIES = [
   },
   {
     classification: 'active_launch_path',
+    surfaceLabel: 'Assistive AI API',
+    detail:
+      'Button-click assistive AI routes remain active only for proof clarity, assignment clarity, verification composition, privacy preflight, and suggestion audit events.',
+    matches: (pathname: string) =>
+      pathname === '/api/ai/proof-pack/suggest' ||
+      pathname === '/api/ai/suggestions/events' ||
+      pathname === '/api/ai/assignments/clarify' ||
+      pathname === '/api/ai/verifications/compose' ||
+      pathname === '/api/ai/privacy-preflight/check',
+  },
+  {
+    classification: 'active_launch_path',
     surfaceLabel: 'Assignments API',
     detail: 'Assignment drafting, publishing, and review remain inside the locked launch corridor.',
     matches: (pathname: string) =>
