@@ -186,9 +186,20 @@ describe('assignment clarity assistant route', () => {
       request(baseBody({ outcomeSummary: 'Launch the pilot corridor in 90 days.' }))
     );
     const payload = await res.json();
+    const responseJsonSchema = (generateJson as any).mock.calls[0]?.[0]?.responseJsonSchema as any;
     const serialized = JSON.stringify(payload).toLowerCase();
 
     expect(res.status).toBe(200);
+    expect(responseJsonSchema?.required).toEqual([
+      'ambiguityFlags',
+      'suggestedRewrite',
+      'reviewQuestions',
+      'excludedOrRiskyCriteria',
+    ]);
+    expect(
+      responseJsonSchema?.properties?.suggestedRewrite?.properties?.verificationRequirements
+        ?.maxItems
+    ).toBe(10);
     expect(payload.suggestedRewrite.outcomeSummary).toBeNull();
     expect(serialized).not.toContain('fit score');
     expect(serialized).not.toContain('shortlisted');

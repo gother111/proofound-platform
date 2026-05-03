@@ -11,6 +11,7 @@ describe('Rate Limiting', () => {
     vi.resetModules();
     delete process.env.KV_REST_API_URL;
     delete process.env.KV_REST_API_TOKEN;
+    delete process.env.VERCEL_ENV;
   });
 
   afterEach(() => {
@@ -19,6 +20,7 @@ describe('Rate Limiting', () => {
     vi.doUnmock('@vercel/kv');
     delete process.env.KV_REST_API_URL;
     delete process.env.KV_REST_API_TOKEN;
+    delete process.env.VERCEL_ENV;
   });
 
   describe('Rate limit configuration', () => {
@@ -115,6 +117,41 @@ describe('Rate Limiting', () => {
       const { allowed, result } = await checkRateLimit(
         new NextRequest('https://proofound.io/api/verify/token-value'),
         RATE_LIMITS.publicToken
+      );
+
+      expect(allowed).toBe(false);
+      expect(result.unavailable).toBe(true);
+      expect(result.failureReason).toBe('missing_configuration');
+    });
+
+    it('uses a local fallback limiter for assistive AI routes outside launch environments', async () => {
+      const { RATE_LIMITS, checkRateLimit } = await import('@/lib/rate-limit/index');
+      let lastResult: Awaited<ReturnType<typeof checkRateLimit>> | null = null;
+
+      for (let i = 0; i < RATE_LIMITS.aiAssistive.limit + 1; i += 1) {
+        lastResult = await checkRateLimit(
+          new NextRequest('http://localhost/api/ai/privacy-preflight/check', {
+            method: 'POST',
+            headers: { 'x-forwarded-for': '127.0.0.1' },
+          }),
+          RATE_LIMITS.aiAssistive
+        );
+      }
+
+      expect(lastResult?.allowed).toBe(false);
+      expect(lastResult?.result.unavailable).toBeUndefined();
+      expect(lastResult?.result.remaining).toBe(0);
+    });
+
+    it('still fails closed for assistive AI routes without KV in launch environments', async () => {
+      process.env.VERCEL_ENV = 'preview';
+
+      const { RATE_LIMITS, checkRateLimit } = await import('@/lib/rate-limit/index');
+      const { allowed, result } = await checkRateLimit(
+        new NextRequest('https://proofound.io/api/ai/privacy-preflight/check', {
+          method: 'POST',
+        }),
+        RATE_LIMITS.aiAssistive
       );
 
       expect(allowed).toBe(false);

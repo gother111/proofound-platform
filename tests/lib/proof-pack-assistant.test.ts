@@ -149,7 +149,16 @@ describe('Proof Pack Assistant privacy controls', () => {
     });
 
     const prompt = mocks.generateJson.mock.calls[0]?.[0]?.prompt as string;
+    const responseJsonSchema = mocks.generateJson.mock.calls[0]?.[0]?.responseJsonSchema as any;
     expect(prompt).toContain('ai-proof-pack-v1');
+    expect(responseJsonSchema?.required).toEqual([
+      'missingContext',
+      'suggestedRewrite',
+      'privacyFlags',
+      'verificationSuggestions',
+      'warnings',
+    ]);
+    expect(responseJsonSchema?.properties?.verificationSuggestions?.maxItems).toBe(12);
     expect(prompt).not.toContain('jane@example.com');
     expect(prompt).not.toContain('https://example.com/private');
     expect(prompt).not.toContain('Jane-Doe-Resume.pdf');

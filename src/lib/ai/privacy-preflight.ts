@@ -49,6 +49,18 @@ const GeminiPrivacyPreflightSchema = z.object({
   notes: z.array(z.string().trim().max(220)).max(6).default([]),
 });
 
+const PRIVACY_PREFLIGHT_RESPONSE_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    notes: {
+      type: 'array',
+      items: { type: 'string', maxLength: 220 },
+      maxItems: 6,
+    },
+  },
+  required: ['notes'],
+} as const;
+
 export type PrivacyPreflightRequest = z.infer<typeof PrivacyPreflightRequestSchema>;
 export type PrivacyPreflightResponse = {
   riskLevel: PrivacyPreflightRiskLevel;
@@ -135,6 +147,7 @@ export async function runPrivacyPreflightCheck(params: {
           flags: deterministic.flags,
         }),
         schema: GeminiPrivacyPreflightSchema,
+        responseJsonSchema: PRIVACY_PREFLIGHT_RESPONSE_JSON_SCHEMA,
         maxOutputTokens: 280,
         temperature: 0,
         usage: params.userId

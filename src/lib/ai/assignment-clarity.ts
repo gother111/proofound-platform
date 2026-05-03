@@ -132,6 +132,53 @@ export const AssignmentClarityResponseSchema = z.object({
   excludedOrRiskyCriteria: z.array(z.string().trim().max(260)).max(12).default([]),
 });
 
+const ASSIGNMENT_CLARITY_STRING_ARRAY_JSON_SCHEMA = {
+  type: 'array',
+  items: { type: 'string', maxLength: 260 },
+  maxItems: 12,
+} as const;
+
+const ASSIGNMENT_CLARITY_RESPONSE_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    ambiguityFlags: ASSIGNMENT_CLARITY_STRING_ARRAY_JSON_SCHEMA,
+    suggestedRewrite: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', maxLength: 220 },
+        rolePurpose: { type: 'string', maxLength: 700 },
+        outcomeSummary: { type: 'string', maxLength: 1200 },
+        constraints: {
+          type: 'object',
+          properties: {
+            locationMode: { type: 'string', enum: ['remote', 'onsite', 'hybrid'] },
+            city: { type: 'string', maxLength: 120 },
+            country: { type: 'string', maxLength: 120 },
+            hoursMin: { type: 'number' },
+            hoursMax: { type: 'number' },
+            compensationSummary: { type: 'string', maxLength: 220 },
+            startWindow: { type: 'string', maxLength: 180 },
+          },
+        },
+        capabilityExpectations: {
+          type: 'array',
+          items: { type: 'string', maxLength: 180 },
+          maxItems: 10,
+        },
+        proofExpectations: { type: 'string', maxLength: 1200 },
+        verificationRequirements: {
+          type: 'array',
+          items: { type: 'string', maxLength: 160 },
+          maxItems: 10,
+        },
+      },
+    },
+    reviewQuestions: ASSIGNMENT_CLARITY_STRING_ARRAY_JSON_SCHEMA,
+    excludedOrRiskyCriteria: ASSIGNMENT_CLARITY_STRING_ARRAY_JSON_SCHEMA,
+  },
+  required: ['ambiguityFlags', 'suggestedRewrite', 'reviewQuestions', 'excludedOrRiskyCriteria'],
+} as const;
+
 export type AssignmentClarityRequest = z.infer<typeof AssignmentClarityRequestSchema>;
 export type AssignmentClarityResponse = z.infer<typeof AssignmentClarityResponseSchema>;
 type SkillInput = z.infer<typeof SkillInputSchema>;
@@ -661,6 +708,7 @@ export async function suggestAssignmentClarityForUser(params: {
       feature: ASSIGNMENT_CLARITY_FEATURE,
       prompt: buildPrompt(context),
       schema: AssignmentClarityResponseSchema,
+      responseJsonSchema: ASSIGNMENT_CLARITY_RESPONSE_JSON_SCHEMA,
       maxOutputTokens: 900,
       temperature: 0,
       usage: {

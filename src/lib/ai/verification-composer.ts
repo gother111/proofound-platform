@@ -48,6 +48,37 @@ export const VerificationComposerResponseSchema = z.object({
   tooBroadWarnings: z.array(z.string().trim().max(240)).max(8).default([]),
 });
 
+const VERIFICATION_COMPOSER_STRING_ARRAY_JSON_SCHEMA = {
+  type: 'array',
+  items: { type: 'string', maxLength: 240 },
+  maxItems: 8,
+} as const;
+
+const VERIFICATION_COMPOSER_RESPONSE_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    subject: { type: 'string', maxLength: 140 },
+    message: { type: 'string', maxLength: 1800 },
+    claimScope: { type: 'string', maxLength: 500 },
+    verificationQuestions: {
+      type: 'array',
+      items: { type: 'string', maxLength: 240 },
+      minItems: 1,
+      maxItems: 5,
+    },
+    privacyNotes: VERIFICATION_COMPOSER_STRING_ARRAY_JSON_SCHEMA,
+    tooBroadWarnings: VERIFICATION_COMPOSER_STRING_ARRAY_JSON_SCHEMA,
+  },
+  required: [
+    'subject',
+    'message',
+    'claimScope',
+    'verificationQuestions',
+    'privacyNotes',
+    'tooBroadWarnings',
+  ],
+} as const;
+
 export type VerificationComposerResponse = z.infer<typeof VerificationComposerResponseSchema>;
 
 type ComposeVerificationRequestParams = {
@@ -380,6 +411,7 @@ export async function composeVerificationRequestForUser(
       feature: VERIFICATION_COMPOSER_FEATURE,
       prompt: buildPrompt(context),
       schema: VerificationComposerResponseSchema,
+      responseJsonSchema: VERIFICATION_COMPOSER_RESPONSE_JSON_SCHEMA,
       maxOutputTokens: 900,
       temperature: 0,
       usage: {

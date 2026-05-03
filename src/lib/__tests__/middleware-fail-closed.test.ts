@@ -33,6 +33,7 @@ describe('middleware fail-closed behavior', () => {
     delete process.env.KV_REST_API_URL;
     delete process.env.KV_REST_API_TOKEN;
     delete process.env.KV_REST_API_READ_ONLY_TOKEN;
+    delete process.env.VERCEL_ENV;
     vi.resetModules();
     vi.restoreAllMocks();
     vi.doUnmock('@/lib/launch/surface-policy');
@@ -193,6 +194,48 @@ describe('middleware fail-closed behavior', () => {
     expect(response.headers.get('Retry-After')).toMatch(/^\d+$/);
     expect(response.headers.get('x-request-id')).toBe('req-missing-rate-limit');
     expect(JSON.stringify(body)).not.toContain('sensitive-token-value');
+    expect(body).toEqual({
+      error: 'Service temporarily unavailable',
+      message: 'Request protection is temporarily unavailable. Please try again shortly.',
+      retryAfter: expect.any(Number),
+    });
+  });
+
+  it('keeps local assistive AI routes behind CSRF instead of missing-KV 503s', async () => {
+    const { middleware } = await loadMiddleware();
+    const response = await middleware(
+      new NextRequest('http://localhost/api/ai/privacy-preflight/check', {
+        method: 'POST',
+        headers: {
+          'x-request-id': 'req-local-ai-rate-limit-fallback',
+          Cookie: 'sb-localhost-auth-token=session-value',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(response.headers.get('x-request-id')).toBe('req-local-ai-rate-limit-fallback');
+    expect(body.error).toBe('CSRF validation failed');
+  });
+
+  it('still degrades assistive AI routes when launch env is missing the limiter dependency', async () => {
+    process.env.VERCEL_ENV = 'preview';
+
+    const { middleware } = await loadMiddleware();
+    const response = await middleware(
+      new NextRequest('http://localhost/api/ai/privacy-preflight/check', {
+        method: 'POST',
+        headers: {
+          'x-request-id': 'req-launch-ai-missing-rate-limit',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get('Retry-After')).toMatch(/^\d+$/);
+    expect(response.headers.get('x-request-id')).toBe('req-launch-ai-missing-rate-limit');
     expect(body).toEqual({
       error: 'Service temporarily unavailable',
       message: 'Request protection is temporarily unavailable. Please try again shortly.',

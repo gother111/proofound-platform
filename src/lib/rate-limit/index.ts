@@ -36,6 +36,12 @@ export interface RateLimitConfig {
    * failures still close high-risk endpoints.
    */
   failClosedOnProviderError?: boolean;
+
+  /**
+   * Use an in-memory limiter when KV is not configured outside launch environments.
+   * This keeps local browser verification rate limited without weakening staging/production.
+   */
+  allowLocalFallback?: boolean;
 }
 
 export interface RateLimitResult {
@@ -56,6 +62,23 @@ const DEFAULT_CONFIG: RateLimitConfig = {
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 const RATE_LIMIT_ENV_KEYS = ['KV_REST_API_URL', 'KV_REST_API_TOKEN'] as const;
+
+interface LocalRateLimitEntry {
+  count: number;
+  reset: number;
+}
+
+function getLocalRateLimitStore(): Map<string, LocalRateLimitEntry> {
+  const globalStore = globalThis as typeof globalThis & {
+    __PROFOUND_RATE_LIMIT_STORE__?: Map<string, LocalRateLimitEntry>;
+  };
+
+  if (!globalStore.__PROFOUND_RATE_LIMIT_STORE__) {
+    globalStore.__PROFOUND_RATE_LIMIT_STORE__ = new Map<string, LocalRateLimitEntry>();
+  }
+
+  return globalStore.__PROFOUND_RATE_LIMIT_STORE__;
+}
 
 /**
  * Get client identifier from request
@@ -129,6 +152,28 @@ function unavailableResult(
   };
 }
 
+function localRateLimit(key: string, config: RateLimitConfig): RateLimitResult {
+  const now = Date.now();
+  const windowMs = config.windowSeconds * 1000;
+  const store = getLocalRateLimitStore();
+  const existing = store.get(key);
+  const current =
+    existing && existing.reset > now
+      ? { count: existing.count + 1, reset: existing.reset }
+      : { count: 1, reset: now + windowMs };
+
+  store.set(key, current);
+
+  const remaining = Math.max(0, config.limit - current.count);
+
+  return {
+    success: current.count <= config.limit,
+    limit: config.limit,
+    remaining,
+    reset: current.reset,
+  };
+}
+
 /**
  * Rate limit a request using token bucket algorithm
  *
@@ -147,6 +192,10 @@ export async function rateLimit(
 
   try {
     if (!isRateLimiterConfigured() || !kv) {
+      if (finalConfig.allowLocalFallback && !isLaunchRateLimitRequired()) {
+        return localRateLimit(key, finalConfig);
+      }
+
       return unavailableResult(finalConfig, 'missing_configuration');
     }
 
@@ -210,6 +259,7 @@ export const RATE_LIMITS = {
     identifier: 'ai-assistive',
     requiresLimiter: true,
     failClosedOnProviderError: true,
+    allowLocalFallback: true,
   },
 
   /** Auth endpoints: 10 req/min (prevent brute force) */

@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Loader2, ShieldCheck } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 type VisibilityFlags = {
   header: boolean;
@@ -65,7 +66,7 @@ export function PortfolioVisibilityCard() {
   const save = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/portfolio/visibility', {
+      const res = await apiFetch('/api/portfolio/visibility', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -87,7 +88,7 @@ export function PortfolioVisibilityCard() {
     setChecking(true);
     setPreflightMessage(null);
     try {
-      const res = await fetch('/api/ai/privacy-preflight/check', {
+      const res = await apiFetch('/api/ai/privacy-preflight/check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

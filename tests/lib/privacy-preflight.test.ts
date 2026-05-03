@@ -47,7 +47,10 @@ describe('privacy preflight assistant', () => {
     });
 
     const prompt = mocks.generateJson.mock.calls[0]?.[0]?.prompt as string;
+    const responseJsonSchema = mocks.generateJson.mock.calls[0]?.[0]?.responseJsonSchema as any;
     expect(prompt).toContain('ai-privacy-preflight-v1');
+    expect(responseJsonSchema?.required).toEqual(['notes']);
+    expect(responseJsonSchema?.properties?.notes?.maxItems).toBe(6);
     expect(prompt).not.toContain('jane@example.com');
     expect(prompt).not.toContain('sk_test_1234567890abcdefghijklmnop');
     expect(prompt).not.toContain('Jane_Resume.pdf');

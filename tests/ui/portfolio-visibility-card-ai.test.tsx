@@ -4,6 +4,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PortfolioVisibilityCard } from '@/components/settings/PortfolioVisibilityCard';
 
+const apiFetchMock = vi.fn();
+
+vi.mock('@/lib/api/fetch', () => ({
+  apiFetch: (...args: unknown[]) => apiFetchMock(...args),
+}));
+
 describe('PortfolioVisibilityCard AI privacy preflight', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -30,23 +36,16 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
         } as Response;
       }
 
-      if (url === '/api/ai/privacy-preflight/check') {
-        expect(init?.method).toBe('POST');
-        expect(JSON.parse(String(init?.body))).toEqual({
-          surface: 'public_portfolio',
-          includeModelReview: false,
-        });
-        return {
-          ok: true,
-          json: async () => ({
-            riskLevel: 'low',
-            flags: [],
-          }),
-        } as Response;
-      }
-
       throw new Error(`Unexpected fetch call: ${url}`);
     }) as any;
+
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        riskLevel: 'low',
+        flags: [],
+      }),
+    });
   });
 
   it('shows Check privacy before publishing and reports deterministic safe-mode result', async () => {
@@ -60,9 +59,13 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     await waitFor(() => {
       expect(screen.getByText(/No high-risk deterministic flags were found/i)).toBeInTheDocument();
     });
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(apiFetchMock).toHaveBeenCalledWith(
       '/api/ai/privacy-preflight/check',
       expect.objectContaining({ method: 'POST' })
     );
+    expect(JSON.parse(String(apiFetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      surface: 'public_portfolio',
+      includeModelReview: false,
+    });
   });
 });

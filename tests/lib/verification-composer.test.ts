@@ -177,7 +177,17 @@ describe('Verification Request Composer privacy controls', () => {
     });
 
     const prompt = mocks.generateJson.mock.calls[0]?.[0]?.prompt as string;
+    const responseJsonSchema = mocks.generateJson.mock.calls[0]?.[0]?.responseJsonSchema as any;
     expect(prompt).toContain(VERIFICATION_COMPOSER_PROMPT_VERSION);
+    expect(responseJsonSchema?.required).toEqual([
+      'subject',
+      'message',
+      'claimScope',
+      'verificationQuestions',
+      'privacyNotes',
+      'tooBroadWarnings',
+    ]);
+    expect(responseJsonSchema?.properties?.verificationQuestions?.maxItems).toBe(5);
     expect(prompt).not.toContain('verifier@example.com');
     expect(prompt).not.toContain('Hidden-Client-Plan.docx');
     expect(prompt).not.toContain('jane@example.com');

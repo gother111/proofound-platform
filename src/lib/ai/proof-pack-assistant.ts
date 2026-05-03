@@ -66,6 +66,39 @@ export const ProofPackAssistantResponseSchema = z.object({
   warnings: z.array(z.string().trim().max(260)).max(12).default([]),
 });
 
+const PROOF_PACK_STRING_ARRAY_JSON_SCHEMA = {
+  type: 'array',
+  items: { type: 'string', maxLength: 260 },
+  maxItems: 12,
+} as const;
+
+const PROOF_PACK_ASSISTANT_RESPONSE_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    missingContext: PROOF_PACK_STRING_ARRAY_JSON_SCHEMA,
+    suggestedRewrite: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', maxLength: 180 },
+        claimStatement: { type: 'string', maxLength: 600 },
+        ownershipStatement: { type: 'string', maxLength: 600 },
+        outcomeSummary: { type: 'string', maxLength: 700 },
+        timeframe: { type: 'string', maxLength: 160 },
+      },
+    },
+    privacyFlags: PROOF_PACK_STRING_ARRAY_JSON_SCHEMA,
+    verificationSuggestions: PROOF_PACK_STRING_ARRAY_JSON_SCHEMA,
+    warnings: PROOF_PACK_STRING_ARRAY_JSON_SCHEMA,
+  },
+  required: [
+    'missingContext',
+    'suggestedRewrite',
+    'privacyFlags',
+    'verificationSuggestions',
+    'warnings',
+  ],
+} as const;
+
 export type ProofPackAssistantResponse = z.infer<typeof ProofPackAssistantResponseSchema>;
 
 export type ProofPackAssistantSanitizedContext = {
@@ -398,6 +431,7 @@ export async function suggestProofPackForUser(params: {
       feature: PROOF_PACK_ASSISTANT_FEATURE,
       prompt: buildPrompt(context),
       schema: ProofPackAssistantResponseSchema,
+      responseJsonSchema: PROOF_PACK_ASSISTANT_RESPONSE_JSON_SCHEMA,
       maxOutputTokens: 700,
       temperature: 0,
       usage: {
