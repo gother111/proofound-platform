@@ -57,6 +57,27 @@ The MVP is **not**:
 - a social network or content feed
 - a generic org operating system
 
+### 1.3.1 Optional assistive AI layer
+
+The MVP may include a small optional AI assistive layer.
+
+Allowed AI assistance:
+
+- Proof Pack Assistant: suggests missing context, clearer ownership wording, clearer outcome wording, evidence gaps, and privacy flags.
+- Assignment Clarity Assistant: suggests clearer outcomes, constraints, proof expectations, and ambiguity fixes.
+- Verification Request Composer: drafts claim-scoped verification request language for user review.
+- Privacy Preflight: rules-first privacy check with optional model review of short sanitized text.
+
+Product rules:
+
+- AI suggestions are optional and button-click based.
+- AI suggestions are never saved, sent, or published automatically.
+- AI does not score, rank, recommend, shortlist, or evaluate candidates.
+- AI does not make hiring, reveal, verification, or trust decisions.
+- AI does not receive full private files by default.
+- AI output is always user-reviewed before use.
+- Review Summary / Reason-Code Explanation Assistant is postponed from MVP v1.
+
 ### 1.4 Included user groups
 
 **Individuals**
@@ -288,6 +309,14 @@ Rules:
 - no orphan Proof Packs for intro-eligible users
 - at least one primary context anchor is required for intro-eligible readiness
 
+### 5.3.1 Assistive proof drafting
+
+Individuals may request optional suggestions while editing a Proof Pack.
+
+The assistant may suggest missing context, clearer claim wording, clearer ownership wording, clearer outcome wording, evidence gaps, privacy flags, and verification request ideas.
+
+The assistant must not invent facts, add unsupported claims, add unverified outcomes, or change proof content automatically.
+
 ### 5.4 Skills logic
 
 Skills remain in MVP, but they are not the hero object.
@@ -309,6 +338,12 @@ Evidence classes supported in MVP:
 ### 5.5 Verification and attestations
 
 Verification is scoped, not global.
+
+Individuals may request an optional draft for a claim-scoped verification request.
+
+The assistant may produce a subject, message, claim scope, and scoped verification questions.
+
+The request must remain attached to one claim or one Proof Pack. It must not ask for vague praise or overall candidate judgment. The user must review and send it manually.
 
 Supported verification types in MVP:
 
@@ -471,6 +506,14 @@ Each assignment includes:
 - additional verification gates beyond the baseline profile-readiness threshold
 - timing / availability constraints
 - optional compensation overlap logic if used
+
+### 6.3.1 Assistive assignment drafting
+
+Organization owners or managers may request optional assignment clarity suggestions.
+
+The assistant may flag ambiguous outcomes, missing constraints, vague capability requirements, and weak proof expectations.
+
+The assistant must not create candidate scoring rubrics, ranking logic, or discriminatory criteria.
 
 ### 6.4 Review queue
 
@@ -717,6 +760,8 @@ INTERNAL OPS
 - public publication never weakens review-stage privacy
 - field-level visibility and narrowest-wins must be enforced
 - PII must not leak via metadata, logs, filenames, analytics, or rendering
+- privacy preflight remains rules-first; optional model checks may be used only after deterministic redaction and only for short sanitized text
+- AI privacy preflight cannot certify privacy safety and cannot replace user review or manual ops review
 
 ### 9.3 Verification constraints
 

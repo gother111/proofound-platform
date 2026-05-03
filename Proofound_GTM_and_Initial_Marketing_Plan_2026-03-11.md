@@ -1,7 +1,7 @@
 # Proofound GTM and Initial Marketing Plan
 
 Doc Class: `governance`
-Last Verified: `2026-04-27`
+Last Verified: `2026-05-03`
 Launch status: `MVP pilot ready after restore drill approval`
 
 This file restores the GTM authority document referenced by the locked MVP source of truth. It keeps GTM scope narrow: a proof-first hiring corridor for design partners who need stronger signal than CVs, not a broad marketplace launch.
@@ -57,6 +57,15 @@ Homepage wedge:
 
 - `Hire through proof, not profile theater`
 - `See the work behind the claim`
+
+AI positioning rule:
+
+- Do not lead with AI.
+- AI may be mentioned only as optional guided assistance inside the product, not as the category or promise.
+- Allowed phrasing: guided suggestions, improve this proof, clarify assignment, draft verification request, check privacy before publishing.
+- Avoid: AI-powered hiring intelligence, AI candidate scoring, AI recruiter, AI screening, AI talent intelligence, automated hiring decisions.
+
+AI should support the buyer promise only indirectly. The buyer promise remains clearer assignments, stronger signal than CVs, proof-backed review, less shortlist noise, and privacy-safe reveal. Do not sell AI as the product. Sell better proof-backed review.
 
 Founder outbound wedge:
 

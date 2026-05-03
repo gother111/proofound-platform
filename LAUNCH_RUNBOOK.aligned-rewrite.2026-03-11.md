@@ -90,6 +90,20 @@ The product must not launch broadly until all launch-blocking gates pass.
 - transactional email for workflow-critical messages is functional
 - manual ops queues are staffed and documented
 
+### 2.5 AI assistive layer gates, if enabled
+
+- AI feature flag state is visible to operators.
+- AI API keys are server-only.
+- No client-exposed AI key exists.
+- AI monthly hard cap is configured.
+- AI usage logging is active.
+- AI raw prompt logging is disabled in production.
+- AI privacy redaction tests pass.
+- AI routes reject full private file payloads.
+- AI routes reject signed URLs and tokenized links.
+- AI routes do not produce scoring, ranking, fit verdicts, or hiring recommendations.
+- AI can be disabled without breaking the core corridor.
+
 ---
 
 ## 3. Smoke-test matrix
@@ -129,6 +143,16 @@ Minimum smoke coverage before launch and after every production deployment:
 - confirm email notifications do not expose hidden information
 - confirm quarantined / risky proof items do not render unsafely
 
+### 3.4 AI assistive layer smoke checks, if enabled
+
+- Proof Pack Assistant returns suggestion or deterministic fallback.
+- Assignment Clarity Assistant returns suggestion or deterministic fallback.
+- Verification Request Composer returns draft or deterministic fallback.
+- Privacy Preflight runs deterministic rules without provider dependency.
+- Budget cap blocks calls safely.
+- Feature flag off disables provider calls.
+- Launch status shows AI budget state without exposing secrets or raw prompts.
+
 ---
 
 ## 4. Fallback states and safe mode
@@ -156,7 +180,13 @@ Safe mode may:
 - require manual verification review before certain proof becomes review-visible
 - route risky assignments or proof into ops handling
 
-### 4.3 Fallback rules
+### 4.3 AI safe mode
+
+AI safe mode is activated by setting `AI_ASSISTANTS_ENABLED=false`.
+
+Safe mode disables provider calls and keeps deterministic fallbacks available. It must be used immediately after any privacy, cost, provider, or trust incident involving AI suggestions.
+
+### 4.4 Fallback rules
 
 - never fake density if supply quality is weak
 - never auto-reveal to preserve flow speed

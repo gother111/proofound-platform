@@ -1,7 +1,7 @@
 # Proofound MVP — Locked Source of Truth
 
 > Doc Class: `active`
-> Last Verified: `2026-03-12`
+> Last Verified: `2026-05-03`
 
 **Status:** Locked for MVP planning and implementation  
 **Date:** 2026-03-11  
@@ -21,6 +21,18 @@ Precedence order:
 3. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` for operating guidance only
 4. `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md` for market framing and launch messaging only
 5. Audits, reviews, and older exploratory materials as advisory only
+
+### AI assistive layer note
+
+The MVP may include an optional, button-click assistive AI layer only where it directly strengthens Proof Pack clarity, assignment clarity, claim-scoped verification requests, or privacy preflight.
+
+This AI layer is subordinate to the locked MVP. It does not change the product definition, wedge, trust model, privacy model, or launch boundaries.
+
+The controlling addendum is:
+
+- `docs/ai/Proofound_AI_Assistive_Layer_Source_Of_Truth_Addendum_2026-05-03.md`
+
+If the AI addendum conflicts with this locked source of truth, this locked source of truth wins.
 
 This document is intentionally narrower than the broader company vision. For MVP, Proofound is a proof-backed hiring credibility corridor centered on Proof Packs. The public portfolio is a selected output surface, not the product center.
 
@@ -117,6 +129,7 @@ The MVP is **not**:
 - a social network or content feed
 - a gamified profile product
 - a mental-health product beyond optional private check-ins and reflections
+- an AI candidate scoring, ranking, hiring recommendation, fit-verdict, or automated review decision product
 
 ### 2.2 Explicitly postponed to post-MVP or later
 
@@ -140,6 +153,7 @@ The following rules exist to prevent scope creep:
 - The MVP ships one clean corridor for individuals and one clean corridor for organizations.
 - The MVP emphasizes proof, trust, privacy, and matching clarity over breadth.
 - Any feature that does not strengthen proof quality, trust, shareability, or review quality should be cut or postponed.
+- Assistive AI is allowed only as optional support for proof quality, assignment clarity, verification wording, and privacy preflight. It must not introduce scoring, ranking, automated hiring recommendations, black-box review intelligence, or AI-first positioning.
 - “Platform vision” is allowed in the data model and object model, but not as UI sprawl.
 
 ---

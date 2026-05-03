@@ -53,6 +53,12 @@ Current stack may include optional OAuth sign-in providers, but:
 - sign-in provider is not trust semantics
 - LinkedIn import or employment-verification logic is not MVP trust logic
 
+### 1.3.1 Optional AI assistive layer
+
+The technical architecture may include an optional server-side AI assistive layer using a provider abstraction. Gemini 3.1 Flash-Lite Preview is the default testing assumption, but the exact provider model ID must be environment-configured.
+
+The AI layer must be disabled by default, rate limited, spend capped, logged, cacheable, and safe to disable without breaking core MVP flows.
+
 ### 1.4 Explicitly out of active technical scope
 
 Not launch-binding in this document:
@@ -86,6 +92,8 @@ Launch requirements:
 - CSRF protection for cookie-auth mutating routes
 - rate limiting on public and mutation-heavy endpoints
 - audit logging for security-sensitive actions
+- AI API keys are server-only; no `NEXT_PUBLIC_*` AI provider key is allowed
+- all AI routes require authentication, ownership or organization role authorization, Zod input validation, JSON-schema output validation, and fail-closed provider fallback behavior
 
 ### 2.2 Privacy
 
@@ -98,6 +106,8 @@ Launch requirements:
 - separation of public portfolio surfaces from matching/review surfaces
 - PII scrubbing in logs and analytics payloads
 - metadata / filename redaction or sanitization for sensitive uploads
+- no full private file, original filename, signed URL, private storage URL, API key, cookie, session ID, token, hidden identity-bearing review data, or protected-trait information is sent to an AI model by default
+- AI usage logs store metadata, hashes, token counts, feature names, cost, and redaction summaries; raw prompts are not logged by default
 
 ### 2.3 Performance
 
@@ -115,6 +125,8 @@ Launch requirements:
 - idempotent handling for tokens, intros, reveals, and decision updates
 - deterministic workflow recovery after retryable failures
 - backups, restore discipline, and smoke-test verification before broad rollout
+- core MVP flows must work when AI is disabled or budget is exhausted
+- disabled AI returns deterministic checklists or static templates for proof drafting, assignment drafting, verification requests, and privacy checks
 
 ### 2.5 Accessibility
 
@@ -174,6 +186,15 @@ Launch requirements:
 - `interviews`
 - `decisions`
 - `feedback_records`
+
+#### Optional AI support
+
+- `ai_usage_logs`
+- `ai_monthly_budgets`
+- `ai_suggestion_cache`
+- `ai_suggestion_events`
+
+These tables support spend caps, auditability, cache reuse, and user-visible suggestion event tracking. They must not become a hidden candidate evaluation store.
 
 ### 3.2 Canonical role model
 
