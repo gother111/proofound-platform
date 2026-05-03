@@ -1,0 +1,125 @@
+> proofound@0.1.0 test:launch:workflow
+> npm run test -- tests/api/org-match-review-route.test.ts tests/api/interviews-schedule-route.test.ts tests/api/interviews-edit-route.test.ts tests/api/interviews-complete-route.test.ts tests/api/interviews-cancel-route.test.ts tests/api/decisions-route.test.ts tests/api/decisions-window-route.test.ts tests/api/engagement-verifications-route.test.ts tests/api/conversation-reveal-route.test.ts tests/lib/workflow-contracts.test.ts tests/lib/workflow-decision-record.test.ts tests/lib/workflow-idempotency.test.ts tests/lib/workflow-email-privacy.test.ts tests/lib/workflow-reveal-timeout.test.ts
+
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/org-match-review-route.test.ts tests/api/interviews-schedule-route.test.ts tests/api/interviews-edit-route.test.ts tests/api/interviews-complete-route.test.ts tests/api/interviews-cancel-route.test.ts tests/api/decisions-route.test.ts tests/api/decisions-window-route.test.ts tests/api/engagement-verifications-route.test.ts tests/api/conversation-reveal-route.test.ts tests/lib/workflow-contracts.test.ts tests/lib/workflow-decision-record.test.ts tests/lib/workflow-idempotency.test.ts tests/lib/workflow-email-privacy.test.ts tests/lib/workflow-reveal-timeout.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+WebSocket server error:
+Error: listen EPERM: operation not permitted 0.0.0.0:24678
+    at Server.setupListenHandle [as _listen2] (node:net:1918:21)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
+    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
+    at Array.map (<anonymous>)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
+    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/api/decisions-route.test.ts  (10 tests) 15ms
+ ✓ tests/lib/workflow-decision-record.test.ts  (3 tests) 5ms
+ ✓ tests/api/interviews-schedule-route.test.ts  (11 tests) 25ms
+ ✓ tests/api/engagement-verifications-route.test.ts  (4 tests) 20ms
+ ✓ tests/api/org-match-review-route.test.ts  (17 tests) 53ms
+ ✓ tests/api/interviews-cancel-route.test.ts  (3 tests) 16ms
+ ✓ tests/api/interviews-edit-route.test.ts  (5 tests) 12ms
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/conversation-reveal-route.test.ts  (7 tests) 18ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16623) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/api/decisions-window-route.test.ts  (2 tests) 9ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+ ✓ tests/lib/workflow-email-privacy.test.ts  (11 tests) 25ms
+ ✓ tests/lib/workflow-idempotency.test.ts  (3 tests) 9ms
+stderr | tests/api/interviews-complete-route.test.ts > POST /api/interviews/complete > returns success even if feedback invite issuance fails after completion
+Interview completion feedback invites failed Error: schema cache drift
+    at /Users/yuriibakurov/proofound/tests/api/interviews-complete-route.test.ts:130:50
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+
+ ✓ tests/api/interviews-complete-route.test.ts  (2 tests) 11ms
+ ✓ tests/lib/workflow-contracts.test.ts  (4 tests) 2ms
+(node:16623) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+ ✓ tests/lib/workflow-reveal-timeout.test.ts  (2 tests) 1ms
+
+ Test Files  14 passed (14)
+      Tests  84 passed (84)
+   Start at  23:08:20
+   Duration  2.31s (transform 1.17s, setup 1.95s, collect 5.67s, tests 221ms, environment 4.28s, prepare 1.06s)

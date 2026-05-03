@@ -93,7 +93,7 @@ Proofound has fresh evidence that the live site can still serve key public and c
 
 ## Final Launch Checklist Artifact
 
-- Latest operational checklist: `.artifacts/launch-validation-2026-04-30/final-launch-checklist-status.md`
-- Latest machine-readable bundle: `.artifacts/launch-validation-2026-04-30/final-launch-checklist-status.json`
-- Generated at: `2026-04-30T20:58:39.700Z`
+- Latest operational checklist: `.artifacts/launch-validation-2026-05-02/final-launch-checklist-status.md`
+- Latest machine-readable bundle: `.artifacts/launch-validation-2026-05-02/final-launch-checklist-status.json`
+- Generated at: `2026-05-02T21:22:38.745Z`
 <!-- final-launch-checklist:end -->

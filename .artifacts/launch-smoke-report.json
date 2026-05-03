@@ -1,36 +1,36 @@
 {
   "schemaVersion": 2,
   "scope": "full",
-  "generatedAt": "2026-05-01T17:47:19.758Z",
-  "targetBaseUrl": "http://localhost:3000",
+  "generatedAt": "2026-05-02T21:04:35.434Z",
+  "targetBaseUrl": "http://127.0.0.1:3000",
   "executionMode": "local",
   "freshnessThresholdMinutes": 60,
-  "expiresAt": "2026-05-01T18:47:19.758Z",
-  "overallStatus": "fail",
+  "expiresAt": "2026-05-02T22:04:35.434Z",
+  "overallStatus": "pass",
   "corridors": [
     {
       "id": "individual",
       "label": "Individual corridor",
       "status": "pass",
       "checkIds": ["public_individual_portfolio_visible", "proof_creation_case"],
-      "generatedAt": "2026-05-01T17:47:19.758Z"
+      "generatedAt": "2026-05-02T21:04:35.434Z"
     },
     {
       "id": "organization",
       "label": "Organization corridor",
-      "status": "fail",
+      "status": "pass",
       "checkIds": [
         "public_org_trust_fixture_live",
         "full_org_corridor_review_to_engagement_verification"
       ],
-      "generatedAt": "2026-05-01T17:47:19.758Z"
+      "generatedAt": "2026-05-02T21:04:35.434Z"
     },
     {
       "id": "trust_privacy",
       "label": "Trust / privacy corridor",
       "status": "pass",
       "checkIds": ["hidden_portfolio_protected", "privacy_no_leak_case"],
-      "generatedAt": "2026-05-01T17:47:19.758Z"
+      "generatedAt": "2026-05-02T21:04:35.434Z"
     }
   ],
   "checks": [
@@ -45,9 +45,9 @@
       },
       "status": "pass",
       "expectedState": "public_individual_portfolio_visible",
-      "durationMs": 4237,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 144ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  19:47:02\n   Duration  2.77s (transform 212ms, setup 371ms, collect 401ms, tests 144ms, environment 718ms, prepare 96ms)\n\n\nWebSocket server error:\nError: listen EPERM: operation not permitted 0.0.0.0:24678\n    at Server.setupListenHandle [as _listen2] (node:net:1918:21)\n    at listenInCluster (node:net:1997:12)\n    at Server.listen (node:net:2102:7)\n    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)\n    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)\n    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)\n    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101\n    at Array.map (<anonymous>)\n    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84\n    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)\n(node:22526) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
-      "generatedAt": "2026-05-01T17:47:05.377Z"
+      "durationMs": 1492,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 66ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  22:59:15\n   Duration  831ms (transform 96ms, setup 97ms, collect 148ms, tests 66ms, environment 187ms, prepare 37ms)\n\n\n(node:13663) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-02T20:59:16.562Z"
     },
     {
       "id": "proof_creation_case",
@@ -60,9 +60,9 @@
       },
       "status": "pass",
       "expectedState": "proof_creation_case_live",
-      "durationMs": 2884,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (4 tests) 21ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  19:47:06\n   Duration  1.70s (transform 92ms, setup 135ms, collect 81ms, tests 21ms, environment 282ms, prepare 83ms)\n\n\nWebSocket server error:\nError: listen EPERM: operation not permitted 0.0.0.0:24678\n    at Server.setupListenHandle [as _listen2] (node:net:1918:21)\n    at listenInCluster (node:net:1997:12)\n    at Server.listen (node:net:2102:7)\n    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)\n    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)\n    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)\n    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101\n    at Array.map (<anonymous>)\n    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84\n    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)\n(node:22583) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
-      "generatedAt": "2026-05-01T17:47:08.263Z"
+      "durationMs": 1468,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (4 tests) 12ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  22:59:17\n   Duration  772ms (transform 56ms, setup 98ms, collect 49ms, tests 12ms, environment 185ms, prepare 36ms)\n\n\n(node:13708) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-02T20:59:18.031Z"
     },
     {
       "id": "public_org_trust_fixture_live",
@@ -79,12 +79,11 @@
         ],
         "command": ["npm", "run", "test:e2e:org-trust:smoke"]
       },
-      "status": "fail",
+      "status": "pass",
       "expectedState": "public_org_trust_fixture_live",
-      "durationMs": 505,
-      "message": "Seeded public org trust fixture live failed during seed_public_org_trust_fixture",
-      "outputSnippet": "[seed_public_org_trust_fixture]\n> proofound@0.1.0 seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n\nnode:net:1918\n      const error = new UVExceptionWithHostPort(rval, 'listen', address, port);\n                    ^\n\nError: listen EPERM: operation not permitted /var/folders/9v/7r8pcr3n6x7dqdlykhq8f2480000gn/T/tsx-501/22640.pipe\n    at Server.setupListenHandle [as _listen2] (node:net:1918:21)\n    at listenInCluster (node:net:1997:12)\n    at Server.listen (node:net:2119:5)\n    at file:///Users/yuriibakurov/proofound/node_modules/tsx/dist/cli.mjs:53:31537\n    at new Promise (<anonymous>)\n    at createIpcServer (file:///Users/yuriibakurov/proofound/node_modules/tsx/dist/cli.mjs:53:31515)\n    at async file:///Users/yuriibakurov/proofound/node_modules/tsx/dist/cli.mjs:55:459 {\n  code: 'EPERM',\n  errno: -1,\n  syscall: 'listen',\n  address: '/var/folders/9v/7r8pcr3n6x7dqdlykhq8f2480000gn/T/tsx-501/22640.pipe',\n  port: -1\n}\n\nNode.js v25.4.0",
-      "generatedAt": "2026-05-01T17:47:08.768Z",
+      "durationMs": 15782,
+      "outputSnippet": "[seed_public_org_trust_fixture]\n> proofound@0.1.0 seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-05-02T20:59:18.582Z\",\n  \"verificationUrl\": null,\n  \"verifiedAt\": null,\n  \"httpStatus\": null\n}\n\n(node:13753) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n\n[seeded_public_org_trust_smoke]\n> proofound@0.1.0 test:e2e:org-trust:smoke\n> node ./scripts/playwright-node20.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:44:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\u001b[1A\u001b[2K  1 passed (11.4s)",
+      "generatedAt": "2026-05-02T20:59:33.814Z",
       "evidence": {
         "fixtureSlug": "proofound-labs",
         "fixturePath": "/portfolio/org/proofound-labs"
@@ -110,12 +109,11 @@
           "NEXT_PUBLIC_USE_MOCK_SUPABASE": "false"
         }
       },
-      "status": "fail",
+      "status": "pass",
       "expectedState": "full_org_corridor_review_to_engagement_verification_live",
-      "durationMs": 3717,
-      "message": "Full org corridor review to engagement verification case failed",
-      "outputSnippet": "[strict_org_corridor_smoke]\nError: Process from config.webServer exited early.\n\n\u001b[1A\u001b[2K\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m ⨯ Failed to start server\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22mError: listen EPERM: operation not permitted 0.0.0.0:3000\n\u001b[2m[WebServer] \u001b[22m    at <unknown> (Error: listen EPERM: operation not permitted 0.0.0.0:3000)\n\u001b[2m[WebServer] \u001b[22m    at new Promise (<anonymous>) {\n\u001b[2m[WebServer] \u001b[22m  code: \u001b[32m'EPERM'\u001b[39m,\n\u001b[2m[WebServer] \u001b[22m  errno: \u001b[33m-1\u001b[39m,\n\u001b[2m[WebServer] \u001b[22m  syscall: \u001b[32m'listen'\u001b[39m,\n\u001b[2m[WebServer] \u001b[22m  address: \u001b[32m'0.0.0.0'\u001b[39m,\n\u001b[2m[WebServer] \u001b[22m  port: \u001b[33m3000\u001b[39m\n\u001b[2m[WebServer] \u001b[22m}",
-      "generatedAt": "2026-05-01T17:47:12.485Z"
+      "durationMs": 297736,
+      "outputSnippet": "[strict_org_corridor_smoke]\n[dotenv@17.2.3] injecting env (39) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops\n\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/strict/org-corridor.strict.spec.ts:276:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end\n\n\u001b[1A\u001b[2K  1 passed (5.0m)\n\n\u001b[1A\u001b[2K(node:13859) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K[chromium] › e2e/strict/org-corridor.strict.spec.ts:276:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end\n[strict-fixtures] failed to clean profiles: insert or update on table \"matching_refresh_jobs\" violates foreign key constraint \"matching_refresh_jobs_profile_id_fkey\"",
+      "generatedAt": "2026-05-02T21:04:31.550Z"
     },
     {
       "id": "hidden_portfolio_protected",
@@ -128,9 +126,9 @@
       },
       "status": "pass",
       "expectedState": "hidden_portfolio_protected",
-      "durationMs": 3233,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 130ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  19:47:13\n   Duration  1.89s (transform 186ms, setup 237ms, collect 291ms, tests 130ms, environment 364ms, prepare 112ms)\n\n\nWebSocket server error:\nError: listen EPERM: operation not permitted 0.0.0.0:24678\n    at Server.setupListenHandle [as _listen2] (node:net:1918:21)\n    at listenInCluster (node:net:1997:12)\n    at Server.listen (node:net:2102:7)\n    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)\n    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)\n    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)\n    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101\n    at Array.map (<anonymous>)\n    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84\n    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)\n(node:22729) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
-      "generatedAt": "2026-05-01T17:47:15.718Z"
+      "durationMs": 1983,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 68ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  23:04:32\n   Duration  1.11s (transform 103ms, setup 162ms, collect 168ms, tests 68ms, environment 295ms, prepare 53ms)\n\n\n(node:15002) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-02T21:04:33.533Z"
     },
     {
       "id": "privacy_no_leak_case",
@@ -147,9 +145,9 @@
       },
       "status": "pass",
       "expectedState": "privacy_no_leak_enforced",
-      "durationMs": 4040,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 3ms\n ✓ tests/api/org-match-review-route.test.ts  (17 tests) 67ms\n ✓ tests/api/conversation-reveal-route.test.ts  (7 tests) 30ms\n\n Test Files  3 passed (3)\n      Tests  29 passed (29)\n   Start at  19:47:16\n   Duration  2.79s (transform 558ms, setup 634ms, collect 1.97s, tests 100ms, environment 1.32s, prepare 476ms)\n\n\nWebSocket server error:\nError: listen EPERM: operation not permitted 0.0.0.0:24678\n    at Server.setupListenHandle [as _listen2] (node:net:1918:21)\n    at listenInCluster (node:net:1997:12)\n    at Server.listen (node:net:2102:7)\n    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)\n    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)\n    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)\n    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101\n    at Array.map (<anonymous>)\n    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84\n    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)\n(node:22793) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:22793) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:22793) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
-      "generatedAt": "2026-05-01T17:47:19.758Z"
+      "durationMs": 1901,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 1ms\n ✓ tests/api/org-match-review-route.test.ts  (17 tests) 32ms\n ✓ tests/api/conversation-reveal-route.test.ts  (7 tests) 18ms\n\n Test Files  3 passed (3)\n      Tests  29 passed (29)\n   Start at  23:04:34\n   Duration  1.21s (transform 230ms, setup 322ms, collect 913ms, tests 51ms, environment 650ms, prepare 128ms)\n\n\n(node:15060) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:15060) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:15060) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-02T21:04:35.434Z"
     }
   ]
 }

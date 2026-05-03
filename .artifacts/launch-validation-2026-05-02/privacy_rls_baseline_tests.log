@@ -1,0 +1,92 @@
+> proofound@0.1.0 test:privacy
+> PROOFOUND_VITEST_TIMEOUT_MS=120000 node ./scripts/run-vitest-with-timeout.mjs --config vitest.supabase.config.ts tests/privacy/rls-policies.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+WebSocket server error:
+Error: listen EPERM: operation not permitted 0.0.0.0:24678
+    at Server.setupListenHandle [as _listen2] (node:net:1918:21)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
+    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
+    at Array.map (<anonymous>)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
+    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (5) from .env.test -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+(node:16415) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🔧 Setting up test users...
+
+stderr | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:16416:13
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at _handleRequest (/Users/yuriibakurov/proofound/node_modules/@supabase/auth-js/src/lib/fetch.ts:223:17)
+    at _request (/Users/yuriibakurov/proofound/node_modules/@supabase/auth-js/src/lib/fetch.ts:210:14)
+    at GoTrueAdminApi.createUser (/Users/yuriibakurov/proofound/node_modules/@supabase/auth-js/src/GoTrueAdminApi.ts:210:9)
+    at createTestUser (/Users/yuriibakurov/proofound/tests/privacy/helpers/supabase-test-client.ts:176:27)
+    at /Users/yuriibakurov/proofound/tests/privacy/rls-policies.test.ts:92:13
+    at async Promise.all (index 0)
+    at callSuiteHook (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:700:23)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:892:27) {
+  [cause]: Error: getaddrinfo ENOTFOUND cjpfrgmsxwxhuomnvciq.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:121:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'cjpfrgmsxwxhuomnvciq.supabase.co'
+  }
+}
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🧹 Cleaning up test data...
+
+ ❯ tests/privacy/rls-policies.test.ts  (20 tests) 18ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+Error: Failed to create test user alice_rls_test+1777756096738@test.com: fetch failed
+ ❯ createTestUser tests/privacy/helpers/supabase-test-client.ts:184:11
+    183|  * @param userId - UUID of the user to delete
+    184|  * 
+    185|  * Example:
+       |       ^
+    186|  * ```typescript
+    187|  * await deleteTestUser(alice.id);
+ ❯ tests/privacy/rls-policies.test.ts:92:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+TypeError: Cannot read properties of undefined (reading 'id')
+ ❯ tests/privacy/rls-policies.test.ts:127:33
+    126|       const { data, error } = await aliceClient
+    127|         .from('profiles')
+    128|         .select('*')
+       |       ^
+    129|         .eq('id', alice.id)
+    130|         .single();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests   (20)
+   Start at  23:08:16
+   Duration  589ms (transform 162ms, setup 16ms, collect 221ms, tests 18ms, environment 0ms, prepare 39ms)
