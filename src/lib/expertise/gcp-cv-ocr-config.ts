@@ -1,4 +1,4 @@
-export type GcpCvOcrAuthMode = 'hmac';
+export type GcpCvOcrAuthMode = 'hmac' | 'oidc';
 
 export type GcpCvOcrUnavailableReason =
   | 'disabled'
@@ -9,7 +9,9 @@ export type GcpCvOcrUnavailableReason =
   | 'invalid_base_url'
   | 'missing_auth_mode'
   | 'invalid_auth_mode'
-  | 'missing_shared_secret';
+  | 'missing_shared_secret'
+  | 'missing_oidc_config'
+  | 'invalid_oidc_config';
 
 export type GcpCvOcrAllowedMimeType =
   | 'application/pdf'
@@ -34,6 +36,12 @@ export type GcpCvOcrConfig = {
   userDailyLimit: number;
   globalDailyLimit: number;
   hasAuthSecret: boolean;
+  oidcAudience: string | null;
+  oidcProjectNumber: string | null;
+  oidcWorkloadIdentityPoolId: string | null;
+  oidcWorkloadIdentityProviderId: string | null;
+  oidcServiceAccountEmail: string | null;
+  hasOidcConfig: boolean;
 };
 
 type EnvReader = Record<string, string | undefined>;
@@ -68,7 +76,17 @@ export const GCP_CV_OCR_ENV_KEYS = [
   'GCP_CV_OCR_RETENTION_HOURS',
   'GCP_CV_OCR_USER_DAILY_LIMIT',
   'GCP_CV_OCR_GLOBAL_DAILY_LIMIT',
+  'GCP_CV_OCR_OIDC_AUDIENCE',
+  'GCP_CV_OCR_OIDC_PROJECT_NUMBER',
+  'GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_POOL_ID',
+  'GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_PROVIDER_ID',
+  'GCP_CV_OCR_OIDC_SERVICE_ACCOUNT_EMAIL',
 ] as const;
+
+const GCP_PROJECT_NUMBER_PATTERN = /^\d{6,20}$/;
+const WORKLOAD_IDENTITY_ID_PATTERN = /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/;
+const SERVICE_ACCOUNT_EMAIL_PATTERN =
+  /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.iam\.gserviceaccount\.com$/;
 
 function parseBoolean(value: string | undefined, fallback: boolean): boolean {
   if (!value) {
@@ -145,11 +163,105 @@ function parseAuthMode(value: string | undefined): {
     return { authMode: null, reason: 'missing_auth_mode' };
   }
 
-  if (normalized === 'hmac') {
-    return { authMode: 'hmac', reason: null };
+  if (normalized === 'hmac' || normalized === 'oidc') {
+    return { authMode: normalized, reason: null };
   }
 
   return { authMode: null, reason: 'invalid_auth_mode' };
+}
+
+function parseOptionalHttpsOrigin(value: string | undefined): {
+  origin: string | null;
+  reason: GcpCvOcrUnavailableReason | null;
+} {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return { origin: null, reason: null };
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== 'https:') {
+      return { origin: null, reason: 'invalid_oidc_config' };
+    }
+    return { origin: parsed.origin, reason: null };
+  } catch {
+    return { origin: null, reason: 'invalid_oidc_config' };
+  }
+}
+
+function parseOidcConfig(
+  env: EnvReader,
+  defaultAudience: string | null
+): Pick<
+  GcpCvOcrConfig,
+  | 'oidcAudience'
+  | 'oidcProjectNumber'
+  | 'oidcWorkloadIdentityPoolId'
+  | 'oidcWorkloadIdentityProviderId'
+  | 'oidcServiceAccountEmail'
+  | 'hasOidcConfig'
+> & {
+  reason: GcpCvOcrUnavailableReason | null;
+} {
+  const audience = parseOptionalHttpsOrigin(env.GCP_CV_OCR_OIDC_AUDIENCE);
+  if (audience.reason) {
+    return emptyOidcConfig(audience.reason);
+  }
+
+  const oidcAudience = audience.origin ?? defaultAudience;
+  const oidcProjectNumber = env.GCP_CV_OCR_OIDC_PROJECT_NUMBER?.trim() || null;
+  const oidcWorkloadIdentityPoolId = env.GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_POOL_ID?.trim() || null;
+  const oidcWorkloadIdentityProviderId =
+    env.GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_PROVIDER_ID?.trim() || null;
+  const oidcServiceAccountEmail = env.GCP_CV_OCR_OIDC_SERVICE_ACCOUNT_EMAIL?.trim() || null;
+
+  const values = {
+    oidcAudience,
+    oidcProjectNumber,
+    oidcWorkloadIdentityPoolId,
+    oidcWorkloadIdentityProviderId,
+    oidcServiceAccountEmail,
+  };
+
+  if (Object.values(values).some((value) => !value)) {
+    return {
+      ...values,
+      hasOidcConfig: false,
+      reason: 'missing_oidc_config',
+    };
+  }
+
+  if (
+    !GCP_PROJECT_NUMBER_PATTERN.test(oidcProjectNumber ?? '') ||
+    !WORKLOAD_IDENTITY_ID_PATTERN.test(oidcWorkloadIdentityPoolId ?? '') ||
+    !WORKLOAD_IDENTITY_ID_PATTERN.test(oidcWorkloadIdentityProviderId ?? '') ||
+    !SERVICE_ACCOUNT_EMAIL_PATTERN.test(oidcServiceAccountEmail ?? '')
+  ) {
+    return {
+      ...values,
+      hasOidcConfig: false,
+      reason: 'invalid_oidc_config',
+    };
+  }
+
+  return {
+    ...values,
+    hasOidcConfig: true,
+    reason: null,
+  };
+}
+
+function emptyOidcConfig(reason: GcpCvOcrUnavailableReason): ReturnType<typeof parseOidcConfig> {
+  return {
+    oidcAudience: null,
+    oidcProjectNumber: null,
+    oidcWorkloadIdentityPoolId: null,
+    oidcWorkloadIdentityProviderId: null,
+    oidcServiceAccountEmail: null,
+    hasOidcConfig: false,
+    reason,
+  };
 }
 
 function parseAllowedMimeTypes(value: string | undefined): GcpCvOcrAllowedMimeType[] {
@@ -213,6 +325,12 @@ export function resolveGcpCvOcrConfig(
       DEFAULT_GLOBAL_DAILY_LIMIT
     ),
     hasAuthSecret: Boolean(getGcpCvOcrAuthSecret(env)),
+    oidcAudience: null,
+    oidcProjectNumber: null,
+    oidcWorkloadIdentityPoolId: null,
+    oidcWorkloadIdentityProviderId: null,
+    oidcServiceAccountEmail: null,
+    hasOidcConfig: false,
   } satisfies Omit<GcpCvOcrConfig, 'available' | 'unavailableReason'>;
 
   if (!enabled) {
@@ -247,7 +365,7 @@ export function resolveGcpCvOcrConfig(
     });
   }
 
-  if (!baseConfig.hasAuthSecret) {
+  if (authMode.authMode === 'hmac' && !baseConfig.hasAuthSecret) {
     return unavailableConfig({
       ...baseConfig,
       expiresAt: expiry.expiresAt,
@@ -257,8 +375,24 @@ export function resolveGcpCvOcrConfig(
     });
   }
 
+  const oidcConfig = parseOidcConfig(env, baseUrl.baseUrl);
+  if (authMode.authMode === 'oidc' && oidcConfig.reason) {
+    const { reason, ...parsedOidcConfig } = oidcConfig;
+    return unavailableConfig({
+      ...baseConfig,
+      ...parsedOidcConfig,
+      expiresAt: expiry.expiresAt,
+      baseUrl: baseUrl.baseUrl,
+      authMode: authMode.authMode,
+      reason,
+    });
+  }
+
+  const { reason: _oidcReason, ...parsedOidcConfig } = oidcConfig;
+
   return {
     ...baseConfig,
+    ...parsedOidcConfig,
     available: true,
     unavailableReason: null,
     expiresAt: expiry.expiresAt,

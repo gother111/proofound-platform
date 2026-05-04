@@ -26,6 +26,19 @@ function enabledEnv(overrides: Record<string, string | undefined> = {}) {
   };
 }
 
+function enabledOidcEnv(overrides: Record<string, string | undefined> = {}) {
+  return enabledEnv({
+    GCP_CV_OCR_AUTH_MODE: 'oidc',
+    GCP_CV_OCR_SHARED_SECRET: '',
+    GCP_CV_OCR_OIDC_PROJECT_NUMBER: '617801124609',
+    GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_POOL_ID: 'vercel',
+    GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_PROVIDER_ID: 'vercel',
+    GCP_CV_OCR_OIDC_SERVICE_ACCOUNT_EMAIL:
+      'vercel-cv-ocr-invoker@pf-cv-ocr-20260503.iam.gserviceaccount.com',
+    ...overrides,
+  });
+}
+
 function input(overrides: Partial<DocumentExtractionInput> = {}) {
   return {
     requestId: 'req_test_123',
@@ -150,6 +163,81 @@ describe('document extraction provider abstraction', () => {
       fallback: false,
     });
     expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses Vercel OIDC and Google identity tokens without a shared secret', async () => {
+    const fetchSpy = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const target = String(url);
+      if (target === 'https://sts.googleapis.com/v1/token') {
+        expect(String(init?.body)).toContain('subject_token=vercel-oidc-token');
+        expect(String(init?.body)).toContain('workloadIdentityPools%2Fvercel%2Fproviders%2Fvercel');
+        return new Response(JSON.stringify({ access_token: 'google-access-token' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      if (target.includes(':generateIdToken')) {
+        expect(init).toMatchObject({
+          method: 'POST',
+          headers: {
+            authorization: 'Bearer google-access-token',
+            'content-type': 'application/json; charset=utf-8',
+          },
+        });
+        expect(JSON.parse(String(init?.body))).toMatchObject({
+          audience: 'https://gcp-cv-ocr.example',
+          includeEmail: true,
+        });
+        return new Response(JSON.stringify({ token: 'cloud-run-id-token' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      expect(target).toBe('https://gcp-cv-ocr.example/extract');
+      expect(init?.headers).toMatchObject({
+        'content-type': 'application/json',
+        authorization: 'Bearer cloud-run-id-token',
+      });
+      expect(JSON.stringify(init?.headers)).not.toMatch(/x-proofound-signature|test-secret/i);
+      return new Response(
+        JSON.stringify({
+          status: 'completed',
+          provider: 'gcp_document_ai',
+          requestId: 'ocr_provider_request',
+          documentId: 'doc_provider_document',
+          pageCount: 1,
+          text: 'Synthetic OCR text from Cloud Run.',
+          metadata: {
+            confidence: 0.88,
+            elapsedMs: 123,
+          },
+          warnings: [],
+        }),
+        {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+          },
+        }
+      );
+    });
+
+    const result = await extractTextFromDocument(input(), {
+      env: enabledOidcEnv(),
+      now: NOW,
+      fetchImpl: fetchSpy as typeof fetch,
+      clock: () => 1777838400000,
+      vercelOidcTokenFactory: () => 'vercel-oidc-token',
+    });
+
+    expect(result).toMatchObject({
+      status: 'completed',
+      provider: 'gcp_document_ai',
+      fallback: false,
+    });
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
   it('maps GCP HTTP provider failures to fallback without exposing provider details', async () => {

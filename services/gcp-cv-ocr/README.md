@@ -11,9 +11,9 @@ It is intentionally not deployment wiring. It contains no GCP project IDs, proce
 
 ## Auth Posture
 
-Preferred deployment auth is private Cloud Run invocation through IAM-authenticated OIDC between the Proofound server boundary and Cloud Run. That should be used if the caller can mint short-lived identity tokens without committing long-lived keys.
+Preferred deployment auth is private Cloud Run invocation through IAM-authenticated OIDC between the Proofound server boundary and Cloud Run. Production deployments should use `GCP_CV_OCR_AUTH_MODE=oidc`, keep Cloud Run private, and grant `roles/run.invoker` only to the service account that Vercel can impersonate through Workload Identity Federation.
 
-This runnable service implements the fallback auth path: HMAC request verification with timestamp, nonce replay protection, and a request-body SHA-256 hash.
+This runnable service also implements the fallback auth path for short local/staging smoke windows: HMAC request verification with timestamp, nonce replay protection, and a request-body SHA-256 hash.
 
 Required request headers for `POST /extract`:
 
@@ -22,7 +22,7 @@ Required request headers for `POST /extract`:
 - `x-proofound-content-sha256`: hex SHA-256 of the exact request body
 - `x-proofound-signature`: `sha256=` plus HMAC-SHA256 over `timestamp.nonce.bodyHash`
 
-The shared secret is read from `GCP_CV_OCR_SHARED_SECRET` at runtime only.
+The shared secret is read from `GCP_CV_OCR_SHARED_SECRET` at runtime only and is not used by the production OIDC path.
 
 ## Local Service
 

@@ -9,6 +9,10 @@ import {
   type GcpCvOcrConfig,
 } from '@/lib/expertise/gcp-cv-ocr-config';
 import {
+  resolveGcpCvOcrOidcBearerToken,
+  type VercelOidcTokenFactory,
+} from '@/lib/expertise/gcp-cv-ocr-oidc';
+import {
   isLocalMockDocumentExtractionEnabled,
   localMockDocumentExtractionProvider,
   resolveLocalMockDocumentExtractionConfig,
@@ -197,6 +201,7 @@ export type ExtractTextFromDocumentOptions = {
   timeoutMs?: number;
   clock?: () => number;
   nonceFactory?: () => string;
+  vercelOidcTokenFactory?: VercelOidcTokenFactory;
 };
 
 export class DocumentExtractionProviderError extends Error {
@@ -243,23 +248,26 @@ export class GcpCvOcrHttpDocumentExtractionProvider implements DocumentExtractio
   readonly provider = 'gcp_document_ai' as const;
 
   private readonly config: GcpCvOcrConfig;
-  private readonly secret: string;
+  private readonly secret: string | null;
   private readonly fetchImpl: typeof fetch;
   private readonly clock: () => number;
   private readonly nonceFactory: () => string;
+  private readonly vercelOidcTokenFactory?: VercelOidcTokenFactory;
 
   constructor(params: {
     config: GcpCvOcrConfig;
-    secret: string;
+    secret?: string | null;
     fetchImpl?: typeof fetch;
     clock?: () => number;
     nonceFactory?: () => string;
+    vercelOidcTokenFactory?: VercelOidcTokenFactory;
   }) {
     this.config = params.config;
-    this.secret = params.secret;
+    this.secret = params.secret ?? null;
     this.fetchImpl = params.fetchImpl ?? fetch;
     this.clock = params.clock ?? Date.now;
     this.nonceFactory = params.nonceFactory ?? (() => `nonce_${randomUUID().replaceAll('-', '')}`);
+    this.vercelOidcTokenFactory = params.vercelOidcTokenFactory;
   }
 
   async extractTextFromDocument(
@@ -278,21 +286,10 @@ export class GcpCvOcrHttpDocumentExtractionProvider implements DocumentExtractio
       contentType: input.contentType,
       fileBase64: Buffer.from(fileBytes).toString('base64'),
     });
-    const timestamp = String(Math.floor(this.clock() / 1000));
-    const nonce = this.nonceFactory();
-    const bodyHash = createHash('sha256').update(rawBody).digest('hex');
-    const signature = `sha256=${createHmac('sha256', this.secret)
-      .update(`${timestamp}.${nonce}.${bodyHash}`)
-      .digest('hex')}`;
+    const headers = await this.buildAuthHeaders(rawBody);
     const response = await this.fetchImpl(`${this.config.baseUrl}/extract`, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-proofound-timestamp': timestamp,
-        'x-proofound-nonce': nonce,
-        'x-proofound-content-sha256': bodyHash,
-        'x-proofound-signature': signature,
-      },
+      headers,
       body: rawBody,
     });
 
@@ -317,6 +314,39 @@ export class GcpCvOcrHttpDocumentExtractionProvider implements DocumentExtractio
       warnings: parsed.warnings,
       fallback: false,
     });
+  }
+
+  private async buildAuthHeaders(rawBody: string): Promise<Record<string, string>> {
+    const headers: Record<string, string> = {
+      'content-type': 'application/json',
+    };
+
+    if (this.config.authMode === 'oidc') {
+      const token = await resolveGcpCvOcrOidcBearerToken({
+        config: this.config,
+        fetchImpl: this.fetchImpl,
+        vercelOidcTokenFactory: this.vercelOidcTokenFactory,
+        nowMs: this.clock,
+      });
+      headers.authorization = `Bearer ${token}`;
+      return headers;
+    }
+
+    if (!this.secret) {
+      throw new DocumentExtractionProviderError('GCP CV OCR auth secret is missing.', 'error');
+    }
+
+    const timestamp = String(Math.floor(this.clock() / 1000));
+    const nonce = this.nonceFactory();
+    const bodyHash = createHash('sha256').update(rawBody).digest('hex');
+    headers['x-proofound-timestamp'] = timestamp;
+    headers['x-proofound-nonce'] = nonce;
+    headers['x-proofound-content-sha256'] = bodyHash;
+    headers['x-proofound-signature'] = `sha256=${createHmac('sha256', this.secret)
+      .update(`${timestamp}.${nonce}.${bodyHash}`)
+      .digest('hex')}`;
+
+    return headers;
   }
 }
 
@@ -367,6 +397,7 @@ export async function extractTextFromDocument(
           fetchImpl: options.fetchImpl,
           clock,
           nonceFactory: options.nonceFactory,
+          vercelOidcTokenFactory: options.vercelOidcTokenFactory,
         }));
 
   try {
@@ -400,10 +431,11 @@ function createConfiguredGcpProvider(params: {
   fetchImpl?: typeof fetch;
   clock?: () => number;
   nonceFactory?: () => string;
+  vercelOidcTokenFactory?: VercelOidcTokenFactory;
 }): DocumentExtractionProvider {
   const secret = getGcpCvOcrAuthSecret(params.env);
 
-  if (!params.config.available || !secret) {
+  if (!params.config.available || (params.config.authMode === 'hmac' && !secret)) {
     return unavailableDocumentExtractionProvider;
   }
 
@@ -413,6 +445,7 @@ function createConfiguredGcpProvider(params: {
     fetchImpl: params.fetchImpl,
     clock: params.clock,
     nonceFactory: params.nonceFactory,
+    vercelOidcTokenFactory: params.vercelOidcTokenFactory,
   });
 }
 

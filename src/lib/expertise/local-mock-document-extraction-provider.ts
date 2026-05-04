@@ -75,6 +75,12 @@ export function resolveLocalMockDocumentExtractionConfig(
       DEFAULT_GLOBAL_DAILY_LIMIT
     ),
     hasAuthSecret: false,
+    oidcAudience: null,
+    oidcProjectNumber: null,
+    oidcWorkloadIdentityPoolId: null,
+    oidcWorkloadIdentityProviderId: null,
+    oidcServiceAccountEmail: null,
+    hasOidcConfig: false,
   };
 }
 

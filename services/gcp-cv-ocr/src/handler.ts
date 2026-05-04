@@ -62,20 +62,23 @@ export function createGcpCvOcrHandler(options: GcpCvOcrHandlerOptions = {}) {
     const requestId = requestIdFactory();
     const startedAt = nowMs();
     const rawBody = await request.text();
-    const auth = verifyHmacRequest({
-      headers: request.headers,
-      rawBody,
-      secret: env.GCP_CV_OCR_SHARED_SECRET?.trim() || null,
-      nowMs: startedAt,
-      nonceStore,
-    });
+    const authMode = resolveAuthMode(env);
+    if (authMode === 'hmac') {
+      const auth = verifyHmacRequest({
+        headers: request.headers,
+        rawBody,
+        secret: env.GCP_CV_OCR_SHARED_SECRET?.trim() || null,
+        nowMs: startedAt,
+        nonceStore,
+      });
 
-    if (!auth.ok) {
-      return safeErrorResponse(
-        401,
-        requestId,
-        auth.code === 'stale_timestamp' ? 'stale_timestamp' : 'unauthorized'
-      );
+      if (!auth.ok) {
+        return safeErrorResponse(
+          401,
+          requestId,
+          auth.code === 'stale_timestamp' ? 'stale_timestamp' : 'unauthorized'
+        );
+      }
     }
 
     if (isOcrProviderExpired(env.GCP_CV_OCR_EXPIRES_AT, startedAt)) {
@@ -135,6 +138,10 @@ export function createGcpCvOcrHandler(options: GcpCvOcrHandlerOptions = {}) {
       return safeErrorResponse(code === 'provider_timeout' ? 504 : 502, requestId, code);
     }
   };
+}
+
+function resolveAuthMode(env: Env): 'hmac' | 'oidc' {
+  return env.GCP_CV_OCR_AUTH_MODE?.trim().toLowerCase() === 'oidc' ? 'oidc' : 'hmac';
 }
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {

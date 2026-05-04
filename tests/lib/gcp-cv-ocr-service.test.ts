@@ -104,6 +104,36 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
     expect(body.error.code).toBe('unauthorized');
   });
 
+  it('accepts extract requests in OIDC mode after Cloud Run IAM has admitted the call', async () => {
+    const extractSpy = vi.fn(async () => ({
+      provider: 'mock' as const,
+      text: 'safe text',
+      confidence: 0.9,
+    }));
+    const response = await testHandler({
+      env: {
+        GCP_CV_OCR_AUTH_MODE: 'oidc',
+        GCP_CV_OCR_MAX_FILE_SIZE_MB: '1',
+        GCP_CV_OCR_MAX_PAGES: '2',
+      },
+      provider: {
+        extract: extractSpy,
+      },
+    })(
+      new Request('https://ocr.example.test/extract', {
+        method: 'POST',
+        body: JSON.stringify(basePayload()),
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(extractSpy).toHaveBeenCalledTimes(1);
+    expect(await json(response)).toMatchObject({
+      status: 'completed',
+      provider: 'mock',
+    });
+  });
+
   it('rejects replayed nonces and old timestamps', async () => {
     const handler = testHandler();
     const first = await handler(signedRequest({ body: basePayload(), nonce: 'nonce-replay-1' }));

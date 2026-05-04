@@ -21,6 +21,19 @@ function enabledEnv(overrides: Record<string, string | undefined> = {}) {
   };
 }
 
+function enabledOidcEnv(overrides: Record<string, string | undefined> = {}) {
+  return enabledEnv({
+    GCP_CV_OCR_AUTH_MODE: 'oidc',
+    GCP_CV_OCR_SHARED_SECRET: '',
+    GCP_CV_OCR_OIDC_PROJECT_NUMBER: '617801124609',
+    GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_POOL_ID: 'vercel',
+    GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_PROVIDER_ID: 'vercel',
+    GCP_CV_OCR_OIDC_SERVICE_ACCOUNT_EMAIL:
+      'vercel-cv-ocr-invoker@pf-cv-ocr-20260503.iam.gserviceaccount.com',
+    ...overrides,
+  });
+}
+
 describe('GCP CV OCR safe status', () => {
   it('reports disabled without probing the provider', async () => {
     const fetchSpy = vi.fn();
@@ -94,6 +107,44 @@ describe('GCP CV OCR safe status', () => {
       cache: 'no-store',
       signal: expect.any(AbortSignal),
     });
+  });
+
+  it('uses OIDC bearer auth for provider health when configured', async () => {
+    const fetchSpy = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const target = String(url);
+      if (target === 'https://sts.googleapis.com/v1/token') {
+        return new Response(JSON.stringify({ access_token: 'google-access-token' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      if (target.includes(':generateIdToken')) {
+        return new Response(JSON.stringify({ token: 'cloud-run-id-token' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      expect(target).toBe('https://gcp-cv-ocr.example/health');
+      expect(init?.headers).toEqual({
+        authorization: 'Bearer cloud-run-id-token',
+      });
+      return new Response(JSON.stringify({ status: 'ok' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    });
+
+    await expect(
+      resolveGcpCvOcrSafeStatus({
+        env: enabledOidcEnv(),
+        now: NOW,
+        probeProvider: true,
+        fetchImpl: fetchSpy as typeof fetch,
+        vercelOidcTokenFactory: () => 'vercel-oidc-token',
+      })
+    ).resolves.toEqual({ status: 'provider reachable' });
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
   it('reports fallback when the provider health check fails', async () => {

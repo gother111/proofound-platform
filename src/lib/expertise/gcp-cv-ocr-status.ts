@@ -1,4 +1,8 @@
 import { resolveGcpCvOcrConfig } from '@/lib/expertise/gcp-cv-ocr-config';
+import {
+  resolveGcpCvOcrOidcBearerToken,
+  type VercelOidcTokenFactory,
+} from '@/lib/expertise/gcp-cv-ocr-oidc';
 
 export const GCP_CV_OCR_SAFE_STATUSES = [
   'disabled',
@@ -18,6 +22,7 @@ export type ResolveGcpCvOcrSafeStatusOptions = {
   probeProvider?: boolean;
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
+  vercelOidcTokenFactory?: VercelOidcTokenFactory;
 };
 
 export type GcpCvOcrSafeStatusReport = {
@@ -48,28 +53,35 @@ export async function resolveGcpCvOcrSafeStatus(
   }
 
   const reachable = await probeProviderHealth({
-    baseUrl: config.baseUrl,
+    config,
     fetchImpl: options.fetchImpl ?? fetch,
     timeoutMs: options.timeoutMs ?? DEFAULT_STATUS_TIMEOUT_MS,
+    vercelOidcTokenFactory: options.vercelOidcTokenFactory,
   });
 
   return { status: reachable ? 'provider reachable' : 'fallback' };
 }
 
 async function probeProviderHealth(params: {
-  baseUrl: string;
+  config: ReturnType<typeof resolveGcpCvOcrConfig>;
   fetchImpl: typeof fetch;
   timeoutMs: number;
+  vercelOidcTokenFactory?: VercelOidcTokenFactory;
 }): Promise<boolean> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), params.timeoutMs);
 
   try {
-    const response = await params.fetchImpl(`${params.baseUrl}/health`, {
+    const headers = await buildHealthAuthHeaders(params);
+    const init: RequestInit = {
       method: 'GET',
       cache: 'no-store',
       signal: controller.signal,
-    });
+    };
+    if (headers) {
+      init.headers = headers;
+    }
+    const response = await params.fetchImpl(`${params.config.baseUrl}/health`, init);
 
     if (!response.ok) {
       return false;
@@ -82,6 +94,25 @@ async function probeProviderHealth(params: {
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function buildHealthAuthHeaders(params: {
+  config: ReturnType<typeof resolveGcpCvOcrConfig>;
+  fetchImpl: typeof fetch;
+  vercelOidcTokenFactory?: VercelOidcTokenFactory;
+}): Promise<Record<string, string> | undefined> {
+  if (params.config.authMode !== 'oidc') {
+    return undefined;
+  }
+
+  const token = await resolveGcpCvOcrOidcBearerToken({
+    config: params.config,
+    fetchImpl: params.fetchImpl,
+    vercelOidcTokenFactory: params.vercelOidcTokenFactory,
+  });
+  return {
+    authorization: `Bearer ${token}`,
+  };
 }
 
 async function safeJson(response: Response): Promise<unknown> {

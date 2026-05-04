@@ -21,6 +21,19 @@ function enabledEnv(overrides: Record<string, string | undefined> = {}) {
   };
 }
 
+function enabledOidcEnv(overrides: Record<string, string | undefined> = {}) {
+  return enabledEnv({
+    GCP_CV_OCR_AUTH_MODE: 'oidc',
+    GCP_CV_OCR_SHARED_SECRET: '',
+    GCP_CV_OCR_OIDC_PROJECT_NUMBER: '617801124609',
+    GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_POOL_ID: 'vercel',
+    GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_PROVIDER_ID: 'vercel',
+    GCP_CV_OCR_OIDC_SERVICE_ACCOUNT_EMAIL:
+      'vercel-cv-ocr-invoker@pf-cv-ocr-20260503.iam.gserviceaccount.com',
+    ...overrides,
+  });
+}
+
 describe('GCP CV/OCR config helpers', () => {
   it('is disabled and unavailable by default', () => {
     const config = resolveGcpCvOcrConfig({}, NOW);
@@ -31,6 +44,7 @@ describe('GCP CV/OCR config helpers', () => {
     expect(config.baseUrl).toBeNull();
     expect(config.authMode).toBeNull();
     expect(config.hasAuthSecret).toBe(false);
+    expect(config.hasOidcConfig).toBe(false);
   });
 
   it('parses an enabled future-dated provider config without exposing the secret', () => {
@@ -53,6 +67,7 @@ describe('GCP CV/OCR config helpers', () => {
     expect(config.baseUrl).toBe('https://gcp-cv-ocr.example');
     expect(config.authMode).toBe('hmac');
     expect(config.hasAuthSecret).toBe(true);
+    expect(config.hasOidcConfig).toBe(false);
     expect(config).not.toHaveProperty('authSecret');
     expect(config.maxFileSizeMb).toBe(7);
     expect(config.maxFileSizeBytes).toBe(7 * 1024 * 1024);
@@ -63,6 +78,24 @@ describe('GCP CV/OCR config helpers', () => {
     expect(config.userDailyLimit).toBe(9);
     expect(config.globalDailyLimit).toBe(100);
     expect(getGcpCvOcrAuthSecret(enabledEnv())).toBe('test-secret');
+  });
+
+  it('parses an enabled future-dated provider config with OIDC instead of a shared secret', () => {
+    const config = resolveGcpCvOcrConfig(enabledOidcEnv(), NOW);
+
+    expect(config.available).toBe(true);
+    expect(config.unavailableReason).toBeNull();
+    expect(config.authMode).toBe('oidc');
+    expect(config.hasAuthSecret).toBe(false);
+    expect(config.hasOidcConfig).toBe(true);
+    expect(config.oidcAudience).toBe('https://gcp-cv-ocr.example');
+    expect(config.oidcProjectNumber).toBe('617801124609');
+    expect(config.oidcWorkloadIdentityPoolId).toBe('vercel');
+    expect(config.oidcWorkloadIdentityProviderId).toBe('vercel');
+    expect(config.oidcServiceAccountEmail).toBe(
+      'vercel-cv-ocr-invoker@pf-cv-ocr-20260503.iam.gserviceaccount.com'
+    );
+    expect(config).not.toHaveProperty('vercelOidcToken');
   });
 
   it('treats expired config as unavailable', () => {
@@ -123,6 +156,22 @@ describe('GCP CV/OCR config helpers', () => {
     expect(missingSecret.available).toBe(false);
     expect(missingSecret.unavailableReason).toBe('missing_shared_secret');
     expect(missingSecret.hasAuthSecret).toBe(false);
+  });
+
+  it('treats missing or invalid OIDC metadata as unavailable for OIDC mode', () => {
+    const missingOidc = resolveGcpCvOcrConfig(
+      enabledOidcEnv({ GCP_CV_OCR_OIDC_PROJECT_NUMBER: '' }),
+      NOW
+    );
+    const invalidOidc = resolveGcpCvOcrConfig(
+      enabledOidcEnv({ GCP_CV_OCR_OIDC_SERVICE_ACCOUNT_EMAIL: 'not-a-service-account' }),
+      NOW
+    );
+
+    expect(missingOidc.available).toBe(false);
+    expect(missingOidc.unavailableReason).toBe('missing_oidc_config');
+    expect(invalidOidc.available).toBe(false);
+    expect(invalidOidc.unavailableReason).toBe('invalid_oidc_config');
   });
 
   it('uses production-safe defaults without any client-exposed GCP config keys', () => {
