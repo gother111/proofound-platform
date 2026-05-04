@@ -38,7 +38,7 @@ describe('privacy preflight assistant', () => {
           {
             label: 'claim',
             value:
-              'Jane can be reached at jane@example.com. Token sk_test_1234567890abcdefghijklmnop. See Jane_Resume.pdf for Acme Climate AB.',
+              'Jane can be reached at jane@example.com or +46 70 123 45 67 for work with Acme Climate AB.',
             visibility: 'visible',
           },
         ],
@@ -52,12 +52,10 @@ describe('privacy preflight assistant', () => {
     expect(responseJsonSchema?.required).toEqual(['notes']);
     expect(responseJsonSchema?.properties?.notes?.maxItems).toBe(6);
     expect(prompt).not.toContain('jane@example.com');
-    expect(prompt).not.toContain('sk_test_1234567890abcdefghijklmnop');
-    expect(prompt).not.toContain('Jane_Resume.pdf');
+    expect(prompt).not.toContain('+46 70 123 45 67');
     expect(prompt).not.toContain('Acme Climate AB');
     expect(prompt).toContain('[redacted email]');
-    expect(prompt).toContain('[redacted access token]');
-    expect(prompt).toContain('[redacted filename]');
+    expect(prompt).toContain('[redacted phone]');
     expect(prompt).toContain('[redacted hidden term]');
     expect(result.riskLevel).toBe('high');
     expect(result.modelReview.used).toBe(true);

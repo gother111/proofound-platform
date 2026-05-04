@@ -11,10 +11,14 @@ import {
   hashAiContent,
   recordAiSuggestionEvent,
 } from '@/lib/ai/usage-ledger';
+import { containsForbiddenAiOutput } from '@/lib/ai/request-safety';
 import { isPublicSafeVisibility } from '@/lib/privacy/effective-visibility';
 import type { CanonicalProofPackAggregate } from '@/lib/proofs/canonical-pack';
 import { getCanonicalProofPackAggregate } from '@/lib/proofs/canonical-pack';
-import { redactProofPackAssistantText } from '@/lib/ai/proof-pack-assistant';
+import {
+  collectAiHiddenIdentityTerms,
+  redactProofPackAssistantText,
+} from '@/lib/ai/proof-pack-assistant';
 
 export const VERIFICATION_COMPOSER_FEATURE = 'verification_request_composer';
 export const VERIFICATION_COMPOSER_PROMPT_VERSION = 'ai-verification-composer-v1';
@@ -110,8 +114,12 @@ function mergeCounts(target: Record<string, number>, source: Record<string, numb
   }
 }
 
-function redactedNullable(value: string | null | undefined, counts: Record<string, number>) {
-  const redacted = redactProofPackAssistantText(value);
+function redactedNullableWithHiddenTerms(
+  value: string | null | undefined,
+  counts: Record<string, number>,
+  hiddenIdentityTerms: string[]
+) {
+  const redacted = redactProofPackAssistantText(value, hiddenIdentityTerms);
   mergeCounts(counts, redacted.counts);
   return redacted.value.length > 0 ? redacted.value : null;
 }
@@ -174,43 +182,59 @@ export function buildSanitizedVerificationComposerContext(params: {
 }): SanitizedComposerContext {
   const contract = params.aggregate.publicSafe?.contract ?? params.aggregate.ownerFull.contract;
   const redactionSummary: Record<string, number> = {};
+  const hiddenIdentityTerms = collectAiHiddenIdentityTerms(params.aggregate);
   const selected = new Set(params.selectedPublicSafeProofFields);
   const selectedFields: SanitizedComposerContext['selectedFields'] = {};
 
   if (selected.has('title')) {
-    selectedFields.title = redactedNullable(contract.title, redactionSummary);
+    selectedFields.title = redactedNullableWithHiddenTerms(
+      contract.title,
+      redactionSummary,
+      hiddenIdentityTerms
+    );
   }
   if (selected.has('claim_statement')) {
-    selectedFields.claim_statement = redactedNullable(
+    selectedFields.claim_statement = redactedNullableWithHiddenTerms(
       contract.primaryClaim.statement,
-      redactionSummary
+      redactionSummary,
+      hiddenIdentityTerms
     );
   }
   if (selected.has('ownership_statement')) {
-    selectedFields.ownership_statement = redactedNullable(
+    selectedFields.ownership_statement = redactedNullableWithHiddenTerms(
       contract.ownershipStatement,
-      redactionSummary
+      redactionSummary,
+      hiddenIdentityTerms
     );
   }
   if (selected.has('outcome_summary')) {
-    selectedFields.outcome_summary = redactedNullable(contract.outcomeSummary, redactionSummary);
+    selectedFields.outcome_summary = redactedNullableWithHiddenTerms(
+      contract.outcomeSummary,
+      redactionSummary,
+      hiddenIdentityTerms
+    );
   }
   if (selected.has('timeframe')) {
-    selectedFields.timeframe = redactedNullable(
+    selectedFields.timeframe = redactedNullableWithHiddenTerms(
       compactTimeframe(contract.timeframe),
-      redactionSummary
+      redactionSummary,
+      hiddenIdentityTerms
     );
   }
   if (selected.has('evidence_titles')) {
     selectedFields.evidence_titles = publicSafeEvidenceTitles(params.aggregate)
       .slice(0, 5)
-      .map((title) => redactedNullable(title, redactionSummary))
+      .map((title) => redactedNullableWithHiddenTerms(title, redactionSummary, hiddenIdentityTerms))
       .filter((title): title is string => Boolean(title));
   }
 
   const claimScope =
-    redactedNullable(contract.primaryClaim.statement, redactionSummary) ||
-    redactedNullable(contract.title, redactionSummary) ||
+    redactedNullableWithHiddenTerms(
+      contract.primaryClaim.statement,
+      redactionSummary,
+      hiddenIdentityTerms
+    ) ||
+    redactedNullableWithHiddenTerms(contract.title, redactionSummary, hiddenIdentityTerms) ||
     'One scoped Proof Pack claim';
 
   return {
@@ -225,7 +249,7 @@ export function buildSanitizedVerificationComposerContext(params: {
       'Use only the selected fields in this JSON context.',
       'Do not include hidden private context, private files, verifier email, or account metadata.',
       'Ask about one primary claim scope only.',
-      'Do not ask for general praise or overall candidate quality assessment.',
+      'Do not ask for general praise, candidate evaluation, suitability, trust level, verification approval, interview, or hiring decisions.',
     ],
     redactionSummary,
   };
@@ -238,7 +262,7 @@ function buildPrompt(context: SanitizedComposerContext) {
     'Draft concise, respectful verification request copy for one claim-scoped Proof Pack request.',
     'Use only the selected public-safe proof fields in the JSON context.',
     'Never include verifier email or hidden/private context.',
-    'Do not ask for general praise, endorsement, ranking, hiring fit, or overall candidate quality.',
+    'Do not ask for general praise, endorsement, candidate evaluation, suitability, trust level, verification approval, interview, or hiring decisions.',
     'Generate exactly one primary claim scope. If the selected fields are too broad, keep the draft narrow and add warnings.',
     'Return JSON only with keys: subject, message, claimScope, verificationQuestions, privacyNotes, tooBroadWarnings.',
     '',
@@ -286,7 +310,7 @@ function sanitizeComposerOutput(
 ): VerificationComposerResponse {
   const sanitize = (value: string) => redactProofPackAssistantText(value).value;
   const forbiddenPattern =
-    /\b(?:praise|endorse(?:ment)?|overall candidate|candidate quality|hire|hiring fit|rank|score|recommend(?:ation)?)\b/i;
+    /\b(?:praise|endorse(?:ment)?|overall candidate|candidate quality|hire|hiring fit|rank|ranking|score|fit score|suitability\s+judg(?:e|ment)|verification\s+approval|trust\s+level|best\s+candidate|should\s+hire|recommended\s+to\s+interview|recommend(?:ation)?)\b/i;
   const tooBroadWarnings = new Set(response.tooBroadWarnings.map(sanitize));
 
   const questions = response.verificationQuestions
@@ -294,9 +318,11 @@ function sanitizeComposerOutput(
     .filter((question) => question.length > 0)
     .slice(0, 5);
 
-  const filteredQuestions = questions.filter((question) => !forbiddenPattern.test(question));
+  const filteredQuestions = questions.filter(
+    (question) => !forbiddenPattern.test(question) && !containsForbiddenAiOutput(question)
+  );
   if (filteredQuestions.length !== questions.length) {
-    tooBroadWarnings.add('Removed a question that asked for praise or candidate quality judgment.');
+    tooBroadWarnings.add('Removed a question that crossed Proofound verification boundaries.');
   }
   const fallback = deterministicFallback(context);
   const subject = sanitize(response.subject);
@@ -306,16 +332,25 @@ function sanitizeComposerOutput(
   if (
     forbiddenPattern.test(subject) ||
     forbiddenPattern.test(message) ||
-    forbiddenPattern.test(claimScope)
+    forbiddenPattern.test(claimScope) ||
+    containsForbiddenAiOutput({ subject, message, claimScope })
   ) {
-    tooBroadWarnings.add('Removed draft text that asked for praise or candidate quality judgment.');
+    tooBroadWarnings.add('Removed draft text that crossed Proofound verification boundaries.');
   }
 
   return {
     subject:
-      subject && !forbiddenPattern.test(subject) ? subject : 'Proofound verification request',
-    message: message && !forbiddenPattern.test(message) ? message : fallback.message,
-    claimScope: claimScope && !forbiddenPattern.test(claimScope) ? claimScope : context.claimScope,
+      subject && !forbiddenPattern.test(subject) && !containsForbiddenAiOutput(subject)
+        ? subject
+        : 'Proofound verification request',
+    message:
+      message && !forbiddenPattern.test(message) && !containsForbiddenAiOutput(message)
+        ? message
+        : fallback.message,
+    claimScope:
+      claimScope && !forbiddenPattern.test(claimScope) && !containsForbiddenAiOutput(claimScope)
+        ? claimScope
+        : context.claimScope,
     verificationQuestions:
       filteredQuestions.length > 0 ? filteredQuestions : fallback.verificationQuestions,
     privacyNotes: response.privacyNotes.map(sanitize).filter(Boolean).slice(0, 8),
@@ -453,11 +488,12 @@ export async function composeVerificationRequestForUser(
     };
   } catch (error) {
     if (error instanceof AiProviderError) {
+      const fallbackWarning =
+        error.code === 'budget_exceeded'
+          ? 'AI suggestions are temporarily unavailable; manual editing still works.'
+          : 'AI provider was unavailable, so Proofound returned a deterministic draft.';
       return {
-        ...deterministicFallback(
-          context,
-          'AI provider was unavailable, so Proofound returned a deterministic draft.'
-        ),
+        ...deterministicFallback(context, fallbackWarning),
         fallback: true,
       };
     }

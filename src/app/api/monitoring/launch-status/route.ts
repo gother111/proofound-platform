@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 
+import { getStartFromCvLaunchSummary } from '@/lib/ai/start-from-cv';
 import { getAiLaunchOperationalSummary } from '@/lib/ai/usage-ledger';
 import { requireInternalOpsRequest } from '@/lib/api/cron-auth';
 import { getEmailProviderDependencyStatus } from '@/lib/email/config';
+import { resolveGcpCvOcrSafeStatus } from '@/lib/expertise/gcp-cv-ocr-status';
 import { buildLaunchStatusReport } from '@/lib/launch/status-report';
 import { getRateLimitDependencyStatus } from '@/lib/rate-limit/index';
 import {
@@ -59,6 +61,8 @@ export async function GET(request: Request) {
       liveRefresh: liveRefreshOverride,
     });
     const aiSummary = await getAiLaunchOperationalSummary();
+    const startFromCvSummary = getStartFromCvLaunchSummary();
+    const gcpOcrSummary = await resolveGcpCvOcrSafeStatus({ probeProvider: false });
     const rateLimitDependency = getRateLimitDependencyStatus();
     const emailProviderDependency = getEmailProviderDependencyStatus();
     const dependencyReasons = [];
@@ -164,6 +168,111 @@ export async function GET(request: Request) {
       });
     }
 
+    if (aiSummary.aiAssistantsEnabled && aiSummary.aiBudgetState === 'ok') {
+      if (aiSummary.aiConfiguredModel !== 'gemini-3.1-flash-lite-preview') {
+        dependencies.aiConfiguredModel = {
+          ok: false,
+          required: true,
+          configured: aiSummary.aiConfiguredModel,
+          expected: 'gemini-3.1-flash-lite-preview',
+        };
+        dependencyReasons.push({
+          code: 'ai_default_model_mismatch' as const,
+          message:
+            'Launch readiness is blocked because the configured AI default model does not match the verified production target.',
+          monitorKeys: ['ai_provider_model'],
+          source: 'dependency' as const,
+          freshnessState: 'fresh' as const,
+          checkedAt: [report.generatedAt],
+          lastSuccessfulCheckedAt: [null],
+          liveRefreshAttempted: report.liveRefresh.attempted,
+        });
+      }
+
+      if (!aiSummary.aiLastSuccessfulProviderSmokeAt) {
+        dependencies.aiProviderSmoke = {
+          ok: false,
+          required: true,
+          configured: false,
+          model: aiSummary.aiConfiguredModel,
+        };
+        dependencyReasons.push({
+          code: 'ai_provider_smoke_missing' as const,
+          message:
+            'Launch readiness is blocked because no successful live AI provider smoke is recorded for the configured model.',
+          monitorKeys: ['ai_provider_smoke'],
+          source: 'dependency' as const,
+          freshnessState: 'missing' as const,
+          checkedAt: [report.generatedAt],
+          lastSuccessfulCheckedAt: [null],
+          liveRefreshAttempted: report.liveRefresh.attempted,
+        });
+      }
+
+      if (aiSummary.aiFallbackModelState === 'configured_unverified') {
+        dependencies.aiFallbackModel = {
+          ok: false,
+          required: false,
+          configured: aiSummary.aiFallbackModel,
+          verified: false,
+        };
+        dependencyReasons.push({
+          code: 'ai_fallback_model_unverified' as const,
+          message:
+            'Launch readiness is blocked because an AI fallback model is configured without successful live-provider verification.',
+          monitorKeys: ['ai_provider_fallback'],
+          source: 'dependency' as const,
+          freshnessState: 'missing' as const,
+          checkedAt: [report.generatedAt],
+          lastSuccessfulCheckedAt: [null],
+          liveRefreshAttempted: report.liveRefresh.attempted,
+        });
+      }
+    }
+
+    if (gcpOcrSummary.enabled && !gcpOcrSummary.available) {
+      dependencies.gcpOcr = {
+        ok: false,
+        required: false,
+        configured: false,
+        status: gcpOcrSummary.status,
+        unavailableReason: gcpOcrSummary.unavailableReason,
+        expiresAt: gcpOcrSummary.expiresAt,
+        hardBudgetCapConfigured: gcpOcrSummary.hardBudgetCapConfigured,
+        budgetCapExhausted: gcpOcrSummary.budgetCapExhausted,
+        cloudRunMaxInstancesDocumented: gcpOcrSummary.cloudRunMaxInstancesDocumented,
+        publicInvocation: gcpOcrSummary.publicInvocation,
+      };
+      dependencyReasons.push({
+        code: `gcp_ocr_${gcpOcrSummary.unavailableReason ?? 'not_ready'}` as const,
+        message:
+          'Launch readiness is blocked because GCP OCR is enabled but its cost, expiry, auth, provider, retention, or Cloud Run governance gate is not ready.',
+        monitorKeys: ['gcp_ocr_governance'],
+        source: 'dependency' as const,
+        freshnessState: 'fresh' as const,
+        checkedAt: [report.generatedAt],
+        lastSuccessfulCheckedAt: [null],
+        liveRefreshAttempted: report.liveRefresh.attempted,
+      });
+    }
+
+    if (startFromCvSummary.enabled && !startFromCvSummary.ok) {
+      dependencies.startFromCv = {
+        ...startFromCvSummary,
+      };
+      dependencyReasons.push({
+        code: 'start_from_cv_beta_blocked' as const,
+        message:
+          'Launch readiness is blocked because Start from CV beta is enabled with unsafe or incomplete gates.',
+        monitorKeys: ['start_from_cv_beta'],
+        source: 'dependency' as const,
+        freshnessState: 'fresh' as const,
+        checkedAt: [report.generatedAt],
+        lastSuccessfulCheckedAt: [null],
+        liveRefreshAttempted: report.liveRefresh.attempted,
+      });
+    }
+
     const responseBody =
       dependencyReasons.length === 0
         ? {
@@ -171,6 +280,8 @@ export async function GET(request: Request) {
             summary: {
               ...report.summary,
               ...aiSummary,
+              startFromCvBeta: startFromCvSummary,
+              gcpOcr: gcpOcrSummary,
             },
           }
         : {
@@ -181,6 +292,8 @@ export async function GET(request: Request) {
             summary: {
               ...report.summary,
               ...aiSummary,
+              startFromCvBeta: startFromCvSummary,
+              gcpOcr: gcpOcrSummary,
               blockedMonitors: report.summary.blockedMonitors + dependencyReasons.length,
             },
             notReadyReasons: [...report.notReadyReasons, ...dependencyReasons],

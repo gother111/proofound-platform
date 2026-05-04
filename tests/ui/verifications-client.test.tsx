@@ -80,6 +80,15 @@ function makeRequest(overrides: Partial<VerificationRequest> = {}): Verification
 describe('VerificationsClient', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input) === '/api/feature-flags') {
+        return {
+          ok: true,
+          json: async () => ({ flags: { assistiveAiUi: true } }),
+        } as Response;
+      }
+      throw new Error(`Unexpected fetch call: ${String(input)}`);
+    }) as any;
     apiFetchMock.mockResolvedValue({
       ok: true,
       json: async () => ({ success: true }),
@@ -193,6 +202,7 @@ describe('VerificationsClient', () => {
         return {
           ok: true,
           json: async () => ({
+            suggestionId: '33333333-3333-4333-8333-333333333333',
             subject: 'Can you confirm this TypeScript claim?',
             message: 'Please confirm this one TypeScript claim from direct observation.',
             claimScope: 'I used TypeScript in a production migration.',
@@ -207,6 +217,13 @@ describe('VerificationsClient', () => {
         return {
           ok: true,
           json: async () => ({ request: { id: 'request-1' } }),
+        };
+      }
+
+      if (url === '/api/ai/suggestions/events') {
+        return {
+          ok: true,
+          json: async () => ({ ok: true }),
         };
       }
 
@@ -235,16 +252,15 @@ describe('VerificationsClient', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /^Draft verification request$/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /^Draft scoped request$/i }));
 
     const dialog = screen.getByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft verification request$/i }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft scoped request$/i }));
 
     await screen.findByDisplayValue(
       'Please confirm this one TypeScript claim from direct observation.'
     );
 
-    expect(apiFetchMock).toHaveBeenCalledTimes(1);
     expect(apiFetchMock).toHaveBeenCalledWith(
       '/api/ai/verifications/compose',
       expect.objectContaining({ method: 'POST' })
@@ -273,6 +289,38 @@ describe('VerificationsClient', () => {
       skillId: '22222222-2222-4222-8222-222222222222',
       verifierEmail: 'mentor@example.com',
       message: 'Please confirm this one TypeScript claim from direct observation.',
+    });
+
+    expect(apiFetchMock).toHaveBeenCalledWith(
+      '/api/ai/suggestions/events',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"eventType":"published"'),
+      })
+    );
+    const eventBodies = apiFetchMock.mock.calls
+      .filter((call) => call[0] === '/api/ai/suggestions/events')
+      .map((call) => String(call[1]?.body));
+    expect(eventBodies.join('\n')).not.toContain('mentor@example.com');
+    expect(eventBodies.join('\n')).not.toContain(
+      'Please confirm this one TypeScript claim from direct observation.'
+    );
+  });
+
+  it('hides the scoped request composer when assistive AI UI is disabled', async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ flags: { assistiveAiUi: false } }),
+    });
+
+    render(
+      <VerificationsClient incomingRequests={[]} sentRequests={[]} userEmail="me@proofound.io" />
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: /^Draft scoped request$/i })
+      ).not.toBeInTheDocument();
     });
   });
 

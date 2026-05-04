@@ -55,6 +55,7 @@ describe('launch gate package configuration', () => {
       'tests/lib/cv-import-suggest-1000-benchmark.test.ts'
     );
     expect(scripts['test:launch:smoke']).toBe('node --import tsx ./scripts/launch-smoke-runner.ts');
+    expect(scripts['ai:provider:smoke']).toBe('node --import tsx ./scripts/ai-provider-smoke.ts');
     expect(scripts['monitor:launch']).toBe(
       'node --import tsx ./scripts/run-launch-synthetic-monitors.ts'
     );

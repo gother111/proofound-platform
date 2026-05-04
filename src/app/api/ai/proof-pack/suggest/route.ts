@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireApiAuthContext } from '@/lib/auth';
+import {
+  buildAiAssistKillSwitchResponse,
+  isAiAssistDisabledByKillSwitch,
+} from '@/lib/ai/kill-switches';
 import { addUnsafeAiRequestPayloadIssue } from '@/lib/ai/request-safety';
 import { suggestProofPackForUser } from '@/lib/ai/proof-pack-assistant';
+import { safeApiErrorResponse, safeValidationErrorResponse } from '@/lib/api/errors';
 
 const ProofPackAssistantRequestSchema = z
   .object({
@@ -20,6 +25,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    if (isAiAssistDisabledByKillSwitch('proof_pack_assistant')) {
+      return NextResponse.json(buildAiAssistKillSwitchResponse('proof_pack_assistant'), {
+        status: 503,
+      });
+    }
+
     const body = await request.json();
     const payload = ProofPackAssistantRequestSchema.parse(body);
     const requestId = crypto.randomUUID();
@@ -34,24 +45,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(suggestion);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          message: error.issues[0]?.message || 'Invalid Proof Pack assistant request.',
-          details: error.issues,
-        },
-        { status: 400 }
-      );
+      return safeValidationErrorResponse({
+        error,
+        message: 'Validation failed',
+      });
     }
 
     if (error instanceof Error && error.message === 'PROOF_PACK_NOT_FOUND') {
       return NextResponse.json({ error: 'Proof Pack not found' }, { status: 404 });
     }
 
-    console.error('Proof Pack assistant failed:', error);
-    return NextResponse.json(
-      { error: 'Failed to suggest Proof Pack improvements' },
-      { status: 500 }
-    );
+    return safeApiErrorResponse({
+      event: 'ai.proof_pack_assistant.failed',
+      error,
+      publicMessage: 'Failed to suggest Proof Pack improvements',
+    });
   }
 }

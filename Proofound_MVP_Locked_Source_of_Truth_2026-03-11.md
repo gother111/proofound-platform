@@ -1,7 +1,7 @@
 # Proofound MVP — Locked Source of Truth
 
 > Doc Class: `active`
-> Last Verified: `2026-05-03`
+> Last Verified: `2026-05-04`
 
 **Status:** Locked for MVP planning and implementation  
 **Date:** 2026-03-11  
@@ -1377,3 +1377,38 @@ It includes private contextual scaffolding, bounded verification, and an explici
 It excludes generic HR SaaS sprawl, public marketplace sprawl, vanity mechanics, and integration-heavy replacement ambitions.
 
 That is the MVP to build.
+
+---
+
+## Appendix A. Controlled AI/OCR Rollout Boundary
+
+This appendix does not change the locked MVP. It only records the allowed release boundary for optional assistive AI and the temporary OCR beta.
+
+Production-eligible after gates:
+
+- Proof Pack Assistant
+- Assignment Clarity Assistant
+- Verification Request Composer
+- Privacy Preflight
+- Suggestion Event Tracking
+
+Gemini assistive AI may be production-eligible only after live model smoke, app-level hard caps, launch-status checks, privacy tests, and raw-prompt logging checks pass.
+
+Invite-only production beta:
+
+- Proof Artifact Text Extraction using Google Cloud Document AI OCR
+
+The OCR beta is not CV import. OCR output is draft text only and must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or hiring-decision state.
+
+OCR requires explicit user consent per document and must be feature-flagged, invite-gated, page-limited, file-size-limited, spend-capped, and safe to disable. Google Cloud budgets are alerts only; hard caps must be enforced in app/service code. Cloud Run max instances starts at `1` and must not exceed `3` during beta.
+
+The temporary Google Cloud credit window is expected to expire around `2026-08-03`; the disable-or-pay decision is due by `2026-07-24`.
+
+Excluded:
+
+- CV import wizard
+- AI candidate scoring, ranking, shortlisting, suitability judgments, hiring recommendations, verification decisions, or trust-state decisions
+- Gemini skill extractor for employer review
+- taxonomy shortlist or reranker
+- Cloud Vision OCR
+- moving core infrastructure from Vercel/Supabase to Google Cloud

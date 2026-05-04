@@ -8,6 +8,7 @@ import {
 
 const NOW = new Date('2026-05-03T12:00:00.000Z');
 const FUTURE = '2026-05-04T12:00:00.000Z';
+const PRODUCTION_FUTURE = '2026-06-04T12:00:00.000Z';
 const CONSERVATIVE_CREDIT_CUTOFF = '2026-08-03T00:00:00.000Z';
 
 function enabledEnv(overrides: Record<string, string | undefined> = {}) {
@@ -30,6 +31,26 @@ function enabledOidcEnv(overrides: Record<string, string | undefined> = {}) {
     GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_PROVIDER_ID: 'vercel',
     GCP_CV_OCR_OIDC_SERVICE_ACCOUNT_EMAIL:
       'vercel-cv-ocr-invoker@pf-cv-ocr-20260503.iam.gserviceaccount.com',
+    ...overrides,
+  });
+}
+
+function productionGcpGovernance(overrides: Record<string, string | undefined> = {}) {
+  return enabledOidcEnv({
+    VERCEL_ENV: 'production',
+    GCP_CV_OCR_EXPIRES_AT: PRODUCTION_FUTURE,
+    GCP_CV_OCR_PROVIDER: 'document_ai',
+    GCP_CV_OCR_BUDGET_ALERT_CONFIGURED: 'true',
+    GCP_CV_OCR_HARD_BUDGET_CAP_SEK: '200',
+    GCP_CV_OCR_MAX_FILE_SIZE_MB: '5',
+    GCP_CV_OCR_MAX_PAGES: '4',
+    GCP_CV_OCR_MAX_FILES_PER_REQUEST: '1',
+    GCP_CV_OCR_USER_DAILY_LIMIT: '5',
+    GCP_CV_OCR_GLOBAL_DAILY_LIMIT: '20',
+    GCP_CV_OCR_RETENTION_HOURS: '24',
+    GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES: '1',
+    GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES_DOCUMENTED: 'true',
+    GCP_CV_OCR_CLOUD_RUN_PUBLIC_INVOCATION: 'false',
     ...overrides,
   });
 }
@@ -177,7 +198,6 @@ describe('GCP CV/OCR config helpers', () => {
   it('uses production-safe defaults without any client-exposed GCP config keys', () => {
     const config = resolveGcpCvOcrConfig(
       enabledEnv({
-        NODE_ENV: 'production',
         GCP_CV_OCR_MAX_FILE_SIZE_MB: 'not-a-number',
         GCP_CV_OCR_MAX_PAGES: '-1',
         GCP_CV_OCR_ALLOWED_MIME_TYPES: 'application/x-msdownload',
@@ -189,11 +209,85 @@ describe('GCP CV/OCR config helpers', () => {
     expect(config.maxFileSizeMb).toBe(5);
     expect(config.maxPages).toBe(4);
     expect(config.maxFilesPerRequest).toBe(1);
-    expect(config.allowedMimeTypes).toEqual(['application/pdf']);
+    expect(config.allowedMimeTypes).toEqual(['application/pdf', 'image/jpeg', 'image/png']);
     expect(config.retentionHours).toBe(24);
     expect(config.userDailyLimit).toBe(5);
-    expect(config.globalDailyLimit).toBe(50);
+    expect(config.globalDailyLimit).toBe(20);
     expect(GCP_CV_OCR_ENV_KEYS.every((key) => !key.startsWith('NEXT_PUBLIC_'))).toBe(true);
+  });
+
+  it('blocks production readiness without explicit budget alerts and hard caps', () => {
+    const missingCaps = resolveGcpCvOcrConfig(
+      enabledOidcEnv({
+        VERCEL_ENV: 'production',
+        GCP_CV_OCR_EXPIRES_AT: PRODUCTION_FUTURE,
+      }),
+      NOW
+    );
+    const ready = resolveGcpCvOcrConfig(productionGcpGovernance(), NOW);
+
+    expect(missingCaps.available).toBe(false);
+    expect(missingCaps.unavailableReason).toBe('missing_page_caps');
+    expect(ready.available).toBe(true);
+    expect(ready.hasExplicitHardCaps).toBe(true);
+    expect(ready.budgetAlertConfigured).toBe(true);
+    expect(ready.hardBudgetCapSek).toBe(200);
+  });
+
+  it('blocks HMAC and retention above 24 hours in production', () => {
+    const hmac = resolveGcpCvOcrConfig(
+      productionGcpGovernance({
+        GCP_CV_OCR_AUTH_MODE: 'hmac',
+        GCP_CV_OCR_SHARED_SECRET: 'test-secret',
+      }),
+      NOW
+    );
+    const longRetention = resolveGcpCvOcrConfig(
+      productionGcpGovernance({
+        GCP_CV_OCR_RETENTION_HOURS: '25',
+      }),
+      NOW
+    );
+
+    expect(hmac.available).toBe(false);
+    expect(hmac.unavailableReason).toBe('hmac_not_allowed_in_production');
+    expect(longRetention.available).toBe(false);
+    expect(longRetention.unavailableReason).toBe('invalid_retention');
+  });
+
+  it('disables production OCR inside the emergency expiry window', () => {
+    const config = resolveGcpCvOcrConfig(
+      productionGcpGovernance({
+        GCP_CV_OCR_EXPIRES_AT: '2026-05-05T12:00:00.000Z',
+      }),
+      NOW
+    );
+
+    expect(config.available).toBe(false);
+    expect(config.unavailableReason).toBe('expiry_emergency_disable_window');
+  });
+
+  it('blocks production OCR without hard budget cap, with exhausted cap, public invocation, or Cloud Vision', () => {
+    expect(
+      resolveGcpCvOcrConfig(productionGcpGovernance({ GCP_CV_OCR_HARD_BUDGET_CAP_SEK: '' }), NOW)
+        .unavailableReason
+    ).toBe('missing_hard_budget_cap');
+    expect(
+      resolveGcpCvOcrConfig(
+        productionGcpGovernance({ GCP_CV_OCR_BUDGET_CAP_EXHAUSTED: 'true' }),
+        NOW
+      ).unavailableReason
+    ).toBe('budget_cap_exhausted');
+    expect(
+      resolveGcpCvOcrConfig(
+        productionGcpGovernance({ GCP_CV_OCR_CLOUD_RUN_PUBLIC_INVOCATION: 'true' }),
+        NOW
+      ).unavailableReason
+    ).toBe('cloud_run_public_invocation');
+    expect(
+      resolveGcpCvOcrConfig(productionGcpGovernance({ GCP_CV_OCR_PROVIDER: 'gcp_vision' }), NOW)
+        .unavailableReason
+    ).toBe('cloud_vision_provider_blocked');
   });
 
   it('does not accept NEXT_PUBLIC GCP, Gemini, or generic API secret env vars', () => {

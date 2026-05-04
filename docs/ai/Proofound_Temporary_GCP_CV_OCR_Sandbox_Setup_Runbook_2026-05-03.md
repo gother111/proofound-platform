@@ -1,14 +1,14 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-03`
+> Last Verified: `2026-05-04`
 
-# GCP CV/OCR Production Provider Setup Runbook
+# GCP Proof Artifact OCR Production-Beta Setup Runbook
 
-**Status:** Setup runbook for internal production provider smoke only
+**Status:** Setup runbook for invite-only Proof Artifact Text Extraction beta and synthetic provider smoke only
 **Date:** 2026-05-03
 **Audience:** Founder, engineering, ops, privacy, QA
 **Authority:** Subordinate to the locked MVP source of truth, aligned PRD/technical requirements, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, and `docs/ai/Proofound_Temporary_GCP_CV_OCR_Sandbox_Reference_2026-05-03.md`.
 
-This runbook is docs-only guidance. It must not be treated as approval to process real/pilot data, broaden the CV import surface, or make GCP a required launch dependency.
+This runbook is docs-only guidance. It must not be treated as approval to process real/pilot data outside invite-only Proof Artifact Text Extraction, broaden the CV import surface, or make GCP a required launch dependency.
 
 ---
 
@@ -17,13 +17,17 @@ This runbook is docs-only guidance. It must not be treated as approval to proces
 Do not create or enable the production provider smoke until all of these are true:
 
 - Google Cloud Billing has been checked in the console for exact credit expiration, remaining balance, and eligible products.
-- Billing confirms coverage for the products being used: Cloud Run, Document AI or Cloud Vision OCR, Cloud Storage if used, Secret Manager, Cloud Logging, and Cloud Monitoring.
+- Billing confirms coverage for the products being used: Cloud Run, Document AI, Cloud Storage if used, Secret Manager, Cloud Logging, and Cloud Monitoring.
 - Gemini API / AI Studio spend is not assumed to be covered. Do not route this sandbox through Gemini unless Billing explicitly confirms that specific product coverage.
 - A dedicated, approved GCP project is used. Do not attach this to any unrelated shared project.
 - Budget alerts are configured before the first billable call.
+- App/service-level hard caps are configured before the first billable call. Google Cloud budgets are alerts only, not hard caps.
 - Vercel env vars are disabled by default.
-- Only synthetic production smoke files are used until privacy review and route approval pass.
-- No real pilot data is processed until privacy review passes and explicit product/route approval exists.
+- Only synthetic smoke files are used until privacy review, invite-gate approval, and route approval pass.
+- No real beta data is processed until privacy review passes, explicit per-document consent exists, and the account is invite-gated into Proof Artifact Text Extraction.
+- Cloud Run max instances starts at `1` and must not exceed `3` during beta.
+- The disable-or-pay checkpoints are binding: review on `2026-07-15`, disabled-mode drill on `2026-07-25`, final disable-or-paid decision on `2026-08-01`, and free-credit expiry on `2026-08-03`.
+- Cloud Vision OCR is excluded from this rollout.
 
 If any item cannot be verified, stop at mock/local mode.
 
@@ -34,18 +38,18 @@ If any item cannot be verified, stop at mock/local mode.
 Use placeholders while following this runbook. Do not paste real credentials into tracked files.
 
 ```bash
-PROJECT_ID=proofound-cv-ocr-prod-YYYYMMDD
+PROJECT_ID=proofound-proof-artifact-ocr-prod-YYYYMMDD
 BILLING_ACCOUNT_ID=<billing-account-id>
 REGION=europe-west1
-SERVICE_NAME=proofound-cv-ocr
-SERVICE_ACCOUNT_NAME=cv-ocr-runner
+SERVICE_NAME=proofound-proof-artifact-ocr
+SERVICE_ACCOUNT_NAME=proof-artifact-ocr-runner
 SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 TEMP_BUCKET="${PROJECT_ID}-temp"
 DOC_AI_LOCATION=eu
 DOC_AI_PROCESSOR_ID=<processor-id-if-document-ai-is-used>
 ```
 
-Use a region/location that is compatible with the selected OCR product and the privacy review. Keep Cloud Run, GCS, and Document AI/Vision as close as practical to avoid avoidable latency and cost.
+Use a region/location that is compatible with Document AI and the privacy review. Keep Cloud Run, GCS, and Document AI as close as practical to avoid avoidable latency and cost.
 
 ---
 
@@ -57,10 +61,10 @@ Before setup:
 2. Record the exact credit expiration timestamp in the private ops note, not in this repo.
 3. Confirm the temporary credit covers the planned product SKUs.
 4. Confirm whether Document AI is covered.
-5. Confirm whether Cloud Vision OCR is covered.
-6. Confirm whether Cloud Run, Cloud Storage, Secret Manager, Logging, and Monitoring are covered.
-7. Confirm whether Gemini API / AI Studio is covered. If not explicitly confirmed, do not use it.
-8. Set `GCP_CV_OCR_EXPIRES_AT` to the verified expiration. If still unverified, keep the conservative cutoff at `2026-08-03T00:00:00Z`.
+5. Confirm whether Cloud Run, Cloud Storage, Secret Manager, Logging, and Monitoring are covered.
+6. Confirm whether Gemini API / AI Studio is covered. If not explicitly confirmed, do not use it.
+7. Set `GCP_CV_OCR_EXPIRES_AT` to the verified expiration. If still unverified, keep the conservative cutoff at `2026-08-03T00:00:00Z`.
+8. Record the disable-or-pay timeline: review on `2026-07-15`, disabled-mode drill on `2026-07-25`, final disable-or-paid decision on `2026-08-01`, and free-credit expiry on `2026-08-03`.
 
 Billing evidence should stay outside the repo because it can include personal billing details.
 
@@ -71,7 +75,7 @@ Billing evidence should stay outside the repo because it can include personal bi
 Create or select the approved OCR project and link billing only after eligibility is confirmed:
 
 ```bash
-gcloud projects create "$PROJECT_ID" --name="Proofound CV OCR"
+gcloud projects create "$PROJECT_ID" --name="Proofound Proof Artifact OCR"
 gcloud billing projects link "$PROJECT_ID" --billing-account="$BILLING_ACCOUNT_ID"
 gcloud config set project "$PROJECT_ID"
 ```
@@ -80,7 +84,7 @@ Apply labels for cleanup and cost reporting:
 
 ```bash
 gcloud projects update "$PROJECT_ID" \
-  --update-labels=owner=proofound,purpose=cv-ocr,expires=2026-08-03,environment=production
+  --update-labels=owner=proofound,purpose=proof-artifact-ocr,expires=2026-08-03,environment=production
 ```
 
 Do not use this project for real pilot files or long-lived infrastructure until privacy, billing, and route approval gates pass.
@@ -91,36 +95,34 @@ Do not use this project for real pilot files or long-lived infrastructure until 
 
 Create a small, founder-approved budget scoped to the sandbox project before enabling billable APIs.
 
-Minimum alert thresholds:
+Required alert thresholds:
 
-- 10% actual spend
 - 25% actual spend
 - 50% actual spend
 - 75% actual spend
 - 90% actual spend
 - 100% actual spend
-- 100% forecasted spend
 
-Budget alerts notify; they are not a substitute for app-level shutoff. Keep the app-level disabled flag and expiry guard even if budget alerts exist.
+Budget alerts notify; they are not hard caps. Actual usage must be controlled by app-level hard caps, per-user and global page/request caps, expiry gates, and kill switches.
 
 Example shape:
 
 ```bash
 gcloud billing budgets create \
   --billing-account="$BILLING_ACCOUNT_ID" \
-  --display-name="Proofound CV OCR Sandbox Budget" \
+  --display-name="Proofound Proof Artifact OCR Sandbox Budget" \
   --budget-amount=<amount-and-currency> \
   --filter-projects="projects/$PROJECT_ID" \
-  --threshold-rule=percent=0.10 \
   --threshold-rule=percent=0.25 \
   --threshold-rule=percent=0.50 \
   --threshold-rule=percent=0.75 \
   --threshold-rule=percent=0.90 \
-  --threshold-rule=percent=1.00 \
-  --threshold-rule=percent=1.00,basis=forecasted-spend
+  --threshold-rule=percent=1.00
 ```
 
 Do not commit the amount if it reveals personal billing details.
+
+The app-side hard cap must be set separately with `GCP_CV_OCR_HARD_BUDGET_CAP_SEK`. If that cap is missing or marked exhausted with `GCP_CV_OCR_BUDGET_CAP_EXHAUSTED=true`, production readiness must block OCR and the app must stay usable without provider calls.
 
 ---
 
@@ -146,19 +148,13 @@ Document AI path:
 gcloud services enable documentai.googleapis.com
 ```
 
-Cloud Vision path:
-
-```bash
-gcloud services enable vision.googleapis.com
-```
-
 Optional GCS temp bucket path:
 
 ```bash
 gcloud services enable storage.googleapis.com
 ```
 
-Do not enable Vertex AI, Gemini, BigQuery, or other APIs unless the product is explicitly approved and billing coverage is verified.
+Do not enable Cloud Vision, Vertex AI, Gemini, BigQuery, or other APIs unless a separate approved rollout changes this document.
 
 ---
 
@@ -168,7 +164,7 @@ Create one user-managed service account for Cloud Run:
 
 ```bash
 gcloud iam service-accounts create "$SERVICE_ACCOUNT_NAME" \
-  --display-name="Proofound CV OCR Cloud Run runner"
+  --display-name="Proofound Proof Artifact OCR Cloud Run runner"
 ```
 
 Grant only the roles required by the selected processor path.
@@ -180,8 +176,6 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
   --role="roles/documentai.apiUser"
 ```
-
-For Cloud Vision with GCS inputs/outputs, grant bucket-scoped storage access only after the bucket exists. Prefer direct upload/in-memory OCR for small synthetic images when possible.
 
 For Secret Manager access:
 
@@ -210,7 +204,7 @@ Required Cloud Run posture:
 
 - service account: `cv-ocr-runner`
 - unauthenticated invocations: disabled
-- max instances: low finite number, for example `1` or `2`
+- max instances: `1` initially; no more than `3` during beta
 - request timeout: at or below the app timeout budget
 - concurrency: conservative
 - CPU/memory: small synthetic-test size first
@@ -226,7 +220,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --source=<extractor-source-dir> \
   --service-account="$SERVICE_ACCOUNT_EMAIL" \
   --no-allow-unauthenticated \
-  --max-instances=2 \
+  --max-instances=1 \
   --timeout=20s \
   --set-env-vars="GCP_CV_OCR_MODE=production,GCP_CV_OCR_RETENTION_HOURS=24"
 ```
@@ -235,11 +229,7 @@ Only a server-side Vercel route or approved staging smoke client may invoke this
 
 ---
 
-## 8. Configure Document AI Or Cloud Vision OCR
-
-Choose exactly one primary OCR path for the first smoke.
-
-### Option A - Document AI
+## 8. Configure Document AI OCR
 
 Use Document AI when structured document OCR is needed and Billing confirms product eligibility.
 
@@ -260,20 +250,6 @@ Runtime must return only:
 - safe provider/status metadata
 
 It must not return original filename, GCS path, signed URL, processor ID, or raw provider debug payload.
-
-### Option B - Cloud Vision OCR
-
-Use Cloud Vision when the smoke can stay image/PDF OCR focused and Billing confirms product eligibility.
-
-Setup requirements:
-
-- Enable Vision API.
-- For PDF/TIFF asynchronous processing, use private GCS input/output buckets and bucket-scoped IAM.
-- For small synthetic images, prefer direct requests that do not require storage.
-- For GCS input, the runtime identity needs object read access.
-- For GCS output, the runtime identity needs object create access.
-
-Cloud Vision PDF/TIFF async output writes JSON to GCS, so the GCS lifecycle and cleanup rules are mandatory if this path is used.
 
 ---
 
@@ -368,17 +344,18 @@ GCP_CV_OCR_MAX_FILES_PER_REQUEST=1
 GCP_CV_OCR_ALLOWED_MIME_TYPES=application/pdf
 GCP_CV_OCR_RETENTION_HOURS=24
 GCP_CV_OCR_USER_DAILY_LIMIT=5
-GCP_CV_OCR_GLOBAL_DAILY_LIMIT=50
+GCP_CV_OCR_GLOBAL_DAILY_LIMIT=20
 GCP_CV_OCR_FAIL_OPEN_TO_FALLBACK=true
 ```
 
 Rules:
 
-- Production stays `GCP_CV_OCR_ENABLED=false` unless explicitly approved.
-- Preview/staging may be enabled only for synthetic smoke after billing and budget setup.
+- Production stays `GCP_CV_OCR_ENABLED=false` unless explicitly approved for invite-only Proof Artifact Text Extraction beta.
+- Preview/staging may be enabled only for synthetic smoke after billing, budget alerts, and app-level hard-cap setup.
 - Env changes require a redeploy before they affect Vercel deployments.
 - Missing base URL, missing secret, expired timestamp, budget exhaustion, or disabled flag must result in no Cloud Run call.
 - The OCR provider path uses the Cloud Run service account with Google ADC for Document AI. Do not add Google API keys, browser-created Gemini keys, or service account JSON for this path.
+- OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, or affect match/review/trust/hiring state.
 
 ---
 
@@ -414,6 +391,9 @@ No real pilot data may be processed until privacy review passes.
 Privacy review must verify:
 
 - user disclosure and consent for explicit upload
+- explicit consent is captured per document
+- invite-gate membership is checked server-side
+- page, file-size, rate, and app-level spend caps are enforced before Document AI calls
 - no hidden background OCR
 - no original filenames in provider calls or logs where avoidable
 - no raw text logging
@@ -443,16 +423,16 @@ approves the exact target project and resource names in a separate operations se
 4. Confirm the app status/fallback path reports OCR unavailable and does not call Cloud Run.
 5. Delete or disable the Cloud Run service.
 6. Delete Cloud Run revisions that are not required for approved audit retention.
-7. Delete or disable the Document AI processor. If Cloud Vision was used instead, disable Vision usage for the sandbox project after confirming no other approved sandbox flow needs it.
+7. Delete or disable the Document AI processor.
 8. Empty the private GCS temp bucket, verify it is empty, then delete the bucket.
-9. Delete the BigQuery benchmark dataset if one was created.
+9. Delete any approved synthetic-only benchmark dataset if one was created.
 10. Revoke IAM bindings granted for the sandbox runtime and deployment path.
 11. Delete runtime/deployer service accounts if they are not needed for another approved sandbox.
 12. Revoke and delete any service account keys if any were created despite the no-long-lived-key preference.
 13. Destroy Secret Manager secret versions and delete the secret containers when retention rules allow.
 14. Remove or destroy matching Vercel secrets/env values after the disabled deployment is confirmed.
 15. Review Cloud Logging for accidental sensitive payloads and apply approved retention/remediation.
-16. Verify Google Cloud Billing shows no new Cloud Run, Document AI, Vision, GCS, BigQuery, Secret Manager, Logging, or Monitoring charges after shutdown.
+16. Verify Google Cloud Billing shows no new Cloud Run, Document AI, GCS, Secret Manager, Logging, or Monitoring charges after shutdown.
 17. Keep budget alerts active until billing shows no new usage, then disable alerts only after all resources are removed.
 18. Verify the sandbox project has no billable resources left.
 19. Optionally unlink billing or delete the sandbox project.
@@ -478,9 +458,6 @@ this repo.
 - [Cloud Run deployment quickstart](https://cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-nodejs-service)
 - [Document AI OCR](https://cloud.google.com/document-ai/docs/process-documents-ocr)
 - [Document AI IAM roles](https://docs.cloud.google.com/document-ai/docs/access-control/iam-roles)
-- [Cloud Vision OCR](https://docs.cloud.google.com/vision/docs/ocr)
-- [Cloud Vision PDF/TIFF OCR](https://cloud.google.com/vision/docs/pdf)
-- [Cloud Vision authentication](https://cloud.google.com/vision/docs/authentication)
 - [Cloud Storage public access prevention](https://cloud.google.com/storage/docs/public-access-prevention)
 - [Cloud Storage object lifecycle management](https://cloud.google.com/storage/docs/lifecycle)
 - [Secret Manager documentation](https://cloud.google.com/secret-manager/docs)

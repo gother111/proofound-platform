@@ -5,6 +5,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
+  assertAiProductionHardCapConfigured,
   assertAiRawPromptLoggingAllowed,
   resolveAiRawPromptLoggingEnabled,
 } from '@/lib/ai/usage-ledger';
@@ -55,6 +56,18 @@ describe('AI launch no-go guardrails', () => {
     expect(() => assertAiRawPromptLoggingAllowed()).toThrow(/AI_RAW_PROMPT_LOGGING_ENABLED/);
   });
 
+  it('requires a monthly AI hard cap when assistants are enabled in production', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.AI_ASSISTANTS_ENABLED = 'true';
+    delete process.env.AI_MONTHLY_HARD_CAP_SEK;
+    delete process.env.AI_PROD_MONTHLY_HARD_CAP_SEK;
+
+    expect(() => assertAiProductionHardCapConfigured()).toThrow(/AI_ASSISTANTS_ENABLED=true/);
+
+    process.env.AI_PROD_MONTHLY_HARD_CAP_SEK = '700';
+    expect(() => assertAiProductionHardCapConfigured()).not.toThrow();
+  });
+
   it('keeps active AI route names away from scoring and ranking surfaces', async () => {
     const routeFiles = await collectRouteFiles(AI_ROUTE_ROOT);
     const routePaths = routeFiles.map(
@@ -65,6 +78,12 @@ describe('AI launch no-go guardrails', () => {
       '/api/ai/assignments/clarify',
       '/api/ai/privacy-preflight/check',
       '/api/ai/proof-pack/suggest',
+      '/api/ai/start-from-cv/sessions/[sessionId]/accept',
+      '/api/ai/start-from-cv/sessions/[sessionId]/discard',
+      '/api/ai/start-from-cv/sessions/[sessionId]/extract',
+      '/api/ai/start-from-cv/sessions/[sessionId]',
+      '/api/ai/start-from-cv/sessions',
+      '/api/ai/start-from-cv/status',
       '/api/ai/suggestions/events',
       '/api/ai/verifications/compose',
     ]);

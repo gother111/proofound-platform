@@ -68,6 +68,8 @@ export async function GET() {
         killSwitchIntros: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.killSwitchIntros],
         killSwitchExactRank: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.killSwitchExactRank],
         legacyMvpSurfaces: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.legacyMvpSurfaces],
+        assistiveAiUi: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.assistiveAiUi],
+        proofArtifactOcrBeta: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.proofArtifactOcrBeta],
       },
     });
   } catch (error) {

@@ -5,6 +5,7 @@ import {
   resolveConfiguredKeySlots,
   resolveGeminiApiKey,
   resolveGeminiModelDefault,
+  resolveGeminiModelFallback,
   resolveGeminiTaxonomyShortlistDocumentTimeoutMs,
   resolveGeminiTaxonomyShortlistQueryTimeoutMs,
   resolveGeminiTaxonomyShortlistSeedLimit,
@@ -26,6 +27,8 @@ describe('gemini config helpers', () => {
   const originalLegacyPrimary = process.env.CV_IMPORT_GEMINI_PRIMARY_API_KEY;
   const originalLegacySecondary = process.env.CV_IMPORT_GEMINI_SECONDARY_API_KEY;
   const originalDefaultModel = process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT;
+  const originalAiFallbackModel = process.env.AI_MODEL_FALLBACK;
+  const originalFallbackModel = process.env.CV_IMPORT_GEMINI_MODEL_FALLBACK;
   const originalSeedLimit = process.env.CV_IMPORT_GEMINI_SHORTLIST_SEED_LIMIT;
   const originalSeedTimeout = process.env.CV_IMPORT_GEMINI_SHORTLIST_QUERY_TIMEOUT_MS;
   const originalDocumentTimeout = process.env.CV_IMPORT_GEMINI_SHORTLIST_DOCUMENT_TIMEOUT_MS;
@@ -79,6 +82,18 @@ describe('gemini config helpers', () => {
       process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT = originalDefaultModel;
     }
 
+    if (originalAiFallbackModel === undefined) {
+      delete process.env.AI_MODEL_FALLBACK;
+    } else {
+      process.env.AI_MODEL_FALLBACK = originalAiFallbackModel;
+    }
+
+    if (originalFallbackModel === undefined) {
+      delete process.env.CV_IMPORT_GEMINI_MODEL_FALLBACK;
+    } else {
+      process.env.CV_IMPORT_GEMINI_MODEL_FALLBACK = originalFallbackModel;
+    }
+
     if (originalSeedLimit === undefined) {
       delete process.env.CV_IMPORT_GEMINI_SHORTLIST_SEED_LIMIT;
     } else {
@@ -115,10 +130,22 @@ describe('gemini config helpers', () => {
     expect(resolveGeminiTaxonomyGuidedEnabled()).toBe(false);
   });
 
-  it('uses gemini-2.5-flash-lite as default model when env override is unset', () => {
+  it('uses gemini-3.1-flash-lite-preview as default model when env override is unset', () => {
     delete process.env.AI_MODEL_DEFAULT;
     delete process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT;
-    expect(resolveGeminiModelDefault()).toBe('gemini-2.5-flash-lite');
+    expect(resolveGeminiModelDefault()).toBe('gemini-3.1-flash-lite-preview');
+  });
+
+  it('keeps the Gemini fallback model unset unless explicitly configured', () => {
+    delete process.env.AI_MODEL_FALLBACK;
+    delete process.env.CV_IMPORT_GEMINI_MODEL_FALLBACK;
+    expect(resolveGeminiModelFallback()).toBeNull();
+
+    process.env.CV_IMPORT_GEMINI_MODEL_FALLBACK = 'gemini-explicit-fallback';
+    expect(resolveGeminiModelFallback()).toBe('gemini-explicit-fallback');
+
+    process.env.AI_MODEL_FALLBACK = 'gemini-ai-fallback';
+    expect(resolveGeminiModelFallback()).toBe('gemini-ai-fallback');
   });
 
   it('prefers AI-facing Gemini key names and keeps legacy CV import names as fallback', () => {

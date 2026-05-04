@@ -1,3 +1,6 @@
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-04`
+
 # Admin Dashboard MVP Ops Review
 
 Date: 2026-05-03

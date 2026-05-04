@@ -68,8 +68,8 @@ function computeSourceHash(params: {
   return createHash('sha256').update(material).digest('hex');
 }
 
-function trimModelName(value: string): string {
-  return value.trim().toLowerCase();
+function trimModelName(value: string | null | undefined): string {
+  return value?.trim().toLowerCase() || '';
 }
 
 function renderShortlistForPrompt(shortlist: TaxonomyShortlistSkill[] | undefined): string {
@@ -562,6 +562,7 @@ export async function suggestSkillsWithGemini(params: {
         extraction = await extractWithRetries(defaultModel);
       } catch (error) {
         if (
+          fallbackModel &&
           trimModelName(fallbackModel) !== trimModelName(defaultModel) &&
           shouldRetryWithFallbackModel(error)
         ) {

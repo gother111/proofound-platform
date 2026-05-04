@@ -228,7 +228,7 @@ export const unavailableDocumentExtractionProvider: DocumentExtractionProvider =
 const GcpCvOcrServiceResponseSchema = z
   .object({
     status: z.enum(['completed']),
-    provider: z.enum(['gcp_document_ai', 'gcp_vision', 'mock']),
+    provider: z.enum(['gcp_document_ai', 'mock']),
     requestId: SafeIdSchema,
     documentId: SafeIdSchema,
     pageCount: z.number().int().min(0),
@@ -285,6 +285,7 @@ export class GcpCvOcrHttpDocumentExtractionProvider implements DocumentExtractio
     const rawBody = JSON.stringify({
       contentType: input.contentType,
       fileBase64: Buffer.from(fileBytes).toString('base64'),
+      requesterRef: createOpaqueRequesterRef(input),
     });
     const headers = await this.buildAuthHeaders(rawBody);
     const response = await this.fetchImpl(`${this.config.baseUrl}/extract`, {
@@ -542,6 +543,14 @@ function validateExtractionInputAgainstConfig(
   }
 
   return null;
+}
+
+function createOpaqueRequesterRef(input: DocumentExtractionInput): string {
+  const rawRef = input.userRef?.value ?? input.userId ?? input.requestId;
+  return `req_${createHash('sha256')
+    .update(`proofound-gcp-cv-ocr:${rawRef}`)
+    .digest('hex')
+    .slice(0, 32)}`;
 }
 
 function elapsedSince(startedAt: number, clock: () => number): number {

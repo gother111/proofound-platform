@@ -8,9 +8,16 @@ import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 
 export const dynamic = 'force-dynamic';
 
+const SuggestionFieldNameSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(120)
+  .regex(/^[a-z][a-z0-9_.:-]*$/i, 'Suggestion event fields must be stable field identifiers.');
+
 const FieldMetadataSchema = z
   .object({
-    field: z.string().trim().min(1).max(120),
+    field: SuggestionFieldNameSchema,
     edited: z.boolean().optional(),
     applied: z.boolean().optional(),
   })
@@ -20,13 +27,14 @@ const SuggestionEventRequestSchema = z
   .object({
     suggestionId: z.string().uuid(),
     eventType: z.enum(['viewed', 'accepted', 'edited', 'dismissed', 'published']),
-    field: z.string().trim().min(1).max(120).optional(),
+    field: SuggestionFieldNameSchema.optional(),
     fields: z.array(FieldMetadataSchema).max(30).optional(),
     metadata: z
       .object({
         source: z.string().trim().max(80).optional(),
         uiSurface: z.string().trim().max(120).optional(),
       })
+      .strict()
       .optional(),
   })
   .strict();

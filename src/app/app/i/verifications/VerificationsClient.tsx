@@ -36,6 +36,7 @@ import {
 import { RespondDialog } from './components/RespondDialog';
 import { BundleCancelDialog } from './components/BundleCancelDialog';
 import { VerificationRequestComposerDialog } from './components/VerificationRequestComposerDialog';
+import { useAssistiveAiFlag } from '@/hooks/useAssistiveAiFlag';
 
 type VerificationRequest = VerificationRequestView;
 
@@ -79,6 +80,7 @@ export function VerificationsClient({
   composerProofPacks = [],
 }: VerificationsClientProps) {
   const router = useRouter();
+  const assistiveAiEnabled = useAssistiveAiFlag();
   const [incomingRequests, setIncomingRequests] = useState(initialIncomingRequests);
   const [sentRequests, setSentRequests] = useState(initialSentRequests);
   const [selectedRequest, setSelectedRequest] = useState<VerificationRequest | null>(null);
@@ -818,14 +820,16 @@ export function VerificationsClient({
               Follow which proof, claim, verifier, and bounded outcome each request is tied to.
             </p>
           </div>
-          <Button
-            type="button"
-            onClick={() => setComposerOpen(true)}
-            className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 md:w-auto"
-          >
-            <Wand2 className="mr-2 h-4 w-4" />
-            Draft verification request
-          </Button>
+          {assistiveAiEnabled ? (
+            <Button
+              type="button"
+              onClick={() => setComposerOpen(true)}
+              className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 md:w-auto"
+            >
+              <Wand2 className="mr-2 h-4 w-4" />
+              Draft scoped request
+            </Button>
+          ) : null}
         </div>
 
         <Tabs defaultValue="incoming" className="w-full">

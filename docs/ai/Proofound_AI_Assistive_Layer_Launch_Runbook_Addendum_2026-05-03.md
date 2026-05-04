@@ -1,9 +1,9 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-03`
+> Last Verified: `2026-05-04`
 
 # Proofound AI Assistive Layer Launch Runbook Addendum
 
-**Status:** Proposed operating addendum  
+**Status:** Controlled rollout operating addendum
 **Date:** 2026-05-03  
 **Audience:** Founder, ops, engineering, QA, privacy  
 **Authority:** Subordinate to `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` and the locked MVP source of truth.
@@ -15,6 +15,24 @@
 This runbook addendum defines how to launch, monitor, disable, and audit the optional AI assistive layer.
 
 The AI layer is not launch-critical for the MVP. The core Proofound corridor must work without it.
+
+---
+
+## 0.1 Release Classification
+
+| Surface                                                          | Release state                   | Launch rule                                                                                                             |
+| ---------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Proof Pack Assistant                                             | Production-eligible after gates | Enable only after live model smoke, hard caps, launch-status checks, privacy tests, and raw-prompt logging checks pass. |
+| Assignment Clarity Assistant                                     | Production-eligible after gates | Same gates as above; assignment output must not create scoring or ranking logic.                                        |
+| Verification Request Composer                                    | Production-eligible after gates | Same gates as above; output remains claim-scoped and user-sent only.                                                    |
+| Privacy Preflight                                                | Production-eligible after gates | Rules-first; optional model pass can receive only short sanitized text.                                                 |
+| Suggestion Event Tracking                                        | Production-eligible after gates | Safe metadata only; no raw prompts or hidden private content.                                                           |
+| Proof Artifact Text Extraction with Google Cloud Document AI OCR | Invite-only production beta     | Explicit consent per document, invite gate, feature flag, page/file/spend caps, safe disable path.                      |
+| CV import wizard and broad OCR/import flows                      | Excluded                        | Must remain inactive/non-launch unless the locked MVP authority stack is explicitly changed.                            |
+
+OCR draft text is never authoritative. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or update match, review, verification, reveal, trust-state, or hiring-decision state.
+
+Cloud Vision OCR is excluded from this rollout. Google Cloud Document AI is the only approved OCR provider for the beta.
 
 ---
 
@@ -73,9 +91,20 @@ AI assistance must not be enabled in production unless all gates pass.
 - App-level monthly hard cap is configured.
 - Production monthly cap is configured.
 - Staging and QA caps are configured.
+- Google Cloud budgets, where used for OCR, are configured as alerts only and are not treated as hard caps.
+- OCR hard caps are enforced in app/service code before any Document AI call.
 - Budget reservation and finalization tests pass.
 - Usage logging tests pass.
 - Cache tests pass.
+
+### 2.6 Live model and logging gates
+
+- Live Gemini smoke succeeds against the exact configured production model ID.
+- If a fallback model is configured, live Gemini smoke also proves that fallback before `AI_MODEL_FALLBACK_VERIFIED=true` is set; otherwise fallback stays unset/disabled.
+- Launch status shows AI feature flag, model ID, fallback configured/verified/unset state, last successful provider-smoke timestamp, budget state, spend cap, and raw-prompt logging state.
+- Launch status does not expose API keys, raw prompts, raw model responses, hidden private content, OCR extracted text, Google project IDs, processor IDs, bucket names, signed URLs, or service URLs.
+- Production-like readiness is blocked if `AI_RAW_PROMPT_LOGGING_ENABLED=true`.
+- Production-like readiness is blocked if any `NEXT_PUBLIC_*GEMINI*KEY`, `NEXT_PUBLIC_*AI*KEY`, or OCR provider secret is configured.
 
 ### 2.5 QA gates
 
@@ -84,6 +113,7 @@ Required test groups:
 ```bash
 npm run lint
 npm run typecheck
+npm run ai:provider:smoke
 npm run build
 npm run test -- tests/api/ai*.test.ts tests/lib/ai*.test.ts
 npm run test:privacy

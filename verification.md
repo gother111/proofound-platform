@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `verification.md`
-> Last Verified: `2026-05-03`
+> Last Verified: `2026-05-04`
 
 # Verification Checklist (Before Merging)
 
@@ -157,16 +157,22 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - Resend API send succeeded for the generated action link
   - Recipient receives a valid Supabase verify/recovery link.
 
-## Manual Smoke Checks (Temporary GCP OCR Sandbox)
+## Manual Smoke Checks (Document AI Proof Artifact OCR Beta)
 
 Before any staging Cloud Run OCR call:
 
 - Confirm Google Cloud Billing credit expiration was verified live in the Google Cloud Console during this smoke pass.
-- Confirm covered products were verified live for the exact sandbox path: Cloud Run, Document AI or Cloud Vision OCR, Cloud Storage if used, Secret Manager if used, Cloud Logging, and Cloud Monitoring.
+- Confirm covered products were verified live for the exact sandbox path: Cloud Run, Document AI, Cloud Storage if used, Secret Manager if used, Cloud Logging, and Cloud Monitoring.
 - Confirm budget alerts are configured for the sandbox project before the first billable call, then test the alert route or notification recipient and record the test evidence in local/operator notes.
+- Confirm app/service-level hard caps are configured and tested before any Document AI call. Google Cloud budgets are alerts only, not hard caps.
 - Confirm the GCP project ID is recorded only in local/operator documentation and trusted deployment configuration. Do not hardcode it in product code, public docs, browser env, test fixtures, or committed smoke artifacts if it is sensitive.
-- Confirm production remains disabled: `GCP_CV_OCR_ENABLED=false` in production and no production credential, endpoint, processor, or bucket value is created or changed for this smoke.
-- Confirm staging/preview is enabled only for synthetic PDFs and only after billing, product coverage, budget alert, and cleanup gates are ready.
+- Confirm production remains disabled unless explicitly approved for invite-only Proof Artifact Text Extraction beta: `GCP_CV_OCR_ENABLED=false` in production and no production credential, endpoint, processor, or bucket value is created or changed for synthetic smoke.
+- Confirm staging/preview is enabled only for synthetic PDFs and only after billing, product coverage, budget alert, app-level hard-cap, and cleanup gates are ready.
+- Confirm OCR requires explicit consent per document.
+- Confirm OCR output is draft text only and cannot auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or change match/review/trust/hiring state.
+- Confirm Cloud Run max instances is `1` initially and no more than `3` during beta.
+- Confirm the disable-or-pay decision is scheduled by `2026-07-24` because credits expire around `2026-08-03`.
+- Confirm Cloud Vision OCR is not enabled.
 
 Required staging smoke:
 

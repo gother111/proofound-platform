@@ -1,4 +1,9 @@
-# CV Import Feature Documentation
+> Doc Class: `historical`
+> Last Verified: `2026-05-04`
+
+# Archived CV Import Feature Documentation
+
+> Launch status: archived/non-launch. The CV import wizard is not an active MVP feature and is explicitly excluded from the controlled assistive AI / Document AI OCR rollout. Keep this document as historical implementation context only. Do not use it as launch evidence or as approval to reactivate CV import, taxonomy shortlist, ranking, or OCR import flows.
 
 ## Overview
 

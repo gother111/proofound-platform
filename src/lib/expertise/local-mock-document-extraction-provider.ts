@@ -16,7 +16,11 @@ const DEFAULT_MAX_FILES_PER_REQUEST = 1;
 const DEFAULT_RETENTION_HOURS = 24;
 const DEFAULT_USER_DAILY_LIMIT = 5;
 const DEFAULT_GLOBAL_DAILY_LIMIT = 50;
-const LOCAL_MOCK_ALLOWED_MIME_TYPES: GcpCvOcrAllowedMimeType[] = ['application/pdf'];
+const LOCAL_MOCK_ALLOWED_MIME_TYPES: GcpCvOcrAllowedMimeType[] = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+];
 const TRUE_VALUES = new Set(['true', '1', 'yes', 'on']);
 const FIXTURE_PATH = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -74,6 +78,14 @@ export function resolveLocalMockDocumentExtractionConfig(
       env.GCP_CV_OCR_GLOBAL_DAILY_LIMIT,
       DEFAULT_GLOBAL_DAILY_LIMIT
     ),
+    hasExplicitHardCaps: false,
+    hardBudgetCapSek: null,
+    budgetCapExhausted: false,
+    budgetAlertConfigured: false,
+    provider: 'mock',
+    cloudRunMaxInstances: null,
+    cloudRunMaxInstancesDocumented: true,
+    publicInvocation: false,
     hasAuthSecret: false,
     oidcAudience: null,
     oidcProjectNumber: null,

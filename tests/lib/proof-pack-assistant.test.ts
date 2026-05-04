@@ -37,6 +37,7 @@ import {
   buildSanitizedProofPackAssistantContext,
   suggestProofPackForUser,
 } from '@/lib/ai/proof-pack-assistant';
+import { AiProviderError } from '@/lib/ai/provider/types';
 
 function createAggregate(overrides: Record<string, unknown> = {}) {
   return {
@@ -48,14 +49,21 @@ function createAggregate(overrides: Record<string, unknown> = {}) {
       ...((overrides.pack as Record<string, unknown>) ?? {}),
     },
     ownerFull: {
+      hiddenReviewIdentity: {
+        displayName: 'Jane Doe',
+        email: 'jane.hidden@example.com',
+        employerNames: ['Very Hidden Employer AB'],
+        schoolNames: ['Hidden School of Design'],
+      },
       contract: {
-        title: 'Launch proof for jane@example.com',
+        title: 'Launch proof for jane@example.com at Very Hidden Employer AB',
         primaryClaim: {
           statement:
             'I shipped the launch pack. See https://example.com/private and sk_test_1234567890abcdefghijklmnop.',
         },
         ownershipStatement: 'Call me at +46701234567. I owned the release notes.',
-        outcomeSummary: 'Outcome was captured in Jane-Doe-Resume.pdf.',
+        outcomeSummary:
+          'Outcome was captured in Jane-Doe-Resume.pdf after Hidden School of Design.',
         timeframe: {
           start: null,
           end: null,
@@ -116,11 +124,14 @@ describe('Proof Pack Assistant privacy controls', () => {
     expect(serialized).not.toContain('Jane-Doe-Resume.pdf');
     expect(serialized).not.toContain('Hidden-Client-Plan.docx');
     expect(serialized).not.toContain('sk_test_1234567890abcdefghijklmnop');
+    expect(serialized).not.toContain('Very Hidden Employer AB');
+    expect(serialized).not.toContain('Hidden School of Design');
     expect(serialized).toContain('[redacted email]');
     expect(serialized).toContain('[redacted phone]');
     expect(serialized).toContain('[redacted url]');
     expect(serialized).toContain('[redacted filename]');
     expect(serialized).toContain('[redacted token]');
+    expect(serialized).toContain('[redacted hidden identity]');
   });
 
   it("rejects another user's Proof Pack before provider access", async () => {
@@ -164,7 +175,30 @@ describe('Proof Pack Assistant privacy controls', () => {
     expect(prompt).not.toContain('Jane-Doe-Resume.pdf');
     expect(prompt).not.toContain('sk_test_1234567890abcdefghijklmnop');
     expect(prompt).not.toContain('Hidden-Client-Plan.docx');
+    expect(prompt).not.toContain('Very Hidden Employer AB');
+    expect(prompt).not.toContain('Hidden School of Design');
+    expect(prompt).not.toContain('jane.hidden@example.com');
     expect(prompt).toContain('[redacted');
+  });
+
+  it('returns deterministic fallback when the provider fails', async () => {
+    mocks.getCanonicalProofPackAggregate.mockResolvedValue(createAggregate());
+    mocks.generateJson.mockRejectedValueOnce(
+      new AiProviderError('provider failed', 'model_error', 500, true)
+    );
+
+    const result = await suggestProofPackForUser({
+      proofPackId: '11111111-1111-4111-8111-111111111111',
+      userId: 'user-1',
+      requestId: 'req-1',
+    });
+
+    expect(result.fallback).toBe(true);
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        'AI provider was unavailable, so Proofound returned a deterministic checklist.',
+      ])
+    );
   });
 
   it('returns cached suggestions without provider generation', async () => {
@@ -181,7 +215,7 @@ describe('Proof Pack Assistant privacy controls', () => {
         warnings: [],
       },
       outputHash: 'output-hash',
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-3.1-flash-lite-preview',
       costOre: 0,
       tokenUsage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
     });

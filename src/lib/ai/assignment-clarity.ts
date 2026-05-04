@@ -11,7 +11,7 @@ import {
   hashAiContent,
   recordAiSuggestionEvent,
 } from '@/lib/ai/usage-ledger';
-import { addUnsafeAiRequestPayloadIssue } from '@/lib/ai/request-safety';
+import { addUnsafeAiRequestPayloadIssue, containsForbiddenAiOutput } from '@/lib/ai/request-safety';
 import { verifyExplicitAssignmentMutationAccess } from '@/lib/assignments/access';
 import { skillDisplayLabel } from '@/lib/copy/labels';
 
@@ -48,7 +48,7 @@ const REDACTION_PATTERNS = [
 ] as const;
 
 const SCORING_OR_JUDGMENT_PATTERN =
-  /\b(?:score|scoring|rubric|rank|ranking|top\s+candidate|best\s+candidate|shortlist(?:ed|ing)?|fit\s+score|fit\s+verdict|hire\s+recommendation|hiring\s+recommendation|recommended\s+candidate)\b/i;
+  /\b(?:score|scoring|rubric|rank|ranking|top\s+candidate|best\s+candidate|shortlist(?:ed|ing)?|fit\s+score|fit\s+verdict|suitability\s+judg(?:e|ment)|verification\s+approval|trust\s+level|should\s+hire|hire\s+recommendation|hiring\s+recommendation|recommended\s+(?:candidate|to\s+interview))\b/i;
 
 const PROTECTED_TRAIT_PATTERN =
   /\b(?:age|young|younger|older|gender|male|female|race|racial|ethnicity|ethnic|religion|religious|disability|disabled|pregnant|pregnancy|marital|parenthood|native\s+speaker|nationality|citizenship|visa|sexual\s+orientation|transgender)\b/i;
@@ -244,6 +244,10 @@ function redactedNullable(value: string | null | undefined, counts: Record<strin
   return redacted.value.length > 0 ? redacted.value : null;
 }
 
+function hasOwnInputField<T extends object>(input: T, key: keyof T) {
+  return Object.prototype.hasOwnProperty.call(input, key);
+}
+
 function extractSkillCode(skill: unknown): string | null {
   if (!skill || typeof skill !== 'object') return null;
   const record = skill as Record<string, unknown>;
@@ -381,9 +385,9 @@ async function buildSanitizedAssignmentContext(
   });
 
   const redactionSummary: Record<string, number> = {};
-  const outcomeSummary =
-    redactedNullable(input.outcomeSummary, redactionSummary) ??
-    (outcomeRows.length > 0
+  const outcomeSummary = hasOwnInputField(input, 'outcomeSummary')
+    ? redactedNullable(input.outcomeSummary, redactionSummary)
+    : outcomeRows.length > 0
       ? outcomeRows
           .map((outcome) => {
             const firstMetric = Array.isArray(outcome.metrics) ? outcome.metrics[0] : null;
@@ -394,7 +398,7 @@ async function buildSanitizedAssignmentContext(
           .map((value) => redactedNullable(value, redactionSummary))
           .filter(Boolean)
           .join(' | ')
-      : redactedNullable(assignment.description, redactionSummary));
+      : redactedNullable(assignment.description, redactionSummary);
 
   return {
     promptVersion: ASSIGNMENT_CLARITY_PROMPT_VERSION,
@@ -413,9 +417,9 @@ async function buildSanitizedAssignmentContext(
         assignment.mustHaveSkills,
         redactionSummary
       ),
-      proofExpectations:
-        redactedNullable(input.proofExpectations, redactionSummary) ??
-        redactedNullable(assignment.expectedImpact, redactionSummary),
+      proofExpectations: hasOwnInputField(input, 'proofExpectations')
+        ? redactedNullable(input.proofExpectations, redactionSummary)
+        : redactedNullable(assignment.expectedImpact, redactionSummary),
       engagementType: input.engagementType ?? (assignment.engagementType as any) ?? null,
       verificationRequirements: (
         input.verificationRequirements ??
@@ -438,7 +442,7 @@ function buildPrompt(context: SanitizedAssignmentContext) {
     'Use only the sanitized assignment JSON context.',
     'Do not write generic job-description copy.',
     'Do not add facts, protected-trait criteria, discriminatory criteria, or credential requirements that are not already present.',
-    'Do not create candidate scoring rubrics, candidate ranking, candidate fit verdicts, hiring recommendations, shortlists, or review decisions.',
+    'Do not create candidate evaluation rubrics, ordering, suitability verdicts, trust levels, verification approvals, interview recommendations, hiring recommendations, or review decisions.',
     'Do not refer to private candidates or candidate data.',
     'Focus on outcomes, constraints, must-have capabilities, proof expectations, verification requirements, and ambiguity.',
     'Return JSON only with keys: ambiguityFlags, suggestedRewrite, reviewQuestions, excludedOrRiskyCriteria.',
@@ -504,7 +508,7 @@ function deterministicFallback(
     );
   }
 
-  if (SCORING_OR_JUDGMENT_PATTERN.test(allText)) {
+  if (SCORING_OR_JUDGMENT_PATTERN.test(allText) || containsForbiddenAiOutput(allText)) {
     excludedOrRiskyCriteria.push('Removed prohibited review criteria from the assistant scope.');
   }
 
@@ -560,6 +564,7 @@ function sanitizeStringArray(values: string[], redactionSummary: Record<string, 
       mergeCounts(redactionSummary, redacted.counts);
       if (
         SCORING_OR_JUDGMENT_PATTERN.test(redacted.value) ||
+        containsForbiddenAiOutput(redacted.value) ||
         PROTECTED_TRAIT_PATTERN.test(redacted.value)
       ) {
         return null;
@@ -756,14 +761,12 @@ export async function suggestAssignmentClarityForUser(params: {
     };
   } catch (error) {
     if (error instanceof AiProviderError) {
+      const fallbackWarning =
+        error.code === 'budget_exceeded'
+          ? 'AI suggestions are temporarily unavailable; manual editing still works.'
+          : 'AI provider was unavailable, so Proofound returned a deterministic assignment checklist.';
       return {
-        ...sanitizeSuggestionOutput(
-          deterministicFallback(
-            context,
-            'AI provider was unavailable, so Proofound returned a deterministic assignment checklist.'
-          ),
-          context
-        ),
+        ...sanitizeSuggestionOutput(deterministicFallback(context, fallbackWarning), context),
         fallback: true,
         promptVersion: ASSIGNMENT_CLARITY_PROMPT_VERSION,
       };

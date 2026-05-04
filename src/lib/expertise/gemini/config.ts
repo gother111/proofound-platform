@@ -12,8 +12,7 @@ const DEFAULT_SHORT_TEXT_MAX_OUTPUT_TOKENS = 1000;
 const DEFAULT_PRIMARY_BUDGET_SEK = 80;
 const DEFAULT_SECONDARY_BUDGET_SEK = 80;
 const DEFAULT_USD_TO_SEK_RATE = 10.5;
-const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
-const DEFAULT_FALLBACK_MODEL = 'gemini-2.5-flash';
+const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview';
 const DEFAULT_TAXONOMY_SHORTLIST_MAX_ENTRIES = 120;
 const DEFAULT_TAXONOMY_SHORTLIST_MAX_TOKENS = 1200;
 const DEFAULT_TAXONOMY_SHORTLIST_SEED_LIMIT = 8;
@@ -69,8 +68,12 @@ export function resolveGeminiModelDefault(): string {
   );
 }
 
-export function resolveGeminiModelFallback(): string {
-  return process.env.CV_IMPORT_GEMINI_MODEL_FALLBACK?.trim() || DEFAULT_FALLBACK_MODEL;
+export function resolveGeminiModelFallback(): string | null {
+  return (
+    process.env.AI_MODEL_FALLBACK?.trim() ||
+    process.env.CV_IMPORT_GEMINI_MODEL_FALLBACK?.trim() ||
+    null
+  );
 }
 
 export function resolveGeminiMaxOutputTokens(): number {

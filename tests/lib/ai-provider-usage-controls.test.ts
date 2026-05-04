@@ -8,6 +8,7 @@ const ResponseSchema = z.object({
 });
 
 const ledger = {
+  assertAiProductionHardCapConfigured: vi.fn(() => undefined),
   buildAiIdempotencyKey: vi.fn(() => 'idem-1'),
   buildAiSuggestionCacheKey: vi.fn(() => 'cache-1'),
   createAiUsageLog: vi.fn(async () => 'usage-1'),
@@ -32,7 +33,7 @@ const ledger = {
 function geminiResponse(text: string) {
   return new Response(
     JSON.stringify({
-      modelVersion: 'gemini-2.5-flash-lite',
+      modelVersion: 'gemini-3.1-flash-lite-preview',
       usageMetadata: {
         promptTokenCount: 1000,
         candidatesTokenCount: 2000,
@@ -84,6 +85,10 @@ describe('Gemini AI provider usage controls', () => {
   const originalEnv = {
     AI_ASSISTANTS_ENABLED: process.env.AI_ASSISTANTS_ENABLED,
     AI_GEMINI_API_KEY: process.env.AI_GEMINI_API_KEY,
+    NODE_ENV: process.env.NODE_ENV,
+    VERCEL_ENV: process.env.VERCEL_ENV,
+    APP_ENV: process.env.APP_ENV,
+    NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
   };
 
   beforeEach(() => {
@@ -91,6 +96,11 @@ describe('Gemini AI provider usage controls', () => {
     vi.clearAllMocks();
     process.env.AI_ASSISTANTS_ENABLED = 'true';
     process.env.AI_GEMINI_API_KEY = 'server-key';
+    process.env.NODE_ENV = 'test';
+    delete process.env.VERCEL_ENV;
+    delete process.env.APP_ENV;
+    delete process.env.NEXT_PUBLIC_APP_ENV;
+    ledger.assertAiProductionHardCapConfigured.mockImplementation(() => undefined);
     ledger.buildAiIdempotencyKey.mockReturnValue('idem-1');
     ledger.buildAiSuggestionCacheKey.mockReturnValue('cache-1');
     ledger.createAiUsageLog.mockResolvedValue('usage-1');
@@ -167,6 +177,24 @@ describe('Gemini AI provider usage controls', () => {
     expect(ledger.reserveAiBudget).not.toHaveBeenCalled();
   });
 
+  it('blocks production assistant calls before provider calls when no monthly hard cap is configured', async () => {
+    ledger.assertAiProductionHardCapConfigured.mockImplementationOnce(() => {
+      throw new Error('missing hard cap');
+    });
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    const { generateJson } = await importProvider();
+
+    await expect(generateJson(requestParams())).rejects.toMatchObject({
+      code: 'budget_cap_not_configured',
+      status: 503,
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(ledger.createAiUsageLog).not.toHaveBeenCalled();
+    expect(ledger.enforceAiDailyRateLimits).not.toHaveBeenCalled();
+    expect(ledger.reserveAiBudget).not.toHaveBeenCalled();
+  });
+
   it('releases the reservation when the provider fails before usage metadata is available', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ error: { message: 'provider down' } }), { status: 500 })
@@ -182,7 +210,11 @@ describe('Gemini AI provider usage controls', () => {
     );
     expect(ledger.updateAiUsageLog).toHaveBeenCalledWith(
       'usage-1',
-      expect.objectContaining({ status: 'model_error', reservedOre: 0 })
+      expect.objectContaining({
+        status: 'model_error',
+        providerStatus: 'deterministic_fallback',
+        reservedOre: 0,
+      })
     );
   });
 
@@ -201,7 +233,12 @@ describe('Gemini AI provider usage controls', () => {
     );
     expect(ledger.updateAiUsageLog).toHaveBeenCalledWith(
       'usage-1',
-      expect.objectContaining({ status: 'success', reservedOre: 0, costOre: expect.any(Number) })
+      expect.objectContaining({
+        status: 'success',
+        providerStatus: 'provider_success',
+        reservedOre: 0,
+        costOre: expect.any(Number),
+      })
     );
     expect(ledger.upsertAiSuggestionCache).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -216,7 +253,7 @@ describe('Gemini AI provider usage controls', () => {
       cacheId: 'cache-row-1',
       payload: { answer: 'cached' },
       outputHash: 'output-hash',
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-3.1-flash-lite-preview',
       costOre: 12,
       tokenUsage: {
         inputTokens: 10,
@@ -236,12 +273,21 @@ describe('Gemini AI provider usage controls', () => {
       })
     );
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(ledger.createAiUsageLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'cache_hit',
+        cacheStatus: 'hit',
+        providerStatus: 'cache_replay',
+        estimatedCostOre: 0,
+        costOre: 0,
+      })
+    );
     expect(ledger.reserveAiBudget).not.toHaveBeenCalled();
     expect(ledger.finalizeAiBudgetReservation).not.toHaveBeenCalled();
   });
 
-  it('blocks per-user and per-org daily rate limits before reservation', async () => {
-    for (const scope of ['user', 'organization'] as const) {
+  it('blocks per-user, per-org, per-feature, and global daily rate limits before reservation', async () => {
+    for (const scope of ['user', 'organization', 'feature', 'global'] as const) {
       vi.resetModules();
       vi.clearAllMocks();
       process.env.AI_ASSISTANTS_ENABLED = 'true';
@@ -264,6 +310,12 @@ describe('Gemini AI provider usage controls', () => {
 
       expect(fetchMock).not.toHaveBeenCalled();
       expect(ledger.reserveAiBudget).not.toHaveBeenCalled();
+      expect(ledger.createAiUsageLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'rate_limited',
+          providerStatus: 'rate_limited',
+        })
+      );
       expect(ledger.updateAiUsageLog).not.toHaveBeenCalledWith(
         'usage-1',
         expect.objectContaining({ status: 'success' })

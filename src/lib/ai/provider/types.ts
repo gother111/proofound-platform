@@ -44,6 +44,7 @@ export interface AiJsonProvider {
 export type AiProviderErrorCode =
   | 'assistants_disabled'
   | 'missing_api_key'
+  | 'budget_cap_not_configured'
   | 'budget_exceeded'
   | 'rate_limited'
   | 'invalid_json'

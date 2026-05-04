@@ -10,6 +10,7 @@ export type GcpCvOcrHandlerOptions = {
   env?: Env;
   nowMs?: () => number;
   nonceStore?: NonceStore;
+  dailyLimitStore?: DailyLimitStore;
   provider?: OcrProvider;
   providerTimeoutMs?: number;
   requestIdFactory?: () => string;
@@ -18,6 +19,8 @@ export type GcpCvOcrHandlerOptions = {
 
 const DEFAULT_PROVIDER_TIMEOUT_MS = 8000;
 const DEFAULT_RESPONSE_TEXT_LIMIT = 30000;
+const DEFAULT_USER_DAILY_LIMIT = 5;
+const DEFAULT_GLOBAL_DAILY_LIMIT = 50;
 const SIGNED_URL_PATTERN =
   /https?:\/\/[^\s"'<>]*(?:x-amz-signature|x-goog-signature|signature=|token=)[^\s"'<>]*/gi;
 const STORAGE_PATH_PATTERN =
@@ -25,12 +28,60 @@ const STORAGE_PATH_PATTERN =
 const SECRET_PATTERN =
   /\b(?:api[_-]?key|authorization|bearer|secret|token)\s*[:=]\s*['"]?[^'",\s;}]+/gi;
 const RAW_FILENAME_PATTERN = /\b[\w.-]+\.(?:pdf|docx?|png|jpe?g|tiff?|webp)\b/gi;
+const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
+const PHONE_PATTERN = /(?:\+?\d[\d\s().-]{7,}\d)/g;
+const SENSITIVE_NUMBER_PATTERN =
+  /\b(?:personnummer|ssn|social security|passport|bank account|iban|tax id|national id)\b[^.\n]{0,80}/gi;
 
 const sharedNonceStore = new InMemoryNonceStore();
+
+export type DailyLimitStore = {
+  consume(params: {
+    nowMs: number;
+    requesterRef: string;
+    userDailyLimit: number;
+    globalDailyLimit: number;
+  }): 'ok' | 'daily_limit_exceeded' | 'global_limit_exceeded';
+};
+
+export class InMemoryDailyLimitStore implements DailyLimitStore {
+  private dayKey: string | null = null;
+  private globalCount = 0;
+  private readonly requesterCounts = new Map<string, number>();
+
+  consume(params: {
+    nowMs: number;
+    requesterRef: string;
+    userDailyLimit: number;
+    globalDailyLimit: number;
+  }): 'ok' | 'daily_limit_exceeded' | 'global_limit_exceeded' {
+    const dayKey = new Date(params.nowMs).toISOString().slice(0, 10);
+    if (this.dayKey !== dayKey) {
+      this.dayKey = dayKey;
+      this.globalCount = 0;
+      this.requesterCounts.clear();
+    }
+
+    const requesterCount = this.requesterCounts.get(params.requesterRef) ?? 0;
+    if (requesterCount >= params.userDailyLimit) {
+      return 'daily_limit_exceeded';
+    }
+    if (this.globalCount >= params.globalDailyLimit) {
+      return 'global_limit_exceeded';
+    }
+
+    this.requesterCounts.set(params.requesterRef, requesterCount + 1);
+    this.globalCount += 1;
+    return 'ok';
+  }
+}
+
+const sharedDailyLimitStore = new InMemoryDailyLimitStore();
 
 export function createGcpCvOcrHandler(options: GcpCvOcrHandlerOptions = {}) {
   const env = options.env ?? process.env;
   const nonceStore = options.nonceStore ?? sharedNonceStore;
+  const dailyLimitStore = options.dailyLimitStore ?? sharedDailyLimitStore;
   const provider = options.provider ?? createOcrProvider(env);
   const nowMs = options.nowMs ?? Date.now;
   const providerTimeoutMs = options.providerTimeoutMs ?? DEFAULT_PROVIDER_TIMEOUT_MS;
@@ -63,6 +114,10 @@ export function createGcpCvOcrHandler(options: GcpCvOcrHandlerOptions = {}) {
     const startedAt = nowMs();
     const rawBody = await request.text();
     const authMode = resolveAuthMode(env);
+    if (authMode === 'hmac' && isProductionRuntime(env)) {
+      return safeErrorResponse(503, requestId, 'hmac_not_allowed');
+    }
+
     if (authMode === 'hmac') {
       const auth = verifyHmacRequest({
         headers: request.headers,
@@ -92,13 +147,27 @@ export function createGcpCvOcrHandler(options: GcpCvOcrHandlerOptions = {}) {
       return safeErrorResponse(400, requestId, 'bad_json');
     }
 
-    const validation = validateExtractPayload(payload, resolveLimits(env));
+    const limits = resolveLimits(env);
+    const validation = validateExtractPayload(payload, limits);
     if (!validation.ok) {
       return safeErrorResponse(
         400,
         requestId,
         validation.code === 'file_too_large' ? 'file_too_large' : validation.code
       );
+    }
+
+    const quota = dailyLimitStore.consume({
+      nowMs: startedAt,
+      requesterRef: validation.document.requesterRef ?? 'local_synthetic_smoke',
+      userDailyLimit: parsePositiveInt(env.GCP_CV_OCR_USER_DAILY_LIMIT, DEFAULT_USER_DAILY_LIMIT),
+      globalDailyLimit: parsePositiveInt(
+        env.GCP_CV_OCR_GLOBAL_DAILY_LIMIT,
+        DEFAULT_GLOBAL_DAILY_LIMIT
+      ),
+    });
+    if (quota !== 'ok') {
+      return safeErrorResponse(429, requestId, quota);
     }
 
     const documentId = documentIdFactory();
@@ -113,7 +182,8 @@ export function createGcpCvOcrHandler(options: GcpCvOcrHandlerOptions = {}) {
         }),
         providerTimeoutMs
       );
-      const text = truncateText(redactSensitiveText(providerOutput.text));
+      const redactedText = redactSensitiveText(providerOutput.text);
+      const text = truncateText(redactedText);
 
       return jsonResponse(200, {
         status: 'completed',
@@ -126,7 +196,7 @@ export function createGcpCvOcrHandler(options: GcpCvOcrHandlerOptions = {}) {
           confidence: clampConfidence(providerOutput.confidence),
           elapsedMs: Math.max(0, Math.round(nowMs() - startedAt)),
           textLength: text.length,
-          truncated: text.length < providerOutput.text.length,
+          truncated: redactedText.length > text.length,
         },
         warnings: [],
       });
@@ -181,6 +251,14 @@ function safeErrorMessage(code: string): string {
       return 'Document exceeds the configured size limit.';
     case 'too_many_pages':
       return 'Document exceeds the configured page limit.';
+    case 'too_many_files':
+      return 'Request exceeds the configured file-count limit.';
+    case 'daily_limit_exceeded':
+      return 'Daily OCR request limit exceeded.';
+    case 'global_limit_exceeded':
+      return 'Global OCR request limit exceeded.';
+    case 'hmac_not_allowed':
+      return 'OCR service auth mode is not available in this environment.';
     case 'provider_timeout':
       return 'OCR provider timed out.';
     case 'provider_error':
@@ -216,7 +294,10 @@ function redactSensitiveText(value: string): string {
   return value
     .replace(SIGNED_URL_PATTERN, '[redacted-url]')
     .replace(STORAGE_PATH_PATTERN, '[redacted-path]')
+    .replace(EMAIL_PATTERN, '[redacted-email]')
+    .replace(PHONE_PATTERN, '[redacted-phone]')
     .replace(SECRET_PATTERN, '[redacted-secret]')
+    .replace(SENSITIVE_NUMBER_PATTERN, '[redacted-sensitive-pattern]')
     .replace(RAW_FILENAME_PATTERN, '[redacted-file]');
 }
 
@@ -236,4 +317,21 @@ function isOcrProviderExpired(expiresAtValue: string | undefined, nowMs: number)
 
   const expiresAtMs = Date.parse(trimmed);
   return !Number.isFinite(expiresAtMs) || expiresAtMs <= nowMs;
+}
+
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function isProductionRuntime(env: Env): boolean {
+  return (
+    env.GCP_CV_OCR_DEPLOYMENT_ENV?.trim().toLowerCase() === 'production' ||
+    env.K_SERVICE !== undefined ||
+    env.NODE_ENV?.trim().toLowerCase() === 'production'
+  );
 }

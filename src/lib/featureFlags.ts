@@ -25,6 +25,8 @@ export const FEATURE_FLAG_KEYS = {
   KILL_SWITCH_INTROS: 'FF_KILL_SWITCH_INTROS',
   KILL_SWITCH_EXACT_RANK: 'FF_KILL_SWITCH_EXACT_RANK',
   LEGACY_MVP_SURFACES: 'FF_LEGACY_MVP_SURFACES',
+  ASSISTIVE_AI_UI: 'FF_ASSISTIVE_AI_UI',
+  PROOF_ARTIFACT_OCR_BETA: 'FF_PROOF_ARTIFACT_OCR_BETA',
 } as const;
 
 export const CLIENT_FEATURE_FLAG_RESPONSE_MAP = {
@@ -38,6 +40,8 @@ export const CLIENT_FEATURE_FLAG_RESPONSE_MAP = {
   killSwitchIntros: FEATURE_FLAG_KEYS.KILL_SWITCH_INTROS,
   killSwitchExactRank: FEATURE_FLAG_KEYS.KILL_SWITCH_EXACT_RANK,
   legacyMvpSurfaces: FEATURE_FLAG_KEYS.LEGACY_MVP_SURFACES,
+  assistiveAiUi: FEATURE_FLAG_KEYS.ASSISTIVE_AI_UI,
+  proofArtifactOcrBeta: FEATURE_FLAG_KEYS.PROOF_ARTIFACT_OCR_BETA,
 } as const;
 
 // Legacy env gate retained for compatibility.
@@ -61,6 +65,8 @@ export const FEATURE_FLAG_DEFAULTS = {
   [FEATURE_FLAG_KEYS.KILL_SWITCH_INTROS]: false,
   [FEATURE_FLAG_KEYS.KILL_SWITCH_EXACT_RANK]: true,
   [FEATURE_FLAG_KEYS.LEGACY_MVP_SURFACES]: false,
+  [FEATURE_FLAG_KEYS.ASSISTIVE_AI_UI]: false,
+  [FEATURE_FLAG_KEYS.PROOF_ARTIFACT_OCR_BETA]: false,
 } as const;
 
 export function getFeatureFlagDefault(
@@ -86,4 +92,6 @@ export const CLIENT_FF_DEFAULTS = {
   killSwitchIntros: getFeatureFlagDefault(FEATURE_FLAG_KEYS.KILL_SWITCH_INTROS),
   killSwitchExactRank: getFeatureFlagDefault(FEATURE_FLAG_KEYS.KILL_SWITCH_EXACT_RANK),
   legacyMvpSurfaces: getFeatureFlagDefault(FEATURE_FLAG_KEYS.LEGACY_MVP_SURFACES),
+  assistiveAiUi: getFeatureFlagDefault(FEATURE_FLAG_KEYS.ASSISTIVE_AI_UI),
+  proofArtifactOcrBeta: getFeatureFlagDefault(FEATURE_FLAG_KEYS.PROOF_ARTIFACT_OCR_BETA),
 } as const;

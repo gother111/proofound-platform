@@ -1,6 +1,12 @@
 import { log } from '@/lib/log';
 import type { z } from 'zod';
 import {
+  resolveAiAssistantsEnabled,
+  resolveAiModelDefault,
+  resolveAiModelFallback,
+  resolveAiModelFallbackVerified,
+} from '@/lib/ai/provider/config';
+import {
   AiProviderError,
   type AiGenerateJsonParams,
   type AiGenerateJsonResult,
@@ -8,6 +14,7 @@ import {
   type AiTokenUsage,
 } from '@/lib/ai/provider/types';
 import {
+  assertAiProductionHardCapConfigured,
   buildAiIdempotencyKey,
   buildAiSuggestionCacheKey,
   createAiUsageLog,
@@ -23,10 +30,10 @@ import {
   type AiUsageReservation,
   type AiUsageStatus,
 } from '@/lib/ai/usage-ledger';
+import { containsForbiddenAiOutput } from '@/lib/ai/request-safety';
 import { computeGeminiCostOre, estimateReservationCostOre } from '@/lib/expertise/gemini/pricing';
 
 const PROVIDER = 'gemini' as const;
-const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
 const DEFAULT_TEMPERATURE = 0;
 const DEFAULT_TIMEOUT_MS = 12000;
 const DEFAULT_FEATURE_MAX_OUTPUT_TOKENS = 1600;
@@ -41,6 +48,8 @@ type GeminiUsageMetadata = {
 };
 
 type EnvReader = Record<string, string | undefined>;
+
+type GeminiGeneratePayload = Record<string, unknown>;
 
 function assertServerOnly(): void {
   if (typeof window !== 'undefined') {
@@ -140,6 +149,14 @@ function isQuotaError(status: number, message: string): boolean {
   );
 }
 
+function trimModelName(value: string | null | undefined): string {
+  return value?.trim().toLowerCase() || '';
+}
+
+function shouldRetryWithFallbackModel(error: unknown): boolean {
+  return error instanceof AiProviderError && error.code === 'model_error';
+}
+
 async function parseProviderErrorMessage(response: Response): Promise<string> {
   try {
     const payload = (await response.json()) as {
@@ -173,13 +190,12 @@ function extractFirstCandidateText(payload: Record<string, unknown>): string {
   return typeof textPart?.text === 'string' ? textPart.text.trim() : '';
 }
 
-export function resolveAiAssistantsEnabled(env: EnvReader = process.env): boolean {
-  return parseBoolean(env.AI_ASSISTANTS_ENABLED, false);
-}
-
-export function resolveAiModelDefault(env: EnvReader = process.env): string {
-  return env.AI_MODEL_DEFAULT?.trim() || DEFAULT_MODEL;
-}
+export {
+  resolveAiAssistantsEnabled,
+  resolveAiModelDefault,
+  resolveAiModelFallback,
+  resolveAiModelFallbackVerified,
+} from '@/lib/ai/provider/config';
 
 export function resolveAiFeatureMaxOutputTokens(
   feature: string,
@@ -240,6 +256,17 @@ export class GeminiJsonProvider implements AiJsonProvider {
       throw new AiProviderError('AI assistants are disabled.', 'assistants_disabled', 503, false);
     }
 
+    try {
+      assertAiProductionHardCapConfigured();
+    } catch {
+      throw new AiProviderError(
+        'AI monthly hard cap is not configured for production.',
+        'budget_cap_not_configured',
+        503,
+        false
+      );
+    }
+
     const apiKey = resolveGeminiProviderApiKey({ keySlot: params.keySlot });
     if (!apiKey) {
       throw new AiProviderError(
@@ -289,6 +316,31 @@ export class GeminiJsonProvider implements AiJsonProvider {
       if (replay) {
         const validation = params.schema.safeParse(replay.payload);
         if (validation.success) {
+          await createAiUsageLog({
+            requestId: params.requestId,
+            idempotencyKey: `${idempotencyKey || cacheKey}:cache:${params.requestId}`,
+            userId: usageContext!.userId,
+            orgId: usageContext!.orgId,
+            feature: params.feature,
+            entityType: usageContext!.entityType,
+            entityId: usageContext!.entityId,
+            model: replay.model,
+            promptVersion: params.promptVersion,
+            inputHash,
+            status: 'cache_hit',
+            cacheStatus: 'hit',
+            providerStatus: 'cache_replay',
+            estimatedCostOre: 0,
+            costOre: 0,
+            redactionSummary: usageContext!.redactionSummary,
+            safeMetadata: {
+              ...usageContext!.safeMetadata,
+              prompt_version: params.promptVersion,
+              model: replay.model,
+              cache_id: replay.cacheId,
+              charged: false,
+            },
+          });
           await recordAiSuggestionEvent({
             cacheId: replay.cacheId,
             eventType: 'cache_hit',
@@ -350,6 +402,8 @@ export class GeminiJsonProvider implements AiJsonProvider {
           promptVersion: params.promptVersion,
           inputHash,
           status: 'rate_limited',
+          cacheStatus: usageContext?.bypassCache ? 'bypass' : 'miss',
+          providerStatus: 'rate_limited',
           estimatedCostOre,
           redactionSummary: usageContext!.redactionSummary,
           safeMetadata: {
@@ -388,6 +442,8 @@ export class GeminiJsonProvider implements AiJsonProvider {
         model,
         promptVersion: params.promptVersion,
         inputHash,
+        cacheStatus: usageContext?.bypassCache ? 'bypass' : 'miss',
+        providerStatus: 'not_called',
         estimatedCostOre,
         redactionSummary: usageContext!.redactionSummary,
         safeMetadata: usageContext!.safeMetadata,
@@ -409,6 +465,7 @@ export class GeminiJsonProvider implements AiJsonProvider {
       if (!budgetDecision.ok) {
         await updateAiUsageLog(usageLogId, {
           status: 'budget_blocked',
+          providerStatus: 'budget_blocked',
           errorCode:
             budgetDecision.reason === 'disabled' ? 'ai_budget_disabled' : 'ai_budget_exceeded',
           latencyMs: Date.now() - startedAt,
@@ -459,55 +516,84 @@ export class GeminiJsonProvider implements AiJsonProvider {
       }
     }
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-      model
-    )}:generateContent`;
+    const fallbackModel = resolveAiModelFallback();
+    const fallbackVerified = resolveAiModelFallbackVerified();
+    const shouldAllowFallback =
+      fallbackVerified && trimModelName(fallbackModel) !== trimModelName(model);
+
+    const fetchGeminiPayload = async (requestModel: string): Promise<GeminiGeneratePayload> => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+        requestModel
+      )}:generateContent`;
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey,
+            'x-request-id': params.requestId,
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: params.prompt }],
+              },
+            ],
+            generationConfig: {
+              responseMimeType: 'application/json',
+              responseSchema: params.responseJsonSchema,
+              maxOutputTokens,
+              temperature,
+            },
+          }),
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          const providerMessage = await parseProviderErrorMessage(response);
+          throw new AiProviderError(
+            isQuotaError(response.status, providerMessage)
+              ? 'AI provider quota is exhausted.'
+              : 'AI provider request failed.',
+            isQuotaError(response.status, providerMessage) ? 'quota_exceeded' : 'model_error',
+            response.status,
+            response.status >= 500 || response.status === 429
+          );
+        }
+
+        return (await response.json()) as GeminiGeneratePayload;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          throw new AiProviderError('AI provider request timed out.', 'model_error', 504, true);
+        }
+        throw error;
+      } finally {
+        clearTimeout(timer);
+      }
+    };
 
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-          'x-request-id': params.requestId,
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: params.prompt }],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: params.responseJsonSchema,
-            maxOutputTokens,
-            temperature,
-          },
-        }),
-        cache: 'no-store',
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const providerMessage = await parseProviderErrorMessage(response);
-        throw new AiProviderError(
-          isQuotaError(response.status, providerMessage)
-            ? 'AI provider quota is exhausted.'
-            : 'AI provider request failed.',
-          isQuotaError(response.status, providerMessage) ? 'quota_exceeded' : 'model_error',
-          response.status,
-          response.status >= 500 || response.status === 429
-        );
+      let payload: GeminiGeneratePayload;
+      let requestedModel = model;
+      try {
+        payload = await fetchGeminiPayload(model);
+      } catch (error) {
+        if (!shouldAllowFallback || !shouldRetryWithFallbackModel(error) || !fallbackModel) {
+          throw error;
+        }
+        requestedModel = fallbackModel;
+        payload = await fetchGeminiPayload(fallbackModel);
       }
 
-      const payload = (await response.json()) as Record<string, unknown>;
       const modelVersion =
         typeof payload.modelVersion === 'string' && payload.modelVersion.trim().length > 0
           ? payload.modelVersion.trim()
-          : model;
+          : requestedModel;
       const tokenUsage = normalizeTokenUsage(normalizeUsageMetadata(payload.usageMetadata));
       const rawText = extractFirstCandidateText(payload);
 
@@ -529,6 +615,7 @@ export class GeminiJsonProvider implements AiJsonProvider {
         reservationClosed = true;
         await updateAiUsageLog(usageLogId, {
           status: usageStatusForErrorCode(code),
+          providerStatus: 'deterministic_fallback',
           model: modelVersion,
           promptTokens: tokenUsage.inputTokens,
           outputTokens: tokenUsage.outputTokens,
@@ -575,6 +662,16 @@ export class GeminiJsonProvider implements AiJsonProvider {
         );
       }
 
+      if (containsForbiddenAiOutput(validation.data)) {
+        await finalizeFailedUsage('validation_failed');
+        throw new AiProviderError(
+          'AI provider returned prohibited decision language.',
+          'validation_failed',
+          502,
+          false
+        );
+      }
+
       if (usageEnabled && usageLogId && inputHash && cacheKey) {
         const actualCostOre = computeGeminiCostOre({
           model: modelVersion,
@@ -591,6 +688,7 @@ export class GeminiJsonProvider implements AiJsonProvider {
 
         await updateAiUsageLog(usageLogId, {
           status: 'success',
+          providerStatus: 'provider_success',
           model: modelVersion,
           outputHash,
           promptTokens: tokenUsage.inputTokens,
@@ -670,6 +768,16 @@ export class GeminiJsonProvider implements AiJsonProvider {
           reservationClosed = true;
           await updateAiUsageLog(usageLogId, {
             status: usageStatusForErrorCode(error.code),
+            providerStatus:
+              error.code === 'quota_exceeded'
+                ? 'quota_exhausted'
+                : error.code === 'budget_exceeded'
+                  ? 'budget_blocked'
+                  : error.code === 'rate_limited'
+                    ? 'rate_limited'
+                    : error.code === 'model_error'
+                      ? 'deterministic_fallback'
+                      : 'provider_error',
             reservedOre: 0,
             errorCode: error.code,
             latencyMs: Date.now() - startedAt,
@@ -693,31 +801,6 @@ export class GeminiJsonProvider implements AiJsonProvider {
         }
         throw error;
       }
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        if (usageEnabled && usageLogId && inputHash && !reservationClosed) {
-          await releaseAiBudgetReservation(reservation);
-          reservationClosed = true;
-          await updateAiUsageLog(usageLogId, {
-            status: 'model_error',
-            reservedOre: 0,
-            errorCode: 'model_error',
-            latencyMs: Date.now() - startedAt,
-          });
-          await recordAiSuggestionEvent({
-            usageLogId,
-            eventType: 'provider_failed',
-            userId: usageContext!.userId,
-            orgId: usageContext!.orgId,
-            feature: params.feature,
-            entityType: usageContext!.entityType,
-            entityId: usageContext!.entityId,
-            inputHash,
-            safeMetadata: { code: 'timeout' },
-          });
-        }
-        throw new AiProviderError('AI provider request timed out.', 'model_error', 504, true);
-      }
-
       log.error('ai_provider.gemini.generate_json_failed', {
         requestId: params.requestId,
         promptVersion: params.promptVersion,
@@ -732,6 +815,7 @@ export class GeminiJsonProvider implements AiJsonProvider {
         reservationClosed = true;
         await updateAiUsageLog(usageLogId, {
           status: 'model_error',
+          providerStatus: 'deterministic_fallback',
           reservedOre: 0,
           errorCode: 'model_error',
           latencyMs: Date.now() - startedAt,
@@ -749,8 +833,6 @@ export class GeminiJsonProvider implements AiJsonProvider {
         });
       }
       throw new AiProviderError('AI provider request failed.', 'model_error', 500, true);
-    } finally {
-      clearTimeout(timer);
     }
   }
 }

@@ -1,18 +1,28 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ContextTab } from '@/components/profile/editable-profile/ContextTab';
 import { Tabs } from '@/components/ui/tabs';
 
-vi.mock('@/components/expertise/cv-import/CvImportWizard', () => ({
-  CvImportWizard: ({ onApplyComplete }: { onApplyComplete?: () => void }) => (
-    <div data-testid="cv-import-wizard">
+vi.mock('@/components/profile/StartFromCvDialog', () => ({
+  StartFromCvDialog: ({ onApplyComplete }: { onApplyComplete?: () => void }) => (
+    <div data-testid="start-from-cv-dialog">
       <button type="button" onClick={() => onApplyComplete?.()}>
-        mock-apply-cv-import
+        mock-apply-start-from-cv
       </button>
     </div>
   ),
+}));
+
+const startFromCvStatus = vi.hoisted(() => ({
+  visible: false,
+  available: false,
+  blockers: [] as string[],
+}));
+
+vi.mock('@/hooks/useStartFromCvBetaStatus', () => ({
+  useStartFromCvBetaStatus: () => startFromCvStatus,
 }));
 
 const baseProps = {
@@ -39,16 +49,33 @@ function renderContextTab(props: React.ComponentProps<typeof ContextTab>) {
 }
 
 describe('profile context CV import', () => {
-  it('opens the CV import flow from the Context tab and refreshes after apply', () => {
+  afterEach(() => {
+    startFromCvStatus.visible = false;
+    startFromCvStatus.available = false;
+    startFromCvStatus.blockers = [];
+  });
+
+  it('hides Start from CV when the beta flag is off', () => {
+    startFromCvStatus.visible = false;
+    startFromCvStatus.available = false;
+
+    renderContextTab({ ...baseProps, onImportComplete: vi.fn() });
+
+    expect(screen.queryByRole('button', { name: /Start from CV/i })).not.toBeInTheDocument();
+  });
+
+  it('opens Start from CV from the Context tab and refreshes after apply', () => {
     const onImportComplete = vi.fn();
+    startFromCvStatus.visible = true;
+    startFromCvStatus.available = true;
 
     renderContextTab({ ...baseProps, onImportComplete });
 
-    fireEvent.click(screen.getByRole('button', { name: /Import CV/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /Start from CV/i })[0]);
 
-    expect(screen.getByTestId('cv-import-wizard')).toBeInTheDocument();
+    expect(screen.getByTestId('start-from-cv-dialog')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'mock-apply-cv-import' }));
+    fireEvent.click(screen.getByRole('button', { name: 'mock-apply-start-from-cv' }));
 
     expect(onImportComplete).toHaveBeenCalledTimes(1);
   });

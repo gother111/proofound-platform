@@ -1,9 +1,9 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-03`
+> Last Verified: `2026-05-04`
 
 # Proofound AI Assistive Layer Technical Requirements
 
-**Status:** Proposed technical addendum  
+**Status:** Controlled rollout technical addendum
 **Date:** 2026-05-03  
 **Audience:** Engineering, QA, privacy, ops  
 **Authority:** Subordinate to `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, and `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`.
@@ -27,6 +27,50 @@ The AI layer must be:
 - safe to disable without breaking the core MVP
 
 The AI layer must not introduce AI scoring, ranking, fit judgments, or hiring recommendations.
+
+---
+
+## 0.1 Rollout-State Technical Contract
+
+### Production-eligible assistive AI
+
+The following assistive AI surfaces are production-eligible only after all production gates pass:
+
+- `proof_pack_assistant`
+- `assignment_clarity`
+- `verification_request_composer`
+- `privacy_preflight`
+- `ai_suggestion_events`
+
+Required production gates:
+
+- live Gemini model smoke succeeds against the configured production model ID
+- app-level monthly hard cap blocks calls before provider spend exceeds the cap
+- launch status reports AI enabled/disabled state, budget state, model ID, and raw-prompt logging state without secrets or prompts
+- privacy/redaction tests pass for each feature
+- raw prompt logging is disabled in production-like environments
+- feature flags and deterministic fallbacks are verified
+
+### Invite-only OCR beta
+
+Google Cloud Document AI OCR may be used only for invite-only Proof Artifact Text Extraction. It must not be wired to CV import or profile import, and it must not be treated as a broad production OCR dependency.
+
+Technical beta requirements:
+
+- explicit user consent per document before OCR
+- invite gate plus server-side feature flag
+- maximum one document per request initially
+- page cap and file-size cap enforced before provider call
+- app-level OCR spend cap enforced in app/service code
+- safe disabled and expired states that make no Cloud Run call
+- Cloud Run max instances set to `1` initially and never above `3` during beta
+- Document AI only; Cloud Vision OCR is excluded
+- output returned only as user-reviewable draft text
+- no automatic proof writes, publication, verification, score, rank, shortlist, match-state update, review-state update, trust-state update, or hiring recommendation
+
+Google Cloud budgets are alerting tools only. They are not hard caps. Hard caps must be enforced in the Proofound app and/or OCR worker before any Document AI call.
+
+The temporary credit window is expected to expire around `2026-08-03`. The release owner must make a disable-or-pay decision no later than `2026-07-24`, and the default decision is disable unless billing and privacy owners explicitly approve continued spend.
 
 ---
 
@@ -146,14 +190,16 @@ Recommended environment variables:
 ```bash
 AI_ASSISTANTS_ENABLED=false
 AI_PROVIDER=gemini
-AI_MODEL_DEFAULT=gemini-2.5-flash-lite
+AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
 AI_MODEL_FALLBACK=
+AI_MODEL_FALLBACK_VERIFIED=false
+AI_PROVIDER_SMOKE_LAST_SUCCESS_AT=
 
 AI_GEMINI_PROD_API_KEY=
 AI_GEMINI_STAGING_API_KEY=
 
-AI_MONTHLY_HARD_CAP_SEK=160
-AI_PROD_MONTHLY_HARD_CAP_SEK=160
+AI_MONTHLY_HARD_CAP_SEK=500
+AI_PROD_MONTHLY_HARD_CAP_SEK=500
 AI_ABSOLUTE_MONTHLY_STOP_SEK=160
 AI_USD_TO_SEK_RATE=10.5
 
@@ -167,8 +213,9 @@ AI_PRIVACY_PREFLIGHT_MAX_OUTPUT_TOKENS=500
 AI_CACHE_TTL_DAYS=30
 AI_RAW_PROMPT_LOGGING_ENABLED=false
 AI_REQUIRE_USER_CONSENT=true
-AI_USER_DAILY_LIMIT=50
-AI_ORG_DAILY_LIMIT=200
+AI_GLOBAL_DAILY_LIMIT=250
+AI_USER_DAILY_LIMIT=20
+AI_ORG_DAILY_LIMIT=50
 AI_PROOF_PACK_ASSISTANT_DAILY_LIMIT=500
 AI_ASSIGNMENT_CLARITY_DAILY_LIMIT=500
 AI_VERIFICATION_REQUEST_COMPOSER_DAILY_LIMIT=500
@@ -604,7 +651,7 @@ Add AI state to launch status or admin-only launch diagnostics:
 {
   "aiAssistantsEnabled": false,
   "aiProvider": "gemini",
-  "aiModelDefault": "gemini-2.5-flash-lite",
+  "aiModelDefault": "gemini-3.1-flash-lite-preview",
   "aiMonthlyCapSek": 120,
   "aiSpendThisMonthSek": 0,
   "aiBudgetState": "disabled|healthy|near_cap|exhausted",

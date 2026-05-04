@@ -1,5 +1,16 @@
 import { useState } from 'react';
-import { FileText, Loader2, Plus, Sparkles, Trash2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ClipboardCheck,
+  FileSearch,
+  FileText,
+  Loader2,
+  Plus,
+  Sparkles,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { apiFetch } from '@/lib/api/fetch';
@@ -17,6 +28,8 @@ import {
 import { proofTypeLabel } from '@/lib/copy/labels';
 import { Textarea } from '@/components/ui/textarea';
 import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
+import { useAssistiveAiFlag } from '@/hooks/useAssistiveAiFlag';
+import { useProofArtifactOcrBetaStatus } from '@/hooks/useProofArtifactOcrBetaStatus';
 
 import type { Proof, ProofDraft } from './types';
 
@@ -38,6 +51,7 @@ type ProofsSectionProps = {
 
 type ProofPackAssistantSuggestion = {
   suggestionId?: string | null;
+  fallback?: boolean;
   missingContext: string[];
   suggestedRewrite: {
     title?: string | null;
@@ -59,6 +73,38 @@ type AssistantState = {
   acceptedFields: Record<string, boolean>;
 };
 
+type ProofArtifactOcrDraftFields = {
+  title?: string;
+  summary?: string;
+  evidenceSummary?: string;
+  outcomesSummary?: string;
+  ownershipStatement?: string;
+};
+
+type ProofArtifactOcrResult = {
+  requestId: string;
+  artifactId: string;
+  status: 'completed';
+  draftOnly: true;
+  provider: string;
+  pageCount: number;
+  confidence: number;
+  extractedTextPreview: string;
+  privacyRiskWarnings: string[];
+  suggestedProofPackFieldsDraft: ProofArtifactOcrDraftFields;
+};
+
+type OcrState = {
+  consentOpen: boolean;
+  consentAccepted: boolean;
+  loading: boolean;
+  applying: boolean;
+  error: string | null;
+  result: ProofArtifactOcrResult | null;
+  privacyConfirmed: boolean;
+  applied: boolean;
+};
+
 const ASSISTANT_FIELDS: Array<{
   key: keyof ProofPackAssistantSuggestion['suggestedRewrite'];
   label: string;
@@ -72,6 +118,34 @@ const ASSISTANT_FIELDS: Array<{
 
 function resolveProofPackId(proof: Proof) {
   return proof.canonicalPackId || proof.canonical_pack_id || null;
+}
+
+function resolveProofArtifactId(proof: Proof) {
+  return proof.canonicalArtifactId || proof.canonical_artifact_id || null;
+}
+
+function createOcrState(overrides: Partial<OcrState> = {}): OcrState {
+  return {
+    consentOpen: false,
+    consentAccepted: false,
+    loading: false,
+    applying: false,
+    error: null,
+    result: null,
+    privacyConfirmed: false,
+    applied: false,
+    ...overrides,
+  };
+}
+
+function ocrUnavailableCopy(reason: string | null) {
+  if (reason === 'missing_budget_or_hard_caps') {
+    return 'OCR is temporarily unavailable because the beta budget cap is not ready. You can still upload the document and edit the Proof Pack manually.';
+  }
+  if (reason === 'disabled') {
+    return 'OCR is currently disabled. Upload the proof document and add the relevant text manually.';
+  }
+  return 'OCR is unavailable right now. Upload the proof document and continue with manual Proof Pack editing.';
 }
 
 function recordAssistantEvent(
@@ -112,7 +186,10 @@ export function ProofsSection({
   const router = useRouter();
   const recoveryActions = getIndividualRecoveryActions('proofs-empty');
   const isProofLimitReached = proofs.length >= MAX_PROOFS_PER_SKILL;
+  const assistiveAiEnabled = useAssistiveAiFlag();
+  const proofArtifactOcrStatus = useProofArtifactOcrBetaStatus();
   const [assistantByPackId, setAssistantByPackId] = useState<Record<string, AssistantState>>({});
+  const [ocrByArtifactId, setOcrByArtifactId] = useState<Record<string, OcrState>>({});
 
   const requestAssistant = async (proofPackId: string) => {
     setAssistantByPackId((current) => ({
@@ -251,6 +328,107 @@ export function ProofsSection({
       delete next[proofPackId];
       return next;
     });
+  };
+
+  const updateOcrState = (artifactId: string, patch: Partial<OcrState>) => {
+    setOcrByArtifactId((current) => ({
+      ...current,
+      [artifactId]: createOcrState({
+        ...(current[artifactId] ?? {}),
+        ...patch,
+      }),
+    }));
+  };
+
+  const requestProofArtifactOcr = async (artifactId: string) => {
+    const current = ocrByArtifactId[artifactId];
+    if (!current?.consentAccepted) {
+      updateOcrState(artifactId, {
+        consentOpen: true,
+        error: 'Review and confirm the OCR consent before extraction.',
+      });
+      return;
+    }
+
+    updateOcrState(artifactId, {
+      loading: true,
+      error: null,
+      applied: false,
+    });
+
+    try {
+      const response = await apiFetch(`/api/proof-artifacts/${artifactId}/text-extraction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consentToProcess: true }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || 'OCR is unavailable. Continue with manual editing.');
+      }
+
+      const result = (await response.json()) as ProofArtifactOcrResult;
+      updateOcrState(artifactId, {
+        loading: false,
+        error: null,
+        result,
+        consentOpen: false,
+        privacyConfirmed: false,
+      });
+    } catch (error) {
+      updateOcrState(artifactId, {
+        loading: false,
+        error: error instanceof Error ? error.message : 'OCR is unavailable.',
+      });
+    }
+  };
+
+  const applyProofArtifactOcrDraft = async (
+    artifactId: string,
+    proofPackId: string,
+    result: ProofArtifactOcrResult
+  ) => {
+    const current = ocrByArtifactId[artifactId];
+    if (!current?.privacyConfirmed) {
+      updateOcrState(artifactId, {
+        error: 'Confirm the privacy warning before copying OCR text into a Proof Pack draft.',
+      });
+      return;
+    }
+
+    updateOcrState(artifactId, {
+      applying: true,
+      error: null,
+    });
+
+    try {
+      const response = await apiFetch(`/api/proof-artifacts/${artifactId}/text-extraction/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          proofPackId,
+          sourceExtractionRequestId: result.requestId,
+          selectedFields: result.suggestedProofPackFieldsDraft,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || 'Selected OCR draft text could not be copied.');
+      }
+
+      updateOcrState(artifactId, {
+        applying: false,
+        applied: true,
+      });
+    } catch (error) {
+      updateOcrState(artifactId, {
+        applying: false,
+        error:
+          error instanceof Error ? error.message : 'Selected OCR draft text could not be copied.',
+      });
+    }
   };
 
   return (
@@ -471,7 +649,15 @@ export function ProofsSection({
             <Card key={proof.id} className="p-3 border-proofound-stone">
               {(() => {
                 const proofPackId = resolveProofPackId(proof);
+                const proofArtifactId = resolveProofArtifactId(proof);
                 const assistant = proofPackId ? assistantByPackId[proofPackId] : null;
+                const ocr = proofArtifactId ? ocrByArtifactId[proofArtifactId] : null;
+                const canShowOcr =
+                  proofArtifactOcrStatus.visible &&
+                  proof.proof_type === 'document' &&
+                  Boolean(proof.file_path) &&
+                  Boolean(proofArtifactId) &&
+                  Boolean(proofPackId);
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const expiresDate = proof.expires_date ? new Date(proof.expires_date) : null;
@@ -523,7 +709,7 @@ export function ProofsSection({
                             Expires: {new Date(proof.expires_date).toLocaleDateString()}
                           </p>
                         )}
-                        {proofPackId && (
+                        {proofPackId && assistiveAiEnabled && (
                           <div className="mt-3 space-y-2">
                             <Button
                               type="button"
@@ -538,12 +724,206 @@ export function ProofsSection({
                               ) : (
                                 <Sparkles className="h-4 w-4 mr-2" />
                               )}
-                              Improve this proof
+                              Improve clarity
                             </Button>
                             <p className="text-xs text-muted-foreground">
-                              Sends selected Proof Pack text only. Does not review full files by
-                              default.
+                              AI suggestions are drafts. They do not verify, score, rank, or
+                              evaluate anyone.
                             </p>
+                          </div>
+                        )}
+                        {canShowOcr && proofArtifactId && proofPackId && (
+                          <div className="mt-3 rounded-lg border border-proofound-stone bg-white p-3">
+                            {!proofArtifactOcrStatus.available ? (
+                              <div className="flex gap-2 text-sm text-muted-foreground">
+                                <FileSearch className="mt-0.5 h-4 w-4 text-proofound-forest" />
+                                <p>
+                                  {ocrUnavailableCopy(proofArtifactOcrStatus.unavailableReason)}
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      updateOcrState(proofArtifactId, {
+                                        consentOpen: true,
+                                        error: null,
+                                      })
+                                    }
+                                    disabled={ocr?.loading}
+                                    className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
+                                  >
+                                    {ocr?.loading ? (
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    ) : (
+                                      <FileSearch className="h-4 w-4 mr-2" />
+                                    )}
+                                    Extract text from this proof document
+                                  </Button>
+                                  <span className="text-xs text-muted-foreground">
+                                    Optional beta. Draft text only.
+                                  </span>
+                                </div>
+
+                                {ocr?.consentOpen && !ocr.result && (
+                                  <div className="rounded-md border border-proofound-stone bg-japandi-bg/60 p-3">
+                                    <p className="text-sm font-medium text-foreground">
+                                      Consent before OCR
+                                    </p>
+                                    <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                                      <li>
+                                        This document will be processed by Google Cloud Document AI.
+                                      </li>
+                                      <li>OCR is optional.</li>
+                                      <li>Extracted text is a draft.</li>
+                                      <li>Nothing is published automatically.</li>
+                                      <li>Nothing is verified automatically.</li>
+                                      <li>Nothing is used for ranking, scoring, or matching.</li>
+                                      <li>You can delete or discard extracted text.</li>
+                                    </ul>
+                                    <label className="mt-3 flex items-start gap-2 text-xs text-foreground">
+                                      <input
+                                        type="checkbox"
+                                        checked={ocr.consentAccepted}
+                                        onChange={(event) =>
+                                          updateOcrState(proofArtifactId, {
+                                            consentAccepted: event.target.checked,
+                                            error: null,
+                                          })
+                                        }
+                                        className="mt-0.5"
+                                      />
+                                      I consent to process this proof document for optional OCR.
+                                    </label>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() => requestProofArtifactOcr(proofArtifactId)}
+                                        disabled={!ocr.consentAccepted || ocr.loading}
+                                        className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                                      >
+                                        {ocr.loading && (
+                                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        )}
+                                        Run OCR
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          updateOcrState(proofArtifactId, {
+                                            consentOpen: false,
+                                            consentAccepted: false,
+                                            error: null,
+                                          })
+                                        }
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {ocr?.error && (
+                                  <p className="rounded-md border border-[#F5D6CD] bg-[#FFF0F0] px-3 py-2 text-sm text-[#8B4A36]">
+                                    {ocr.error}
+                                  </p>
+                                )}
+
+                                {ocr?.result && (
+                                  <div className="rounded-md border border-proofound-stone bg-japandi-bg/60 p-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div>
+                                        <p className="text-sm font-medium text-foreground">
+                                          Extracted text preview
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          Draft only. Review and edit before keeping anything.
+                                        </p>
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          updateOcrState(proofArtifactId, createOcrState())
+                                        }
+                                      >
+                                        <X className="h-4 w-4 mr-1" />
+                                        Discard
+                                      </Button>
+                                    </div>
+                                    <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap rounded-md border border-proofound-stone bg-white p-3 text-xs text-foreground">
+                                      {ocr.result.extractedTextPreview}
+                                    </pre>
+                                    <div className="mt-3 rounded-md border border-[#F5D6CD] bg-[#FFF8F5] p-3">
+                                      <div className="flex items-start gap-2">
+                                        <AlertTriangle className="mt-0.5 h-4 w-4 text-[#8B4A36]" />
+                                        <div>
+                                          <p className="text-xs font-medium text-[#8B4A36]">
+                                            Privacy warnings
+                                          </p>
+                                          <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-[#8B4A36]">
+                                            {ocr.result.privacyRiskWarnings.map((warning) => (
+                                              <li key={warning}>{warning}</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <label className="mt-3 flex items-start gap-2 text-xs text-foreground">
+                                      <input
+                                        type="checkbox"
+                                        checked={ocr.privacyConfirmed}
+                                        onChange={(event) =>
+                                          updateOcrState(proofArtifactId, {
+                                            privacyConfirmed: event.target.checked,
+                                            error: null,
+                                          })
+                                        }
+                                        className="mt-0.5"
+                                      />
+                                      I reviewed the privacy warnings and want to copy selected
+                                      draft text into this Proof Pack draft.
+                                    </label>
+                                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          applyProofArtifactOcrDraft(
+                                            proofArtifactId,
+                                            proofPackId,
+                                            ocr.result as ProofArtifactOcrResult
+                                          )
+                                        }
+                                        disabled={!ocr.privacyConfirmed || ocr.applying}
+                                      >
+                                        {ocr.applying ? (
+                                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        ) : (
+                                          <ClipboardCheck className="h-4 w-4 mr-2" />
+                                        )}
+                                        Copy to Proof Pack draft
+                                      </Button>
+                                      {ocr.applied && (
+                                        <span className="inline-flex items-center gap-1 text-xs text-proofound-forest">
+                                          <CheckCircle2 className="h-4 w-4" />
+                                          Copied to draft only
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -569,7 +949,9 @@ export function ProofsSection({
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="text-sm font-medium text-foreground">
-                              Suggested improvements
+                              {assistant.suggestion.fallback
+                                ? 'Manual clarity checklist'
+                                : 'Draft assistance'}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               Review, edit, accept individual fields, or dismiss. Nothing is saved

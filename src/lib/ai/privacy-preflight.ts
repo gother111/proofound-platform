@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { generateJson } from '@/lib/ai/provider';
 import { AiProviderError } from '@/lib/ai/provider/types';
 import { hashAiContent } from '@/lib/ai/usage-ledger';
-import { addUnsafeAiRequestPayloadIssue } from '@/lib/ai/request-safety';
+import { addUnsafeAiRequestPayloadIssue, containsForbiddenAiOutput } from '@/lib/ai/request-safety';
 import {
   PRIVACY_PREFLIGHT_PROMPT_VERSION,
   evaluatePrivacyPreflightRules,
@@ -62,6 +62,8 @@ const PRIVACY_PREFLIGHT_RESPONSE_JSON_SCHEMA = {
   },
   required: ['notes'],
 } as const;
+
+const MAX_MODEL_REVIEW_TEXT_CHARS = 1200;
 
 export type PrivacyPreflightRequest = z.infer<typeof PrivacyPreflightRequestSchema>;
 export type PrivacyPreflightResponse = {
@@ -145,7 +147,7 @@ export async function runPrivacyPreflightCheck(params: {
         feature: PRIVACY_PREFLIGHT_FEATURE,
         prompt: buildPrompt({
           surface: parsed.surface,
-          redactedText: deterministic.redactedText,
+          redactedText: deterministic.redactedText.slice(0, MAX_MODEL_REVIEW_TEXT_CHARS),
           flags: deterministic.flags,
         }),
         schema: GeminiPrivacyPreflightSchema,
@@ -171,9 +173,11 @@ export async function runPrivacyPreflightCheck(params: {
 
       modelUsed = true;
       notes.push(
-        ...result.data.notes.map((note) =>
-          note.replace(/\bsafe\b|\bcertified\b|\bcleared\b|\bguaranteed\b/gi, 'reviewed')
-        )
+        ...result.data.notes
+          .map((note) =>
+            note.replace(/\bsafe\b|\bcertified\b|\bcleared\b|\bguaranteed\b/gi, 'reviewed')
+          )
+          .filter((note) => !containsForbiddenAiOutput(note))
       );
     } catch (error) {
       if (!(error instanceof AiProviderError)) {

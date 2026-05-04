@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "provider": "gemini",
+  "generatedAt": "2026-05-04T13:25:48.264Z",
+  "success": false,
+  "defaultModel": {
+    "model": "gemini-3.1-flash-lite-preview",
+    "accepted": false,
+    "usageMetadataState": "missing_safe",
+    "errorCode": "missing_api_key"
+  },
+  "fallbackModel": {
+    "configured": false,
+    "model": null,
+    "accepted": null,
+    "usageMetadataState": "missing_safe"
+  },
+  "jsonSchemaResponseWorks": false,
+  "disabledFailureSafe": true
+}

@@ -97,9 +97,29 @@ describe('/api/monitoring/launch-status', () => {
     (getHttpMonitorKeysNeedingRefresh as any).mockReturnValue([]);
     (getAiLaunchOperationalSummary as any).mockResolvedValue({
       aiAssistantsEnabled: false,
+      aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+      aiFallbackModel: null,
+      aiFallbackModelState: 'unset',
+      aiFallbackModelConfigured: false,
+      aiFallbackModelVerified: false,
+      aiLastSuccessfulProviderSmokeAt: null,
       aiMonthlyCapSek: 250,
+      aiHardCapConfigured: true,
       aiSpendThisMonthSek: 0,
+      currentAiMonthToDateSpendSek: 0,
+      aiMonthlyHardCapSek: 250,
+      aiMonthlyHardCapPercentUsed: 0,
+      aiMonthlyHardCapExhausted: false,
       aiBudgetState: 'disabled',
+      aiRateLimitHealth: {
+        ok: true,
+        globalDailyLimit: 250,
+        userDailyLimit: 20,
+        orgDailyLimit: 50,
+        defaultFeatureDailyLimit: 500,
+        perFeatureDailyLimits: {},
+        configurablePerFeatureLimits: true,
+      },
       aiRawPromptLoggingEnabled: false,
     });
   });
@@ -144,10 +164,31 @@ describe('/api/monitoring/launch-status', () => {
     expect(body.summary).toEqual(
       expect.objectContaining({
         aiAssistantsEnabled: false,
+        aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+        aiFallbackModelState: 'unset',
+        aiFallbackModelConfigured: false,
+        aiFallbackModelVerified: false,
+        aiLastSuccessfulProviderSmokeAt: null,
         aiMonthlyCapSek: 250,
+        aiHardCapConfigured: true,
         aiSpendThisMonthSek: 0,
+        currentAiMonthToDateSpendSek: 0,
+        aiMonthlyHardCapSek: 250,
+        aiMonthlyHardCapPercentUsed: 0,
+        aiMonthlyHardCapExhausted: false,
+        aiRateLimitHealth: expect.objectContaining({
+          ok: true,
+          globalDailyLimit: 250,
+          userDailyLimit: 20,
+          orgDailyLimit: 50,
+        }),
         aiBudgetState: 'disabled',
         aiRawPromptLoggingEnabled: false,
+        gcpOcr: expect.objectContaining({
+          status: 'disabled',
+          enabled: false,
+          available: false,
+        }),
       })
     );
     expect(body.notReadyReasons).toEqual([]);
@@ -168,9 +209,29 @@ describe('/api/monitoring/launch-status', () => {
     (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
     (getAiLaunchOperationalSummary as any).mockResolvedValueOnce({
       aiAssistantsEnabled: true,
+      aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+      aiFallbackModel: 'gemini-explicit-fallback',
+      aiFallbackModelState: 'configured_verified',
+      aiFallbackModelConfigured: true,
+      aiFallbackModelVerified: true,
+      aiLastSuccessfulProviderSmokeAt: '2026-03-10T09:58:00.000Z',
       aiMonthlyCapSek: 250,
+      aiHardCapConfigured: true,
       aiSpendThisMonthSek: 12.5,
+      currentAiMonthToDateSpendSek: 12.5,
+      aiMonthlyHardCapSek: 250,
+      aiMonthlyHardCapPercentUsed: 5,
+      aiMonthlyHardCapExhausted: false,
       aiBudgetState: 'raw_prompt_logging_blocked',
+      aiRateLimitHealth: {
+        ok: true,
+        globalDailyLimit: 250,
+        userDailyLimit: 20,
+        orgDailyLimit: 50,
+        defaultFeatureDailyLimit: 500,
+        perFeatureDailyLimits: {},
+        configurablePerFeatureLimits: true,
+      },
       aiRawPromptLoggingEnabled: true,
     });
 
@@ -183,8 +244,19 @@ describe('/api/monitoring/launch-status', () => {
     expect(body.summary).toEqual(
       expect.objectContaining({
         aiAssistantsEnabled: true,
+        aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+        aiFallbackModel: 'gemini-explicit-fallback',
+        aiFallbackModelState: 'configured_verified',
+        aiFallbackModelConfigured: true,
+        aiFallbackModelVerified: true,
+        aiLastSuccessfulProviderSmokeAt: '2026-03-10T09:58:00.000Z',
         aiMonthlyCapSek: 250,
+        aiHardCapConfigured: true,
         aiSpendThisMonthSek: 12.5,
+        currentAiMonthToDateSpendSek: 12.5,
+        aiMonthlyHardCapSek: 250,
+        aiMonthlyHardCapPercentUsed: 5,
+        aiMonthlyHardCapExhausted: false,
         aiBudgetState: 'raw_prompt_logging_blocked',
         aiRawPromptLoggingEnabled: true,
       })
@@ -202,9 +274,29 @@ describe('/api/monitoring/launch-status', () => {
     (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
     (getAiLaunchOperationalSummary as any).mockResolvedValueOnce({
       aiAssistantsEnabled: true,
+      aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+      aiFallbackModel: null,
+      aiFallbackModelState: 'unset',
+      aiFallbackModelConfigured: false,
+      aiFallbackModelVerified: false,
+      aiLastSuccessfulProviderSmokeAt: null,
       aiMonthlyCapSek: null,
+      aiHardCapConfigured: false,
       aiSpendThisMonthSek: 0,
+      currentAiMonthToDateSpendSek: 0,
+      aiMonthlyHardCapSek: null,
+      aiMonthlyHardCapPercentUsed: null,
+      aiMonthlyHardCapExhausted: false,
       aiBudgetState: 'cap_not_configured',
+      aiRateLimitHealth: {
+        ok: true,
+        globalDailyLimit: 250,
+        userDailyLimit: 20,
+        orgDailyLimit: 50,
+        defaultFeatureDailyLimit: 500,
+        perFeatureDailyLimits: {},
+        configurablePerFeatureLimits: true,
+      },
       aiRawPromptLoggingEnabled: false,
     });
 
@@ -234,9 +326,29 @@ describe('/api/monitoring/launch-status', () => {
     (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
     (getAiLaunchOperationalSummary as any).mockResolvedValueOnce({
       aiAssistantsEnabled: true,
+      aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+      aiFallbackModel: null,
+      aiFallbackModelState: 'unset',
+      aiFallbackModelConfigured: false,
+      aiFallbackModelVerified: false,
+      aiLastSuccessfulProviderSmokeAt: null,
       aiMonthlyCapSek: 160,
+      aiHardCapConfigured: true,
       aiSpendThisMonthSek: 160,
+      currentAiMonthToDateSpendSek: 160,
+      aiMonthlyHardCapSek: 160,
+      aiMonthlyHardCapPercentUsed: 100,
+      aiMonthlyHardCapExhausted: true,
       aiBudgetState: 'exhausted',
+      aiRateLimitHealth: {
+        ok: true,
+        globalDailyLimit: 250,
+        userDailyLimit: 20,
+        orgDailyLimit: 50,
+        defaultFeatureDailyLimit: 500,
+        perFeatureDailyLimits: {},
+        configurablePerFeatureLimits: true,
+      },
       aiRawPromptLoggingEnabled: false,
     });
 
@@ -315,6 +427,41 @@ describe('/api/monitoring/launch-status', () => {
         code: 'missing_email_provider_dependency',
         source: 'dependency',
         monitorKeys: ['email_provider_dependency'],
+      }),
+    ]);
+  });
+
+  it('blocks launch status when GCP OCR is enabled without an expiry date', async () => {
+    vi.stubEnv('GCP_CV_OCR_ENABLED', 'true');
+    vi.stubEnv('GCP_CV_OCR_EXPIRES_AT', '');
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.ok).toBe(false);
+    expect(body.readinessState).toBe('blocked');
+    expect(body.summary.gcpOcr).toEqual(
+      expect.objectContaining({
+        status: 'fallback',
+        enabled: true,
+        available: false,
+        unavailableReason: 'missing_expiry',
+      })
+    );
+    expect(body.dependencies.gcpOcr).toEqual(
+      expect.objectContaining({
+        ok: false,
+        status: 'fallback',
+        unavailableReason: 'missing_expiry',
+      })
+    );
+    expect(body.notReadyReasons).toEqual([
+      expect.objectContaining({
+        code: 'gcp_ocr_missing_expiry',
+        source: 'dependency',
+        monitorKeys: ['gcp_ocr_governance'],
       }),
     ]);
   });

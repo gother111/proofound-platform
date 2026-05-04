@@ -1,9 +1,9 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-03`
+> Last Verified: `2026-05-04`
 
 # Proofound MVP AI Assistive Layer Addendum
 
-**Status:** Proposed additive MVP addendum  
+**Status:** Controlled rollout source-of-truth addendum
 **Date:** 2026-05-03  
 **Audience:** Founder, product, engineering, QA, privacy, ops  
 **Authority:** This document is subordinate to `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`. It does not replace, broaden, or reinterpret the locked MVP. It only defines where optional AI assistance is allowed inside the existing MVP corridor.
@@ -24,6 +24,52 @@ The purpose of AI in the MVP is to reduce user friction and improve the quality 
 - privacy preflight before publishing or review
 
 AI must not become the product center.
+
+---
+
+## 0.1 Controlled Rollout Classification
+
+This addendum separates production-eligible assistive AI from the invite-only OCR beta.
+
+### Production-eligible after gates pass
+
+The following Gemini assistive AI features may be considered production-eligible only after live model smoke, app-level hard caps, launch-status checks, privacy tests, and raw-prompt logging checks pass:
+
+- Proof Pack Assistant
+- Assignment Clarity Assistant
+- Verification Request Composer
+- Privacy Preflight
+- Suggestion Event Tracking
+
+Until those gates pass, each feature remains disabled-by-default and must fall back deterministically.
+
+### Production beta only
+
+Proof Artifact Text Extraction using Google Cloud Document AI OCR is a separate invite-only beta. It is not CV import, not profile import, and not a broad production OCR platform.
+
+OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist candidates, or affect match, review, verification, reveal, trust-state, or hiring-decision state.
+
+Every OCR request requires explicit user consent per document and must be feature-flagged, invite-gated, page-limited, file-size-limited, spend-capped, and safe to disable.
+
+### Internal-only / excluded
+
+Internal status checks, synthetic smoke tests, and provider diagnostics may exist only to prove safety. They do not authorize processing real or pilot documents.
+
+Explicitly excluded from the MVP and this rollout:
+
+- CV import wizard
+- AI candidate scoring
+- AI ranking
+- AI shortlisting
+- AI suitability judgments
+- AI hiring recommendations
+- AI verification decisions
+- AI trust-state decisions
+- Gemini skill extractor for employer review
+- taxonomy shortlist
+- reranker
+- Cloud Vision OCR
+- moving core infrastructure from Vercel/Supabase to Google Cloud
 
 ---
 
@@ -205,7 +251,7 @@ If introduced later, it must only explain already existing deterministic reason 
 
 ### 3.1 Default model assumption
 
-The MVP AI assistive layer is designed around Gemini 2.5 Flash-Lite through Google AI Studio or the relevant Google Gemini API surface. As of this addendum, the current Gemini 2.5 Flash-Lite API model code is `gemini-2.5-flash-lite`.
+The MVP AI assistive layer is configured around Gemini 3.1 Flash-Lite Preview through Google AI Studio or the relevant Google Gemini API surface. As of this addendum, the configured model code is `gemini-3.1-flash-lite-preview`.
 
 The exact model identifier must be configured server-side through environment variables. The product must not hardcode the model name in client code.
 
@@ -214,7 +260,7 @@ Recommended environment posture:
 ```bash
 AI_ASSISTANTS_ENABLED=false
 AI_PROVIDER=gemini
-AI_MODEL_DEFAULT=gemini-2.5-flash-lite
+AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
 ```
 
 If the provider exposes a different exact model ID, implementation must update the server-side environment value without changing product behavior.

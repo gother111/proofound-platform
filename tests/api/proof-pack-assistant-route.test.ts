@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 const mocks = vi.hoisted(() => ({
@@ -41,12 +41,27 @@ describe('Proof Pack Assistant route', () => {
     });
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('requires an authenticated user', async () => {
     mocks.requireApiAuthContext.mockResolvedValueOnce(null);
 
     const response = await POST(request({ proofPackId: '11111111-1111-4111-8111-111111111111' }));
 
     expect(response.status).toBe(401);
+    expect(mocks.suggestProofPackForUser).not.toHaveBeenCalled();
+  });
+
+  it('honors the global AI kill switch before assistant service access', async () => {
+    vi.stubEnv('AI_GLOBAL_KILL_SWITCH', 'true');
+
+    const response = await POST(request({ proofPackId: '11111111-1111-4111-8111-111111111111' }));
+    const payload = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(payload.code).toBe('ai_global_kill_switch');
     expect(mocks.suggestProofPackForUser).not.toHaveBeenCalled();
   });
 

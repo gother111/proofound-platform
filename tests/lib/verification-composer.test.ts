@@ -53,13 +53,17 @@ function createAggregate(overrides: Record<string, unknown> = {}) {
       ...((overrides.pack as Record<string, unknown>) ?? {}),
     },
     ownerFull: {
+      hiddenReviewIdentity: {
+        employerNames: ['Acme'],
+        schoolNames: ['Hidden School of Design'],
+      },
       contract: {
         title: 'Hidden Acme launch jane@example.com',
         primaryClaim: {
           statement: 'I coordinated the Acme launch using https://private.example.com.',
         },
         ownershipStatement: 'My private phone was +46701234567.',
-        outcomeSummary: 'Outcome details in Secret-Client-Report.pdf.',
+        outcomeSummary: 'Outcome details in Secret-Client-Report.pdf for Hidden School of Design.',
         timeframe: { start: null, end: null, label: '2026 Q1' },
       },
       items: [
@@ -138,11 +142,14 @@ describe('Verification Request Composer privacy controls', () => {
     expect(serialized).not.toContain('https://private.example.com');
     expect(serialized).not.toContain('+46701234567');
     expect(serialized).not.toContain('Secret-Client-Report.pdf');
+    expect(serialized).not.toContain('Hidden Acme');
+    expect(serialized).not.toContain('Hidden School of Design');
     expect(serialized).toContain('Public evidence title');
     expect(serialized).toContain('[redacted email]');
     expect(serialized).toContain('[redacted url]');
     expect(serialized).toContain('[redacted phone]');
     expect(serialized).toContain('[redacted filename]');
+    expect(serialized).toContain('[redacted hidden identity]');
   });
 
   it('validates ownership before provider access', async () => {

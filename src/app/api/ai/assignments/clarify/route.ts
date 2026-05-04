@@ -5,6 +5,10 @@ import {
   AssignmentClarityRequestSchema,
   suggestAssignmentClarityForUser,
 } from '@/lib/ai/assignment-clarity';
+import {
+  buildAiAssistKillSwitchResponse,
+  isAiAssistDisabledByKillSwitch,
+} from '@/lib/ai/kill-switches';
 import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
 import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
@@ -16,6 +20,12 @@ export async function POST(request: NextRequest) {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (isAiAssistDisabledByKillSwitch('assignment_clarity')) {
+      return NextResponse.json(buildAiAssistKillSwitchResponse('assignment_clarity'), {
+        status: 503,
+      });
     }
 
     const body = await request.json();

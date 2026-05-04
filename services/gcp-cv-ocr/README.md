@@ -1,8 +1,13 @@
-# GCP CV/OCR Cloud Run Service
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-04`
 
-This directory contains the disabled-by-default Cloud Run service for the production OCR provider path.
+# GCP Document AI Proof Artifact OCR Cloud Run Service
+
+This directory contains the disabled-by-default Cloud Run service for the invite-only Proof Artifact Text Extraction beta using Google Cloud Document AI OCR.
 
 It is intentionally not deployment wiring. It contains no GCP project IDs, processor IDs, bucket names, service account JSON, credentials, or secrets.
+
+This service is not CV import, not broad OCR, and not a candidate evaluation system. OCR output is draft text only and must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match/review/trust/hiring state. Cloud Vision OCR is excluded from this rollout.
 
 ## Endpoints
 
@@ -31,13 +36,16 @@ The service accepts JSON with a base64 document body:
 ```json
 {
   "contentType": "application/pdf",
-  "fileBase64": "JVBERi0xLjQK..."
+  "fileBase64": "JVBERi0xLjQK...",
+  "requesterRef": "req_opaque_daily_limit_ref"
 }
 ```
 
 The service generates opaque `requestId` and `documentId` values. Do not send filenames, storage paths, buckets, processor IDs, headers, or secrets in the payload.
 
-The default provider is a mock Document AI/Vision-style client. Production deployments should set `GCP_CV_OCR_PROVIDER=document_ai`.
+The default provider is a mock Document AI-style client. Production-beta deployments should set `GCP_CV_OCR_PROVIDER=document_ai`.
+
+Cloud Run max instances should start at `1` and must not exceed `3` during beta. Google Cloud budgets are alerts only; app/service code must enforce hard caps before Document AI calls.
 
 To enable the live Document AI path inside Cloud Run, set these service-only values:
 
@@ -49,3 +57,5 @@ GCP_CV_OCR_DOCUMENT_AI_PROCESSOR_ID=<processor-id>
 ```
 
 The Document AI provider uses the Cloud Run service account through Google Application Default Credentials. Do not create or commit service account JSON keys. Unit tests mock the provider response and must not require Google credentials or live cloud access.
+
+See `DEPLOYMENT.md` for the private Cloud Run, max-instance, budget, logging, and synthetic-smoke deployment checklist.

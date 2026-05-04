@@ -1,11 +1,13 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-03`
+> Last Verified: `2026-05-04`
 
 # Proofound AI Document Patch Map
 
 **Status:** Repo patch guide  
 **Date:** 2026-05-03  
 **Purpose:** This document shows exactly what to add to existing Proofound docs without rewriting the locked MVP.
+
+**2026-05-04 rollout ruling:** Assistive AI may be production-eligible only after live Gemini model smoke, app-level hard caps, launch-status checks, privacy tests, and raw-prompt logging checks pass. Google Cloud OCR is production-beta only for invite-gated Proof Artifact Text Extraction using Document AI. It is not CV import, not Cloud Vision OCR, not AI scoring/ranking/shortlisting, and not a move away from Vercel/Supabase.
 
 ---
 
@@ -19,6 +21,9 @@ docs/ai/Proofound_AI_Assistive_Layer_Technical_Requirements_2026-05-03.md
 docs/ai/Proofound_AI_Assistive_Layer_Launch_Runbook_Addendum_2026-05-03.md
 docs/ai/Proofound_AI_Assistive_Layer_Codex_Prompts_2026-05-03.md
 docs/ai/Proofound_AI_Document_Patch_Map_2026-05-03.md
+docs/ai/Proofound_GCP_CV_OCR_Production_Integration_Proposal_2026-05-03.md
+docs/ai/Proofound_Temporary_GCP_CV_OCR_Sandbox_Reference_2026-05-03.md
+docs/ai/Proofound_Temporary_GCP_CV_OCR_Sandbox_Setup_Runbook_2026-05-03.md
 ```
 
 Then make the small edits below.
@@ -145,7 +150,7 @@ An optional model check may be used only after deterministic redaction and only 
 ```md
 ### Optional AI assistive layer
 
-The technical architecture may include an optional server-side AI assistive layer using a provider abstraction. Gemini 2.5 Flash-Lite is the default testing assumption, but the exact provider model ID must be environment-configured.
+The technical architecture may include an optional server-side AI assistive layer using a provider abstraction. Gemini 3.1 Flash-Lite Preview is the default testing assumption, but the exact provider model ID must be environment-configured.
 
 The AI layer must be disabled by default, rate limited, spend capped, logged, cacheable, and safe to disable without breaking core MVP flows.
 ```
@@ -308,14 +313,14 @@ Add:
 ```bash
 AI_ASSISTANTS_ENABLED=false
 AI_PROVIDER=gemini
-AI_MODEL_DEFAULT=gemini-2.5-flash-lite
+AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
 AI_MODEL_FALLBACK=
 
 AI_GEMINI_PROD_API_KEY=
 AI_GEMINI_STAGING_API_KEY=
 
-AI_MONTHLY_HARD_CAP_SEK=160
-AI_PROD_MONTHLY_HARD_CAP_SEK=160
+AI_MONTHLY_HARD_CAP_SEK=500
+AI_PROD_MONTHLY_HARD_CAP_SEK=500
 AI_ABSOLUTE_MONTHLY_STOP_SEK=160
 AI_USD_TO_SEK_RATE=10.5
 
@@ -324,8 +329,9 @@ AI_DEFAULT_MAX_OUTPUT_TOKENS=700
 AI_CACHE_TTL_DAYS=30
 AI_RAW_PROMPT_LOGGING_ENABLED=false
 AI_REQUIRE_USER_CONSENT=true
-AI_USER_DAILY_LIMIT=50
-AI_ORG_DAILY_LIMIT=200
+AI_GLOBAL_DAILY_LIMIT=250
+AI_USER_DAILY_LIMIT=20
+AI_ORG_DAILY_LIMIT=50
 AI_PROOF_PACK_ASSISTANT_DAILY_LIMIT=500
 AI_ASSIGNMENT_CLARITY_DAILY_LIMIT=500
 AI_VERIFICATION_REQUEST_COMPOSER_DAILY_LIMIT=500
@@ -356,7 +362,7 @@ If AI assistance is implemented, launch status should expose only safe operator 
 {
   "aiAssistantsEnabled": false,
   "aiProvider": "gemini",
-  "aiModelDefault": "gemini-2.5-flash-lite",
+  "aiModelDefault": "gemini-3.1-flash-lite-preview",
   "aiBudgetState": "disabled",
   "aiSpendThisMonthSek": 0,
   "aiMonthlyCapSek": 120,

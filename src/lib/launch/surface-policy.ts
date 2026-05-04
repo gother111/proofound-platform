@@ -82,6 +82,20 @@ const ACTIVE_API_POLICIES = [
   },
   {
     classification: 'active_launch_path',
+    surfaceLabel: 'Start from CV Beta API',
+    detail:
+      'Invite-only Start from CV routes remain active only for candidate-controlled private draft onboarding, never employer CV parsing or candidate evaluation.',
+    matches: (pathname: string) => matchExactOrPrefix('/api/ai/start-from-cv')(pathname),
+  },
+  {
+    classification: 'active_launch_path',
+    surfaceLabel: 'Proof Artifact OCR Beta API',
+    detail:
+      'Invite-only Proof Artifact OCR routes remain active only for draft text extraction on user-owned proof artifacts.',
+    matches: (pathname: string) => matchExactOrPrefix('/api/proof-artifacts')(pathname),
+  },
+  {
+    classification: 'active_launch_path',
     surfaceLabel: 'Assignments API',
     detail: 'Assignment drafting, publishing, and review remain inside the locked launch corridor.',
     matches: (pathname: string) =>

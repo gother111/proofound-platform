@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Architecture.md`
-> Last Verified: `2026-03-12`
+> Last Verified: `2026-05-04`
 
 # Architecture Snapshot
 
@@ -75,9 +75,9 @@ This document records a lightweight, repo-grounded architecture view. Statements
 
 ### Python Compute Layer (Repo Truth)
 
-- Public CV import routes stay in Next.js while Python handles the document-intelligence compute path behind internal-only contracts. (source: src/lib/expertise/python-cv-proxy.ts, api/python/cv_import.py, python_cv/contracts.py)
+- Legacy CV import routes are archived/non-launch. Historical Python document-intelligence contracts remain code context only and do not authorize CV import wizard reactivation. (source: src/lib/expertise/python-cv-proxy.ts, api/python/cv_import.py, python_cv/contracts.py)
 - The Python service can stay in-process or move behind a separate base URL via `PYTHON_CV_IMPORT_BASE_URL` without changing the public TypeScript route surface. (source: src/lib/python-internal/service.ts)
-- Internal queue-backed Python work uses `public.python_internal_jobs` plus the worker route `/api/cron/python-internal-worker` and the internal enqueue route `/api/internal/python-jobs`. CV PDF extraction now also uses the same queue via `document_intelligence_extract_only` jobs, with uploaded PDFs staged in the private `cv-import-temp` storage bucket and polled through `/api/expertise/cv-import/wizard-extract/status`. (source: src/db/schema.ts, src/db/migrations/20260306103000_add_python_internal_jobs.sql, src/db/migrations/20260306201000_add_cv_import_extract_jobs_and_temp_storage.sql, src/app/api/cron/python-internal-worker/route.ts, src/app/api/internal/python-jobs/route.ts, src/app/api/expertise/cv-import/wizard-extract/route.ts, src/app/api/expertise/cv-import/wizard-extract/status/route.ts)
+- Internal queue-backed Python work uses `public.python_internal_jobs` plus the worker route `/api/cron/python-internal-worker` and the internal enqueue route `/api/internal/python-jobs`. Historical CV PDF extraction jobs and the `cv-import-temp` bucket are non-launch context while CV import routes remain archived. (source: src/db/schema.ts, src/db/migrations/20260306103000_add_python_internal_jobs.sql, src/db/migrations/20260306201000_add_cv_import_extract_jobs_and_temp_storage.sql, src/app/api/cron/python-internal-worker/route.ts, src/app/api/internal/python-jobs/route.ts, src/app/api/expertise/cv-import/wizard-extract/route.ts, src/app/api/expertise/cv-import/wizard-extract/status/route.ts)
 
 ### Queue + Worker Flow (Repo Truth)
 

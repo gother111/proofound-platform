@@ -59,8 +59,18 @@ function Harness({ onEnsureDraft = vi.fn() }: { onEnsureDraft?: () => Promise<an
 describe('Assignment Clarity Assistant UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input) === '/api/feature-flags') {
+        return {
+          ok: true,
+          json: async () => ({ flags: { assistiveAiUi: true } }),
+        } as Response;
+      }
+      throw new Error(`Unexpected fetch call: ${String(input)}`);
+    }) as any;
     apiFetchMock.mockResolvedValue(
       mockResponse({
+        suggestionId: '33333333-3333-4333-8333-333333333333',
         ambiguityFlags: ['Outcome summary is vague or missing concrete deliverables.'],
         suggestedRewrite: {
           title: 'Pilot operations lead',
@@ -78,8 +88,9 @@ describe('Assignment Clarity Assistant UI', () => {
   it('shows the button and supports explicit accept and dismiss behavior', async () => {
     render(<Harness />);
 
-    fireEvent.click(screen.getByRole('button', { name: /clarify assignment/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /clarify assignment/i }));
 
+    await screen.findByText('Draft assistance');
     await screen.findByText('Ambiguity flags');
     expect(screen.getByLabelText('Title')).toHaveValue('Pilot operations lead');
     expect(screen.getByTestId('role-value')).toHaveTextContent('Ops lead');
@@ -97,6 +108,48 @@ describe('Assignment Clarity Assistant UI', () => {
       '/api/ai/assignments/clarify',
       expect.objectContaining({ method: 'POST' })
     );
+    expect(apiFetchMock).toHaveBeenCalledWith(
+      '/api/ai/suggestions/events',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.not.stringContaining('Pilot operations lead'),
+      })
+    );
     expect(JSON.stringify(apiFetchMock.mock.calls)).not.toContain('publish');
+  });
+
+  it('shows manual guidance without the AI button when the feature flag is disabled', async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ flags: { assistiveAiUi: false } }),
+    });
+
+    render(<Harness />);
+
+    expect(await screen.findByText(/Manual guidance: name the outcome/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /clarify assignment/i })).not.toBeInTheDocument();
+  });
+
+  it('shows a deterministic manual checklist when provider assistance fails', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      mockResponse({
+        fallback: true,
+        ambiguityFlags: ['AI suggestions are temporarily unavailable; manual editing still works.'],
+        suggestedRewrite: {
+          title: 'Ops lead',
+        },
+        reviewQuestions: ['Which proof artifact would show ownership?'],
+        excludedOrRiskyCriteria: [],
+      })
+    );
+
+    render(<Harness />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /clarify assignment/i }));
+
+    await screen.findByText('Manual clarity checklist');
+    expect(
+      screen.getByText('AI suggestions are temporarily unavailable; manual editing still works.')
+    ).toBeInTheDocument();
   });
 });

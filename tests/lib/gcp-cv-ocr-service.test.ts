@@ -2,16 +2,19 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { InMemoryNonceStore, sha256Hex, signHmacRequest } from '../../services/gcp-cv-ocr/src/auth';
 import { createGcpCvOcrHandler } from '../../services/gcp-cv-ocr/src/handler';
+import { InMemoryDailyLimitStore } from '../../services/gcp-cv-ocr/src/handler';
 import {
   GoogleDocumentAiOcrProvider,
   OcrProviderError,
   type OcrProvider,
 } from '../../services/gcp-cv-ocr/src/provider';
+import { extractTextFromDocument } from '@/lib/expertise/document-extraction-provider';
 
 const SECRET = 'unit-test-secret';
 const NOW_MS = Date.parse('2026-05-03T12:00:00.000Z');
 const NOW_SECONDS = String(Math.floor(NOW_MS / 1000));
 const CONSERVATIVE_CREDIT_CUTOFF = '2026-08-03T00:00:00.000Z';
+const USER_ID = '11111111-1111-4111-8111-111111111111';
 
 function pdfBytes(pages = 1): Buffer {
   const pageObjects = Array.from(
@@ -70,6 +73,7 @@ function testHandler(options: Parameters<typeof createGcpCvOcrHandler>[0] = {}) 
     },
     nowMs: () => NOW_MS,
     nonceStore: new InMemoryNonceStore(),
+    dailyLimitStore: new InMemoryDailyLimitStore(),
     requestIdFactory: () => 'ocr_testrequest000000000000000001',
     documentIdFactory: () => 'doc_testdocument0000000000000001',
     ...options,
@@ -238,6 +242,70 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
     expect((await json(response)).error.code).toBe('too_many_pages');
   });
 
+  it('rejects multi-file request shapes above the configured request limit', async () => {
+    const response = await testHandler()(
+      signedRequest({
+        body: {
+          files: [basePayload(), basePayload()],
+        },
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect((await json(response)).error.code).toBe('too_many_files');
+  });
+
+  it('enforces per-requester and global daily limits before calling the provider', async () => {
+    const extractSpy = vi.fn(async () => ({
+      provider: 'mock' as const,
+      text: 'safe text',
+      confidence: 0.9,
+    }));
+    const handler = testHandler({
+      env: {
+        GCP_CV_OCR_SHARED_SECRET: SECRET,
+        GCP_CV_OCR_USER_DAILY_LIMIT: '1',
+        GCP_CV_OCR_GLOBAL_DAILY_LIMIT: '2',
+      },
+      provider: {
+        extract: extractSpy,
+      },
+    });
+
+    const first = await handler(
+      signedRequest({
+        body: basePayload({ requesterRef: 'req_same_requester_0001' }),
+        nonce: 'nonce-limit-1',
+      })
+    );
+    const secondSameRequester = await handler(
+      signedRequest({
+        body: basePayload({ requesterRef: 'req_same_requester_0001' }),
+        nonce: 'nonce-limit-2',
+      })
+    );
+    const secondRequester = await handler(
+      signedRequest({
+        body: basePayload({ requesterRef: 'req_second_requester_0001' }),
+        nonce: 'nonce-limit-3',
+      })
+    );
+    const globalExceeded = await handler(
+      signedRequest({
+        body: basePayload({ requesterRef: 'req_third_requester_0001' }),
+        nonce: 'nonce-limit-4',
+      })
+    );
+
+    expect(first.status).toBe(200);
+    expect(secondSameRequester.status).toBe(429);
+    expect((await json(secondSameRequester)).error.code).toBe('daily_limit_exceeded');
+    expect(secondRequester.status).toBe(200);
+    expect(globalExceeded.status).toBe(429);
+    expect((await json(globalExceeded)).error.code).toBe('global_limit_exceeded');
+    expect(extractSpy).toHaveBeenCalledTimes(2);
+  });
+
   it('returns a safe provider-timeout response', async () => {
     const neverProvider: OcrProvider = {
       async extract() {
@@ -365,7 +433,7 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
             provider: 'mock',
             text:
               'candidate-secret-cv.pdf cv-import-temp/user/job/candidate-secret-cv.pdf ' +
-              'https://storage.example/cv.pdf?X-Goog-Signature=abc',
+              'https://storage.example/cv.pdf?X-Goog-Signature=abc jane@example.com +46 70 123 45 67',
             confidence: 0.9,
           };
         },
@@ -378,9 +446,13 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
     expect(body.text).toContain('[redacted-file]');
     expect(body.text).toContain('[redacted-path]');
     expect(body.text).toContain('[redacted-url]');
+    expect(body.text).toContain('[redacted-email]');
+    expect(body.text).toContain('[redacted-phone]');
     expect(serialized).not.toContain('candidate-secret-cv.pdf');
     expect(serialized).not.toContain('cv-import-temp/user/job');
     expect(serialized).not.toContain('X-Goog-Signature');
+    expect(serialized).not.toContain('jane@example.com');
+    expect(serialized).not.toContain('+46 70 123 45 67');
   });
 
   it('does not log raw file text on validation or provider failures', async () => {
@@ -507,6 +579,125 @@ describe('temporary GCP CV/OCR Cloud Run service skeleton', () => {
     expect(JSON.stringify(fetchSpy.mock.calls[0][1])).not.toMatch(
       /filename|storagePath|signedUrl|processorId/i
     );
+  });
+
+  it('keeps the Cloud Vision provider non-production-ready', async () => {
+    const response = await testHandler({
+      env: {
+        GCP_CV_OCR_SHARED_SECRET: SECRET,
+        GCP_CV_OCR_PROVIDER: 'gcp_vision',
+      },
+    })(signedRequest({ body: basePayload() }));
+
+    expect(response.status).toBe(502);
+    expect((await json(response)).error.code).toBe('provider_error');
+  });
+
+  it('sends only an opaque requester reference from the Vercel server integration', async () => {
+    const fetchSpy = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          status: 'completed',
+          provider: 'gcp_document_ai',
+          requestId: 'worker_request',
+          documentId: 'worker_document',
+          pageCount: 1,
+          text: 'Synthetic OCR text',
+          metadata: { confidence: 0.9, elapsedMs: 12 },
+          warnings: [],
+        }),
+        {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }
+      );
+    });
+
+    await extractTextFromDocument(
+      {
+        requestId: 'ocr_request_opaque_ref',
+        userId: USER_ID,
+        documentId: 'doc_testdocument0000000000000001',
+        contentType: 'application/pdf',
+        fileBytes: new Uint8Array(pdfBytes(1)),
+        metadata: {},
+      },
+      {
+        config: {
+          available: true,
+          unavailableReason: null,
+          baseUrl: 'https://gcp-cv-ocr.example',
+          authMode: 'hmac',
+          allowedMimeTypes: ['application/pdf'],
+          maxFileSizeBytes: 1024 * 1024,
+        } as any,
+        env: {
+          GCP_CV_OCR_SHARED_SECRET: SECRET,
+        },
+        fetchImpl: fetchSpy as typeof fetch,
+        clock: () => NOW_MS,
+        nonceFactory: () => 'nonce-opaque-ref',
+      }
+    );
+
+    const body = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body));
+    expect(body.requesterRef).toMatch(/^req_[a-f0-9]{32}$/);
+    expect(JSON.stringify(body)).not.toContain(USER_ID);
+  });
+
+  it('treats Cloud Vision worker responses as invalid for the Vercel integration', async () => {
+    const result = await extractTextFromDocument(
+      {
+        requestId: 'ocr_request_cloud_vision_rejected',
+        userRef: {
+          kind: 'opaque_user_ref',
+          value: 'synthetic-user',
+        },
+        documentId: 'doc_testdocument0000000000000001',
+        contentType: 'application/pdf',
+        fileBytes: new Uint8Array(pdfBytes(1)),
+        metadata: {},
+      },
+      {
+        config: {
+          available: true,
+          unavailableReason: null,
+          baseUrl: 'https://gcp-cv-ocr.example',
+          authMode: 'hmac',
+          allowedMimeTypes: ['application/pdf'],
+          maxFileSizeBytes: 1024 * 1024,
+        } as any,
+        env: {
+          GCP_CV_OCR_SHARED_SECRET: SECRET,
+        },
+        fetchImpl: vi.fn(
+          async () =>
+            new Response(
+              JSON.stringify({
+                status: 'completed',
+                provider: 'gcp_vision',
+                requestId: 'worker_request',
+                documentId: 'worker_document',
+                pageCount: 1,
+                text: 'Should not be trusted',
+                metadata: { confidence: 0.9, elapsedMs: 12 },
+                warnings: [],
+              }),
+              {
+                status: 200,
+                headers: { 'content-type': 'application/json' },
+              }
+            )
+        ) as typeof fetch,
+        clock: () => NOW_MS,
+        nonceFactory: () => 'nonce-cloud-vision',
+      }
+    );
+
+    expect(result.status).toBe('invalid_response');
+    expect(result.provider).toBe('fallback');
+    expect(result.fallback).toBe(true);
+    expect(result.text).toBe('');
   });
 
   it('fails closed when Document AI config is missing or the provider response is invalid', async () => {

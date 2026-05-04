@@ -1,19 +1,25 @@
 {
   "schemaVersion": 2,
   "scope": "full",
-  "generatedAt": "2026-05-02T21:04:35.434Z",
-  "targetBaseUrl": "http://127.0.0.1:3000",
+  "generatedAt": "2026-05-04T14:18:05.924Z",
+  "targetBaseUrl": "http://127.0.0.1:33100",
   "executionMode": "local",
   "freshnessThresholdMinutes": 60,
-  "expiresAt": "2026-05-02T22:04:35.434Z",
+  "expiresAt": "2026-05-04T15:18:05.924Z",
   "overallStatus": "pass",
+  "ai": {
+    "assistantsEnabled": false,
+    "rawPromptLoggingEnabled": false,
+    "modelCallRequired": false,
+    "state": "disabled_local_fallback_verified"
+  },
   "corridors": [
     {
       "id": "individual",
       "label": "Individual corridor",
       "status": "pass",
       "checkIds": ["public_individual_portfolio_visible", "proof_creation_case"],
-      "generatedAt": "2026-05-02T21:04:35.434Z"
+      "generatedAt": "2026-05-04T14:18:05.924Z"
     },
     {
       "id": "organization",
@@ -23,14 +29,14 @@
         "public_org_trust_fixture_live",
         "full_org_corridor_review_to_engagement_verification"
       ],
-      "generatedAt": "2026-05-02T21:04:35.434Z"
+      "generatedAt": "2026-05-04T14:18:05.924Z"
     },
     {
       "id": "trust_privacy",
       "label": "Trust / privacy corridor",
       "status": "pass",
       "checkIds": ["hidden_portfolio_protected", "privacy_no_leak_case"],
-      "generatedAt": "2026-05-02T21:04:35.434Z"
+      "generatedAt": "2026-05-04T14:18:05.924Z"
     }
   ],
   "checks": [
@@ -45,9 +51,9 @@
       },
       "status": "pass",
       "expectedState": "public_individual_portfolio_visible",
-      "durationMs": 1492,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 66ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  22:59:15\n   Duration  831ms (transform 96ms, setup 97ms, collect 148ms, tests 66ms, environment 187ms, prepare 37ms)\n\n\n(node:13663) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
-      "generatedAt": "2026-05-02T20:59:16.562Z"
+      "durationMs": 1539,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 83ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  16:12:11\n   Duration  1.06s (transform 114ms, setup 128ms, collect 192ms, tests 83ms, environment 241ms, prepare 61ms)",
+      "generatedAt": "2026-05-04T14:12:12.806Z"
     },
     {
       "id": "proof_creation_case",
@@ -60,9 +66,9 @@
       },
       "status": "pass",
       "expectedState": "proof_creation_case_live",
-      "durationMs": 1468,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (4 tests) 12ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  22:59:17\n   Duration  772ms (transform 56ms, setup 98ms, collect 49ms, tests 12ms, environment 185ms, prepare 36ms)\n\n\n(node:13708) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
-      "generatedAt": "2026-05-02T20:59:18.031Z"
+      "durationMs": 1276,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (4 tests) 15ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  16:12:13\n   Duration  789ms (transform 57ms, setup 110ms, collect 57ms, tests 15ms, environment 213ms, prepare 53ms)",
+      "generatedAt": "2026-05-04T14:12:14.087Z"
     },
     {
       "id": "public_org_trust_fixture_live",
@@ -81,9 +87,9 @@
       },
       "status": "pass",
       "expectedState": "public_org_trust_fixture_live",
-      "durationMs": 15782,
-      "outputSnippet": "[seed_public_org_trust_fixture]\n> proofound@0.1.0 seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-05-02T20:59:18.582Z\",\n  \"verificationUrl\": null,\n  \"verifiedAt\": null,\n  \"httpStatus\": null\n}\n\n(node:13753) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n\n[seeded_public_org_trust_smoke]\n> proofound@0.1.0 test:e2e:org-trust:smoke\n> node ./scripts/playwright-node20.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:44:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\u001b[1A\u001b[2K  1 passed (11.4s)",
-      "generatedAt": "2026-05-02T20:59:33.814Z",
+      "durationMs": 27525,
+      "outputSnippet": "[seed_public_org_trust_fixture]\n> proofound@0.1.0 seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-05-04T14:12:14.422Z\",\n  \"verificationUrl\": null,\n  \"verifiedAt\": null,\n  \"httpStatus\": null\n}\n\n[seeded_public_org_trust_smoke]\n> proofound@0.1.0 test:e2e:org-trust:smoke\n> node ./scripts/playwright-node20.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\n\n\n\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:44:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\u001b[1A\u001b[2K  1 passed (22.8s)\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:38642) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (193kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)",
+      "generatedAt": "2026-05-04T14:12:41.612Z",
       "evidence": {
         "fixtureSlug": "proofound-labs",
         "fixturePath": "/portfolio/org/proofound-labs"
@@ -111,9 +117,9 @@
       },
       "status": "pass",
       "expectedState": "full_org_corridor_review_to_engagement_verification_live",
-      "durationMs": 297736,
-      "outputSnippet": "[strict_org_corridor_smoke]\n[dotenv@17.2.3] injecting env (39) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops\n\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/strict/org-corridor.strict.spec.ts:276:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end\n\n\u001b[1A\u001b[2K  1 passed (5.0m)\n\n\u001b[1A\u001b[2K(node:13859) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K[chromium] › e2e/strict/org-corridor.strict.spec.ts:276:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end\n[strict-fixtures] failed to clean profiles: insert or update on table \"matching_refresh_jobs\" violates foreign key constraint \"matching_refresh_jobs_profile_id_fkey\"",
-      "generatedAt": "2026-05-02T21:04:31.550Z"
+      "durationMs": 320851,
+      "outputSnippet": "[strict_org_corridor_smoke]\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/strict/org-corridor.strict.spec.ts:276:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end\n\n\n\n\u001b[1A\u001b[2K  1 passed (5.3m)\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:38737) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (193kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K(node:38757) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m ⨯ [Error: aborted]\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m{\"level\":\"warn\",\"event\":\"api.slow\",\"timestamp\":\"2026-05-04T14:13:54.381Z\",\"requestId\":\"_m0iCK7NryVH\",\"path\":\"/api/assignments\",\"method\":\"POST\",\"route\":\"/api/assignments\",\"durationMs\":5748}\n\u001b[1A\u001b[2K[chromium] › e2e/strict/org-corridor.strict.spec.ts:276:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end\n[strict-fixtures] failed to clean profiles: insert or update on table \"matching_refresh_jobs\" violates foreign key constraint \"matching_refresh_jobs_profile_id_fkey\"",
+      "generatedAt": "2026-05-04T14:18:02.463Z"
     },
     {
       "id": "hidden_portfolio_protected",
@@ -126,9 +132,9 @@
       },
       "status": "pass",
       "expectedState": "hidden_portfolio_protected",
-      "durationMs": 1983,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 68ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  23:04:32\n   Duration  1.11s (transform 103ms, setup 162ms, collect 168ms, tests 68ms, environment 295ms, prepare 53ms)\n\n\n(node:15002) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
-      "generatedAt": "2026-05-02T21:04:33.533Z"
+      "durationMs": 1859,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 81ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  16:18:03\n   Duration  1.26s (transform 112ms, setup 191ms, collect 188ms, tests 81ms, environment 352ms, prepare 60ms)",
+      "generatedAt": "2026-05-04T14:18:04.323Z"
     },
     {
       "id": "privacy_no_leak_case",
@@ -145,9 +151,9 @@
       },
       "status": "pass",
       "expectedState": "privacy_no_leak_enforced",
-      "durationMs": 1901,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 1ms\n ✓ tests/api/org-match-review-route.test.ts  (17 tests) 32ms\n ✓ tests/api/conversation-reveal-route.test.ts  (7 tests) 18ms\n\n Test Files  3 passed (3)\n      Tests  29 passed (29)\n   Start at  23:04:34\n   Duration  1.21s (transform 230ms, setup 322ms, collect 913ms, tests 51ms, environment 650ms, prepare 128ms)\n\n\n(node:15060) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:15060) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:15060) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
-      "generatedAt": "2026-05-02T21:04:35.434Z"
+      "durationMs": 1601,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 2ms\n ✓ tests/api/org-match-review-route.test.ts  (17 tests) 39ms\n ✓ tests/api/conversation-reveal-route.test.ts  (7 tests) 20ms\n\n Test Files  3 passed (3)\n      Tests  29 passed (29)\n   Start at  16:18:04\n   Duration  1.13s (transform 320ms, setup 351ms, collect 758ms, tests 61ms, environment 656ms, prepare 148ms)",
+      "generatedAt": "2026-05-04T14:18:05.924Z"
     }
   ]
 }

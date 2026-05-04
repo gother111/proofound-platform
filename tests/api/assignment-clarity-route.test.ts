@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 import { POST } from '@/app/api/ai/assignments/clarify/route';
@@ -120,6 +120,10 @@ describe('assignment clarity assistant route', () => {
     );
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('returns 403 for org reviewers', async () => {
     (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
       status: 'insufficient_role',
@@ -132,6 +136,17 @@ describe('assignment clarity assistant route', () => {
 
     expect(res.status).toBe(403);
     expect(payload.error).toBe('Forbidden');
+    expect(generateJson).not.toHaveBeenCalled();
+  });
+
+  it('honors the feature-level assignment clarity kill switch before model calls', async () => {
+    vi.stubEnv('AI_KILL_SWITCH_ASSIGNMENT_CLARITY', 'true');
+
+    const res = await POST(request(baseBody()));
+    const payload = await res.json();
+
+    expect(res.status).toBe(503);
+    expect(payload.code).toBe('ai_feature_kill_switch');
     expect(generateJson).not.toHaveBeenCalled();
   });
 
@@ -181,6 +196,40 @@ describe('assignment clarity assistant route', () => {
         'Outcome summary is vague or missing concrete deliverables.',
         'Proof expectations are missing or too generic.',
       ])
+    );
+  });
+
+  it('treats an explicitly blank proof expectation as missing instead of falling back to stored text', async () => {
+    (db.query.assignments.findFirst as any).mockResolvedValueOnce({
+      id: assignmentId,
+      orgId,
+      role: 'Launch operator',
+      businessValue: 'Help launch the pilot corridor.',
+      description: 'Publish a launch assignment with concrete milestones.',
+      expectedImpact: 'Stored proof expectations that should not override the blank request.',
+      engagementType: 'contract_consulting',
+      status: 'draft',
+      mustHaveSkills: [],
+      verificationGates: [],
+      locationMode: 'remote',
+      city: null,
+      country: null,
+      compMin: 100000,
+      compMax: 120000,
+      currency: 'USD',
+      hoursMin: null,
+      hoursMax: null,
+      startEarliest: null,
+      startLatest: null,
+    });
+
+    const res = await POST(request(baseBody({ proofExpectations: '' })));
+    const payload = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(payload.fallback).toBe(true);
+    expect(payload.ambiguityFlags).toEqual(
+      expect.arrayContaining(['Proof expectations are missing or too generic.'])
     );
   });
 

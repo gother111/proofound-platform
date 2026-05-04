@@ -2,23 +2,30 @@ export type GcpCvOcrAuthMode = 'hmac' | 'oidc';
 
 export type GcpCvOcrUnavailableReason =
   | 'disabled'
+  | 'gcp_service_kill_switch'
   | 'missing_expiry'
   | 'invalid_expiry'
   | 'expired'
+  | 'expiry_emergency_disable_window'
   | 'missing_base_url'
   | 'invalid_base_url'
   | 'missing_auth_mode'
   | 'invalid_auth_mode'
+  | 'hmac_not_allowed_in_production'
   | 'missing_shared_secret'
   | 'missing_oidc_config'
-  | 'invalid_oidc_config';
+  | 'invalid_oidc_config'
+  | 'missing_budget_or_hard_caps'
+  | 'missing_page_caps'
+  | 'missing_hard_budget_cap'
+  | 'budget_cap_exhausted'
+  | 'missing_retention_limit'
+  | 'invalid_retention'
+  | 'missing_cloud_run_max_instance_docs'
+  | 'cloud_run_public_invocation'
+  | 'cloud_vision_provider_blocked';
 
-export type GcpCvOcrAllowedMimeType =
-  | 'application/pdf'
-  | 'image/jpeg'
-  | 'image/png'
-  | 'image/tiff'
-  | 'image/webp';
+export type GcpCvOcrAllowedMimeType = 'application/pdf' | 'image/jpeg' | 'image/png';
 
 export type GcpCvOcrConfig = {
   enabled: boolean;
@@ -35,6 +42,14 @@ export type GcpCvOcrConfig = {
   retentionHours: number;
   userDailyLimit: number;
   globalDailyLimit: number;
+  hasExplicitHardCaps: boolean;
+  hardBudgetCapSek: number | null;
+  budgetCapExhausted: boolean;
+  budgetAlertConfigured: boolean;
+  provider: string | null;
+  cloudRunMaxInstances: number | null;
+  cloudRunMaxInstancesDocumented: boolean;
+  publicInvocation: boolean;
   hasAuthSecret: boolean;
   oidcAudience: string | null;
   oidcProjectNumber: string | null;
@@ -51,24 +66,29 @@ const DEFAULT_MAX_PAGES = 4;
 const DEFAULT_MAX_FILES_PER_REQUEST = 1;
 const DEFAULT_RETENTION_HOURS = 24;
 const DEFAULT_USER_DAILY_LIMIT = 5;
-const DEFAULT_GLOBAL_DAILY_LIMIT = 50;
-const DEFAULT_ALLOWED_MIME_TYPES: GcpCvOcrAllowedMimeType[] = ['application/pdf'];
+const DEFAULT_GLOBAL_DAILY_LIMIT = 20;
+const DEFAULT_ALLOWED_MIME_TYPES: GcpCvOcrAllowedMimeType[] = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+];
 const TRUE_VALUES = new Set(['true', '1', 'yes', 'on']);
 const FALSE_VALUES = new Set(['false', '0', 'no', 'off']);
 const ALLOWED_MIME_TYPES = new Set<GcpCvOcrAllowedMimeType>([
   'application/pdf',
   'image/jpeg',
   'image/png',
-  'image/tiff',
-  'image/webp',
 ]);
 
 export const GCP_CV_OCR_ENV_KEYS = [
   'GCP_CV_OCR_ENABLED',
+  'GCP_CV_OCR_KILL_SWITCH',
   'GCP_CV_OCR_EXPIRES_AT',
+  'GCP_CV_OCR_EMERGENCY_DISABLE_HOURS',
   'GCP_CV_OCR_BASE_URL',
   'GCP_CV_OCR_AUTH_MODE',
   'GCP_CV_OCR_SHARED_SECRET',
+  'GCP_CV_OCR_PROVIDER',
   'GCP_CV_OCR_MAX_FILE_SIZE_MB',
   'GCP_CV_OCR_MAX_PAGES',
   'GCP_CV_OCR_MAX_FILES_PER_REQUEST',
@@ -76,6 +96,12 @@ export const GCP_CV_OCR_ENV_KEYS = [
   'GCP_CV_OCR_RETENTION_HOURS',
   'GCP_CV_OCR_USER_DAILY_LIMIT',
   'GCP_CV_OCR_GLOBAL_DAILY_LIMIT',
+  'GCP_CV_OCR_HARD_BUDGET_CAP_SEK',
+  'GCP_CV_OCR_BUDGET_CAP_EXHAUSTED',
+  'GCP_CV_OCR_BUDGET_ALERT_CONFIGURED',
+  'GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES',
+  'GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES_DOCUMENTED',
+  'GCP_CV_OCR_CLOUD_RUN_PUBLIC_INVOCATION',
   'GCP_CV_OCR_OIDC_AUDIENCE',
   'GCP_CV_OCR_OIDC_PROJECT_NUMBER',
   'GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_POOL_ID',
@@ -104,6 +130,24 @@ function parseBoolean(value: string | undefined, fallback: boolean): boolean {
   return fallback;
 }
 
+function isProductionRuntime(env: EnvReader): boolean {
+  return (
+    env.GCP_CV_OCR_DEPLOYMENT_ENV?.trim().toLowerCase() === 'production' ||
+    env.VERCEL_ENV?.trim().toLowerCase() === 'production' ||
+    env.NODE_ENV?.trim().toLowerCase() === 'production'
+  );
+}
+
+function hasExplicitPositiveInt(env: EnvReader, key: string): boolean {
+  const value = env[key]?.trim();
+  if (!value) {
+    return false;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0;
+}
+
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) {
     return fallback;
@@ -115,6 +159,16 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
   }
 
   return parsed;
+}
+
+function parsePositiveNumber(value: string | undefined): number | null {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
 function parseExpiry(value: string | undefined): {
@@ -304,7 +358,43 @@ export function resolveGcpCvOcrConfig(
   now: Date = new Date()
 ): GcpCvOcrConfig {
   const enabled = parseBoolean(env.GCP_CV_OCR_ENABLED, false);
+  const gcpServiceKillSwitch = parseBoolean(env.GCP_CV_OCR_KILL_SWITCH, false);
   const maxFileSizeMb = parsePositiveInt(env.GCP_CV_OCR_MAX_FILE_SIZE_MB, DEFAULT_MAX_FILE_SIZE_MB);
+  const maxPages = parsePositiveInt(env.GCP_CV_OCR_MAX_PAGES, DEFAULT_MAX_PAGES);
+  const retentionHours = Math.min(
+    parsePositiveInt(env.GCP_CV_OCR_RETENTION_HOURS, DEFAULT_RETENTION_HOURS),
+    DEFAULT_RETENTION_HOURS
+  );
+  const userDailyLimit = parsePositiveInt(
+    env.GCP_CV_OCR_USER_DAILY_LIMIT,
+    DEFAULT_USER_DAILY_LIMIT
+  );
+  const globalDailyLimit = parsePositiveInt(
+    env.GCP_CV_OCR_GLOBAL_DAILY_LIMIT,
+    DEFAULT_GLOBAL_DAILY_LIMIT
+  );
+  const maxFilesPerRequest = parsePositiveInt(
+    env.GCP_CV_OCR_MAX_FILES_PER_REQUEST,
+    DEFAULT_MAX_FILES_PER_REQUEST
+  );
+  const productionRuntime = isProductionRuntime(env);
+  const provider = env.GCP_CV_OCR_PROVIDER?.trim().toLowerCase() || null;
+  const hardBudgetCapSek = parsePositiveNumber(env.GCP_CV_OCR_HARD_BUDGET_CAP_SEK);
+  const budgetCapExhausted = parseBoolean(env.GCP_CV_OCR_BUDGET_CAP_EXHAUSTED, false);
+  const cloudRunMaxInstances = parsePositiveNumber(env.GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES);
+  const cloudRunMaxInstancesDocumented = parseBoolean(
+    env.GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES_DOCUMENTED,
+    false
+  );
+  const publicInvocation = parseBoolean(env.GCP_CV_OCR_CLOUD_RUN_PUBLIC_INVOCATION, false);
+  const hasExplicitHardCaps = [
+    'GCP_CV_OCR_MAX_FILE_SIZE_MB',
+    'GCP_CV_OCR_MAX_PAGES',
+    'GCP_CV_OCR_MAX_FILES_PER_REQUEST',
+    'GCP_CV_OCR_USER_DAILY_LIMIT',
+    'GCP_CV_OCR_GLOBAL_DAILY_LIMIT',
+  ].every((key) => hasExplicitPositiveInt(env, key));
+  const budgetAlertConfigured = parseBoolean(env.GCP_CV_OCR_BUDGET_ALERT_CONFIGURED, false);
   const baseConfig = {
     enabled,
     expiresAt: null,
@@ -312,18 +402,20 @@ export function resolveGcpCvOcrConfig(
     authMode: null,
     maxFileSizeMb,
     maxFileSizeBytes: maxFileSizeMb * 1024 * 1024,
-    maxPages: parsePositiveInt(env.GCP_CV_OCR_MAX_PAGES, DEFAULT_MAX_PAGES),
-    maxFilesPerRequest: parsePositiveInt(
-      env.GCP_CV_OCR_MAX_FILES_PER_REQUEST,
-      DEFAULT_MAX_FILES_PER_REQUEST
-    ),
+    maxPages,
+    maxFilesPerRequest,
     allowedMimeTypes: parseAllowedMimeTypes(env.GCP_CV_OCR_ALLOWED_MIME_TYPES),
-    retentionHours: parsePositiveInt(env.GCP_CV_OCR_RETENTION_HOURS, DEFAULT_RETENTION_HOURS),
-    userDailyLimit: parsePositiveInt(env.GCP_CV_OCR_USER_DAILY_LIMIT, DEFAULT_USER_DAILY_LIMIT),
-    globalDailyLimit: parsePositiveInt(
-      env.GCP_CV_OCR_GLOBAL_DAILY_LIMIT,
-      DEFAULT_GLOBAL_DAILY_LIMIT
-    ),
+    retentionHours,
+    userDailyLimit,
+    globalDailyLimit,
+    hasExplicitHardCaps,
+    hardBudgetCapSek,
+    budgetCapExhausted,
+    budgetAlertConfigured,
+    provider,
+    cloudRunMaxInstances,
+    cloudRunMaxInstancesDocumented,
+    publicInvocation,
     hasAuthSecret: Boolean(getGcpCvOcrAuthSecret(env)),
     oidcAudience: null,
     oidcProjectNumber: null,
@@ -337,6 +429,10 @@ export function resolveGcpCvOcrConfig(
     return unavailableConfig({ ...baseConfig, reason: 'disabled' });
   }
 
+  if (gcpServiceKillSwitch) {
+    return unavailableConfig({ ...baseConfig, reason: 'gcp_service_kill_switch' });
+  }
+
   const expiry = parseExpiry(env.GCP_CV_OCR_EXPIRES_AT);
   if (expiry.reason) {
     return unavailableConfig({ ...baseConfig, expiresAt: expiry.expiresAt, reason: expiry.reason });
@@ -344,6 +440,110 @@ export function resolveGcpCvOcrConfig(
 
   if (!expiry.expiresAt || expiry.expiresAt.getTime() <= now.getTime()) {
     return unavailableConfig({ ...baseConfig, expiresAt: expiry.expiresAt, reason: 'expired' });
+  }
+
+  const emergencyDisableHours = parsePositiveNumber(env.GCP_CV_OCR_EMERGENCY_DISABLE_HOURS) ?? 72;
+  const emergencyDisableMs = emergencyDisableHours * 60 * 60 * 1000;
+  if (productionRuntime && expiry.expiresAt.getTime() - now.getTime() <= emergencyDisableMs) {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      reason: 'expiry_emergency_disable_window',
+    });
+  }
+
+  if (productionRuntime && !hasExplicitPositiveInt(env, 'GCP_CV_OCR_MAX_PAGES')) {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      reason: 'missing_page_caps',
+    });
+  }
+
+  if (productionRuntime && hardBudgetCapSek === null) {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      reason: 'missing_hard_budget_cap',
+    });
+  }
+
+  if (productionRuntime && budgetCapExhausted) {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      reason: 'budget_cap_exhausted',
+    });
+  }
+
+  if (productionRuntime && !budgetAlertConfigured) {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      reason: 'missing_budget_or_hard_caps',
+    });
+  }
+
+  if (productionRuntime && !hasExplicitHardCaps) {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      reason: 'missing_budget_or_hard_caps',
+    });
+  }
+
+  if (productionRuntime && !env.GCP_CV_OCR_RETENTION_HOURS?.trim()) {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      reason: 'missing_retention_limit',
+    });
+  }
+
+  if (productionRuntime && env.GCP_CV_OCR_RETENTION_HOURS?.trim()) {
+    const requestedRetention = Number.parseInt(env.GCP_CV_OCR_RETENTION_HOURS, 10);
+    if (
+      !Number.isFinite(requestedRetention) ||
+      requestedRetention <= 0 ||
+      requestedRetention > 24
+    ) {
+      return unavailableConfig({ ...baseConfig, reason: 'invalid_retention' });
+    }
+  }
+
+  if (productionRuntime && !cloudRunMaxInstancesDocumented) {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      reason: 'missing_cloud_run_max_instance_docs',
+    });
+  }
+
+  if (
+    productionRuntime &&
+    (cloudRunMaxInstances === null || cloudRunMaxInstances <= 0 || cloudRunMaxInstances > 3)
+  ) {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      reason: 'missing_cloud_run_max_instance_docs',
+    });
+  }
+
+  if (productionRuntime && publicInvocation) {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      reason: 'cloud_run_public_invocation',
+    });
+  }
+
+  if (provider === 'cloud_vision' || provider === 'gcp_vision' || provider === 'vision') {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      reason: 'cloud_vision_provider_blocked',
+    });
   }
 
   const baseUrl = normalizeBaseUrl(env.GCP_CV_OCR_BASE_URL);
@@ -362,6 +562,16 @@ export function resolveGcpCvOcrConfig(
       expiresAt: expiry.expiresAt,
       baseUrl: baseUrl.baseUrl,
       reason: authMode.reason,
+    });
+  }
+
+  if (productionRuntime && authMode.authMode === 'hmac') {
+    return unavailableConfig({
+      ...baseConfig,
+      expiresAt: expiry.expiresAt,
+      baseUrl: baseUrl.baseUrl,
+      authMode: authMode.authMode,
+      reason: 'hmac_not_allowed_in_production',
     });
   }
 

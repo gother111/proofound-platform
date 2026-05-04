@@ -6,6 +6,10 @@ import {
   type PrivacyPreflightRequest,
   runPrivacyPreflightCheck,
 } from '@/lib/ai/privacy-preflight';
+import {
+  buildAiAssistKillSwitchResponse,
+  isAiAssistDisabledByKillSwitch,
+} from '@/lib/ai/kill-switches';
 import { requireApiAuthContext } from '@/lib/auth';
 import { safeApiErrorResponse, safeValidationErrorResponse } from '@/lib/api/errors';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
@@ -77,6 +81,12 @@ export async function POST(request: NextRequest) {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (isAiAssistDisabledByKillSwitch('privacy_preflight')) {
+      return NextResponse.json(buildAiAssistKillSwitchResponse('privacy_preflight'), {
+        status: 503,
+      });
     }
 
     const body = await request.json();

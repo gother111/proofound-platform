@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireApiAuthContext } from '@/lib/auth';
+import {
+  buildAiAssistKillSwitchResponse,
+  isAiAssistDisabledByKillSwitch,
+} from '@/lib/ai/kill-switches';
 import { addUnsafeAiRequestPayloadIssue } from '@/lib/ai/request-safety';
+import { safeApiErrorResponse, safeValidationErrorResponse } from '@/lib/api/errors';
 import {
   VERIFICATION_COMPOSER_FIELDS,
   VERIFICATION_SCOPES,
@@ -46,6 +51,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    if (isAiAssistDisabledByKillSwitch('verification_composer')) {
+      return NextResponse.json(buildAiAssistKillSwitchResponse('verification_composer'), {
+        status: 503,
+      });
+    }
+
     const body = await request.json();
     const payload = VerificationComposerRequestSchema.parse(body);
     const requestId = crypto.randomUUID();
@@ -65,14 +76,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(draft);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          message: error.issues[0]?.message || 'Invalid verification composer request.',
-          details: error.issues,
-        },
-        { status: 400 }
-      );
+      return safeValidationErrorResponse({
+        error,
+        message: error.issues[0]?.message || 'Validation failed',
+      });
     }
 
     if (
@@ -82,7 +89,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Proof Pack or claim not found' }, { status: 404 });
     }
 
-    console.error('Verification request composer failed:', error);
-    return NextResponse.json({ error: 'Failed to draft verification request' }, { status: 500 });
+    return safeApiErrorResponse({
+      event: 'ai.verification_composer.failed',
+      error,
+      publicMessage: 'Failed to draft verification request',
+    });
   }
 }

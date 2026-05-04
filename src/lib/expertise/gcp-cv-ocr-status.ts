@@ -27,6 +27,16 @@ export type ResolveGcpCvOcrSafeStatusOptions = {
 
 export type GcpCvOcrSafeStatusReport = {
   status: GcpCvOcrSafeStatus;
+  enabled: boolean;
+  available: boolean;
+  unavailableReason: ReturnType<typeof resolveGcpCvOcrConfig>['unavailableReason'];
+  expiresAt: string | null;
+  provider: string | null;
+  authMode: ReturnType<typeof resolveGcpCvOcrConfig>['authMode'];
+  hardBudgetCapConfigured: boolean;
+  budgetCapExhausted: boolean;
+  cloudRunMaxInstancesDocumented: boolean;
+  publicInvocation: boolean;
 };
 
 const DEFAULT_STATUS_TIMEOUT_MS = 3000;
@@ -35,21 +45,33 @@ export async function resolveGcpCvOcrSafeStatus(
   options: ResolveGcpCvOcrSafeStatusOptions = {}
 ): Promise<GcpCvOcrSafeStatusReport> {
   const config = resolveGcpCvOcrConfig(options.env, options.now ?? new Date());
+  const base = {
+    enabled: config.enabled,
+    available: config.available,
+    unavailableReason: config.unavailableReason,
+    expiresAt: config.expiresAt?.toISOString() ?? null,
+    provider: config.provider,
+    authMode: config.authMode,
+    hardBudgetCapConfigured: config.hardBudgetCapSek !== null,
+    budgetCapExhausted: config.budgetCapExhausted,
+    cloudRunMaxInstancesDocumented: config.cloudRunMaxInstancesDocumented,
+    publicInvocation: config.publicInvocation,
+  };
 
   if (!config.enabled) {
-    return { status: 'disabled' };
+    return { ...base, status: 'disabled' };
   }
 
   if (config.unavailableReason === 'expired') {
-    return { status: 'expired' };
+    return { ...base, status: 'expired' };
   }
 
   if (!config.available || !config.baseUrl) {
-    return { status: 'fallback' };
+    return { ...base, status: 'fallback' };
   }
 
   if (!options.probeProvider) {
-    return { status: 'configured' };
+    return { ...base, status: 'configured' };
   }
 
   const reachable = await probeProviderHealth({
@@ -59,7 +81,7 @@ export async function resolveGcpCvOcrSafeStatus(
     vercelOidcTokenFactory: options.vercelOidcTokenFactory,
   });
 
-  return { status: reachable ? 'provider reachable' : 'fallback' };
+  return { ...base, status: reachable ? 'provider reachable' : 'fallback' };
 }
 
 async function probeProviderHealth(params: {

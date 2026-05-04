@@ -64,7 +64,7 @@ function cacheRow(overrides: Record<string, unknown> = {}) {
     responsePayload: { answer: 'cached' },
     outputHash: 'output-hash',
     tokenUsage: { inputTokens: 1, outputTokens: 2, totalTokens: 3 },
-    model: 'gemini-2.5-flash-lite',
+    model: 'gemini-3.1-flash-lite-preview',
     costOre: 7,
     feature: 'proof_pack_assistant',
     entityType: 'proof_pack',
@@ -176,7 +176,7 @@ describe('AI suggestion cache and audit trail helpers', () => {
       feature: 'assignment_clarity',
       entityType: 'assignment',
       entityId: 'assignment-1',
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-3.1-flash-lite-preview',
       promptVersion: 'prompt-v1',
       inputHash: 'input-hash-1',
       outputHash: 'output-hash',
@@ -200,7 +200,7 @@ describe('AI suggestion cache and audit trail helpers', () => {
       feature: 'assignment_clarity',
       entityType: 'assignment',
       entityId: 'assignment-1',
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-3.1-flash-lite-preview',
       promptVersion: 'prompt-v1',
       inputHash: 'input-hash-1',
       outputHash: 'output-hash',
@@ -233,6 +233,7 @@ describe('AI suggestion cache and audit trail helpers', () => {
             { field: 'title', edited: eventType === 'edited', applied: eventType === 'accepted' },
           ],
           rawInput: 'must redact',
+          suggestionText: 'Better title with jane@example.com',
         },
       });
     }
@@ -245,6 +246,8 @@ describe('AI suggestion cache and audit trail helpers', () => {
     ]);
     expect(JSON.stringify(dbMock.state.insertValues)).toContain('"field":"title"');
     expect(JSON.stringify(dbMock.state.insertValues)).not.toContain('must redact');
+    expect(JSON.stringify(dbMock.state.insertValues)).not.toContain('Better title');
+    expect(JSON.stringify(dbMock.state.insertValues)).not.toContain('jane@example.com');
     expect(JSON.stringify(dbMock.state.insertValues)).toContain('[redacted]');
   });
 });

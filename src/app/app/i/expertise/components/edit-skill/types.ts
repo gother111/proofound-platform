@@ -12,6 +12,8 @@ export interface Proof {
   canonical_pack_id?: string;
   canonicalPackTitle?: string;
   canonical_pack_title?: string;
+  canonicalArtifactId?: string;
+  canonical_artifact_id?: string;
 }
 
 export type ProofDraft = {

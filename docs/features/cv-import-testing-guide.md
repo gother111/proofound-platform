@@ -1,20 +1,29 @@
-# Manual Testing Guide: CV Import Feature
+> Doc Class: `historical`
+> Last Verified: `2026-05-04`
+
+# Archived Manual Testing Guide: CV Import Feature
+
+> Launch status: archived/non-launch. The CV import wizard is not an active MVP feature and is explicitly excluded from the controlled assistive AI / Document AI OCR rollout. Do not use this guide as MVP launch smoke evidence unless a future approved route-surface change reactivates CV import.
 
 ## 🎯 Purpose
+
 This guide helps you verify that the CV import feature is working correctly after the bug fixes.
 
 ## ✅ Pre-Testing Checklist
 
 Before you start testing, ensure:
+
 - [ ] Your local development server is running (`npm run dev`)
 - [ ] You're logged in as a test user
 - [ ] Your database has skills in the taxonomy (check with the query below)
 - [ ] Browser dev tools are open (Console + Network tabs)
 
 **Check Taxonomy**:
+
 ```sql
 SELECT COUNT(*) FROM skills_taxonomy WHERE status = 'active';
 ```
+
 Should return > 0 skills.
 
 ---
@@ -26,22 +35,25 @@ Should return > 0 skills.
 **Goal**: Verify complete import workflow from CV text to saved skills.
 
 **Steps**:
+
 1. Navigate to `/app/i/expertise`
 2. Click the **"Import from CV"** tab (or similar button)
 3. Paste this sample CV:
+
    ```
    Senior Software Engineer
-   
+
    SKILLS:
    • JavaScript, TypeScript, React, Node.js
    • Python, Django, Flask
    • PostgreSQL, MongoDB
    • AWS, Docker, Kubernetes
    • Git, CI/CD, Agile
-   
+
    Built scalable web applications serving 1M+ users.
    Led team of 5 engineers. 8+ years experience.
    ```
+
 4. Click **"Analyze & Suggest Skills"**
 5. Wait for suggestions to appear (should take 1-3 seconds)
 6. Select 3-5 skills by clicking on them
@@ -49,6 +61,7 @@ Should return > 0 skills.
 8. Wait for success message
 
 **Expected Results**:
+
 - ✅ Suggestions appear with skill names and confidence scores
 - ✅ Clicking skills toggles selection (border changes color)
 - ✅ "Add X Selected" button shows correct count
@@ -57,6 +70,7 @@ Should return > 0 skills.
 - ✅ Skills appear in your Expertise Atlas
 
 **Check Console**:
+
 - No JavaScript errors
 - Network request to `/api/expertise/auto-suggest` returns 200
 - Network requests to `/api/expertise/user-skills` return 201
@@ -68,11 +82,13 @@ Should return > 0 skills.
 **Goal**: Verify graceful handling when no skills are detected.
 
 **Steps**:
+
 1. Go to Import from CV tab
 2. Paste: `The quick brown fox jumps over the lazy dog.`
 3. Click **"Analyze & Suggest Skills"**
 
 **Expected Results**:
+
 - ✅ Info toast: "No skills found. Try pasting more detailed text."
 - ✅ No suggestions appear
 - ✅ No errors in console
@@ -84,6 +100,7 @@ Should return > 0 skills.
 **Goal**: Verify system handles duplicate skills gracefully.
 
 **Steps**:
+
 1. Import a skill (follow Test 1)
 2. Note which skill you added (e.g., "JavaScript")
 3. Import the SAME skill again:
@@ -93,19 +110,22 @@ Should return > 0 skills.
    - Click Add Selected
 
 **Expected Results**:
+
 - ✅ First import: Success message
 - ✅ Second import: Success message (counts as success, skill already exists)
 - ✅ NO duplicate skills in database (verify in Expertise Atlas)
 - ✅ Console shows skill already exists (but doesn't show error to user)
 
 **Verify in Database**:
+
 ```sql
-SELECT skill_code, COUNT(*) 
-FROM skills 
-WHERE profile_id = 'your-user-id' 
-GROUP BY skill_code 
+SELECT skill_code, COUNT(*)
+FROM skills
+WHERE profile_id = 'your-user-id'
+GROUP BY skill_code
 HAVING COUNT(*) > 1;
 ```
+
 Should return 0 rows (no duplicates).
 
 ---
@@ -115,6 +135,7 @@ Should return 0 rows (no duplicates).
 **Goal**: Verify batch import of multiple skills.
 
 **Steps**:
+
 1. Go to Import from CV tab
 2. Paste CV with many skills:
    ```
@@ -129,6 +150,7 @@ Should return 0 rows (no duplicates).
 5. Click Add Selected
 
 **Expected Results**:
+
 - ✅ Loading state shown ("Adding...")
 - ✅ Success message: "Successfully added 10 skills!"
 - ✅ All selected skills appear in Expertise Atlas
@@ -145,6 +167,7 @@ Should return 0 rows (no duplicates).
 **Goal**: Verify CV/JD/General context buttons work.
 
 **Steps**:
+
 1. Go to Import from CV tab
 2. Click **"CV/Resume"** button → verify it's selected (different color)
 3. Click **"Job Description"** button → verify it's selected
@@ -152,6 +175,7 @@ Should return 0 rows (no duplicates).
 5. Paste text and analyze with each context
 
 **Expected Results**:
+
 - ✅ Only one button selected at a time
 - ✅ Context is sent to API (check Network tab)
 - ✅ Different contexts may return slightly different suggestions
@@ -163,21 +187,25 @@ Should return 0 rows (no duplicates).
 **Goal**: Verify UI shows proper loading feedback.
 
 **Steps**:
+
 1. Go to Import from CV tab
 2. Paste long CV (2000+ characters)
 3. Click Analyze and IMMEDIATELY watch the button
 
 **Expected Results**:
+
 - ✅ Button text changes to "Analyzing..."
 - ✅ Button is disabled during analysis
 - ✅ After suggestions appear, button returns to "Analyze & Suggest Skills"
 
 **Repeat for Add Selected**:
+
 1. Select skills
 2. Click Add Selected
 3. Watch the button
 
 **Expected Results**:
+
 - ✅ Button text changes to "Adding..."
 - ✅ Button is disabled while saving
 - ✅ After save completes, suggestions clear
@@ -189,6 +217,7 @@ Should return 0 rows (no duplicates).
 **Goal**: Verify graceful error handling.
 
 **Test 7A: Empty Text**
+
 1. Go to Import from CV tab
 2. Leave textarea empty
 3. Try to click Analyze
@@ -196,19 +225,23 @@ Should return 0 rows (no duplicates).
 **Expected**: Button should be disabled.
 
 **Test 7B: Network Error (Simulate)**
+
 1. Open Dev Tools → Network tab
 2. Set throttling to "Offline"
 3. Paste CV and click Analyze
 
 **Expected**:
+
 - ✅ Error toast: "Failed to analyze text"
 - ✅ No crash, UI remains functional
 
 **Test 7C: Invalid Auth (Simulate)**
+
 1. Clear your auth cookies
 2. Try to import
 
 **Expected**:
+
 - ✅ Redirected to login
 - OR Error message about authentication
 
@@ -219,10 +252,12 @@ Should return 0 rows (no duplicates).
 **Goal**: Verify proper UI rendering.
 
 **Steps**:
+
 1. Import CV and get suggestions
 2. Inspect each suggestion card
 
 **Expected Results**:
+
 - ✅ Skill name is displayed clearly
 - ✅ Confidence badge shows percentage (e.g., "85%")
 - ✅ Alternative names shown if available ("Also known as: JS, ECMAScript")
@@ -238,6 +273,7 @@ Should return 0 rows (no duplicates).
 **Goal**: Verify skills are actually saved to database.
 
 **Steps**:
+
 1. Import and add 3 skills
 2. Note their names
 3. Navigate away from Expertise page
@@ -245,13 +281,15 @@ Should return 0 rows (no duplicates).
 5. Check Skills Atlas tab
 
 **Expected Results**:
+
 - ✅ All 3 skills still appear
 - ✅ Skills have correct default values
 - ✅ Can edit/delete the skills
 
 **Verify in Database**:
+
 ```sql
-SELECT s.*, st.name_i18n 
+SELECT s.*, st.name_i18n
 FROM skills s
 LEFT JOIN skills_taxonomy st ON s.skill_code = st.code
 WHERE s.profile_id = 'your-user-id'
@@ -260,6 +298,7 @@ LIMIT 5;
 ```
 
 Should show your recently imported skills with:
+
 - `skill_code` matching taxonomy
 - `level = 2`
 - `months_experience = 0`
@@ -273,11 +312,13 @@ Should show your recently imported skills with:
 ### If Suggestions Don't Appear
 
 **Check**:
+
 1. Console for errors
 2. Network tab: `/api/expertise/auto-suggest` response
 3. Response should have `suggestions` array
 
 **Common Issues**:
+
 - Empty taxonomy: Run seed script to add skills
 - Auth error: Token expired, log in again
 - API error: Check server logs
@@ -285,11 +326,13 @@ Should show your recently imported skills with:
 ### If Skills Don't Save
 
 **Check**:
+
 1. Console for errors
 2. Network tab: `/api/expertise/user-skills` requests
 3. Should see 201 responses for each skill
 
 **Common Issues**:
+
 - Database connection: Check DB is running
 - RLS policies: User might not have permission
 - Invalid skill_code: Skill doesn't exist in taxonomy
@@ -297,6 +340,7 @@ Should show your recently imported skills with:
 ### If Page Doesn't Refresh
 
 **Check**:
+
 1. `onSkillsAdded` callback is called
 2. Should trigger `window.location.reload()` in parent component
 3. Check ExpertiseAtlasClient.tsx line ~269
@@ -306,6 +350,7 @@ Should show your recently imported skills with:
 ## 📊 Success Criteria
 
 Mark each as complete:
+
 - [ ] Test 1: Basic flow works end-to-end
 - [ ] Test 2: No skills found handled gracefully
 - [ ] Test 3: Duplicates prevented
@@ -323,12 +368,14 @@ Mark each as complete:
 ## 🎉 Post-Testing
 
 If all tests pass:
+
 1. ✅ Mark the verify-fix todo as complete
 2. ✅ Consider running automated tests: `npm run test:integration -- cv-import`
 3. ✅ Deploy to staging for QA team testing
 4. ✅ Update issue tracker or project board
 
 If tests fail:
+
 1. Document which tests failed
 2. Check the troubleshooting section
 3. Review code changes in:
@@ -342,4 +389,3 @@ If tests fail:
 **Happy Testing!** 🚀
 
 If you encounter any issues not covered here, please update this guide or reach out to the team.
-

@@ -13,7 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CvImportWizard } from '@/components/expertise/cv-import/CvImportWizard';
+import { StartFromCvDialog } from '@/components/profile/StartFromCvDialog';
+import { useStartFromCvBetaStatus } from '@/hooks/useStartFromCvBetaStatus';
 import type { Education, Experience, Volunteering } from '@/types/profile';
 
 import { JourneySection } from './JourneyTab';
@@ -52,6 +53,8 @@ export function ContextTab({
   onImportComplete,
 }: ContextTabProps) {
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const startFromCvStatus = useStartFromCvBetaStatus();
+  const startFromCvEnabled = startFromCvStatus.visible && startFromCvStatus.available;
 
   return (
     <TabsContent value="context" className="space-y-6">
@@ -69,43 +72,46 @@ export function ContextTab({
               </p>
             </div>
           </div>
-          <Button type="button" variant="outline" onClick={() => setIsImportOpen(true)}>
-            <FileUp className="mr-2 h-4 w-4" />
-            Import CV
-          </Button>
+          {startFromCvEnabled ? (
+            <Button type="button" variant="outline" onClick={() => setIsImportOpen(true)}>
+              <FileUp className="mr-2 h-4 w-4" />
+              Start from CV
+            </Button>
+          ) : null}
         </div>
       </Card>
 
-      <Card className="border-proofound-forest/20 bg-proofound-forest/5 p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">Prefill context from a CV</p>
-            <p className="text-sm text-muted-foreground">
-              Import only the formal basics: organization, timeline, and role or program. You can
-              edit every imported entry afterward.
-            </p>
+      {startFromCvEnabled ? (
+        <Card className="border-proofound-forest/20 bg-proofound-forest/5 p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">Start from your CV</p>
+              <p className="text-sm text-muted-foreground">
+                Upload your CV to create private editable drafts. Nothing is published, verified,
+                scored, ranked, or shown to organizations unless you choose what to keep later.
+              </p>
+            </div>
+            <Button
+              type="button"
+              className="shrink-0 bg-proofound-forest hover:bg-proofound-forest/90"
+              onClick={() => setIsImportOpen(true)}
+            >
+              <FileUp className="mr-2 h-4 w-4" />
+              Start from CV
+            </Button>
           </div>
-          <Button
-            type="button"
-            className="shrink-0 bg-proofound-forest hover:bg-proofound-forest/90"
-            onClick={() => setIsImportOpen(true)}
-          >
-            <FileUp className="mr-2 h-4 w-4" />
-            Start import
-          </Button>
-        </div>
-      </Card>
+        </Card>
+      ) : null}
 
       <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
         <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Import CV context</DialogTitle>
+            <DialogTitle>Start from your CV</DialogTitle>
             <DialogDescription>
-              Review the extracted work, learning, and volunteering entries before applying them to
-              your private profile context.
+              Review private drafts before applying anything to your profile context.
             </DialogDescription>
           </DialogHeader>
-          <CvImportWizard
+          <StartFromCvDialog
             onApplyComplete={() => {
               setIsImportOpen(false);
               onImportComplete?.();

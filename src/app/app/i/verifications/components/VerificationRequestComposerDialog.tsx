@@ -35,6 +35,8 @@ import {
 import type { VerificationComposerField, VerificationScope } from '@/lib/ai/verification-composer';
 
 type ComposerDraft = {
+  suggestionId?: string | null;
+  fallback?: boolean;
   subject: string;
   message: string;
   claimScope: string;
@@ -68,6 +70,26 @@ const SCOPE_OPTIONS: Array<{ value: VerificationScope; label: string }> = [
   { value: 'artifact_familiarity', label: 'Artifact familiarity' },
   { value: 'relationship_fact', label: 'Relationship fact' },
 ];
+
+function recordSuggestionEvent(
+  suggestionId: string | null | undefined,
+  eventType: 'accepted' | 'edited' | 'dismissed' | 'published',
+  field: string,
+  edited?: boolean
+) {
+  if (!suggestionId) return;
+  void apiFetch('/api/ai/suggestions/events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      suggestionId,
+      eventType,
+      field,
+      fields: [{ field, edited, applied: eventType === 'accepted' || eventType === 'published' }],
+      metadata: { uiSurface: 'verification_request_composer' },
+    }),
+  }).catch(() => undefined);
+}
 
 export function VerificationRequestComposerDialog({
   open,
@@ -105,6 +127,12 @@ export function VerificationRequestComposerDialog({
     setVerifierEmail('');
     setDraft(null);
     setReviewed(false);
+  };
+
+  const dismissDraft = () => {
+    recordSuggestionEvent(draft?.suggestionId, 'dismissed', 'composer');
+    reset();
+    onOpenChange(false);
   };
 
   const toggleField = (field: VerificationComposerField) => {
@@ -192,6 +220,7 @@ export function VerificationRequestComposerDialog({
       }
 
       toast.success('Verification request sent.');
+      recordSuggestionEvent(draft.suggestionId, 'published', 'verification_request');
       reset();
       onOpenChange(false);
       onSent?.();
@@ -210,16 +239,17 @@ export function VerificationRequestComposerDialog({
       open={open}
       onOpenChange={(nextOpen) => {
         if (!nextOpen) {
-          reset();
+          dismissDraft();
+          return;
         }
         onOpenChange(nextOpen);
       }}
     >
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto bg-japandi-bg">
         <DialogHeader>
-          <DialogTitle>Draft verification request</DialogTitle>
+          <DialogTitle>Draft scoped request</DialogTitle>
           <DialogDescription>
-            Draft one claim-scoped request, review it, then send it manually.
+            AI suggestions are drafts. They do not verify, score, rank, or evaluate anyone.
           </DialogDescription>
         </DialogHeader>
 
@@ -337,11 +367,26 @@ export function VerificationRequestComposerDialog({
             ) : (
               <Wand2 className="mr-2 h-4 w-4" />
             )}
-            Draft verification request
+            Draft scoped request
           </Button>
 
           {draft && (
             <div className="space-y-4 rounded-lg border border-proofound-stone bg-white p-4">
+              {draft.fallback ? (
+                <div className="rounded-md border border-proofound-stone bg-japandi-bg px-3 py-2 text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground">Manual checklist draft</p>
+                  <p>
+                    Provider assistance was unavailable, so this deterministic draft uses selected
+                    public-safe fields only. Manual editing still works.
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-md border border-proofound-stone bg-japandi-bg px-3 py-2 text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground">Draft assistance</p>
+                  <p>Review, edit, accept, dismiss, or ignore this draft before sending.</p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="verification-draft-subject">Subject</Label>
                 <Input
@@ -351,6 +396,9 @@ export function VerificationRequestComposerDialog({
                     setDraft({ ...draft, subject: event.target.value });
                     setReviewed(false);
                   }}
+                  onBlur={() =>
+                    recordSuggestionEvent(draft.suggestionId, 'edited', 'subject', true)
+                  }
                 />
               </div>
 
@@ -364,6 +412,9 @@ export function VerificationRequestComposerDialog({
                     setDraft({ ...draft, message: event.target.value });
                     setReviewed(false);
                   }}
+                  onBlur={() =>
+                    recordSuggestionEvent(draft.suggestionId, 'edited', 'message', true)
+                  }
                 />
               </div>
 
@@ -403,7 +454,13 @@ export function VerificationRequestComposerDialog({
                 <Checkbox
                   id="composer-reviewed-draft"
                   checked={reviewed}
-                  onCheckedChange={(value) => setReviewed(value === true)}
+                  onCheckedChange={(value) => {
+                    const nextReviewed = value === true;
+                    setReviewed(nextReviewed);
+                    if (nextReviewed) {
+                      recordSuggestionEvent(draft.suggestionId, 'accepted', 'composer_review');
+                    }
+                  }}
                 />
                 <Label
                   htmlFor="composer-reviewed-draft"
@@ -417,7 +474,7 @@ export function VerificationRequestComposerDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={sending}>
+          <Button variant="outline" onClick={dismissDraft} disabled={sending}>
             Cancel
           </Button>
           <Button

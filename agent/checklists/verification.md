@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `verification.md`
-> Last Verified: `2026-05-03`
+> Last Verified: `2026-05-04`
 
 # Verification Checklist (Before Merging)
 
@@ -219,32 +219,38 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - Resend API send succeeded for the generated action link
   - Recipient receives a valid Supabase verify/recovery link.
 
-## Manual Smoke Checks (GCP OCR Production Provider)
+## Manual Smoke Checks (Document AI Proof Artifact OCR Beta)
 
 Before any production Cloud Run OCR call:
 
 - Confirm Google Cloud Billing coverage was verified live in the Google Cloud Console during this smoke pass.
-- Confirm covered products were verified live for the exact provider path: Cloud Run, Document AI or Cloud Vision OCR, Cloud Storage if used, Secret Manager if used, Cloud Logging, and Cloud Monitoring.
+- Confirm covered products were verified live for the exact provider path: Cloud Run, Document AI, Cloud Storage if used, Secret Manager if used, Cloud Logging, and Cloud Monitoring.
 - Confirm budget alerts are configured for the production project before the first billable call, then test the alert route or notification recipient and record the test evidence in local/operator notes.
+- Confirm app/service-level hard caps are configured and tested before any Document AI call. Google Cloud budgets are alerts only, not hard caps.
 - Confirm the GCP project ID is recorded only in local/operator documentation and trusted deployment configuration. Do not hardcode it in product code, public docs, browser env, test fixtures, or committed smoke artifacts if it is sensitive.
 - Confirm production remains disabled until the smoke window starts: `GCP_CV_OCR_ENABLED=false` and no provider route is connected to user-facing CV/import flow.
-- Confirm production is enabled only for synthetic PDFs and only after billing, product coverage, budget alert, privacy-review, and cleanup gates are ready.
+- Confirm production is enabled only for synthetic PDFs or approved invite-only Proof Artifact Text Extraction beta accounts, and only after billing, product coverage, budget alert, app-level hard-cap, privacy-review, and cleanup gates are ready.
+- Confirm OCR requires explicit consent per document.
+- Confirm OCR output is draft text only and cannot auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or change match/review/trust/hiring state.
+- Confirm Cloud Run max instances is `1` initially and no more than `3` during beta.
+- Confirm the disable-or-pay decision is scheduled by `2026-07-24` because credits expire around `2026-08-03`.
+- Confirm Cloud Vision OCR is not enabled.
 
 Required production smoke:
 
 - Run the internal safe status check: `npm run ocr:production:status`. It must report only one of `disabled`, `configured`, `expired`, `fallback`, or `provider reachable`.
 - For a live production provider smoke only, temporarily enable production with a short future `GCP_CV_OCR_EXPIRES_AT`, then run `npm run ocr:production:smoke`. The command submits one generated synthetic PDF and prints only the safe status plus pass/fail.
 - Upload or submit exactly one synthetic one-page PDF with no real names, emails, phone numbers, addresses, employer names, customer names, CV history, pilot data, filenames, or storage paths.
-- Confirm synthetic one-page PDF extraction succeeds through the production provider and returns only schema-valid extracted text plus safe metadata.
+- Confirm synthetic one-page PDF extraction succeeds through the Document AI provider and returns only schema-valid extracted text plus safe metadata.
 - Set `GCP_CV_OCR_ENABLED=false`, redeploy or refresh production config as required, and confirm the feature returns the deterministic/browser-side fallback.
 - Set `GCP_CV_OCR_EXPIRES_AT` to a past timestamp in production, redeploy or refresh config as required, and confirm the feature returns fallback and makes no Cloud Run call.
 - Inspect application logs, Cloud Run logs, Cloud Logging, and any temporary provider logs; confirm they contain no raw extracted text, original filenames, storage paths, bucket/object names, signed URLs, processor IDs, service URLs, user emails, secrets, tokens, or credential material.
 - Confirm the cost dashboard for the sandbox project shows the expected small smoke spend and no unrelated product spend.
 - Test the cleanup path: disable the staging flag, remove temporary staging env values, delete or verify deletion of temp objects, and confirm the fallback path still works after cleanup.
 
-Pass condition: live billing/product eligibility is recorded outside the repo, budget alerting is proved, one synthetic extraction succeeds, disabled and expired states fall back without Cloud Run calls, logs are payload-safe, cost is bounded, and cleanup is verified.
+Pass condition: live billing/product eligibility is recorded outside the repo, budget alerting and app-level hard caps are proved, one synthetic extraction succeeds, disabled and expired states fall back without Cloud Run calls, logs are payload-safe, cost is bounded, Cloud Run max instances stay within beta limits, and cleanup is verified.
 
-Fail condition: any real or pilot data is processed, a secret or project identifier is hardcoded where it should not be, budget alerting is untested, disabled/expired config still invokes Cloud Run, logs contain sensitive payloads, cost is unexplained, or cleanup leaves billable resources active.
+Fail condition: any real or pilot data is processed outside invite-only Proof Artifact Text Extraction with explicit consent, a secret or project identifier is hardcoded where it should not be, budget alerting or app-level hard caps are untested, disabled/expired config still invokes Cloud Run, logs contain sensitive payloads, cost is unexplained, Cloud Vision OCR is used, or cleanup leaves billable resources active.
 
 ## Manual Smoke Checks (Profile Sharing)
 

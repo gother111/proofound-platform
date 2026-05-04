@@ -10,9 +10,11 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
+import { useAssistiveAiFlag } from '@/hooks/useAssistiveAiFlag';
 
 type AssignmentClaritySuggestion = {
   suggestionId?: string | null;
+  fallback?: boolean;
   ambiguityFlags: string[];
   suggestedRewrite: {
     title?: string | null;
@@ -110,6 +112,7 @@ export function AssignmentClarityAssistant({
   orgSlug,
   onEnsureDraft,
 }: Props) {
+  const assistiveAiEnabled = useAssistiveAiFlag();
   const [isClarifying, setIsClarifying] = useState(false);
   const [suggestion, setSuggestion] = useState<AssignmentClaritySuggestion | null>(null);
   const [draft, setDraft] = useState<Record<EditableField, string>>({
@@ -238,13 +241,27 @@ export function AssignmentClarityAssistant({
     recordSuggestionEvent(suggestion?.suggestionId, 'accepted', 'constraints');
   };
 
+  if (!assistiveAiEnabled) {
+    return (
+      <Card className="space-y-3 p-4" data-testid="assignment-clarity-assistant">
+        <div className="space-y-1">
+          <h2 className="text-base font-semibold text-foreground">Assignment clarity</h2>
+          <p className="text-sm text-muted-foreground">
+            Manual guidance: name the outcome, proof expectations, constraints, and must-have
+            capabilities before publishing.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="space-y-4 p-4" data-testid="assignment-clarity-assistant">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h2 className="text-base font-semibold text-foreground">Assignment clarity</h2>
           <p className="text-sm text-muted-foreground">
-            Outcome, proof, capability, and constraint suggestions stay in draft until you save.
+            AI suggestions are drafts. They do not verify, score, rank, or evaluate anyone.
           </p>
         </div>
         <Button onClick={handleClarify} disabled={isClarifying} variant="outline">
@@ -255,6 +272,23 @@ export function AssignmentClarityAssistant({
 
       {suggestion ? (
         <div className="space-y-4">
+          {suggestion.fallback ? (
+            <div className="rounded-md border border-proofound-stone bg-white p-3">
+              <p className="text-sm font-medium text-foreground">Manual clarity checklist</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Provider assistance was unavailable, so these are deterministic manual prompts.
+                Manual editing still works.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-md border border-proofound-stone bg-white p-3">
+              <p className="text-sm font-medium text-foreground">Draft assistance</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Review, edit, accept, or dismiss each suggestion before it affects the draft.
+              </p>
+            </div>
+          )}
+
           {suggestion.ambiguityFlags.length > 0 ? (
             <div className="rounded-md border border-amber-300 bg-amber-50 p-3">
               <p className="text-sm font-medium text-amber-950">Ambiguity flags</p>

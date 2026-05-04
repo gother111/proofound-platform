@@ -16,6 +16,13 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     global.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
+      if (url === '/api/feature-flags') {
+        return {
+          ok: true,
+          json: async () => ({ flags: { assistiveAiUi: true } }),
+        } as Response;
+      }
+
       if (url === '/api/portfolio/visibility') {
         return {
           ok: true,
@@ -52,7 +59,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     render(<PortfolioVisibilityCard />);
 
     const button = await screen.findByRole('button', {
-      name: /check privacy before publishing/i,
+      name: /run privacy preflight/i,
     });
     fireEvent.click(button);
 
@@ -67,5 +74,44 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
       surface: 'public_portfolio',
       includeModelReview: false,
     });
+  });
+
+  it('hides the privacy preflight button and shows manual guidance when AI UI is disabled', async () => {
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === '/api/feature-flags') {
+        return {
+          ok: true,
+          json: async () => ({ flags: { assistiveAiUi: false } }),
+        } as Response;
+      }
+      if (url === '/api/portfolio/visibility') {
+        return {
+          ok: true,
+          json: async () => ({
+            visibility: {
+              header: true,
+              proofBar: true,
+              workEmail: false,
+              linkedin: true,
+              identity: true,
+              skills: false,
+              bio: false,
+              contact: false,
+            },
+            publicPageEnabled: true,
+            searchIndexingEnabled: false,
+          }),
+        } as Response;
+      }
+      throw new Error(`Unexpected fetch call: ${url}`);
+    }) as any;
+
+    render(<PortfolioVisibilityCard />);
+
+    expect(await screen.findByText(/Manual guidance: review visible fields/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /run privacy preflight/i })
+    ).not.toBeInTheDocument();
   });
 });

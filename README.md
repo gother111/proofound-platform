@@ -1,7 +1,7 @@
 # Proofound MVP
 
 > Doc Class: `active`
-> Last Verified: `2026-04-29`
+> Last Verified: `2026-05-04`
 
 Production-ready scaffold for a proof-first, privacy-first hiring corridor centered on Proof Packs, with one individual side and one organization side.
 
@@ -358,7 +358,7 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - Vercel function logs for detailed errors.
   - DB tables: `fairnessNotes`, `fairnessReports` for outputs; other crons rely on logs/status JSON.
   - Success = 200 JSON; 401 = bad/missing bearer; 500 = code/data/env issue (check logs).
-- CV import PDF analyze now uses an async extract-first flow:
+- Legacy CV import PDF analyze is archived/non-launch. These routes remain historical context and must not be treated as active MVP launch evidence:
   1. `POST /api/expertise/cv-import/wizard-extract` uploads PDFs into private temp storage and enqueues `document_intelligence_extract_only`
   2. `GET /api/expertise/cv-import/wizard-extract/status?job_id=...` polls until extraction completes or fails
   3. the client submits extracted text to the existing JSON `POST /api/expertise/cv-import/wizard-suggest`

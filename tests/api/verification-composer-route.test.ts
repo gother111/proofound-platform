@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 const mocks = vi.hoisted(() => ({
@@ -60,6 +60,10 @@ describe('Verification Request Composer route', () => {
     });
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('requires an authenticated user', async () => {
     mocks.requireApiAuthContext.mockResolvedValueOnce(null);
 
@@ -76,6 +80,24 @@ describe('Verification Request Composer route', () => {
     expect(mocks.composeVerificationRequestForUser).not.toHaveBeenCalled();
   });
 
+  it('honors the feature-level verification composer kill switch', async () => {
+    vi.stubEnv('AI_KILL_SWITCH_VERIFICATION_COMPOSER', 'true');
+
+    const response = await POST(
+      request({
+        proofPackId: '11111111-1111-4111-8111-111111111111',
+        verifierRelationshipType: 'Peer',
+        verificationScope: 'observed_behavior',
+        selectedPublicSafeProofFields: ['claim_statement'],
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(payload.code).toBe('ai_feature_kill_switch');
+    expect(mocks.composeVerificationRequestForUser).not.toHaveBeenCalled();
+  });
+
   it('rejects requests without a valid Proof Pack or claim', async () => {
     const response = await POST(
       request({
@@ -87,7 +109,13 @@ describe('Verification Request Composer route', () => {
     const payload = await response.json();
 
     expect(response.status).toBe(400);
-    expect(payload.error).toBe('Validation failed');
+    expect(payload.error).toBe('proofPackId or claimId is required');
+    expect(payload.details[0]).toEqual(
+      expect.objectContaining({
+        path: ['proofPackId'],
+        message: 'proofPackId or claimId is required',
+      })
+    );
     expect(mocks.composeVerificationRequestForUser).not.toHaveBeenCalled();
   });
 

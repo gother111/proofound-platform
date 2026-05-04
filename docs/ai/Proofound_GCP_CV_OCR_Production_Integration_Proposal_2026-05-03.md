@@ -1,17 +1,32 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-03`
+> Last Verified: `2026-05-04`
 
-# GCP CV/OCR Production Integration Proposal
+# GCP Proof Artifact OCR Production-Beta Integration Proposal
 
-**Status:** Go for internal production provider status/smoke tooling. No-go for user-facing production OCR activation until the gates below pass.
-**Scope:** Promote the GCP CV/OCR extractor provider path to production-ready internal tooling without reactivating archived CV import routes, silently creating a user-facing production dependency, exposing secrets, or processing real/pilot documents.
+**Status:** Go for invite-only Proof Artifact Text Extraction beta after gates. No-go for CV import, broad OCR, scoring, ranking, or user-facing production OCR outside that beta.
+**Scope:** Promote a temporary Google Cloud Document AI OCR path for explicit user-consented Proof Artifact Text Extraction, without reactivating archived CV import routes, silently creating a required production dependency, exposing secrets, or processing documents outside invite-gated beta accounts.
 **Authority:** Subordinate to `AGENTS.md`, `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, and `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`.
 
 ## Executive Decision
 
-**Go for internal production status/smoke tooling. No-go for user-facing production OCR activation.**
+**Go for invite-only production beta only as Proof Artifact Text Extraction. No-go for CV import or broad OCR.**
 
-The GCP CV/OCR extractor can be represented as an internal production provider path, but it is not ready to process real or pilot production documents because:
+The approved beta shape is:
+
+- provider: Google Cloud Document AI OCR only;
+- product surface: explicit Proof Artifact Text Extraction for user-uploaded proof artifacts;
+- availability: invite-only, feature-flagged, disabled by default;
+- consent: explicit per document before OCR;
+- output: draft extracted text for user review only;
+- limits: page-limited, file-size-limited, rate-limited, spend-capped, and safe to disable;
+- Cloud Run scaling: max instances `1` initially, never above `3` during beta;
+- expiry: disable-or-pay decision due by `2026-07-24` because free credits expire around `2026-08-03`.
+
+OCR output must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or hiring-decision state.
+
+Google Cloud budgets are alerting tools only. They are not hard caps. Hard caps must be enforced in app/service code before the OCR worker calls Document AI.
+
+The GCP OCR extractor can be represented as an internal production provider path, but it is not ready to process real or pilot production documents outside the invite-only Proof Artifact OCR beta because:
 
 - the CV import wizard route family is explicitly archived in the launch surface policy;
 - live billing/product eligibility has not been verified in this pass;
@@ -20,7 +35,16 @@ The GCP CV/OCR extractor can be represented as an internal production provider p
 - staging smoke evidence is not present;
 - the Cloud Run provider path still requires live production smoke evidence before any user-facing flow can rely on it.
 
-**Conditional go for a production synthetic smoke window** if it uses synthetic documents only, stays behind disabled-by-default server flags before and after the smoke, and connects through internal tooling rather than reactivating CV import.
+**Conditional go for a production synthetic smoke window** if it uses synthetic documents only, stays behind disabled-by-default server flags before and after the smoke, uses Document AI only, and connects through internal tooling rather than reactivating CV import.
+
+**Explicit no-go surfaces:**
+
+- CV import wizard
+- AI candidate scoring, ranking, shortlisting, suitability judgments, hiring recommendations, verification decisions, or trust-state decisions
+- Gemini skill extractor for employer review
+- taxonomy shortlist or reranker
+- Cloud Vision OCR
+- moving core infrastructure from Vercel/Supabase to Google Cloud
 
 ## Current Route Surface Policy
 
@@ -79,7 +103,7 @@ Adding one of those would require edits to:
 - archived route tests if anything moves out of `410`
 - launch docs/checklists describing the new surface
 
-Recommended path: avoid a new active route. Integrate only behind an existing active proof-upload/proof-attachment flow after approval.
+Recommended path: avoid a new active route. Integrate only behind an existing active proof-upload/proof-attachment flow after approval, and only as invite-only Proof Artifact Text Extraction.
 
 ## Existing Active Flow Candidate
 
@@ -113,6 +137,8 @@ Proposed future integration shape:
 - Require the user to explicitly choose what becomes proof content.
 - Keep `uploadedFileId` as the authority for attachment.
 - Never use OCR output to score, rank, shortlist, recommend, or auto-create hiring decisions.
+- Never use OCR output to update match, review, verification, reveal, trust-state, or hiring-decision state.
+- Require explicit user consent per document before the OCR call.
 
 ## Privacy Review Outcome
 
@@ -149,7 +175,7 @@ Existing controls:
 Open billing blockers:
 
 - Google Cloud Billing credit expiration and product eligibility were not verified live in this pass.
-- Coverage for Cloud Run, Document AI or Cloud Vision OCR, Cloud Storage if used, Secret Manager, Cloud Logging, and Cloud Monitoring is unresolved.
+- Coverage for Cloud Run, Document AI, Cloud Storage if used, Secret Manager, Cloud Logging, and Cloud Monitoring is unresolved.
 - Gemini/API Studio coverage must not be assumed.
 - Budget alerts are documented but not smoke-proven.
 - The GCP-specific `userDailyLimit` and `globalDailyLimit` config values are parsed, but there is no production OCR usage ledger or app-level budget stop wired into an approved active route.
@@ -160,8 +186,9 @@ Required before any billable staging call:
 - sandbox-only GCP project;
 - budget alerts at 10/25/50/75/90/100% plus forecasted 100%;
 - proof that budget notification delivery works;
-- app-level hard stop that blocks calls independently of GCP alerts;
+- app/service-level hard stop that blocks calls independently of GCP alerts;
 - disabled/expired config smoke proving no Cloud Run call.
+- disable-or-pay decision by `2026-07-24`, before the expected `2026-08-03` free-credit expiry.
 
 ## Staging Smoke Evidence
 
@@ -190,9 +217,10 @@ Recommended no-new-route integration:
 - `src/lib/expertise/gcp-cv-ocr-config.ts`
   - add budget/eligibility status fields only if needed; keep secrets out of returned config.
 - `services/gcp-cv-ocr/src/provider.ts`
-  - replace stubbed real GCP provider with Document AI or Vision implementation after billing/product approval.
+  - replace stubbed real GCP provider with Document AI implementation after billing/product approval. Cloud Vision OCR is excluded from this rollout.
 - `services/gcp-cv-ocr/src/handler.ts`
   - keep HMAC/IAM auth, safe response contract, no raw logging, expiry guard.
+  - keep Cloud Run max instances at `1` initially and no more than `3` during beta.
 - `src/lib/uploads/lifecycle.ts`
   - optional extraction hook only after file validation/privacy gates; no automatic proof writes.
 - `src/app/api/upload/document/route.ts`
@@ -255,7 +283,7 @@ Fast app rollback:
 GCP rollback:
 
 1. Disable or delete Cloud Run service/revisions.
-2. Disable or delete Document AI processor or disable Vision use.
+2. Disable or delete Document AI processor.
 3. Empty and delete temp bucket after confirming no approved retention need.
 4. Revoke IAM bindings and service accounts.
 5. Destroy Secret Manager versions.
@@ -280,7 +308,7 @@ Code rollback:
 
 ## Final Recommendation
 
-Do not connect GCP CV/OCR to a user-facing production flow now.
+Do not connect GCP OCR to any user-facing production flow outside the invite-only Proof Artifact Text Extraction beta.
 
 The acceptable production-provider implementation must:
 

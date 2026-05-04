@@ -1811,6 +1811,68 @@ export const proofPacks = pgTable(
   })
 );
 
+export const startFromCvImportSessions = pgTable(
+  'start_from_cv_import_sessions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    sourceType: text('source_type', { enum: ['cv'] })
+      .default('cv')
+      .notNull(),
+    status: text('status', {
+      enum: [
+        'created',
+        'extraction_failed',
+        'manual_fallback',
+        'ready_for_review',
+        'accepted',
+        'discarded',
+        'deleted',
+      ],
+    })
+      .default('created')
+      .notNull(),
+    consentConfirmedAt: timestamp('consent_confirmed_at', { withTimezone: true }),
+    extractionStatus: text('extraction_status').default('not_started').notNull(),
+    privacyWarnings: jsonb('privacy_warnings')
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    draftPayload: jsonb('draft_payload')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    discardedUnsafeItems: jsonb('discarded_unsafe_items')
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    acceptedPayload: jsonb('accepted_payload')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    fileMimeType: text('file_mime_type'),
+    fileSizeBytes: integer('file_size_bytes'),
+    pageCount: integer('page_count'),
+    extractedTextHash: text('extracted_text_hash'),
+    redactionSummary: jsonb('redaction_summary')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    ocrProviderUsed: text('ocr_provider_used'),
+    modelUsed: text('model_used'),
+    usageLogId: uuid('usage_log_id'),
+    sourceDeletedAt: timestamp('source_deleted_at', { withTimezone: true }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    userCreatedIdx: index('idx_start_from_cv_sessions_user_created').on(
+      table.userId,
+      table.createdAt
+    ),
+    statusIdx: index('idx_start_from_cv_sessions_status').on(table.status),
+  })
+);
+
 export const proofPackItems = pgTable(
   'proof_pack_items',
   {
@@ -3543,6 +3605,25 @@ export const aiUsageLogs = pgTable(
       ],
     })
       .default('in_progress')
+      .notNull(),
+    cacheStatus: text('cache_status', {
+      enum: ['miss', 'hit', 'bypass', 'not_applicable'],
+    })
+      .default('miss')
+      .notNull(),
+    providerStatus: text('provider_status', {
+      enum: [
+        'not_called',
+        'provider_success',
+        'provider_error',
+        'quota_exhausted',
+        'budget_blocked',
+        'rate_limited',
+        'cache_replay',
+        'deterministic_fallback',
+      ],
+    })
+      .default('not_called')
       .notNull(),
     promptTokens: integer('prompt_tokens'),
     outputTokens: integer('output_tokens'),

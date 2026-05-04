@@ -11,6 +11,7 @@ import {
   hashAiContent,
   recordAiSuggestionEvent,
 } from '@/lib/ai/usage-ledger';
+import { containsForbiddenAiOutput } from '@/lib/ai/request-safety';
 import { skillDisplayLabel } from '@/lib/copy/labels';
 import type { CanonicalProofPackAggregate } from '@/lib/proofs/canonical-pack';
 import { getCanonicalProofPackAggregate } from '@/lib/proofs/canonical-pack';
@@ -46,9 +47,6 @@ const REDACTION_PATTERNS = [
     replacement: '[redacted phone]',
   },
 ] as const;
-
-const FORBIDDEN_JUDGMENT_PATTERN =
-  /\b(?:candidate\s+score|score\s+the|rank(?:ing)?|shortlist|fit\s+judg(?:e|ment)|fit\s+for\s+the\s+role|hire\s+recommendation|recommended\s+candidate)\b/i;
 
 export const ProofPackAssistantRewriteSchema = z.object({
   title: z.string().trim().max(180).nullable().optional(),
@@ -125,13 +123,70 @@ type RedactionResult = {
   counts: Record<string, number>;
 };
 
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function normalizeHiddenIdentityTerm(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  return normalized.length >= 3 ? normalized.slice(0, 160) : null;
+}
+
+export function collectAiHiddenIdentityTerms(value: unknown, depth = 0): string[] {
+  if (!value || depth > 4) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => collectAiHiddenIdentityTerms(item, depth + 1));
+  }
+
+  if (typeof value !== 'object') {
+    return [];
+  }
+
+  const record = value as Record<string, unknown>;
+  const terms: string[] = [];
+  for (const [key, item] of Object.entries(record)) {
+    const keyIsIdentity =
+      /^(?:displayName|handle|email|portfolioUrl|exactLocation|employerName|employerNames|schoolName|schoolNames)$/i.test(
+        key
+      );
+    const keyIsHiddenContainer = /(?:hidden|blind|reviewIdentity|identityFields)/i.test(key);
+
+    if (keyIsIdentity) {
+      if (Array.isArray(item)) {
+        for (const entry of item) {
+          const term = normalizeHiddenIdentityTerm(entry);
+          if (term) terms.push(term);
+        }
+      } else {
+        const term = normalizeHiddenIdentityTerm(item);
+        if (term) terms.push(term);
+      }
+    }
+
+    if (keyIsHiddenContainer || (typeof item === 'object' && item !== null)) {
+      terms.push(...collectAiHiddenIdentityTerms(item, depth + 1));
+    }
+  }
+
+  return [...new Set(terms)].slice(0, 80);
+}
+
 function mergeCounts(target: Record<string, number>, source: Record<string, number>) {
   for (const [key, count] of Object.entries(source)) {
     target[key] = (target[key] ?? 0) + count;
   }
 }
 
-export function redactProofPackAssistantText(value: string | null | undefined): RedactionResult {
+export function redactProofPackAssistantText(
+  value: string | null | undefined,
+  hiddenIdentityTerms: string[] = []
+): RedactionResult {
   let next = typeof value === 'string' ? value : '';
   const counts: Record<string, number> = {};
 
@@ -146,14 +201,30 @@ export function redactProofPackAssistantText(value: string | null | undefined): 
     }
   }
 
+  for (const term of hiddenIdentityTerms) {
+    const pattern = new RegExp(`\\b${escapeRegex(term)}\\b`, 'gi');
+    let count = 0;
+    next = next.replace(pattern, () => {
+      count += 1;
+      return '[redacted hidden identity]';
+    });
+    if (count > 0) {
+      counts.hidden_identity = (counts.hidden_identity ?? 0) + count;
+    }
+  }
+
   return {
     value: next.trim().slice(0, 1200),
     counts,
   };
 }
 
-function redactedNullable(value: string | null | undefined, counts: Record<string, number>) {
-  const redacted = redactProofPackAssistantText(value);
+function redactedNullable(
+  value: string | null | undefined,
+  counts: Record<string, number>,
+  hiddenIdentityTerms: string[] = []
+) {
+  const redacted = redactProofPackAssistantText(value, hiddenIdentityTerms);
   mergeCounts(counts, redacted.counts);
   return redacted.value.length > 0 ? redacted.value : null;
 }
@@ -176,6 +247,7 @@ export function buildSanitizedProofPackAssistantContext(
 ): ProofPackAssistantSanitizedContext {
   const contract = aggregate.ownerFull.contract;
   const redactionSummary: Record<string, number> = {};
+  const hiddenIdentityTerms = collectAiHiddenIdentityTerms(aggregate);
   const evidence = aggregate.ownerFull.items.filter(isModelVisibleEvidenceItem).map((item) => {
     const title =
       item.artifact.artifactDisplayName ||
@@ -185,7 +257,7 @@ export function buildSanitizedProofPackAssistantContext(
 
     return {
       type: item.artifact.artifactKind || item.itemClass,
-      title: redactedNullable(title, redactionSummary),
+      title: redactedNullable(title, redactionSummary, hiddenIdentityTerms),
     };
   });
 
@@ -193,17 +265,33 @@ export function buildSanitizedProofPackAssistantContext(
     promptVersion: PROOF_PACK_ASSISTANT_PROMPT_VERSION,
     proofPackId: aggregate.pack.id,
     selectedFields: {
-      title: redactedNullable(contract.title, redactionSummary),
-      claimStatement: redactedNullable(contract.primaryClaim.statement, redactionSummary),
-      ownershipStatement: redactedNullable(contract.ownershipStatement, redactionSummary),
-      outcomeSummary: redactedNullable(contract.outcomeSummary, redactionSummary),
-      timeframe: redactedNullable(compactTimeframe(contract.timeframe), redactionSummary),
+      title: redactedNullable(contract.title, redactionSummary, hiddenIdentityTerms),
+      claimStatement: redactedNullable(
+        contract.primaryClaim.statement,
+        redactionSummary,
+        hiddenIdentityTerms
+      ),
+      ownershipStatement: redactedNullable(
+        contract.ownershipStatement,
+        redactionSummary,
+        hiddenIdentityTerms
+      ),
+      outcomeSummary: redactedNullable(
+        contract.outcomeSummary,
+        redactionSummary,
+        hiddenIdentityTerms
+      ),
+      timeframe: redactedNullable(
+        compactTimeframe(contract.timeframe),
+        redactionSummary,
+        hiddenIdentityTerms
+      ),
       linkedSkills: contract.linkedSkills
         .map(
           (skill) =>
             linkedSkillLabelsById.get(skill.skillId) || skillDisplayLabel({ id: skill.skillId })
         )
-        .map((label) => redactedNullable(label, redactionSummary))
+        .map((label) => redactedNullable(label, redactionSummary, hiddenIdentityTerms))
         .filter((label): label is string => Boolean(label)),
       evidence,
       visibilityState: aggregate.pack.visibility,
@@ -219,7 +307,7 @@ function buildPrompt(context: ProofPackAssistantSanitizedContext) {
     'Help an individual improve structured Proof Pack text without inventing facts.',
     'Use only the selected sanitized fields in the JSON context.',
     'Never send, request, or rely on file contents, original filenames, URLs, emails, phone numbers, tokens, hidden private context, or protected-trait inference.',
-    'Never produce a candidate score, rank, fit judgment, hiring recommendation, shortlist decision, or verifier decision.',
+    'Never produce scoring, ordering, shortlisting, suitability, trust, verification approval, interview, or hiring-decision outputs.',
     'If a rewrite would require a new fact, put that gap in missingContext or warnings instead.',
     'Return JSON only with keys: missingContext, suggestedRewrite, privacyFlags, verificationSuggestions, warnings.',
     'The suggestedRewrite object may include only title, claimStatement, ownershipStatement, outcomeSummary, and timeframe.',
@@ -286,24 +374,25 @@ function sanitizeSuggestionOutput(
 
     const redacted = redactProofPackAssistantText(value);
     mergeCounts(context.redactionSummary, redacted.counts);
-    if (FORBIDDEN_JUDGMENT_PATTERN.test(redacted.value)) {
+    if (containsForbiddenAiOutput(redacted.value)) {
       suggestedRewrite[key] = null;
-      warnings.add(
-        'Removed a suggested field because it resembled scoring, ranking, or fit judgment.'
-      );
+      warnings.add('Removed a suggested field because it crossed Proofound AI boundaries.');
       continue;
     }
     suggestedRewrite[key] = redacted.value;
   }
 
+  const sanitizeArray = (values: string[]) =>
+    values
+      .map((item) => redactProofPackAssistantText(item).value)
+      .filter((item) => item.length > 0 && !containsForbiddenAiOutput(item));
+
   return {
-    missingContext: response.missingContext.map((item) => redactProofPackAssistantText(item).value),
+    missingContext: sanitizeArray(response.missingContext),
     suggestedRewrite,
-    privacyFlags: response.privacyFlags.map((item) => redactProofPackAssistantText(item).value),
-    verificationSuggestions: response.verificationSuggestions.map(
-      (item) => redactProofPackAssistantText(item).value
-    ),
-    warnings: [...warnings].map((item) => redactProofPackAssistantText(item).value),
+    privacyFlags: sanitizeArray(response.privacyFlags),
+    verificationSuggestions: sanitizeArray(response.verificationSuggestions),
+    warnings: sanitizeArray([...warnings]),
   };
 }
 
@@ -472,11 +561,12 @@ export async function suggestProofPackForUser(params: {
     };
   } catch (error) {
     if (error instanceof AiProviderError) {
+      const fallbackWarning =
+        error.code === 'budget_exceeded'
+          ? 'AI suggestions are temporarily unavailable; manual editing still works.'
+          : 'AI provider was unavailable, so Proofound returned a deterministic checklist.';
       return {
-        ...deterministicFallback(
-          context,
-          'AI provider was unavailable, so Proofound returned a deterministic checklist.'
-        ),
+        ...deterministicFallback(context, fallbackWarning),
         fallback: true,
       };
     }

@@ -458,6 +458,41 @@ describe('document extraction provider abstraction', () => {
     expect(providerSpy).not.toHaveBeenCalled();
   });
 
+  it('falls back without provider calls when the production hard budget cap is exhausted', async () => {
+    const provider = successfulProvider();
+    const providerSpy = vi.spyOn(provider, 'extractTextFromDocument');
+
+    const result = await extractTextFromDocument(input(), {
+      env: enabledOidcEnv({
+        VERCEL_ENV: 'production',
+        GCP_CV_OCR_EXPIRES_AT: '2026-06-03T00:00:00.000Z',
+        GCP_CV_OCR_PROVIDER: 'document_ai',
+        GCP_CV_OCR_BUDGET_ALERT_CONFIGURED: 'true',
+        GCP_CV_OCR_HARD_BUDGET_CAP_SEK: '200',
+        GCP_CV_OCR_BUDGET_CAP_EXHAUSTED: 'true',
+        GCP_CV_OCR_MAX_FILE_SIZE_MB: '5',
+        GCP_CV_OCR_MAX_PAGES: '4',
+        GCP_CV_OCR_MAX_FILES_PER_REQUEST: '1',
+        GCP_CV_OCR_USER_DAILY_LIMIT: '5',
+        GCP_CV_OCR_GLOBAL_DAILY_LIMIT: '50',
+        GCP_CV_OCR_RETENTION_HOURS: '24',
+        GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES: '1',
+        GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES_DOCUMENTED: 'true',
+      }),
+      provider,
+      now: NOW,
+      clock: () => 100,
+    });
+
+    expect(result).toMatchObject({
+      status: 'unavailable',
+      provider: 'unavailable',
+      warnings: ['document_extraction_provider_budget_cap_exhausted'],
+      fallback: true,
+    });
+    expect(providerSpy).not.toHaveBeenCalled();
+  });
+
   it('redacts raw filenames from provider text before returning extraction results', async () => {
     const result = await extractTextFromDocument(input(), {
       config: resolveGcpCvOcrConfig(enabledEnv(), NOW),

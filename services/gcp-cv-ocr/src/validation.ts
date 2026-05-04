@@ -2,6 +2,7 @@ export type ValidatedDocument = {
   contentType: AllowedMimeType;
   fileBytes: Uint8Array;
   pageCount: number;
+  requesterRef: string | null;
 };
 
 export type ValidationFailureCode =
@@ -11,28 +12,18 @@ export type ValidationFailureCode =
   | 'bad_base64'
   | 'bad_magic_bytes'
   | 'file_too_large'
-  | 'too_many_pages';
+  | 'too_many_pages'
+  | 'too_many_files';
 
 export type ValidationResult =
   | { ok: true; document: ValidatedDocument }
   | { ok: false; code: ValidationFailureCode };
 
-export type AllowedMimeType =
-  | 'application/pdf'
-  | 'image/jpeg'
-  | 'image/png'
-  | 'image/tiff'
-  | 'image/webp';
+export type AllowedMimeType = 'application/pdf' | 'image/jpeg' | 'image/png';
 
 const DEFAULT_MAX_FILE_SIZE_MB = 5;
 const DEFAULT_MAX_PAGES = 4;
-const ALLOWED_MIME_TYPES = new Set<AllowedMimeType>([
-  'application/pdf',
-  'image/jpeg',
-  'image/png',
-  'image/tiff',
-  'image/webp',
-]);
+const ALLOWED_MIME_TYPES = new Set<AllowedMimeType>(['application/pdf', 'image/jpeg', 'image/png']);
 const FORBIDDEN_REQUEST_KEYS = new Set([
   'bucket',
   'fileName',
@@ -53,20 +44,30 @@ const FORBIDDEN_REQUEST_KEYS = new Set([
 export function resolveLimits(env: Record<string, string | undefined> = process.env): {
   maxFileSizeBytes: number;
   maxPages: number;
+  maxFilesPerRequest: number;
 } {
   const maxFileSizeMb = parsePositiveInt(env.GCP_CV_OCR_MAX_FILE_SIZE_MB, DEFAULT_MAX_FILE_SIZE_MB);
 
   return {
     maxFileSizeBytes: maxFileSizeMb * 1024 * 1024,
     maxPages: parsePositiveInt(env.GCP_CV_OCR_MAX_PAGES, DEFAULT_MAX_PAGES),
+    maxFilesPerRequest: parsePositiveInt(env.GCP_CV_OCR_MAX_FILES_PER_REQUEST, 1),
   };
 }
 
 export function validateExtractPayload(
   rawPayload: unknown,
-  limits: { maxFileSizeBytes: number; maxPages: number }
+  limits: { maxFileSizeBytes: number; maxPages: number; maxFilesPerRequest: number }
 ): ValidationResult {
   if (!isRecord(rawPayload) || containsForbiddenRequestKey(rawPayload)) {
+    return { ok: false, code: 'invalid_request' };
+  }
+
+  if (Array.isArray(rawPayload.files) || Array.isArray(rawPayload.documents)) {
+    const files = Array.isArray(rawPayload.files) ? rawPayload.files : rawPayload.documents;
+    if (Array.isArray(files) && files.length > limits.maxFilesPerRequest) {
+      return { ok: false, code: 'too_many_files' };
+    }
     return { ok: false, code: 'invalid_request' };
   }
 
@@ -100,12 +101,21 @@ export function validateExtractPayload(
     return { ok: false, code: 'too_many_pages' };
   }
 
+  const requesterRef =
+    typeof rawPayload.requesterRef === 'string'
+      ? normalizeRequesterRef(rawPayload.requesterRef)
+      : null;
+  if (rawPayload.requesterRef !== undefined && !requesterRef) {
+    return { ok: false, code: 'invalid_request' };
+  }
+
   return {
     ok: true,
     document: {
       contentType: contentType as AllowedMimeType,
       fileBytes,
       pageCount,
+      requesterRef,
     },
   };
 }
@@ -197,18 +207,12 @@ function matchesMagicBytes(contentType: AllowedMimeType, fileBytes: Uint8Array):
     return startsWithBytes(fileBytes, [0xff, 0xd8, 0xff]);
   }
 
-  if (contentType === 'image/tiff') {
-    return (
-      startsWithBytes(fileBytes, [0x49, 0x49, 0x2a, 0x00]) ||
-      startsWithBytes(fileBytes, [0x4d, 0x4d, 0x00, 0x2a])
-    );
-  }
+  return false;
+}
 
-  return (
-    startsWithAscii(fileBytes, 'RIFF') &&
-    fileBytes.byteLength >= 12 &&
-    Buffer.from(fileBytes.slice(8, 12)).toString('ascii') === 'WEBP'
-  );
+function normalizeRequesterRef(value: string): string | null {
+  const trimmed = value.trim();
+  return /^[a-zA-Z0-9][a-zA-Z0-9._:-]{7,127}$/.test(trimmed) ? trimmed : null;
 }
 
 function startsWithAscii(fileBytes: Uint8Array, value: string): boolean {

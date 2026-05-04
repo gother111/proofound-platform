@@ -1,9 +1,9 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-03`
+> Last Verified: `2026-05-04`
 
-# GCP CV/OCR Provider Reference
+# Temporary GCP Proof Artifact OCR Sandbox Reference
 
-**Status:** Historical sandbox reference, superseded for repo-facing tooling by the internal production provider status/smoke path.
+**Status:** Temporary sandbox reference for invite-only Proof Artifact Text Extraction using Google Cloud Document AI OCR.
 **Date:** 2026-05-03
 **Audience:** Founder, product, engineering, QA, privacy, ops
 **Authority:** This document is subordinate to `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, the aligned PRD/technical requirements, and the existing launch runbook. It must not broaden the locked MVP.
@@ -24,35 +24,43 @@ The most important current-code constraint: the named CV import wizard routes ar
 
 ## 1. Executive Recommendation
 
-Recommendation: Go for the internal production provider status/smoke tooling, but do not wire it into a user-facing production dependency yet.
+Recommendation: Go only for a temporary invite-only Proof Artifact Text Extraction beta after billing, privacy, app-level hard-cap, and smoke gates pass.
 
 Best feature candidate:
 
-**GCP OCR / Document Intelligence Provider for Internal Production Smoke**
+**Google Cloud Document AI OCR for Proof Artifact Text Extraction**
 
-The first implementation slice should be a synthetic CV/document extraction benchmark and mock provider abstraction, then an internal production Cloud Run plus Document AI or Cloud Vision OCR service using synthetic PDFs. Only after privacy review, billing verification, and explicit route-surface approval should this connect to any real user-facing CV/import flow.
+The first implementation slice should be synthetic-document smoke and a mock provider abstraction, then an internal Cloud Run plus Document AI OCR service using synthetic PDFs. Only after privacy review, billing verification, explicit invite-gate approval, and proof-upload integration approval should this connect to real beta proof artifacts.
 
 Why this fits the MVP:
 
-Proofound's MVP allows proof import/upload and cares about proof clarity, private context, and trust-safe proof creation. A narrow OCR/document-intelligence helper can reduce friction when users bring in CV-like documents or proof-import files, but only if it returns extracted text for user review and does not evaluate the person.
+Proofound's MVP allows proof upload and cares about proof clarity, private context, and trust-safe proof creation. A narrow OCR helper can reduce friction when invited users bring proof artifacts into Proof Packs, but only if it returns draft extracted text for user review and does not evaluate the person.
 
 Why it must remain optional/temporary:
 
-The credit window is temporary, user-provided as May 3, 2026 through August 3, 2026, and must be verified in Google Cloud Billing before implementation. Gemini API/AI Studio coverage must not be assumed. The service must automatically disable after expiry or if env config is removed, and the MVP must continue to work without it.
+The credit window is temporary, user-provided as May 3, 2026 through August 3, 2026, and must be verified in Google Cloud Billing before implementation. The release owner must review the plan on `2026-07-15`, run a disabled-mode drill on `2026-07-25`, make the final disable-or-paid decision on `2026-08-01`, and treat `2026-08-03` as the free-credit expiry. Gemini API/AI Studio coverage must not be assumed. The service must automatically disable after expiry or if env config is removed, and the MVP must continue to work without it.
+
+Explicitly excluded from this sandbox and beta:
+
+- CV import wizard
+- AI candidate scoring, ranking, shortlisting, suitability judgments, hiring recommendations, verification decisions, or trust-state decisions
+- Gemini skill extractor for employer review
+- taxonomy shortlist or reranker
+- Cloud Vision OCR
+- moving core infrastructure from Vercel/Supabase to Google Cloud
 
 ---
 
 ## 2. Candidate Decision Matrix
 
-| Candidate                                                                            | MVP fit                                   | Implementation effort | Privacy/security risk                                    | Credit usefulness | User value                     | Shutdown simplicity | Recommendation                               |
-| ------------------------------------------------------------------------------------ | ----------------------------------------- | --------------------- | -------------------------------------------------------- | ----------------- | ------------------------------ | ------------------- | -------------------------------------------- |
-| Temporary GCP OCR / Document Intelligence Extractor for CV Import Sandbox            | High, if kept to explicit proof/CV import | Medium                | Medium-high because CVs contain PII                      | High              | High if later connected safely | Medium              | Best overall candidate, staging-first only   |
-| Synthetic OCR Benchmark Lab using Cloud Run + Document AI/Vision + optional BigQuery | Medium-high                               | Low-medium            | Low because synthetic files only                         | Medium-high       | Indirect but useful            | High                | Best first implementation slice              |
-| Privacy preflight OCR for uploaded proof files                                       | High                                      | Medium                | High because proof files may expose identity/client data | Medium            | High                           | Medium              | Defer until upload/privacy review passes     |
-| Cloud Run deterministic parser worker only                                           | Medium                                    | Low                   | Low                                                      | Low-medium        | Medium                         | High                | Useful as fallback/mock, not best credit use |
-| BigQuery-only launch analytics/benchmark warehouse                                   | Low-medium                                | Medium                | Low if metadata only                                     | Medium            | Low immediate user value       | Medium              | Not recommended for MVP focus                |
+| Candidate                                                                | MVP fit                                   | Implementation effort | Privacy/security risk                                           | Credit usefulness | User value               | Shutdown simplicity | Recommendation                               |
+| ------------------------------------------------------------------------ | ----------------------------------------- | --------------------- | --------------------------------------------------------------- | ----------------- | ------------------------ | ------------------- | -------------------------------------------- |
+| Temporary Document AI OCR for invite-only Proof Artifact Text Extraction | High, if kept to explicit proof artifacts | Medium                | Medium-high because proof files may expose identity/client data | High              | High if connected safely | Medium              | Best overall candidate, beta only            |
+| Synthetic Document AI OCR smoke lab using Cloud Run                      | Medium-high                               | Low-medium            | Low because synthetic files only                                | Medium-high       | Indirect but useful      | High                | Best first implementation slice              |
+| Privacy preflight OCR for uploaded proof files                           | High                                      | Medium                | High because proof files may expose identity/client data        | Medium            | High                     | Medium              | Defer until upload/privacy review passes     |
+| Cloud Run deterministic parser worker only                               | Medium                                    | Low                   | Low                                                             | Low-medium        | Medium                   | High                | Useful as fallback/mock, not best credit use |
 
-Decision: Build the GCP OCR/CV extractor sandbox, but start with the synthetic benchmark plus mock provider slice. No candidate beats the CV/OCR idea on user value and credit usefulness, but the current archived CV-import route state makes production integration premature.
+Decision: Build the temporary Document AI OCR sandbox, but start with the synthetic benchmark plus mock provider slice. The current archived CV-import route state means CV import must stay inactive; the only approved beta path is explicit Proof Artifact Text Extraction.
 
 ---
 
@@ -88,15 +96,17 @@ It must not:
 
 ## 4. Proposed Feature
 
-Name: **Temporary GCP OCR / Document Intelligence Extractor for CV Import Sandbox**
+Name: **Temporary GCP Document AI OCR for Proof Artifact Text Extraction**
 
-Initial status: Disabled by default, staging/sandbox only.
+Initial status: Disabled by default, invite-only beta after staging/sandbox smoke.
 
 Reference env shape:
 
 ```bash
 GCP_CV_OCR_ENABLED=false
+GCP_CV_OCR_KILL_SWITCH=false
 GCP_CV_OCR_EXPIRES_AT=2026-08-03T00:00:00Z
+GCP_CV_OCR_EMERGENCY_DISABLE_HOURS=72
 GCP_CV_OCR_BASE_URL=
 GCP_CV_OCR_AUTH_MODE=hmac
 GCP_CV_OCR_SHARED_SECRET=
@@ -107,8 +117,14 @@ GCP_CV_OCR_MAX_FILES_PER_REQUEST=1
 GCP_CV_OCR_ALLOWED_MIME_TYPES=application/pdf
 GCP_CV_OCR_RETENTION_HOURS=24
 GCP_CV_OCR_USER_DAILY_LIMIT=5
-GCP_CV_OCR_GLOBAL_DAILY_LIMIT=50
-GCP_CV_OCR_FAIL_OPEN_TO_FALLBACK=true
+GCP_CV_OCR_GLOBAL_DAILY_LIMIT=20
+GCP_CV_OCR_HARD_BUDGET_CAP_SEK=<founder-approved-hard-cap>
+GCP_CV_OCR_BUDGET_CAP_EXHAUSTED=false
+GCP_CV_OCR_BUDGET_ALERT_CONFIGURED=false
+GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES=1
+GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES_DOCUMENTED=false
+GCP_CV_OCR_CLOUD_RUN_PUBLIC_INVOCATION=false
+PROOF_ARTIFACT_OCR_BETA_KILL_SWITCH=false
 ```
 
 Use a verified expiry value from Google Cloud Billing. Until verified, use the conservative August 3, 2026 UTC cutoff so the service stops before accidental post-credit spend.
@@ -118,7 +134,7 @@ Output contract:
 ```json
 {
   "status": "completed",
-  "provider": "gcp_document_ai|gcp_vision|mock|fallback",
+  "provider": "gcp_document_ai|mock|fallback",
   "requestId": "opaque-id",
   "documentId": "opaque-id",
   "pageCount": 1,
@@ -151,7 +167,7 @@ Recommended flow:
 3. Next.js creates an opaque request ID and document ID. It must not use the raw filename in any GCP object name or user-facing response.
 4. Next.js sends the file to Cloud Run over HTTPS using service-to-service auth.
 5. Cloud Run validates auth, timestamp, nonce, content type, size, pages, and request schema.
-6. Cloud Run calls Document AI OCR or Cloud Vision OCR.
+6. Cloud Run calls Document AI OCR.
 7. If temporary Cloud Storage is needed, Cloud Run writes to a private bucket using opaque object names and deletes objects immediately after processing. Bucket lifecycle must delete any leftovers within 24 hours.
 8. Cloud Run returns extracted text and safe metadata only.
 9. Next.js validates the response schema, truncates to configured max chars, deletes any temporary Supabase/GCP object, and returns the text for user review.
@@ -160,7 +176,7 @@ Recommended flow:
 ### 5.2 GCP Components
 
 - Cloud Run: Yes. Host the temporary extractor service. Keep it private or authenticated.
-- Document AI or Cloud Vision OCR: Use one primary path after billing/product eligibility is verified. Document AI is preferred for structured document OCR. Cloud Vision OCR is acceptable if simpler or more credit-eligible.
+- Document AI OCR: Use this path only after billing/product eligibility is verified. Cloud Vision OCR is excluded from this rollout.
 - Temporary Cloud Storage bucket: Optional. Prefer direct in-memory request processing for small files. Use GCS only when required by the processor or file flow. If used, it must be private, non-public, lifecycle-managed, and immediately cleaned.
 - Cloud Logging/Monitoring: Yes, but metadata only. No raw file text, no filenames, no paths, no secrets.
 - Optional BigQuery benchmark logging: Only for synthetic/staging benchmark data. Do not log real pilot file text or personal data to BigQuery.
@@ -223,7 +239,16 @@ At or after `GCP_CV_OCR_EXPIRES_AT`:
 - Any pending extraction job should fail closed with a safe fallback message.
 - Cleanup runbook should remove the GCP resources and Vercel env vars.
 
-### 6.3 Cleanup Steps
+Within the configured emergency-disable window, default `72` hours before expiry in production, the app must treat GCP OCR as unavailable even if `GCP_CV_OCR_ENABLED=true`.
+
+### 6.3 Disable-Or-Pay Timeline
+
+- `2026-07-15`: Review Google Cloud spend, remaining credits, Document AI/Cloud Run usage, and whether OCR beta still justifies a paid path.
+- `2026-07-25`: Run a disabled-mode drill by turning off OCR beta and GCP service flags, then verify core Proofound flows and deterministic fallbacks still work.
+- `2026-08-01`: Make the final disable-or-paid decision. If no paid decision exists, disable OCR beta and remove provider env vars.
+- `2026-08-03`: Free credit expires. OCR must be disabled or explicitly paid, documented, and capped.
+
+### 6.4 Cleanup Steps
 
 Document and, where safe, script these steps without embedding secrets:
 
@@ -249,26 +274,37 @@ Before any real GCP call, verify in Google Cloud Billing:
 - exact credit expiration;
 - credit balance;
 - eligible products;
-- whether Document AI, Cloud Vision OCR, Cloud Run, Cloud Storage, Logging, Monitoring, and BigQuery are covered;
+- whether Document AI, Cloud Run, Cloud Storage, Logging, Monitoring, and any approved synthetic-only benchmark service are covered;
 - whether Gemini API / AI Studio is excluded or separately billed.
 
 Controls:
 
 - Create a dedicated sandbox GCP project under Albina's billing account if allowed.
-- Use budget alerts at 10%, 25%, 50%, 75%, 90%, and 100%.
+- Use Google Cloud budget alerts at 25%, 50%, 75%, 90%, and 100%.
 - Add app-level hard stop independent of GCP budget alerts.
+- Treat Google Cloud budgets as alerts only, not hard caps.
+- Set `GCP_CV_OCR_HARD_BUDGET_CAP_SEK`; if missing, launch readiness blocks OCR.
+- Set `GCP_CV_OCR_BUDGET_CAP_EXHAUSTED=true` when the app-level hard cap is exhausted; OCR disables without breaking the app.
 - Set per-user and global rate limits.
 - Start with synthetic PDFs only.
 - No real pilot data until privacy review passes.
 - Max 1 file/request initially.
 - Max 5 MB/file.
 - Max 4 pages/file.
+- Cloud Run max instances starts at `1` and must not exceed `3` during beta.
 - Timeout <= 20 seconds end to end.
 - No public buckets.
 - No raw filenames or storage paths in responses.
 - No secrets, file text, filenames, signed URLs, or processor IDs in logs.
 - No client-exposed API keys.
-- Minimal IAM: Cloud Run service account can invoke only required Document AI/Vision APIs and access only the one temp bucket if used.
+- Minimal IAM: Cloud Run service account can invoke only required Document AI APIs and access only the one temp bucket if used.
+
+Kill switches:
+
+- Global AI kill switch: `AI_GLOBAL_KILL_SWITCH=true` disables all assistive AI routes.
+- OCR beta kill switch: `PROOF_ARTIFACT_OCR_BETA_KILL_SWITCH=true` hides/disables Proof Artifact OCR routes.
+- GCP OCR service kill switch: `GCP_CV_OCR_KILL_SWITCH=true` prevents any GCP OCR provider call.
+- Feature-level AI kill switches: `AI_KILL_SWITCH_PROOF_PACK_ASSISTANT`, `AI_KILL_SWITCH_ASSIGNMENT_CLARITY`, `AI_KILL_SWITCH_VERIFICATION_COMPOSER`, and `AI_KILL_SWITCH_PRIVACY_PREFLIGHT`.
 
 ---
 
@@ -411,7 +447,7 @@ The existing Python proxy tests already enforce important patterns: no forwardin
 ### 9.5 Mock GCP Tests
 
 - Mock Document AI returns text.
-- Mock Vision OCR returns text.
+- No Cloud Vision OCR mock or production path is enabled for this rollout.
 - Mock quota error triggers budget fallback.
 - Mock malformed provider response fails closed.
 - Mock long-running request times out.
@@ -436,7 +472,7 @@ Use synthetic PDFs only:
 - Verify credit start date and expiration date.
 - Verify remaining balance.
 - Verify products covered.
-- Verify Document AI/Vision pricing region.
+- Verify Document AI pricing region.
 - Verify budget alerts recipients.
 - Verify no billing export or BigQuery dataset contains PII.
 - Verify Cloud Run request count/cost after smoke.
@@ -456,7 +492,7 @@ Add disabled-by-default config and a mock extractor contract. No GCP calls. No p
 
 ### Phase 2 - Staging/Sandbox GCP Project
 
-Create a sandbox Cloud Run service and Document AI/Vision processor after billing verification. Synthetic PDFs only.
+Create a sandbox Cloud Run service and Document AI processor after billing verification. Synthetic PDFs only.
 
 ### Phase 3 - Internal Dogfood
 

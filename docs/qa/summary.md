@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-01`
+> Last Verified: `2026-05-04`
 
 # QA Summary
 
@@ -41,6 +41,32 @@ This summary tracks the currently enforced QA automation surface and launch-gate
 - Provider strict flows require deterministic connected provider credentials and complete env setup.
 - Launch strict runs can fail due to missing env vars or provider account readiness rather than functional regressions.
 - `npm run db:push` remains dev-only and is not a production migration path.
+
+## Controlled AI / OCR Smoke Gates
+
+Gemini assistive AI is production-eligible only after:
+
+- live model smoke passes against the configured production model ID
+- app-level hard caps block provider calls before spend exceeds the cap
+- launch-status checks expose only safe AI state and block raw-prompt logging in production-like environments
+- privacy/redaction tests prove no full files, original filenames, signed URLs, hidden identity data, or secrets are sent
+- raw prompt logging remains disabled
+
+Invite-only Proof Artifact Text Extraction with Google Cloud Document AI OCR is beta-only and must verify:
+
+- explicit user consent per document
+- invite gate and server-side feature flag
+- page, file-size, rate, and app/service spend caps before Document AI calls
+- disabled/expired fallback makes no Cloud Run call
+- Cloud Run max instances is `1` initially and no more than `3` during beta
+- OCR output is draft text only and does not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or change match/review/trust/hiring state
+
+Explicitly excluded from launch evidence:
+
+- CV import wizard
+- AI scoring, ranking, shortlisting, suitability, hiring recommendation, verification decision, or trust-state decision flows
+- Gemini skill extractor for employer review
+- taxonomy shortlist, reranker, or Cloud Vision OCR
 
 ## Revamp Stabilization Validation (PRO-119, 2026-03-01)
 

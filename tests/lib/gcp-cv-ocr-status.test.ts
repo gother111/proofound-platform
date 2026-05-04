@@ -45,7 +45,7 @@ describe('GCP CV OCR safe status', () => {
         probeProvider: true,
         fetchImpl: fetchSpy as typeof fetch,
       })
-    ).resolves.toEqual({ status: 'disabled' });
+    ).resolves.toEqual(expect.objectContaining({ status: 'disabled' }));
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -59,7 +59,7 @@ describe('GCP CV OCR safe status', () => {
         probeProvider: true,
         fetchImpl: fetchSpy as typeof fetch,
       })
-    ).resolves.toEqual({ status: 'expired' });
+    ).resolves.toEqual(expect.objectContaining({ status: 'expired' }));
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -70,7 +70,7 @@ describe('GCP CV OCR safe status', () => {
         now: NOW,
         probeProvider: true,
       })
-    ).resolves.toEqual({ status: 'fallback' });
+    ).resolves.toEqual(expect.objectContaining({ status: 'fallback' }));
   });
 
   it('reports configured when provider probing is disabled', async () => {
@@ -80,7 +80,7 @@ describe('GCP CV OCR safe status', () => {
         now: NOW,
         probeProvider: false,
       })
-    ).resolves.toEqual({ status: 'configured' });
+    ).resolves.toEqual(expect.objectContaining({ status: 'configured' }));
   });
 
   it('reports provider reachable only from the safe health response', async () => {
@@ -99,7 +99,7 @@ describe('GCP CV OCR safe status', () => {
       fetchImpl: fetchSpy as typeof fetch,
     });
 
-    expect(result).toEqual({ status: 'provider reachable' });
+    expect(result).toEqual(expect.objectContaining({ status: 'provider reachable' }));
     expect(GCP_CV_OCR_SAFE_STATUSES).toContain(result.status);
     expect(JSON.stringify(result)).not.toMatch(/secret|processor|project|text|gcp-cv-ocr/i);
     expect(fetchSpy).toHaveBeenCalledWith('https://gcp-cv-ocr.example/health', {
@@ -143,7 +143,7 @@ describe('GCP CV OCR safe status', () => {
         fetchImpl: fetchSpy as typeof fetch,
         vercelOidcTokenFactory: () => 'vercel-oidc-token',
       })
-    ).resolves.toEqual({ status: 'provider reachable' });
+    ).resolves.toEqual(expect.objectContaining({ status: 'provider reachable' }));
     expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
@@ -159,6 +159,6 @@ describe('GCP CV OCR safe status', () => {
         probeProvider: true,
         fetchImpl: fetchSpy as typeof fetch,
       })
-    ).resolves.toEqual({ status: 'fallback' });
+    ).resolves.toEqual(expect.objectContaining({ status: 'fallback' }));
   });
 });

@@ -84,6 +84,20 @@ describe('AI suggestion events route', () => {
     expect(JSON.stringify(mocks.recordSuggestionEvent.mock.calls)).not.toContain('Better title');
   });
 
+  it('rejects event payloads that try to store suggestion text as metadata', async () => {
+    const response = await POST(
+      request({
+        suggestionId: '22222222-2222-4222-8222-222222222222',
+        eventType: 'edited',
+        field: 'Better title with private detail',
+        metadata: { suggestionText: 'Better title with private detail' },
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.recordSuggestionEvent).not.toHaveBeenCalled();
+  });
+
   it('fails closed when the suggestion does not belong to the user', async () => {
     mocks.recordSuggestionEvent.mockRejectedValueOnce(new Error('AI_SUGGESTION_CACHE_FORBIDDEN'));
 

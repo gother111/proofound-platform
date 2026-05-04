@@ -18,6 +18,10 @@ const truthy = (value) =>
       .trim()
       .toLowerCase()
   );
+const positiveNumber = (value) => {
+  const parsed = Number(String(value ?? '').trim());
+  return Number.isFinite(parsed) && parsed > 0;
+};
 const productionDeployDetected =
   String(env.NODE_ENV ?? '')
     .trim()
@@ -74,6 +78,53 @@ if (strict && enabledMockModes.length) {
   failures.push(
     `Strict deploy checks must not enable mock database/admin/auth modes: ${enabledMockModes.join(', ')}`
   );
+}
+
+if (truthy(env.GCP_CV_OCR_ENABLED)) {
+  const requiredGcpOcr = [
+    'GCP_CV_OCR_EXPIRES_AT',
+    'GCP_CV_OCR_MAX_PAGES',
+    'GCP_CV_OCR_MAX_FILE_SIZE_MB',
+    'GCP_CV_OCR_MAX_FILES_PER_REQUEST',
+    'GCP_CV_OCR_USER_DAILY_LIMIT',
+    'GCP_CV_OCR_GLOBAL_DAILY_LIMIT',
+    'GCP_CV_OCR_HARD_BUDGET_CAP_SEK',
+    'GCP_CV_OCR_AUTH_MODE',
+    'GCP_CV_OCR_RETENTION_HOURS',
+    'GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES',
+  ];
+
+  for (const key of requiredGcpOcr) {
+    if (!env[key]) missing.push(key);
+  }
+
+  if (!truthy(env.GCP_CV_OCR_BUDGET_ALERT_CONFIGURED)) {
+    failures.push('GCP OCR is enabled without budget alert confirmation.');
+  }
+
+  if (!truthy(env.GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES_DOCUMENTED)) {
+    failures.push('GCP OCR is enabled without Cloud Run max instance documentation.');
+  }
+
+  if (truthy(env.GCP_CV_OCR_CLOUD_RUN_PUBLIC_INVOCATION)) {
+    failures.push('GCP OCR Cloud Run public invocation must be disabled.');
+  }
+
+  if (['vision', 'gcp_vision', 'cloud_vision'].includes(String(env.GCP_CV_OCR_PROVIDER ?? '').trim().toLowerCase())) {
+    failures.push('GCP OCR must not use the Cloud Vision provider for this beta.');
+  }
+
+  if (truthy(env.GCP_CV_OCR_BUDGET_CAP_EXHAUSTED)) {
+    failures.push('GCP OCR hard budget cap is exhausted; keep OCR disabled.');
+  }
+
+  if (env.GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES && Number(env.GCP_CV_OCR_CLOUD_RUN_MAX_INSTANCES) > 3) {
+    failures.push('GCP OCR Cloud Run max instances must be 3 or lower during beta.');
+  }
+
+  if (env.GCP_CV_OCR_HARD_BUDGET_CAP_SEK && !positiveNumber(env.GCP_CV_OCR_HARD_BUDGET_CAP_SEK)) {
+    failures.push('GCP_CV_OCR_HARD_BUDGET_CAP_SEK must be a positive number.');
+  }
 }
 
 const hasLinkedInCreds = Boolean(env.LINKEDIN_CLIENT_ID) && Boolean(env.LINKEDIN_CLIENT_SECRET);

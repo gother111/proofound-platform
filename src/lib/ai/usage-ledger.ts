@@ -9,6 +9,12 @@ import {
   aiUsageLogs,
   organizationMembers,
 } from '@/db/schema';
+import { resolveAiModelDefault, resolveAiModelFallback } from '@/lib/ai/provider/config';
+import {
+  resolveAiProviderSmokeArtifactPath,
+  resolveLastSuccessfulAiProviderSmokeAt,
+} from '@/lib/ai/provider-smoke-artifact';
+import { containsForbiddenAiOutput, containsUnsafeAiRequestPayload } from '@/lib/ai/request-safety';
 import { getRows } from '@/lib/db/rows';
 
 export type AiUsageStatus =
@@ -55,7 +61,24 @@ export type AiBudgetDecision =
 
 export type AiRateLimitDecision =
   | { ok: true }
-  | { ok: false; scope: 'user' | 'organization' | 'feature'; limit: number; count: number };
+  | {
+      ok: false;
+      scope: 'user' | 'organization' | 'feature' | 'global';
+      limit: number;
+      count: number;
+    };
+
+export type AiUsageCacheStatus = 'miss' | 'hit' | 'bypass' | 'not_applicable';
+
+export type AiUsageProviderStatus =
+  | 'not_called'
+  | 'provider_success'
+  | 'provider_error'
+  | 'quota_exhausted'
+  | 'budget_blocked'
+  | 'rate_limited'
+  | 'cache_replay'
+  | 'deterministic_fallback';
 
 export type AiSuggestionReplay = {
   cacheId: string;
@@ -95,17 +118,38 @@ export type AiLaunchBudgetState =
 
 export type AiLaunchOperationalSummary = {
   aiAssistantsEnabled: boolean;
+  aiConfiguredModel: string;
+  aiFallbackModel: string | null;
+  aiFallbackModelState: 'unset' | 'configured_unverified' | 'configured_verified';
+  aiFallbackModelConfigured: boolean;
+  aiFallbackModelVerified: boolean;
+  aiLastSuccessfulProviderSmokeAt: string | null;
   aiMonthlyCapSek: number | null;
+  aiHardCapConfigured: boolean;
   aiSpendThisMonthSek: number;
+  currentAiMonthToDateSpendSek: number;
+  aiMonthlyHardCapSek: number | null;
+  aiMonthlyHardCapPercentUsed: number | null;
+  aiMonthlyHardCapExhausted: boolean;
   aiBudgetState: AiLaunchBudgetState;
+  aiRateLimitHealth: {
+    ok: boolean;
+    globalDailyLimit: number;
+    userDailyLimit: number;
+    orgDailyLimit: number;
+    defaultFeatureDailyLimit: number;
+    perFeatureDailyLimits: Record<string, number>;
+    configurablePerFeatureLimits: boolean;
+  };
   aiRawPromptLoggingEnabled: boolean;
 };
 
 const AI_PROVIDER = 'gemini' as const;
 const AI_CURRENCY = 'SEK' as const;
 export const DEFAULT_AI_SUGGESTION_CACHE_TTL_SECONDS = 30 * 24 * 60 * 60;
-const DEFAULT_USER_DAILY_LIMIT = 50;
-const DEFAULT_ORG_DAILY_LIMIT = 200;
+const DEFAULT_GLOBAL_DAILY_LIMIT = 250;
+const DEFAULT_USER_DAILY_LIMIT = 20;
+const DEFAULT_ORG_DAILY_LIMIT = 50;
 const DEFAULT_FEATURE_DAILY_LIMIT = 500;
 
 type BudgetScope = {
@@ -149,6 +193,10 @@ function isProductionLike(env: Pick<NodeJS.ProcessEnv, string> = process.env): b
   const vercelEnv = env.VERCEL_ENV?.trim().toLowerCase();
   const appEnv = (env.NEXT_PUBLIC_APP_ENV || env.APP_ENV)?.trim().toLowerCase();
   return nodeEnv === 'production' || vercelEnv === 'production' || appEnv === 'production';
+}
+
+export function isAiProductionLike(env: Pick<NodeJS.ProcessEnv, string> = process.env): boolean {
+  return isProductionLike(env);
 }
 
 function parseBoolean(value: string | undefined, fallback: boolean): boolean {
@@ -195,13 +243,17 @@ function omitSensitiveMetadata(
     return {};
   }
 
-  const blockedKey = /(prompt|input|text|document|candidate|payload|response|email|name|phone)/i;
+  const blockedKey =
+    /(prompt|input|text|content|draft|suggestion|document|candidate|payload|response|email|name|phone|url|file|path|storage|cookie|session|token|secret|password|authorization|api[_-]?key)/i;
   const sanitizeValue = (entryValue: unknown, depth = 0): unknown => {
     if (entryValue === null || typeof entryValue === 'boolean' || typeof entryValue === 'number') {
       return entryValue;
     }
 
     if (typeof entryValue === 'string') {
+      if (containsUnsafeAiRequestPayload(entryValue) || containsForbiddenAiOutput(entryValue)) {
+        return '[redacted]';
+      }
       return entryValue.slice(0, 120);
     }
 
@@ -373,6 +425,26 @@ function resolveConfiguredLaunchMonthlyCapSek(
   return Math.min(...caps);
 }
 
+export function resolveConfiguredAiMonthlyHardCapSek(
+  env: Pick<NodeJS.ProcessEnv, string> = process.env
+): number | null {
+  return resolveConfiguredLaunchMonthlyCapSek(env);
+}
+
+export function assertAiProductionHardCapConfigured(
+  env: Pick<NodeJS.ProcessEnv, string> = process.env
+): void {
+  if (
+    parseBoolean(env.AI_ASSISTANTS_ENABLED, false) &&
+    isProductionLike(env) &&
+    resolveConfiguredLaunchMonthlyCapSek(env) === null
+  ) {
+    throw new Error(
+      'AI_ASSISTANTS_ENABLED=true requires AI_MONTHLY_HARD_CAP_SEK or AI_PROD_MONTHLY_HARD_CAP_SEK in production.'
+    );
+  }
+}
+
 export function resolveAiRawPromptLoggingEnabled(
   env: Pick<NodeJS.ProcessEnv, string> = process.env
 ): boolean {
@@ -393,11 +465,26 @@ export async function getAiLaunchOperationalSummary(
   const aiAssistantsEnabled = parseBoolean(env.AI_ASSISTANTS_ENABLED, false);
   const aiRawPromptLoggingEnabled = resolveAiRawPromptLoggingEnabled(env);
   const aiMonthlyCapSek = resolveConfiguredLaunchMonthlyCapSek(env);
+  const aiConfiguredModel = resolveAiModelDefault(env);
+  const aiFallbackModel = resolveAiModelFallback(env);
+  const aiProviderSmokeArtifactPath = resolveAiProviderSmokeArtifactPath(env);
+  const aiLastSuccessfulProviderSmokeAt = await resolveLastSuccessfulAiProviderSmokeAt({
+    env,
+    artifactPath: aiProviderSmokeArtifactPath,
+  });
+  const aiFallbackModelVerified = Boolean(
+    aiFallbackModel && parseBoolean(env.AI_MODEL_FALLBACK_VERIFIED, false)
+  );
+  const aiFallbackModelState = !aiFallbackModel
+    ? 'unset'
+    : aiFallbackModelVerified
+      ? 'configured_verified'
+      : 'configured_unverified';
   const monthStart = resolveAiMonthStart();
   const result = await db.execute(sql`
     SELECT
-      COALESCE(SUM(spent_ore), 0)::int AS spent_ore,
-      COALESCE(SUM(reserved_ore), 0)::int AS reserved_ore,
+      COALESCE(MAX(spent_ore), 0)::int AS spent_ore,
+      COALESCE(MAX(reserved_ore), 0)::int AS reserved_ore,
       BOOL_OR(status = 'exhausted') AS exhausted
     FROM public.ai_monthly_budgets
     WHERE provider = 'gemini'
@@ -412,6 +499,9 @@ export async function getAiLaunchOperationalSummary(
   const spentOre = asNumber(row?.spent_ore);
   const reservedOre = asNumber(row?.reserved_ore);
   const exhausted = row?.exhausted === true || row?.exhausted === 'true' || row?.exhausted === 't';
+  const hardCapOre = aiMonthlyCapSek === null ? null : toOre(aiMonthlyCapSek);
+  const hardCapExhausted =
+    aiMonthlyCapSek !== null && (exhausted || spentOre + reservedOre >= toOre(aiMonthlyCapSek));
 
   let aiBudgetState: AiLaunchBudgetState = 'ok';
   if (!aiAssistantsEnabled) {
@@ -420,15 +510,30 @@ export async function getAiLaunchOperationalSummary(
     aiBudgetState = 'raw_prompt_logging_blocked';
   } else if (aiMonthlyCapSek === null) {
     aiBudgetState = 'cap_not_configured';
-  } else if (exhausted || spentOre + reservedOre >= toOre(aiMonthlyCapSek)) {
+  } else if (hardCapExhausted) {
     aiBudgetState = 'exhausted';
   }
 
+  const rateLimitHealth = resolveAiRateLimitHealth(env);
+
   return {
     aiAssistantsEnabled,
+    aiConfiguredModel,
+    aiFallbackModel,
+    aiFallbackModelState,
+    aiFallbackModelConfigured: Boolean(aiFallbackModel),
+    aiFallbackModelVerified,
+    aiLastSuccessfulProviderSmokeAt,
     aiMonthlyCapSek,
+    aiHardCapConfigured: aiMonthlyCapSek !== null,
     aiSpendThisMonthSek: spentOre / 100,
+    currentAiMonthToDateSpendSek: spentOre / 100,
+    aiMonthlyHardCapSek: aiMonthlyCapSek,
+    aiMonthlyHardCapPercentUsed:
+      hardCapOre && hardCapOre > 0 ? Math.round((spentOre / hardCapOre) * 10000) / 100 : null,
+    aiMonthlyHardCapExhausted: hardCapExhausted,
     aiBudgetState,
+    aiRateLimitHealth: rateLimitHealth,
     aiRawPromptLoggingEnabled,
   };
 }
@@ -438,6 +543,35 @@ function resolveFeatureDailyLimit(feature: string): number {
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, '_')}_DAILY_LIMIT`;
   return parsePositiveInteger(process.env[envKey], DEFAULT_FEATURE_DAILY_LIMIT);
+}
+
+function resolveAiRateLimitHealth(
+  env: Pick<NodeJS.ProcessEnv, string> = process.env
+): AiLaunchOperationalSummary['aiRateLimitHealth'] {
+  const perFeatureDailyLimits: Record<string, number> = {};
+  const featurePattern = /^AI_(.+)_DAILY_LIMIT$/;
+  const reservedScopes = new Set(['GLOBAL', 'USER', 'ORG', 'ORGANIZATION']);
+
+  for (const [key, value] of Object.entries(env)) {
+    const match = key.match(featurePattern);
+    if (!match || reservedScopes.has(match[1])) {
+      continue;
+    }
+    perFeatureDailyLimits[match[1].toLowerCase()] = parsePositiveInteger(
+      value,
+      DEFAULT_FEATURE_DAILY_LIMIT
+    );
+  }
+
+  return {
+    ok: true,
+    globalDailyLimit: parsePositiveInteger(env.AI_GLOBAL_DAILY_LIMIT, DEFAULT_GLOBAL_DAILY_LIMIT),
+    userDailyLimit: parsePositiveInteger(env.AI_USER_DAILY_LIMIT, DEFAULT_USER_DAILY_LIMIT),
+    orgDailyLimit: parsePositiveInteger(env.AI_ORG_DAILY_LIMIT, DEFAULT_ORG_DAILY_LIMIT),
+    defaultFeatureDailyLimit: DEFAULT_FEATURE_DAILY_LIMIT,
+    perFeatureDailyLimits,
+    configurablePerFeatureLimits: true,
+  };
 }
 
 async function countUsageSince(params: {
@@ -462,6 +596,10 @@ export async function enforceAiDailyRateLimits(params: {
   now?: Date;
 }): Promise<AiRateLimitDecision> {
   const dayStart = resolveAiDayStart(params.now);
+  const globalLimit = parsePositiveInteger(
+    process.env.AI_GLOBAL_DAILY_LIMIT,
+    DEFAULT_GLOBAL_DAILY_LIMIT
+  );
   const userLimit = parsePositiveInteger(process.env.AI_USER_DAILY_LIMIT, DEFAULT_USER_DAILY_LIMIT);
   const orgLimit = parsePositiveInteger(process.env.AI_ORG_DAILY_LIMIT, DEFAULT_ORG_DAILY_LIMIT);
   const featureLimit = resolveFeatureDailyLimit(params.feature);
@@ -490,6 +628,14 @@ export async function enforceAiDailyRateLimits(params: {
   });
   if (featureCount >= featureLimit) {
     return { ok: false, scope: 'feature', limit: featureLimit, count: featureCount };
+  }
+
+  const globalCount = await countUsageSince({
+    whereSql: sql`provider = ${AI_PROVIDER}`,
+    dayStart,
+  });
+  if (globalCount >= globalLimit) {
+    return { ok: false, scope: 'global', limit: globalLimit, count: globalCount };
   }
 
   return { ok: true };
@@ -578,7 +724,10 @@ export async function createAiUsageLog(params: {
   promptVersion: string;
   inputHash: string;
   status?: AiUsageStatus;
+  cacheStatus?: AiUsageCacheStatus;
+  providerStatus?: AiUsageProviderStatus;
   estimatedCostOre?: number;
+  costOre?: number;
   reservedOre?: number;
   redactionSummary?: Record<string, unknown>;
   safeMetadata?: Record<string, unknown>;
@@ -598,8 +747,11 @@ export async function createAiUsageLog(params: {
       promptVersion: params.promptVersion,
       inputHash: params.inputHash,
       status: params.status || 'in_progress',
+      cacheStatus: params.cacheStatus || 'miss',
+      providerStatus: params.providerStatus || 'not_called',
       estimatedCostOre: Math.max(0, params.estimatedCostOre || 0),
       reservedOre: Math.max(0, params.reservedOre || 0),
+      costOre: Math.max(0, params.costOre || 0),
       currency: AI_CURRENCY,
       redactionSummary: omitSensitiveMetadata(params.redactionSummary),
       safeMetadata: omitSensitiveMetadata(params.safeMetadata),
@@ -618,6 +770,8 @@ export async function updateAiUsageLog(
   logId: string,
   patch: {
     status?: AiUsageStatus;
+    cacheStatus?: AiUsageCacheStatus;
+    providerStatus?: AiUsageProviderStatus;
     model?: string | null;
     outputHash?: string | null;
     promptTokens?: number | null;
@@ -635,6 +789,8 @@ export async function updateAiUsageLog(
     .update(aiUsageLogs)
     .set({
       ...('status' in patch ? { status: patch.status } : {}),
+      ...('cacheStatus' in patch ? { cacheStatus: patch.cacheStatus } : {}),
+      ...('providerStatus' in patch ? { providerStatus: patch.providerStatus } : {}),
       ...('model' in patch ? { model: patch.model } : {}),
       ...('outputHash' in patch ? { outputHash: patch.outputHash } : {}),
       ...('promptTokens' in patch ? { promptTokens: patch.promptTokens } : {}),

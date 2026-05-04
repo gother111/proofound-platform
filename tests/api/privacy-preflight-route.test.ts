@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 const mocks = vi.hoisted(() => ({
@@ -49,12 +49,32 @@ describe('POST /api/ai/privacy-preflight/check', () => {
     });
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('requires authentication', async () => {
     mocks.requireApiAuthContext.mockResolvedValueOnce(null);
 
     const response = await POST(request({ text: 'public proof summary' }));
 
     expect(response.status).toBe(401);
+    expect(mocks.runPrivacyPreflightCheck).not.toHaveBeenCalled();
+  });
+
+  it('honors the feature-level privacy preflight kill switch', async () => {
+    vi.stubEnv('AI_KILL_SWITCH_PRIVACY_PREFLIGHT', 'true');
+
+    const response = await POST(
+      request({
+        surface: 'proof_publication',
+        fields: [{ label: 'proof summary', value: 'Built the release.' }],
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(payload.code).toBe('ai_feature_kill_switch');
     expect(mocks.runPrivacyPreflightCheck).not.toHaveBeenCalled();
   });
 

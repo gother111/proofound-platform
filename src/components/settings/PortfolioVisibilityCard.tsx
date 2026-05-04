@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { useAssistiveAiFlag } from '@/hooks/useAssistiveAiFlag';
 
 type VisibilityFlags = {
   header: boolean;
@@ -31,6 +32,7 @@ const defaults: VisibilityFlags = {
 };
 
 export function PortfolioVisibilityCard() {
+  const assistiveAiEnabled = useAssistiveAiFlag();
   const [flags, setFlags] = useState<VisibilityFlags>(defaults);
   const [publicPageEnabled, setPublicPageEnabled] = useState(true);
   const [searchIndexingEnabled, setSearchIndexingEnabled] = useState(false);
@@ -107,7 +109,9 @@ export function PortfolioVisibilityCard() {
       );
     } catch (e) {
       console.error(e);
-      setPreflightMessage('Could not run the privacy check. This is not a privacy guarantee.');
+      setPreflightMessage(
+        'Manual checklist: remove private contact details, hidden identity terms, original filenames, private URLs, and unsupported sensitive details before publishing.'
+      );
     } finally {
       setChecking(false);
     }
@@ -195,6 +199,17 @@ export function PortfolioVisibilityCard() {
                 : 'Public page is off. The public route will be unavailable.'}
             </p>
 
+            {assistiveAiEnabled ? (
+              <p className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                AI suggestions are drafts. They do not verify, score, rank, or evaluate anyone.
+              </p>
+            ) : (
+              <p className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                Manual guidance: review visible fields for private contact details, hidden identity
+                terms, sensitive filenames, and private links before publishing.
+              </p>
+            )}
+
             {preflightMessage ? (
               <p className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
                 {preflightMessage}
@@ -202,17 +217,19 @@ export function PortfolioVisibilityCard() {
             ) : null}
 
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={checkPrivacy} disabled={checking}>
-                {checking ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Checking...
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck className="mr-2 h-4 w-4" /> Check privacy before publishing
-                  </>
-                )}
-              </Button>
+              {assistiveAiEnabled ? (
+                <Button size="sm" variant="outline" onClick={checkPrivacy} disabled={checking}>
+                  {checking ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Checking...
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="mr-2 h-4 w-4" /> Run privacy preflight
+                    </>
+                  )}
+                </Button>
+              ) : null}
               <Button size="sm" onClick={save} disabled={saving}>
                 {saving ? (
                   <>
