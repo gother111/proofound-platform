@@ -44,7 +44,7 @@ export function CookieBanner() {
     setSaving(true);
     setShow(false);
 
-    void saveCookiePreferences(preferences, true)
+    void saveCookiePreferences(preferences, false)
       .catch((error) => {
         logError(context, error);
       })

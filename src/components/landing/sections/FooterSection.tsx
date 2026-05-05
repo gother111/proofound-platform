@@ -27,9 +27,9 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
                 <Image
                   src="/logo.png"
                   alt="Proofound"
-                  width={120}
-                  height={48}
-                  className="h-11 w-auto"
+                  width={44}
+                  height={44}
+                  className="h-11 w-11"
                 />
                 <span className="text-sm uppercase tracking-[0.28em] text-foreground/48">
                   Proofound

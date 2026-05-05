@@ -52,7 +52,7 @@ function buildContentSecurityPolicy(nonce?: string): string {
   return [
     "default-src 'self'",
     scriptSrc,
-    "style-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data: https:",
     connectSrc,
@@ -90,7 +90,7 @@ const applySecurityHeaders = (response: NextResponse, request: NextRequest, nonc
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set(
     'Permissions-Policy',
-    'accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=()'
+    'accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=()'
   );
 
   if (shouldSendHstsHeader()) {
@@ -187,7 +187,7 @@ function buildArchivedApiResponse(
 ) {
   const response = NextResponse.json(
     {
-      error: `${surface} is not part of the launch MVP corridor.`,
+      error: `${surface} is unavailable in the launch MVP corridor.`,
       message: detail,
       surface,
       launchState: 'non_launch',

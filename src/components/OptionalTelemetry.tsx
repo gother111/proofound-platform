@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { PerformanceTracker } from '@/components/PerformanceTracker';
-import { WebVitalsReporter } from '@/components/WebVitalsReporter';
 import {
   COOKIE_PREFERENCES_CHANGED_EVENT,
   hasAnalyticsConsent,
@@ -42,8 +40,6 @@ export function OptionalTelemetry() {
 
   return (
     <>
-      <PerformanceTracker />
-      <WebVitalsReporter />
       <Analytics />
       <SpeedInsights />
     </>

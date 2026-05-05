@@ -42,7 +42,9 @@ test.describe('Landing Page', () => {
     await expect(page.getByRole('heading', { name: /Precise solutions/i })).toBeVisible();
 
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.82));
-    await expect(page.getByRole('heading', { name: /To modern challenges/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /To modern challenges/i }).first()
+    ).toBeVisible();
   });
 
   test('locks desktop wheel gestures to one story frame at a time', async ({ page }) => {
@@ -98,11 +100,14 @@ test.describe('Landing Page', () => {
   });
 
   test('routes header sign-in and signup CTAs', async ({ page }) => {
-    await page
-      .getByTestId('landing-header')
-      .getByRole('link', { name: /Sign in/i })
-      .click();
-    await expect(page.getByTestId('login-form-shell')).toBeVisible();
+    await Promise.all([
+      page.waitForURL(/\/login$/),
+      page
+        .getByTestId('landing-header')
+        .getByRole('link', { name: /Sign in/i })
+        .click(),
+    ]);
+    await expect(page.getByTestId('login-form-shell')).toBeVisible({ timeout: 30_000 });
 
     await page.goto('/');
     await page

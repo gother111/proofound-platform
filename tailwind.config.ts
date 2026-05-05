@@ -34,7 +34,7 @@ const config: Config = {
         // Figma Design System Colors - Primary Brand
         proofound: {
           forest: '#56624F',
-          terracotta: '#C09E85',
+          terracotta: '#8B4A36',
           parchment: '#F3F0E8',
           charcoal: '#5E5E5E',
           stone: '#D5CABA',
@@ -44,7 +44,7 @@ const config: Config = {
           sage: '#B9B99D',
           teal: '#B0B9A8',
           ochre: '#DCB482',
-          clay: '#C09E85',
+          clay: '#8B4A36',
           sand: '#D5CABA',
           bamboo: '#56624F',
         },
@@ -53,7 +53,7 @@ const config: Config = {
         // shadcn/ui semantic tokens
         'japandi-bg': '#F3F0E8',
         'japandi-sage': '#B9B99D',
-        'japandi-terracotta': '#C09E85',
+        'japandi-terracotta': '#8B4A36',
         'japandi-charcoal': '#5E5E5E',
         'japandi-gray': '#E6E4E0',
         border: 'hsl(var(--border))',

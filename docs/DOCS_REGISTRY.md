@@ -338,6 +338,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `agent/runbooks/release-batch-flow.md` | `runbook` | `agent` | `repo+live` | `2026-03-11` | `-` | `false` |
 | `artifacts/docs-reconciliation/squirrel-full-2026-02-26.llm.md` | `reference-spec` | `artifacts` | `repo` | `2026-02-26` | `-` | `false` |
 | `artifacts/docs-reconciliation/squirrel-surface-2026-02-26.llm.md` | `reference-spec` | `artifacts` | `repo` | `2026-02-26` | `-` | `false` |
+| `services/gcp-cv-ocr/DEPLOYMENT.md` | `runbook` | `services` | `repo` | `2026-05-04` | `-` | `false` |
 | `services/gcp-cv-ocr/README.md` | `reference-spec` | `services` | `repo` | `2026-05-04` | `-` | `false` |
 | `src/archive/non_launch_integrations/README.md` | `historical` | `archive` | `repo` | `2026-03-25` | `-` | `false` |
 | `docs/mobile/IOS_PARITY_MATRIX.md` | `reference-spec` | `docs` | `repo` | `2026-02-26` | `-` | `false` |

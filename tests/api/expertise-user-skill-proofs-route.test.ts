@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 import { POST } from '@/app/api/expertise/user-skills/[id]/proofs/route';
@@ -73,6 +73,7 @@ describe('expertise user-skill proofs route', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    delete process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE;
     authContext.supabase = createSupabaseMock();
     vi.mocked(requireApiAuthContext).mockResolvedValue(authContext as any);
     vi.mocked(attachUploadedFile).mockResolvedValue(null as any);
@@ -86,6 +87,10 @@ describe('expertise user-skill proofs route', () => {
         proof_type: 'link',
       },
     } as any);
+  });
+
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE;
   });
 
   it('blocks new proof creation without a primary anchor context', async () => {
@@ -168,6 +173,34 @@ describe('expertise user-skill proofs route', () => {
         proof_type: 'link',
       })
     );
+  });
+
+  it('returns a mock proof in local mock Supabase mode without touching canonical storage', async () => {
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+    authContext.supabase = createSupabaseMock({ anchorExists: false });
+
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proofType: 'link',
+        title: 'Mock proof',
+        url: 'https://example.com/project-alpha',
+        primaryAnchor: {
+          type: 'experience',
+          id: '11111111-1111-4111-8111-111111111111',
+        },
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(payload.proof.canonicalPackId).toBe('mock-pack-skill-1');
+    expect(payload.proof.title).toBe('Mock proof');
+    expect(vi.mocked(upsertCanonicalSkillProof)).not.toHaveBeenCalled();
+    expect(revalidatePublicPortfolioByProfileId).not.toHaveBeenCalled();
   });
 
   it('uses a neutral fallback title for uploaded files and surfaces privacy-review holds', async () => {

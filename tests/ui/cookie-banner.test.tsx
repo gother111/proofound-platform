@@ -46,8 +46,9 @@ describe('CookieBanner', () => {
 
       expect(screen.getByRole('heading', { name: /privacy choices/i })).toBeInTheDocument();
 
-      act(() => {
+      await act(async () => {
         fireEvent.click(screen.getByRole('button', { name: label }));
+        await Promise.resolve();
       });
 
       expect(screen.queryByRole('heading', { name: /privacy choices/i })).not.toBeInTheDocument();

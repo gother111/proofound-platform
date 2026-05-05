@@ -81,9 +81,9 @@ export function SignupContent() {
               <Image
                 src="/logo.png"
                 alt="Proofound"
-                width={120}
+                width={48}
                 height={48}
-                className="mx-auto h-12 w-auto"
+                className="mx-auto h-12 w-12"
                 priority
               />
             </motion.div>

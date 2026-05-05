@@ -25,6 +25,7 @@ export async function JsonLdScripts({
           key={`${idPrefix}-${index}`}
           id={`${idPrefix}-${index}`}
           nonce={nonce}
+          suppressHydrationWarning
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: serializeJsonLdForHtml(item) }}
         />

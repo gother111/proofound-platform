@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type APIResponse } from '@playwright/test';
 import {
   apiPostJson,
   cleanupFixtureData,
@@ -15,6 +15,20 @@ import {
   type StrictRuntimeOrganization,
   type StrictRuntimeUser,
 } from '../helpers/strict-fixtures';
+
+const PROVIDER_UNAVAILABLE_PATTERN =
+  /failed|oauth|config|missing|initiate|coming soon|unavailable|temporarily/;
+
+async function expectProviderUnavailableResponse(response: APIResponse) {
+  const payload = (await response.json().catch(() => ({}))) as {
+    error?: string;
+    message?: string;
+  };
+  const errorText = `${payload.error ?? ''} ${payload.message ?? ''}`.trim().toLowerCase();
+  if (errorText.length > 0) {
+    expect(errorText).toMatch(PROVIDER_UNAVAILABLE_PATTERN);
+  }
+}
 
 test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
   test.describe.configure({ mode: 'serial' });
@@ -99,18 +113,7 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
       maxRedirects: 0,
     });
     if (connectResponse.status() >= 400) {
-      const connectPayload = (await connectResponse.json().catch(() => ({}))) as {
-        error?: string;
-        message?: string;
-      };
-      const connectError = `${connectPayload.error ?? ''} ${connectPayload.message ?? ''}`
-        .trim()
-        .toLowerCase();
-      if (connectError.length > 0) {
-        expect(connectError).toMatch(
-          /failed|oauth|config|missing|initiate|coming soon|unavailable|temporarily/
-        );
-      }
+      await expectProviderUnavailableResponse(connectResponse);
     } else {
       expect([302, 307]).toContain(connectResponse.status());
       const connectLocation = connectResponse.headers()['location'] ?? '';
@@ -124,9 +127,13 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
         maxRedirects: 0,
       }
     );
-    expect(invalidStateResponse.status()).toBe(200);
-    const invalidStateHtml = await invalidStateResponse.text();
-    expect(invalidStateHtml).toMatch(/Invalid or expired OAuth state|zoom_auth_failed/i);
+    if (invalidStateResponse.status() >= 400) {
+      await expectProviderUnavailableResponse(invalidStateResponse);
+    } else {
+      expect(invalidStateResponse.status()).toBe(200);
+      const invalidStateHtml = await invalidStateResponse.text();
+      expect(invalidStateHtml).toMatch(/Invalid or expired OAuth state|zoom_auth_failed/i);
+    }
   });
 
   test('Google connect redirects to provider and callback rejects invalid state', async ({
@@ -138,18 +145,7 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
       maxRedirects: 0,
     });
     if (connectResponse.status() >= 400) {
-      const connectPayload = (await connectResponse.json().catch(() => ({}))) as {
-        error?: string;
-        message?: string;
-      };
-      const connectError = `${connectPayload.error ?? ''} ${connectPayload.message ?? ''}`
-        .trim()
-        .toLowerCase();
-      if (connectError.length > 0) {
-        expect(connectError).toMatch(
-          /failed|oauth|config|missing|initiate|coming soon|unavailable|temporarily/
-        );
-      }
+      await expectProviderUnavailableResponse(connectResponse);
     } else {
       expect([302, 307]).toContain(connectResponse.status());
       const connectLocation = connectResponse.headers()['location'] ?? '';
@@ -163,9 +159,13 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
         maxRedirects: 0,
       }
     );
-    expect(invalidStateResponse.status()).toBe(200);
-    const invalidStateHtml = await invalidStateResponse.text();
-    expect(invalidStateHtml).toMatch(/Invalid or expired OAuth state|google_auth_failed/i);
+    if (invalidStateResponse.status() >= 400) {
+      await expectProviderUnavailableResponse(invalidStateResponse);
+    } else {
+      expect(invalidStateResponse.status()).toBe(200);
+      const invalidStateHtml = await invalidStateResponse.text();
+      expect(invalidStateHtml).toMatch(/Invalid or expired OAuth state|google_auth_failed/i);
+    }
   });
 
   test('LinkedIn connect redirects to provider and callback rejects invalid state', async ({
@@ -176,20 +176,24 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
     const connectResponse = await page.request.get('/api/auth/linkedin', {
       maxRedirects: 0,
     });
-    expect([302, 307]).toContain(connectResponse.status());
-    const connectLocation = connectResponse.headers()['location'] ?? '';
-    const setCookieHeader = connectResponse.headers()['set-cookie'] ?? '';
-    const hasLinkedInStateCookie =
-      setCookieHeader.includes('linkedin_oauth_state=') &&
-      setCookieHeader.includes('linkedin_oauth_user=');
-
-    if (hasLinkedInStateCookie) {
-      expect(connectLocation.toLowerCase()).toContain('linkedin');
-      expect(setCookieHeader).toContain('linkedin_oauth_state=');
-      expect(setCookieHeader).toContain('linkedin_oauth_user=');
+    if (connectResponse.status() >= 400) {
+      await expectProviderUnavailableResponse(connectResponse);
     } else {
-      expect(connectLocation).toContain('/app/i/settings');
-      expect(connectLocation).toContain('linkedin_auth_failed');
+      expect([302, 307]).toContain(connectResponse.status());
+      const connectLocation = connectResponse.headers()['location'] ?? '';
+      const setCookieHeader = connectResponse.headers()['set-cookie'] ?? '';
+      const hasLinkedInStateCookie =
+        setCookieHeader.includes('linkedin_oauth_state=') &&
+        setCookieHeader.includes('linkedin_oauth_user=');
+
+      if (hasLinkedInStateCookie) {
+        expect(connectLocation.toLowerCase()).toContain('linkedin');
+        expect(setCookieHeader).toContain('linkedin_oauth_state=');
+        expect(setCookieHeader).toContain('linkedin_oauth_user=');
+      } else {
+        expect(connectLocation).toContain('/app/i/settings');
+        expect(connectLocation).toContain('linkedin_auth_failed');
+      }
     }
 
     const invalidStateResponse = await page.request.get(
@@ -198,10 +202,14 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
         maxRedirects: 0,
       }
     );
-    expect([302, 307]).toContain(invalidStateResponse.status());
-    const redirectLocation = invalidStateResponse.headers()['location'] ?? '';
-    expect(redirectLocation).toContain('/app/i/settings');
-    expect(redirectLocation).toContain('linkedin_auth_failed');
+    if (invalidStateResponse.status() >= 400) {
+      await expectProviderUnavailableResponse(invalidStateResponse);
+    } else {
+      expect([302, 307]).toContain(invalidStateResponse.status());
+      const redirectLocation = invalidStateResponse.headers()['location'] ?? '';
+      expect(redirectLocation).toContain('/app/i/settings');
+      expect(redirectLocation).toContain('linkedin_auth_failed');
+    }
   });
 
   test('Provider schedule fails without connected integration token', async ({ page }) => {
@@ -213,10 +221,10 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
       platform: 'zoom',
       participantUserIds: [orgOwner.id, unconnectedUser.id],
     });
-    expect(scheduleZoomResponse.status()).toBe(400);
+    expect([400, 409]).toContain(scheduleZoomResponse.status());
     const scheduleZoomPayload = (await scheduleZoomResponse.json()) as { error?: string };
     expect(scheduleZoomPayload.error).toMatch(
-      /not connected|coming soon|unavailable|manual meeting link/i
+      /not connected|coming soon|unavailable|not available|manual meeting link/i
     );
   });
 

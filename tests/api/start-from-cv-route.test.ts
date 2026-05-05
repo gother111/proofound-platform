@@ -192,6 +192,40 @@ describe('Start from CV API routes', () => {
     expect(payload.error).toContain('PDF, PNG, and JPG/JPEG');
   });
 
+  it('passes supported PDF uploads into the extraction boundary', async () => {
+    const pdfBytes = Buffer.from('%PDF-1.7 /Type /Page (Proofound launch corridor)');
+
+    const response = await extractSession(
+      jsonRequest(`http://localhost/api/ai/start-from-cv/sessions/${sessionId}/extract`, {
+        file: {
+          name: 'launch-cv.pdf',
+          type: 'application/pdf',
+          base64: pdfBytes.toString('base64'),
+        },
+      }),
+      params()
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.extractionStatus).toBe('completed');
+    expect(mocks.extractStartFromCvSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionId,
+        userId: 'user-1',
+        persona: 'individual',
+        file: expect.objectContaining({
+          name: 'launch-cv.pdf',
+          type: 'application/pdf',
+          size: pdfBytes.length,
+          bytes: expect.any(Uint8Array),
+        }),
+      })
+    );
+    const call = mocks.extractStartFromCvSession.mock.calls.at(-1)?.[0];
+    expect(Buffer.from(call.file.bytes).toString('utf8')).toBe(pdfBytes.toString('utf8'));
+  });
+
   it('keeps wrong-user access hidden behind not found', async () => {
     mocks.getStartFromCvSession.mockRejectedValueOnce(
       new mocks.StartFromCvError('START_FROM_CV_SESSION_NOT_FOUND', 404)

@@ -141,10 +141,10 @@ export function ProofoundLanding({
               <Image
                 src="/logo.png"
                 alt="Proofound"
-                width={120}
-                height={48}
+                width={44}
+                height={44}
                 priority
-                className="h-9 w-auto sm:h-10 md:h-11"
+                className="h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11"
               />
               <span className="hidden text-xs font-medium uppercase tracking-[0.32em] text-foreground/72 lg:inline">
                 Proofound

@@ -61,7 +61,7 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
             </div>
           </div>
           <div className="rounded-xl border border-proofound-stone/70 bg-white/65 px-3 py-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-proofound-charcoal/60">
+            <p className="text-xs font-medium uppercase tracking-wide text-proofound-charcoal">
               Next
             </p>
             <p className="mt-1 text-sm text-proofound-charcoal">

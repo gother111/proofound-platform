@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
-
 export function useAssistiveAiFlag() {
-  const [enabled, setEnabled] = useState(CLIENT_FF_DEFAULTS.assistiveAiUi);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
     const load = async () => {

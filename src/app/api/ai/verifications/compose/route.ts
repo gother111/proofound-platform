@@ -8,11 +8,14 @@ import {
 } from '@/lib/ai/kill-switches';
 import { addUnsafeAiRequestPayloadIssue } from '@/lib/ai/request-safety';
 import { safeApiErrorResponse, safeValidationErrorResponse } from '@/lib/api/errors';
+import { isMockSupabaseEnabled } from '@/lib/env';
 import {
   VERIFICATION_COMPOSER_FIELDS,
   VERIFICATION_SCOPES,
   composeVerificationRequestForUser,
 } from '@/lib/ai/verification-composer';
+
+const MOCK_COMPOSER_PROOF_PACK_ID = '11111111-1111-4111-8111-111111111111';
 
 const VerificationComposerRequestSchema = z
   .object({
@@ -60,6 +63,29 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const payload = VerificationComposerRequestSchema.parse(body);
     const requestId = crypto.randomUUID();
+
+    if (isMockSupabaseEnabled() && payload.proofPackId === MOCK_COMPOSER_PROOF_PACK_ID) {
+      return NextResponse.json({
+        subject: 'Proofound verification request',
+        message: [
+          'Hi, I am asking you to confirm one specific Proofound claim: I narrowed a launch workflow into one privacy-safe proof path with review checkpoints.',
+          'Please only respond based on what you directly know or observed. It is completely fine to confirm only part of it or say that you cannot verify it.',
+          'Thank you for taking a careful look.',
+        ].join('\n\n'),
+        claimScope:
+          'I narrowed a launch workflow into one privacy-safe proof path with review checkpoints.',
+        verificationQuestions: [
+          'Can you confirm the specific proof-first workflow contribution?',
+          'Which parts can you confirm from direct knowledge or observation?',
+          'Is there anything in this request that you cannot verify?',
+        ],
+        privacyNotes: ['Draft uses selected public-safe Proof Pack fields only.'],
+        tooBroadWarnings: [
+          'This draft is limited to one claim scope and avoids general praise or candidate quality judgment.',
+        ],
+        fallback: true,
+      });
+    }
 
     const draft = await composeVerificationRequestForUser({
       proofPackId: payload.proofPackId ?? null,

@@ -7,6 +7,7 @@ import { getProfileData } from '@/actions/profile';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { capabilities, matches } from '@/db/schema';
+import { isMockSupabaseEnabled } from '@/lib/env';
 
 const QUALITY_MATCH_THRESHOLD = 0.8;
 
@@ -28,6 +29,17 @@ export interface DashboardMetrics {
 
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   const user = await requireAuth();
+
+  if (isMockSupabaseEnabled()) {
+    return {
+      portfolioReadinessPercent: 35,
+      proofStoriesCount: 0,
+      verifiedSkills: 0,
+      pendingVerifications: 0,
+      qualifiedMatches: 0,
+      activeIntroductions: 0,
+    };
+  }
 
   const profileDataPromise = getProfileData();
 

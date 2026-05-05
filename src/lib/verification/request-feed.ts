@@ -1,4 +1,5 @@
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
+import { isMockSupabaseEnabled } from '@/lib/env';
 import {
   listCanonicalBundlesForOwner,
   type CanonicalBundleArtifactType,
@@ -119,6 +120,28 @@ export type VerificationRequestView = {
   skills?: SkillDetailsRecord;
   profiles?: ProfileDetailsRecord;
 };
+
+const MOCK_COMPOSER_PROOF_PACK_ID = '11111111-1111-4111-8111-111111111111';
+const MOCK_COMPOSER_SKILL_ID = '33333333-3333-4333-8333-333333333333';
+
+function buildMockComposerProofPackOptions(): VerificationComposerProofPackOption[] {
+  return [
+    {
+      proofPackId: MOCK_COMPOSER_PROOF_PACK_ID,
+      claimId: MOCK_COMPOSER_SKILL_ID,
+      title: 'Proof-first launch corridor',
+      claimStatement:
+        'I narrowed a launch workflow into one privacy-safe proof path with review checkpoints.',
+      ownershipStatement:
+        'I owned the operating model, reduced broad claims, and kept evidence scoped.',
+      outcomeSummary: 'The workflow can be reviewed without exposing private identity details.',
+      timeframe: 'Recent launch preparation',
+      evidenceTitles: ['Assignment clarity checklist', 'Privacy preflight result'],
+      primarySubjectType: 'skill',
+      primarySubjectId: MOCK_COMPOSER_SKILL_ID,
+    },
+  ];
+}
 
 function verificationStatusRank(status: string | null | undefined) {
   switch (status) {
@@ -713,6 +736,9 @@ export async function loadVerificationRequestFeed(params: {
   return {
     incomingRequests,
     sentRequests,
-    composerProofPacks: buildComposerProofPackOptions(canonicalAggregates),
+    composerProofPacks:
+      isMockSupabaseEnabled() && canonicalAggregates.length === 0
+        ? buildMockComposerProofPackOptions()
+        : buildComposerProofPackOptions(canonicalAggregates),
   };
 }

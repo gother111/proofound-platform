@@ -28,6 +28,7 @@ import {
 import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import { isMockSupabaseEnabled } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
@@ -394,6 +395,39 @@ export async function POST(request: NextRequest) {
 
       // Validate input
       const validatedData = AssignmentCreateSchema.parse(body);
+
+      if (isMockSupabaseEnabled()) {
+        const resolvedRole = validatedData.title ?? validatedData.role ?? 'Mock assignment';
+        const mockOrgId =
+          validatedData.orgId ||
+          validatedData.principalContext?.orgId ||
+          '99999999-9999-4999-9999-999999999999';
+        const now = new Date().toISOString();
+
+        return NextResponse.json(
+          {
+            assignment: {
+              id: '22222222-2222-4222-8222-222222222222',
+              orgId: mockOrgId,
+              role: resolvedRole,
+              title: resolvedRole,
+              engagementType: validatedData.engagementType ?? 'full_time',
+              businessValue: validatedData.rolePurpose ?? validatedData.businessValue ?? null,
+              expectedImpact:
+                validatedData.proofExpectations ?? validatedData.expectedImpact ?? null,
+              status: validatedData.status ?? 'draft',
+              creationStatus: validatedData.creationStatus ?? 'draft',
+              builderMode: validatedData.builderMode ?? 'basic',
+              mustHaveSkills: validatedData.mustHaveSkills ?? [],
+              niceToHaveSkills: validatedData.niceToHaveSkills ?? [],
+              createdAt: now,
+              updatedAt: now,
+            },
+          },
+          { status: 201 }
+        );
+      }
+
       const principal = validatedData.principalContext
         ? ensureOrganizationPrincipal(validatedData.principalContext)
         : null;

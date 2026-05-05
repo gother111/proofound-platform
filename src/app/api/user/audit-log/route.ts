@@ -129,6 +129,8 @@ export async function GET(request: NextRequest) {
       return {
         id: event.id,
         timestamp: event.timestamp,
+        eventType: event.action,
+        eventDescription: humanReadableAction,
         action: humanReadableAction,
         ipHash: abbreviatedIpHash,
         device,

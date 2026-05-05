@@ -28,11 +28,13 @@ import { internalValueLabel, isMachineIdentifier } from '@/lib/copy/labels';
 
 interface AuditLogEntry {
   id: string;
-  eventType: string;
-  eventDescription: string;
+  eventType?: string;
+  eventDescription?: string;
+  action?: string;
   timestamp: string;
-  ipHash: string;
-  userAgent: string;
+  ipHash?: string;
+  userAgent?: string;
+  device?: string;
   metadata?: Record<string, any>;
 }
 
@@ -52,7 +54,8 @@ export function AuditLogTable() {
     try {
       setLoading(true);
 
-      const response = await apiFetch(`/api/user/audit-log?page=${page}&limit=${pageSize}`);
+      const offset = (page - 1) * pageSize;
+      const response = await apiFetch(`/api/user/audit-log?offset=${offset}&limit=${pageSize}`);
       if (!response.ok) throw new Error('Failed to fetch account history');
 
       const data = await response.json();
@@ -83,6 +86,26 @@ export function AuditLogTable() {
 
   const formatEventType = (eventType: string): string => {
     return internalValueLabel(eventType.replace(/\./g, '_'));
+  };
+
+  const normalizeEventType = (log: AuditLogEntry): string => {
+    if (typeof log.eventType === 'string' && log.eventType.trim()) {
+      return log.eventType;
+    }
+    if (typeof log.action === 'string' && log.action.trim()) {
+      return log.action;
+    }
+    return 'account_activity';
+  };
+
+  const normalizeEventDescription = (log: AuditLogEntry): string => {
+    if (typeof log.eventDescription === 'string' && log.eventDescription.trim()) {
+      return log.eventDescription;
+    }
+    if (typeof log.action === 'string' && log.action.trim()) {
+      return log.action;
+    }
+    return 'Account activity';
   };
 
   const readableMetadataValue = (value: unknown): string => {
@@ -143,43 +166,46 @@ export function AuditLogTable() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {logs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="font-mono text-xs">
-                        {formatTimestamp(log.timestamp)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getEventBadgeColor(log.eventType)} variant="secondary">
-                          {formatEventType(log.eventType)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-md">
-                        <span className="text-sm">{log.eventDescription}</span>
-                        {log.metadata && Object.keys(log.metadata).length > 0 && (
-                          <details className="mt-1">
-                            <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
-                              More information
-                            </summary>
-                            <dl className="mt-2 grid gap-1 rounded bg-muted p-2 text-xs">
-                              {Object.entries(log.metadata)
-                                .slice(0, 6)
-                                .map(([key, value]) => (
-                                  <div key={key} className="flex justify-between gap-3">
-                                    <dt className="text-muted-foreground">
-                                      {internalValueLabel(key)}
-                                    </dt>
-                                    <dd className="text-right">{readableMetadataValue(value)}</dd>
-                                  </div>
-                                ))}
-                            </dl>
-                          </details>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {log.ipHash ? 'Protected' : 'Not recorded'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {logs.map((log) => {
+                    const eventType = normalizeEventType(log);
+                    return (
+                      <TableRow key={log.id}>
+                        <TableCell className="font-mono text-xs">
+                          {formatTimestamp(log.timestamp)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getEventBadgeColor(eventType)} variant="secondary">
+                            {formatEventType(eventType)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-md">
+                          <span className="text-sm">{normalizeEventDescription(log)}</span>
+                          {log.metadata && Object.keys(log.metadata).length > 0 && (
+                            <details className="mt-1">
+                              <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+                                More information
+                              </summary>
+                              <dl className="mt-2 grid gap-1 rounded bg-muted p-2 text-xs">
+                                {Object.entries(log.metadata)
+                                  .slice(0, 6)
+                                  .map(([key, value]) => (
+                                    <div key={key} className="flex justify-between gap-3">
+                                      <dt className="text-muted-foreground">
+                                        {internalValueLabel(key)}
+                                      </dt>
+                                      <dd className="text-right">{readableMetadataValue(value)}</dd>
+                                    </div>
+                                  ))}
+                              </dl>
+                            </details>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {log.ipHash ? 'Protected' : 'Not recorded'}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

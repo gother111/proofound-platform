@@ -343,8 +343,12 @@ test.describe('Strict Authenticated Org Corridor', () => {
         timeoutMs: 120_000,
       }
     );
-    expect(assignmentDraftResponse.status()).toBe(201);
-    const assignmentDraftPayload = (await assignmentDraftResponse.json()) as {
+    const assignmentDraftText = await assignmentDraftResponse.text();
+    expect(
+      assignmentDraftResponse.status(),
+      `assignment draft response: ${assignmentDraftText}`
+    ).toBe(201);
+    const assignmentDraftPayload = JSON.parse(assignmentDraftText) as {
       assignment?: { id?: string };
     };
     const assignmentId = assignmentDraftPayload.assignment?.id;
