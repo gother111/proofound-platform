@@ -3,7 +3,7 @@
 
 # Temporary GCP Proof Artifact OCR Sandbox Reference
 
-**Status:** Temporary sandbox reference for invite-only Proof Artifact Text Extraction using Google Cloud Document AI OCR.
+**Status:** Temporary sandbox reference for authenticated-user Proof Artifact Text Extraction and authenticated-individual Start from CV using Google Cloud Document AI OCR.
 **Date:** 2026-05-03
 **Audience:** Founder, product, engineering, QA, privacy, ops
 **Authority:** This document is subordinate to `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, the aligned PRD/technical requirements, and the existing launch runbook. It must not broaden the locked MVP.
@@ -18,23 +18,23 @@ The locked MVP defines Proofound as a proof-first, privacy-first hiring credibil
 
 The launch-binding stack is Next.js/Vercel, Supabase/Postgres/Auth/Storage, Resend, and lightweight telemetry. GCP must not replace any of those. `README.md` confirms the current architecture routes traffic through Vercel/Next.js, Supabase, Resend, Sentry, Vercel Cron, and an optional internal document-intelligence/Python service path.
 
-The most important current-code constraint: the named CV import wizard routes are currently archived/non-launch. `wizard-extract`, `wizard-extract/status`, `wizard-suggest`, and `wizard-apply` all return legacy/non-launch responses. The active launch surface policy also classifies broad `/api/expertise` and `/app/i/expertise` surfaces as archived except for narrow retained taxonomy/user-skill/assignment-expertise endpoints. Therefore, the GCP provider path must remain internal-only unless a separate approved flow connects it through user-clicked, user-reviewed review.
+The most important current-code constraint: the named CV import wizard routes are currently archived/non-launch. `wizard-extract`, `wizard-extract/status`, `wizard-suggest`, and `wizard-apply` all return legacy/non-launch responses. The active launch surface policy also classifies broad `/api/expertise` and `/app/i/expertise` surfaces as archived except for narrow retained taxonomy/user-skill/assignment-expertise endpoints. Therefore, the GCP provider path must remain behind approved user-clicked, user-reviewed beta flows such as Proof Artifact Text Extraction and Start from CV.
 
 ---
 
 ## 1. Executive Recommendation
 
-Recommendation: Go only for a temporary invite-only Proof Artifact Text Extraction beta after billing, privacy, app-level hard-cap, and smoke gates pass.
+Recommendation: Go only for temporary authenticated-user Proof Artifact Text Extraction and authenticated-individual Start from CV betas after billing, privacy, app-level hard-cap, and smoke gates pass.
 
 Best feature candidate:
 
-**Google Cloud Document AI OCR for Proof Artifact Text Extraction**
+**Google Cloud Document AI OCR for Proof Artifact Text Extraction and Start from CV**
 
-The first implementation slice should be synthetic-document smoke and a mock provider abstraction, then an internal Cloud Run plus Document AI OCR service using synthetic PDFs. Only after privacy review, billing verification, explicit invite-gate approval, and proof-upload integration approval should this connect to real beta proof artifacts.
+The first implementation slice should be synthetic-document smoke and a mock provider abstraction, then an internal Cloud Run plus Document AI OCR service using synthetic PDFs. Only after privacy review, billing verification, explicit authenticated-user beta approval, and approved Proof Artifact or Start from CV integration should this connect to real beta uploads.
 
 Why this fits the MVP:
 
-Proofound's MVP allows proof upload and cares about proof clarity, private context, and trust-safe proof creation. A narrow OCR helper can reduce friction when invited users bring proof artifacts into Proof Packs, but only if it returns draft extracted text for user review and does not evaluate the person.
+Proofound's MVP allows proof upload and cares about proof clarity, private context, and trust-safe proof creation. A narrow OCR helper can reduce friction when authenticated users bring proof artifacts into Proof Packs, but only if it returns draft extracted text for user review and does not evaluate the person.
 
 Why it must remain optional/temporary:
 
@@ -42,7 +42,7 @@ The credit window is temporary, user-provided as May 3, 2026 through August 3, 2
 
 Explicitly excluded from this sandbox and beta:
 
-- CV import wizard
+- archived CV import wizard and broad OCR/import flows
 - AI candidate scoring, ranking, shortlisting, suitability judgments, hiring recommendations, verification decisions, or trust-state decisions
 - Gemini skill extractor for employer review
 - taxonomy shortlist or reranker
@@ -53,14 +53,14 @@ Explicitly excluded from this sandbox and beta:
 
 ## 2. Candidate Decision Matrix
 
-| Candidate                                                                | MVP fit                                   | Implementation effort | Privacy/security risk                                           | Credit usefulness | User value               | Shutdown simplicity | Recommendation                               |
-| ------------------------------------------------------------------------ | ----------------------------------------- | --------------------- | --------------------------------------------------------------- | ----------------- | ------------------------ | ------------------- | -------------------------------------------- |
-| Temporary Document AI OCR for invite-only Proof Artifact Text Extraction | High, if kept to explicit proof artifacts | Medium                | Medium-high because proof files may expose identity/client data | High              | High if connected safely | Medium              | Best overall candidate, beta only            |
-| Synthetic Document AI OCR smoke lab using Cloud Run                      | Medium-high                               | Low-medium            | Low because synthetic files only                                | Medium-high       | Indirect but useful      | High                | Best first implementation slice              |
-| Privacy preflight OCR for uploaded proof files                           | High                                      | Medium                | High because proof files may expose identity/client data        | Medium            | High                     | Medium              | Defer until upload/privacy review passes     |
-| Cloud Run deterministic parser worker only                               | Medium                                    | Low                   | Low                                                             | Low-medium        | Medium                   | High                | Useful as fallback/mock, not best credit use |
+| Candidate                                                                                         | MVP fit                                                        | Implementation effort | Privacy/security risk                                       | Credit usefulness | User value               | Shutdown simplicity | Recommendation                               |
+| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | --------------------- | ----------------------------------------------------------- | ----------------- | ------------------------ | ------------------- | -------------------------------------------- |
+| Temporary Document AI OCR for authenticated-user Proof Artifact Text Extraction and Start from CV | High, if kept to explicit proof artifacts or private CV drafts | Medium                | Medium-high because uploads may expose identity/client data | High              | High if connected safely | Medium              | Best overall candidate, beta only            |
+| Synthetic Document AI OCR smoke lab using Cloud Run                                               | Medium-high                                                    | Low-medium            | Low because synthetic files only                            | Medium-high       | Indirect but useful      | High                | Best first implementation slice              |
+| Privacy preflight OCR for uploaded proof files                                                    | High                                                           | Medium                | High because proof files may expose identity/client data    | Medium            | High                     | Medium              | Defer until upload/privacy review passes     |
+| Cloud Run deterministic parser worker only                                                        | Medium                                                         | Low                   | Low                                                         | Low-medium        | Medium                   | High                | Useful as fallback/mock, not best credit use |
 
-Decision: Build the temporary Document AI OCR sandbox, but start with the synthetic benchmark plus mock provider slice. The current archived CV-import route state means CV import must stay inactive; the only approved beta path is explicit Proof Artifact Text Extraction.
+Decision: Build the temporary Document AI OCR sandbox, but start with the synthetic benchmark plus mock provider slice. The archived CV-import wizard must stay inactive; the approved beta paths are explicit Proof Artifact Text Extraction and Start from CV private draft creation.
 
 ---
 
@@ -98,7 +98,7 @@ It must not:
 
 Name: **Temporary GCP Document AI OCR for Proof Artifact Text Extraction**
 
-Initial status: Disabled by default, invite-only beta after staging/sandbox smoke.
+Initial status: Disabled by default, authenticated-user beta after staging/sandbox smoke.
 
 Reference env shape:
 

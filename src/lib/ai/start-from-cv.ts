@@ -223,6 +223,7 @@ export function resolveStartFromCvConfig(env: EnvReader = process.env) {
   );
   return {
     enabled: parseBoolean(env.START_FROM_CV_BETA_ENABLED, false),
+    openBetaEnabled: parseBoolean(env.START_FROM_CV_OPEN_BETA_ENABLED, false),
     allowedUserIds: parseCsv(env.START_FROM_CV_ALLOWED_USER_IDS),
     allowedOrgIds: parseCsv(env.START_FROM_CV_ALLOWED_ORG_IDS),
     useGcpOcr: parseBoolean(env.START_FROM_CV_USE_GCP_OCR, false),
@@ -250,7 +251,12 @@ export function getStartFromCvLaunchSummary(env: EnvReader = process.env) {
   if (config.enabled && config.publicBrowserOcrEnabled) {
     blockers.push('browser_cv_import_ocr_enabled');
   }
-  if (config.enabled && config.allowedUserIds.length === 0 && config.allowedOrgIds.length === 0) {
+  if (
+    config.enabled &&
+    !config.openBetaEnabled &&
+    config.allowedUserIds.length === 0 &&
+    config.allowedOrgIds.length === 0
+  ) {
     blockers.push('invite_audience_not_configured');
   }
   if (config.enabled && config.useGcpOcr) {
@@ -276,7 +282,9 @@ export function getStartFromCvLaunchSummary(env: EnvReader = process.env) {
 
   return {
     enabled: config.enabled,
-    inviteOnly: true,
+    openBetaEnabled: config.openBetaEnabled,
+    authenticatedUserBeta: config.openBetaEnabled,
+    inviteOnly: !config.openBetaEnabled,
     allowedUserCount: config.allowedUserIds.length,
     allowedOrgCount: config.allowedOrgIds.length,
     useGcpOcr: config.useGcpOcr,
@@ -316,6 +324,7 @@ export async function assertStartFromCvAccess(context: StartFromCvEligibilityCon
 
   const orgIds = context.orgIds ?? (await loadActiveOrgIds(context.userId));
   const eligible =
+    config.openBetaEnabled ||
     Boolean(context.isBetaTesting) ||
     config.allowedUserIds.includes(context.userId) ||
     orgIds.some((orgId) => config.allowedOrgIds.includes(orgId));

@@ -29,7 +29,7 @@ AI must not become the product center.
 
 ## 0.1 Controlled Rollout Classification
 
-This addendum separates production-eligible assistive AI from the invite-only OCR beta.
+This addendum separates production-eligible assistive AI from the authenticated-user OCR beta.
 
 ### Production-eligible after gates pass
 
@@ -45,11 +45,11 @@ Until those gates pass, each feature remains disabled-by-default and must fall b
 
 ### Production beta only
 
-Proof Artifact Text Extraction using Google Cloud Document AI OCR is a separate invite-only beta. It is not CV import, not profile import, and not a broad production OCR platform.
+Proof Artifact Text Extraction using Google Cloud Document AI OCR is a separate authenticated-user beta. Start from CV may also use the guarded Document AI OCR path as an authenticated-individual beta when `START_FROM_CV_OPEN_BETA_ENABLED=true`. These beta paths are not the archived CV import wizard, not employer-side parsing, and not a broad production OCR platform.
 
 OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist candidates, or affect match, review, verification, reveal, trust-state, or hiring-decision state.
 
-Every OCR request requires explicit user consent per document and must be feature-flagged, authenticated, invite-gated, page-limited, file-size-limited, spend-capped, expiry-gated through the August 3, 2026 beta cutoff, and safe to disable.
+Every OCR request requires explicit user consent per document and must be feature-flagged, authenticated, page-limited, file-size-limited, spend-capped, expiry-gated through the August 3, 2026 beta cutoff, and safe to disable.
 
 ### Internal-only / excluded
 
@@ -57,7 +57,7 @@ Internal status checks, synthetic smoke tests, and provider diagnostics may exis
 
 Explicitly excluded from the MVP and this rollout:
 
-- CV import wizard
+- archived CV import wizard and broad OCR/import flows
 - AI candidate scoring
 - AI ranking
 - AI shortlisting

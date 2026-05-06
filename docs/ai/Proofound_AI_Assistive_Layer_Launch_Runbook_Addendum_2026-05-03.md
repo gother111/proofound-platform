@@ -20,19 +20,19 @@ The AI layer is not launch-critical for the MVP. The core Proofound corridor mus
 
 ## 0.1 Release Classification
 
-| Surface                                                          | Release state                   | Launch rule                                                                                                                     |
-| ---------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Proof Pack Assistant                                             | Production-eligible after gates | Enable only after live model smoke, hard caps, launch-status checks, privacy tests, and raw-prompt logging checks pass.         |
-| Assignment Clarity Assistant                                     | Production-eligible after gates | Same gates as above; assignment output must not create scoring or ranking logic.                                                |
-| Verification Request Composer                                    | Production-eligible after gates | Same gates as above; output remains claim-scoped and user-sent only.                                                            |
-| Privacy Preflight                                                | Production-eligible after gates | Rules-first; optional model pass can receive only short sanitized text.                                                         |
-| Suggestion Event Tracking                                        | Production-eligible after gates | Safe metadata only; no raw prompts or hidden private content.                                                                   |
-| Proof Artifact Text Extraction with Google Cloud Document AI OCR | Invite-only production beta     | Explicit consent per document, authentication, invite gate, feature flag, page/file/spend caps, expiry gate, safe disable path. |
-| CV import wizard and broad OCR/import flows                      | Excluded                        | Must remain inactive/non-launch unless the locked MVP authority stack is explicitly changed.                                    |
+| Surface                                                          | Release state                      | Launch rule                                                                                                             |
+| ---------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Proof Pack Assistant                                             | Production-eligible after gates    | Enable only after live model smoke, hard caps, launch-status checks, privacy tests, and raw-prompt logging checks pass. |
+| Assignment Clarity Assistant                                     | Production-eligible after gates    | Same gates as above; assignment output must not create scoring or ranking logic.                                        |
+| Verification Request Composer                                    | Production-eligible after gates    | Same gates as above; output remains claim-scoped and user-sent only.                                                    |
+| Privacy Preflight                                                | Production-eligible after gates    | Rules-first; optional model pass can receive only short sanitized text.                                                 |
+| Suggestion Event Tracking                                        | Production-eligible after gates    | Safe metadata only; no raw prompts or hidden private content.                                                           |
+| Proof Artifact Text Extraction with Google Cloud Document AI OCR | Authenticated-user production beta | Explicit consent per document, authentication, feature flag, page/file/spend caps, expiry gate, safe disable path.      |
+| CV import wizard and broad OCR/import flows                      | Excluded                           | Must remain inactive/non-launch unless the locked MVP authority stack is explicitly changed.                            |
 
 OCR draft text is never authoritative. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or update match, review, verification, reveal, trust-state, or hiring-decision state.
 
-OCR and Start from CV beta availability may be opened only to invited users after the same privacy, billing, budget, retention, consent, provider-smoke, and kill-switch gates pass. User-facing copy should describe the feature as beta, but must not expose internal budget balances or the August 3, 2026 credit cutoff.
+Proof Artifact OCR beta availability may be opened to all authenticated users after the same privacy, billing, budget, retention, consent, provider-smoke, and kill-switch gates pass. Start from CV beta may be opened to all authenticated individual users through `START_FROM_CV_OPEN_BETA_ENABLED=true` after the same consent, limit, provider-smoke, raw-prompt logging, and cost-control gates pass. User-facing copy should describe these surfaces as beta, but must not expose internal budget balances or the August 3, 2026 credit cutoff.
 
 Cloud Vision OCR is excluded from this rollout. Google Cloud Document AI is the only approved OCR provider for the beta.
 

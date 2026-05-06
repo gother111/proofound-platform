@@ -3,19 +3,19 @@
 
 # GCP Proof Artifact OCR Production-Beta Integration Proposal
 
-**Status:** Go for invite-only Proof Artifact Text Extraction beta after gates. No-go for CV import, broad OCR, scoring, ranking, or user-facing production OCR outside that beta.
-**Scope:** Promote a temporary Google Cloud Document AI OCR path for explicit user-consented Proof Artifact Text Extraction, without reactivating archived CV import routes, silently creating a required production dependency, exposing secrets, or processing documents outside invite-gated beta accounts.
+**Status:** Go for authenticated-user Proof Artifact Text Extraction beta and authenticated-individual Start from CV beta after gates. No-go for archived CV import wizard reactivation, broad OCR outside those beta corridors, scoring, ranking, or user-facing production OCR outside those betas.
+**Scope:** Promote a temporary Google Cloud Document AI OCR path for explicit user-consented Proof Artifact Text Extraction and Start from CV beta processing, without reactivating archived CV import routes, silently creating a required production dependency, exposing secrets, or processing documents outside authenticated beta accounts.
 **Authority:** Subordinate to `AGENTS.md`, `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, and `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`.
 
 ## Executive Decision
 
-**Go for invite-only production beta only as Proof Artifact Text Extraction. No-go for CV import or broad OCR.**
+**Go for authenticated-user production beta as Proof Artifact Text Extraction and authenticated-individual Start from CV. No-go for archived CV import wizard reactivation or broad OCR outside those corridors.**
 
 The approved beta shape is:
 
 - provider: Google Cloud Document AI OCR only;
-- product surface: explicit Proof Artifact Text Extraction for user-uploaded proof artifacts;
-- availability: invite-only, feature-flagged, disabled by default;
+- product surface: explicit Proof Artifact Text Extraction for user-uploaded proof artifacts, plus Start from CV private draft creation for authenticated individual users;
+- availability: authenticated-user beta, feature-flagged, disabled by default;
 - consent: explicit per document before OCR;
 - output: draft extracted text for user review only;
 - limits: page-limited, file-size-limited, rate-limited, spend-capped, and safe to disable;
@@ -26,7 +26,7 @@ OCR output must not auto-publish, auto-verify, auto-score, auto-rank, shortlist,
 
 Google Cloud budgets are alerting tools only. They are not hard caps. Hard caps must be enforced in app/service code before the OCR worker calls Document AI.
 
-The GCP OCR extractor can be represented as an internal production provider path, but it is not ready to process real or pilot production documents outside the invite-only Proof Artifact OCR beta because:
+The GCP OCR extractor can be represented as an internal production provider path, but it must not process real or pilot production documents outside the authenticated-user Proof Artifact OCR beta or authenticated-individual Start from CV beta because:
 
 - the CV import wizard route family is explicitly archived in the launch surface policy;
 - live billing/product eligibility has not been verified in this pass;
@@ -103,7 +103,7 @@ Adding one of those would require edits to:
 - archived route tests if anything moves out of `410`
 - launch docs/checklists describing the new surface
 
-Recommended path: avoid a new active route. Integrate only behind an existing active proof-upload/proof-attachment flow after approval, and only as invite-only Proof Artifact Text Extraction.
+Recommended path: avoid broad new OCR/CV/import routes. Integrate only behind approved active beta surfaces: authenticated-user Proof Artifact Text Extraction and authenticated-individual Start from CV.
 
 ## Existing Active Flow Candidate
 
@@ -308,12 +308,12 @@ Code rollback:
 
 ## Final Recommendation
 
-Do not connect GCP OCR to any user-facing production flow outside the invite-only Proof Artifact Text Extraction beta.
+Do not connect GCP OCR to any user-facing production flow outside the authenticated-user Proof Artifact Text Extraction beta or authenticated-individual Start from CV beta.
 
 The acceptable production-provider implementation must:
 
 - keeps CV import wizard routes archived;
-- uses existing proof upload/proof attachment surfaces;
+- uses existing proof upload/proof attachment surfaces or the approved Start from CV private-draft flow;
 - processes synthetic files first;
 - returns OCR text only for authenticated owner review;
 - keeps production disabled;

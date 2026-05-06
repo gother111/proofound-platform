@@ -16,6 +16,7 @@ describe('Start from CV guardrails', () => {
     const config = resolveStartFromCvConfig({});
 
     expect(config.enabled).toBe(false);
+    expect(config.openBetaEnabled).toBe(false);
     expect(config.publicBrowserOcrEnabled).toBe(false);
     expect(config.maxFileSizeMb).toBe(5);
     expect(config.maxPages).toBe(4);
@@ -23,7 +24,7 @@ describe('Start from CV guardrails', () => {
     expect(config.globalDailyLimit).toBe(20);
   });
 
-  it('requires an invite audience for a non-beta individual user', async () => {
+  it('keeps legacy invite access closed for a non-beta individual user when open beta is off', async () => {
     await expect(
       assertStartFromCvAccess({
         userId: '11111111-1111-4111-8111-111111111111',
@@ -37,7 +38,37 @@ describe('Start from CV guardrails', () => {
     ).rejects.toMatchObject({ code: 'START_FROM_CV_NOT_INVITED' });
   });
 
-  it('reports beta blockers when enabled without an invite audience', () => {
+  it('opens beta access to authenticated individual users when open beta is enabled', async () => {
+    await expect(
+      assertStartFromCvAccess({
+        userId: '11111111-1111-4111-8111-111111111111',
+        persona: 'individual',
+        orgIds: [],
+        env: {
+          START_FROM_CV_BETA_ENABLED: 'true',
+          START_FROM_CV_OPEN_BETA_ENABLED: 'true',
+          NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
+        },
+      })
+    ).resolves.toBeUndefined();
+  });
+
+  it('keeps organization profiles outside Start from CV even during open beta', async () => {
+    await expect(
+      assertStartFromCvAccess({
+        userId: '11111111-1111-4111-8111-111111111111',
+        persona: 'organization',
+        orgIds: [],
+        env: {
+          START_FROM_CV_BETA_ENABLED: 'true',
+          START_FROM_CV_OPEN_BETA_ENABLED: 'true',
+          NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
+        },
+      })
+    ).rejects.toMatchObject({ code: 'INDIVIDUAL_ONLY' });
+  });
+
+  it('reports beta blockers when enabled without open beta or an invite audience', () => {
     const summary = getStartFromCvLaunchSummary({
       START_FROM_CV_BETA_ENABLED: 'true',
       NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
@@ -48,10 +79,27 @@ describe('Start from CV guardrails', () => {
     expect(summary.blockers).toContain('invite_audience_not_configured');
   });
 
+  it('reports authenticated-user beta readiness without requiring invite lists', () => {
+    const summary = getStartFromCvLaunchSummary({
+      START_FROM_CV_BETA_ENABLED: 'true',
+      START_FROM_CV_OPEN_BETA_ENABLED: 'true',
+      NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
+    });
+
+    expect(summary.enabled).toBe(true);
+    expect(summary.openBetaEnabled).toBe(true);
+    expect(summary.authenticatedUserBeta).toBe(true);
+    expect(summary.inviteOnly).toBe(false);
+    expect(summary.allowedUserCount).toBe(0);
+    expect(summary.allowedOrgCount).toBe(0);
+    expect(summary.ok).toBe(true);
+    expect(summary.blockers).not.toContain('invite_audience_not_configured');
+  });
+
   it('blocks launch status if browser CV OCR is enabled with Start from CV', () => {
     const summary = getStartFromCvLaunchSummary({
       START_FROM_CV_BETA_ENABLED: 'true',
-      START_FROM_CV_ALLOWED_USER_IDS: '11111111-1111-4111-8111-111111111111',
+      START_FROM_CV_OPEN_BETA_ENABLED: 'true',
       NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'true',
     });
 

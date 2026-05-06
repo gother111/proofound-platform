@@ -1118,7 +1118,7 @@ NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED=false
 - `true` - Enable OCR retry in CV Import Wizard.
 - `false` - Disable OCR fallback and prompt for a text-based PDF.
 
-**Launch status**: keep `false` for controlled rollout. Browser-side CV import OCR is not part of the invite-only Proof Artifact Text Extraction beta.
+**Launch status**: keep `false` for controlled rollout. Browser-side CV import OCR is not part of the authenticated-user Proof Artifact Text Extraction or Start from CV betas.
 
 **Default**: `false`
 
@@ -1193,7 +1193,7 @@ GCP_CV_OCR_CLOUD_RUN_PUBLIC_INVOCATION=false
 **Behavior**:
 
 - Keep `PROOF_ARTIFACT_OCR_BETA_ENABLED=false` and `GCP_CV_OCR_ENABLED=false` by default in local, staging, and production.
-- Enable in production only for invite-gated Proof Artifact Text Extraction after privacy, billing, budget alert, app-level hard-cap, credential, live smoke, launch-status, and operator-review gates pass.
+- Enable in production only for approved authenticated-user beta surfaces after privacy, billing, budget alert, app-level hard-cap, credential, live smoke, launch-status, and operator-review gates pass.
 - The app route also requires `FF_PROOF_ARTIFACT_OCR_BETA` audience eligibility, so global enablement alone is not sufficient.
 - Accepted source MIME types are PDF, PNG, and JPG/JPEG only; browser CV import OCR remains separately disabled.
 - OCR requires explicit user consent per document.
@@ -1223,12 +1223,13 @@ npm run ocr:production:smoke
 
 ### START_FROM_CV_BETA_ENABLED
 
-**Purpose**: Disabled-by-default invite-only Start from CV beta. This is an individual onboarding helper that turns a user-owned CV into private editable drafts. It is not CV screening, candidate evaluation, employer-side parsing, matching, ranking, shortlisting, verification, trust state, or public portfolio publication.
+**Purpose**: Disabled-by-default Start from CV beta. This is an individual onboarding helper that turns a user-owned CV into private editable drafts. It can run as an authenticated-individual open beta when `START_FROM_CV_OPEN_BETA_ENABLED=true`, or as a legacy invite-scoped beta when the open-beta flag is off. It is not CV screening, candidate evaluation, employer-side parsing, matching, ranking, shortlisting, verification, trust state, or public portfolio publication.
 
 **Format**:
 
 ```env
 START_FROM_CV_BETA_ENABLED=false
+START_FROM_CV_OPEN_BETA_ENABLED=false
 START_FROM_CV_ALLOWED_USER_IDS=
 START_FROM_CV_ALLOWED_ORG_IDS=
 START_FROM_CV_USE_GCP_OCR=false
@@ -1245,7 +1246,7 @@ NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED=false
 **Behavior**:
 
 - Keep `START_FROM_CV_BETA_ENABLED=false` by default.
-- Enabling requires an invite audience through `START_FROM_CV_ALLOWED_USER_IDS`, `START_FROM_CV_ALLOWED_ORG_IDS`, or a beta-testing individual profile.
+- Set `START_FROM_CV_OPEN_BETA_ENABLED=true` only when the beta is approved for all authenticated individual users. If it remains `false`, enabling requires an invite audience through `START_FROM_CV_ALLOWED_USER_IDS`, `START_FROM_CV_ALLOWED_ORG_IDS`, or a beta-testing individual profile.
 - `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED` must remain `false`; the archived browser CV OCR path is not part of this beta.
 - Accepted file types are PDF, PNG, and JPG/JPEG only. DOCX is not supported in this beta.
 - Default limits are 5 MB, 4 pages, 3 sessions per user per day, 20 sessions globally per day, and 24-hour retention.
@@ -1671,6 +1672,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 | **Legacy CV Import Gemini (archived/non-launch)** | `AI_ASSISTANTS_ENABLED`, `AI_MODEL_DEFAULT`, `AI_GEMINI_PROD_API_KEY`, `AI_GEMINI_STAGING_API_KEY`, `CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_USD_TO_SEK_RATE`, `CV_IMPORT_GEMINI_MODEL_DEFAULT`, `CV_IMPORT_GEMINI_MODEL_FALLBACK`, `CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_SHORT_TEXT_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_TAXONOMY_GUIDED`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_ENTRIES`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_TOKENS`, `CV_IMPORT_GEMINI_SHORTLIST_SEED_LIMIT`, `CV_IMPORT_GEMINI_SHORTLIST_CONCURRENCY`, `CV_IMPORT_GEMINI_SHORTLIST_QUERY_TIMEOUT_MS`, `CV_IMPORT_GEMINI_SHORTLIST_DOCUMENT_TIMEOUT_MS`, `CV_IMPORT_GEMINI_SHORTLIST_CACHE_TTL_MS`, `CV_IMPORT_GEMINI_TAXONOMY_VERSION` |
 | **Legacy CV Import OCR (archived/non-launch)**    | `NEXT_PUBLIC_CV_IMPORT_REVIEW_V3`, `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_FILE_SIZE_MB`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES`, `NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS`, `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | **Proof Artifact OCR Beta (Document AI)**         | `PROOF_ARTIFACT_OCR_BETA_ENABLED`, `GCP_CV_OCR_ENABLED`, `GCP_CV_OCR_EXPIRES_AT`, `GCP_CV_OCR_BASE_URL`, `GCP_CV_OCR_AUTH_MODE`, `GCP_CV_OCR_SHARED_SECRET`, `GCP_CV_OCR_OIDC_AUDIENCE`, `GCP_CV_OCR_OIDC_PROJECT_NUMBER`, `GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_POOL_ID`, `GCP_CV_OCR_OIDC_WORKLOAD_IDENTITY_PROVIDER_ID`, `GCP_CV_OCR_OIDC_SERVICE_ACCOUNT_EMAIL`, `GCP_CV_OCR_PROVIDER`, `GCP_CV_OCR_PROJECT_ID`, `GCP_CV_OCR_DOCUMENT_AI_LOCATION`, `GCP_CV_OCR_DOCUMENT_AI_PROCESSOR_ID`                                                                                                                                                                                                                                                                                                    |
+| **Start from CV Beta**                            | `START_FROM_CV_BETA_ENABLED`, `START_FROM_CV_OPEN_BETA_ENABLED`, `START_FROM_CV_ALLOWED_USER_IDS`, `START_FROM_CV_ALLOWED_ORG_IDS`, `START_FROM_CV_USE_GCP_OCR`, `START_FROM_CV_USE_GEMINI_STRUCTURING`, `START_FROM_CV_MAX_FILE_SIZE_MB`, `START_FROM_CV_MAX_PAGES`, `START_FROM_CV_USER_DAILY_LIMIT`, `START_FROM_CV_GLOBAL_DAILY_LIMIT`, `START_FROM_CV_RETENTION_HOURS`, `START_FROM_CV_DELETE_SOURCE_AFTER_EXTRACTION`, `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED`                                                                                                                                                                                                                                                                                                                              |
 | **Performance Budgets**                           | `PERF_API_P95_BUDGET_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **Real-time Messaging**                           | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
@@ -1751,7 +1753,7 @@ Use this checklist when setting up a new environment:
 - [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS` - OCR total timeout
 - [ ] `PROOF_ARTIFACT_OCR_BETA_ENABLED=false` - App-level Proof Artifact OCR beta gate stays disabled by default
 - [ ] `PROOF_ARTIFACT_OCR_BETA_KILL_SWITCH=false` - OCR beta route kill switch
-- [ ] `GCP_CV_OCR_ENABLED=false` - Document AI Proof Artifact OCR provider stays disabled by default until invite-gated approval
+- [ ] `GCP_CV_OCR_ENABLED=false` - Document AI Proof Artifact OCR provider stays disabled by default until authenticated-user beta approval
 - [ ] `GCP_CV_OCR_KILL_SWITCH=false` - GCP service kill switch
 - [ ] `GCP_CV_OCR_EXPIRES_AT=2026-08-01T00:00:00Z` - Future timestamp required for any temporary production smoke window before the current credit cutoff window
 - [ ] GCP budget alerts at 25%, 50%, 75%, 90%, and 100%; app-level caps are the hard stop

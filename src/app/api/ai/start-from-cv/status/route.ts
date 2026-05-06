@@ -27,7 +27,8 @@ export async function GET() {
         visible: summary.ok,
         available: summary.ok,
         enabled: config.enabled,
-        inviteOnly: true,
+        inviteOnly: summary.inviteOnly,
+        authenticatedUserBeta: summary.authenticatedUserBeta,
         blockers: summary.blockers,
         limits: {
           maxFileSizeMb: config.maxFileSizeMb,
@@ -45,12 +46,14 @@ export async function GET() {
     );
   } catch (error) {
     if (error instanceof StartFromCvError) {
+      const summary = getStartFromCvLaunchSummary();
       return NextResponse.json(
         {
           visible: false,
           available: false,
-          enabled: false,
-          inviteOnly: true,
+          enabled: summary.enabled,
+          inviteOnly: summary.inviteOnly,
+          authenticatedUserBeta: summary.authenticatedUserBeta,
           blockers: [error.code.toLowerCase()],
         },
         {

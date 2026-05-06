@@ -51,14 +51,14 @@ Required production gates:
 - raw prompt logging is disabled in production-like environments
 - feature flags and deterministic fallbacks are verified
 
-### Invite-only OCR beta
+### Authenticated-user OCR beta
 
-Google Cloud Document AI OCR may be used only for invite-only Proof Artifact Text Extraction while the beta is open. It must not be wired to CV import or profile import, and it must not be treated as a broad production OCR dependency.
+Google Cloud Document AI OCR may be used only for authenticated-user Proof Artifact Text Extraction and authenticated-individual Start from CV while the beta gates are open. It must not reactivate the archived CV import wizard, create employer-side CV parsing, or be treated as a broad production OCR dependency.
 
 Technical beta requirements:
 
 - explicit user consent per document before OCR
-- authenticated session plus server-side invite gate and feature flag
+- authenticated session plus server-side feature flag
 - maximum one document per request initially
 - page cap and file-size cap enforced before provider call
 - app-level OCR spend cap enforced in app/service code

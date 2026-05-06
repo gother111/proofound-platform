@@ -3,12 +3,12 @@
 
 # GCP Proof Artifact OCR Production-Beta Setup Runbook
 
-**Status:** Setup runbook for invite-only Proof Artifact Text Extraction beta and synthetic provider smoke only
+**Status:** Setup runbook for authenticated-user Proof Artifact Text Extraction beta, authenticated-individual Start from CV beta, and synthetic provider smoke only
 **Date:** 2026-05-03
 **Audience:** Founder, engineering, ops, privacy, QA
 **Authority:** Subordinate to the locked MVP source of truth, aligned PRD/technical requirements, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, and `docs/ai/Proofound_Temporary_GCP_CV_OCR_Sandbox_Reference_2026-05-03.md`.
 
-This runbook is docs-only guidance. It must not be treated as approval to process real/pilot data outside invite-only Proof Artifact Text Extraction beta, broaden the CV import surface, or make GCP a required launch dependency.
+This runbook is docs-only guidance. It must not be treated as approval to process real/pilot data outside authenticated Proof Artifact Text Extraction or Start from CV beta, broaden the archived CV import wizard surface, or make GCP a required launch dependency.
 
 ---
 
@@ -23,8 +23,8 @@ Do not create or enable the production provider smoke until all of these are tru
 - Budget alerts are configured before the first billable call.
 - App/service-level hard caps are configured before the first billable call. Google Cloud budgets are alerts only, not hard caps.
 - Vercel env vars are disabled by default.
-- Only synthetic smoke files are used until privacy review, invite-gate approval, and route approval pass.
-- No real beta data is processed until privacy review passes, explicit per-document consent exists, and the account is invite-gated into Proof Artifact Text Extraction.
+- Only synthetic smoke files are used until privacy review, authenticated-user beta approval, and route approval pass.
+- No real beta data is processed until privacy review passes, explicit per-document consent exists, and the authenticated account is inside an enabled Proof Artifact Text Extraction or Start from CV beta path.
 - Cloud Run max instances starts at `1` and must not exceed `3` during beta.
 - The disable-or-pay checkpoints are binding: review on `2026-07-15`, disabled-mode drill on `2026-07-25`, final disable-or-paid decision on `2026-08-01`, and free-credit expiry on `2026-08-03`.
 - Cloud Vision OCR is excluded from this rollout.
@@ -350,7 +350,7 @@ GCP_CV_OCR_FAIL_OPEN_TO_FALLBACK=true
 
 Rules:
 
-- Production stays `GCP_CV_OCR_ENABLED=false` unless explicitly approved for invite-only Proof Artifact Text Extraction beta.
+- Production stays `GCP_CV_OCR_ENABLED=false` unless explicitly approved for authenticated-user Proof Artifact Text Extraction or authenticated-individual Start from CV beta.
 - Preview/staging may be enabled only for synthetic smoke after billing, budget alerts, and app-level hard-cap setup.
 - Env changes require a redeploy before they affect Vercel deployments.
 - Missing base URL, missing secret, expired timestamp, budget exhaustion, or disabled flag must result in no Cloud Run call.
@@ -392,7 +392,7 @@ Privacy review must verify:
 
 - user disclosure and consent for explicit upload
 - explicit consent is captured per document
-- invite-gated beta access is checked server-side
+- authenticated beta access is checked server-side
 - page, file-size, rate, and app-level spend caps are enforced before Document AI calls
 - no hidden background OCR
 - no original filenames in provider calls or logs where avoidable
