@@ -104,6 +104,7 @@ vi.mock('@/lib/proofs/canonical-pack', () => ({
 }));
 
 vi.mock('@/lib/proofs/pack-anchor', () => ({
+  isExportableProofPack: vi.fn(() => true),
   isQuarantinedProofPack: vi.fn(() => false),
   validateProofPackAnchor: vi.fn(() => ({ ok: true })),
 }));

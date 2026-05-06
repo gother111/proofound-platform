@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildOwnerAnchor,
+  isExportableProofPack,
   isQuarantinedProofPack,
   validateProofPackAnchor,
 } from '@/lib/proofs/pack-anchor';
@@ -80,5 +81,34 @@ describe('proof pack anchor policy', () => {
         exportExcludedReason: 'missing_primary_anchor_context',
       } as any)
     ).toBe(true);
+  });
+
+  it('only exports packs that pass quarantine and anchor policy', () => {
+    const validExportPack = {
+      packKind: 'profile_export',
+      ownerType: 'individual_profile',
+      ownerId: 'user-1',
+      primarySubjectType: 'individual_profile',
+      primarySubjectId: 'user-1',
+      deletedAt: null,
+      exportExcludedReason: null,
+    };
+
+    expect(isExportableProofPack(validExportPack as any)).toBe(true);
+
+    expect(
+      isExportableProofPack({
+        ...validExportPack,
+        exportExcludedReason: 'missing_primary_anchor_context',
+      } as any)
+    ).toBe(false);
+
+    expect(
+      isExportableProofPack({
+        ...validExportPack,
+        primarySubjectType: 'organization',
+        primarySubjectId: 'org-1',
+      } as any)
+    ).toBe(false);
   });
 });

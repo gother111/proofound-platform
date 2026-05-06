@@ -16,6 +16,11 @@ type ProofPackAnchorFields = Pick<
   'packKind' | 'ownerType' | 'ownerId' | 'primarySubjectType' | 'primarySubjectId'
 >;
 
+type ProofPackQuarantineFields = Pick<
+  typeof proofPacks.$inferSelect,
+  'exportExcludedReason' | 'deletedAt'
+>;
+
 export type ProofPackAnchorValidationResult =
   | { ok: true }
   | {
@@ -123,8 +128,10 @@ export function validateProofPackAnchor(
   return { ok: true };
 }
 
-export function isQuarantinedProofPack(
-  pack: Pick<typeof proofPacks.$inferSelect, 'exportExcludedReason' | 'deletedAt'>
-) {
+export function isQuarantinedProofPack(pack: ProofPackQuarantineFields) {
   return pack.deletedAt !== null || pack.exportExcludedReason === 'missing_primary_anchor_context';
+}
+
+export function isExportableProofPack(pack: ProofPackAnchorFields & ProofPackQuarantineFields) {
+  return !isQuarantinedProofPack(pack) && validateProofPackAnchor(pack).ok;
 }

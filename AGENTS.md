@@ -37,6 +37,11 @@
 
 For UI, landing, public-page, or visual-system work, also read `DESIGN.md` after the MVP authority stack and before editing.
 
+For internal structure, maintainability, or future-agent orientation work, use these reference-only guides after the relevant source files and authority stack:
+
+- `.artifacts/CURRENT_CODEBASE_TRUTH.md`
+- `docs/PROOFOUND_UBIQUITOUS_LANGUAGE.md`
+
 ## Logging Policy (Conflict Prevention)
 
 - Legacy shared files are history/index surfaces:

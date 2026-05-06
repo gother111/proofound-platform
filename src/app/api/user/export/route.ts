@@ -39,7 +39,7 @@ import {
 import { getRows } from '@/lib/db/rows';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
-import { isQuarantinedProofPack, validateProofPackAnchor } from '@/lib/proofs/pack-anchor';
+import { isExportableProofPack } from '@/lib/proofs/pack-anchor';
 import { buildPortableUploadManifest } from '@/lib/uploads/export';
 import { buildUserExportDownloadFilename } from '@/lib/privacy/export-download';
 import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
@@ -328,13 +328,7 @@ export async function GET() {
     const ownerSafeVerificationLogEntries = redactVerificationLogEntriesForOwnerExport(
       canonicalVerificationLogEntries
     );
-    const exportableProofPacks = canonicalProofPacks.filter((pack) => {
-      if (isQuarantinedProofPack(pack)) {
-        return false;
-      }
-
-      return validateProofPackAnchor(pack as any).ok;
-    });
+    const exportableProofPacks = canonicalProofPacks.filter(isExportableProofPack);
     const exportableProofPackIds = new Set(exportableProofPacks.map((pack) => pack.id));
     const exportableProofPackItems = canonicalProofPackItems.filter((item) =>
       exportableProofPackIds.has(item.packId)
