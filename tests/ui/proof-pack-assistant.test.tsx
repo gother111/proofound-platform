@@ -387,12 +387,12 @@ describe('Proof Pack Assistant UI', () => {
     );
   });
 
-  it('renders manual fallback when the OCR beta budget gate disables the provider', async () => {
+  it('renders a generic manual fallback when OCR beta is temporarily unavailable', async () => {
     ocrStatus = {
       ...ocrStatus,
       visible: true,
       available: false,
-      unavailableReason: 'missing_budget_or_hard_caps',
+      unavailableReason: 'temporarily_unavailable',
     };
 
     render(
@@ -411,7 +411,7 @@ describe('Proof Pack Assistant UI', () => {
       />
     );
 
-    expect(await screen.findByText(/beta budget cap is not ready/i)).toBeInTheDocument();
+    expect(await screen.findByText(/OCR is temporarily unavailable/i)).toBeInTheDocument();
     expect(apiFetchMock).not.toHaveBeenCalledWith(
       expect.stringContaining('/text-extraction'),
       expect.anything()

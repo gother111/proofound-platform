@@ -40,7 +40,7 @@ Hard product rules:
 - Keep AI disabled by default.
 - All AI suggestions must be optional and user-reviewed.
 - Gemini assistive AI is production-eligible only after live model smoke, app-level hard caps, launch-status checks, privacy tests, and raw-prompt logging checks pass.
-- Google Cloud Document AI OCR is production-beta only for invite-gated Proof Artifact Text Extraction, not CV import.
+- Google Cloud Document AI OCR is production-beta only for invite-only Proof Artifact Text Extraction, not CV import.
 - OCR requires explicit consent per document and returns draft text only.
 - OCR output must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match/review/trust/hiring state.
 - Cloud Vision OCR, taxonomy shortlist, reranker, and Gemini skill extractor for employer review are excluded.

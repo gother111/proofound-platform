@@ -1132,6 +1132,13 @@ export async function cleanupFixtureData(fixture: StrictFixtureState): Promise<v
         `[strict-fixtures] failed to clean consent_obligations: ${consentError.message}`
       );
     }
+
+    await deleteByIds('user_consents', 'profile_id', fixtureUserIds);
+    await deleteByIds('matching_profiles', 'profile_id', fixtureUserIds);
+    await deleteByIds('skills', 'profile_id', fixtureUserIds);
+    await deleteByIds('individual_profiles', 'user_id', fixtureUserIds);
+    await deleteByIds('experiences', 'user_id', fixtureUserIds);
+    await deleteByIds('matching_refresh_jobs', 'profile_id', fixtureUserIds);
   }
 
   for (const userId of fixture.userIds) {

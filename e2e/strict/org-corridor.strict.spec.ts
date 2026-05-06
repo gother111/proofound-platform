@@ -121,43 +121,68 @@ async function browserRequestJson(
             }
           };
 
-          const csrfResponse = await fetchWithTimeout(
-            `/api/csrf-token?ts=${Date.now()}`,
-            {
-              method: 'GET',
-              credentials: 'include',
-              cache: 'no-store',
-              headers: {
-                'cache-control': 'no-store',
-                pragma: 'no-cache',
-              },
-            },
-            15_000
-          );
+          const state = window as typeof window & {
+            __PROOFOUND_E2E_CSRF_TOKEN__?: string;
+          };
+          const fetchCsrfToken = async (forceRefresh = false) => {
+            if (!forceRefresh && state.__PROOFOUND_E2E_CSRF_TOKEN__) {
+              return state.__PROOFOUND_E2E_CSRF_TOKEN__;
+            }
 
-          const csrfPayload = (await csrfResponse.json()) as { token?: string };
-          if (!csrfResponse.ok || !csrfPayload.token) {
-            throw new Error(`Failed to fetch browser CSRF token: HTTP ${csrfResponse.status}`);
+            const csrfResponse = await fetchWithTimeout(
+              `/api/csrf-token?ts=${Date.now()}`,
+              {
+                method: 'GET',
+                credentials: 'include',
+                cache: 'no-store',
+                headers: {
+                  'cache-control': 'no-store',
+                  pragma: 'no-cache',
+                },
+              },
+              15_000
+            );
+
+            const csrfPayload = (await csrfResponse.json()) as { token?: string };
+            if (!csrfResponse.ok || !csrfPayload.token) {
+              throw new Error(`Failed to fetch browser CSRF token: HTTP ${csrfResponse.status}`);
+            }
+
+            state.__PROOFOUND_E2E_CSRF_TOKEN__ = csrfPayload.token;
+            return csrfPayload.token;
+          };
+
+          const sendRequest = async (csrfToken: string) => {
+            return fetchWithTimeout(
+              requestUrl,
+              {
+                method: requestMethod,
+                credentials: 'include',
+                headers: {
+                  'content-type': 'application/json',
+                  'x-csrf-token': csrfToken,
+                },
+                body: JSON.stringify(requestData),
+              },
+              45_000
+            );
+          };
+
+          let response = await sendRequest(await fetchCsrfToken());
+          let text = await response.text();
+
+          if (
+            response.status === 403 &&
+            /csrf validation failed|invalid or missing csrf token/i.test(text)
+          ) {
+            response = await sendRequest(await fetchCsrfToken(true));
+            text = await response.text();
           }
-
-          const response = await fetchWithTimeout(
-            requestUrl,
-            {
-              method: requestMethod,
-              credentials: 'include',
-              headers: {
-                'content-type': 'application/json',
-                'x-csrf-token': csrfPayload.token,
-              },
-              body: JSON.stringify(requestData),
-            },
-            45_000
-          );
 
           return {
             ok: response.ok,
             status: response.status,
-            text: await response.text(),
+            text,
           };
         },
         {
@@ -601,7 +626,11 @@ test.describe('Strict Authenticated Org Corridor', () => {
         assignmentId,
       }
     );
-    expect(candidateInterestResponse.ok()).toBeTruthy();
+    const candidateInterestText = await candidateInterestResponse.text();
+    expect(
+      candidateInterestResponse.ok(),
+      `candidate interest failed with HTTP ${candidateInterestResponse.status()}: ${candidateInterestText}`
+    ).toBeTruthy();
 
     await page.context().clearCookies();
     await loginWithUi(page, orgOwner);

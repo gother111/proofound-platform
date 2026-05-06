@@ -36,7 +36,7 @@ export async function GET() {
         visible,
         available: visible && config.available,
         status: safeStatus.status,
-        unavailableReason: visible ? config.unavailableReason : null,
+        unavailableReason: visible && config.unavailableReason ? 'temporarily_unavailable' : null,
         limits: {
           maxFileSizeMb: Math.min(config.maxFileSizeMb || 5, 5),
           maxPages: Math.min(config.maxPages || 4, 4),

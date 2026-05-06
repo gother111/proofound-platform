@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  assertStartFromCvAccess,
   countStartFromCvPages,
   getStartFromCvLaunchSummary,
   resolveStartFromCvConfig,
@@ -20,6 +21,20 @@ describe('Start from CV guardrails', () => {
     expect(config.maxPages).toBe(4);
     expect(config.userDailyLimit).toBe(3);
     expect(config.globalDailyLimit).toBe(20);
+  });
+
+  it('requires an invite audience for a non-beta individual user', async () => {
+    await expect(
+      assertStartFromCvAccess({
+        userId: '11111111-1111-4111-8111-111111111111',
+        persona: 'individual',
+        orgIds: [],
+        env: {
+          START_FROM_CV_BETA_ENABLED: 'true',
+          NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
+        },
+      })
+    ).rejects.toMatchObject({ code: 'START_FROM_CV_NOT_INVITED' });
   });
 
   it('reports beta blockers when enabled without an invite audience', () => {

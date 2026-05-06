@@ -155,7 +155,7 @@ describe('Start from CV API routes', () => {
     expect(mocks.createStartFromCvSession).not.toHaveBeenCalled();
   });
 
-  it('returns invite-only denial for non-eligible users', async () => {
+  it('returns a safe beta denial if access is unavailable for the account', async () => {
     mocks.createStartFromCvSession.mockRejectedValueOnce(
       new mocks.StartFromCvError('START_FROM_CV_NOT_INVITED', 403)
     );
@@ -168,7 +168,7 @@ describe('Start from CV API routes', () => {
     const payload = await response.json();
 
     expect(response.status).toBe(403);
-    expect(payload.error).toBe('Start from CV is invite-only right now.');
+    expect(payload.error).toBe('Start from CV beta is not available for this account.');
   });
 
   it('rejects unsupported MIME types through the extraction boundary', async () => {

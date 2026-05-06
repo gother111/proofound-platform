@@ -49,7 +49,7 @@ Proof Artifact Text Extraction using Google Cloud Document AI OCR is a separate 
 
 OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist candidates, or affect match, review, verification, reveal, trust-state, or hiring-decision state.
 
-Every OCR request requires explicit user consent per document and must be feature-flagged, invite-gated, page-limited, file-size-limited, spend-capped, and safe to disable.
+Every OCR request requires explicit user consent per document and must be feature-flagged, authenticated, invite-gated, page-limited, file-size-limited, spend-capped, expiry-gated through the August 3, 2026 beta cutoff, and safe to disable.
 
 ### Internal-only / excluded
 

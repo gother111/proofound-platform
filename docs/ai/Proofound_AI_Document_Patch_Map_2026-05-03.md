@@ -7,7 +7,7 @@
 **Date:** 2026-05-03  
 **Purpose:** This document shows exactly what to add to existing Proofound docs without rewriting the locked MVP.
 
-**2026-05-04 rollout ruling:** Assistive AI may be production-eligible only after live Gemini model smoke, app-level hard caps, launch-status checks, privacy tests, and raw-prompt logging checks pass. Google Cloud OCR is production-beta only for invite-gated Proof Artifact Text Extraction using Document AI. It is not CV import, not Cloud Vision OCR, not AI scoring/ranking/shortlisting, and not a move away from Vercel/Supabase.
+**2026-05-06 rollout ruling:** Assistive AI may be production-eligible only after live Gemini model smoke, app-level hard caps, launch-status checks, privacy tests, and raw-prompt logging checks pass. Google Cloud OCR is production-beta only for invite-only Proof Artifact Text Extraction using Document AI. It is not CV import, not Cloud Vision OCR, not AI scoring/ranking/shortlisting, and not a move away from Vercel/Supabase.
 
 ---
 

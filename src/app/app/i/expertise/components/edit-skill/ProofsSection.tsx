@@ -139,13 +139,10 @@ function createOcrState(overrides: Partial<OcrState> = {}): OcrState {
 }
 
 function ocrUnavailableCopy(reason: string | null) {
-  if (reason === 'missing_budget_or_hard_caps') {
-    return 'OCR is temporarily unavailable because the beta budget cap is not ready. You can still upload the document and edit the Proof Pack manually.';
-  }
   if (reason === 'disabled') {
     return 'OCR is currently disabled. Upload the proof document and add the relevant text manually.';
   }
-  return 'OCR is unavailable right now. Upload the proof document and continue with manual Proof Pack editing.';
+  return 'OCR is temporarily unavailable. Upload the proof document and continue with manual Proof Pack editing.';
 }
 
 function recordAssistantEvent(

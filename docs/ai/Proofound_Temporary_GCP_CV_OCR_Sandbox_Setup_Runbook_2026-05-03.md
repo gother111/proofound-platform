@@ -8,7 +8,7 @@
 **Audience:** Founder, engineering, ops, privacy, QA
 **Authority:** Subordinate to the locked MVP source of truth, aligned PRD/technical requirements, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, and `docs/ai/Proofound_Temporary_GCP_CV_OCR_Sandbox_Reference_2026-05-03.md`.
 
-This runbook is docs-only guidance. It must not be treated as approval to process real/pilot data outside invite-only Proof Artifact Text Extraction, broaden the CV import surface, or make GCP a required launch dependency.
+This runbook is docs-only guidance. It must not be treated as approval to process real/pilot data outside invite-only Proof Artifact Text Extraction beta, broaden the CV import surface, or make GCP a required launch dependency.
 
 ---
 
@@ -392,7 +392,7 @@ Privacy review must verify:
 
 - user disclosure and consent for explicit upload
 - explicit consent is captured per document
-- invite-gate membership is checked server-side
+- invite-gated beta access is checked server-side
 - page, file-size, rate, and app-level spend caps are enforced before Document AI calls
 - no hidden background OCR
 - no original filenames in provider calls or logs where avoidable

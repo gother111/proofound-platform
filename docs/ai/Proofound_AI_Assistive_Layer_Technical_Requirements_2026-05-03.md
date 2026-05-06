@@ -53,12 +53,12 @@ Required production gates:
 
 ### Invite-only OCR beta
 
-Google Cloud Document AI OCR may be used only for invite-only Proof Artifact Text Extraction. It must not be wired to CV import or profile import, and it must not be treated as a broad production OCR dependency.
+Google Cloud Document AI OCR may be used only for invite-only Proof Artifact Text Extraction while the beta is open. It must not be wired to CV import or profile import, and it must not be treated as a broad production OCR dependency.
 
 Technical beta requirements:
 
 - explicit user consent per document before OCR
-- invite gate plus server-side feature flag
+- authenticated session plus server-side invite gate and feature flag
 - maximum one document per request initially
 - page cap and file-size cap enforced before provider call
 - app-level OCR spend cap enforced in app/service code
@@ -70,7 +70,7 @@ Technical beta requirements:
 
 Google Cloud budgets are alerting tools only. They are not hard caps. Hard caps must be enforced in the Proofound app and/or OCR worker before any Document AI call.
 
-The temporary credit window is expected to expire around `2026-08-03`. The release owner must make a disable-or-pay decision no later than `2026-07-24`, and the default decision is disable unless billing and privacy owners explicitly approve continued spend.
+The temporary credit window is expected to expire around `2026-08-03`. The release owner must make a disable-or-pay decision no later than `2026-07-24`, and the default decision is disable unless billing and privacy owners explicitly approve continued spend. Users should see the feature as beta-only, without seeing internal budget or credit-expiry details.
 
 ---
 

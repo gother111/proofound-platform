@@ -219,6 +219,13 @@ describe('Proof Artifact Text Extraction', () => {
       }),
       expect.any(Object)
     );
+    expect(mocks.isFeatureEnabled).toHaveBeenCalledWith(
+      'FF_PROOF_ARTIFACT_OCR_BETA',
+      expect.objectContaining({
+        userId: USER_ID,
+      }),
+      false
+    );
     expect(JSON.stringify(mocks.extractTextFromDocument.mock.calls[0][0])).not.toMatch(
       /quarantine|storage|signed|filename/i
     );

@@ -88,7 +88,7 @@ export function safeStartFromCvMessage(code: string) {
     case 'BROWSER_CV_OCR_MUST_STAY_DISABLED':
       return 'Start from CV is not available while browser OCR is enabled.';
     case 'START_FROM_CV_NOT_INVITED':
-      return 'Start from CV is invite-only right now.';
+      return 'Start from CV beta is not available for this account.';
     case 'INDIVIDUAL_ONLY':
       return 'Start from CV is available for individual profiles only.';
     case 'CONSENT_REQUIRED':
