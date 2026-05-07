@@ -611,7 +611,7 @@ export function buildFinalLaunchChecklistDefinitions({
             /Uploaded PDF document/i,
           ]) &&
           textContainsAll(context.uploadsLifecycleQueueTest, [
-            /sanitizedFilename/i,
+            /filenameReviewLabel/i,
             /reviewReasons/i,
             /correction_revocation/i,
           ])
@@ -622,7 +622,7 @@ export function buildFinalLaunchChecklistDefinitions({
               sourceLabel: 'Upload privacy tests',
               status: 'PASS',
               summary:
-                'Upload privacy tests cover filename sanitization, metadata review flags, generic public/review display labels, and queue handoff with sanitized filenames.',
+                'Upload privacy tests cover filename sanitization, metadata review flags, generic public/review display labels, and queue handoff with generic filename review labels.',
               evidence: [
                 {
                   label: 'Upload privacy helpers test',
@@ -632,7 +632,7 @@ export function buildFinalLaunchChecklistDefinitions({
                 {
                   label: 'Upload lifecycle queue test',
                   path: 'tests/lib/uploads-lifecycle-queue.test.ts',
-                  note: 'Asserts correction_revocation queue metadata includes sanitizedFilename and reviewReasons.',
+                  note: 'Asserts correction_revocation queue metadata includes filenameReviewLabel and reviewReasons.',
                 },
               ],
               observedAt: null,
@@ -1159,8 +1159,7 @@ export function buildFinalLaunchChecklistDefinitions({
           observedAt: null,
           sourcePath: 'docs/internal-ops/production-launch-evidence-2026-04-27.md',
           sourceLabel: 'Production launch evidence pack',
-          summary:
-            'The dated launch evidence pack records a successful isolated restore drill.',
+          summary: 'The dated launch evidence pack records a successful isolated restore drill.',
           patterns: [/Restore drill status: `PASS`/i, /isolated recovery target/i],
         });
         if (restoreEvidence.length > 0) {
@@ -1263,13 +1262,7 @@ export function buildFinalLaunchChecklistDefinitions({
           sourceLabel: 'GTM and initial marketing plan',
           summary:
             'The GTM plan documents pilot scope, timeline, pricing posture, terms, and case-study expectations.',
-          patterns: [
-            /Pilot Package/i,
-            /scope/i,
-            /timeline/i,
-            /case-study/i,
-            /Status: `PASS`/i,
-          ],
+          patterns: [/Pilot Package/i, /scope/i, /timeline/i, /case-study/i, /Status: `PASS`/i],
         }),
     },
     {

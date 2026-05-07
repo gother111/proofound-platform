@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const resendSendMock = vi.hoisted(() => vi.fn());
 
@@ -12,10 +12,30 @@ vi.mock('resend', () => ({
 
 import { sendWorkEmailVerification } from '@/lib/email';
 
+const ORIGINAL_NEXT_PUBLIC_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
+const ORIGINAL_SITE_URL = process.env.SITE_URL;
+const ORIGINAL_VERCEL_ENV = process.env.VERCEL_ENV;
+
+function restoreEnv(name: string, value: string | undefined) {
+  if (value === undefined) {
+    delete process.env[name];
+  } else {
+    process.env[name] = value;
+  }
+}
+
 describe('sendWorkEmailVerification delivery handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    restoreEnv('SITE_URL', ORIGINAL_SITE_URL);
+    restoreEnv('VERCEL_ENV', ORIGINAL_VERCEL_ENV);
+  });
+
+  afterEach(() => {
+    restoreEnv('NEXT_PUBLIC_SITE_URL', ORIGINAL_NEXT_PUBLIC_SITE_URL);
+    restoreEnv('SITE_URL', ORIGINAL_SITE_URL);
+    restoreEnv('VERCEL_ENV', ORIGINAL_VERCEL_ENV);
   });
 
   it('throws when resend returns an error payload without throwing', async () => {
@@ -34,5 +54,32 @@ describe('sendWorkEmailVerification delivery handling', () => {
     await expect(
       sendWorkEmailVerification('worker@example.com', 'token-123', 'Worker')
     ).resolves.toBeUndefined();
+  });
+
+  it('uses the canonical server-side SITE_URL fallback for token-bearing links', async () => {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    process.env.SITE_URL = 'https://proofound.io/';
+    resendSendMock.mockResolvedValueOnce({ id: 're_123' });
+
+    await expect(
+      sendWorkEmailVerification('worker@example.com', 'token-123', 'Worker')
+    ).resolves.toBeUndefined();
+
+    const payload = resendSendMock.mock.calls[0]?.[0];
+    const renderedEmail = JSON.stringify(payload?.react);
+    expect(renderedEmail).toContain('https://proofound.io/verify-work-email?token=token-123');
+    expect(renderedEmail).not.toContain('undefined/verify-work-email');
+  });
+
+  it('fails closed before sending token-bearing links when production site url is unavailable', async () => {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    delete process.env.SITE_URL;
+    process.env.VERCEL_ENV = 'production';
+
+    await expect(
+      sendWorkEmailVerification('worker@example.com', 'token-123', 'Worker')
+    ).rejects.toThrow('Failed to send work email verification');
+
+    expect(resendSendMock).not.toHaveBeenCalled();
   });
 });

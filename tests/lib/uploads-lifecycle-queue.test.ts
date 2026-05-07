@@ -96,7 +96,7 @@ describe('upload lifecycle internal ops queue handoff', () => {
         actorType: 'candidate',
         actorId: '11111111-1111-1111-1111-111111111111',
         metadata: expect.objectContaining({
-          sanitizedFilename: 'risk_.pdf',
+          filenameReviewLabel: 'Uploaded PDF document',
           uploadKind: 'document',
           safetyReason: expect.stringContaining('privacy_review_required:'),
           reviewReasons: expect.arrayContaining([
@@ -108,6 +108,41 @@ describe('upload lifecycle internal ops queue handoff', () => {
         }),
       })
     );
+    const queueMetadata = ensureInternalOpsQueueItemMock.mock.calls[0]?.[0]?.metadata;
+    expect(queueMetadata).not.toHaveProperty('artifactDisplayName');
+    expect(queueMetadata).not.toHaveProperty('sanitizedFilename');
+  });
+
+  it('rejects public image uploads when metadata cannot be stripped', async () => {
+    const buffer = Buffer.from([0xff, 0xd8, 0xff, ...Buffer.from('Exif GPSLatitude')]);
+    const file = {
+      name: 'profile.jpg',
+      type: 'image/jpeg',
+      size: buffer.length,
+      arrayBuffer: async () => buffer,
+    } as File;
+
+    const result = await ingestUploadedFile(file, {
+      ownerType: 'individual_profile',
+      ownerId: '11111111-1111-1111-1111-111111111111',
+      sourceSurface: 'avatar_upload',
+      uploadKind: UPLOAD_KINDS.AVATAR,
+    });
+
+    expect(result.status).toBe('rejected');
+    expect(result.url).toBeNull();
+    expect(result.storagePath).toBeNull();
+    expect(result.safetyReason).toContain('metadata_exif');
+    expect(result.safetyReason).toContain('metadata_stripping_unavailable');
+    expect(removeMock).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.stringContaining('profile.jpg')])
+    );
+    expect(ensureInternalOpsQueueItemMock).not.toHaveBeenCalled();
+
+    const joined = executeMock.mock.calls.map(([statement]) => renderSql(statement)).join('\n');
+    expect(joined).toContain("lifecycle_state = 'rejected'");
+    expect(joined).toContain('safe_for_public = false');
+    expect(joined).not.toContain('promoted_public');
   });
 
   it('rejects unsafe MIME mismatches and removes the quarantined object', async () => {
@@ -248,7 +283,7 @@ describe('upload lifecycle internal ops queue handoff', () => {
       linked_entity_type: 'uploaded_file',
       linked_entity_id: uploadId,
       summary: 'Risky evidence upload held for privacy-safe review.',
-      metadata: { artifactDisplayName: 'Uploaded PDF document' },
+      metadata: { filenameReviewLabel: 'Uploaded PDF document' },
       created_at: new Date('2026-03-21T10:00:00.000Z'),
       updated_at: new Date('2026-03-21T11:00:00.000Z'),
       resolved_at: null,

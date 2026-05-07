@@ -153,7 +153,8 @@ describe('internal ops queue compatibility fallback', () => {
         summary: 'Risky evidence upload held for privacy-safe review.',
         metadata: {
           reviewReasons: ['metadata_exif'],
-          sanitizedFilename: 'evidence-redacted.pdf',
+          filenameReviewLabel: 'Uploaded PDF document',
+          sanitizedFilename: 'Jane_Doe_Resume.pdf',
           uploadKind: 'proof_evidence',
           sourceSurface: 'proof_pack_upload',
           safetyReason: 'privacy_review_required:metadata_exif',
@@ -178,7 +179,7 @@ describe('internal ops queue compatibility fallback', () => {
         linkedEntityType: 'uploaded_file',
         metadata: expect.objectContaining({
           reviewReasons: ['metadata_exif'],
-          sanitizedFilename: 'evidence-redacted.pdf',
+          filenameReviewLabel: 'Uploaded PDF document',
           uploadKind: 'proof_evidence',
           sourceSurface: 'proof_pack_upload',
           safetyReason: 'privacy_review_required:metadata_exif',
@@ -192,7 +193,10 @@ describe('internal ops queue compatibility fallback', () => {
     );
     expect(uploadItem?.detail.fields).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: 'Filename review label', value: 'evidence-redacted.pdf' }),
+        expect.objectContaining({
+          label: 'Filename review label',
+          value: 'Uploaded PDF document',
+        }),
         expect.objectContaining({
           label: 'Safety status',
           value: 'privacy_review_required:metadata_exif',
@@ -200,6 +204,7 @@ describe('internal ops queue compatibility fallback', () => {
       ])
     );
     expect(JSON.stringify(uploadItem)).not.toContain('Jane Doe Resume.pdf');
+    expect(JSON.stringify(uploadItem)).not.toContain('Jane_Doe_Resume.pdf');
     expect(JSON.stringify(uploadItem)).not.toContain('user-uploads-private');
     expect(JSON.stringify(uploadItem)).not.toContain('user-uploads-quarantine');
     expect(JSON.stringify(uploadItem)).not.toContain('jane@example.com');
@@ -222,7 +227,10 @@ describe('internal ops queue compatibility fallback', () => {
       linkedEntityType: 'uploaded_file',
       linkedEntityId: 'upload-1',
       summary: 'Risky evidence upload held for privacy-safe review.',
-      metadata: { sanitizedFilename: 'safe_name.pdf' },
+      metadata: {
+        filenameReviewLabel: 'Uploaded PDF document',
+        sanitizedFilename: 'Jane_Doe_Resume.pdf',
+      },
       actorType: 'candidate',
       actorId: 'candidate-1',
     });
@@ -232,11 +240,12 @@ describe('internal ops queue compatibility fallback', () => {
         id: 'compat-fallback:correction_revocation:upload-1',
         linkedEntityType: 'uploaded_file',
         metadata: expect.objectContaining({
-          sanitizedFilename: 'safe_name.pdf',
+          filenameReviewLabel: 'Uploaded PDF document',
           schemaCompatibilityFallback: true,
         }),
       })
     );
+    expect(JSON.stringify(result)).not.toContain('Jane_Doe_Resume.pdf');
     expect(warnSpy).toHaveBeenCalledWith(
       'internal_ops_queue.ensure.compatibility_fallback',
       expect.objectContaining({

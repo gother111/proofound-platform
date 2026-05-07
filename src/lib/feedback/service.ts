@@ -135,8 +135,8 @@ const createToken = async (
     actionScope: 'feedback.submit',
     subjectType: 'interview_feedback',
     subjectId: params.interviewId,
-    actorBinding: params.recipientEmail ? CAPABILITY_BINDINGS.EMAIL_HASH : CAPABILITY_BINDINGS.NONE,
-    actorEmail: params.recipientEmail,
+    actorBinding: CAPABILITY_BINDINGS.NONE,
+    actorEmail: null,
     actorProfileId: null,
     expiresAt: new Date(expiresAt),
     singleUse: true,
@@ -168,11 +168,18 @@ const createToken = async (
 
 export const markTokenUsed = async (
   token: string,
-  actor?: { email?: string | null; redeemSessionNonce?: string | null }
+  actor?: {
+    redeemSessionNonce?: string | null;
+    ip?: string | null;
+    userAgent?: string | null;
+  }
 ) => {
   const redeemed = await redeemCapabilityToken(token, {
     tokenClass: CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE,
-    actor: { email: actor?.email ?? null },
+    actor: {
+      ip: actor?.ip ?? null,
+      userAgent: actor?.userAgent ?? null,
+    },
     consume: true,
     requireRedeemSessionNonce: true,
     redeemSessionNonce: actor?.redeemSessionNonce ?? null,

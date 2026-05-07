@@ -29,6 +29,7 @@ import {
   buildRevealConversationUrl,
   type WorkflowEmailPrivacyOptions,
 } from './email/privacy';
+import { resolveCanonicalSiteUrl } from './env';
 
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
@@ -43,10 +44,37 @@ function recordLegacyEmailFailure(workflow: TransactionalEmailWorkflow, error: u
   });
 }
 
-export async function sendVerificationEmail(email: string, token: string, persona?: string) {
-  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?token=${token}`;
+function buildCanonicalEmailUrl(
+  pathname: string,
+  searchParams?: Record<string, string | number | boolean | null | undefined>
+): string {
+  const baseUrl = resolveCanonicalSiteUrl();
+  if (!baseUrl) {
+    throw new Error('canonical_site_url_missing');
+  }
 
+  const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  const url = new URL(normalizedPath, `${baseUrl}/`);
+
+  for (const [key, value] of Object.entries(searchParams ?? {})) {
+    if (value === null || value === undefined) {
+      continue;
+    }
+
+    const stringValue = String(value);
+    if (stringValue.trim().length === 0) {
+      continue;
+    }
+
+    url.searchParams.set(key, stringValue);
+  }
+
+  return url.toString();
+}
+
+export async function sendVerificationEmail(email: string, token: string, persona?: string) {
   try {
+    const verifyUrl = buildCanonicalEmailUrl('/verify-email', { token });
     // Choose template based on persona
     let subject = 'Verify your email - Proofound';
     let template;
@@ -75,9 +103,8 @@ export async function sendVerificationEmail(email: string, token: string, person
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password?token=${token}`;
-
   try {
+    const resetUrl = buildCanonicalEmailUrl('/reset-password', { token });
     await resend.emails.send({
       from: fromEmail,
       to: email,
@@ -97,10 +124,8 @@ export async function sendOrgInviteEmail(
   token: string,
   _orgSlug?: string
 ) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  const inviteUrl = `${baseUrl}/accept-invite?token=${token}`;
-
   try {
+    const inviteUrl = buildCanonicalEmailUrl('/accept-invite', { token });
     await resend.emails.send({
       from: fromEmail,
       to: email,
@@ -141,9 +166,8 @@ export async function sendDeletionScheduledEmail(
   userId: string,
   scheduledDate: Date
 ): Promise<void> {
-  const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/settings?tab=privacy`;
-
   try {
+    const cancellationUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
     await resend.emails.send({
       from: fromEmail,
       to: email,
@@ -162,9 +186,8 @@ export async function sendDeletionReminderEmail(
   scheduledDate: Date,
   daysRemaining: number
 ): Promise<void> {
-  const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/settings?tab=privacy`;
-
   try {
+    const cancellationUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
     await resend.emails.send({
       from: fromEmail,
       to: email,
@@ -196,9 +219,8 @@ export async function sendWorkEmailVerification(
   token: string,
   userName: string
 ): Promise<void> {
-  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-work-email?token=${token}`;
-
   try {
+    const verifyUrl = buildCanonicalEmailUrl('/verify-work-email', { token });
     const result = await resend.emails.send({
       from: fromEmail,
       to: email,
@@ -227,10 +249,9 @@ export async function sendSkillVerificationRequest(
   token: string,
   message?: string
 ): Promise<void> {
-  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify/${token}`;
-  const declineUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify/${token}`;
-
   try {
+    const verifyUrl = buildCanonicalEmailUrl(`/verify/${encodeURIComponent(token)}`);
+    const declineUrl = verifyUrl;
     await resend.emails.send({
       from: fromEmail,
       to: verifierEmail,
@@ -262,9 +283,10 @@ export async function sendMatchNotification(
     matchId: string;
   }
 ): Promise<void> {
-  const viewMatchUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/matches/${matchData.matchId}`;
-
   try {
+    const viewMatchUrl = buildCanonicalEmailUrl(
+      `/app/i/matches/${encodeURIComponent(matchData.matchId)}`
+    );
     await resend.emails.send({
       from: fromEmail,
       to: recipientEmail,
@@ -302,7 +324,6 @@ export async function sendContractSignedEmail(
   },
   privacy?: WorkflowEmailPrivacyOptions
 ): Promise<void> {
-  const viewContractUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/contracts/${contractData.contractId}`;
   const maskedStage = privacy?.stage === 'masked';
   const emailPrivacy = applyWorkflowEmailPrivacy(
     {
@@ -319,6 +340,9 @@ export async function sendContractSignedEmail(
   );
 
   try {
+    const viewContractUrl = buildCanonicalEmailUrl(
+      `/app/contracts/${encodeURIComponent(contractData.contractId)}`
+    );
     await resend.emails.send({
       from: fromEmail,
       to: recipientEmail,
@@ -360,7 +384,6 @@ export async function sendInterviewScheduledEmail(
   },
   privacy?: WorkflowEmailPrivacyOptions
 ): Promise<void> {
-  const viewInterviewUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/interviews/${interviewData.interviewId}`;
   const maskedStage = privacy?.stage === 'masked';
   const emailPrivacy = applyWorkflowEmailPrivacy(
     {
@@ -377,6 +400,9 @@ export async function sendInterviewScheduledEmail(
   );
 
   try {
+    const viewInterviewUrl = buildCanonicalEmailUrl(
+      `/app/i/interviews/${encodeURIComponent(interviewData.interviewId)}`
+    );
     await resend.emails.send({
       from: fromEmail,
       to: recipientEmail,
@@ -415,15 +441,6 @@ export async function sendIdentityRevealedEmail(
   },
   privacy?: WorkflowEmailPrivacyOptions
 ): Promise<void> {
-  const viewConversationUrl = buildRevealConversationUrl({
-    baseUrl: process.env.NEXT_PUBLIC_SITE_URL,
-    conversationId: identityData.conversationId,
-    role,
-    orgSlug: identityData.orgSlug,
-  });
-  if (!viewConversationUrl) {
-    throw new Error('Failed to send identity revealed email');
-  }
   const emailPrivacy = applyWorkflowEmailPrivacy(
     {
       subject: 'Identities Revealed - Proofound',
@@ -439,6 +456,15 @@ export async function sendIdentityRevealedEmail(
   );
 
   try {
+    const viewConversationUrl = buildRevealConversationUrl({
+      baseUrl: resolveCanonicalSiteUrl(),
+      conversationId: identityData.conversationId,
+      role,
+      orgSlug: identityData.orgSlug,
+    });
+    if (!viewConversationUrl) {
+      throw new Error('canonical_site_url_missing');
+    }
     await resend.emails.send({
       from: fromEmail,
       to: recipientEmail,
@@ -466,7 +492,6 @@ export async function sendFeedbackRequestEmail(params: {
   interviewTime?: string;
 }) {
   const { to, direction, token, expiresAt, interviewTime } = params;
-  const feedbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/feedback/${token}`;
 
   sendDebugIngest({
     sessionId: 'debug-session',
@@ -483,6 +508,7 @@ export async function sendFeedbackRequestEmail(params: {
   });
 
   try {
+    const feedbackUrl = buildCanonicalEmailUrl(`/feedback/${encodeURIComponent(token)}`);
     await resend.emails.send({
       from: fromEmail,
       to,
@@ -504,9 +530,8 @@ export async function sendVerificationApprovedEmail(
   verificationType: 'linkedin' | 'work-email' | 'veriff',
   profileId: string
 ): Promise<void> {
-  const viewProfileUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/profile/${profileId}`;
-
   try {
+    const viewProfileUrl = buildCanonicalEmailUrl(`/app/profile/${encodeURIComponent(profileId)}`);
     await resend.emails.send({
       from: fromEmail,
       to: recipientEmail,
@@ -571,9 +596,8 @@ export async function sendLinkedInVerificationPendingReviewEmail(params: {
     return;
   }
 
-  const adminQueueUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/admin/verification`;
-
   try {
+    const adminQueueUrl = buildCanonicalEmailUrl('/admin/verification');
     await resend.emails.send({
       from: fromEmail,
       to: recipients,
@@ -601,9 +625,8 @@ export async function sendVerificationRejectedEmail(
   verificationType: 'linkedin' | 'work-email' | 'veriff',
   rejectionReason?: string
 ): Promise<void> {
-  const retryUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/settings?tab=verification`;
-
   try {
+    const retryUrl = buildCanonicalEmailUrl('/app/i/settings', { tab: 'verification' });
     await resend.emails.send({
       from: fromEmail,
       to: recipientEmail,

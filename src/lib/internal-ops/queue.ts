@@ -107,6 +107,7 @@ const SAFE_METADATA_KEYS = new Set([
   'disputeState',
   'exportStatus',
   'fallbackSurface',
+  'filenameReviewLabel',
   'freshnessState',
   'latestOperatorAction',
   'latestOperatorActionAt',
@@ -120,7 +121,6 @@ const SAFE_METADATA_KEYS = new Set([
   'revealStage',
   'reviewReasons',
   'safeForPublic',
-  'sanitizedFilename',
   'schemaCompatibilityFallback',
   'safetyReason',
   'safetyStatus',
@@ -248,8 +248,8 @@ export function buildInternalOpsQueueDetail(
       pushField(
         fields,
         'Filename review label',
-        getString(metadata, 'sanitizedFilename') ?? 'Raw filename withheld',
-        getString(metadata, 'sanitizedFilename') ? 'default' : 'warning'
+        getString(metadata, 'filenameReviewLabel') ?? 'Raw filename withheld',
+        getString(metadata, 'filenameReviewLabel') ? 'default' : 'warning'
       );
       pushField(fields, 'Upload kind', getString(metadata, 'uploadKind'));
       pushField(fields, 'Source surface', getString(metadata, 'sourceSurface'));

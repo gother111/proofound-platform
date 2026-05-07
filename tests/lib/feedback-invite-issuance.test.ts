@@ -141,6 +141,20 @@ describe('feedback invite issuance compatibility', () => {
   it('persists the legacy raw token alongside canonical token fields', async () => {
     await issueFeedbackInvites('interview-1');
 
+    expect(mocks.issueCapabilityToken).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        actorBinding: 'none',
+        actorEmail: null,
+      })
+    );
+    expect(mocks.issueCapabilityToken).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        actorBinding: 'none',
+        actorEmail: null,
+      })
+    );
     expect(mocks.feedbackTokensInsert).toHaveBeenCalledTimes(2);
     expect(mocks.feedbackTokensInsert).toHaveBeenNthCalledWith(
       1,

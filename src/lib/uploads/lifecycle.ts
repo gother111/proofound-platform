@@ -537,6 +537,15 @@ export async function ingestUploadedFile(
     detectedMime,
     uploadKind: context.uploadKind,
   });
+  const artifactReviewLabel = resolveArtifactDisplayNameForSurface(
+    {
+      sanitizedFilename,
+      originalFilename: file.name,
+      detectedMime,
+      uploadKind: context.uploadKind,
+    },
+    'review'
+  );
   const fileHash = sha256Buffer(buffer);
   const now = Date.now();
   const quarantinePath = `${context.ownerType}/${context.ownerId}/${context.uploadKind}/${now}-${sanitizedFilename}`;
@@ -805,13 +814,12 @@ export async function ingestUploadedFile(
       metadata: {
         uploadKind: context.uploadKind,
         sourceSurface: context.sourceSurface,
-        sanitizedFilename,
+        filenameReviewLabel: artifactReviewLabel,
         reviewReasons: combinedReviewReasons,
         safetyReason: combinedSafetyReason,
         sensitivityReason: privacyAssessment.sensitivity.sensitivityReason,
         recommendedVisibility: privacyAssessment.sensitivity.recommendedVisibility,
         recommendedRevealGate: privacyAssessment.sensitivity.recommendedRevealGate,
-        artifactDisplayName,
       },
     });
 
@@ -821,6 +829,39 @@ export async function ingestUploadedFile(
       url: null,
       storagePath: null,
       safetyReason: combinedSafetyReason,
+      detectedMime,
+      artifactDisplayName,
+    };
+  }
+
+  if (validation.promotePublic && !securityReview.safeForPublic) {
+    await admin.storage.from(UPLOAD_BUCKETS.QUARANTINE).remove([quarantinePath]);
+    await db.execute(sql`
+      UPDATE uploaded_files
+      SET
+        lifecycle_state = 'rejected',
+        safety_status = 'rejected',
+        safety_reason = ${combinedSafetyReason ?? 'metadata_not_public_safe'},
+        metadata_status = 'extracted',
+        attach_status = 'rejected',
+        safe_for_public = false,
+        deleted_at = NOW(),
+        updated_at = NOW()
+      WHERE id = ${inserted.id}
+    `);
+    await recordUploadEvent(inserted.id, 'privacy_review_required', {
+      reasons: combinedReviewReasons,
+      metadataFlags,
+      securityAdapter: securityReview,
+      uploadKind: context.uploadKind,
+    });
+
+    return {
+      uploadedFileId: inserted.id,
+      status: 'rejected',
+      url: null,
+      storagePath: null,
+      safetyReason: combinedSafetyReason ?? 'metadata_not_public_safe',
       detectedMime,
       artifactDisplayName,
     };

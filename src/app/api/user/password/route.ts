@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { safeApiErrorResponse } from '@/lib/api/errors';
 import { createClient } from '@/lib/supabase/server';
 
 /**
@@ -53,11 +54,13 @@ export async function PUT(request: NextRequest) {
     });
 
     if (updateError) {
-      console.error('Error updating password:', updateError);
-      return NextResponse.json(
-        { error: updateError.message || 'Failed to update password' },
-        { status: 400 }
-      );
+      return safeApiErrorResponse({
+        event: 'user.password.update_failed',
+        error: updateError,
+        status: 400,
+        publicMessage: 'Unable to update password. Please try again later.',
+        context: { userId: user.id },
+      });
     }
 
     return NextResponse.json({
@@ -65,7 +68,11 @@ export async function PUT(request: NextRequest) {
       message: 'Password updated successfully',
     });
   } catch (error) {
-    console.error('Error in password update API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return safeApiErrorResponse({
+      event: 'user.password.update_unexpected',
+      error,
+      status: 500,
+      publicMessage: 'Unable to update password. Please try again later.',
+    });
   }
 }

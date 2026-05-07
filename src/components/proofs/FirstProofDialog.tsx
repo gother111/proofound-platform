@@ -231,7 +231,7 @@ export function FirstProofDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add your first proof</DialogTitle>
           <DialogDescription>

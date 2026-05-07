@@ -675,4 +675,46 @@ describe('public portfolio projection', () => {
     expect(serialized).not.toContain('Stockholm University');
     expect(serialized).not.toContain('private reviewer note');
   });
+
+  it('omits private signed evidence URLs from public proof links', async () => {
+    vi.mocked(db.execute as any).mockResolvedValueOnce(profileRow());
+    vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([
+      publicReadyAggregate({
+        publicItem: {
+          sourceUrl:
+            'https://project.supabase.co/storage/v1/object/sign/user-uploads-private/user-1/proof.pdf?token=secret&expires=999999',
+        },
+      }),
+    ]);
+
+    const projection = await getPublicIndividualPortfolioProjectionByHandle('jane');
+
+    expect(projection).not.toBeNull();
+    expect(projection?.exportData.proofPacks[0]?.selectedEvidence[0]?.href).toBeNull();
+    expect(projection?.featuredProofs[0]?.evidence).toEqual([]);
+    expect(projection?.featuredProofs[0]?.proofPackHref).toBeNull();
+    expect(JSON.stringify(projection)).not.toContain('token=secret');
+    expect(JSON.stringify(projection)).not.toContain('user-uploads-private');
+  });
+
+  it('redacts hidden context labels before publishing proof-pack context', async () => {
+    vi.mocked(db.execute as any).mockResolvedValueOnce(profileRow());
+    vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([
+      publicReadyAggregate({
+        pack: {
+          contextJson: {
+            employerNames: ['Acme Climate AB'],
+            primaryAnchorLabel: 'Acme Climate AB launch role',
+          },
+        },
+      }),
+    ]);
+
+    const projection = await getPublicIndividualPortfolioProjectionByHandle('jane');
+    const proofPack = projection?.exportData.proofPacks[0];
+
+    expect(projection).not.toBeNull();
+    expect(proofPack?.contextLabel).toBe('Experience');
+    expect(JSON.stringify(projection)).not.toContain('Acme Climate AB');
+  });
 });

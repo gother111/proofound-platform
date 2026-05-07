@@ -219,6 +219,7 @@
     "brace-expansion": "^2.0.3",
     "esbuild": "^0.27.1",
     "glob": "^11.1.0",
+    "ip-address": "^10.2.0",
     "js-yaml": "^4.1.1",
     "jws": "^4.0.1",
     "mdast-util-to-hast": "^13.2.1",

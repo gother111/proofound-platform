@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     let templateId = body.templateId;
     let useAdminClient = false;
     let actorEmail: string | null = null;
+    let tokenSourceId: string | null = null;
 
     // Authenticated path
     if (!body.token) {
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest) {
 
       interviewId = tokenRow.interview_id;
       templateId = tokenRow.template_id;
+      tokenSourceId = tokenRow.id;
 
       if (tokenRow.direction !== body.direction) {
         return NextResponse.json({ error: 'Token direction mismatch' }, { status: 400 });
@@ -206,6 +208,21 @@ export async function POST(request: NextRequest) {
 
     const structuredFeedback = body.structuredFeedback;
 
+    if (body.token) {
+      const redeemSessionNonce =
+        request.cookies.get(
+          getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE)
+        )?.value ?? null;
+      const markUsed = await markTokenUsed(body.token, {
+        redeemSessionNonce,
+        ip: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
+      });
+      if (!markUsed.ok || markUsed.token.source_id !== tokenSourceId) {
+        return NextResponse.json({ error: 'Invalid token' }, { status: 404 });
+      }
+    }
+
     const { data: response, error: insertError } = await client
       .from('feedback_responses')
       .insert({
@@ -249,20 +266,6 @@ export async function POST(request: NextRequest) {
       if (answerError) {
         console.error('Feedback answers error', answerError);
         return NextResponse.json({ error: 'Could not save answers' }, { status: 500 });
-      }
-    }
-
-    if (body.token) {
-      const redeemSessionNonce =
-        request.cookies.get(
-          getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE)
-        )?.value ?? null;
-      const markUsed = await markTokenUsed(body.token, {
-        email: actorEmail,
-        redeemSessionNonce,
-      });
-      if (!markUsed.ok) {
-        return NextResponse.json({ error: 'Invalid token' }, { status: 404 });
       }
     }
 

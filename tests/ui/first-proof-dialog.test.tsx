@@ -6,7 +6,7 @@ import { FirstProofDialog } from '@/components/proofs/FirstProofDialog';
 
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ children, open }: any) => (open ? <div role="dialog">{children}</div> : null),
-  DialogContent: ({ children }: any) => <div>{children}</div>,
+  DialogContent: ({ children, className }: any) => <div className={className}>{children}</div>,
   DialogDescription: ({ children }: any) => <p>{children}</p>,
   DialogFooter: ({ children }: any) => <footer>{children}</footer>,
   DialogHeader: ({ children }: any) => <header>{children}</header>,
@@ -39,6 +39,9 @@ describe('first proof entry point', () => {
     expect(screen.getByLabelText('Proof link')).toBeInTheDocument();
     expect(screen.getByLabelText('Upload proof file')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save first proof' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Save first proof' }).closest('.overflow-y-auto')
+    ).toHaveClass('max-h-[90vh]');
     expect(screen.queryByText('Add Skill to Atlas')).not.toBeInTheDocument();
   });
 });

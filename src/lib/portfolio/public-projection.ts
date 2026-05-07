@@ -304,7 +304,38 @@ function isValidPublicUrl(value: string | null | undefined): value is string {
 
   try {
     const parsed = new URL(value);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      return false;
+    }
+
+    const hostname = parsed.hostname.toLowerCase();
+    const pathname = parsed.pathname.toLowerCase();
+    const search = parsed.search.toLowerCase();
+
+    const hostLooksPrivate =
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '::1' ||
+      hostname.endsWith('.local') ||
+      hostname.includes('supabase') ||
+      hostname.includes('amazonaws.com') ||
+      hostname.includes('storage.googleapis.com') ||
+      hostname.includes('blob.core.windows.net');
+    const pathLooksPrivate =
+      pathname.includes('/storage/v1/object/sign/') ||
+      pathname.includes('/storage/v1/object/authenticated/') ||
+      pathname.includes('/private/') ||
+      pathname.includes('/user-uploads-private/') ||
+      pathname.includes('/user-uploads-quarantine/');
+    const searchLooksSigned =
+      search.includes('x-amz-signature=') ||
+      search.includes('x-goog-signature=') ||
+      search.includes('signature=') ||
+      search.includes('token=') ||
+      search.includes('expires=') ||
+      search.includes('sig=');
+
+    return !hostLooksPrivate && !pathLooksPrivate && !searchLooksSigned;
   } catch {
     return false;
   }
@@ -324,9 +355,14 @@ function resolvePublicProofPackContextLabel(input: {
     contextJson?: unknown;
     metadata?: unknown;
   };
+  hiddenContextTerms?: string[];
 }): string | null {
   const contextJson = toRecord(input.pack.contextJson);
   const metadata = toRecord(input.pack.metadata);
+  const fallbackLabel =
+    typeof input.pack.primarySubjectType === 'string' && input.pack.primarySubjectType.trim()
+      ? titleCase(input.pack.primarySubjectType)
+      : null;
   const explicitLabel =
     (typeof metadata.topic_label === 'string' && metadata.topic_label.trim()) ||
     (typeof contextJson.topicLabel === 'string' && contextJson.topicLabel.trim()) ||
@@ -334,14 +370,11 @@ function resolvePublicProofPackContextLabel(input: {
     null;
 
   if (explicitLabel) {
-    return explicitLabel;
+    const sanitized = sanitizePublicText(explicitLabel, input.hiddenContextTerms ?? []);
+    return sanitized && !sanitized.includes('[redacted') ? sanitized : fallbackLabel;
   }
 
-  if (typeof input.pack.primarySubjectType === 'string' && input.pack.primarySubjectType.trim()) {
-    return titleCase(input.pack.primarySubjectType);
-  }
-
-  return null;
+  return fallbackLabel;
 }
 
 function resolvePublicProofBadge(input: {
@@ -715,7 +748,10 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
       proofQualityScore: publicSafePack.contract.proofQualityScore,
       schemaVersion: publicSafePack.contract.schemaVersion,
       artifactCount: publicSafePack.items.length,
-      contextLabel: resolvePublicProofPackContextLabel({ pack: aggregate.pack }),
+      contextLabel: resolvePublicProofPackContextLabel({
+        pack: aggregate.pack,
+        hiddenContextTerms,
+      }),
       selectedEvidence: publicSafePack.items.slice(0, 3).map((item) => ({
         title: resolvePublicEvidenceTitle({
           title: item.title,

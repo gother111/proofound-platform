@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { safeApiErrorResponse } from '@/lib/api/errors';
 import { createClient } from '@/lib/supabase/server';
 
 /**
@@ -33,11 +34,13 @@ export async function PUT(request: NextRequest) {
     });
 
     if (error) {
-      console.error('Error updating email:', error);
-      return NextResponse.json(
-        { error: error.message || 'Failed to update email' },
-        { status: 400 }
-      );
+      return safeApiErrorResponse({
+        event: 'user.email.update_failed',
+        error,
+        status: 400,
+        publicMessage: 'Unable to update email. Please check the address or try again later.',
+        context: { userId: user.id },
+      });
     }
 
     return NextResponse.json({
@@ -46,8 +49,12 @@ export async function PUT(request: NextRequest) {
       user: data.user,
     });
   } catch (error) {
-    console.error('Error in email update API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return safeApiErrorResponse({
+      event: 'user.email.update_unexpected',
+      error,
+      status: 500,
+      publicMessage: 'Unable to update email. Please try again later.',
+    });
   }
 }
 
@@ -73,7 +80,11 @@ export async function GET(request: NextRequest) {
       emailConfirmedAt: user.email_confirmed_at || null,
     });
   } catch (error) {
-    console.error('Error in get email API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return safeApiErrorResponse({
+      event: 'user.email.get_failed',
+      error,
+      status: 500,
+      publicMessage: 'Unable to load email settings. Please try again later.',
+    });
   }
 }
