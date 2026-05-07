@@ -6,11 +6,16 @@ import { organizationMembers } from '@/db/schema';
 import { safeApiErrorResponse, safeValidationErrorResponse } from '@/lib/api/errors';
 import { requireApiAuthContext } from '@/lib/auth';
 import {
+  resolveStartFromCvConfig,
   StartFromCvError,
   type StartFromCvEligibilityContext,
   type StartFromCvUploadedFile,
 } from '@/lib/ai/start-from-cv';
 import { and, eq } from 'drizzle-orm';
+
+const MULTIPART_UPLOAD_OVERHEAD_BYTES = 64 * 1024;
+const JSON_BASE64_UPLOAD_OVERHEAD_BYTES = 64 * 1024;
+const BASE64_ENCODED_SIZE_RATIO = 4 / 3;
 
 export async function requireStartFromCvRouteContext(): Promise<
   | {
@@ -49,6 +54,34 @@ const JsonFileSchema = z
     base64: z.string().min(1),
   })
   .strict();
+
+function parseContentLength(value: string | null | undefined) {
+  if (!value || !/^\d+$/.test(value.trim())) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isSafeInteger(parsed) ? parsed : null;
+}
+
+export function rejectOversizedStartFromCvRequest(request: NextRequest): NextResponse | null {
+  const contentLength = parseContentLength(request.headers.get('content-length'));
+  if (contentLength === null) {
+    return null;
+  }
+
+  const contentType = request.headers.get('content-type') || '';
+  const maxFileSizeBytes = resolveStartFromCvConfig().maxFileSizeBytes;
+  const maxRequestBytes = contentType.includes('application/json')
+    ? Math.ceil(maxFileSizeBytes * BASE64_ENCODED_SIZE_RATIO) + JSON_BASE64_UPLOAD_OVERHEAD_BYTES
+    : maxFileSizeBytes + MULTIPART_UPLOAD_OVERHEAD_BYTES;
+
+  if (contentLength <= maxRequestBytes) {
+    return null;
+  }
+
+  return startFromCvErrorResponse(new StartFromCvError('FILE_TOO_LARGE', 413));
+}
 
 export async function parseStartFromCvFile(request: NextRequest): Promise<StartFromCvUploadedFile> {
   const contentType = request.headers.get('content-type') || '';

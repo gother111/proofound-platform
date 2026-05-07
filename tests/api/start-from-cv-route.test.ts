@@ -44,6 +44,9 @@ vi.mock('@/db', () => ({
 vi.mock('@/lib/ai/start-from-cv', () => ({
   StartFromCvError: mocks.StartFromCvError,
   StartFromCvConsentSchema: z.object({ consentToProcessCv: z.literal(true) }).strict(),
+  resolveStartFromCvConfig: () => ({
+    maxFileSizeBytes: 5 * 1024 * 1024,
+  }),
   StartFromCvAcceptSchema: z
     .object({
       accepted: z
@@ -74,10 +77,10 @@ import { POST as discardSession } from '@/app/api/ai/start-from-cv/sessions/[ses
 
 const sessionId = '11111111-1111-4111-8111-111111111111';
 
-function jsonRequest(url: string, body: unknown) {
+function jsonRequest(url: string, body: unknown, headers: Record<string, string> = {}) {
   return new NextRequest(url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -224,6 +227,30 @@ describe('Start from CV API routes', () => {
     );
     const call = mocks.extractStartFromCvSession.mock.calls.at(-1)?.[0];
     expect(Buffer.from(call.file.bytes).toString('utf8')).toBe(pdfBytes.toString('utf8'));
+  });
+
+  it('rejects oversized extraction requests before parsing the upload body', async () => {
+    const response = await extractSession(
+      jsonRequest(
+        `http://localhost/api/ai/start-from-cv/sessions/${sessionId}/extract`,
+        {
+          file: {
+            name: 'too-large.pdf',
+            type: 'application/pdf',
+            base64: Buffer.from('%PDF-1.7').toString('base64'),
+          },
+        },
+        {
+          'content-length': String(20 * 1024 * 1024),
+        }
+      ),
+      params()
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(413);
+    expect(payload.error).toBe('Start from CV supports files up to the configured size limit.');
+    expect(mocks.extractStartFromCvSession).not.toHaveBeenCalled();
   });
 
   it('keeps wrong-user access hidden behind not found', async () => {

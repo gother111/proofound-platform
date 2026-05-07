@@ -5,6 +5,7 @@ import { extractStartFromCvSession } from '@/lib/ai/start-from-cv';
 import {
   handleStartFromCvRouteError,
   parseStartFromCvFile,
+  rejectOversizedStartFromCvRequest,
   requireStartFromCvRouteContext,
 } from '../../../_route-helpers';
 
@@ -21,6 +22,11 @@ export async function POST(
     }
 
     const { sessionId } = await params;
+    const oversizedResponse = rejectOversizedStartFromCvRequest(request);
+    if (oversizedResponse) {
+      return oversizedResponse;
+    }
+
     const file = await parseStartFromCvFile(request);
     const result = await extractStartFromCvSession({
       ...context.betaContext,

@@ -40,6 +40,7 @@ const sentryIgnoredArtifacts = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
+  poweredByHeader: false,
   allowedDevOrigins,
   eslint: {
     // Keep lint as part of build by default. Explicitly opt out only when needed.

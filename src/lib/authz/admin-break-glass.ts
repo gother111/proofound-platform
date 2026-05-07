@@ -6,11 +6,9 @@ import { getAdminUser } from '@/lib/auth/admin';
 const BREAK_GLASS_REASON_MIN_LENGTH = 12;
 
 function getBreakGlassReason(request: Request) {
-  const url = new URL(request.url);
   return (
     request.headers.get('x-break-glass-reason') ||
     request.headers.get('x-proofound-break-glass-reason') ||
-    url.searchParams.get('reason') ||
     ''
   ).trim();
 }
