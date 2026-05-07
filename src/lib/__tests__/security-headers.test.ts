@@ -73,12 +73,28 @@ describe('security headers middleware', () => {
 
   it('sets a nonce-based production CSP without inline or broad script origins', async () => {
     vi.stubEnv('VERCEL_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://project-ref.supabase.co');
 
     const response = await getMiddlewareResponse('https://proofound.io/app/i/home');
     const csp = response.headers.get('Content-Security-Policy');
 
     expectProductionScriptCsp(csp);
     expect(cspDirective(csp ?? '', 'default-src')).toBe("default-src 'self'");
+    expect(cspDirective(csp ?? '', 'style-src')).toBe(
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://client.crisp.chat"
+    );
+    expect(cspDirective(csp ?? '', 'img-src')).toBe(
+      "img-src 'self' data: blob: https://project-ref.supabase.co https://*.supabase.co https://client.crisp.chat https://image.crisp.chat https://storage.crisp.chat https://images.unsplash.com"
+    );
+    expect(cspDirective(csp ?? '', 'font-src')).toBe(
+      "font-src 'self' data: https://fonts.gstatic.com"
+    );
+    expect(cspDirective(csp ?? '', 'connect-src')).toBe(
+      "connect-src 'self' https://project-ref.supabase.co https://*.supabase.co wss://*.supabase.co https://client.crisp.chat https://image.crisp.chat https://storage.crisp.chat wss://client.relay.crisp.chat"
+    );
+    expect(csp).not.toContain('img-src https:');
+    expect(csp).not.toContain('connect-src https:');
+    expect(csp).not.toContain('font-src https:');
     expect(cspDirective(csp ?? '', 'frame-src')).toBe("frame-src 'self'");
     expect(cspDirective(csp ?? '', 'frame-ancestors')).toBe("frame-ancestors 'none'");
     expect(csp).not.toContain('frame-ancestors *');

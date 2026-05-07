@@ -6,6 +6,25 @@ test.skip(
 );
 
 const CSP_SCRIPT_HOST_ALLOWLIST = ['https://client.crisp.chat'];
+const CSP_CONNECT_HOST_ALLOWLIST = [
+  "'self'",
+  'https://*.supabase.co',
+  'wss://*.supabase.co',
+  'https://client.crisp.chat',
+  'https://image.crisp.chat',
+  'https://storage.crisp.chat',
+  'wss://client.relay.crisp.chat',
+];
+const CSP_IMAGE_HOST_ALLOWLIST = [
+  "'self'",
+  'data:',
+  'blob:',
+  'https://*.supabase.co',
+  'https://client.crisp.chat',
+  'https://image.crisp.chat',
+  'https://storage.crisp.chat',
+  'https://images.unsplash.com',
+];
 
 function getDirective(csp: string, directive: string): string[] {
   return (
@@ -30,6 +49,31 @@ function expectProductionCsp(csp: string | undefined) {
   expect(scriptSrc.filter((token) => token.startsWith('https://'))).toEqual(
     CSP_SCRIPT_HOST_ALLOWLIST
   );
+
+  const styleSrc = getDirective(csp ?? '', 'style-src');
+  expect(styleSrc).toEqual([
+    'style-src',
+    "'self'",
+    "'unsafe-inline'",
+    'https://fonts.googleapis.com',
+    'https://client.crisp.chat',
+  ]);
+
+  const imgSrc = getDirective(csp ?? '', 'img-src');
+  for (const token of CSP_IMAGE_HOST_ALLOWLIST) {
+    expect(imgSrc).toContain(token);
+  }
+  expect(imgSrc).not.toContain('https:');
+
+  const fontSrc = getDirective(csp ?? '', 'font-src');
+  expect(fontSrc).toEqual(['font-src', "'self'", 'data:', 'https://fonts.gstatic.com']);
+
+  const connectSrc = getDirective(csp ?? '', 'connect-src');
+  for (const token of CSP_CONNECT_HOST_ALLOWLIST) {
+    expect(connectSrc).toContain(token);
+  }
+  expect(connectSrc).not.toContain('https:');
+  expect(connectSrc).not.toContain('wss:');
 
   expect(getDirective(csp ?? '', 'object-src')).toEqual(['object-src', "'none'"]);
   expect(getDirective(csp ?? '', 'frame-ancestors')).toEqual(['frame-ancestors', "'none'"]);

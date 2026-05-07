@@ -36,6 +36,47 @@ describe('middleware CSRF behavior', () => {
     expect(setCookieHeader).not.toContain('csrf_token=');
   });
 
+  it('does not mint page-load csrf_token cookies on the admin corridor', async () => {
+    const request = new NextRequest('http://localhost/admin', {
+      method: 'GET',
+    });
+
+    const response = await middleware(request);
+    const setCookieHeader = response.headers.get('set-cookie') || '';
+
+    expect(setCookieHeader).not.toContain('csrf_token=');
+  });
+
+  it('does not re-issue an already valid csrf_token cookie on page loads', async () => {
+    const token = await generateSignedCSRFToken(new NextRequest('http://localhost/app/i/home'));
+    const request = new NextRequest('http://localhost/app/i/home', {
+      method: 'GET',
+      headers: {
+        Cookie: `csrf_token=${token}`,
+      },
+    });
+
+    const response = await middleware(request);
+    const setCookieHeader = response.headers.get('set-cookie') || '';
+
+    expect(setCookieHeader).not.toContain('csrf_token=');
+  });
+
+  it('does not re-issue an already valid csrf_token cookie on API pass-through', async () => {
+    const token = await generateSignedCSRFToken(new NextRequest('http://localhost/api/health'));
+    const request = new NextRequest('http://localhost/api/health', {
+      method: 'GET',
+      headers: {
+        Cookie: `csrf_token=${token}`,
+      },
+    });
+
+    const response = await middleware(request);
+    const setCookieHeader = response.headers.get('set-cookie') || '';
+
+    expect(setCookieHeader).not.toContain('csrf_token=');
+  });
+
   it('keeps CSRF protection for regular mutating API routes', async () => {
     const request = new NextRequest('http://localhost/api/conversations', {
       method: 'POST',

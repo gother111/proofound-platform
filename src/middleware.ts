@@ -31,6 +31,14 @@ function generateCspNonce(): string {
 
 function buildContentSecurityPolicy(nonce?: string): string {
   const isDev = process.env.NODE_ENV === 'development' && process.env.VERCEL_ENV !== 'production';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseOrigin = (() => {
+    try {
+      return supabaseUrl ? new URL(supabaseUrl).origin : null;
+    } catch {
+      return null;
+    }
+  })();
 
   // Note: Next dev uses eval-like codepaths (React Refresh / Webpack runtime). If CSP blocks
   // unsafe-eval in development, the app may never hydrate, breaking interactive flows.
@@ -47,14 +55,35 @@ function buildContentSecurityPolicy(nonce?: string): string {
 
   const connectSrc = isDev
     ? "connect-src 'self' https: wss: ws:"
-    : "connect-src 'self' https: wss:";
+    : [
+        "connect-src 'self'",
+        supabaseOrigin,
+        'https://*.supabase.co',
+        'wss://*.supabase.co',
+        'https://client.crisp.chat',
+        'https://image.crisp.chat',
+        'https://storage.crisp.chat',
+        'wss://client.relay.crisp.chat',
+      ]
+        .filter(Boolean)
+        .join(' ');
 
   return [
     "default-src 'self'",
     scriptSrc,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: blob: https:",
-    "font-src 'self' data: https:",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://client.crisp.chat",
+    [
+      "img-src 'self' data: blob:",
+      supabaseOrigin,
+      'https://*.supabase.co',
+      'https://client.crisp.chat',
+      'https://image.crisp.chat',
+      'https://storage.crisp.chat',
+      'https://images.unsplash.com',
+    ]
+      .filter(Boolean)
+      .join(' '),
+    "font-src 'self' data: https://fonts.gstatic.com",
     connectSrc,
     "frame-src 'self'",
     "object-src 'none'",
@@ -80,6 +109,22 @@ function buildNextResponseForPage(request: NextRequest, nonce: string): NextResp
       headers: buildNonceRequestHeaders(request, nonce),
     },
   });
+}
+
+function shouldIssuePageCsrfCookie(pathname: string): boolean {
+  return !pathname.startsWith('/admin');
+}
+
+function setCSRFTokenCookieIfChanged(
+  request: NextRequest,
+  response: NextResponse,
+  csrfToken: string
+) {
+  if (request.cookies.get('csrf_token')?.value === csrfToken) {
+    return;
+  }
+
+  setCSRFTokenCookie(response, csrfToken);
 }
 
 // Apply consistent security headers for both page and API responses.
@@ -395,7 +440,7 @@ export async function middleware(request: NextRequest) {
       const csrfToken = await getOrGenerateCSRFToken(request);
       const response = NextResponse.next();
       response.headers.set('x-request-id', requestId);
-      setCSRFTokenCookie(response, csrfToken);
+      setCSRFTokenCookieIfChanged(request, response, csrfToken);
       attachRateLimitHeaders(response);
       applySecurityHeaders(response, request);
 
@@ -431,10 +476,12 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    const csrfToken = await getOrGenerateCSRFToken(request);
     const response = pageNonce ? buildNextResponseForPage(request, pageNonce) : NextResponse.next();
     response.headers.set('x-request-id', requestId);
-    setCSRFTokenCookie(response, csrfToken);
+    if (shouldIssuePageCsrfCookie(pathname)) {
+      const csrfToken = await getOrGenerateCSRFToken(request);
+      setCSRFTokenCookieIfChanged(request, response, csrfToken);
+    }
     attachRateLimitHeaders(response);
     applySecurityHeaders(response, request, pageNonce);
     return response;

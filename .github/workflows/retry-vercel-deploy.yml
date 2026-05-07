@@ -15,21 +15,55 @@ concurrency:
 jobs:
   retry-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 180
+    env:
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_ENV: ci
+      NODE_OPTIONS: --max-old-space-size=6144
+      FORCE_LINT: 'true'
+      FORCE_STRICT_DEPLOY_CHECK: 'true'
+      npm_config_engine_strict: 'true'
+      PLAYWRIGHT_SERVER_MODE: prod
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PII_HASH_SALT: ${{ secrets.PII_HASH_SALT || 'ci-playwright-test-salt' }}
+      CRON_SECRET: ci-launch-cron-secret
+      SUS_STUDY_COMPLETE: 'true'
+      ZOOM_CLIENT_ID: ${{ secrets.ZOOM_CLIENT_ID }}
+      ZOOM_CLIENT_SECRET: ${{ secrets.ZOOM_CLIENT_SECRET }}
+      ZOOM_REDIRECT_URI: ${{ secrets.ZOOM_REDIRECT_URI }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+      LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+      LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+      LINKEDIN_REDIRECT_URI: ${{ secrets.LINKEDIN_REDIRECT_URI }}
+      E2E_PROVIDER_USER_ID: ${{ secrets.E2E_PROVIDER_USER_ID }}
+      E2E_PROVIDER_USER_EMAIL: ${{ secrets.E2E_PROVIDER_USER_EMAIL }}
+      E2E_PROVIDER_USER_PASSWORD: ${{ secrets.E2E_PROVIDER_USER_PASSWORD }}
+      NEXT_PUBLIC_USE_MOCK_SUPABASE: 'false'
+      STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'true'
+      STRICT_PROVIDER_E2E_REQUIRE_BOTH: 'true'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: '.nvmrc'
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Run strict MVP release gate
+        run: node ./scripts/run-mvp-strict-gates.mjs --artifact-dir .artifacts/mvp-strict-gates/retry-vercel-deploy
 
       - name: Install Python package manager
         run: |

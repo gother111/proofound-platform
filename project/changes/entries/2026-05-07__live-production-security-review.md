@@ -41,6 +41,52 @@
    - Fix: Docker build now copies the lockfile explicitly and uses `npm ci --omit=dev`.
    - File: `services/gcp-cv-ocr/Dockerfile`
 
+5. Missing vulnerability disclosure contact
+   - Risk: `/.well-known/security.txt` and `/security.txt` returned `404` in production.
+   - Fix: both routes now serve a text security contact file with a canonical URL, expiry, preferred language, and policy link.
+   - Files:
+     - `src/lib/security-txt.ts`
+     - `src/app/.well-known/security.txt/route.ts`
+     - `src/app/security.txt/route.ts`
+     - `tests/api/security-txt-route.test.ts`
+
+6. Broad production CSP allowances
+   - Risk: production CSP allowed broad `img-src https:`, `connect-src https: wss:`, and `font-src https:` sources.
+   - Fix: production CSP now names the known launch providers for Supabase, Crisp, Google Fonts, and the current landing image host instead of blanket HTTPS/WSS allowances.
+   - Files:
+     - `src/middleware.ts`
+     - `src/lib/__tests__/security-headers.test.ts`
+     - `e2e/csp-production.spec.ts`
+
+7. Duplicate CSRF cookie on admin redirect
+   - Risk: `/admin` returned duplicate identical `Set-Cookie: csrf_token=...` headers while redirecting to `/403`.
+   - Fix: middleware no longer mints page-load CSRF cookies for the admin corridor and no longer re-issues unchanged CSRF cookies on page/API pass-through.
+   - Files:
+     - `src/middleware.ts`
+     - `src/lib/__tests__/middleware-csrf.test.ts`
+
+8. Production deploy workflow gate
+   - Risk: repo-visible production retry deploy workflow did not rerun the strict MVP release gate before deploying prebuilt output.
+   - Fix: `retry-vercel-deploy.yml` now runs `scripts/run-mvp-strict-gates.mjs` before the production build/deploy path.
+   - File: `.github/workflows/retry-vercel-deploy.yml`
+
+9. GitHub Actions mutable tag pinning
+   - Risk: workflow actions were pinned to mutable major tags.
+   - Fix: workflow actions are pinned to current upstream `v4` commit SHAs for `actions/checkout`, `actions/setup-node`, and `actions/upload-artifact`.
+   - Files:
+     - `.github/workflows/accessibility.yml`
+     - `.github/workflows/cancel-stale-vercel-deployments.yml`
+     - `.github/workflows/ci.yml`
+     - `.github/workflows/playwright.yml`
+     - `.github/workflows/release-candidate.yml`
+     - `.github/workflows/retry-vercel-deploy.yml`
+     - `.github/workflows/strict-quality.yml`
+
+10. Migration source-of-truth confusion
+    - Risk: `supabase/migrations` could be mistaken for the current RLS/migration authority.
+    - Fix: a README now marks that directory as a legacy Supabase CLI snapshot and points to canonical runtime migration sources.
+    - File: `supabase/migrations/README.md`
+
 ## Live production evidence
 
 - `GET /` returned `200` on Vercel with HSTS preload, CSP, frame denial, `nosniff`, strict referrer policy, restrictive permissions policy, and a secure `HttpOnly` `SameSite=strict` CSRF cookie.
@@ -57,30 +103,13 @@
 ## Remaining findings / risks
 
 1. Production deployment pending
-   - Local fixes are not automatically live. `proofound.io` still showed `x-powered-by: Next.js` during the review.
+   - Local fixes are not automatically live. `proofound.io` still reflected the pre-fix deployment during the review.
 
-2. Missing `security.txt`
-   - `/.well-known/security.txt` and `/security.txt` returned `404`.
-   - This is a disclosure/contact-process gap, not an exploit.
+2. CSP provider compatibility should be watched after deploy
+   - The tightened CSP intentionally removes blanket HTTPS/WSS allowances. Browser verification should confirm that Crisp, Supabase-backed images, public portfolio images, and any intentionally supported external logo/avatar sources still render/connect as expected.
 
-3. CSP can be tightened over time
-   - Current CSP uses broad allowances such as `img-src ... https:` and `connect-src ... https: wss:`, plus `style-src 'unsafe-inline'`.
-   - No exploit was confirmed; this is a hardening item.
-
-4. Duplicate CSRF cookie on `/admin` redirect
-   - `/admin` returned two identical `Set-Cookie: csrf_token=...` headers while redirecting to `/403`.
-   - Low severity hygiene issue; sampled cookies were secure and identical.
-
-5. Deploy gate proof is incomplete from local evidence
-   - PR CI runs the strict MVP gate, but Vercel builds skip lint/type failures in `next.config.js` when `VERCEL` is set.
-   - The retry production deploy workflow does not itself rerun the strict MVP gate before deploying prebuilt output.
-   - This is acceptable only if GitHub branch protection requires the strict checks before `master`; local `gh` auth is invalid, so branch protection could not be verified live.
-
-6. GitHub Actions are major-version pinned, not SHA pinned
-   - Normal posture, but weaker than immutable SHA pinning for supply-chain hardening.
-
-7. Migration source-of-truth split
-   - Canonical runtime migration evidence points at `src/db/migrations` and `src/db/policies.sql`; older `supabase/migrations` content should not be treated as current RLS truth without cross-checking.
+3. GitHub branch protection remains unverified
+   - Repo-visible checks are stronger after this pass, but local `gh` auth is invalid, so live required-check/branch-protection settings could not be verified.
 
 ## Dependency and secrets review
 
@@ -96,9 +125,12 @@
 
 - `npm run test -- tests/api/start-from-cv-route.test.ts tests/lib/admin-break-glass.test.ts tests/api/admin-organizations-verify-route.test.ts tests/api/org-audit-export-routes.test.ts` - passed, 15 tests.
 - `npm run test:launch:ai` - passed, 116 tests.
+- `npm run test -- tests/api/security-txt-route.test.ts src/lib/__tests__/middleware-csrf.test.ts src/lib/__tests__/security-headers.test.ts tests/ui/pilot-packaging-guardrails.test.tsx tests/ui/step4-practicals-location-autocomplete.test.tsx tests/ui/volunteer-form-skill-picker.test.tsx` - passed, 36 tests.
 - `npm run lint` - passed.
 - `npm run typecheck` - passed.
+- `npm run docs:freshness` - passed.
 - `npm run vercel:preflight` - passed after network approval; verified project link, production branch, and required env key presence without printing secret values.
+- `git ls-remote` checks confirmed the pinned `actions/checkout`, `actions/setup-node`, and `actions/upload-artifact` SHAs match the current upstream `v4` tags as of 2026-05-07.
 
 ## Not performed
 
