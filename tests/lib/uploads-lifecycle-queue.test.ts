@@ -145,6 +145,35 @@ describe('upload lifecycle internal ops queue handoff', () => {
     expect(joined).not.toContain('promoted_public');
   });
 
+  it('rejects public image uploads with metadata beyond the first 64 KiB', async () => {
+    const buffer = Buffer.concat([
+      Buffer.from([0xff, 0xd8, 0xff]),
+      Buffer.alloc(70 * 1024, 0x20),
+      Buffer.from('GPSLatitude'),
+    ]);
+    const file = {
+      name: 'cover.jpg',
+      type: 'image/jpeg',
+      size: buffer.length,
+      arrayBuffer: async () => buffer,
+    } as File;
+
+    const result = await ingestUploadedFile(file, {
+      ownerType: 'individual_profile',
+      ownerId: '11111111-1111-1111-1111-111111111111',
+      sourceSurface: 'cover_upload',
+      uploadKind: UPLOAD_KINDS.COVER,
+    });
+
+    expect(result.status).toBe('rejected');
+    expect(result.url).toBeNull();
+    expect(result.safetyReason).toContain('metadata_gps');
+    expect(result.safetyReason).toContain('metadata_stripping_unavailable');
+    expect(removeMock).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.stringContaining('cover.jpg')])
+    );
+  });
+
   it('rejects unsafe MIME mismatches and removes the quarantined object', async () => {
     const buffer = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
     const file = {

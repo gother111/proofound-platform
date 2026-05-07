@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isActiveMembershipState, normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { redirect } from 'next/navigation';
 import { assertMockDatabaseAllowed, isMockSupabaseEnabled } from '@/lib/env';
+import { log } from '@/lib/log';
 
 export type AdminLevel = 'super_admin' | 'platform_admin' | 'org_admin' | 'none';
 
@@ -319,7 +320,11 @@ export async function autoGrantAdminRole(userId: string, email: string): Promise
         .set({ platformRole: 'platform_admin' })
         .where(eq(profiles.id, userId));
 
-      console.log(`Auto-granted platform_admin role to whitelisted email: ${email}`);
+      log.info('admin_role.auto_granted', {
+        userId,
+        platformRole: 'platform_admin',
+        grantSource: 'email_whitelist',
+      });
       return;
     }
 
@@ -340,7 +345,12 @@ export async function autoGrantAdminRole(userId: string, email: string): Promise
         })
         .where(eq(adminInvitations.id, invitation.id));
 
-      console.log(`Granted ${invitation.role} role via invitation to: ${email}`);
+      log.info('admin_role.auto_granted', {
+        userId,
+        platformRole: invitation.role,
+        invitationId: invitation.id,
+        grantSource: 'admin_invitation',
+      });
     }
   } catch (error) {
     console.error('Error auto-granting admin role:', error);

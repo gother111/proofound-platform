@@ -121,6 +121,7 @@ describe('GET /api/expertise/taxonomy (search mode)', () => {
   });
 
   it('returns atlas-ranked skills with match metadata in cv_import context', async () => {
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     searchAtlasSkillMatchesMock.mockResolvedValue([
       {
         skill_id: 'skill_nodejs',
@@ -184,27 +185,33 @@ describe('GET /api/expertise/taxonomy (search mode)', () => {
       })
     );
 
-    const response = await GET(
-      new Request(
-        'http://localhost/api/expertise/taxonomy?search=node.js&context=cv_import&category=technical&evidence=Built%20Node.js%20services'
-      )
-    );
-    const body = await response.json();
+    try {
+      const response = await GET(
+        new Request(
+          'http://localhost/api/expertise/taxonomy?search=node.js&context=cv_import&category=technical&evidence=Built%20Node.js%20services'
+        )
+      );
+      const body = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(searchAtlasSkillMatchesMock).toHaveBeenCalledWith({
-      query: 'node.js',
-      evidenceSnippets: ['Built Node.js services'],
-      category: 'technical',
-      limit: 50,
-    });
-    expect(body.l4_skills).toHaveLength(2);
-    expect(body.l4_skills[0].code).toBe('skill_nodejs');
-    expect(body.l4_skills[0].matchMethod).toBe('exact');
-    expect(body.l4_skills[0].matchScore).toBe(0.99);
-    expect(body.l4_skills[0].matchSource).toBe('alias');
-    expect(body.l4_skills[0].matchedLabel).toBe('Node.js');
-    expect(body.l4_skills[0].l1.nameI18n.en).toBe('Tools & Technology');
+      expect(response.status).toBe(200);
+      expect(searchAtlasSkillMatchesMock).toHaveBeenCalledWith({
+        query: 'node.js',
+        evidenceSnippets: ['Built Node.js services'],
+        category: 'technical',
+        limit: 50,
+      });
+      expect(body.l4_skills).toHaveLength(2);
+      expect(body.l4_skills[0].code).toBe('skill_nodejs');
+      expect(body.l4_skills[0].matchMethod).toBe('exact');
+      expect(body.l4_skills[0].matchScore).toBe(0.99);
+      expect(body.l4_skills[0].matchSource).toBe('alias');
+      expect(body.l4_skills[0].matchedLabel).toBe('Node.js');
+      expect(body.l4_skills[0].l1.nameI18n.en).toBe('Tools & Technology');
+      expect(JSON.stringify(consoleLog.mock.calls)).not.toContain('node.js');
+      expect(JSON.stringify(consoleLog.mock.calls)).not.toContain('Built Node.js services');
+    } finally {
+      consoleLog.mockRestore();
+    }
   });
 
   it('suppresses ambiguous short tokens outside cv_import context', async () => {

@@ -272,6 +272,42 @@ describe('assignment clarity assistant route', () => {
     );
   });
 
+  it('redacts protected-trait terms before assignment context reaches the model', async () => {
+    (generateJson as any).mockResolvedValue({
+      data: {
+        ambiguityFlags: [],
+        suggestedRewrite: {
+          outcomeSummary: 'Coordinate launch milestones.',
+          proofExpectations: 'Show shipped work and ownership tradeoffs.',
+        },
+        reviewQuestions: [],
+        excludedOrRiskyCriteria: [],
+      },
+    });
+
+    const res = await POST(
+      request(
+        baseBody({
+          outcomeSummary: 'Need a native speaker with visa status for the launch corridor.',
+          proofExpectations: 'Show previous ownership without disability accommodations.',
+        })
+      )
+    );
+    const payload = await res.json();
+    const prompt = (generateJson as any).mock.calls[0]?.[0]?.prompt as string;
+
+    expect(res.status).toBe(200);
+    expect(prompt).toContain('[redacted protected trait]');
+    expect(prompt).not.toContain('native speaker');
+    expect(prompt).not.toContain('visa status');
+    expect(prompt).not.toContain('disability');
+    expect(payload.excludedOrRiskyCriteria).toEqual(
+      expect.arrayContaining([
+        'Removed protected or discriminatory criteria from the assistant scope.',
+      ])
+    );
+  });
+
   it('does not publish or update the assignment', async () => {
     const res = await POST(request(baseBody()));
 

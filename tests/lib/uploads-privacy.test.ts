@@ -33,6 +33,17 @@ describe('upload privacy helpers', () => {
     expect(assessment.reasons).toEqual(['filename_identity_signal']);
   });
 
+  it('drops unsafe user-controlled extensions from sanitized public object names', () => {
+    const unsafeName = 'cover.\u202Egnp';
+
+    expect(sanitizeUploadFilename(unsafeName)).toBe('cover');
+
+    const assessment = assessUploadFilenamePrivacy(unsafeName);
+    expect(assessment.requiresReview).toBe(true);
+    expect(assessment.sanitizedFilename).toBe('cover');
+    expect(assessment.reasons).toEqual(['filename_sanitized']);
+  });
+
   it('detects metadata flags that require privacy review', () => {
     const buffer = Buffer.from('Exif GPS /Author xmp:meta');
     const metadataFlags = collectUploadMetadataFlags(buffer, 'image/jpeg');
@@ -155,6 +166,14 @@ describe('upload privacy helpers', () => {
     });
 
     expect(assessment.reasons).toEqual(['metadata_author', 'metadata_title', 'metadata_creator']);
+    expect(metadataFlags.publicSafeEligible).toBe(false);
+  });
+
+  it('detects image metadata even when it appears after the old 64 KiB sample window', () => {
+    const buffer = Buffer.concat([Buffer.alloc(70 * 1024, 0x20), Buffer.from('GPSLatitude')]);
+    const metadataFlags = collectUploadMetadataFlags(buffer, 'image/jpeg');
+
+    expect(metadataFlags.hasGps).toBe(true);
     expect(metadataFlags.publicSafeEligible).toBe(false);
   });
 

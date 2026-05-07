@@ -9,11 +9,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { safeApiErrorResponse, safeValidationErrorResponse } from '@/lib/api/errors';
 import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { individualProfiles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { emitVisibilityChanged, emitRedactModeToggled } from '@/lib/analytics/events';
+import { ProfileVisibilityLevelSchema } from '@/lib/contracts/domain';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +25,29 @@ const PRIVATE_CONTEXT_VISIBILITY_DEFAULTS = {
   education: 'private',
   volunteering: 'private',
 } as const;
+
+const FieldVisibilitySchema = z
+  .object({
+    mission: ProfileVisibilityLevelSchema.optional(),
+    vision: ProfileVisibilityLevelSchema.optional(),
+    values: ProfileVisibilityLevelSchema.optional(),
+    causes: ProfileVisibilityLevelSchema.optional(),
+    avatar: ProfileVisibilityLevelSchema.optional(),
+    tagline: ProfileVisibilityLevelSchema.optional(),
+    location: ProfileVisibilityLevelSchema.optional(),
+    skills: ProfileVisibilityLevelSchema.optional(),
+    experiences: ProfileVisibilityLevelSchema.optional(),
+    education: ProfileVisibilityLevelSchema.optional(),
+    impactStories: ProfileVisibilityLevelSchema.optional(),
+  })
+  .strict();
+
+const PrivacySettingsUpdateSchema = z
+  .object({
+    fieldVisibility: FieldVisibilitySchema.optional().default({}),
+    redactMode: z.boolean().optional().default(false),
+  })
+  .strict();
 
 /**
  * GET: Fetch user's privacy settings
@@ -57,14 +83,11 @@ export async function GET() {
       redactMode: profile.redactMode || false,
     });
   } catch (error) {
-    console.error('Failed to fetch privacy settings:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch privacy settings',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return safeApiErrorResponse({
+      event: 'profile.privacy_settings.get.failed',
+      error,
+      publicMessage: 'Failed to fetch privacy settings',
+    });
   }
 }
 
@@ -79,7 +102,7 @@ export async function POST(request: NextRequest) {
     }
     const { user } = authContext;
     const body = await request.json();
-    const { fieldVisibility, redactMode } = body;
+    const { fieldVisibility, redactMode } = PrivacySettingsUpdateSchema.parse(body);
 
     // Get current settings for change tracking
     const currentProfile = await db.query.individualProfiles.findFirst({
@@ -105,12 +128,10 @@ export async function POST(request: NextRequest) {
     // Emit analytics events for visibility changes
     if (currentProfile && fieldVisibility) {
       const oldVisibility = (currentProfile.fieldVisibility as any) || {};
-      Object.keys(fieldVisibility).forEach((field) => {
-        if (oldVisibility[field] !== fieldVisibility[field]) {
-          const visibility = fieldVisibility[field];
+      Object.entries(fieldVisibility).forEach(([field, visibility]) => {
+        if (oldVisibility[field] !== visibility) {
           if (
             visibility === 'public' ||
-            visibility === 'network' ||
             visibility === 'network_only' ||
             visibility === 'match_only' ||
             visibility === 'private'
@@ -131,13 +152,17 @@ export async function POST(request: NextRequest) {
       message: 'Privacy settings updated successfully',
     });
   } catch (error) {
-    console.error('Failed to update privacy settings:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to update privacy settings',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    if (error instanceof z.ZodError) {
+      return safeValidationErrorResponse({
+        error,
+        message: 'Invalid privacy settings',
+      });
+    }
+
+    return safeApiErrorResponse({
+      event: 'profile.privacy_settings.update.failed',
+      error,
+      publicMessage: 'Failed to update privacy settings',
+    });
   }
 }

@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { safeApiErrorResponse } from '@/lib/api/errors';
 import { createClient } from '@/lib/supabase/server';
 import { getPurposeEditHistory } from '@/lib/audit/purpose-log';
 
@@ -42,10 +43,10 @@ export async function GET(request: NextRequest) {
       count: history.length,
     });
   } catch (error) {
-    console.error('Error fetching purpose edit history:', error);
-
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return safeApiErrorResponse({
+      event: 'privacy.purpose_edit_history.failed',
+      error,
+      publicMessage: 'Failed to fetch purpose edit history',
+    });
   }
 }

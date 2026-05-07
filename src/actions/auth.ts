@@ -394,13 +394,6 @@ export async function signIn(
       password,
     };
 
-    console.log('DEBUG: signIn formData:', {
-      rawEmail,
-      email,
-      passwordLength: password.length,
-      keys: Array.from(formData.keys()),
-    });
-
     const result = signInSchema.safeParse(data);
     if (!result.success) {
       return { error: 'Enter a valid email address and password.' };

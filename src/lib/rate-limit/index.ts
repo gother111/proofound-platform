@@ -241,7 +241,9 @@ export const RATE_LIMITS = {
     limit: 40,
     windowSeconds: 60,
     identifier: 'api-mutation',
+    requiresLimiter: true,
     failClosedOnProviderError: true,
+    allowLocalFallback: true,
   },
 
   /** Matching API rate limit: 30 req/min (computationally expensive) */
@@ -249,7 +251,9 @@ export const RATE_LIMITS = {
     limit: 30,
     windowSeconds: 60,
     identifier: 'matching',
+    requiresLimiter: true,
     failClosedOnProviderError: true,
+    allowLocalFallback: true,
   },
 
   /** Assistive AI endpoints: 12 req/min */
@@ -267,7 +271,9 @@ export const RATE_LIMITS = {
     limit: 10,
     windowSeconds: 60,
     identifier: 'auth',
+    requiresLimiter: true,
     failClosedOnProviderError: true,
+    allowLocalFallback: true,
   },
 
   /** Work-email send/verify: 5 req/min */
@@ -284,7 +290,9 @@ export const RATE_LIMITS = {
     limit: 20,
     windowSeconds: 60,
     identifier: 'email',
+    requiresLimiter: true,
     failClosedOnProviderError: true,
+    allowLocalFallback: true,
   },
 
   /** File uploads: 8 req/min */
@@ -292,7 +300,9 @@ export const RATE_LIMITS = {
     limit: 8,
     windowSeconds: 60,
     identifier: 'upload',
+    requiresLimiter: true,
     failClosedOnProviderError: true,
+    allowLocalFallback: true,
   },
 
   /** Verification requests/responses: 20 req/5 min */
@@ -300,7 +310,9 @@ export const RATE_LIMITS = {
     limit: 20,
     windowSeconds: 300,
     identifier: 'verification',
+    requiresLimiter: true,
     failClosedOnProviderError: true,
+    allowLocalFallback: true,
   },
 
   /** Public token preview/submit routes: 12 req/5 min */
@@ -317,7 +329,9 @@ export const RATE_LIMITS = {
     limit: 10,
     windowSeconds: 60,
     identifier: 'reveal-intro',
+    requiresLimiter: true,
     failClosedOnProviderError: true,
+    allowLocalFallback: true,
   },
 
   /** Public profile views: 80 req/min (read-heavy but public) */
@@ -328,7 +342,9 @@ export const RATE_LIMITS = {
     limit: 5,
     windowSeconds: 60,
     identifier: 'wellbeing',
+    requiresLimiter: true,
     failClosedOnProviderError: true,
+    allowLocalFallback: true,
   },
 
   /** Non-API page views: 240 req/min */

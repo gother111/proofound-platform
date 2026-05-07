@@ -16,7 +16,10 @@ const PRIVATE_FILE_FIELD_NAME_PATTERN =
   /(?:full[_-]?file|raw[_-]?(?:file|upload)|uploaded[_-]?file|file[_-]?(?:payload|contents|bytes|data|body|path|url)|original[_-]?file[_-]?name|original[_-]?filename|private[_-]?(?:file|storage|payload|field)|storage[_-]?path|private[_-]?path)/i;
 
 export const FORBIDDEN_AI_OUTPUT_PATTERN =
-  /\b(?:candidate\s+(?:score|rank)|fit\s+score|ranking|rank(?:ed)?\s+(?:the|this|candidates?)|shortlist(?:ed|ing)?|shortlist\s+recommendation|suitability\s+judg(?:e|ment)|verification\s+approval|trust\s+level|hiring\s+recommendation|best\s+candidate|should\s+hire|recommended\s+to\s+interview|recommend(?:ed|ation)?\s+(?:this\s+)?candidate\s+for\s+(?:hire|hiring|interview)|score\s+(?:this\s+)?candidate)\b/i;
+  /\b(?:candidate\s+(?:score|rank)|fit\s+score|ranking|rank(?:ed)?\s+(?:the|this|candidates?)|shortlist(?:ed|ing)?|shortlist\s+recommendation|suitability\s+judg(?:e|ment)|verification\s+approval|trust\s+level|hiring\s+recommendation|best\s+candidate|should\s+hire|hire\s+(?:this\s+)?candidate|recommended\s+to\s+interview|recommend(?:ed|ation)?\s+(?:hiring|interviewing|advancing)\s+(?:this\s+)?candidate|recommend(?:ed|ation)?\s+(?:this\s+)?candidate\s+for\s+(?:hire|hiring|interview)|move\s+(?:this\s+)?candidate\s+forward|advance\s+(?:this\s+)?candidate|proceed\s+(?:with\s+)?(?:this\s+)?candidate\s+to\s+interview|score\s+(?:this\s+)?candidate)\b/i;
+
+const PROTECTED_TRAIT_AI_TEXT_PATTERN =
+  /\b(?:age|young|younger|older|gender|male|female|race|racial|ethnicity|ethnic|religion|religious|disability|disabled|pregnant|pregnancy|marital|parenthood|native\s+speaker|nationality|citizenship|visa|sexual\s+orientation|transgender)\b/gi;
 
 const UNSAFE_AI_REQUEST_MESSAGE =
   'Signed URLs, tokenized links, private storage URLs, storage paths, secrets, original filenames, and private file payloads are not allowed in AI requests.';
@@ -84,6 +87,26 @@ export function containsForbiddenAiOutput(value: unknown): boolean {
   }
 
   return Object.values(value).some((item) => containsForbiddenAiOutput(item));
+}
+
+export function redactProtectedTraitAiText(value: string | null | undefined): {
+  value: string;
+  counts: Record<string, number>;
+} {
+  let count = 0;
+  const next = (value ?? '').replace(PROTECTED_TRAIT_AI_TEXT_PATTERN, () => {
+    count += 1;
+    return '[redacted protected trait]';
+  });
+  const counts: Record<string, number> = {};
+  if (count > 0) {
+    counts.protected_traits = count;
+  }
+
+  return {
+    value: next,
+    counts,
+  };
 }
 
 export function addUnsafeAiRequestPayloadIssue(value: unknown, ctx: z.RefinementCtx): void {

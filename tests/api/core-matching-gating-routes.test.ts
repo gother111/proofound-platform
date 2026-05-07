@@ -146,4 +146,25 @@ describe('core matching gating routes', () => {
     expect(payload.eligibility.unmetCriteria).toEqual(baseEligibility.unmetCriteria);
     expect(Array.isArray(payload.topActions)).toBe(true);
   });
+
+  it('/api/core/matching/near-matches does not expose backend error details', async () => {
+    (evaluateIndividualMatchability as any).mockRejectedValueOnce(
+      new Error('relation "matching_profiles" does not exist for verifier@example.com')
+    );
+    const req = new NextRequest('http://localhost/api/core/matching/near-matches', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+
+    const res = await postNearMatches(req);
+    const payload = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(payload).toEqual({
+      error: 'Matching failed',
+      message: 'Unable to fetch matches. Please try again.',
+    });
+    expect(JSON.stringify(payload)).not.toContain('matching_profiles');
+    expect(JSON.stringify(payload)).not.toContain('verifier@example.com');
+  });
 });

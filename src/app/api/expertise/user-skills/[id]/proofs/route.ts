@@ -78,6 +78,27 @@ const ANCHOR_TABLES = {
   volunteering: 'volunteering',
 } as const;
 
+const PROTECTED_PROOF_METADATA_KEYS = new Set([
+  'visibility',
+  'uploadedFileId',
+  'artifactDisplayName',
+  'primaryAnchorType',
+  'primaryAnchorId',
+  'canonicalWritePath',
+  'importedFrom',
+  'imported_from',
+]);
+
+function sanitizeUserProofMetadata(metadata: Record<string, unknown> | undefined) {
+  if (!metadata) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(metadata).filter(([key]) => !PROTECTED_PROOF_METADATA_KEYS.has(key))
+  );
+}
+
 async function validateOwnedPrimaryAnchor(
   supabase: ApiAuthContext['supabase'],
   userId: string,
@@ -216,6 +237,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         issuedDate: validated.issuedDate || null,
         expiresDate: validated.expiresDate || null,
         metadata: {
+          ...sanitizeUserProofMetadata(validated.metadata),
           visibility: 'match-only',
           uploadedFileId: validated.uploadedFileId ?? null,
           artifactDisplayName: attachedUpload
@@ -225,7 +247,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             : null,
           primaryAnchorType: validated.primaryAnchor.type,
           primaryAnchorId: validated.primaryAnchor.id,
-          ...(validated.metadata || {}),
         },
         importedFrom: validated.uploadedFileId ? 'skill-proof-upload' : 'skill-proof-form',
       });

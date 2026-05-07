@@ -61,6 +61,7 @@ export type UploadSensitivityAssessment = {
 
 const FILENAME_REVIEW_PATTERN =
   /[\/\\]|(\.\.)|[\u0000-\u001f\u007f]|[\u202A-\u202E\u2066-\u2069]|[<>:"|?*]/;
+const SAFE_UPLOAD_EXTENSION_PATTERN = /^\.(?:pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)$/i;
 const PRIVACY_REVIEW_REASON_PREFIX = 'privacy_review_required:';
 const SENSITIVE_ENGAGEMENT_DOCUMENT_PATTERN =
   /\b(invoice|contract|agreement|statement[\s_-]*of[\s_-]*work|sow|offer[\s_-]*letter)\b/i;
@@ -95,12 +96,13 @@ const GENERIC_FILENAME_WORDS = new Set([
 
 export function sanitizeUploadFilename(fileName: string): string {
   const ext = path.extname(fileName).toLowerCase();
+  const safeExt = SAFE_UPLOAD_EXTENSION_PATTERN.test(ext) ? ext : '';
   const base =
     path
       .basename(fileName.trim(), ext)
       .replace(/[^a-zA-Z0-9_-]/g, '_')
       .slice(0, 80) || 'file';
-  return `${base}${ext.slice(0, 10)}`;
+  return `${base}${safeExt}`;
 }
 
 function resolveTypedArtifactFallbackLabel(input: {
@@ -253,20 +255,20 @@ export function collectUploadMetadataFlags(
   buffer: Buffer,
   detectedMime: string | null
 ): UploadMetadataFlags {
-  const utf8Preview = buffer.subarray(0, Math.min(buffer.length, 65536)).toString('utf8');
-  const asciiPreview = buffer.subarray(0, Math.min(buffer.length, 65536)).toString('latin1');
+  const utf8Content = buffer.toString('utf8');
+  const asciiContent = buffer.toString('latin1');
 
-  const hasExif = /Exif|exif:/i.test(asciiPreview);
-  const hasGps = /GPSLatitude|GPSLongitude|\bGPS\b|gps:/i.test(asciiPreview);
+  const hasExif = /Exif|exif:/i.test(asciiContent);
+  const hasGps = /GPSLatitude|GPSLongitude|\bGPS\b|gps:/i.test(asciiContent);
   const hasAuthorMetadata =
-    /\/Author\b|author[:=]|<dc:creator\b|<cp:lastModifiedBy\b|<Manager\b/i.test(utf8Preview);
-  const hasTitleMetadata = /\/Title\b|<dc:title\b|<Title\b/i.test(utf8Preview);
+    /\/Author\b|author[:=]|<dc:creator\b|<cp:lastModifiedBy\b|<Manager\b/i.test(utf8Content);
+  const hasTitleMetadata = /\/Title\b|<dc:title\b|<Title\b/i.test(utf8Content);
   const hasCreatorMetadata = /\/Creator\b|\/Producer\b|creator[:=]|<Application\b/i.test(
-    utf8Preview
+    utf8Content
   );
-  const hasCompanyMetadata = /\bCompany\b|<Company\b|company[:=]/i.test(utf8Preview);
+  const hasCompanyMetadata = /\bCompany\b|<Company\b|company[:=]/i.test(utf8Content);
   const hasHiddenDocumentProperties =
-    /xmp:|<rdf:|photoshop|icc_profile|docProps\/(core|app)\.xml/i.test(utf8Preview);
+    /xmp:|<rdf:|photoshop|icc_profile|docProps\/(core|app)\.xml/i.test(utf8Content);
 
   return {
     detectedMime,

@@ -12,7 +12,6 @@ import {
   recordAiSuggestionEvent,
 } from '@/lib/ai/usage-ledger';
 import { containsForbiddenAiOutput } from '@/lib/ai/request-safety';
-import { isPublicSafeVisibility } from '@/lib/privacy/effective-visibility';
 import type { CanonicalProofPackAggregate } from '@/lib/proofs/canonical-pack';
 import { getCanonicalProofPackAggregate } from '@/lib/proofs/canonical-pack';
 import {
@@ -125,24 +124,20 @@ function redactedNullableWithHiddenTerms(
 }
 
 function compactTimeframe(
-  timeframe: CanonicalProofPackAggregate['ownerFull']['contract']['timeframe']
+  timeframe: CanonicalProofPackAggregate['ownerFull']['contract']['timeframe'] | null | undefined
 ) {
-  return timeframe.label || [timeframe.start, timeframe.end].filter(Boolean).join(' to ') || null;
+  return (
+    timeframe?.label || [timeframe?.start, timeframe?.end].filter(Boolean).join(' to ') || null
+  );
 }
 
 function publicSafeEvidenceTitles(aggregate: CanonicalProofPackAggregate) {
-  const publicProjectionTitles = aggregate.publicSafe?.items
-    .map((item) => item.artifactDisplayName || item.title)
-    .filter((title): title is string => typeof title === 'string' && title.trim().length > 0);
-
-  if (publicProjectionTitles?.length) {
-    return publicProjectionTitles;
-  }
-
-  return aggregate.ownerFull.items
-    .filter((item) => isPublicSafeVisibility(item.effectiveVisibility))
-    .map((item) => item.artifact.artifactDisplayName || item.artifact.title)
-    .filter((title): title is string => typeof title === 'string' && title.trim().length > 0);
+  return (
+    aggregate.publicSafe?.items
+      .map((item) => item.artifactDisplayName || item.title)
+      .filter((title): title is string => typeof title === 'string' && title.trim().length > 0) ??
+    []
+  );
 }
 
 async function resolveProofPackId(params: {
@@ -180,7 +175,7 @@ export function buildSanitizedVerificationComposerContext(params: {
   selectedPublicSafeProofFields: VerificationComposerField[];
   claimId?: string | null;
 }): SanitizedComposerContext {
-  const contract = params.aggregate.publicSafe?.contract ?? params.aggregate.ownerFull.contract;
+  const contract = params.aggregate.publicSafe?.contract ?? null;
   const redactionSummary: Record<string, number> = {};
   const hiddenIdentityTerms = collectAiHiddenIdentityTerms(params.aggregate);
   const selected = new Set(params.selectedPublicSafeProofFields);
@@ -188,35 +183,35 @@ export function buildSanitizedVerificationComposerContext(params: {
 
   if (selected.has('title')) {
     selectedFields.title = redactedNullableWithHiddenTerms(
-      contract.title,
+      contract?.title,
       redactionSummary,
       hiddenIdentityTerms
     );
   }
   if (selected.has('claim_statement')) {
     selectedFields.claim_statement = redactedNullableWithHiddenTerms(
-      contract.primaryClaim.statement,
+      contract?.primaryClaim.statement,
       redactionSummary,
       hiddenIdentityTerms
     );
   }
   if (selected.has('ownership_statement')) {
     selectedFields.ownership_statement = redactedNullableWithHiddenTerms(
-      contract.ownershipStatement,
+      contract?.ownershipStatement,
       redactionSummary,
       hiddenIdentityTerms
     );
   }
   if (selected.has('outcome_summary')) {
     selectedFields.outcome_summary = redactedNullableWithHiddenTerms(
-      contract.outcomeSummary,
+      contract?.outcomeSummary,
       redactionSummary,
       hiddenIdentityTerms
     );
   }
   if (selected.has('timeframe')) {
     selectedFields.timeframe = redactedNullableWithHiddenTerms(
-      compactTimeframe(contract.timeframe),
+      compactTimeframe(contract?.timeframe),
       redactionSummary,
       hiddenIdentityTerms
     );
@@ -230,11 +225,11 @@ export function buildSanitizedVerificationComposerContext(params: {
 
   const claimScope =
     redactedNullableWithHiddenTerms(
-      contract.primaryClaim.statement,
+      contract?.primaryClaim.statement,
       redactionSummary,
       hiddenIdentityTerms
     ) ||
-    redactedNullableWithHiddenTerms(contract.title, redactionSummary, hiddenIdentityTerms) ||
+    redactedNullableWithHiddenTerms(contract?.title, redactionSummary, hiddenIdentityTerms) ||
     'One scoped Proof Pack claim';
 
   return {
@@ -388,6 +383,15 @@ export async function composeVerificationRequestForUser(
     selectedPublicSafeProofFields: params.selectedPublicSafeProofFields,
     claimId: params.claimId,
   });
+  if (!aggregate.publicSafe?.contract) {
+    return {
+      ...deterministicFallback(
+        context,
+        'Public-safe Proof Pack context was unavailable, so manual editing is required before AI drafting.'
+      ),
+      fallback: true,
+    };
+  }
   const inputHash = hashAiContent(context);
   const cacheKey = buildAiSuggestionCacheKey({
     userId: params.userId,

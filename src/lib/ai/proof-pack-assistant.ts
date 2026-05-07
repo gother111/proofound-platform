@@ -11,7 +11,7 @@ import {
   hashAiContent,
   recordAiSuggestionEvent,
 } from '@/lib/ai/usage-ledger';
-import { containsForbiddenAiOutput } from '@/lib/ai/request-safety';
+import { containsForbiddenAiOutput, redactProtectedTraitAiText } from '@/lib/ai/request-safety';
 import { skillDisplayLabel } from '@/lib/copy/labels';
 import type { CanonicalProofPackAggregate } from '@/lib/proofs/canonical-pack';
 import { getCanonicalProofPackAggregate } from '@/lib/proofs/canonical-pack';
@@ -212,6 +212,10 @@ export function redactProofPackAssistantText(
       counts.hidden_identity = (counts.hidden_identity ?? 0) + count;
     }
   }
+
+  const protectedTraitRedaction = redactProtectedTraitAiText(next);
+  next = protectedTraitRedaction.value;
+  mergeCounts(counts, protectedTraitRedaction.counts);
 
   return {
     value: next.trim().slice(0, 1200),

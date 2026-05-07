@@ -610,9 +610,12 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
       }
 
-      console.log(
-        `✅ Skills ${search ? 'search' : 'query'} ${search ? `for "${search}"` : ''} returned ${skills?.length || 0} results`
-      );
+      console.log('[Taxonomy API] Skills request completed', {
+        mode: search ? 'search' : 'query',
+        searchHash,
+        searchClass,
+        resultCount: skills?.length || 0,
+      });
 
       // Map skills with parent context
       const mappedSkills =

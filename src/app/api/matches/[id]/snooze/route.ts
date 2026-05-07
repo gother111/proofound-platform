@@ -59,7 +59,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Update snooze timestamp
-    await db.update(matches).set({ snoozedUntil: snoozeUntil }).where(eq(matches.id, matchId));
+    await db
+      .update(matches)
+      .set({ snoozedUntil: snoozeUntil })
+      .where(and(eq(matches.id, matchId), eq(matches.profileId, user.id)));
 
     // Emit analytics event
     await emitAnalyticsEvent({
@@ -115,7 +118,10 @@ export async function DELETE(
     }
 
     // Clear snooze timestamp
-    await db.update(matches).set({ snoozedUntil: null }).where(eq(matches.id, matchId));
+    await db
+      .update(matches)
+      .set({ snoozedUntil: null })
+      .where(and(eq(matches.id, matchId), eq(matches.profileId, user.id)));
 
     // Emit analytics event
     await emitAnalyticsEvent({

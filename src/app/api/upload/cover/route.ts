@@ -7,12 +7,20 @@ import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import { authorize } from '@/lib/authz';
 import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 import { deleteUploadedFile, ingestUploadedFile, UPLOAD_KINDS } from '@/lib/uploads/lifecycle';
+import { rejectOversizedUploadRequest } from '@/lib/uploads/request-size';
+
+const COVER_UPLOAD_MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const oversizedResponse = rejectOversizedUploadRequest(request, COVER_UPLOAD_MAX_FILE_BYTES);
+    if (oversizedResponse) {
+      return oversizedResponse;
     }
 
     const formData = await request.formData();

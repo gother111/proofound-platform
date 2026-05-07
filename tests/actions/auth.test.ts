@@ -30,6 +30,7 @@ vi.mock('@/lib/env', () => ({
 const mockSupabase = {
   auth: {
     signUp: vi.fn(),
+    signInWithPassword: vi.fn(),
     resend: vi.fn(),
     resetPasswordForEmail: vi.fn(),
     verifyOtp: vi.fn(),
@@ -97,6 +98,9 @@ describe('Auth Actions', () => {
     mockSupabase.auth.resetPasswordForEmail.mockResolvedValue({ error: null });
     mockSupabase.auth.verifyOtp.mockResolvedValue({ error: null });
     mockSupabase.auth.resend.mockResolvedValue({ error: null });
+    mockSupabase.auth.signInWithPassword.mockResolvedValue({
+      error: { message: 'Invalid login credentials', status: 400 },
+    });
     generateLinkMock.mockResolvedValue({
       data: {
         properties: {
@@ -106,6 +110,31 @@ describe('Auth Actions', () => {
       error: null,
     });
     sendEmailMock.mockResolvedValue({ success: true, id: 'email-1' });
+  });
+
+  describe('signIn', () => {
+    it('does not log submitted auth form values', async () => {
+      const { signIn } = await import('@/actions/auth');
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      const formData = new FormData();
+      formData.append('email', 'Sensitive.User@Example.com');
+      formData.append('password', 'correct-horse-battery-staple');
+
+      const result = await signIn(undefined, formData);
+
+      expect(result).toEqual({ error: 'Email or password is incorrect.' });
+      expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
+        email: 'sensitive.user@example.com',
+        password: 'correct-horse-battery-staple',
+      });
+      expect(consoleLogSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('signIn formData'),
+        expect.anything()
+      );
+
+      consoleLogSpy.mockRestore();
+    });
   });
 
   describe('signUp', () => {

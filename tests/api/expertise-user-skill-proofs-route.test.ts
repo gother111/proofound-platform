@@ -175,6 +175,44 @@ describe('expertise user-skill proofs route', () => {
     );
   });
 
+  it('does not let caller metadata override server-controlled proof visibility', async () => {
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proofType: 'link',
+        url: 'https://example.com/project-alpha',
+        primaryAnchor: {
+          type: 'experience',
+          id: '11111111-1111-4111-8111-111111111111',
+        },
+        metadata: {
+          visibility: 'public',
+          uploadedFileId: 'attacker-controlled',
+          importedFrom: 'attacker-controlled',
+          primaryAnchorId: 'attacker-controlled',
+          harmlessNote: 'kept',
+        },
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+
+    expect(response.status).toBe(201);
+    expect(vi.mocked(upsertCanonicalSkillProof)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          visibility: 'match-only',
+          uploadedFileId: null,
+          primaryAnchorId: '11111111-1111-4111-8111-111111111111',
+          harmlessNote: 'kept',
+        }),
+      })
+    );
+    const payload = vi.mocked(upsertCanonicalSkillProof).mock.calls[0]?.[0];
+    expect(payload?.metadata).not.toHaveProperty('importedFrom');
+  });
+
   it('returns a mock proof in local mock Supabase mode without touching canonical storage', async () => {
     process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
     authContext.supabase = createSupabaseMock({ anchorExists: false });

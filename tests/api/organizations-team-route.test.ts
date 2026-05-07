@@ -9,6 +9,13 @@ vi.mock('@/lib/api/auth', () => ({
   getCanonicalActiveOrgMembership: vi.fn(),
 }));
 
+vi.mock('@/lib/authz/policy', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/authz/policy')>()),
+  authorize: vi.fn(({ orgRole }) => ({
+    allowed: orgRole === 'org_owner' || orgRole === 'org_manager',
+  })),
+}));
+
 vi.mock('@/db', () => ({
   db: {
     select: vi.fn(),
@@ -19,6 +26,7 @@ import { GET } from '@/app/api/organizations/[orgId]/team/route';
 import { db } from '@/db';
 import { requireApiAuthContext } from '@/lib/auth';
 import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
+import { authorize } from '@/lib/authz/policy';
 
 const ORG_ID = 'org-1';
 
@@ -164,6 +172,36 @@ describe('GET /api/organizations/[orgId]/team', () => {
     });
   });
 
+  it('keeps the dashboard fallback generic when team loading fails', async () => {
+    const orderBy = vi
+      .fn()
+      .mockRejectedValue(
+        new Error('relation "organization_members" does not exist for verifier@example.com')
+      );
+    const whereMembers = vi.fn().mockReturnValue({ orderBy });
+    const innerJoin = vi.fn().mockReturnValue({ where: whereMembers });
+    const fromMembers = vi.fn().mockReturnValue({ innerJoin });
+    (db.select as any).mockReturnValueOnce({ from: fromMembers });
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/organizations/${ORG_ID}/team`),
+      {
+        params: Promise.resolve({ orgId: ORG_ID }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.members).toEqual([]);
+    expect(body.stats).toEqual({
+      total: 0,
+      byRole: { org_owner: 0, org_manager: 0, org_reviewer: 0 },
+    });
+    expect(body.error).toBe('Failed to fetch team members');
+    expect(JSON.stringify(body)).not.toContain('organization_members');
+    expect(JSON.stringify(body)).not.toContain('verifier@example.com');
+  });
+
   it('returns 403 when caller is not an active org member', async () => {
     (getCanonicalActiveOrgMembership as any).mockResolvedValue(null);
 
@@ -175,6 +213,30 @@ describe('GET /api/organizations/[orgId]/team', () => {
     );
 
     expect(response.status).toBe(403);
+    expect(db.select).not.toHaveBeenCalled();
+    expect(authorize).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when an org reviewer attempts to read the team roster', async () => {
+    (getCanonicalActiveOrgMembership as any).mockResolvedValue({
+      role: 'org_reviewer',
+      state: 'active',
+      status: 'active',
+    });
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/organizations/${ORG_ID}/team`),
+      {
+        params: Promise.resolve({ orgId: ORG_ID }),
+      }
+    );
+
+    expect(response.status).toBe(403);
+    expect(authorize).toHaveBeenCalledWith({
+      resource: 'team_invites_memberships',
+      action: 'read',
+      orgRole: 'org_reviewer',
+    });
     expect(db.select).not.toHaveBeenCalled();
   });
 

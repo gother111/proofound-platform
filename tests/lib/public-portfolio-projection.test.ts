@@ -676,6 +676,44 @@ describe('public portfolio projection', () => {
     expect(serialized).not.toContain('private reviewer note');
   });
 
+  it('keeps legacy string visibility values hidden on public portfolio projections', async () => {
+    vi.mocked(db.execute as any).mockResolvedValueOnce(
+      profileRow({
+        public_portfolio_state: 'public_indexable',
+        search_indexing_enabled_at: '2026-03-20T10:00:00.000Z',
+        bio: 'Private biography',
+        work_email: 'jane.private@example.com',
+        field_visibility: {
+          bio: 'private',
+          contact: 'private',
+          workEmail: 'private',
+          skills: 'private',
+          counts: 'private',
+          proofBar: true,
+          header: true,
+          identity: false,
+          linkedin: false,
+        },
+        skills_visibility: 'public',
+      })
+    );
+    vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([
+      publicReadyAggregate(),
+    ]);
+
+    const projection = await getPublicIndividualPortfolioProjectionByHandle('jane');
+    const serialized = JSON.stringify(projection);
+
+    expect(projection).not.toBeNull();
+    expect(projection?.publicBio).toBeNull();
+    expect(projection?.publicSkills).toEqual([]);
+    expect(projection?.individual.work_email).toBeNull();
+    expect(projection?.exportData.profile.contactEmail).toBeUndefined();
+    expect(serialized).not.toContain('Private biography');
+    expect(serialized).not.toContain('jane.private@example.com');
+    expect(serialized).not.toContain('Floating Skill');
+  });
+
   it('omits private signed evidence URLs from public proof links', async () => {
     vi.mocked(db.execute as any).mockResolvedValueOnce(profileRow());
     vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([

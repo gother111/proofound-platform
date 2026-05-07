@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   updateSet: vi.fn(),
   emitVisibilityChanged: vi.fn(),
   emitRedactModeToggled: vi.fn(),
+  logError: vi.fn(),
 }));
 
 vi.mock('@/lib/auth', () => ({
@@ -16,6 +17,12 @@ vi.mock('@/lib/auth', () => ({
 vi.mock('@/lib/analytics/events', () => ({
   emitVisibilityChanged: mocks.emitVisibilityChanged,
   emitRedactModeToggled: mocks.emitRedactModeToggled,
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: mocks.logError,
+  },
 }));
 
 vi.mock('@/db', () => ({
@@ -62,6 +69,24 @@ describe('profile privacy settings route', () => {
     });
   });
 
+  it('does not expose backend error details when fetching visibility settings fails', async () => {
+    mocks.findFirst.mockRejectedValueOnce(
+      new Error('relation "individual_profiles" does not exist for verifier@example.com')
+    );
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({
+      error: 'Failed to fetch privacy settings',
+    });
+    expect(JSON.stringify(body)).not.toContain('individual_profiles');
+    expect(JSON.stringify(body)).not.toContain('verifier@example.com');
+    expect(JSON.stringify(mocks.logError.mock.calls)).not.toContain('individual_profiles');
+    expect(JSON.stringify(mocks.logError.mock.calls)).not.toContain('verifier@example.com');
+  });
+
   it('persists private-by-default context fields when saving partial visibility settings', async () => {
     mocks.findFirst.mockResolvedValue({
       fieldVisibility: {},
@@ -96,5 +121,25 @@ describe('profile privacy settings route', () => {
       })
     );
     expect(db.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects unknown visibility fields instead of persisting arbitrary keys', async () => {
+    const response = await POST(
+      new NextRequest('http://localhost/api/profile/privacy-settings', {
+        method: 'POST',
+        body: JSON.stringify({
+          fieldVisibility: {
+            mission: 'public',
+            databaseTable: 'public',
+          },
+          redactMode: false,
+        }),
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Invalid privacy settings');
+    expect(db.update).not.toHaveBeenCalled();
   });
 });

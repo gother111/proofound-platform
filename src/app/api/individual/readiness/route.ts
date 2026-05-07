@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { safeApiErrorResponse } from '@/lib/api/errors';
 import { requireApiAuthContext } from '@/lib/auth';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
@@ -24,12 +25,10 @@ export async function GET() {
       : await getIndividualReadiness(user.id);
     return NextResponse.json(readiness);
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: 'Failed to build individual readiness',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return safeApiErrorResponse({
+      event: 'individual.readiness.failed',
+      error,
+      publicMessage: 'Failed to build individual readiness',
+    });
   }
 }

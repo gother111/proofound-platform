@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { safeApiErrorResponse } from '@/lib/api/errors';
 import { deleteUploadedFile, ingestUploadedFile, UPLOAD_KINDS } from '@/lib/uploads/lifecycle';
+import { rejectOversizedUploadRequest } from '@/lib/uploads/request-size';
 
 const TYPE_LABELS: Record<string, string> = {
   'application/pdf': 'PDF',
@@ -12,12 +13,18 @@ const TYPE_LABELS: Record<string, string> = {
   'text/plain': 'TXT',
   'text/markdown': 'Markdown',
 };
+const DOCUMENT_UPLOAD_MAX_FILE_BYTES = 25 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const oversizedResponse = rejectOversizedUploadRequest(request, DOCUMENT_UPLOAD_MAX_FILE_BYTES);
+    if (oversizedResponse) {
+      return oversizedResponse;
     }
 
     const formData = await request.formData();

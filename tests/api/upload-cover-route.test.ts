@@ -31,6 +31,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 import { authorize } from '@/lib/authz';
 import { deleteUploadedFile, ingestUploadedFile } from '@/lib/uploads/lifecycle';
+import { MULTIPART_UPLOAD_OVERHEAD_BYTES } from '@/lib/uploads/request-size';
 
 function makeFormDataRequest(formData: FormData) {
   return {
@@ -43,6 +44,28 @@ describe('POST /api/upload/cover', () => {
     vi.clearAllMocks();
     vi.mocked(getCurrentUser).mockResolvedValue({ id: 'user-1' } as any);
     vi.mocked(createClient).mockResolvedValue({ from: vi.fn() } as any);
+  });
+
+  it('rejects oversized requests before parsing multipart form data', async () => {
+    const formData = vi.fn(async () => {
+      throw new Error('formData should not be parsed for oversized uploads');
+    });
+
+    const response = await POST({
+      headers: new Headers({
+        'content-length': String(10 * 1024 * 1024 + MULTIPART_UPLOAD_OVERHEAD_BYTES + 1),
+      }),
+      formData,
+    } as unknown as NextRequest);
+    const payload = await response.json();
+
+    expect(response.status).toBe(413);
+    expect(payload).toEqual({
+      error: 'Upload rejected',
+      message: 'The upload request is too large for this flow.',
+    });
+    expect(formData).not.toHaveBeenCalled();
+    expect(ingestUploadedFile).not.toHaveBeenCalled();
   });
 
   it('rejects unauthorized organization uploads before storage ingest', async () => {

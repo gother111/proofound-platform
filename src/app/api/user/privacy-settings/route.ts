@@ -6,16 +6,43 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { safeApiErrorResponse, safeValidationErrorResponse } from '@/lib/api/errors';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { individualProfiles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { ProfileVisibilityLevelSchema } from '@/lib/contracts/domain';
 
 const PRIVATE_CONTEXT_VISIBILITY_DEFAULTS = {
   experiences: 'private',
   education: 'private',
   volunteering: 'private',
 } as const;
+
+const FieldVisibilitySchema = z
+  .object({
+    mission: ProfileVisibilityLevelSchema.optional(),
+    vision: ProfileVisibilityLevelSchema.optional(),
+    values: ProfileVisibilityLevelSchema.optional(),
+    causes: ProfileVisibilityLevelSchema.optional(),
+    avatar: ProfileVisibilityLevelSchema.optional(),
+    tagline: ProfileVisibilityLevelSchema.optional(),
+    location: ProfileVisibilityLevelSchema.optional(),
+    skills: ProfileVisibilityLevelSchema.optional(),
+    experiences: ProfileVisibilityLevelSchema.optional(),
+    education: ProfileVisibilityLevelSchema.optional(),
+    volunteering: ProfileVisibilityLevelSchema.optional(),
+    impactStories: ProfileVisibilityLevelSchema.optional(),
+  })
+  .strict();
+
+const PrivacySettingsUpdateSchema = z
+  .object({
+    fieldVisibility: FieldVisibilitySchema.optional().default({}),
+    redactMode: z.boolean(),
+  })
+  .strict();
 
 export async function GET(req: NextRequest) {
   try {
@@ -49,8 +76,11 @@ export async function GET(req: NextRequest) {
       redactMode: profile.redactMode || false,
     });
   } catch (error) {
-    console.error('Failed to fetch privacy settings:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return safeApiErrorResponse({
+      event: 'user.privacy_settings.get.failed',
+      error,
+      publicMessage: 'Failed to fetch privacy settings',
+    });
   }
 }
 
@@ -67,17 +97,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { fieldVisibility, redactMode } = body;
-
-    // Validate fieldVisibility structure
-    if (fieldVisibility && typeof fieldVisibility !== 'object') {
-      return NextResponse.json({ error: 'Invalid fieldVisibility format' }, { status: 400 });
-    }
-
-    // Validate redactMode is boolean
-    if (typeof redactMode !== 'boolean') {
-      return NextResponse.json({ error: 'Invalid redactMode value' }, { status: 400 });
-    }
+    const { fieldVisibility, redactMode } = PrivacySettingsUpdateSchema.parse(body);
 
     // Update profile
     await db
@@ -103,7 +123,17 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to update privacy settings:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    if (error instanceof z.ZodError) {
+      return safeValidationErrorResponse({
+        error,
+        message: 'Invalid privacy settings',
+      });
+    }
+
+    return safeApiErrorResponse({
+      event: 'user.privacy_settings.update.failed',
+      error,
+      publicMessage: 'Failed to update privacy settings',
+    });
   }
 }

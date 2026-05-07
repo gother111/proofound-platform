@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   analyticsInsert: vi.fn(),
   findFirst: vi.fn(),
   updateSet: vi.fn(),
+  logError: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -29,6 +30,12 @@ vi.mock('@/db', () => ({
     update: vi.fn(() => ({
       set: mocks.updateSet,
     })),
+  },
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: mocks.logError,
   },
 }));
 
@@ -95,5 +102,42 @@ describe('user privacy settings route', () => {
     });
     expect(db.update).toHaveBeenCalledTimes(1);
     expect(mocks.analyticsInsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects unknown visibility fields instead of persisting arbitrary keys', async () => {
+    const response = await POST(
+      new NextRequest('http://localhost/api/user/privacy-settings', {
+        method: 'POST',
+        body: JSON.stringify({
+          fieldVisibility: {
+            mission: 'public',
+            databaseTable: 'public',
+          },
+          redactMode: false,
+        }),
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Invalid privacy settings');
+    expect(db.update).not.toHaveBeenCalled();
+    expect(mocks.analyticsInsert).not.toHaveBeenCalled();
+  });
+
+  it('does not expose backend error details when loading privacy settings fails', async () => {
+    mocks.findFirst.mockRejectedValueOnce(
+      new Error('relation "individual_profiles" does not exist for verifier@example.com')
+    );
+
+    const response = await GET(new NextRequest('http://localhost/api/user/privacy-settings'));
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to fetch privacy settings' });
+    expect(JSON.stringify(body)).not.toContain('individual_profiles');
+    expect(JSON.stringify(body)).not.toContain('verifier@example.com');
+    expect(JSON.stringify(mocks.logError.mock.calls)).not.toContain('individual_profiles');
+    expect(JSON.stringify(mocks.logError.mock.calls)).not.toContain('verifier@example.com');
   });
 });

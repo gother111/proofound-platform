@@ -77,4 +77,24 @@ describe('privacy preflight assistant', () => {
     expect(result.notes.join(' ')).toContain('not a privacy guarantee');
     expect(mocks.generateJson).not.toHaveBeenCalled();
   });
+
+  it('redacts protected-trait terms before optional model review', async () => {
+    const result = await runPrivacyPreflightCheck({
+      userId: 'user-1',
+      requestId: 'req-3',
+      input: {
+        surface: 'assignment_publication',
+        includeModelReview: true,
+        text: 'Looking for a native speaker with visa status and no disability constraints.',
+      },
+    });
+
+    const prompt = mocks.generateJson.mock.calls[0]?.[0]?.prompt as string;
+    expect(result.riskLevel).toBe('high');
+    expect(result.flags.map((flag) => flag.code)).toContain('protected_trait');
+    expect(prompt).toContain('[redacted protected trait]');
+    expect(prompt).not.toContain('native speaker');
+    expect(prompt).not.toContain('visa status');
+    expect(prompt).not.toContain('disability');
+  });
 });

@@ -217,4 +217,31 @@ describe('PATCH /api/engagement-verifications/[id]', () => {
     expect(body.engagementVerification.id).toBe('engagement-1');
     expect(mocks.confirmEngagementVerification).not.toHaveBeenCalled();
   });
+
+  it('does not expose raw service error details when confirmation fails unexpectedly', async () => {
+    mocks.confirmEngagementVerification.mockRejectedValueOnce(
+      new Error('relation "engagement_verifications" does not exist for verifier@example.com')
+    );
+
+    const response = await PATCH(
+      new NextRequest('https://example.com/api/engagement-verifications/engagement-1', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          confirm: true,
+          engagementType: 'contract',
+        }),
+      }),
+      {
+        params: Promise.resolve({ id: 'engagement-1' }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to update engagement verification' });
+    expect(JSON.stringify(body)).not.toContain('engagement_verifications');
+    expect(JSON.stringify(body)).not.toContain('verifier@example.com');
+    expect(JSON.stringify(mocks.logError.mock.calls)).not.toContain('engagement_verifications');
+    expect(JSON.stringify(mocks.logError.mock.calls)).not.toContain('verifier@example.com');
+  });
 });

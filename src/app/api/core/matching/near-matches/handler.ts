@@ -464,7 +464,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Matching failed',
-        message: error instanceof Error ? error.message : 'An unexpected error occurred',
+        message: 'Unable to fetch matches. Please try again.',
       },
       { status: 500 }
     );

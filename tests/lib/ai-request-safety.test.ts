@@ -2,7 +2,11 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { containsForbiddenAiOutput, containsUnsafeAiRequestPayload } from '@/lib/ai/request-safety';
+import {
+  containsForbiddenAiOutput,
+  containsUnsafeAiRequestPayload,
+  redactProtectedTraitAiText,
+} from '@/lib/ai/request-safety';
 
 describe('AI request safety guard', () => {
   it('rejects signed URLs, private storage URLs, and secret-shaped request fields', () => {
@@ -62,7 +66,21 @@ describe('AI request safety guard', () => {
   it('detects forbidden AI decision outputs', () => {
     expect(containsForbiddenAiOutput({ text: 'This is the best candidate.' })).toBe(true);
     expect(containsForbiddenAiOutput({ text: 'Recommended to interview.' })).toBe(true);
+    expect(containsForbiddenAiOutput({ text: 'Recommend hiring this candidate.' })).toBe(true);
+    expect(containsForbiddenAiOutput({ text: 'Hire this candidate.' })).toBe(true);
+    expect(containsForbiddenAiOutput({ text: 'Move this candidate forward.' })).toBe(true);
     expect(containsForbiddenAiOutput({ text: 'Use this as a verification approval.' })).toBe(true);
     expect(containsForbiddenAiOutput({ text: 'Ask for concrete ownership evidence.' })).toBe(false);
+  });
+
+  it('redacts protected-trait terms before AI prompt construction', () => {
+    const redacted = redactProtectedTraitAiText(
+      'Must be a native speaker with visa status and no disability accommodations.'
+    );
+
+    expect(redacted.value).toBe(
+      'Must be a [redacted protected trait] with [redacted protected trait] status and no [redacted protected trait] accommodations.'
+    );
+    expect(redacted.counts).toEqual({ protected_traits: 3 });
   });
 });

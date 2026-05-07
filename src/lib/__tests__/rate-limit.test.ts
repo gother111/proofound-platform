@@ -143,6 +143,21 @@ describe('Rate Limiting', () => {
       expect(lastResult?.result.remaining).toBe(0);
     });
 
+    it('uses local fallback for high-risk mutation profiles outside launch environments', async () => {
+      const { RATE_LIMITS, checkRateLimit } = await import('@/lib/rate-limit/index');
+
+      const { allowed, result } = await checkRateLimit(
+        new NextRequest('http://localhost/api/user/password', {
+          method: 'PUT',
+          headers: { 'x-forwarded-for': '127.0.0.1' },
+        }),
+        RATE_LIMITS.auth
+      );
+
+      expect(allowed).toBe(true);
+      expect(result.unavailable).toBeUndefined();
+    });
+
     it('still fails closed for assistive AI routes without KV in launch environments', async () => {
       process.env.VERCEL_ENV = 'preview';
 
@@ -152,6 +167,22 @@ describe('Rate Limiting', () => {
           method: 'POST',
         }),
         RATE_LIMITS.aiAssistive
+      );
+
+      expect(allowed).toBe(false);
+      expect(result.unavailable).toBe(true);
+      expect(result.failureReason).toBe('missing_configuration');
+    });
+
+    it('fails closed for high-risk mutation profiles without KV in launch environments', async () => {
+      process.env.VERCEL_ENV = 'preview';
+
+      const { RATE_LIMITS, checkRateLimit } = await import('@/lib/rate-limit/index');
+      const { allowed, result } = await checkRateLimit(
+        new NextRequest('https://proofound.io/api/user/password', {
+          method: 'PUT',
+        }),
+        RATE_LIMITS.auth
       );
 
       expect(allowed).toBe(false);

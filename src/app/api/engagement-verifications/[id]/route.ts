@@ -19,6 +19,23 @@ const EngagementVerificationPatchSchema = z.object({
   evidenceNote: z.string().trim().max(2000).optional(),
 });
 
+function toSafeEngagementPatchError(error: unknown) {
+  const message = error instanceof Error ? error.message : '';
+
+  switch (message) {
+    case 'Engagement verification not found':
+      return { message, status: 404 };
+    case 'Unsupported engagement type':
+    case 'Uploaded evidence must belong to the current user and be attachable':
+      return { message, status: 400 };
+    default:
+      return {
+        message: 'Failed to update engagement verification',
+        status: 500,
+      };
+  }
+}
+
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const auth = await requireApiAuth();
@@ -119,19 +136,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     );
   } catch (error) {
     log.error('engagement_verification.patch.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
+      error,
     });
 
-    const message =
-      error instanceof Error ? error.message : 'Failed to update engagement verification';
-    const status =
-      message === 'Engagement verification not found'
-        ? 404
-        : message === 'Unsupported engagement type' ||
-            message === 'Uploaded evidence must belong to the current user and be attachable'
-          ? 400
-          : 500;
+    const { message, status } = toSafeEngagementPatchError(error);
 
     return NextResponse.json({ error: message }, { status });
   }

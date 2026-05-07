@@ -11,6 +11,7 @@ export type PrivacyPreflightFlagCode =
   | 'national_id'
   | 'api_key_or_access_token'
   | 'confidential_marker'
+  | 'protected_trait'
   | 'hidden_visibility_term';
 
 export type PrivacyPreflightField = {
@@ -106,6 +107,13 @@ const RULES: PatternRule[] = [
     replacement: '[redacted confidential marker]',
     message: 'Confidentiality marker appears in text intended for publication.',
   },
+  {
+    code: 'protected_trait',
+    pattern:
+      /\b(?:age|young|younger|older|gender|male|female|race|racial|ethnicity|ethnic|religion|religious|disability|disabled|pregnant|pregnancy|marital|parenthood|native\s+speaker|nationality|citizenship|visa|sexual\s+orientation|transgender)\b/gi,
+    replacement: '[redacted protected trait]',
+    message: 'Protected-trait or discriminatory criteria appear in text intended for publication.',
+  },
 ];
 
 const FLAG_MESSAGES: Record<PrivacyPreflightFlagCode, string> = {
@@ -117,6 +125,8 @@ const FLAG_MESSAGES: Record<PrivacyPreflightFlagCode, string> = {
   national_id: 'National ID-like digits appear in text intended for publication.',
   api_key_or_access_token: 'API key or access-token-like text appears in a publication field.',
   confidential_marker: 'Confidentiality marker appears in text intended for publication.',
+  protected_trait:
+    'Protected-trait or discriminatory criteria appear in text intended for publication.',
   hidden_visibility_term:
     'Text repeats a name, client, employer, or private term whose visibility is hidden.',
 };

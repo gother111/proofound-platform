@@ -11,7 +11,11 @@ import {
   hashAiContent,
   recordAiSuggestionEvent,
 } from '@/lib/ai/usage-ledger';
-import { addUnsafeAiRequestPayloadIssue, containsForbiddenAiOutput } from '@/lib/ai/request-safety';
+import {
+  addUnsafeAiRequestPayloadIssue,
+  containsForbiddenAiOutput,
+  redactProtectedTraitAiText,
+} from '@/lib/ai/request-safety';
 import { verifyExplicitAssignmentMutationAccess } from '@/lib/assignments/access';
 import { skillDisplayLabel } from '@/lib/copy/labels';
 
@@ -231,6 +235,10 @@ export function redactAssignmentClarityText(value: string | null | undefined): R
       counts[entry.key] = count;
     }
   }
+
+  const protectedTraitRedaction = redactProtectedTraitAiText(next);
+  next = protectedTraitRedaction.value;
+  mergeCounts(counts, protectedTraitRedaction.counts);
 
   return {
     value: next.replace(/\s+/g, ' ').trim().slice(0, 1800),
@@ -512,7 +520,10 @@ function deterministicFallback(
     excludedOrRiskyCriteria.push('Removed prohibited review criteria from the assistant scope.');
   }
 
-  if (PROTECTED_TRAIT_PATTERN.test(allText)) {
+  if (
+    PROTECTED_TRAIT_PATTERN.test(allText) ||
+    (context.redactionSummary.protected_traits ?? 0) > 0
+  ) {
     excludedOrRiskyCriteria.push(
       'Removed protected or discriminatory criteria from the assistant scope.'
     );
@@ -565,7 +576,8 @@ function sanitizeStringArray(values: string[], redactionSummary: Record<string, 
       if (
         SCORING_OR_JUDGMENT_PATTERN.test(redacted.value) ||
         containsForbiddenAiOutput(redacted.value) ||
-        PROTECTED_TRAIT_PATTERN.test(redacted.value)
+        PROTECTED_TRAIT_PATTERN.test(redacted.value) ||
+        (redacted.counts.protected_traits ?? 0) > 0
       ) {
         return null;
       }
@@ -583,6 +595,10 @@ function sanitizeSuggestionOutput(
     ...response.suggestedRewrite,
   };
 
+  if ((context.redactionSummary.protected_traits ?? 0) > 0) {
+    excluded.add('Removed protected or discriminatory criteria from the assistant scope.');
+  }
+
   for (const key of ['title', 'rolePurpose', 'outcomeSummary', 'proofExpectations'] as const) {
     const value = suggestedRewrite[key];
     if (!value) continue;
@@ -593,7 +609,10 @@ function sanitizeSuggestionOutput(
       excluded.add('Removed prohibited review criteria from a suggested field.');
       continue;
     }
-    if (PROTECTED_TRAIT_PATTERN.test(redacted.value)) {
+    if (
+      PROTECTED_TRAIT_PATTERN.test(redacted.value) ||
+      (redacted.counts.protected_traits ?? 0) > 0
+    ) {
       suggestedRewrite[key] = null;
       excluded.add('Removed protected or discriminatory criteria from a suggested field.');
       continue;

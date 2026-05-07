@@ -120,7 +120,7 @@ describe('Verification Request Composer privacy controls', () => {
     });
   });
 
-  it('omits hidden context and redacts unsafe tokens from the sanitized context', () => {
+  it('does not fall back to owner-full fields when public-safe context is unavailable', () => {
     const context = buildSanitizedVerificationComposerContext({
       aggregate: createAggregate({
         publicSafe: null,
@@ -144,12 +144,14 @@ describe('Verification Request Composer privacy controls', () => {
     expect(serialized).not.toContain('Secret-Client-Report.pdf');
     expect(serialized).not.toContain('Hidden Acme');
     expect(serialized).not.toContain('Hidden School of Design');
-    expect(serialized).toContain('Public evidence title');
-    expect(serialized).toContain('[redacted email]');
-    expect(serialized).toContain('[redacted url]');
-    expect(serialized).toContain('[redacted phone]');
-    expect(serialized).toContain('[redacted filename]');
-    expect(serialized).toContain('[redacted hidden identity]');
+    expect(context.claimScope).toBe('One scoped Proof Pack claim');
+    expect(context.selectedFields).toEqual({
+      title: null,
+      claim_statement: null,
+      ownership_statement: null,
+      outcome_summary: null,
+      evidence_titles: [],
+    });
   });
 
   it('validates ownership before provider access', async () => {
@@ -199,6 +201,63 @@ describe('Verification Request Composer privacy controls', () => {
     expect(prompt).not.toContain('Hidden-Client-Plan.docx');
     expect(prompt).not.toContain('jane@example.com');
     expect(result.verificationQuestions).toEqual(['Can you confirm this specific launch claim?']);
+  });
+
+  it('returns a deterministic draft without model access when public-safe context is unavailable', async () => {
+    mocks.getCanonicalProofPackAggregate.mockResolvedValue(createAggregate({ publicSafe: null }));
+
+    const result = await composeVerificationRequestForUser({
+      proofPackId: '11111111-1111-4111-8111-111111111111',
+      userId: 'user-1',
+      requestId: 'request-1',
+      verifierRelationshipType: 'Manager',
+      verificationScope: 'ownership',
+      selectedPublicSafeProofFields: ['claim_statement', 'ownership_statement'],
+    });
+    const serialized = JSON.stringify(result);
+
+    expect(result.fallback).toBe(true);
+    expect(mocks.generateJson).not.toHaveBeenCalled();
+    expect(serialized).not.toContain('I coordinated the Acme launch');
+    expect(serialized).not.toContain('Hidden Acme');
+    expect(result.tooBroadWarnings).toEqual(
+      expect.arrayContaining([
+        'Public-safe Proof Pack context was unavailable, so manual editing is required before AI drafting.',
+      ])
+    );
+  });
+
+  it('redacts protected-trait terms from public-safe context before model access', async () => {
+    mocks.getCanonicalProofPackAggregate.mockResolvedValue(
+      createAggregate({
+        publicSafe: {
+          contract: {
+            title: 'Launch proof',
+            primaryClaim: {
+              statement: 'I supported a launch while managing visa paperwork.',
+            },
+            ownershipStatement: 'I coordinated with a native speaker review group.',
+            outcomeSummary: 'The launch checklist was completed.',
+            timeframe: { start: null, end: null, label: '2026 Q1' },
+          },
+          items: [],
+        },
+      })
+    );
+
+    await composeVerificationRequestForUser({
+      proofPackId: '11111111-1111-4111-8111-111111111111',
+      userId: 'user-1',
+      requestId: 'request-1',
+      verifierRelationshipType: 'Manager',
+      verificationScope: 'ownership',
+      selectedPublicSafeProofFields: ['claim_statement', 'ownership_statement'],
+    });
+
+    const prompt = mocks.generateJson.mock.calls[0]?.[0]?.prompt as string;
+    expect(prompt).toContain('[redacted protected trait]');
+    expect(prompt).not.toContain('visa paperwork');
+    expect(prompt).not.toContain('native speaker');
   });
 
   it('removes candidate score and rank language from generated draft questions', async () => {
