@@ -190,7 +190,7 @@ Recommended environment variables:
 ```bash
 AI_ASSISTANTS_ENABLED=false
 AI_PROVIDER=gemini
-AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
+AI_MODEL_DEFAULT=gemini-3.1-flash-lite
 AI_MODEL_FALLBACK=
 AI_MODEL_FALLBACK_VERIFIED=false
 AI_PROVIDER_SMOKE_LAST_SUCCESS_AT=
@@ -651,7 +651,7 @@ Add AI state to launch status or admin-only launch diagnostics:
 {
   "aiAssistantsEnabled": false,
   "aiProvider": "gemini",
-  "aiModelDefault": "gemini-3.1-flash-lite-preview",
+  "aiModelDefault": "gemini-3.1-flash-lite",
   "aiMonthlyCapSek": 120,
   "aiSpendThisMonthSek": 0,
   "aiBudgetState": "disabled|healthy|near_cap|exhausted",

@@ -1,6 +1,6 @@
 type EnvReader = Record<string, string | undefined>;
 
-const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview';
+const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
 
 function parseBoolean(value: string | undefined, fallback: boolean): boolean {
   if (!value) {

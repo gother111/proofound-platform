@@ -23,7 +23,7 @@ const artifact: AiProviderSmokeArtifact = {
   generatedAt: '2026-05-04T09:00:00.000Z',
   success: true,
   defaultModel: {
-    model: 'gemini-3.1-flash-lite-preview',
+    model: 'gemini-3.1-flash-lite',
     accepted: true,
     usageMetadataState: 'returned',
     errorCode: null,

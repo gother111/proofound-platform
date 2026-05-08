@@ -20,7 +20,7 @@ const ResponseSchema = z.object({
 function geminiResponse(text: string) {
   return new Response(
     JSON.stringify({
-      modelVersion: 'gemini-3.1-flash-lite-preview',
+      modelVersion: 'gemini-3.1-flash-lite',
       usageMetadata: {
         promptTokenCount: 11,
         candidatesTokenCount: 7,
@@ -78,7 +78,7 @@ describe('Gemini AI provider', () => {
     delete process.env.AI_MODEL_FALLBACK_VERIFIED;
     delete process.env.AI_CV_IMPORT_MAX_OUTPUT_TOKENS;
 
-    expect(resolveAiModelDefault()).toBe('gemini-3.1-flash-lite-preview');
+    expect(resolveAiModelDefault()).toBe('gemini-3.1-flash-lite');
     expect(resolveAiModelFallback()).toBeNull();
     expect(resolveAiModelFallbackVerified()).toBe(false);
     expect(resolveAiAssistantsEnabled()).toBe(false);
@@ -278,7 +278,7 @@ describe('Gemini AI provider', () => {
       requestId: 'req-success',
       promptVersion: 'test-v1',
       feature: 'cv_import',
-      model: 'gemini-3.1-flash-lite-preview',
+      model: 'gemini-3.1-flash-lite',
       provider: 'gemini',
       suggestionId: null,
       tokenUsage: {
@@ -299,7 +299,7 @@ describe('Gemini AI provider', () => {
     process.env.AI_ASSISTANTS_ENABLED = 'true';
     process.env.AI_GEMINI_API_KEY = 'server-key';
     process.env.AI_MODEL_DEFAULT = 'invalid-default-model';
-    process.env.AI_MODEL_FALLBACK = 'gemini-3.1-flash-lite-preview';
+    process.env.AI_MODEL_FALLBACK = 'gemini-3.1-flash-lite';
     delete process.env.AI_MODEL_FALLBACK_VERIFIED;
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
@@ -327,7 +327,7 @@ describe('Gemini AI provider', () => {
     process.env.AI_ASSISTANTS_ENABLED = 'true';
     process.env.AI_GEMINI_API_KEY = 'server-key';
     process.env.AI_MODEL_DEFAULT = 'invalid-default-model';
-    process.env.AI_MODEL_FALLBACK = 'gemini-3.1-flash-lite-preview';
+    process.env.AI_MODEL_FALLBACK = 'gemini-3.1-flash-lite';
     process.env.AI_MODEL_FALLBACK_VERIFIED = 'true';
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
@@ -348,7 +348,7 @@ describe('Gemini AI provider', () => {
     expect(result.data).toEqual({ answer: 'ok' });
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain('invalid-default-model');
-    expect(String(fetchMock.mock.calls[1]?.[0])).toContain('gemini-3.1-flash-lite-preview');
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain('gemini-3.1-flash-lite');
   });
 
   it('surfaces a safe provider error when the verified fallback model is also invalid', async () => {

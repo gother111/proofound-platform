@@ -169,12 +169,12 @@ export async function GET(request: Request) {
     }
 
     if (aiSummary.aiAssistantsEnabled && aiSummary.aiBudgetState === 'ok') {
-      if (aiSummary.aiConfiguredModel !== 'gemini-3.1-flash-lite-preview') {
+      if (aiSummary.aiConfiguredModel !== 'gemini-3.1-flash-lite') {
         dependencies.aiConfiguredModel = {
           ok: false,
           required: true,
           configured: aiSummary.aiConfiguredModel,
-          expected: 'gemini-3.1-flash-lite-preview',
+          expected: 'gemini-3.1-flash-lite',
         };
         dependencyReasons.push({
           code: 'ai_default_model_mismatch' as const,

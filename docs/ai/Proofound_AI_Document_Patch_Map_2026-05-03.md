@@ -150,7 +150,7 @@ An optional model check may be used only after deterministic redaction and only 
 ```md
 ### Optional AI assistive layer
 
-The technical architecture may include an optional server-side AI assistive layer using a provider abstraction. Gemini 3.1 Flash-Lite Preview is the default testing assumption, but the exact provider model ID must be environment-configured.
+The technical architecture may include an optional server-side AI assistive layer using a provider abstraction. Gemini 3.1 Flash-Lite is the default testing assumption, but the exact provider model ID must be environment-configured.
 
 The AI layer must be disabled by default, rate limited, spend capped, logged, cacheable, and safe to disable without breaking core MVP flows.
 ```
@@ -313,7 +313,7 @@ Add:
 ```bash
 AI_ASSISTANTS_ENABLED=false
 AI_PROVIDER=gemini
-AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
+AI_MODEL_DEFAULT=gemini-3.1-flash-lite
 AI_MODEL_FALLBACK=
 
 AI_GEMINI_PROD_API_KEY=
@@ -362,7 +362,7 @@ If AI assistance is implemented, launch status should expose only safe operator 
 {
   "aiAssistantsEnabled": false,
   "aiProvider": "gemini",
-  "aiModelDefault": "gemini-3.1-flash-lite-preview",
+  "aiModelDefault": "gemini-3.1-flash-lite",
   "aiBudgetState": "disabled",
   "aiSpendThisMonthSek": 0,
   "aiMonthlyCapSek": 120,

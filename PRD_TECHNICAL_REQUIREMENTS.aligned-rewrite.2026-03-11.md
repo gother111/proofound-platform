@@ -55,7 +55,7 @@ Current stack may include optional OAuth sign-in providers, but:
 
 ### 1.3.1 Optional AI assistive layer
 
-The technical architecture may include an optional server-side AI assistive layer using a provider abstraction. Gemini 3.1 Flash-Lite Preview is the default testing assumption, but the exact provider model ID must be environment-configured.
+The technical architecture may include an optional server-side AI assistive layer using a provider abstraction. Gemini 3.1 Flash-Lite is the default testing assumption, but the exact provider model ID must be environment-configured.
 
 The AI layer must be disabled by default, rate limited, spend capped, logged, cacheable, and safe to disable without breaking core MVP flows.
 

@@ -97,7 +97,7 @@ describe('/api/monitoring/launch-status', () => {
     (getHttpMonitorKeysNeedingRefresh as any).mockReturnValue([]);
     (getAiLaunchOperationalSummary as any).mockResolvedValue({
       aiAssistantsEnabled: false,
-      aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+      aiConfiguredModel: 'gemini-3.1-flash-lite',
       aiFallbackModel: null,
       aiFallbackModelState: 'unset',
       aiFallbackModelConfigured: false,
@@ -164,7 +164,7 @@ describe('/api/monitoring/launch-status', () => {
     expect(body.summary).toEqual(
       expect.objectContaining({
         aiAssistantsEnabled: false,
-        aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+        aiConfiguredModel: 'gemini-3.1-flash-lite',
         aiFallbackModelState: 'unset',
         aiFallbackModelConfigured: false,
         aiFallbackModelVerified: false,
@@ -209,7 +209,7 @@ describe('/api/monitoring/launch-status', () => {
     (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
     (getAiLaunchOperationalSummary as any).mockResolvedValueOnce({
       aiAssistantsEnabled: true,
-      aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+      aiConfiguredModel: 'gemini-3.1-flash-lite',
       aiFallbackModel: 'gemini-explicit-fallback',
       aiFallbackModelState: 'configured_verified',
       aiFallbackModelConfigured: true,
@@ -244,7 +244,7 @@ describe('/api/monitoring/launch-status', () => {
     expect(body.summary).toEqual(
       expect.objectContaining({
         aiAssistantsEnabled: true,
-        aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+        aiConfiguredModel: 'gemini-3.1-flash-lite',
         aiFallbackModel: 'gemini-explicit-fallback',
         aiFallbackModelState: 'configured_verified',
         aiFallbackModelConfigured: true,
@@ -274,7 +274,7 @@ describe('/api/monitoring/launch-status', () => {
     (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
     (getAiLaunchOperationalSummary as any).mockResolvedValueOnce({
       aiAssistantsEnabled: true,
-      aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+      aiConfiguredModel: 'gemini-3.1-flash-lite',
       aiFallbackModel: null,
       aiFallbackModelState: 'unset',
       aiFallbackModelConfigured: false,
@@ -326,7 +326,7 @@ describe('/api/monitoring/launch-status', () => {
     (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
     (getAiLaunchOperationalSummary as any).mockResolvedValueOnce({
       aiAssistantsEnabled: true,
-      aiConfiguredModel: 'gemini-3.1-flash-lite-preview',
+      aiConfiguredModel: 'gemini-3.1-flash-lite',
       aiFallbackModel: null,
       aiFallbackModelState: 'unset',
       aiFallbackModelConfigured: false,

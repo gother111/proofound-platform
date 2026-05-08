@@ -251,7 +251,7 @@ If introduced later, it must only explain already existing deterministic reason 
 
 ### 3.1 Default model assumption
 
-The MVP AI assistive layer is configured around Gemini 3.1 Flash-Lite Preview through Google AI Studio or the relevant Google Gemini API surface. As of this addendum, the configured model code is `gemini-3.1-flash-lite-preview`.
+The MVP AI assistive layer is configured around Gemini 3.1 Flash-Lite through Google AI Studio or the relevant Google Gemini API surface. As of May 8, 2026, Google documents the configured model code as stable: `gemini-3.1-flash-lite`.
 
 The exact model identifier must be configured server-side through environment variables. The product must not hardcode the model name in client code.
 
@@ -260,7 +260,7 @@ Recommended environment posture:
 ```bash
 AI_ASSISTANTS_ENABLED=false
 AI_PROVIDER=gemini
-AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
+AI_MODEL_DEFAULT=gemini-3.1-flash-lite
 ```
 
 If the provider exposes a different exact model ID, implementation must update the server-side environment value without changing product behavior.

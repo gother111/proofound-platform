@@ -34,21 +34,21 @@ describe('gemini pricing resolution', () => {
     }
   });
 
-  it('maps gemini-3.1-flash-lite-preview to lite pricing family', () => {
+  it('maps gemini-3.1-flash-lite to lite pricing family', () => {
     delete process.env.CV_IMPORT_GEMINI_FLASH_LITE_INPUT_USD_PER_MILLION;
     delete process.env.CV_IMPORT_GEMINI_FLASH_LITE_OUTPUT_USD_PER_MILLION;
 
-    expect(resolveModelPricingUsd('gemini-3.1-flash-lite-preview')).toEqual({
+    expect(resolveModelPricingUsd('gemini-3.1-flash-lite')).toEqual({
       inputPerMillion: 0.25,
       outputPerMillion: 1.5,
     });
   });
 
-  it('applies lite pricing overrides for gemini-3.1-flash-lite-preview', () => {
+  it('applies lite pricing overrides for gemini-3.1-flash-lite', () => {
     process.env.CV_IMPORT_GEMINI_FLASH_LITE_INPUT_USD_PER_MILLION = '0.17';
     process.env.CV_IMPORT_GEMINI_FLASH_LITE_OUTPUT_USD_PER_MILLION = '0.47';
 
-    expect(resolveModelPricingUsd('gemini-3.1-flash-lite-preview')).toEqual({
+    expect(resolveModelPricingUsd('gemini-3.1-flash-lite')).toEqual({
       inputPerMillion: 0.17,
       outputPerMillion: 0.47,
     });

@@ -130,10 +130,10 @@ describe('gemini config helpers', () => {
     expect(resolveGeminiTaxonomyGuidedEnabled()).toBe(false);
   });
 
-  it('uses gemini-3.1-flash-lite-preview as default model when env override is unset', () => {
+  it('uses gemini-3.1-flash-lite as default model when env override is unset', () => {
     delete process.env.AI_MODEL_DEFAULT;
     delete process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT;
-    expect(resolveGeminiModelDefault()).toBe('gemini-3.1-flash-lite-preview');
+    expect(resolveGeminiModelDefault()).toBe('gemini-3.1-flash-lite');
   });
 
   it('keeps the Gemini fallback model unset unless explicitly configured', () => {
