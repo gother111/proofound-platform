@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useMemo, useState } from 'react';
+import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -55,7 +55,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
     [accountType]
   );
 
-  const [formState, formAction] = useFormState(signUp, INITIAL_STATE);
+  const [formState, formAction] = useActionState(signUp, INITIAL_STATE);
   const state = formState ?? INITIAL_STATE;
   const errorMessage = clientError ?? state.error;
 

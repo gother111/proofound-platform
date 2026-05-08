@@ -5,6 +5,7 @@ import { TourProvider } from '@/components/tour/TourProvider';
 import { CommandPalette } from '@/components/navigation/CommandPalette';
 import { SpotlightProvider } from '@/components/ui/spotlight-provider';
 import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
+import { evaluateIndividualProfileCompletion } from '@/lib/profile/completion-flow';
 
 /**
  * Individual User Layout
@@ -19,7 +20,17 @@ import { getIndividualProfileCompletionState } from '@/lib/profile/completion-fl
 
 export default async function IndividualLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePersona('individual');
-  const completionState = await getIndividualProfileCompletionState(user.id);
+  const completionState = await getIndividualProfileCompletionState(user.id).catch(() =>
+    evaluateIndividualProfileCompletion({
+      displayName: user.displayName,
+      handle: user.handle,
+      valuesCount: 0,
+      causesCount: 0,
+      skillsCount: 0,
+      proofCount: 0,
+      acceptedVerificationCount: 0,
+    })
+  );
 
   const userName = user.displayName || user.handle || 'User';
   const userInitials = userName

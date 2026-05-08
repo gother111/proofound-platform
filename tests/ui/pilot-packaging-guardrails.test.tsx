@@ -28,18 +28,74 @@ vi.mock('next/image', () => ({
 vi.mock('framer-motion', () => ({
   useInView: () => true,
   motion: {
-    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-      <div {...props}>{children}</div>
-    ),
-    h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h2 {...props}>{children}</h2>
-    ),
-    p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-      <p {...props}>{children}</p>
-    ),
-    button: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-      <button {...props}>{children}</button>
-    ),
+    div: ({
+      children,
+      ...props
+    }: React.HTMLAttributes<HTMLDivElement> & Record<string, unknown>) => {
+      const domProps = { ...props };
+      for (const key of [
+        'initial',
+        'animate',
+        'transition',
+        'variants',
+        'viewport',
+        'whileInView',
+      ]) {
+        delete domProps[key];
+      }
+      return <div {...domProps}>{children}</div>;
+    },
+    h2: ({
+      children,
+      ...props
+    }: React.HTMLAttributes<HTMLHeadingElement> & Record<string, unknown>) => {
+      const domProps = { ...props };
+      for (const key of [
+        'initial',
+        'animate',
+        'transition',
+        'variants',
+        'viewport',
+        'whileInView',
+      ]) {
+        delete domProps[key];
+      }
+      return <h2 {...domProps}>{children}</h2>;
+    },
+    p: ({
+      children,
+      ...props
+    }: React.HTMLAttributes<HTMLParagraphElement> & Record<string, unknown>) => {
+      const domProps = { ...props };
+      for (const key of [
+        'initial',
+        'animate',
+        'transition',
+        'variants',
+        'viewport',
+        'whileInView',
+      ]) {
+        delete domProps[key];
+      }
+      return <p {...domProps}>{children}</p>;
+    },
+    button: ({
+      children,
+      ...props
+    }: React.ButtonHTMLAttributes<HTMLButtonElement> & Record<string, unknown>) => {
+      const domProps = { ...props };
+      for (const key of [
+        'initial',
+        'animate',
+        'transition',
+        'variants',
+        'viewport',
+        'whileInView',
+      ]) {
+        delete domProps[key];
+      }
+      return <button {...domProps}>{children}</button>;
+    },
   },
 }));
 

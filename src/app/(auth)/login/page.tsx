@@ -33,21 +33,22 @@ export default async function LoginPage({
   const isMock = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
   const params = (await searchParams) ?? {};
   const nextPath = sanitizeNextPath(params.next);
+  let supabase: Awaited<ReturnType<typeof createClient>> | null = null;
+  let hasUser = false;
 
   try {
     // Check if user is already logged in
-    const supabase = await createClient({ allowCookieWrite: true });
-    let user = null;
+    supabase = await createClient({ allowCookieWrite: true });
     try {
       const result = await supabase.auth.getUser();
-      user = result?.data?.user ?? null;
+      hasUser = Boolean(result?.data?.user);
       sendDebugIngest({
         sessionId: 'debug-session',
         runId: 'launch-readiness',
         hypothesisId: 'H-login-1',
         location: 'login/page.tsx:getUser',
         message: 'Auth check on login page',
-        data: { hasUser: Boolean(user) },
+        data: { hasUser },
       });
     } catch (authError) {
       console.error('Auth check failed on login page:', authError);
@@ -60,35 +61,35 @@ export default async function LoginPage({
         data: { error: authError instanceof Error ? authError.message : 'unknown' },
       });
     }
-
-    // If already logged in, redirect to appropriate dashboard based on persona
-    // In mock mode we intentionally keep the login page reachable for auth E2E tests.
-    if (user && !isMock) {
-      let homePath: string | null = null;
-      try {
-        homePath = await resolveUserHomePath(supabase);
-      } catch (resolveError) {
-        console.error('Error resolving home path:', resolveError);
-        // Fall through to show login page if home path resolution fails
-      }
-
-      if (homePath) {
-        sendDebugIngest({
-          sessionId: 'debug-session',
-          runId: 'launch-readiness',
-          hypothesisId: 'H-redirect-loop',
-          location: 'login/page.tsx:redirect',
-          message: 'Redirecting logged-in user',
-          data: { homePath, nextPath },
-        });
-
-        // Important: do not catch the redirect (it throws NEXT_REDIRECT internally).
-        redirect(nextPath || homePath);
-      }
-    }
   } catch (error) {
     // If anything fails, log it and continue to show login page
     console.error('Error checking authentication on login page:', error);
+  }
+
+  // If already logged in, redirect to appropriate dashboard based on persona.
+  // In mock mode we intentionally keep the login page reachable for auth E2E tests.
+  if (hasUser && supabase && !isMock) {
+    let homePath: string | null = null;
+    try {
+      homePath = await resolveUserHomePath(supabase);
+    } catch (resolveError) {
+      console.error('Error resolving home path:', resolveError);
+      // Fall through to show login page if home path resolution fails
+    }
+
+    if (homePath) {
+      sendDebugIngest({
+        sessionId: 'debug-session',
+        runId: 'launch-readiness',
+        hypothesisId: 'H-redirect-loop',
+        location: 'login/page.tsx:redirect',
+        message: 'Redirecting logged-in user',
+        data: { homePath, nextPath },
+      });
+
+      // Important: do not catch the redirect (it throws NEXT_REDIRECT internally).
+      redirect(nextPath || homePath);
+    }
   }
 
   // Render SignIn component with MVP design

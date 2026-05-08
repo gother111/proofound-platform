@@ -39,9 +39,13 @@ vi.mock('@/components/ui/button', () => ({
   },
 }));
 
-vi.mock('@/components/ui/input', () => ({
-  Input: (props: any) => <input {...props} />,
-}));
+vi.mock('@/components/ui/input', () => {
+  const MockInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+    (props, ref) => <input ref={ref} {...props} />
+  );
+  MockInput.displayName = 'MockInput';
+  return { Input: MockInput };
+});
 
 vi.mock('@/components/ui/label', () => ({
   Label: ({ children, htmlFor, ...rest }: any) => (
