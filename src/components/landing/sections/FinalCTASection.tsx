@@ -124,11 +124,11 @@ export function FinalCTASection({
                 onClick={onIndividualSignup ?? onGetStarted}
                 className="group rounded-[1.55rem] border border-proofound-forest/12 bg-proofound-forest px-5 py-5 text-left text-white transition-transform duration-300 hover:-translate-y-0.5 md:rounded-[2rem] md:px-6 md:py-6"
               >
-                <p className="text-sm uppercase tracking-[0.24em] text-white/70">For individuals</p>
+                <p className="text-sm uppercase tracking-[0.24em] text-white/85">For individuals</p>
                 <p className="mt-4 text-3xl font-display leading-tight">
                   Create your proof portfolio
                 </p>
-                <p className="mt-4 max-w-md text-sm leading-6 text-white/72">
+                <p className="mt-4 max-w-md text-sm leading-6 text-white/85">
                   Start with a cleaner public profile, then add proof, verification, and
                   privacy-safe signal over time.
                 </p>
