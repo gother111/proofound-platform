@@ -18,10 +18,15 @@ type ImpactTabProps = {
   proofArtifactCount: number;
   acceptedVerificationCount: number;
   onAddFirstProof: () => void;
+  onCompleteSafeShell: () => void;
 };
 
 function resolveProofPackBlockers(completionState: IndividualProfileCompletionState) {
   const blockers: string[] = [];
+
+  if (!completionState.checks.hasSafeShell) {
+    blockers.push('Complete your safe shell before publishing proof publicly.');
+  }
 
   if (!completionState.checks.hasRealContext) {
     blockers.push('Add one real context so your proof has a credible anchor.');
@@ -51,9 +56,17 @@ export function ImpactTab({
   proofArtifactCount,
   acceptedVerificationCount,
   onAddFirstProof,
+  onCompleteSafeShell,
 }: ImpactTabProps) {
   const blockers = resolveProofPackBlockers(completionState);
-  const primaryCtaLabel = proofArtifactCount > 0 ? 'Add another proof' : 'Add your first proof';
+  const primaryCtaLabel = !completionState.checks.hasSafeShell
+    ? 'Complete safe shell'
+    : proofArtifactCount > 0
+      ? 'Add another proof'
+      : 'Add your first proof';
+  const primaryCtaAction = !completionState.checks.hasSafeShell
+    ? onCompleteSafeShell
+    : onAddFirstProof;
 
   return (
     <TabsContent value="proof_packs" className="space-y-6">
@@ -110,7 +123,7 @@ export function ImpactTab({
 
             <Button
               type="button"
-              onClick={onAddFirstProof}
+              onClick={primaryCtaAction}
               className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
             >
               {primaryCtaLabel}

@@ -521,6 +521,7 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
               onDeleteVolunteering={deleteVolunteering}
               onImportContextComplete={retryLoad}
               onAddFirstProof={() => setIsFirstProofDialogOpen(true)}
+              onCompleteSafeShell={() => setIsEditProfileOpen(true)}
             />
           </div>
         </div>
