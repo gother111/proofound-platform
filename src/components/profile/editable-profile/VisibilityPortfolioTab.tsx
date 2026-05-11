@@ -10,9 +10,15 @@ import type { IndividualProfileCompletionState } from '@/lib/profile/completion-
 
 type VisibilityPortfolioTabProps = {
   completionState: IndividualProfileCompletionState;
+  onCompleteSafeShell: () => void;
 };
 
-export function VisibilityPortfolioTab({ completionState }: VisibilityPortfolioTabProps) {
+export function VisibilityPortfolioTab({
+  completionState,
+  onCompleteSafeShell,
+}: VisibilityPortfolioTabProps) {
+  const isSafeShellLocked = completionState.portfolioLockCode === 'safe_shell';
+
   return (
     <TabsContent value="visibility" className="space-y-6">
       <Card className="border-proofound-stone/60 p-5">
@@ -41,11 +47,17 @@ export function VisibilityPortfolioTab({ completionState }: VisibilityPortfolioT
               </p>
             </div>
 
-            <Button asChild variant="outline">
-              <Link href="/app/i/profile?profileView=full&tab=visibility">
-                Review portfolio visibility
-              </Link>
-            </Button>
+            {isSafeShellLocked ? (
+              <Button type="button" onClick={onCompleteSafeShell}>
+                Complete safe shell
+              </Button>
+            ) : (
+              <Button asChild variant="outline">
+                <Link href="/app/i/profile?profileView=full&tab=visibility">
+                  Review portfolio visibility
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </Card>

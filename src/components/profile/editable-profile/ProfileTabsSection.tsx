@@ -38,6 +38,7 @@ type ProfileTabsSectionProps = {
   onDeleteVolunteering: (id: string) => void;
   onImportContextComplete?: () => void;
   onAddFirstProof: () => void;
+  onCompleteSafeShell: () => void;
 };
 
 type ProfileTabId = 'context' | 'proof_packs' | 'verification' | 'visibility';
@@ -76,6 +77,7 @@ export function ProfileTabsSection({
   onDeleteVolunteering,
   onImportContextComplete,
   onAddFirstProof,
+  onCompleteSafeShell,
 }: ProfileTabsSectionProps) {
   const [activeTab, setActiveTab] = useState<ProfileTabId>(initialTab);
 
@@ -153,11 +155,15 @@ export function ProfileTabsSection({
         proofArtifactCount={proofArtifactCount}
         acceptedVerificationCount={acceptedVerificationCount}
         onAddFirstProof={onAddFirstProof}
+        onCompleteSafeShell={onCompleteSafeShell}
       />
 
       <VerificationTab acceptedVerificationCount={acceptedVerificationCount} />
 
-      <VisibilityPortfolioTab completionState={completionState} />
+      <VisibilityPortfolioTab
+        completionState={completionState}
+        onCompleteSafeShell={onCompleteSafeShell}
+      />
     </Tabs>
   );
 }

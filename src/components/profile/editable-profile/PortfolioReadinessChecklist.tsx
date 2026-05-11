@@ -14,26 +14,33 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
     {
       id: 'safe_shell',
       label: 'Safe shell is complete',
+      nextAction: 'Complete your safe shell',
       passed: completionState.checks.hasSafeShell,
     },
     {
       id: 'context',
       label: 'One real context is anchored',
+      nextAction: 'Anchor one real context',
       passed: completionState.checks.hasRealContext,
     },
     {
       id: 'proof',
       label: 'One real proof is added and structured',
+      nextAction: completionState.checks.hasFirstProof
+        ? 'Structure your first Proof Pack'
+        : 'Add your first proof',
       passed: completionState.checks.hasFirstProof && completionState.checks.hasStructuredProofPack,
     },
     {
       id: 'verification',
       label: 'One non-self verification is accepted',
+      nextAction: 'Request one non-self verification',
       passed: completionState.checks.hasRequiredVerification,
     },
     {
       id: 'publish',
       label: 'Portfolio is published and accessible',
+      nextAction: 'Publish one proof-backed signal',
       passed: completionState.checks.hasPublishedPortfolio,
     },
   ];
@@ -65,7 +72,7 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
               Next
             </p>
             <p className="mt-1 text-sm text-proofound-charcoal">
-              {nextItem ? nextItem.label : 'Portfolio is ready to review'}
+              {nextItem ? nextItem.nextAction : 'Portfolio is ready to review'}
             </p>
           </div>
         </div>

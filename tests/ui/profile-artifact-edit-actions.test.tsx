@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ImpactTab } from '@/components/profile/editable-profile/ImpactTab';
 import { ProfileTabsSection } from '@/components/profile/editable-profile/ProfileTabsSection';
+import { VisibilityPortfolioTab } from '@/components/profile/editable-profile/VisibilityPortfolioTab';
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
@@ -109,6 +110,7 @@ describe('profile launch IA', () => {
         onEditVolunteering={vi.fn()}
         onDeleteVolunteering={vi.fn()}
         onAddFirstProof={vi.fn()}
+        onCompleteSafeShell={vi.fn()}
       />
     );
 
@@ -172,6 +174,7 @@ describe('profile launch IA', () => {
         proofArtifactCount={0}
         acceptedVerificationCount={0}
         onAddFirstProof={onAddFirstProof}
+        onCompleteSafeShell={vi.fn()}
       />
     );
 
@@ -180,5 +183,115 @@ describe('profile launch IA', () => {
     expect(screen.getByText(/add your first proof link or artifact/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /add your first proof/i }));
     expect(onAddFirstProof).toHaveBeenCalledTimes(1);
+  });
+
+  it('prioritizes safe-shell completion before asking users to add more proof', () => {
+    const onCompleteSafeShell = vi.fn();
+    const onAddFirstProof = vi.fn();
+
+    render(
+      <ImpactTab
+        impactStories={[]}
+        onAddStory={vi.fn()}
+        onEditStory={vi.fn()}
+        onDeleteStory={vi.fn()}
+        actionsDisabled={false}
+        completionState={{
+          stage: 'safe_shell',
+          checks: {
+            hasDisplayName: false,
+            hasHandle: false,
+            hasHeadlineOrBio: false,
+            hasLocationOrTimezone: false,
+            hasTargetRoleFocus: true,
+            hasWorkPreference: true,
+            hasEngagementPreference: true,
+            hasLegacyShellCompatibility: false,
+            hasSafeShell: false,
+            hasRealContext: true,
+            hasFirstProof: true,
+            hasStructuredProofPack: true,
+            hasProofForPublishing: true,
+            hasPublishedPortfolio: false,
+            hasRequiredVerification: true,
+          },
+          counts: {
+            contexts: 1,
+            values: 0,
+            causes: 0,
+            skills: 0,
+            proofPacks: 1,
+            anchoredProofPacks: 1,
+            proofArtifacts: 1,
+            acceptedVerifications: 1,
+          },
+          isCoreProfileComplete: false,
+          isPortfolioReady: false,
+          portfolioLockCode: 'safe_shell',
+          portfolioLockReason:
+            'Finish your safe shell with the basics people need before they open your proof.',
+        }}
+        proofArtifactCount={1}
+        acceptedVerificationCount={1}
+        onAddFirstProof={onAddFirstProof}
+        onCompleteSafeShell={onCompleteSafeShell}
+      />
+    );
+
+    expect(
+      screen.getByText(/complete your safe shell before publishing proof publicly/i)
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /complete safe shell/i }));
+    expect(onCompleteSafeShell).toHaveBeenCalledTimes(1);
+    expect(onAddFirstProof).not.toHaveBeenCalled();
+  });
+
+  it('routes locked portfolio visibility users back to safe-shell completion', () => {
+    const onCompleteSafeShell = vi.fn();
+
+    render(
+      <VisibilityPortfolioTab
+        completionState={{
+          stage: 'safe_shell',
+          checks: {
+            hasDisplayName: false,
+            hasHandle: false,
+            hasHeadlineOrBio: false,
+            hasLocationOrTimezone: false,
+            hasTargetRoleFocus: true,
+            hasWorkPreference: true,
+            hasEngagementPreference: true,
+            hasLegacyShellCompatibility: false,
+            hasSafeShell: false,
+            hasRealContext: true,
+            hasFirstProof: true,
+            hasStructuredProofPack: true,
+            hasProofForPublishing: true,
+            hasPublishedPortfolio: false,
+            hasRequiredVerification: true,
+          },
+          counts: {
+            contexts: 1,
+            values: 0,
+            causes: 0,
+            skills: 0,
+            proofPacks: 1,
+            anchoredProofPacks: 1,
+            proofArtifacts: 1,
+            acceptedVerifications: 1,
+          },
+          isCoreProfileComplete: false,
+          isPortfolioReady: false,
+          portfolioLockCode: 'safe_shell',
+          portfolioLockReason:
+            'Finish your safe shell with the basics people need before they open your proof.',
+        }}
+        onCompleteSafeShell={onCompleteSafeShell}
+      />
+    );
+
+    expect(screen.queryByRole('link', { name: /review portfolio visibility/i })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /complete safe shell/i }));
+    expect(onCompleteSafeShell).toHaveBeenCalledTimes(1);
   });
 });

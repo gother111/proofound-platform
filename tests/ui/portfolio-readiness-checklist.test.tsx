@@ -1,0 +1,63 @@
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+
+import { PortfolioReadinessChecklist } from '@/components/profile/editable-profile/PortfolioReadinessChecklist';
+import { evaluateIndividualProfileCompletion } from '@/lib/profile/completion-flow';
+
+function buildState(overrides: Parameters<typeof evaluateIndividualProfileCompletion>[0]) {
+  return evaluateIndividualProfileCompletion({
+    displayName: 'Test User',
+    handle: 'test-user',
+    headline: 'Builder',
+    location: 'Stockholm',
+    timezone: 'Europe/Stockholm',
+    desiredRolesCount: 1,
+    workPreference: 'remote',
+    engagementType: 'contract',
+    contextCount: 0,
+    valuesCount: 0,
+    causesCount: 0,
+    skillsCount: 0,
+    proofCount: 0,
+    proofArtifactCount: 0,
+    anchoredProofPackCount: 0,
+    acceptedVerificationCount: 0,
+    publicProofCount: 0,
+    publishedPortfolio: false,
+    ...overrides,
+  });
+}
+
+describe('PortfolioReadinessChecklist', () => {
+  it('uses action-oriented copy for the missing safe shell step', () => {
+    render(
+      <PortfolioReadinessChecklist
+        completionState={buildState({
+          displayName: 'Your Name',
+          handle: null,
+          headline: null,
+        })}
+      />
+    );
+
+    expect(screen.getByText('Complete your safe shell')).toBeInTheDocument();
+    expect(screen.getByText('Safe shell is complete')).toBeInTheDocument();
+  });
+
+  it('points users to publish once all proof gates are complete', () => {
+    render(
+      <PortfolioReadinessChecklist
+        completionState={buildState({
+          contextCount: 1,
+          proofCount: 1,
+          proofArtifactCount: 1,
+          anchoredProofPackCount: 1,
+          acceptedVerificationCount: 1,
+          publishedPortfolio: false,
+        })}
+      />
+    );
+
+    expect(screen.getByText('Publish one proof-backed signal')).toBeInTheDocument();
+  });
+});
