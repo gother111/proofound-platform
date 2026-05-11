@@ -21,7 +21,10 @@ vi.mock('@/lib/proofs/canonical-pack', () => ({
 }));
 
 import { db } from '@/db';
-import { getPublicIndividualPortfolioProjectionByHandle } from '@/lib/portfolio/public-projection';
+import {
+  getPublicIndividualPortfolioProjectionByHandle,
+  getPublicOrganizationPortfolioProjectionBySlug,
+} from '@/lib/portfolio/public-projection';
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
 import {
   listVerificationRecordsForOwner,
@@ -355,6 +358,23 @@ describe('public portfolio projection', () => {
       }),
     ]);
     expect(JSON.stringify(projection)).not.toContain('Jane Doe Resume.pdf');
+  });
+
+  it('serves the local mock organization public trust page in mock Supabase mode', async () => {
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+
+    try {
+      const projection = await getPublicOrganizationPortfolioProjectionBySlug('test-org');
+
+      expect(projection).not.toBeNull();
+      expect(projection?.effectiveState).toBe('public_link_only');
+      expect(projection?.publicDisplayName).toBe('Test Organization');
+      expect(projection?.minimumContentMet).toBe(true);
+      expect(projection?.assignmentSnapshot?.role).toBe('Proof-first product reviewer');
+      expect(db.execute).not.toHaveBeenCalled();
+    } finally {
+      delete process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE;
+    }
   });
 
   it('does not let orphan packs or floating skills raise public trust projections', async () => {

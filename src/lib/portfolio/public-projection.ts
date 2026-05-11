@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { getRows } from '@/lib/db/rows';
+import { isMockSupabaseEnabled } from '@/lib/env';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
 import {
@@ -128,6 +129,9 @@ type PublicProofOverview = {
   hasRevealGatedContent: boolean;
   hasPrivateContent: boolean;
 };
+
+const MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
+const MOCK_ORG_SLUG = 'test-org';
 
 export type PublicIndividualPortfolioProjection = {
   profileId: string;
@@ -1170,6 +1174,113 @@ async function loadHistoricalOrganizationSlug(slug: string): Promise<string | nu
   return typeof row.redirect_target_slug === 'string' ? row.redirect_target_slug : null;
 }
 
+function buildMockPublicOrganizationPortfolioProjection(): PublicOrganizationPortfolioProjection {
+  const organization: OrganizationRow = {
+    id: MOCK_ORG_ID,
+    slug: MOCK_ORG_SLUG,
+    display_name: 'Test Organization',
+    public_portfolio_state: 'public_link_only',
+    search_indexing_enabled_at: null,
+    trust_status: 'domain_verified',
+    trust_status_updated_at: '2026-03-11T00:00:00.000Z',
+    website_verified_at: '2026-03-11T00:00:00.000Z',
+    operating_region: 'EU',
+    verified: true,
+    website: 'https://test-org.example',
+    tagline: 'Proof-first hiring practice for focused launch review.',
+    mission:
+      'Help teams review candidates through concrete work evidence instead of polished claims.',
+    working_context:
+      'A launch-safe mock organization used for local corridor and public trust-page testing.',
+    type: 'company',
+  };
+  const visibility: OrganizationVisibilityRow = {
+    display_name: 'public',
+    mission: 'public',
+  };
+  const verifiedDomainPath = getVerifiedOrganizationDomainPath({
+    website: organization.website,
+    websiteVerifiedAt: organization.website_verified_at,
+    trustStatus: organization.trust_status,
+    verified: organization.verified,
+  });
+  const publicSummary = organization.mission ?? organization.tagline ?? '';
+  const effectiveState = deriveEffectivePublicPortfolioState({
+    requestedState: resolveRequestedPublicPortfolioState(organization.public_portfolio_state),
+    searchIndexingEnabled: false,
+    minimumContentMet: true,
+  });
+  const shareUrl = `${SITE_URL}/portfolio/org/${encodeURIComponent(organization.slug)}`;
+  const assignmentSnapshot: PortfolioAssignmentSnapshot = {
+    role: 'Proof-first product reviewer',
+    engagementType: 'full_time',
+    businessValue: 'Improve review quality through clearer proof expectations.',
+    description: 'Review candidate work through structured evidence and launch-safe summaries.',
+    expectedImpact: 'Shortlists become more explainable, privacy-safe, and grounded in real work.',
+    outcomes: ['Clarify proof expectations', 'Reduce vague review decisions'],
+  };
+  const verificationSummary = summarizeVerificationPolicy({
+    records: [],
+    legacyOrganization: {
+      trustStatus: 'domain_verified',
+      verified: true,
+    },
+  });
+
+  return {
+    organizationId: organization.id,
+    slug: organization.slug,
+    requestedState: resolveRequestedPublicPortfolioState(organization.public_portfolio_state),
+    effectiveState,
+    shareUrl,
+    publicDisplayName: organization.display_name,
+    publicSummary,
+    verifiedDomainPath,
+    visibility,
+    organization,
+    verificationSummary,
+    metadata: {
+      path: `/portfolio/org/${encodeURIComponent(organization.slug)}`,
+      title: shouldUseGenericSharePreview(effectiveState)
+        ? 'Proofound organization portfolio'
+        : `${organization.display_name} | Proofound`,
+      description: shouldUseGenericSharePreview(effectiveState)
+        ? 'Shareable organization trust card on Proofound.'
+        : publicSummary,
+      ogTitle: shouldUseGenericSharePreview(effectiveState)
+        ? 'Proofound organization portfolio'
+        : `${organization.display_name} on Proofound`,
+      ogDescription: shouldUseGenericSharePreview(effectiveState)
+        ? 'Shareable organization trust card on Proofound.'
+        : publicSummary,
+      useGenericPreview: shouldUseGenericSharePreview(effectiveState),
+    },
+    jsonLd: {
+      description: publicSummary,
+    },
+    exportData: {
+      schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+      surface: 'organization_public',
+      exportedAt: new Date().toISOString(),
+      shareUrl,
+      organization: {
+        id: organization.id,
+        slug: organization.slug,
+        displayName: organization.display_name,
+        verifiedDomainPath: verifiedDomainPath || undefined,
+        mission: organization.mission || undefined,
+        whyWorkMatters: organization.tagline || undefined,
+        operatingContext: organization.working_context || undefined,
+        website: normalizeOrganizationWebsite(organization.website).value || undefined,
+        verified: true,
+      },
+      assignmentSnapshot,
+    },
+    assignmentSnapshot,
+    minimumContentMet: true,
+  };
+}
+
 function resolvePublicOrganizationName(
   organization: OrganizationRow,
   visibility: OrganizationVisibilityRow | null
@@ -1247,6 +1358,10 @@ async function loadPublicOrganizationAssignmentSnapshot(
 export async function getPublicOrganizationPortfolioProjectionBySlug(
   slug: string
 ): Promise<PublicOrganizationPortfolioProjection | null> {
+  if (isMockSupabaseEnabled() && slug === MOCK_ORG_SLUG) {
+    return buildMockPublicOrganizationPortfolioProjection();
+  }
+
   const organization = await loadOrganizationBySlug(slug);
   if (!organization) {
     return null;

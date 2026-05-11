@@ -1,6 +1,10 @@
-import { test, expect, devices } from '@playwright/test';
+import { test, expect, devices, type Page } from '@playwright/test';
 
-test.use({ ...devices['iPhone 12'] });
+const { defaultBrowserType: _defaultBrowserType, ...iphone12ChromiumProfile } =
+  devices['iPhone 12'];
+const isOrgMode = process.env.MOCK_ORG_MODE === 'true';
+
+test.use(iphone12ChromiumProfile);
 test.setTimeout(120000);
 
 test.beforeEach(async ({ page }) => {
@@ -22,84 +26,130 @@ async function gotoStable(page: import('@playwright/test').Page, route: string) 
   }
 }
 
-async function expectNotificationDropdownWithinViewport(page: import('@playwright/test').Page) {
-  const dropdown = page.getByTestId('notifications-dropdown');
-  await expect(dropdown).toBeVisible();
+type MobileRouteExpectation = {
+  route: string;
+  pathname: string;
+  assertLoaded: (page: Page) => Promise<void>;
+};
 
-  const bounds = await dropdown.evaluate((node) => {
-    const rect = node.getBoundingClientRect();
-    return {
-      left: rect.left,
-      right: rect.right,
-      width: rect.width,
-      viewportWidth: window.innerWidth,
-    };
-  });
-
-  expect(
-    bounds.left,
-    'Notification dropdown left edge must stay in viewport'
-  ).toBeGreaterThanOrEqual(0);
-  expect(
-    bounds.right,
-    `Notification dropdown right edge ${bounds.right}px exceeds viewport ${bounds.viewportWidth}px`
-  ).toBeLessThanOrEqual(bounds.viewportWidth);
-}
-
-async function expectNotificationDropdownAboveBottomNav(page: import('@playwright/test').Page) {
-  const layout = await page.evaluate(() => {
-    const dropdown = document.querySelector(
-      '[data-testid="notifications-dropdown"]'
-    ) as HTMLElement | null;
-    const bottomNav = document.querySelector(
-      '[aria-label="Mobile primary navigation"]'
-    ) as HTMLElement | null;
-
-    if (!dropdown || !bottomNav) {
-      return null;
-    }
-
-    const dropdownRect = dropdown.getBoundingClientRect();
-    const bottomNavRect = bottomNav.getBoundingClientRect();
-
-    return {
-      dropdownBottom: dropdownRect.bottom,
-      bottomNavTop: bottomNavRect.top,
-    };
-  });
-
-  expect(layout, 'Notification dropdown or mobile nav is missing').not.toBeNull();
-  expect(
-    layout!.dropdownBottom,
-    'Notification dropdown overlaps bottom mobile nav'
-  ).toBeLessThanOrEqual(layout!.bottomNavTop + 1);
+function expectCurrentPath(page: Page, pathname: string, route: string) {
+  expect(new URL(page.url()).pathname, `${route} should load its intended route`).toBe(pathname);
 }
 
 test.describe('Smartphone UI regression', () => {
   test.describe.configure({ mode: 'serial' });
   test('key mobile routes render without horizontal overflow', async ({ page }) => {
-    const routes = [
-      '/',
-      '/login',
-      '/signup',
-      '/reset-password',
-      '/app/i/home',
-      '/app/i/profile',
-      '/app/o/test-org/home',
-      '/app/o/test-org/profile',
-      '/app/o/test-org/assignments',
-      '/admin',
-      '/verify-email?token=validmocktoken&email=test%40example.com',
+    const publicRoutes: MobileRouteExpectation[] = [
+      {
+        route: '/',
+        pathname: '/',
+        assertLoaded: async (routePage) => {
+          await expect(
+            routePage.getByRole('heading', { name: /Proof behind the claim/i })
+          ).toBeVisible();
+        },
+      },
+      {
+        route: '/login',
+        pathname: '/login',
+        assertLoaded: async (routePage) => {
+          await expect(routePage.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+        },
+      },
+      {
+        route: '/signup',
+        pathname: '/signup',
+        assertLoaded: async (routePage) => {
+          await expect(routePage.getByTestId('signup-choice-screen')).toBeVisible();
+        },
+      },
+      {
+        route: '/reset-password',
+        pathname: '/reset-password',
+        assertLoaded: async (routePage) => {
+          await expect(
+            routePage.getByRole('heading', { name: 'Reset your password' })
+          ).toBeVisible();
+        },
+      },
+      {
+        route: '/admin',
+        pathname: '/admin',
+        assertLoaded: async (routePage) => {
+          await expect(routePage.getByRole('heading', { name: 'Launch Operations' })).toBeVisible();
+        },
+      },
+      {
+        route: '/verify-email?token=validmocktoken&email=test%40example.com',
+        pathname: '/verify-email',
+        assertLoaded: async (routePage) => {
+          await expect(routePage.locator('[data-testid^="verify-email-"]').first()).toBeVisible();
+        },
+      },
     ];
+    const individualRoutes: MobileRouteExpectation[] = [
+      {
+        route: '/app/i/home',
+        pathname: '/app/i/home',
+        assertLoaded: async (routePage) => {
+          await expect(
+            routePage.getByRole('heading', {
+              name: /Add your first proof record|Verify strongest proof record/,
+            })
+          ).toBeVisible();
+        },
+      },
+      {
+        route: '/app/i/profile',
+        pathname: '/app/i/profile',
+        assertLoaded: async (routePage) => {
+          await expect(
+            routePage.getByRole('navigation', { name: 'Mobile primary navigation' })
+          ).toBeVisible();
+          await expect(routePage.getByTestId('profile-skeleton')).toHaveCount(0);
+          await expect(
+            routePage.getByRole('heading', { name: 'Public portfolio readiness' })
+          ).toBeVisible();
+        },
+      },
+    ];
+    const orgRoutes: MobileRouteExpectation[] = [
+      {
+        route: '/app/o/test-org/home',
+        pathname: '/app/o/test-org/home',
+        assertLoaded: async (routePage) => {
+          await expect(routePage.getByText('Trust, assignment, and review order')).toBeVisible();
+        },
+      },
+      {
+        route: '/app/o/test-org/profile',
+        pathname: '/app/o/test-org/profile',
+        assertLoaded: async (routePage) => {
+          await expect(
+            routePage.getByRole('heading', { name: 'Organization trust profile' })
+          ).toBeVisible();
+        },
+      },
+      {
+        route: '/app/o/test-org/assignments',
+        pathname: '/app/o/test-org/assignments',
+        assertLoaded: async (routePage) => {
+          await expect(routePage.getByRole('heading', { name: 'Assignments' })).toBeVisible();
+        },
+      },
+    ];
+    const routes = [...publicRoutes, ...(isOrgMode ? orgRoutes : individualRoutes)];
 
-    for (const route of routes) {
+    for (const routeExpectation of routes) {
       const isolatedPage = await page.context().newPage();
       await isolatedPage.addInitScript(() => {
         localStorage.setItem('proofound-cookie-consent', 'v1.0.2025-11-06-declined');
       });
 
       try {
-        await gotoStable(isolatedPage, route);
+        await gotoStable(isolatedPage, routeExpectation.route);
+        expectCurrentPath(isolatedPage, routeExpectation.pathname, routeExpectation.route);
+        await routeExpectation.assertLoaded(isolatedPage);
 
         const overflowPx = await isolatedPage.evaluate(() => {
           const html = document.documentElement;
@@ -114,7 +164,9 @@ test.describe('Smartphone UI regression', () => {
           return Math.max(0, docWidth - viewportWidth);
         });
 
-        expect(overflowPx, `${route} has horizontal overflow`).toBeLessThanOrEqual(1);
+        expect(overflowPx, `${routeExpectation.route} has horizontal overflow`).toBeLessThanOrEqual(
+          1
+        );
       } finally {
         await isolatedPage.close();
       }
@@ -134,54 +186,15 @@ test.describe('Smartphone UI regression', () => {
     }
   });
 
-  test('notifications dropdown stays inside viewport on app shells', async ({ page }) => {
+  test('app shells do not expose archived notification entrypoints', async ({ page }) => {
     for (const route of ['/app/i/home', '/app/o/test-org/home']) {
       await gotoStable(page, route);
 
-      const notificationsTrigger = page.getByRole('button', { name: 'Notifications' }).first();
-      await expect(notificationsTrigger).toBeVisible();
-      await notificationsTrigger.click();
-
-      await expectNotificationDropdownWithinViewport(page);
-      await expectNotificationDropdownAboveBottomNav(page);
-      await page.getByRole('button', { name: 'Close notifications' }).first().click();
+      await expect(page.getByRole('button', { name: 'Notifications' })).toHaveCount(0);
+      await expect(page.getByTestId('notifications-dropdown')).toHaveCount(0);
+      await expect(page.locator('a[href^="/app/i/notifications"]')).toHaveCount(0);
+      await expect(page.locator('a[href^="/app/i/settings/notifications"]')).toHaveCount(0);
     }
-  });
-
-  test('mobile notifications dropdown auto-dismisses after inactivity', async ({ page }) => {
-    for (const route of ['/app/i/home', '/app/o/test-org/home']) {
-      await gotoStable(page, route);
-
-      const notificationsTrigger = page.getByRole('button', { name: 'Notifications' }).first();
-      await expect(notificationsTrigger).toBeVisible();
-      await notificationsTrigger.click();
-
-      const dropdown = page.getByTestId('notifications-dropdown');
-      await expect(dropdown).toBeVisible();
-      await page.waitForTimeout(4800);
-      await expect(dropdown).toBeHidden();
-    }
-  });
-
-  test('mobile notifications dropdown stays open while interacting', async ({ page }) => {
-    await gotoStable(page, '/app/i/home');
-
-    const notificationsTrigger = page.getByRole('button', { name: 'Notifications' }).first();
-    await expect(notificationsTrigger).toBeVisible();
-    await notificationsTrigger.click();
-
-    const dropdown = page.getByTestId('notifications-dropdown');
-    await expect(dropdown).toBeVisible();
-
-    await page.waitForTimeout(3000);
-    await dropdown.evaluate((node) => {
-      node.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
-    });
-    await page.waitForTimeout(2200);
-    await expect(dropdown).toBeVisible();
-
-    await page.waitForTimeout(2600);
-    await expect(dropdown).toBeHidden();
   });
 
   test('admin mobile header actions are visible and inside viewport', async ({ page }) => {
@@ -225,17 +238,30 @@ test.describe('Smartphone UI regression', () => {
     expect(paddingBottom).toBeGreaterThanOrEqual(80);
   });
 
-  test('mobile profile shells expose Settings in bottom navigation', async ({ page }) => {
-    for (const route of ['/app/i/profile', '/app/o/test-org/profile']) {
-      await gotoStable(page, route);
-      const mobileNav = page.getByRole('navigation', { name: 'Mobile primary navigation' });
-      await expect(mobileNav.getByRole('link', { name: 'Settings' })).toBeVisible();
+  test('mobile profile shells expose their retained bottom navigation destinations', async ({
+    page,
+  }) => {
+    if (!isOrgMode) {
+      await gotoStable(page, '/app/i/profile');
+      const individualMobileNav = page.getByRole('navigation', {
+        name: 'Mobile primary navigation',
+      });
+      await expect(individualMobileNav.getByRole('link', { name: 'Settings' })).toBeVisible();
+    }
+
+    if (isOrgMode) {
+      await gotoStable(page, '/app/o/test-org/profile');
+      const orgMobileNav = page.getByRole('navigation', { name: 'Mobile primary navigation' });
+      await expect(orgMobileNav.getByRole('link', { name: 'Public Trust Profile' })).toBeVisible();
+      await expect(orgMobileNav.getByRole('link', { name: 'Settings' })).toHaveCount(0);
     }
   });
 
   test('individual profile action buttons remain clickable above the mobile bottom nav', async ({
     page,
   }) => {
+    test.skip(isOrgMode, 'Run individual profile action checks without MOCK_ORG_MODE=true');
+
     await gotoStable(page, '/app/i/profile?profileView=full');
 
     const shareButton = page.getByRole('button', { name: 'Share', exact: true });
@@ -251,24 +277,28 @@ test.describe('Smartphone UI regression', () => {
   test('organization profile actions remain clickable above the mobile bottom nav', async ({
     page,
   }) => {
+    test.skip(!isOrgMode, 'Run organization profile action checks with MOCK_ORG_MODE=true');
+
     await gotoStable(page, '/app/o/test-org/profile');
 
-    const editProfile = page.getByTestId('org-edit-profile-button');
-    await expect(editProfile).toBeVisible();
-    await editProfile.click({ trial: true });
+    const organizationName = page.getByRole('textbox', { name: 'Organization name' });
+    await expect(organizationName).toBeVisible();
+    await organizationName.click({ trial: true });
 
-    const settingsLink = page
+    const publicTrustProfileLink = page
       .getByRole('navigation', { name: 'Mobile primary navigation' })
-      .getByRole('link', { name: 'Settings' });
-    await expect(settingsLink).toBeVisible();
-    await settingsLink.click({ trial: true });
+      .getByRole('link', { name: 'Public Trust Profile' });
+    await expect(publicTrustProfileLink).toBeVisible();
+    await publicTrustProfileLink.click({ trial: true });
   });
 
   test('narrow mobile width resilience for profile shells', async ({ browser }) => {
     const context = await browser.newContext({ ...devices['iPhone SE'] });
 
     try {
-      for (const route of ['/app/i/profile', '/app/o/test-org/profile']) {
+      const routes = isOrgMode ? ['/app/o/test-org/profile'] : ['/app/i/profile'];
+
+      for (const route of routes) {
         const page = await context.newPage();
         await page.addInitScript(() => {
           localStorage.setItem('proofound-cookie-consent', 'v1.0.2025-11-06-declined');
@@ -293,7 +323,14 @@ test.describe('Smartphone UI regression', () => {
           expect(overflowPx, `${route} overflows on iPhone SE`).toBeLessThanOrEqual(1);
 
           const mobileNav = page.getByRole('navigation', { name: 'Mobile primary navigation' });
-          await expect(mobileNav.getByRole('link', { name: 'Settings' })).toBeVisible();
+          if (route.startsWith('/app/i/')) {
+            await expect(mobileNav.getByRole('link', { name: 'Settings' })).toBeVisible();
+          } else {
+            await expect(
+              mobileNav.getByRole('link', { name: 'Public Trust Profile' })
+            ).toBeVisible();
+            await expect(mobileNav.getByRole('link', { name: 'Settings' })).toHaveCount(0);
+          }
         } finally {
           await page.close();
         }
@@ -303,7 +340,9 @@ test.describe('Smartphone UI regression', () => {
     }
   });
 
-  test('narrow mobile notifications dropdown stays inside viewport', async ({ browser }) => {
+  test('narrow mobile app shells keep archived notification entrypoints hidden', async ({
+    browser,
+  }) => {
     const context = await browser.newContext({ ...devices['iPhone SE'] });
 
     try {
@@ -316,12 +355,8 @@ test.describe('Smartphone UI regression', () => {
         try {
           await gotoStable(page, route);
 
-          const notificationsTrigger = page.getByRole('button', { name: 'Notifications' }).first();
-          await expect(notificationsTrigger).toBeVisible();
-          await notificationsTrigger.click();
-
-          await expectNotificationDropdownWithinViewport(page);
-          await expectNotificationDropdownAboveBottomNav(page);
+          await expect(page.getByRole('button', { name: 'Notifications' })).toHaveCount(0);
+          await expect(page.getByTestId('notifications-dropdown')).toHaveCount(0);
         } finally {
           await page.close();
         }
