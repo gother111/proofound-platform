@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
+import { inflateSync } from 'node:zlib';
 
 import { and, count, eq, gte, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
@@ -22,6 +23,7 @@ import {
 } from '@/lib/ai/usage-ledger';
 import { extractTextFromDocument } from '@/lib/expertise/document-extraction-provider';
 import { resolveGcpCvOcrConfig } from '@/lib/expertise/gcp-cv-ocr-config';
+import { extractPdfTextFromBytes } from '@/lib/expertise/pdf-client-extractor';
 import { evaluatePrivacyPreflightRules } from '@/lib/privacy/preflight-rules';
 
 export const START_FROM_CV_FEATURE = 'start_from_cv';
@@ -34,17 +36,25 @@ const DEFAULT_USER_DAILY_LIMIT = 3;
 const DEFAULT_GLOBAL_DAILY_LIMIT = 20;
 const DEFAULT_RETENTION_HOURS = 24;
 const MAX_EXTRACTED_TEXT_CHARS = 30_000;
+export const START_FROM_CV_QUOTA_COUNTED_STATUSES = ['ready_for_review', 'accepted'] as const;
 
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 const PHONE_PATTERN = /(?:\+?\d[\d\s().-]{7,}\d)/g;
 const URL_PATTERN = /\b(?:https?:\/\/|www\.)[^\s<>"']+/gi;
 const FILENAME_PATTERN = /\b[^\s/\\]+\.(?:pdf|png|jpe?g|docx?|txt|csv)\b/gi;
+const REDACTION_PLACEHOLDER_PATTERN =
+  /\[redacted (?:email|phone|url|filename|address|sensitive id)\]/gi;
 const ADDRESS_HINT_PATTERN =
   /\b\d{1,5}\s+[A-Z][A-Za-z0-9.' -]{2,}\s+(?:street|st|road|rd|ave|avenue|lane|ln|drive|dr|väg|gatan)\b/gi;
 const SENSITIVE_ID_PATTERN =
   /\b(?:personnummer|ssn|social security|passport|bank account|iban|tax id|national id)\b[:\s-]*[A-Z0-9 -]{4,}/gi;
 const FORBIDDEN_OUTPUT_PATTERN =
   /\b(?:fit score|candidate score|score|rank|ranking|shortlist|recommended role|recommended roles|seniority level|hire|no hire)\b/i;
+const CV_ANCHOR_WORD_PATTERN =
+  /\b(?:experience|employment|education|volunteer|volunteering|project|role|manager|lead|developer|engineer|designer|consultant|coordinator|specialist|director|analyst|associate|advisor|accountant|accounting|audit|audits|assurance|financial|controls?|analytics|automation|university|school|college|degree|diploma|msc|bsc|mba|skills?)\b/i;
+const SKILL_SECTION_PATTERN = /\b(?:skills?|tools?|technologies?|stack|competencies)\b\s*[:;-]/i;
+const ROLE_TITLE_PATTERN =
+  /\b(?:Assurance Associate|Junior Associate|Internal Audit Advisor|Accountant|Accounting Specialist|Audit Specialist|Data Analytics Specialist|Financial Analyst|Program Manager|Project Manager|Operations Manager|Product Engineer|Product Manager|Software Engineer|Developer|Consultant|Coordinator|Specialist|Advisor|Analyst|Lead|Manager)\b/i;
 
 type EnvReader = Record<string, string | undefined>;
 
@@ -403,7 +413,8 @@ export async function extractStartFromCvSession(input: {
   }
 
   const requestId = `start_cv_${randomUUID().replaceAll('-', '')}`;
-  const localText = mimeType === 'application/pdf' ? extractReadablePdfText(input.file.bytes) : '';
+  const localText =
+    mimeType === 'application/pdf' ? await extractReadablePdfText(input.file.bytes) : '';
   const ocrResult =
     localText.trim().length === 0 && config.useGcpOcr
       ? await runGuardedOcr({
@@ -486,8 +497,9 @@ export async function extractStartFromCvSession(input: {
   await updateSessionAfterExtraction({
     sessionId: input.sessionId,
     userId: input.userId,
-    status: 'ready_for_review',
-    extractionStatus,
+    status:
+      structured.extractionStatus === 'manual_fallback' ? 'manual_fallback' : 'ready_for_review',
+    extractionStatus: structured.extractionStatus,
     draftPayload: structured,
     fileMimeType: mimeType,
     fileSizeBytes: input.file.size,
@@ -643,9 +655,10 @@ async function loadActiveOrgIds(userId: string): Promise<string[]> {
   return rows.map((row) => row.orgId);
 }
 
-async function enforceStartFromCvDailyLimits(userId: string, env?: EnvReader) {
+export async function enforceStartFromCvDailyLimits(userId: string, env?: EnvReader) {
   const config = resolveStartFromCvConfig(env);
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const quotaCountedStatus = sql`${startFromCvImportSessions.status} IN ('ready_for_review', 'accepted')`;
   const [userCountRow, globalCountRow] = await Promise.all([
     db
       .select({ value: count() })
@@ -654,6 +667,7 @@ async function enforceStartFromCvDailyLimits(userId: string, env?: EnvReader) {
         and(
           eq(startFromCvImportSessions.userId, userId),
           gte(startFromCvImportSessions.createdAt, since),
+          quotaCountedStatus,
           isNull(startFromCvImportSessions.deletedAt)
         )
       ),
@@ -663,6 +677,7 @@ async function enforceStartFromCvDailyLimits(userId: string, env?: EnvReader) {
       .where(
         and(
           gte(startFromCvImportSessions.createdAt, since),
+          quotaCountedStatus,
           isNull(startFromCvImportSessions.deletedAt)
         )
       ),
@@ -681,7 +696,21 @@ function normalizeMimeType(value: string): string {
   return normalized === 'image/jpg' ? 'image/jpeg' : normalized;
 }
 
-function extractReadablePdfText(bytes: Uint8Array): string {
+async function extractReadablePdfText(bytes: Uint8Array): Promise<string> {
+  try {
+    const extracted = await extractPdfTextFromBytes(bytes);
+    if (extracted.trim().length > 0) {
+      return extracted;
+    }
+  } catch {
+    // Continue with server-side stream decoding and then a conservative raw scrape.
+  }
+
+  const decodedStreamText = extractTextFromPdfStreams(bytes);
+  if (decodedStreamText.trim().length > 0) {
+    return decodedStreamText;
+  }
+
   const raw = Buffer.from(bytes).toString('utf8');
   const printable = raw
     .replace(/\(([^()\r\n]{3,240})\)/g, '\n$1\n')
@@ -689,6 +718,111 @@ function extractReadablePdfText(bytes: Uint8Array): string {
     .replace(/\s+/g, ' ')
     .trim();
   return printable.includes('%PDF') ? printable.replace(/%PDF-\S+/g, '').trim() : printable;
+}
+
+export function extractTextFromPdfStreams(bytes: Uint8Array): string {
+  const pdf = Buffer.from(bytes).toString('latin1');
+  const chunks: string[] = [];
+  const streamPattern = /stream\r?\n([\s\S]*?)endstream/g;
+
+  for (const match of pdf.matchAll(streamPattern)) {
+    const objectSource = pdf.slice(Math.max(0, match.index - 800), match.index);
+    const streamSource = (match[1] ?? '').trim();
+    if (!/\/FlateDecode/i.test(objectSource)) {
+      continue;
+    }
+
+    try {
+      const encoded = /\/ASCII85Decode/i.test(objectSource)
+        ? decodeAscii85(streamSource)
+        : Buffer.from(streamSource, 'latin1');
+      const inflated = inflateSync(encoded).toString('utf8');
+      chunks.push(...extractPdfTextLiterals(inflated));
+    } catch {
+      // Ignore malformed streams and continue scanning other PDF objects.
+    }
+  }
+
+  return chunks.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function decodeAscii85(value: string): Buffer {
+  const clean = value.replace(/^<~/, '').replace(/~>$/, '').replace(/\s+/g, '');
+  const output: number[] = [];
+  let group = '';
+
+  for (const char of clean) {
+    if (char === 'z' && group.length === 0) {
+      output.push(0, 0, 0, 0);
+      continue;
+    }
+    if (char < '!' || char > 'u') {
+      continue;
+    }
+    group += char;
+    if (group.length === 5) {
+      output.push(...decodeAscii85Group(group, 4));
+      group = '';
+    }
+  }
+
+  if (group.length > 0) {
+    const take = group.length - 1;
+    output.push(...decodeAscii85Group(group.padEnd(5, 'u'), take));
+  }
+
+  return Buffer.from(output);
+}
+
+function decodeAscii85Group(group: string, take: number): number[] {
+  let value = 0;
+  for (const char of group) {
+    value = value * 85 + (char.charCodeAt(0) - 33);
+  }
+  return [(value >>> 24) & 0xff, (value >>> 16) & 0xff, (value >>> 8) & 0xff, value & 0xff].slice(
+    0,
+    take
+  );
+}
+
+function extractPdfTextLiterals(content: string): string[] {
+  const values: string[] = [];
+  const literalPattern = /\(((?:\\.|[^\\()])*)\)\s*Tj/g;
+  for (const match of content.matchAll(literalPattern)) {
+    const text = decodePdfLiteral(match[1] ?? '');
+    if (text.trim().length > 0) {
+      values.push(text.trim());
+    }
+  }
+  return values;
+}
+
+function decodePdfLiteral(value: string): string {
+  return value
+    .replace(/\\([nrtbf()\\])/g, (_match, escaped: string) => {
+      switch (escaped) {
+        case 'n':
+          return '\n';
+        case 'r':
+          return '\r';
+        case 't':
+          return '\t';
+        case 'b':
+          return '\b';
+        case 'f':
+          return '\f';
+        default:
+          return escaped;
+      }
+    })
+    .replace(/\\([0-7]{1,3})/g, (_match, octal: string) =>
+      String.fromCharCode(Number.parseInt(octal, 8))
+    )
+    .replace(/\x7f/g, ' • ')
+    .replace(/\x91|\x92/g, "'")
+    .replace(/\x93|\x94/g, '"')
+    .replace(/\x96/g, '–')
+    .replace(/\x97/g, '—');
 }
 
 async function runGuardedOcr(input: {
@@ -850,7 +984,7 @@ function buildGeminiPrompt(text: string, privacyWarnings: string[]) {
   ].join('\n');
 }
 
-function buildDeterministicDrafts(input: {
+export function buildDeterministicDrafts(input: {
   importSessionId: string;
   text: string;
   extractionStatus: string;
@@ -859,15 +993,18 @@ function buildDeterministicDrafts(input: {
   ocrProviderUsed: string | null;
 }): StartFromCvDraftOutput {
   const lines = input.text
-    .split(/[\n.;]+/)
+    .split(/[\n.;•]+/)
     .map((line) => line.replace(/\s+/g, ' ').trim())
-    .filter((line) => line.length >= 6 && line.length <= 240)
+    .filter(isHumanReadableCvLine)
     .slice(0, 80);
+  const contextLines = attachFollowingDateLines(lines);
 
-  const workLines = lines.filter((line) =>
-    /(?: at | - |, ).*(?:20\d{2}|19\d{2}|present|current|engineer|manager|lead|designer|developer|consultant)/i.test(
-      line
-    )
+  const workLines = contextLines.filter(
+    (line) =>
+      !isDateOnlyLine(line) &&
+      /(?: at | - | – ).*(?:20\d{2}|19\d{2}|present|current|engineer|manager|lead|designer|developer|consultant|specialist|associate|advisor|accountant|analyst|assurance|audit)/i.test(
+        line
+      )
   );
   const educationLines = lines.filter((line) =>
     /\b(?:university|school|college|bootcamp|academy|msc|bsc|ba|ma|degree|diploma)\b/i.test(line)
@@ -876,6 +1013,24 @@ function buildDeterministicDrafts(input: {
     /\b(?:volunteer|volunteering|mentor|community|nonprofit|ngo|club)\b/i.test(line)
   );
   const skillLabels = extractSkillLabels(lines);
+
+  const hasUsefulDraftSignal =
+    workLines.length > 0 ||
+    educationLines.length > 0 ||
+    volunteeringLines.length > 0 ||
+    skillLabels.length > 0;
+
+  if (!hasUsefulDraftSignal) {
+    return emptyDraftPayload('manual_fallback', {
+      importSessionId: input.importSessionId,
+      privacyWarnings: [
+        ...input.privacyWarnings,
+        'Readable CV text was too noisy to create useful drafts. Continue manually or upload a clearer PDF/image.',
+      ].slice(0, 12),
+      discardedUnsafeItems: input.discardedUnsafeItems,
+      ocrProviderUsed: input.ocrProviderUsed,
+    });
+  }
 
   const workContextDrafts = workLines.slice(0, 6).map((line) => {
     const parsed = parseContextLine(line);
@@ -928,17 +1083,18 @@ function buildDeterministicDrafts(input: {
     })
   );
 
-  const artifactLinkDrafts = input.text.includes('[redacted url]')
-    ? [
-        StartFromCvArtifactLinkDraftSchema.parse({
-          id: `artifact_${randomUUID()}`,
-          label: 'Possible CV-mentioned link',
-          sourceContext: 'A URL was redacted from the CV before drafting.',
-          status: 'draft_only',
-          privacyWarning: 'Re-add only public-safe links you choose to keep.',
-        }),
-      ]
-    : [];
+  const artifactLinkDrafts =
+    input.text.includes('[redacted url]') && anchorLines.length > 0
+      ? [
+          StartFromCvArtifactLinkDraftSchema.parse({
+            id: `artifact_${randomUUID()}`,
+            label: 'Possible CV-mentioned link',
+            sourceContext: 'A URL was redacted from the CV before drafting.',
+            status: 'draft_only',
+            privacyWarning: 'Re-add only public-safe links you choose to keep.',
+          }),
+        ]
+      : [];
 
   const unsupportedSkillDrafts = skillLabels.slice(0, 16).map((skill) =>
     StartFromCvUnsupportedSkillDraftSchema.parse({
@@ -978,7 +1134,7 @@ function parseContextLine(line: string): {
   dates: string | null;
 } {
   const dates = extractDates(line);
-  const withoutDates = dates ? line.replace(dates, '').trim() : line;
+  const withoutDates = stripCvSectionLabels(dates ? line.replace(dates, '').trim() : line);
   const atParts = withoutDates.split(/\s+at\s+/i);
   if (atParts.length >= 2) {
     return {
@@ -989,17 +1145,34 @@ function parseContextLine(line: string): {
   }
   const dashParts = withoutDates.split(/\s[-–—]\s/);
   if (dashParts.length >= 2) {
+    const left = cleanLabel(dashParts[0]);
+    const right = dashParts.slice(1).join(' - ');
+    const roleTitle = extractRoleTitle(right);
+    if (left && roleTitle) {
+      return {
+        title: roleTitle,
+        organization: left,
+        dates,
+      };
+    }
     return {
       title: cleanLabel(dashParts[0]),
       organization: cleanLabel(dashParts[1]),
       dates,
     };
   }
-  return { title: cleanLabel(withoutDates), organization: null, dates };
+  return {
+    title: extractRoleTitle(withoutDates) ?? cleanLabel(withoutDates),
+    organization: null,
+    dates,
+  };
 }
 
 function extractDates(line: string): string | null {
   return (
+    line.match(
+      /\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(?:19|20)\d{2}\s*(?:[-–—]|to)\s*(?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+)?(?:(?:19|20)\d{2}|present|current|now)\b/i
+    )?.[0] ??
     line.match(
       /\b(?:19|20)\d{2}\s*(?:[-–—]|to)\s*(?:(?:19|20)\d{2}|present|current|now)\b/i
     )?.[0] ??
@@ -1008,12 +1181,69 @@ function extractDates(line: string): string | null {
   );
 }
 
+function isDateOnlyLine(line: string): boolean {
+  const dates = extractDates(line);
+  return Boolean(dates && line.replace(dates, '').replace(/[-–—]/g, '').trim().length === 0);
+}
+
+function stripCvSectionLabels(value: string): string {
+  return value
+    .replace(/^.*\bEXPERIENCE\b\s*/i, '')
+    .replace(
+      /\b(?:CORE SKILLS|EXPERIENCE|EDUCATION|CERTIFICATIONS? & TRAINING|TOOLS|SELECTED ANALYTICS & AUTOMATION IMPACT)\b/gi,
+      ' '
+    )
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractRoleTitle(value: string): string | null {
+  return cleanLabel(value.match(ROLE_TITLE_PATTERN)?.[0]);
+}
+
+function attachFollowingDateLines(lines: string[]): string[] {
+  return lines.map((line, index) => {
+    if (extractDates(line)) {
+      return line;
+    }
+    const next = lines[index + 1];
+    return next && extractDates(next) ? `${line} ${next}` : line;
+  });
+}
+
 function cleanLabel(value: string | undefined): string | null {
   const cleaned = value
     ?.replace(/^[,;:-]+|[,;:-]+$/g, '')
     .trim()
     .slice(0, 160);
   return cleaned && cleaned.length >= 2 ? cleaned : null;
+}
+
+function isHumanReadableCvLine(line: string): boolean {
+  if (line.length < 6 || line.length > 240) {
+    return false;
+  }
+
+  const withoutRedactions = line.replace(REDACTION_PLACEHOLDER_PATTERN, ' ');
+  const letters = withoutRedactions.match(/[A-Za-zÅÄÖåäö]/g)?.length ?? 0;
+  const digits = withoutRedactions.match(/\d/g)?.length ?? 0;
+  const symbols = withoutRedactions.match(/[^A-Za-zÅÄÖåäö0-9\s,.'()+/#:&-]/g)?.length ?? 0;
+  const words = withoutRedactions.match(/[A-Za-zÅÄÖåäö][A-Za-zÅÄÖåäö'+-]{1,}/g) ?? [];
+
+  if (letters < 8 || words.length < 2) {
+    return false;
+  }
+  if (symbols > Math.max(2, Math.floor(line.length * 0.08))) {
+    return false;
+  }
+  if (digits > letters && !extractDates(line)) {
+    return false;
+  }
+  if (extractDates(line)) {
+    return true;
+  }
+
+  return CV_ANCHOR_WORD_PATTERN.test(withoutRedactions) || SKILL_SECTION_PATTERN.test(line);
 }
 
 function extractOutcomeHints(line: string): string[] {
@@ -1030,12 +1260,50 @@ function snippetReference(line: string): string {
 }
 
 function extractSkillLabels(lines: string[]): string[] {
-  const candidates = lines
-    .flatMap((line) => line.split(/[,|/]/))
-    .map((item) => item.replace(/\b(?:skills?|tools?|technologies?|stack)\b:?/gi, '').trim())
-    .filter((item) => /^[A-Za-z][A-Za-z0-9 +#.-]{1,40}$/.test(item))
-    .filter((item) => !/\b(?:email|phone|street|university|school|present)\b/i.test(item));
+  const coreSkillsIndex = lines.findIndex((line) => /\bCORE SKILLS\b/i.test(line));
+  const experienceIndex = lines.findIndex(
+    (line, index) => index > coreSkillsIndex && /\bEXPERIENCE\b/i.test(line)
+  );
+  const coreSkillLines =
+    coreSkillsIndex >= 0
+      ? lines
+          .slice(
+            coreSkillsIndex,
+            experienceIndex > coreSkillsIndex ? experienceIndex + 1 : coreSkillsIndex + 12
+          )
+          .flatMap((line) => line.split(/\bEXPERIENCE\b/i).slice(0, 1))
+      : lines.filter((line) => SKILL_SECTION_PATTERN.test(line));
+
+  const candidates = coreSkillLines
+    .flatMap((line) =>
+      stripCvSectionLabels(line)
+        .replace(/\b(?:skills?|tools?|technologies?|stack|competencies)\b\s*[:;-]?/gi, '')
+        .split(/[,|/]/)
+    )
+    .map((item) => item.trim())
+    .filter(isPlausibleSkillLabel);
   return [...new Set(candidates)].slice(0, 20);
+}
+
+function isPlausibleSkillLabel(value: string): boolean {
+  if (!/^[A-Za-zÅÄÖåäö][A-Za-zÅÄÖåäö0-9 +#.-]{1,40}$/.test(value)) {
+    return false;
+  }
+  if (!/[aeiouyåäö]/i.test(value)) {
+    return false;
+  }
+  if (/[#.-].*[#.-]/.test(value) && !/\b(?:c#|f#|node\.js|next\.js|vue\.js)\b/i.test(value)) {
+    return false;
+  }
+  if (
+    /\b(?:email|phone|street|university|school|present|redacted|mentioned|snippet)\b/i.test(value)
+  ) {
+    return false;
+  }
+  if (/[A-Z]{2,}[a-z][A-Z]|[a-z][A-Z]{2,}/.test(value)) {
+    return false;
+  }
+  return true;
 }
 
 function emptyDraftPayload(

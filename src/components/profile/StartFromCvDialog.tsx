@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { apiFetch } from '@/lib/api/fetch';
 import type { StartFromCvDraftOutput } from '@/lib/ai/start-from-cv';
 
 type StartFromCvDialogProps = {
@@ -69,7 +70,7 @@ export function StartFromCvDialog({ onApplyComplete }: StartFromCvDialogProps) {
     setLoading(true);
     setError(null);
     try {
-      const sessionResponse = await fetch('/api/ai/start-from-cv/sessions', {
+      const sessionResponse = await apiFetch('/api/ai/start-from-cv/sessions', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ consentToProcessCv: true }),
@@ -81,7 +82,7 @@ export function StartFromCvDialog({ onApplyComplete }: StartFromCvDialogProps) {
 
       const formData = new FormData();
       formData.set('file', file);
-      const extractResponse = await fetch(
+      const extractResponse = await apiFetch(
         `/api/ai/start-from-cv/sessions/${created.importSessionId}/extract`,
         {
           method: 'POST',
@@ -114,7 +115,7 @@ export function StartFromCvDialog({ onApplyComplete }: StartFromCvDialogProps) {
           ),
         ])
       );
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/ai/start-from-cv/sessions/${session.importSessionId}/accept`,
         {
           method: 'POST',
@@ -138,7 +139,7 @@ export function StartFromCvDialog({ onApplyComplete }: StartFromCvDialogProps) {
     if (!session) return;
     setLoading(true);
     try {
-      await fetch(`/api/ai/start-from-cv/sessions/${session.importSessionId}/discard`, {
+      await apiFetch(`/api/ai/start-from-cv/sessions/${session.importSessionId}/discard`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ deleteSession: true }),

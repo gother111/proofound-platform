@@ -56,6 +56,19 @@ function ensureWorkerSrc(module: PdfJsModule): void {
 }
 
 async function loadGetDocument(): Promise<GetDocumentFn> {
+  if (typeof window === 'undefined') {
+    try {
+      const legacyModule = (await import('pdfjs-dist/legacy/build/pdf.mjs')) as PdfJsModule;
+      const legacyGetDocument = resolveGetDocument(legacyModule);
+      if (legacyGetDocument) {
+        ensureWorkerSrc(legacyModule);
+        return legacyGetDocument;
+      }
+    } catch {
+      // Continue with browser-oriented entrypoints below.
+    }
+  }
+
   try {
     const webpackModule = (await import('pdfjs-dist/webpack.mjs')) as PdfJsModule;
     const webpackGetDocument = resolveGetDocument(webpackModule);
@@ -92,11 +105,10 @@ async function getDocumentLoader(): Promise<GetDocumentFn> {
   return getDocumentPromise;
 }
 
-export async function extractPdfTextFromFile(file: File): Promise<string> {
+export async function extractPdfTextFromBytes(bytes: Uint8Array): Promise<string> {
   const getDocument = await getDocumentLoader();
-  const buffer = await file.arrayBuffer();
   const document = await getDocument({
-    data: new Uint8Array(buffer),
+    data: new Uint8Array(bytes),
   }).promise;
 
   const pageTexts: string[] = [];
@@ -116,4 +128,9 @@ export async function extractPdfTextFromFile(file: File): Promise<string> {
   }
 
   return pageTexts.join('\n').trim();
+}
+
+export async function extractPdfTextFromFile(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  return extractPdfTextFromBytes(new Uint8Array(buffer));
 }
