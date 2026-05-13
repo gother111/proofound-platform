@@ -31,7 +31,7 @@ import {
   CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS,
   relationshipDisplayLabel,
   type SelectableCustomVerificationRelationship,
-} from '@/lib/verification/custom-verification';
+} from '@/lib/verification/custom-verification-labels';
 import type { VerificationComposerField, VerificationScope } from '@/lib/ai/verification-composer';
 
 type ComposerDraft = {

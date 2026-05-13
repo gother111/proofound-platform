@@ -1,9 +1,9 @@
 import { requireAuth } from '@/lib/auth';
 import { getProfileData } from '@/actions/profile';
-import { EditableProfileView } from '@/components/profile/EditableProfileView';
+import { DeferredEditableProfileView } from '@/components/profile/DeferredEditableProfileView';
 
 export default async function IndividualProfilePage() {
   await requireAuth();
   const profile = await getProfileData();
-  return <EditableProfileView initialProfile={profile} />;
+  return <DeferredEditableProfileView initialProfile={profile} />;
 }

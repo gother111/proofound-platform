@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type { CustomVerificationRelationship } from '@/lib/verification/custom-verification';
+import type { CustomVerificationRelationship } from '@/lib/verification/custom-verification-labels';
 
 type BundleItem = {
   id: string;

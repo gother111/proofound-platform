@@ -9,7 +9,7 @@ import { Wifi, WifiOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
 
-interface RealtimeMessageThreadProps {
+export interface RealtimeMessageThreadProps {
   conversationId: string;
   initialMessages: ThreadMessage[];
   currentUserId: string;

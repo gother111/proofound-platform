@@ -32,7 +32,7 @@ import { verificationStatusLabel } from '@/lib/copy/labels';
 import {
   relationshipDisplayLabel,
   type CustomVerificationRelationship,
-} from '@/lib/verification/custom-verification';
+} from '@/lib/verification/custom-verification-labels';
 import { RespondDialog } from './components/RespondDialog';
 import { BundleCancelDialog } from './components/BundleCancelDialog';
 import { VerificationRequestComposerDialog } from './components/VerificationRequestComposerDialog';
@@ -40,7 +40,7 @@ import { useAssistiveAiFlag } from '@/hooks/useAssistiveAiFlag';
 
 type VerificationRequest = VerificationRequestView;
 
-interface VerificationsClientProps {
+export interface VerificationsClientProps {
   incomingRequests: VerificationRequest[];
   sentRequests: VerificationRequest[];
   composerProofPacks?: VerificationComposerProofPackOption[];

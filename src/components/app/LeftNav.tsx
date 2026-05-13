@@ -19,8 +19,6 @@ import {
   ClipboardList,
   MessageCircle,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
 import { ORG_MVP_NAV_ITEMS } from '@/lib/org/mvp-surface-policy';
 
 /**
@@ -246,11 +244,10 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
               {isExpanded ? 'Beta testing' : 'Beta'}
             </div>
           ) : null}
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full justify-center h-8"
+            className="flex h-8 w-full items-center justify-center rounded-xl text-sm font-medium transition-all duration-300 hover:bg-proofound-forest/5 hover:text-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           >
             {isExpanded ? (
@@ -258,7 +255,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
             ) : (
               <ChevronRight className="w-3.5 h-3.5" />
             )}
-          </Button>
+          </button>
         </div>
       </aside>
 
@@ -308,15 +305,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
               >
                 {/* Fluid Active Indicator */}
                 {isActive && (
-                  <motion.div
-                    layoutId="mobile-nav-indicator"
-                    className="absolute inset-0 bg-proofound-forest/10 rounded-lg pointer-events-none"
-                    transition={{
-                      type: 'spring',
-                      stiffness: 400,
-                      damping: 30,
-                    }}
-                  />
+                  <div className="absolute inset-0 bg-proofound-forest/10 rounded-lg pointer-events-none transition-colors duration-200" />
                 )}
 
                 <Icon className="w-6 h-6 relative z-10" aria-hidden="true" />

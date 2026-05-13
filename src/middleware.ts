@@ -112,7 +112,13 @@ function buildNextResponseForPage(request: NextRequest, nonce: string): NextResp
 }
 
 function shouldIssuePageCsrfCookie(pathname: string): boolean {
-  return !pathname.startsWith('/admin');
+  return pathname === '/onboarding' || pathname.startsWith('/app/');
+}
+
+const CSRF_COOKIE_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+function shouldIssueApiCsrfCookie(request: NextRequest): boolean {
+  return !CSRF_COOKIE_SAFE_METHODS.has(request.method.toUpperCase());
 }
 
 function setCSRFTokenCookieIfChanged(
@@ -437,10 +443,12 @@ export async function middleware(request: NextRequest) {
         return response;
       }
 
-      const csrfToken = await getOrGenerateCSRFToken(request);
       const response = NextResponse.next();
       response.headers.set('x-request-id', requestId);
-      setCSRFTokenCookieIfChanged(request, response, csrfToken);
+      if (shouldIssueApiCsrfCookie(request)) {
+        const csrfToken = await getOrGenerateCSRFToken(request);
+        setCSRFTokenCookieIfChanged(request, response, csrfToken);
+      }
       attachRateLimitHeaders(response);
       applySecurityHeaders(response, request);
 

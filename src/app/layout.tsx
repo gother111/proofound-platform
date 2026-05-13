@@ -1,17 +1,13 @@
 import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import './globals.css';
-import { Toaster } from '@/components/ui/sonner';
-import { Toaster as LegacyToaster } from '@/components/ui/toaster';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { CookieBanner } from '@/components/CookieBanner';
 import { GlobalErrorHandler } from '@/components/GlobalErrorHandler';
-import { OptionalTelemetry } from '@/components/OptionalTelemetry';
 import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
 import { TransitionProvider } from '@/components/ui/transition-provider';
-import { DeferredAppEnhancements } from '@/components/root/DeferredAppEnhancements';
+import { RootClientEnhancements } from '@/components/root/RootClientEnhancements';
 
 /**
  * Root Layout Component
@@ -82,11 +78,7 @@ export default async function RootLayout({
             <div id="main-content" tabIndex={-1}>
               <TransitionProvider>{children}</TransitionProvider>
             </div>
-            <Toaster />
-            <LegacyToaster />
-            <DeferredAppEnhancements />
-            <CookieBanner />
-            <OptionalTelemetry />
+            <RootClientEnhancements />
           </NextIntlClientProvider>
         </ErrorBoundary>
       </body>

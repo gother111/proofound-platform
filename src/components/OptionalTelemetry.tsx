@@ -12,11 +12,21 @@ import {
 /**
  * Mount non-essential telemetry only after explicit analytics consent.
  */
+function shouldMountTelemetryInCurrentRuntime(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const hostname = window.location.hostname;
+  return hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '::1';
+}
+
 export function OptionalTelemetry() {
   const [telemetryEnabled, setTelemetryEnabled] = useState(false);
 
   useEffect(() => {
-    const refresh = () => setTelemetryEnabled(hasAnalyticsConsent());
+    const refresh = () =>
+      setTelemetryEnabled(shouldMountTelemetryInCurrentRuntime() && hasAnalyticsConsent());
     refresh();
 
     const onStorage = (event: StorageEvent) => {

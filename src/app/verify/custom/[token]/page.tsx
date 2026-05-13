@@ -26,7 +26,7 @@ import {
 import {
   relationshipDisplayLabel,
   type CustomVerificationRelationship,
-} from '@/lib/verification/custom-verification';
+} from '@/lib/verification/custom-verification-labels';
 
 type VerifyItem = {
   id: string;

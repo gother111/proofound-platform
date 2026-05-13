@@ -1,6 +1,6 @@
-import OrgMatchingPage from '../matching/page';
 import Link from 'next/link';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { DeferredOrgMatchingClient } from '../matching/DeferredOrgMatchingClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +26,7 @@ export default async function OrgAssignmentsAliasPage({
             pipeline context together.
           </p>
         </header>
-        <OrgMatchingPage />
+        <DeferredOrgMatchingClient />
       </div>
     </AppSurface>
   );

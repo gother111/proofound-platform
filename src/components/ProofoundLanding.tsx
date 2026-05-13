@@ -1,16 +1,21 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, useReducedMotion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { ScrollytellingSection } from './landing/sections/ScrollytellingSection';
 import { FinalCTASection } from './landing/sections/FinalCTASection';
 import { FooterSection } from './landing/sections/FooterSection';
 
-const NetworkBackground = ({ shouldReduceMotion }: { shouldReduceMotion: boolean }) => {
+interface LandingActionProps {
+  onGetStarted?: () => void;
+  onIndividualSignup?: () => void;
+  onOrganizationSignup?: () => void;
+}
+
+const NetworkBackground = () => {
   return (
     <div
       className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
@@ -30,49 +35,8 @@ const NetworkBackground = ({ shouldReduceMotion }: { shouldReduceMotion: boolean
           backgroundSize: '40px 40px',
         }}
       />
-      <motion.div
-        animate={
-          shouldReduceMotion
-            ? undefined
-            : {
-                y: [0, 24, 0],
-                scale: [1, 1.06, 1],
-                opacity: [0.42, 0.52, 0.42],
-              }
-        }
-        transition={
-          shouldReduceMotion
-            ? undefined
-            : {
-                duration: 18,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }
-        }
-        className="absolute right-[-5%] top-[-10%] h-[42rem] w-[42rem] rounded-full bg-proofound-forest/10 blur-[130px]"
-      />
-      <motion.div
-        animate={
-          shouldReduceMotion
-            ? undefined
-            : {
-                y: [0, -18, 0],
-                scale: [1, 1.08, 1],
-                opacity: [0.35, 0.46, 0.35],
-              }
-        }
-        transition={
-          shouldReduceMotion
-            ? undefined
-            : {
-                duration: 20,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                delay: 1.2,
-              }
-        }
-        className="absolute bottom-[-12%] left-[-6%] h-[34rem] w-[34rem] rounded-full bg-proofound-terracotta/12 blur-[110px]"
-      />
+      <div className="absolute right-[-5%] top-[-10%] h-[42rem] w-[42rem] rounded-full bg-proofound-forest/10 blur-[130px]" />
+      <div className="absolute bottom-[-12%] left-[-6%] h-[34rem] w-[34rem] rounded-full bg-proofound-terracotta/12 blur-[110px]" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(28,77,58,0),rgba(28,77,58,0.03))] opacity-60" />
     </div>
   );
@@ -80,20 +44,14 @@ const NetworkBackground = ({ shouldReduceMotion }: { shouldReduceMotion: boolean
 
 // --- Main Component ---
 
-interface ProofoundLandingProps {
-  onGetStarted?: () => void;
-  onIndividualSignup?: () => void;
-  onOrganizationSignup?: () => void;
-}
+type ProofoundLandingProps = LandingActionProps;
 
 export function ProofoundLanding({
   onGetStarted,
   onIndividualSignup,
   onOrganizationSignup,
 }: ProofoundLandingProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion() ?? false;
 
   const handleIndividualSignup = () => {
     if (onIndividualSignup) {
@@ -120,18 +78,10 @@ export function ProofoundLanding({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="relative min-h-screen overflow-x-clip bg-background text-foreground"
-    >
-      <NetworkBackground shouldReduceMotion={shouldReduceMotion} />
+    <div className="relative min-h-screen overflow-x-clip bg-background text-foreground">
+      <NetworkBackground />
 
-      <motion.header
-        initial={{ y: shouldReduceMotion ? 0 : -16, opacity: shouldReduceMotion ? 1 : 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={
-          shouldReduceMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }
-        }
+      <header
         className="fixed left-0 right-0 top-0 z-[80] border-b border-black/8 bg-[#f5f0e7]/94 px-3 py-2.5 backdrop-blur-md md:px-8 md:py-4"
         data-testid="landing-header"
       >
@@ -182,23 +132,21 @@ export function ProofoundLanding({
             </button>
           </div>
         </div>
-      </motion.header>
+      </header>
 
       <main>
         <ScrollytellingSection
-          shouldReduceMotion={shouldReduceMotion}
           onIndividualSignup={handleIndividualSignup}
           onOrganizationSignup={handleOrganizationSignup}
         />
 
         <FinalCTASection
           onGetStarted={handleGetStarted}
-          shouldReduceMotion={shouldReduceMotion}
           onIndividualSignup={handleIndividualSignup}
           onOrganizationSignup={handleOrganizationSignup}
         />
 
-        <FooterSection shouldReduceMotion={shouldReduceMotion} />
+        <FooterSection />
       </main>
     </div>
   );

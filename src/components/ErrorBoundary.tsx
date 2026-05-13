@@ -1,10 +1,6 @@
 'use client';
 
 import React from 'react';
-import * as Sentry from '@sentry/nextjs';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -60,14 +56,22 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to Sentry
-    Sentry.captureException(error, {
-      contexts: {
-        react: {
-          componentStack: errorInfo.componentStack,
-        },
-      },
-    });
+    // Load Sentry only on the rare path where an error boundary actually catches an error.
+    void import('@sentry/nextjs')
+      .then((Sentry) => {
+        Sentry.captureException(error, {
+          contexts: {
+            react: {
+              componentStack: errorInfo.componentStack,
+            },
+          },
+        });
+      })
+      .catch((reportingError) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to report ErrorBoundary exception:', reportingError);
+        }
+      });
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
@@ -89,36 +93,34 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
       // Default error UI with proper accessibility
       return (
-        <div role="alert" aria-live="assertive">
-          <Card className="border-destructive">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden="true" />
-                <CardTitle>Something went wrong</CardTitle>
-              </div>
-              <CardDescription>
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="rounded-lg border border-destructive/60 bg-background p-6 text-foreground shadow-sm"
+        >
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <h2 className="text-base font-semibold">Something went wrong</h2>
+              <p className="text-sm text-muted-foreground">
                 An error occurred while rendering this component. The error has been reported to our
                 team.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {this.props.showDetails && this.state.error && (
-                <div className="rounded-md bg-muted p-4">
-                  <p className="text-sm font-mono text-muted-foreground">
-                    {this.state.error.message}
-                  </p>
-                </div>
-              )}
-              <Button
-                onClick={this.handleReset}
-                variant="outline"
-                size="sm"
-                leftIcon={<RefreshCw className="h-4 w-4" />}
-              >
-                Try again
-              </Button>
-            </CardContent>
-          </Card>
+              </p>
+            </div>
+            {this.props.showDetails && this.state.error && (
+              <div className="rounded-md bg-muted p-4">
+                <p className="font-mono text-sm text-muted-foreground">
+                  {this.state.error.message}
+                </p>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={this.handleReset}
+              className="inline-flex h-9 items-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Try again
+            </button>
+          </div>
         </div>
       );
     }
@@ -141,8 +143,8 @@ export function InlineErrorBoundary({ children }: { children: React.ReactNode })
       fallback={
         <div className="flex items-center justify-center p-8 text-center">
           <div className="space-y-2">
-            <AlertTriangle className="mx-auto h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Failed to load this section</p>
+            <p className="text-sm font-medium text-foreground">Failed to load this section</p>
+            <p className="text-sm text-muted-foreground">Please refresh and try again.</p>
           </div>
         </div>
       }
@@ -161,8 +163,8 @@ export function FormErrorBoundary({ children }: { children: React.ReactNode }) {
     <ErrorBoundary
       fallback={
         <div className="rounded-md border border-destructive bg-destructive/10 p-4">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-destructive" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-destructive">Something went wrong</p>
             <p className="text-sm text-destructive">
               An error occurred. Please refresh the page and try again.
             </p>
@@ -192,16 +194,18 @@ export function DataErrorBoundary({
       onReset={onRetry}
       fallback={
         <div className="flex flex-col items-center justify-center p-12 text-center">
-          <AlertTriangle className="mb-4 h-12 w-12 text-muted-foreground" />
           <h3 className="mb-2 text-lg font-semibold">Failed to load data</h3>
           <p className="mb-4 text-sm text-muted-foreground">
             An error occurred while loading this data. The error has been reported.
           </p>
           {onRetry && (
-            <Button onClick={onRetry} variant="outline" size="sm">
-              <RefreshCw className="mr-2 h-4 w-4" />
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex h-9 items-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               Retry
-            </Button>
+            </button>
           )}
         </div>
       }

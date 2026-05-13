@@ -1,10 +1,10 @@
 import { requireAuth } from '@/lib/auth';
-import { SettingsContent } from '@/components/settings/SettingsContent';
+import { DeferredSettingsContent } from '@/components/settings/DeferredSettingsContent';
 
 export const dynamic = 'force-dynamic';
 
 export default async function IndividualSettingsPage() {
   const user = await requireAuth();
 
-  return <SettingsContent userId={user.id} />;
+  return <DeferredSettingsContent userId={user.id} />;
 }

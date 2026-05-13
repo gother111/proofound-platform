@@ -1,24 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, type ComponentType } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { MapPin, Clock, DollarSign, Shield, Eye, EyeOff, BellOff, Loader2 } from 'lucide-react';
-import { PACScoreExplainer } from './PACScoreExplainer';
-import { MatchExplainerModal } from './MatchExplainerModal';
-import { SnoozeDialog } from './SnoozeDialog';
 import { VerificationGatesWarning } from './VerificationGatesWarning';
 import { RankDisplay } from './RankDisplay';
-import { ConsentToShareDialog } from './ConsentToShareDialog';
 import { apiFetch } from '@/lib/api/fetch';
 import {
   MATCH_EXPLAINER_TEST_IDS,
   MATCH_EXPLAINER_TRIGGER_LABEL,
 } from '@/lib/matching/explainer-contract';
 import { skillDisplayLabel } from '@/lib/copy/labels';
-import { motion } from 'framer-motion';
+
+type DeferredComponent = ComponentType<any>;
 
 interface MatchResultCardProps {
   result: {
@@ -111,6 +108,15 @@ export function MatchResultCard({
   const [gateCheckResult, setGateCheckResult] = useState<any>(null);
   const [isConsentDialogOpen, setIsConsentDialogOpen] = useState(false);
   const [visibleFieldsData, setVisibleFieldsData] = useState<any>(null);
+  const [MatchExplainerModalView, setMatchExplainerModalView] = useState<DeferredComponent | null>(
+    null
+  );
+  const [PACScoreExplainerView, setPACScoreExplainerView] = useState<DeferredComponent | null>(
+    null
+  );
+  const [SnoozeDialogView, setSnoozeDialogView] = useState<DeferredComponent | null>(null);
+  const [ConsentToShareDialogView, setConsentToShareDialogView] =
+    useState<DeferredComponent | null>(null);
 
   // Top 3 skills
   const topSkills = skills.slice(0, 3);
@@ -126,6 +132,83 @@ export function MatchResultCard({
   const contributions = Object.entries(result.contributions ?? {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
+  const shouldShowPacExplainer = Boolean(
+    !result.id &&
+      result.subscores &&
+      (result.subscores.pac || result.subscores.values || result.subscores.causes)
+  );
+
+  useEffect(() => {
+    if (!matchExplanation || MatchExplainerModalView) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void import('./MatchExplainerModal').then((module) => {
+      if (!cancelled) {
+        setMatchExplainerModalView(() => module.MatchExplainerModal);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [MatchExplainerModalView, matchExplanation]);
+
+  useEffect(() => {
+    if (!shouldShowPacExplainer || PACScoreExplainerView) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void import('./PACScoreExplainer').then((module) => {
+      if (!cancelled) {
+        setPACScoreExplainerView(() => module.PACScoreExplainer);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [PACScoreExplainerView, shouldShowPacExplainer]);
+
+  useEffect(() => {
+    if (!isSnoozeDialogOpen || SnoozeDialogView) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void import('./SnoozeDialog').then((module) => {
+      if (!cancelled) {
+        setSnoozeDialogView(() => module.SnoozeDialog);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [SnoozeDialogView, isSnoozeDialogOpen]);
+
+  useEffect(() => {
+    if (!visibleFieldsData || ConsentToShareDialogView) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void import('./ConsentToShareDialog').then((module) => {
+      if (!cancelled) {
+        setConsentToShareDialogView(() => module.ConsentToShareDialog);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ConsentToShareDialogView, visibleFieldsData]);
 
   // Fetch detailed match explanation when requested
   const fetchMatchExplanation = async () => {
@@ -231,7 +314,7 @@ export function MatchResultCard({
 
   if (isOrgView) {
     return (
-      <motion.div layoutId={`match-card-${result.id}`} className="block h-full">
+      <div className="block h-full">
         <Card variant="bento" className="flex h-full flex-col p-5">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="space-y-1">
@@ -251,8 +334,8 @@ export function MatchResultCard({
             </div>
 
             {result.id ? (
-              matchExplanation ? (
-                <MatchExplainerModal
+              matchExplanation && MatchExplainerModalView ? (
+                <MatchExplainerModalView
                   matchId={matchExplanation.matchId}
                   compositeScore={matchExplanation.compositeScore}
                   rank={matchExplanation.rank}
@@ -269,6 +352,18 @@ export function MatchResultCard({
                   constraints={matchExplanation.constraints}
                   reviewCard={matchExplanation.reviewCard}
                 />
+              ) : matchExplanation ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
+                  disabled
+                  data-testid={MATCH_EXPLAINER_TEST_IDS.trigger}
+                  aria-haspopup="dialog"
+                >
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Loading...
+                </Button>
               ) : (
                 <Button
                   variant="ghost"
@@ -372,12 +467,12 @@ export function MatchResultCard({
             </div>
           )}
         </Card>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div layoutId={`match-card-${result.id}`} className="block h-full">
+    <div className="block h-full">
       <Card variant="bento" className="p-4 h-full">
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
@@ -407,9 +502,9 @@ export function MatchResultCard({
             {/* Match Explainer - Full detailed breakdown */}
             {result.id && (
               <div className="mt-2">
-                {matchExplanation ? (
+                {matchExplanation && MatchExplainerModalView ? (
                   <>
-                    <MatchExplainerModal
+                    <MatchExplainerModalView
                       matchId={matchExplanation.matchId}
                       compositeScore={matchExplanation.compositeScore}
                       rank={matchExplanation.rank}
@@ -445,6 +540,18 @@ export function MatchResultCard({
                       </div>
                     )}
                   </>
+                ) : matchExplanation ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
+                    disabled
+                    data-testid={MATCH_EXPLAINER_TEST_IDS.trigger}
+                    aria-haspopup="dialog"
+                  >
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Loading...
+                  </Button>
                 ) : (
                   <Button
                     variant="ghost"
@@ -469,21 +576,32 @@ export function MatchResultCard({
             )}
 
             {/* Fallback PAC Explainer if no match ID */}
-            {!result.id &&
-              result.subscores &&
-              (result.subscores.pac || result.subscores.values || result.subscores.causes) && (
-                <div className="mt-2">
-                  <PACScoreExplainer
-                    pacScore={result.subscores.pac || result.score}
-                    valuesOverlap={result.subscores.values || 0}
-                    causesOverlap={result.subscores.causes || 0}
+            {shouldShowPacExplainer && (
+              <div className="mt-2">
+                {PACScoreExplainerView ? (
+                  <PACScoreExplainerView
+                    pacScore={result.subscores?.pac || result.score}
+                    valuesOverlap={result.subscores?.values || 0}
+                    causesOverlap={result.subscores?.causes || 0}
                     sharedValues={data?.valuesTags || []}
                     sharedCauses={data?.causeTags || []}
                     totalValues={data?.valuesTags?.length || 0}
                     totalCauses={data?.causeTags?.length || 0}
                   />
-                </div>
-              )}
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs gap-1"
+                    style={{ color: '#1C4D3A' }}
+                    disabled
+                  >
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Loading...
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -647,8 +765,8 @@ export function MatchResultCard({
         )}
 
         {/* Snooze Dialog */}
-        {result.id && (
-          <SnoozeDialog
+        {result.id && isSnoozeDialogOpen && SnoozeDialogView && (
+          <SnoozeDialogView
             open={isSnoozeDialogOpen}
             onOpenChange={setIsSnoozeDialogOpen}
             matchId={result.id}
@@ -672,8 +790,8 @@ export function MatchResultCard({
         )}
 
         {/* Consent to Share Dialog */}
-        {visibleFieldsData && (
-          <ConsentToShareDialog
+        {visibleFieldsData && ConsentToShareDialogView && (
+          <ConsentToShareDialogView
             isOpen={isConsentDialogOpen}
             onClose={() => setIsConsentDialogOpen(false)}
             matchId={result.id || ''}
@@ -684,6 +802,6 @@ export function MatchResultCard({
           />
         )}
       </Card>
-    </motion.div>
+    </div>
   );
 }

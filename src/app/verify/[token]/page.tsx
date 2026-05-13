@@ -27,7 +27,7 @@ import {
 import {
   relationshipDisplayLabel,
   type CustomVerificationRelationship,
-} from '@/lib/verification/custom-verification';
+} from '@/lib/verification/custom-verification-labels';
 
 type VerificationStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
 

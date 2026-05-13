@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import { usePathname } from 'next/navigation';
-
-import { ChatWidget } from '@/components/support/ChatWidget';
 
 const IDLE_TIMEOUT_MS = 1500;
 
@@ -18,6 +16,7 @@ function isAppRoute(pathname: string | null): boolean {
 export function DeferredAppEnhancements() {
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
+  const [ChatWidgetComponent, setChatWidgetComponent] = useState<ComponentType | null>(null);
   const shouldDeferMount = useMemo(
     () => isAppRoute(pathname) && !isSnippetEmbedRoute(pathname),
     [pathname]
@@ -57,13 +56,31 @@ export function DeferredAppEnhancements() {
     };
   }, [shouldDeferMount]);
 
-  if (!shouldDeferMount || !ready) {
+  useEffect(() => {
+    if (!shouldDeferMount || !ready || ChatWidgetComponent) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void import('@/components/support/ChatWidget').then((module) => {
+      if (!cancelled) {
+        setChatWidgetComponent(() => module.ChatWidget);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ChatWidgetComponent, ready, shouldDeferMount]);
+
+  if (!shouldDeferMount || !ready || !ChatWidgetComponent) {
     return null;
   }
 
   return (
     <>
-      <ChatWidget />
+      <ChatWidgetComponent />
     </>
   );
 }

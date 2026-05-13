@@ -47,6 +47,28 @@ describe('middleware CSRF behavior', () => {
     expect(setCookieHeader).not.toContain('csrf_token=');
   });
 
+  it('does not mint page-load csrf_token cookies on public marketing pages', async () => {
+    const request = new NextRequest('http://localhost/', {
+      method: 'GET',
+    });
+
+    const response = await middleware(request);
+    const setCookieHeader = response.headers.get('set-cookie') || '';
+
+    expect(setCookieHeader).not.toContain('csrf_token=');
+  });
+
+  it('does not mint csrf_token cookies on safe API reads', async () => {
+    const request = new NextRequest('http://localhost/api/health', {
+      method: 'GET',
+    });
+
+    const response = await middleware(request);
+    const setCookieHeader = response.headers.get('set-cookie') || '';
+
+    expect(setCookieHeader).not.toContain('csrf_token=');
+  });
+
   it('does not re-issue an already valid csrf_token cookie on page loads', async () => {
     const token = await generateSignedCSRFToken(new NextRequest('http://localhost/app/i/home'));
     const request = new NextRequest('http://localhost/app/i/home', {

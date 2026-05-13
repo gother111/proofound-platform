@@ -1,17 +1,7 @@
 'use client';
 
+import { useEffect, useRef, useState, type ComponentType } from 'react';
 import { usePathname } from 'next/navigation';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { signOut } from '@/actions/auth';
 import { Logo } from '@/components/brand/Logo';
 import { getRouteMeta } from '@/lib/ui/v2/routeMeta';
 import { cn } from '@/lib/utils';
@@ -36,8 +26,16 @@ interface TopBarProps {
   userInitials?: string;
 }
 
+type ProfileMenuComponent = ComponentType<{
+  userName: string;
+  onClose: () => void;
+}>;
+
 export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
   const pathname = usePathname();
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [ProfileMenu, setProfileMenu] = useState<ProfileMenuComponent | null>(null);
 
   // V2 Feature Flag
   const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
@@ -62,6 +60,50 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
     return 'Overview';
   };
 
+  useEffect(() => {
+    if (!isProfileMenuOpen || ProfileMenu) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void import('./TopBarProfileMenu').then((module) => {
+      if (!cancelled) {
+        setProfileMenu(() => module.TopBarProfileMenu);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ProfileMenu, isProfileMenuOpen]);
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) {
+      return;
+    }
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (!profileMenuRef.current?.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isProfileMenuOpen]);
+
   return (
     <>
       {/* Semantic header with role="banner" for main site header */}
@@ -84,9 +126,8 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
             </span>
           </div>
 
-          <Separator
-            orientation="vertical"
-            className="h-4 bg-proofound-stone hidden sm:block"
+          <div
+            className="hidden h-4 w-px shrink-0 bg-proofound-stone sm:block"
             aria-hidden="true"
           />
 
@@ -102,42 +143,22 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
         </div>
 
         {/* Right: Avatar */}
-        <div className="flex items-center gap-2 md:gap-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Open profile menu"
-                className="rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 transition-transform hover:scale-105"
-              >
-                <Avatar className="w-8 h-8 border border-white shadow-sm">
-                  <AvatarFallback className="text-xs font-medium bg-proofound-forest text-proofound-parchment">
-                    {userInitials}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48 border-proofound-stone/60 rounded-xl shadow-lg"
-            >
-              <DropdownMenuLabel className="flex flex-col">
-                <span className="text-sm font-medium">{userName}</span>
-                <span className="text-xs text-muted-foreground">Signed in</span>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <form action={signOut}>
-                <DropdownMenuItem
-                  asChild
-                  className="cursor-pointer focus:bg-rose-50 focus:text-rose-600 rounded-md"
-                >
-                  <button type="submit" className="w-full text-left">
-                    Log out
-                  </button>
-                </DropdownMenuItem>
-              </form>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div ref={profileMenuRef} className="relative flex items-center gap-2 md:gap-3">
+          <button
+            type="button"
+            aria-label="Open profile menu"
+            aria-expanded={isProfileMenuOpen}
+            aria-haspopup="menu"
+            onClick={() => setIsProfileMenuOpen((open) => !open)}
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white bg-proofound-forest text-xs font-medium text-proofound-parchment shadow-sm">
+              {userInitials}
+            </span>
+          </button>
+          {isProfileMenuOpen && ProfileMenu ? (
+            <ProfileMenu userName={userName} onClose={() => setIsProfileMenuOpen(false)} />
+          ) : null}
         </div>
       </header>
     </>

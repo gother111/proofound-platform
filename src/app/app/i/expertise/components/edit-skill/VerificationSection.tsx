@@ -10,7 +10,7 @@ import {
   CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS,
   type CustomVerificationRelationship,
   relationshipDisplayLabel,
-} from '@/lib/verification/custom-verification';
+} from '@/lib/verification/custom-verification-labels';
 import { verificationStatusLabel } from '@/lib/copy/labels';
 
 import type { VerificationDraft, VerificationRequest } from './types';

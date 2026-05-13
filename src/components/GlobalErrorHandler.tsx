@@ -11,8 +11,12 @@
  */
 
 import { useEffect } from 'react';
-import { toast } from 'sonner';
 import { getErrorMessage, logError } from '@/lib/error-handler';
+
+async function showErrorToast(message: string) {
+  const { toast } = await import('sonner');
+  toast.error(message);
+}
 
 export function GlobalErrorHandler() {
   useEffect(() => {
@@ -32,9 +36,9 @@ export function GlobalErrorHandler() {
 
       // Only show toast if it's not already shown by component
       if (!message.includes('[object')) {
-        toast.error(message);
+        void showErrorToast(message);
       } else {
-        toast.error('An unexpected error occurred. Please refresh the page.');
+        void showErrorToast('An unexpected error occurred. Please refresh the page.');
       }
     };
 
@@ -56,9 +60,9 @@ export function GlobalErrorHandler() {
       // (Next.js throws promise rejections for redirects which is normal)
       if (!message.includes('NEXT_REDIRECT') && !message.includes('NEXT_NOT_FOUND')) {
         if (!message.includes('[object')) {
-          toast.error(message);
+          void showErrorToast(message);
         } else {
-          toast.error('An unexpected error occurred. Please try again.');
+          void showErrorToast('An unexpected error occurred. Please try again.');
         }
       }
     };

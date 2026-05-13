@@ -2,7 +2,7 @@ import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeEmail } from '@/lib/verification/integrity';
 import { loadVerificationRequestFeed } from '@/lib/verification/request-feed';
-import { VerificationsClient } from './VerificationsClient';
+import { DeferredVerificationsClient } from './DeferredVerificationsClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +21,7 @@ export default async function VerificationsPage() {
   });
 
   return (
-    <VerificationsClient
+    <DeferredVerificationsClient
       incomingRequests={incomingRequests}
       sentRequests={sentRequests}
       composerProofPacks={composerProofPacks}

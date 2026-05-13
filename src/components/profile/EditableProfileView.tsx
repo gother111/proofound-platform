@@ -47,7 +47,7 @@ function resolvePortfolioGateMessage(lockReason: string | null): string {
   }
 }
 
-type EditableProfileViewProps = {
+export type EditableProfileViewProps = {
   initialProfile?: ProfileData | null;
 };
 

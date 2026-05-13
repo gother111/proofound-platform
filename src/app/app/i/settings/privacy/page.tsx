@@ -1,11 +1,10 @@
 import { requireAuth } from '@/lib/auth';
-import { PrivacySettingsClient } from './PrivacySettingsClient';
+import { DeferredPrivacySettingsClient } from './DeferredPrivacySettingsClient';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PrivacySettingsPage() {
   await requireAuth();
 
-  return <PrivacySettingsClient />;
+  return <DeferredPrivacySettingsClient />;
 }
-

@@ -1,25 +1,32 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { createPortal } from 'react-dom';
-import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-interface Step {
-  id: string; // The ID of the DOM element to highlight
+export interface SpotlightStep {
+  id: string;
   title: string;
   description: string;
 }
 
 interface SpotlightContextProps {
-  startTour: (t: Step[]) => void;
+  startTour: (steps: SpotlightStep[]) => void;
   stopTour: () => void;
   nextStep: () => void;
   prevStep: () => void;
   isActive: boolean;
   currentStepIndex: number;
 }
+
+type SpotlightOverlayComponent = React.ComponentType<{
+  isActive: boolean;
+  mounted: boolean;
+  steps: SpotlightStep[];
+  currentStepIndex: number;
+  targetRect: DOMRect | null;
+  onStop: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+}>;
 
 const SpotlightContext = createContext<SpotlightContextProps | null>(null);
 let hasWarnedMissingSpotlightProvider = false;
@@ -47,10 +54,11 @@ export function useSpotlight() {
 }
 
 export function SpotlightProvider({ children }: { children: React.ReactNode }) {
-  const [steps, setSteps] = useState<Step[]>([]);
+  const [steps, setSteps] = useState<SpotlightStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [Overlay, setOverlay] = useState<SpotlightOverlayComponent | null>(null);
 
   const isActive = currentStepIndex >= 0 && currentStepIndex < steps.length;
 
@@ -58,9 +66,27 @@ export function SpotlightProvider({ children }: { children: React.ReactNode }) {
     setMounted(true);
   }, []);
 
-  const startTour = useCallback((t: Step[]) => {
-    if (!t.length) return;
-    setSteps(t);
+  useEffect(() => {
+    if (!isActive || Overlay) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void import('./spotlight-overlay').then((module) => {
+      if (!cancelled) {
+        setOverlay(() => module.SpotlightOverlay);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [Overlay, isActive]);
+
+  const startTour = useCallback((tourSteps: SpotlightStep[]) => {
+    if (!tourSteps.length) return;
+    setSteps(tourSteps);
     setCurrentStepIndex(0);
   }, []);
 
@@ -71,14 +97,13 @@ export function SpotlightProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const nextStep = useCallback(() => {
-    setCurrentStepIndex((i) => i + 1);
+    setCurrentStepIndex((index) => index + 1);
   }, []);
 
   const prevStep = useCallback(() => {
-    setCurrentStepIndex((i) => Math.max(0, i - 1));
+    setCurrentStepIndex((index) => Math.max(0, index - 1));
   }, []);
 
-  // Track scroll and resize
   useEffect(() => {
     if (!isActive) return;
 
@@ -86,11 +111,10 @@ export function SpotlightProvider({ children }: { children: React.ReactNode }) {
 
     const updateRect = () => {
       const currentStep = steps[currentStepIndex];
-      const el = document.getElementById(currentStep.id);
+      const element = document.getElementById(currentStep.id);
 
-      if (el) {
-        // Only scroll if element is completely out of view
-        const rect = el.getBoundingClientRect();
+      if (element) {
+        const rect = element.getBoundingClientRect();
         const isInView =
           rect.top >= 0 &&
           rect.left >= 0 &&
@@ -98,15 +122,13 @@ export function SpotlightProvider({ children }: { children: React.ReactNode }) {
           rect.right <= (window.innerWidth || document.documentElement.clientWidth);
 
         if (!isInView) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        // Apply rect slightly after scroll frames settle
-        setTimeout(
+        window.setTimeout(
           () => {
             if (!isMounted) return;
-            const newRect = el.getBoundingClientRect();
-            setTargetRect(newRect);
+            setTargetRect(element.getBoundingClientRect());
           },
           isInView ? 10 : 300
         );
@@ -127,137 +149,23 @@ export function SpotlightProvider({ children }: { children: React.ReactNode }) {
     };
   }, [isActive, currentStepIndex, steps]);
 
-  const SpotlightOverlay = () => {
-    if (!isActive || !mounted) return null;
-    const currentStep = steps[currentStepIndex];
-
-    // Position tooltip logic
-    let topPos = 0;
-    let leftPos = 0;
-
-    if (targetRect) {
-      topPos = targetRect.bottom + 20;
-      // if too close to bottom, show above instead
-      if (topPos + 200 > window.innerHeight) {
-        topPos = targetRect.top - 20 - 200; // rough estimation
-      }
-      leftPos = Math.max(
-        16,
-        Math.min(window.innerWidth - 320 - 16, targetRect.left + targetRect.width / 2 - 160)
-      );
-    }
-
-    return createPortal(
-      <AnimatePresence>
-        {isActive && (
-          <div className="fixed inset-0 z-[100]">
-            {/* Fully opaque mask layer, SVG punch-out is visual only */}
-            <div
-              className="absolute inset-0 z-[-1] pointer-events-auto"
-              style={{ backdropFilter: 'blur(2px)' }}
-            />
-
-            {/* Cutout Mask using SVG */}
-            <svg width="100%" height="100%" className="absolute inset-0 pointer-events-none z-0">
-              <defs>
-                <mask id="spotlight-mask">
-                  <rect width="100%" height="100%" fill="white" />
-                  {targetRect && (
-                    <motion.rect
-                      fill="black"
-                      rx={16} // smooth rounded corners
-                      initial={false}
-                      animate={{
-                        x: targetRect.left - 12,
-                        y: targetRect.top - 12,
-                        width: targetRect.width + 24,
-                        height: targetRect.height + 24,
-                      }}
-                      transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-                    />
-                  )}
-                </mask>
-              </defs>
-
-              <rect
-                width="100%"
-                height="100%"
-                fill="black"
-                fillOpacity="0.55"
-                mask="url(#spotlight-mask)"
-              />
-            </svg>
-
-            {/* Tooltip Card */}
-            {targetRect && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: 0.1, type: 'spring', stiffness: 200, damping: 25 }}
-                style={{
-                  position: 'absolute',
-                  top: topPos,
-                  left: leftPos,
-                  width: Math.min(320, window.innerWidth - 32),
-                }}
-                className="bg-white dark:bg-stone-900 rounded-xl p-6 shadow-2xl border border-black/10 dark:border-white/10 flex flex-col gap-3 pointer-events-auto z-10"
-              >
-                <div className="flex justify-between items-start gap-4">
-                  <h3 className="font-semibold text-lg text-proofound-charcoal dark:text-foreground leading-tight">
-                    {currentStep.title}
-                  </h3>
-                  <button
-                    onClick={stopTour}
-                    className="text-muted-foreground hover:text-foreground p-1 -mr-2 -mt-2"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {currentStep.description}
-                </p>
-
-                <div className="flex justify-between items-center mt-3 pt-3 border-t border-black/5 dark:border-white/5">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {currentStepIndex + 1} of {steps.length}
-                  </span>
-                  <div className="flex gap-2">
-                    {currentStepIndex > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={prevStep}
-                        className="h-8 text-xs font-medium px-3"
-                      >
-                        Back
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      onClick={currentStepIndex === steps.length - 1 ? stopTour : nextStep}
-                      className="bg-proofound-forest hover:bg-proofound-forest/90 text-white h-8 text-xs font-medium px-4"
-                    >
-                      {currentStepIndex === steps.length - 1 ? 'Get Started' : 'Next'}
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </div>
-        )}
-      </AnimatePresence>,
-      document.body
-    );
-  };
-
   return (
     <SpotlightContext.Provider
       value={{ startTour, stopTour, nextStep, prevStep, isActive, currentStepIndex }}
     >
       {children}
-      <SpotlightOverlay />
+      {Overlay ? (
+        <Overlay
+          isActive={isActive}
+          mounted={mounted}
+          steps={steps}
+          currentStepIndex={currentStepIndex}
+          targetRect={targetRect}
+          onStop={stopTour}
+          onNext={nextStep}
+          onPrev={prevStep}
+        />
+      ) : null}
     </SpotlightContext.Provider>
   );
 }

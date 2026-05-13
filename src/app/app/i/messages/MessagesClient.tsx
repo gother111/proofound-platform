@@ -1,8 +1,8 @@
 /**
- * Messages Page - Organization
+ * Messages Page - Individual
  *
  * Two-column layout: conversation list + message thread
- * Same as individual version but for organizations
+ * Connects to /api/conversations and /api/conversations/[conversationId]/messages
  *
  * Supports URL param: ?conversation=<id> to auto-select a conversation
  */
@@ -16,11 +16,10 @@ import type { RealtimeMessageThreadProps } from '@/components/messaging/Realtime
 import { type Message } from '@/components/messaging/MessageThread';
 import { Lock, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import LoadingIndividualMessages from './loading';
 import { apiFetch } from '@/lib/api/fetch';
 
-export const dynamic = 'force-dynamic';
-
-function OrganizationMessagesPageContent() {
+function MessagesPageContent() {
   const searchParams = useSearchParams();
   const conversationParam = searchParams?.get('conversation');
   const pathname = usePathname();
@@ -176,16 +175,12 @@ function OrganizationMessagesPageContent() {
 
   const handleBackToConversationList = () => {
     setSelectedConversationId(undefined);
-    router.replace(pathname ?? '/app');
+    router.replace(pathname ?? '/app/i/messages');
   };
 
   // Show loading state if auth is not ready
   if (isAuthLoading || !currentUserId) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <LoadingIndividualMessages />;
   }
 
   const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
@@ -204,7 +199,7 @@ function OrganizationMessagesPageContent() {
           selectedId={selectedConversationId}
           onSelect={setSelectedConversationId}
           isLoading={isLoadingConversations}
-          mode="organization"
+          mode="individual"
         />
       </div>
 
@@ -226,9 +221,7 @@ function OrganizationMessagesPageContent() {
             onBack={handleBackToConversationList}
           />
         ) : selectedConversation ? (
-          <div className="h-full flex items-center justify-center">
-            <p className="text-muted-foreground">Loading messages...</p>
-          </div>
+          <LoadingIndividualMessages />
         ) : (
           <div className="mx-6 max-w-md rounded-2xl border border-proofound-stone/70 bg-white/60 p-8 text-center shadow-sm">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-proofound-parchment text-proofound-forest">
@@ -239,12 +232,12 @@ function OrganizationMessagesPageContent() {
                 Select a conversation
               </p>
               <p className="text-sm leading-6 text-muted-foreground">
-                Conversations appear after an assignment and introduction are ready. Choose a thread
-                when one opens in the list.
+                Messages stay quiet until a proof-safe introduction is open. Choose a thread when
+                one appears in the list.
               </p>
               <p className="inline-flex items-center gap-2 pt-2 text-xs font-medium text-proofound-charcoal/70">
                 <Lock className="h-3.5 w-3.5" />
-                Candidate identity remains protected before reveal
+                Private by default before reveal
               </p>
             </div>
           </div>
@@ -255,16 +248,10 @@ function OrganizationMessagesPageContent() {
 }
 
 // Wrap in Suspense for useSearchParams
-export default function OrganizationMessagesPage() {
+export function MessagesClient() {
   return (
-    <Suspense
-      fallback={
-        <div className="h-full flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      }
-    >
-      <OrganizationMessagesPageContent />
+    <Suspense fallback={<LoadingIndividualMessages />}>
+      <MessagesPageContent />
     </Suspense>
   );
 }
