@@ -71,6 +71,36 @@ const SCOPE_OPTIONS: Array<{ value: VerificationScope; label: string }> = [
   { value: 'relationship_fact', label: 'Relationship fact' },
 ];
 
+function buildManualComposerDraft(params: {
+  proofPack: VerificationComposerProofPackOption;
+  relationship: string;
+  scope: VerificationScope;
+}): ComposerDraft {
+  const claim = params.proofPack.claimStatement || params.proofPack.title || 'one scoped claim';
+  const relationship = params.relationship || 'someone familiar with the work';
+
+  return {
+    fallback: true,
+    subject: 'Proofound verification request',
+    message: [
+      `Hi, I am asking ${relationship} to confirm one specific Proofound claim: ${claim}.`,
+      'Please only respond based on what you directly know or observed. It is completely fine to confirm only part of it or say that you cannot verify it.',
+      'Thank you for taking a careful look.',
+    ].join('\n\n'),
+    claimScope: claim,
+    verificationQuestions: [
+      `Can you confirm the specific claim: ${claim}?`,
+      'Which parts can you confirm from direct knowledge or observation?',
+      'Is there anything in this request that you cannot verify?',
+    ],
+    privacyNotes: ['Draft uses selected public-safe Proof Pack fields only.'],
+    tooBroadWarnings: [
+      'AI suggestions are temporarily unavailable; manual editing still works.',
+      `Keep this request limited to the ${params.scope.replace(/_/g, ' ')} scope.`,
+    ],
+  };
+}
+
 function recordSuggestionEvent(
   suggestionId: string | null | undefined,
   eventType: 'accepted' | 'edited' | 'dismissed' | 'published',
@@ -172,6 +202,16 @@ export function VerificationRequestComposerDialog({
 
       const body = await response.json();
       if (!response.ok) {
+        if (body?.fallbackAvailable) {
+          setDraft(
+            buildManualComposerDraft({
+              proofPack: selectedProofPack,
+              relationship: relationshipDisplayLabel(relationship),
+              scope: verificationScope,
+            })
+          );
+          return;
+        }
         toast.error(body.error || 'Failed to draft verification request.');
         return;
       }

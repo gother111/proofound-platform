@@ -116,6 +116,26 @@ const ASSISTANT_FIELDS: Array<{
   { key: 'timeframe', label: 'Timeframe' },
 ];
 
+function buildManualProofPackAssistantSuggestion(reason: string): ProofPackAssistantSuggestion {
+  return {
+    fallback: true,
+    missingContext: [
+      'Add one clear claim about what this proof shows.',
+      'State your role or ownership in the work.',
+      'Add the outcome or contribution this proof supports.',
+      'Attach at least one public-safe evidence title or type.',
+    ],
+    suggestedRewrite: {},
+    privacyFlags: [
+      'Review private names, contact details, filenames, and private links before publishing.',
+    ],
+    verificationSuggestions: [
+      'Ask a non-self verifier to confirm the specific claim, ownership, and outcome.',
+    ],
+    warnings: [reason],
+  };
+}
+
 function resolveProofPackId(proof: Proof) {
   return proof.canonicalPackId || proof.canonical_pack_id || null;
 }
@@ -217,7 +237,24 @@ export function ProofsSection({
         const payload = (await response.json().catch(() => ({}))) as {
           error?: string;
           message?: string;
+          fallbackAvailable?: boolean;
         };
+        if (payload.fallbackAvailable) {
+          const suggestion = buildManualProofPackAssistantSuggestion(
+            'AI suggestions are temporarily unavailable; manual editing still works.'
+          );
+          setAssistantByPackId((current) => ({
+            ...current,
+            [proofPackId]: {
+              loading: false,
+              error: null,
+              suggestion,
+              draft: suggestion.suggestedRewrite,
+              acceptedFields: {},
+            },
+          }));
+          return;
+        }
         throw new Error(payload.message || payload.error || 'Suggestion failed.');
       }
 
@@ -721,7 +758,7 @@ export function ProofsSection({
                               ) : (
                                 <Sparkles className="h-4 w-4 mr-2" />
                               )}
-                              Improve clarity
+                              Improve this proof
                             </Button>
                             <p className="text-xs text-muted-foreground">
                               AI suggestions are drafts. They do not verify, score, rank, or

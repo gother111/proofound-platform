@@ -85,6 +85,52 @@ function responseBody(payload: unknown, status = 200) {
   };
 }
 
+function buildManualAssignmentClaritySuggestion(
+  values: any,
+  reason: string
+): AssignmentClaritySuggestion {
+  const outcomeSummary = [values.description, buildOutcomeSummary(values.outcomes || [])]
+    .filter(Boolean)
+    .join('\n');
+
+  return {
+    fallback: true,
+    ambiguityFlags: [
+      reason,
+      'Confirm the concrete outcome before publishing.',
+      'Confirm which proof artifact or work sample would count as credible evidence.',
+      'Confirm that constraints are practical, current, and not discriminatory.',
+    ],
+    suggestedRewrite: {
+      title: values.role || '',
+      rolePurpose: values.businessValue || '',
+      outcomeSummary,
+      constraints: {
+        locationMode: values.locationMode || null,
+        city: values.city || null,
+        country: values.country || null,
+        hoursMin: values.hoursMin ?? null,
+        hoursMax: values.hoursMax ?? null,
+        compensationSummary:
+          values.compMin && values.compMax
+            ? `${values.currency || 'USD'} ${values.compMin} to ${values.compMax}`
+            : null,
+        startWindow:
+          [values.startEarliest, values.startLatest].filter(Boolean).join(' to ') || null,
+      },
+      capabilityExpectations: [],
+      proofExpectations: values.expectedImpact || '',
+      verificationRequirements: values.verificationGates || [],
+    },
+    reviewQuestions: [
+      'What result must be visible in the first review window?',
+      'Which proof would make this assignment safe to review?',
+      'Which requirement is truly must-have rather than nice-to-have?',
+    ],
+    excludedOrRiskyCriteria: [],
+  };
+}
+
 function recordSuggestionEvent(
   suggestionId: string | null | undefined,
   eventType: 'accepted' | 'edited' | 'dismissed',
@@ -183,7 +229,25 @@ export function AssignmentClarityAssistant({
         })) || responseBody({});
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = (await response.json().catch(() => ({}))) as {
+          error?: string;
+          message?: string;
+          fallbackAvailable?: boolean;
+        };
+        if (errorData.fallbackAvailable) {
+          const payload = buildManualAssignmentClaritySuggestion(
+            values,
+            'AI suggestions are temporarily unavailable; manual editing still works.'
+          );
+          setSuggestion(payload);
+          setDraft({
+            title: payload.suggestedRewrite.title || '',
+            rolePurpose: payload.suggestedRewrite.rolePurpose || '',
+            outcomeSummary: payload.suggestedRewrite.outcomeSummary || '',
+            proofExpectations: payload.suggestedRewrite.proofExpectations || '',
+          });
+          return;
+        }
         throw new Error(errorData.message || errorData.error || 'Assignment clarity failed.');
       }
 

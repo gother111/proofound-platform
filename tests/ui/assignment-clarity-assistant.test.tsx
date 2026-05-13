@@ -152,4 +152,27 @@ describe('Assignment Clarity Assistant UI', () => {
       screen.getByText('AI suggestions are temporarily unavailable; manual editing still works.')
     ).toBeInTheDocument();
   });
+
+  it('uses the manual checklist when the assistant endpoint is safely disabled', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      mockResponse(
+        {
+          error: 'AI assist is disabled',
+          code: 'ai_feature_kill_switch',
+          fallbackAvailable: true,
+        },
+        503
+      )
+    );
+
+    render(<Harness />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /clarify assignment/i }));
+
+    await screen.findByText('Manual clarity checklist');
+    expect(
+      screen.getByText('AI suggestions are temporarily unavailable; manual editing still works.')
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/AI assist is disabled/i)).not.toBeInTheDocument();
+  });
 });

@@ -59,7 +59,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     render(<PortfolioVisibilityCard />);
 
     const button = await screen.findByRole('button', {
-      name: /run privacy preflight/i,
+      name: /check privacy before publishing/i,
     });
     fireEvent.click(button);
 
@@ -111,7 +111,58 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
 
     expect(await screen.findByText(/Manual guidance: review visible fields/i)).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: /run privacy preflight/i })
+      screen.queryByRole('button', { name: /check privacy before publishing/i })
     ).not.toBeInTheDocument();
+  });
+
+  it('reports precise high-risk deterministic flags without claiming safety', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        riskLevel: 'high',
+        safeToPublishSuggestion:
+          'Review required before publishing. Remove or rewrite the flagged private details first.',
+        flags: [
+          {
+            field: 'public bio',
+            message: 'Email-like contact information appears in text intended for publication.',
+          },
+        ],
+      }),
+    });
+
+    render(<PortfolioVisibilityCard />);
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /check privacy before publishing/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/1 deterministic flag found/i)).toBeInTheDocument();
+    });
+    expect(screen.getByText(/public bio: Email-like contact information/i)).toBeInTheDocument();
+    expect(screen.queryByText(/\bsafe\b/i)).not.toBeInTheDocument();
+  });
+
+  it('falls back to a manual checklist when privacy preflight is disabled', async () => {
+    apiFetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      json: async () => ({
+        error: 'AI assist is disabled',
+        fallbackAvailable: true,
+      }),
+    });
+
+    render(<PortfolioVisibilityCard />);
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /check privacy before publishing/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Privacy preflight is temporarily unavailable/i)).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Manual checklist:/i)).toBeInTheDocument();
   });
 });

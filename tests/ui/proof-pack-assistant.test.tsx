@@ -111,14 +111,14 @@ describe('Proof Pack Assistant UI', () => {
       />
     );
 
-    expect(await screen.findByRole('button', { name: /improve clarity/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /improve this proof/i })).toBeInTheDocument();
     expect(
       screen.getByText(
         'AI suggestions are drafts. They do not verify, score, rank, or evaluate anyone.'
       )
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /improve clarity/i }));
+    fireEvent.click(screen.getByRole('button', { name: /improve this proof/i }));
 
     await screen.findByText('Draft assistance');
     expect(screen.getByLabelText('Title')).toHaveValue('Clearer launch proof');
@@ -173,7 +173,7 @@ describe('Proof Pack Assistant UI', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /improve clarity/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /improve this proof/i })).not.toBeInTheDocument();
     });
   });
 
@@ -205,12 +205,47 @@ describe('Proof Pack Assistant UI', () => {
       />
     );
 
-    fireEvent.click(await screen.findByRole('button', { name: /improve clarity/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /improve this proof/i }));
 
     await screen.findByText('Manual clarity checklist');
     expect(
       screen.getByText('AI suggestions are temporarily unavailable; manual editing still works.')
     ).toBeInTheDocument();
+  });
+
+  it('shows the manual checklist when the assistant endpoint is safely disabled', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      mockResponse(
+        {
+          error: 'AI assist is disabled',
+          code: 'ai_feature_kill_switch',
+          fallbackAvailable: true,
+        },
+        503
+      )
+    );
+
+    render(
+      <ProofsSection
+        {...baseProps}
+        proofs={[
+          {
+            id: 'proof-1',
+            proof_type: 'link',
+            title: 'Launch proof',
+            canonicalPackId: '11111111-1111-4111-8111-111111111111',
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /improve this proof/i }));
+
+    await screen.findByText('Manual clarity checklist');
+    expect(
+      screen.getByText('AI suggestions are temporarily unavailable; manual editing still works.')
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/AI assist is disabled/i)).not.toBeInTheDocument();
   });
 
   it('hides proof artifact OCR when the beta status is not visible', async () => {

@@ -20,6 +20,17 @@ type VisibilityFlags = {
   contact: boolean;
 };
 
+type PrivacyPreflightPayload = {
+  riskLevel?: 'low' | 'medium' | 'high';
+  safeToPublishSuggestion?: string;
+  flags?: Array<{
+    message?: string;
+    field?: string | null;
+  }>;
+  error?: string;
+  fallbackAvailable?: boolean;
+};
+
 const defaults: VisibilityFlags = {
   header: true,
   proofBar: true,
@@ -30,6 +41,26 @@ const defaults: VisibilityFlags = {
   bio: false,
   contact: false,
 };
+
+function formatPrivacyPreflightMessage(payload: PrivacyPreflightPayload) {
+  const flags = Array.isArray(payload.flags) ? payload.flags : [];
+  const firstFlag = flags[0];
+
+  if (payload.riskLevel === 'high') {
+    const flagDetail = firstFlag?.message
+      ? ` First flag: ${firstFlag.field ? `${firstFlag.field}: ` : ''}${firstFlag.message}`
+      : '';
+    return `${
+      payload.safeToPublishSuggestion ||
+      'Privacy review is required before publishing. Remove or rewrite flagged private details first.'
+    } ${flags.length} deterministic flag${flags.length === 1 ? '' : 's'} found.${flagDetail}`;
+  }
+
+  return (
+    payload.safeToPublishSuggestion ||
+    'No high-risk deterministic flags were found. This is not a privacy guarantee.'
+  );
+}
 
 export function PortfolioVisibilityCard() {
   const assistiveAiEnabled = useAssistiveAiFlag();
@@ -100,13 +131,15 @@ export function PortfolioVisibilityCard() {
       });
       const payload = await res.json();
       if (!res.ok) {
+        if (payload?.fallbackAvailable) {
+          setPreflightMessage(
+            'Privacy preflight is temporarily unavailable. Manual checklist: remove private contact details, hidden identity terms, original filenames, private URLs, and unsupported sensitive details before publishing.'
+          );
+          return;
+        }
         throw new Error(payload?.error || 'Privacy check failed');
       }
-      setPreflightMessage(
-        payload.riskLevel === 'high'
-          ? 'Privacy review is required before publishing. This is not a privacy guarantee.'
-          : 'No high-risk deterministic flags were found. This is not a privacy guarantee.'
-      );
+      setPreflightMessage(formatPrivacyPreflightMessage(payload));
     } catch (e) {
       console.error(e);
       setPreflightMessage(
@@ -225,7 +258,7 @@ export function PortfolioVisibilityCard() {
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="mr-2 h-4 w-4" /> Run privacy preflight
+                      <ShieldCheck className="mr-2 h-4 w-4" /> Check privacy before publishing
                     </>
                   )}
                 </Button>
