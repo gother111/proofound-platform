@@ -64,7 +64,7 @@ describe('profile context CV import', () => {
     expect(screen.queryByRole('button', { name: /Start from CV/i })).not.toBeInTheDocument();
   });
 
-  it('opens Start from CV from the Context tab and refreshes after apply', () => {
+  it('opens Start from CV from the Context tab and refreshes after apply', async () => {
     const onImportComplete = vi.fn();
     startFromCvStatus.visible = true;
     startFromCvStatus.available = true;
@@ -73,7 +73,7 @@ describe('profile context CV import', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: /Start from CV/i })[0]);
 
-    expect(screen.getByTestId('start-from-cv-dialog')).toBeInTheDocument();
+    expect(await screen.findByTestId('start-from-cv-dialog')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'mock-apply-start-from-cv' }));
 

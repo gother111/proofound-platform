@@ -3,7 +3,7 @@
 
 # Proofound MVP Executive Summary
 
-**Canonical source stack:** `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, then `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then `Proofound_Project_Specification_2026-03-11.md`
+**Canonical source stack:** `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, then `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded audits and evidence. `Proofound_Project_Specification_2026-03-11.md` is preserved reference context only.
 **Purpose of this file:** Executive summary only. It does not define product behavior independently.
 
 ## Product Promise

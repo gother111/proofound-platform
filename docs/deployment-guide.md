@@ -11,7 +11,7 @@ Canonical deployment references for this repository:
 
 - Production branch: `master`
 - Production domain: `https://proofound.io`
-- Node runtime source of truth: `.nvmrc` (`20.20.0`) and `package.json` engines
+- Node runtime source of truth: `.nvmrc` (`24.15.0`) and `package.json` engines
 
 ---
 
@@ -152,7 +152,7 @@ Proofound uses canonical SQL migrations under `src/db/migrations/` and a migrati
 
 ```bash
 # Prefer DIRECT_URL (direct connection) for DDL where possible
-PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate
+PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:migrate
 ```
 
 **Alternative: SQL Editor in Supabase:**
@@ -168,21 +168,21 @@ PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate
 
 ```bash
 # Seed taxonomy data
-PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:seed-taxonomy
+PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:seed-taxonomy
 ```
 
 **Seeded Public Org Trust Fixture (Required for local/staging org trust smoke):**
 
 ```bash
 # Shared fixture for /portfolio/org/proofound-labs smoke verification
-PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run seed:public-org-trust-fixture
+PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run seed:public-org-trust-fixture
 ```
 
 **Local Seed Script (Not a staging fixture path):**
 
 ```bash
 # Local-only feature-flag seed helper
-NEXT_PUBLIC_APP_ENV=local PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:seed
+NEXT_PUBLIC_APP_ENV=local PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:seed
 ```
 
 ### 5. Enable Row Level Security (RLS)

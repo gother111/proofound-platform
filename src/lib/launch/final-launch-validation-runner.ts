@@ -80,7 +80,6 @@ export type FinalLaunchValidationOptions = {
 const ONE_MINUTE = 60_000;
 
 const exportDeleteTestFiles = [
-  'tests/api/data-export-route.test.ts',
   'tests/api/user-export-route.test.ts',
   'tests/api/portfolio-export-route.test.ts',
   'tests/api/portfolio-org-export-route.test.ts',

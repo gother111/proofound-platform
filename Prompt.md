@@ -1,19 +1,19 @@
 > Doc Class: `governance`
 > Sync Pair: `Prompt.md`
-> Last Verified: `2026-03-12`
+> Last Verified: `2026-05-14`
 
 # Proofound: Project Prompt
 
 ## What This Product Is
 
-Proofound is a proof-first, privacy-first hiring credibility corridor centered on Proof Packs, with one clean individual side and one clean organization side. Active MVP implementation authority starts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, then `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then `Proofound_Project_Specification_2026-03-11.md`. This file is repo guidance only and must not override that stack. (source: Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md, PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md, PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md, LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md, Proofound_Project_Specification_2026-03-11.md)
+Proofound is a proof-first, privacy-first hiring credibility corridor centered on Proof Packs, with one clean individual side and one clean organization side. Active MVP implementation authority starts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, then `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded audits and evidence. This file is repo guidance only and must not override that stack. (source: Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md, PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md, PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md, LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md, Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md)
 
 ## Repo Truth (Verified)
 
 - Web stack: Next.js + React + TypeScript. (source: package.json, src/app/)
 - Database + auth: Supabase (JS client) with Postgres; data access is guarded with Row Level Security (RLS). (source: README.md, package.json)
 - ORM/schema source of truth: Drizzle schema lives in `src/db/schema.ts`; Drizzle is configured via `drizzle.config.ts`. (source: src/db/schema.ts, drizzle.config.ts)
-- Canonical MVP implementation precedence is `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, then `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then `Proofound_Project_Specification_2026-03-11.md`. Broader strategy docs stay reference only. (source: Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md, PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md, PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md, LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md, Proofound_Project_Specification_2026-03-11.md)
+- Canonical MVP implementation precedence is `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, then `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded audits and evidence. Broader strategy docs stay reference only. (source: Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md, PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md, PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md, LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md, Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md)
 - API surface: server endpoints are implemented as App Router route handlers under `src/app/api/`. (source: src/app/api/)
 - Security middleware: CSP/security headers, CSRF protection, and optional edge rate limiting live in `src/middleware.ts`. (source: src/middleware.ts)
 - Deployment + cron: cron schedules are configured in `vercel.json` and target `/api/cron/*` routes. (source: vercel.json, src/app/api/cron/)

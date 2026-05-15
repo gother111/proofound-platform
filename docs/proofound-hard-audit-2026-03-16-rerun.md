@@ -2,7 +2,15 @@
 
 Date: 2026-03-16
 
+> Historical/superseded freshness banner added 2026-05-14:
+>
+> - Do not treat this March audit as current launch, route, or MVP truth without checking newer repo evidence first.
+> - The locked MVP definition remains `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`; this audit cannot broaden it.
+> - For narrow pilot-readiness evidence, prefer `project/changes/entries/2026-04-09__mvp-launch-audit-execution.md` or newer current evidence. That April 9 execution retired the March build/runtime, route breadth, launch smoke, and strict org corridor blockers unless those blockers are reproduced again in a fresh run.
+> - For release-clean status, use `audit/full-scale-audit-2026-04-16.md` or newer release evidence; April 16 found the repo structurally healthy but not release-clean.
+>
 > Superseded note added 2026-03-25:
+>
 > - This file is preserved as historical evidence only and does not override the locked MVP stack or newer `.artifacts/*` current-state evidence.
 > - Stale categories in or around this rerun: mixed live verification transport conclusions, any `PageNotFoundError: /_document` build-blocker claims, any `pilot-launchable` or similar launch verdict treated as current truth, and older route-surface claims where newer route inventory disagrees.
 > - Current repo truth differs: `npm run build` and `npm run typecheck` now pass under Node `20.20.0`, fresh strict org-corridor evidence is not green today, and route breadth remains an open launch risk.

@@ -55,7 +55,7 @@ function classifyTier(route, source) {
   const serviceSignals = /(createServiceRoleClient|SUPABASE_SERVICE_ROLE_KEY|service[_ -]?role|admin\.generateLink|createServerSupabaseAdminClient)/i;
   if (serviceSignals.test(source)) return 'service';
 
-  const sessionSignals = /(requireSession|getUser\(|auth\.getUser\(|createRouteHandlerClient|csrf|x-csrf-token|assertAuthenticated)/i;
+  const sessionSignals = /(requireSession|requireApiAuthContext|getUser\(|auth\.getUser\(|createRouteHandlerClient|csrf|x-csrf-token|assertAuthenticated)/i;
   if (sessionSignals.test(source)) return 'session';
 
   return 'public';
@@ -72,6 +72,10 @@ function familyKey(route) {
   const parts = route.replace(/^\/api\/?/, '').split('/').filter(Boolean);
   if (parts[0] === 'mobile' && parts[1] === 'v1') return 'mobile/v1';
   return parts[0] || 'root';
+}
+
+function escapeTableCell(value) {
+  return String(value).replaceAll('|', '\\|');
 }
 
 function build() {
@@ -147,7 +151,9 @@ function build() {
     lines.push('| --- | --- | --- | --- | --- |');
 
     for (const row of rows.filter((item) => item.family === family)) {
-      lines.push(`| \`${row.methods}\` | \`${row.route}\` | \`${row.tier}\` | ${row.notes} | \`${row.source}\` |`);
+      lines.push(
+        `| \`${escapeTableCell(row.methods)}\` | \`${escapeTableCell(row.route)}\` | \`${escapeTableCell(row.tier)}\` | ${escapeTableCell(row.notes)} | \`${escapeTableCell(row.source)}\` |`
+      );
     }
 
     lines.push('');
@@ -163,7 +169,11 @@ function build() {
   if (legacyRows.length === 0) {
     lines.push('| `-` | `-` | none detected |');
   } else {
-    for (const row of legacyRows) lines.push(`| \`${row.route}\` | \`${row.source}\` | legacy/deprecated text present |`);
+    for (const row of legacyRows) {
+      lines.push(
+        `| \`${escapeTableCell(row.route)}\` | \`${escapeTableCell(row.source)}\` | legacy/deprecated text present |`
+      );
+    }
   }
   lines.push('');
 

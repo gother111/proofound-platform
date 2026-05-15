@@ -1,7 +1,7 @@
 # Documentation Registry
 
 > Doc Class: `active`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-14`
 > Generated for documentation freshness governance.
 > Last Generated: `2026-04-15`
 > Latest Active Docs Sync: [Proofound 0-5 execution backlog pack](../project/changes/entries/2026-03-25T21-04-06Z__master__de2cde6d.md)
@@ -87,7 +87,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`                                                                     | `reference-spec` | `root`        | `repo`              | `2026-03-11`  | `-`                                                                                                     | `false`   |
 | `UI_UX_AUDIT_REPORT.md`                                                                                 | `historical`     | `root`        | `archive`           | `-`           | `docs/archive/status-reports/root-historical/UI_UX_AUDIT_REPORT.md`                                     | `false`   |
 | `USER_FLOWS_TECHNICAL_SPECIFICATIONS.md`                                                                | `reference-spec` | `root`        | `repo`              | `2026-03-11`  | `-`                                                                                                     | `false`   |
-| `VERCEL_CRON_LIMIT_WORKAROUND.md`                                                                       | `active`         | `root`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
+| `VERCEL_CRON_LIMIT_WORKAROUND.md`                                                                       | `historical`     | `root`        | `archive`           | `-`           | `-`                                                                                                     | `false`   |
 | `agent/checklists/preflight.md`                                                                         | `active`         | `agent`       | `repo+live`         | `2026-02-26`  | `-`                                                                                                     | `true`    |
 | `agent/checklists/verification.md`                                                                      | `active`         | `agent`       | `repo+live`         | `2026-05-04`  | `-`                                                                                                     | `true`    |
 | `agent/runbooks/setup.md`                                                                               | `active`         | `agent`       | `repo+live`         | `2026-02-26`  | `-`                                                                                                     | `true`    |
@@ -99,6 +99,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `docs/ACCESSIBILITY_TESTING_GUIDE.md`                                                                   | `active`         | `docs`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `docs/ANIMATION_NOTES.md`                                                                               | `active`         | `docs`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `docs/API_REFERENCE.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-03-25`  | `-`                                                                                                     | `false`   |
+| `docs/CURRENT_TRUTH.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-14`  | `-`                                                                                                     | `false`   |
 | `docs/ai/Proofound_AI_Assistive_Layer_Codex_Prompts_2026-05-03.md`                                      | `reference-spec` | `docs`        | `repo`              | `2026-05-04`  | `-`                                                                                                     | `false`   |
 | `docs/ai/Proofound_AI_Assistive_Layer_Launch_Runbook_Addendum_2026-05-03.md`                            | `reference-spec` | `docs`        | `repo`              | `2026-05-04`  | `-`                                                                                                     | `false`   |
 | `docs/ai/Proofound_AI_Assistive_Layer_Source_Of_Truth_Addendum_2026-05-03.md`                           | `reference-spec` | `docs`        | `repo`              | `2026-05-04`  | `-`                                                                                                     | `false`   |
@@ -110,7 +111,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `docs/CRON_SETUP.md`                                                                                    | `active`         | `docs`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `docs/DATA_PROCESSING_AGREEMENTS.md`                                                                    | `active`         | `docs`        | `repo+live`         | `2026-03-11`  | `-`                                                                                                     | `false`   |
 | `docs/DEPLOYMENT_CHECKLIST.md`                                                                          | `active`         | `docs`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
-| `docs/DOCS_REGISTRY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-04`  | `-`                                                                                                     | `false`   |
+| `docs/DOCS_REGISTRY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-14`  | `-`                                                                                                     | `false`   |
 | `docs/ENV_VARIABLES.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-04`  | `-`                                                                                                     | `false`   |
 | `docs/EXPERTISE_ATLAS_SETUP.md`                                                                         | `active`         | `docs`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `docs/PROOFOUND_UBIQUITOUS_LANGUAGE.md`                                                                 | `active`         | `docs`        | `repo`              | `2026-05-06`  | `-`                                                                                                     | `false`   |
@@ -336,7 +337,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 
 | `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` | `active` | `root` | `repo+live` | `2026-05-03` | `-` | `false` |
 | `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md` | `active` | `root` | `repo+live` | `2026-05-03` | `-` | `false` |
-| `PRD_for_a_web_platform_MVP.master-latest.md` | `reference-spec` | `root` | `repo` | `2026-03-12` | `-` | `false` |
+| `PRD_for_a_web_platform_MVP.master-latest.md` | `historical` | `root` | `repo` | `2026-05-14` | `-` | `false` |
 | `agent/runbooks/geo-audit.md` | `governance` | `agent` | `repo+live` | `2026-03-09` | `-` | `false` |
 | `agent/runbooks/expertise-taxonomy-recovery.md` | `active` | `agent` | `repo+live` | `2026-02-26` | `-` | `false` |
 | `agent/runbooks/release-batch-flow.md` | `runbook` | `agent` | `repo+live` | `2026-03-11` | `-` | `false` |

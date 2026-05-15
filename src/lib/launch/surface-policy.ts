@@ -214,7 +214,6 @@ const ACTIVE_API_POLICIES = [
       pathname === '/api/user/audit-log/purpose' ||
       pathname === '/api/user/consent' ||
       pathname === '/api/user/consent/check' ||
-      pathname === '/api/data-export' ||
       pathname === '/api/user/email' ||
       pathname === '/api/user/export' ||
       pathname === '/api/user/me' ||

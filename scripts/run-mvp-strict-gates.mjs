@@ -271,8 +271,8 @@ function enforceRuntime() {
   }
 
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  if (packageJson.packageManager !== 'npm@10.8.2') {
-    fail(`Expected packageManager npm@10.8.2, found ${packageJson.packageManager || 'missing'}.`);
+  if (packageJson.packageManager !== 'npm@11.12.1') {
+    fail(`Expected packageManager npm@11.12.1, found ${packageJson.packageManager || 'missing'}.`);
   }
 }
 

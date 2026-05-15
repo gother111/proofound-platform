@@ -49,7 +49,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '20.20.0'
+          node-version-file: '.nvmrc'
           cache: npm
 
       - name: Run strict MVP release gate

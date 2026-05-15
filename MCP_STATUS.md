@@ -2,7 +2,7 @@
 
 > This file is a technical setup and discovery note only.
 > It is not the MVP source of truth for product scope or launch promises.
-> Product scope precedence is `Proofound_Project_Specification_2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.md`, then `PRD_for_a_web_platform_MVP.master-latest.md`, then `LAUNCH_RUNBOOK.md`.
+> Product scope precedence is `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, and fresh repo-grounded evidence. This document is implementation context only.
 
 ## Current Status
 

@@ -1,12 +1,27 @@
-> Reference-only wrapper: active MVP implementation now uses `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, and `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`.
-> Do not use this file as the active MVP product contract.
+# SUPERSEDED — historical reference only. Do not use as MVP source of truth. The active MVP authority is Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md plus the aligned PRD, technical requirements, launch runbook, GTM plan, and fresh repo-grounded evidence.
+
+> Doc Class: `historical`
+> Last Verified: `2026-05-14`
+
+This file is preserved for historical reference and compatibility only. It is not launch scope, not active product authority, and must not broaden the locked MVP.
+
+Older mentions in this document of dashboards, fairness notes, ETL, broad analytics, portfolio-first framing, platform scope, ATS/HRIS, public directory, marketplace, integrations, and future ecosystem features are not launch scope. If any section appears to imply those items are included, read it as historical or post-MVP context only and defer to the active authority stack.
+
+Active MVP authority stack:
+
+1. `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
+2. `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`
+3. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`
+4. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
+5. `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`
+6. Fresh repo-grounded audits and evidence
 
 # Proofound MVP PRD — Proof-First Hiring Corridor
 
 **Status:** Aligned rewrite for current MVP  
 **Date:** 2026-03-11  
 **Audience:** Founder, product, design, engineering, QA, GTM  
-**Authority:** This document aligns to `Proofound_Project_Specification_2026-03-11.md`. If any section conflicts with the Project Specification, the Project Specification wins.
+**Authority:** Historical reference only. If this document conflicts with the active authority stack above, the active authority stack wins.
 
 ---
 

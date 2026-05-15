@@ -79,15 +79,15 @@ describe('proofound ticket finisher', () => {
   });
 
   it('normalizes verification commands with env prefixes', () => {
-    expect(normalizeCommand('PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint -> PASS')).toBe(
+    expect(normalizeCommand('PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run lint -> PASS')).toBe(
       'npm run lint'
     );
     expect(
       normalizeCommand(
-        'NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node20.mjs test e2e/auth.real.spec.ts --project=chromium --reporter=line --workers=1'
+        'NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node24.mjs test e2e/auth.real.spec.ts --project=chromium --reporter=line --workers=1'
       )
     ).toBe(
-      'node ./scripts/playwright-node20.mjs test e2e/auth.real.spec.ts --project=chromium --reporter=line --workers=1'
+      'node ./scripts/playwright-node24.mjs test e2e/auth.real.spec.ts --project=chromium --reporter=line --workers=1'
     );
   });
 
@@ -95,7 +95,7 @@ describe('proofound ticket finisher', () => {
     const evidence = collectVerificationEvidence([
       {
         file: 'agent/scratchpad/entries/2026-03-06-example.md',
-        text: '- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` -> PASS\n- `npm run typecheck` -> FAIL',
+        text: '- `PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run lint` -> PASS\n- `npm run typecheck` -> FAIL',
       },
     ]);
 

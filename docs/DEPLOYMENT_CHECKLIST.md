@@ -32,10 +32,9 @@ See [RESEND_SETUP.md](./RESEND_SETUP.md) for testing and domain verification.
 #### Cron Jobs
 
 - [x] `CRON_SECRET` - Generated secure token ✅
-- [x] Cron jobs configured in cron-job.org ✅
-  - [x] Send Deletion Reminders (1:00 AM UTC daily)
-  - [x] Process Deletions (2:00 AM UTC daily)
-  - [x] Refresh Matches (2:00 AM UTC daily)
+- [ ] Vercel Cron configured for the four active launch automation routes in `vercel.json`
+- [ ] cron-job.org configured only for the two active observability routes
+- [ ] Removed or non-MVP cron routes are not enabled as launch infrastructure
 - [x] Production URLs configured: `https://proofound.io/api/cron/*` ✅
 
 See [CRON_SETUP.md](./CRON_SETUP.md) for verification and monitoring.
@@ -295,7 +294,7 @@ Test all email features:
 
 ### 3. Cron Jobs ✅ COMPLETED
 
-Cron ownership is split between Vercel Cron and cron-job.org.
+Cron ownership is split between Vercel Cron and cron-job.org. The canonical route classification table is in [CRON_SETUP.md](./CRON_SETUP.md); use it as the source of truth before changing scheduler state.
 
 #### Vercel Cron - Verification
 
@@ -304,7 +303,7 @@ Cron ownership is split between Vercel Cron and cron-job.org.
   - [ ] `/api/cron/refresh-matches`
   - [ ] `/api/cron/refresh-matches-worker`
   - [ ] `/api/cron/sla-enforcement`
-- [ ] `/api/cron/account-deletion-workflow` is not scheduled
+- [ ] No archived, removed, manual-only, or observability route is scheduled in `vercel.json`
 
 #### cron-job.org Dashboard - Verification
 
@@ -312,13 +311,20 @@ Cron ownership is split between Vercel Cron and cron-job.org.
   - [ ] Proofound – Health Check
   - [ ] Proofound – Performance Check
 - [ ] Disabled external jobs:
+  - [ ] Proofound - Decision Reminders
+  - [ ] Proofound - Refresh Matches
+  - [ ] Proofound - Refresh Matches Worker
+  - [ ] Proofound - SLA Enforcement
+  - [ ] Proofound - Launch Synthetic Checks
   - [ ] Proofound - Account Deletion Workflow
-  - [ ] Proofound - Python Internal Worker
-  - [ ] Proofound - CV Import Temp Cleanup
   - [ ] Proofound - Send Deletion Reminders
   - [ ] Proofound - Process Deletions
-  - [ ] Proofound - Refresh Matches
-  - [ ] Proofound - SLA Enforcement
+  - [ ] Proofound - Python Internal Worker
+  - [ ] Proofound - CV Import Temp Cleanup
+  - [ ] Proofound - Weekly Digest
+  - [ ] Proofound - Fairness Note
+  - [ ] Proofound - Fairness Report
+  - [ ] Proofound - Generate Fairness Note
 - [ ] Correct URLs configured (`https://proofound.io/api/cron/*`)
 - [ ] Authorization headers set for protected routes
 
@@ -335,7 +341,7 @@ curl -X GET https://proofound.io/api/cron/refresh-matches-worker \
 curl -X GET https://proofound.io/api/cron/sla-enforcement \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
 
-# cron-job.org-owned workers and observability
+# cron-job.org-owned observability
 curl -X GET https://proofound.io/api/cron/performance-check \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
 curl -X GET https://proofound.io/api/cron/health-check

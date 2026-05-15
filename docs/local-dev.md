@@ -13,10 +13,10 @@ References:
 
 ## Prerequisites
 
-- Node `20.20.0` (see `.nvmrc` and `package.json` engines).
+- Node `24.15.0` (see `.nvmrc` and `package.json` engines).
 - `npm` with `package-lock.json`.
 
-Tip: `npm run dev` and Playwright scripts in this repo use Node 20 wrapper scripts (see `scripts/next-dev-node20.mjs`, `scripts/playwright-node20.mjs`) to avoid accidental Node 16 usage.
+Tip: `npm run dev` and Playwright scripts in this repo use Node 24 wrapper scripts (see `scripts/next-dev-node24.mjs`, `scripts/playwright-node24.mjs`) to avoid accidental runtime drift.
 
 ## Install
 

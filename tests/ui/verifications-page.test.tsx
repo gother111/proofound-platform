@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { requireAuthMock, createClientMock, createAdminClientMock, verificationsClientSpy } =
@@ -67,6 +67,13 @@ import {
   listCanonicalImpactVerificationRequestsForVerifierEmail,
 } from '@/lib/verification/canonical-impact-requests';
 import type { VerificationRequestView } from '@/lib/verification/request-feed';
+
+async function waitForVerificationsClientProps<TProps>() {
+  await screen.findByTestId('verifications-client-proxy');
+  await waitFor(() => expect(verificationsClientSpy).toHaveBeenCalledTimes(1));
+
+  return verificationsClientSpy.mock.calls[0]?.[0] as TProps;
+}
 
 function createSupabaseClientMock(options: {
   userEmail: string;
@@ -222,13 +229,10 @@ describe('VerificationsPage', () => {
     const element = await VerificationsPage();
     render(element);
 
-    expect(screen.getByTestId('verifications-client-proxy')).toBeInTheDocument();
-    expect(verificationsClientSpy).toHaveBeenCalledTimes(1);
-
-    const props = verificationsClientSpy.mock.calls[0]?.[0] as {
+    const props = await waitForVerificationsClientProps<{
       incomingRequests: Array<{ id: string; subjectType: string; createdAt: string }>;
       sentRequests: Array<{ id: string; subjectType: string; impactStoryTitle?: string | null }>;
-    };
+    }>();
 
     expect(props.incomingRequests.map((request) => request.id)).toEqual([
       'impact-incoming-1',
@@ -282,13 +286,12 @@ describe('VerificationsPage', () => {
     const element = await VerificationsPage();
     render(element);
 
-    expect(screen.getByTestId('verifications-client-proxy')).toBeInTheDocument();
     expect(createAdminClientMock).not.toHaveBeenCalled();
 
-    const props = verificationsClientSpy.mock.calls[0]?.[0] as {
+    const props = await waitForVerificationsClientProps<{
       incomingRequests: Array<{ id: string; subjectType: string }>;
       sentRequests: unknown[];
-    };
+    }>();
 
     expect(props.incomingRequests).toHaveLength(1);
     expect(props.incomingRequests[0]).toMatchObject({
@@ -408,7 +411,7 @@ describe('VerificationsPage', () => {
     const element = await VerificationsPage();
     render(element);
 
-    const props = verificationsClientSpy.mock.calls[0]?.[0] as {
+    const props = await waitForVerificationsClientProps<{
       incomingRequests: Array<{
         canonicalPackTitle?: string | null;
         canonicalEvidenceTitles?: string[];
@@ -423,7 +426,7 @@ describe('VerificationsPage', () => {
         proofLabel?: string | null;
         confirmationOutcome?: string | null;
       }>;
-    };
+    }>();
 
     expect(props.incomingRequests[0]).toMatchObject({
       canonicalPackTitle: 'Proof Pack: Product Strategy',
@@ -515,14 +518,14 @@ describe('VerificationsPage', () => {
     const element = await VerificationsPage();
     render(element);
 
-    const props = verificationsClientSpy.mock.calls[0]?.[0] as {
+    const props = await waitForVerificationsClientProps<{
       sentRequests: Array<{
         id: string;
         subjectType: string;
         bundleItemCount?: number;
         bundlePreviewLabels?: string[];
       }>;
-    };
+    }>();
 
     expect(props.sentRequests).toHaveLength(1);
     expect(props.sentRequests[0]).toMatchObject({
@@ -558,13 +561,12 @@ describe('VerificationsPage', () => {
     const element = await VerificationsPage();
     render(element);
 
-    expect(screen.getByTestId('verifications-client-proxy')).toBeInTheDocument();
     expect(createAdminClientMock).not.toHaveBeenCalled();
     expect(listCanonicalImpactVerificationRequestsForVerifierEmail).not.toHaveBeenCalled();
 
-    const props = verificationsClientSpy.mock.calls[0]?.[0] as {
+    const props = await waitForVerificationsClientProps<{
       incomingRequests: Array<{ id: string; subjectType: string }>;
-    };
+    }>();
 
     expect(props.incomingRequests).toHaveLength(0);
   });

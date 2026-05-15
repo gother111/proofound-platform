@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Architecture.md`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-14`
 
 # Architecture Snapshot
 
@@ -10,7 +10,9 @@
 - `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md` is the authoritative supporting product PRD beneath the locked MVP document.
 - `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` is the authoritative technical launch contract beneath the locked MVP document.
 - `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` is operator-facing execution guidance only.
-- `Proofound_Project_Specification_2026-03-11.md` is the last reference layer in the active chain.
+- `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md` governs market framing and launch messaging.
+- Fresh repo-grounded audits and evidence verify current state but do not broaden scope.
+- `Proofound_Project_Specification_2026-03-11.md` is preserved reference context only.
 - `PRD_for_a_web_platform_MVP.master-latest.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `LAUNCH_RUNBOOK.md`, audit docs, and repo governance docs are reference only and must not override the authority stack above.
 - This document is a repo-grounded snapshot, not a competing launch spec.
 - Historical references that describe app-managed JWT sessions, Redis-backed session or queue infrastructure, Datadog or LogDNA as launch dependencies, or Swedish runtime parity are non-canonical for launch.
@@ -22,8 +24,8 @@
 - Drizzle ORM.
 - Resend for transactional email.
 - Sentry, Vercel Analytics, and Supabase dashboard for launch monitoring.
-- Vercel Cron plus `cron-job.org` for the minute-level worker path already wired in the repo.
-- Internal Python CV and document-intelligence service only where already integrated.
+- Vercel Cron for daily core business automation plus `cron-job.org` for explicitly managed observability jobs.
+- Historical Python CV and document-intelligence code only where retained as archived/non-launch context or invite-only proof-artifact OCR beta support.
 
 ## Launch Scope Boundaries
 
@@ -37,14 +39,14 @@ This document records a lightweight, repo-grounded architecture view. Statements
 
 ## Stack (Repo Truth)
 
-- Runtime: Node `20.20.0` is pinned in `.nvmrc`; `package.json` engines require `>=20.20.0 <21`. (source: .nvmrc, package.json)
+- Runtime: Node `24.15.0` is pinned in `.nvmrc`; `package.json` engines require `24.x`. (source: .nvmrc, package.json)
 - Framework: Next.js (App Router) + React + TypeScript. (source: package.json, src/app/, tsconfig.json)
 - Styling/UI: Tailwind CSS is configured in `tailwind.config.ts`; UI libs include Radix and shadcn-style components under `src/components/ui/`. (source: tailwind.config.ts, package.json, src/components/ui/)
 - Data: Supabase JS client and Postgres; ORM/schema via Drizzle. (source: package.json, drizzle.config.ts, src/db/schema.ts)
 - Observability: Sentry is integrated via Next.js config. (source: package.json, next.config.js)
 - Email: Resend + React Email dependencies are present. (source: package.json)
 - Testing: Vitest (unit) + Playwright (E2E). (source: package.json, vitest.config.ts, playwright.config.ts)
-- Hosting: Vercel cron schedules are configured in `vercel.json` for daily core business automation, while cron-job.org is reconciled through `scripts/sync-cron-job-org.mjs` for the sub-daily Python worker and approved observability jobs. (source: vercel.json, package.json, scripts/sync-cron-job-org.mjs)
+- Hosting: Vercel cron schedules are configured in `vercel.json` for daily core business automation, while cron-job.org is reconciled through `scripts/sync-cron-job-org.mjs` for approved observability jobs only. (source: vercel.json, package.json, scripts/sync-cron-job-org.mjs)
 
 ## Folder Map (Repo Truth)
 
@@ -78,13 +80,12 @@ This document records a lightweight, repo-grounded architecture view. Statements
 
 - Legacy CV import routes are archived/non-launch. Historical Python document-intelligence contracts remain code context only and do not authorize CV import wizard reactivation. (source: src/lib/expertise/python-cv-proxy.ts, api/python/cv_import.py, python_cv/contracts.py)
 - The Python service can stay in-process or move behind a separate base URL via `PYTHON_CV_IMPORT_BASE_URL` without changing the public TypeScript route surface. (source: src/lib/python-internal/service.ts)
-- Internal queue-backed Python work uses `public.python_internal_jobs` plus the worker route `/api/cron/python-internal-worker` and the internal enqueue route `/api/internal/python-jobs`. Historical CV PDF extraction jobs and the `cv-import-temp` bucket are non-launch context while CV import routes remain archived. (source: src/db/schema.ts, src/db/migrations/20260306103000_add_python_internal_jobs.sql, src/db/migrations/20260306201000_add_cv_import_extract_jobs_and_temp_storage.sql, src/app/api/cron/python-internal-worker/route.ts, src/app/api/internal/python-jobs/route.ts, src/app/api/expertise/cv-import/wizard-extract/route.ts, src/app/api/expertise/cv-import/wizard-extract/status/route.ts)
+- Internal queue-backed Python work is historical/non-launch context for the locked MVP unless explicitly tied to the invite-only proof-artifact OCR beta. The worker route `/api/cron/python-internal-worker`, internal enqueue route `/api/internal/python-jobs`, CV PDF extraction jobs, and `cv-import-temp` bucket are not active launch infrastructure while CV import routes remain archived. (source: src/lib/launch/surface-policy.ts, docs/CRON_SETUP.md)
 
 ### Queue + Worker Flow (Repo Truth)
 
 - Match refresh jobs and Python internal jobs both use Postgres-backed leasing with retries/backoff rather than Redis or a separate broker. (source: src/lib/matching/refresh-queue.ts, src/lib/python-internal/job-queue.ts)
-- Python internal jobs are claimed by a cron worker, executed through the versioned Python contract, and written back to the queue row as `result` or `last_error`. `document_intelligence_extract_only` is handled directly in the TypeScript worker, which downloads PDFs from private storage, calls the Python `/extract` endpoint with multipart form-data, then deletes temp files after completion. (source: src/app/api/cron/python-internal-worker/route.ts, src/lib/python-internal/client.ts, api/python/cv_import.py, src/lib/expertise/cv-import-extract-worker.ts)
-- On Hobby, the Python internal worker is intended to be triggered by cron-job.org every minute rather than Vercel Cron because the schedule is interactive and sub-daily. A separate daily cron cleans expired temp CV uploads from private storage. (source: README.md, scripts/sync-cron-job-org.mjs, scripts/lib/cron-job-org-config.mjs, src/app/api/cron/cv-import-temp-cleanup/route.ts)
+- The former Python internal worker and CV temp cleanup schedules are archived/non-MVP and must not be treated as active scheduler evidence. (source: docs/CRON_SETUP.md, scripts/lib/cron-job-org-config.mjs)
 
 ### Cron Compatibility (Repo Truth)
 

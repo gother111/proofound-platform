@@ -10,7 +10,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 
 - Ensure the diff is scoped and intentional.
 - Clean install: `npm ci` (source: package.json, package-lock.json, .nvmrc, .npmrc)
-  - The launch-gate runtime is Node `20.20.0` / npm `10.8.2`; `.npmrc` enables engine-strict so unsupported Node versions fail closed.
+  - The launch-gate runtime is Node `24.15.0` / npm `11.12.1`; `.npmrc` enables engine-strict so unsupported Node versions fail closed.
 - Dependency audit:
   - Production threshold: `npm run audit:prod` (source: package.json)
   - All scopes threshold: `npm run audit:all` (source: package.json)

@@ -1,16 +1,18 @@
 > Doc Class: `governance`
 > Sync Pair: `Architecture.md`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-14`
 
 # Architecture Snapshot
 
 ## Canonical Launch Contract
 
 - The canonical MVP implementation contract starts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`.
-- `PRD_for_a_web_platform_MVP.master-latest.md` is the authoritative supporting product PRD beneath the locked MVP document.
-- `PRD_TECHNICAL_REQUIREMENTS.md` is the authoritative technical launch contract beneath the locked MVP document.
-- `LAUNCH_RUNBOOK.md` is operator-facing execution guidance only.
-- `Proofound_Project_Specification_2026-03-11.md`, audit docs, and repo governance docs are reference only and must not override the authority stack above.
+- `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md` is the authoritative supporting product PRD beneath the locked MVP document.
+- `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` is the authoritative technical launch contract beneath the locked MVP document.
+- `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` is operator-facing execution guidance only.
+- `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md` governs market framing and launch messaging.
+- Fresh repo-grounded audits and evidence verify current state but do not broaden scope.
+- `Proofound_Project_Specification_2026-03-11.md`, older wrappers, audit docs, and repo governance docs are reference only and must not override the authority stack above.
 - This document is a repo-grounded snapshot, not a competing launch spec.
 - Historical references that describe app-managed JWT sessions, Redis-backed session or queue infrastructure, Datadog or LogDNA as launch dependencies, or Swedish runtime parity are non-canonical for launch.
 
@@ -21,8 +23,8 @@
 - Drizzle ORM.
 - Resend for transactional email.
 - Sentry, Vercel Analytics, and Supabase dashboard for launch monitoring.
-- Vercel Cron plus `cron-job.org` for the minute-level worker path already wired in the repo.
-- Internal Python CV and document-intelligence service only where already integrated.
+- Vercel Cron for daily core business automation plus `cron-job.org` for explicitly managed observability jobs.
+- Historical Python CV and document-intelligence code only where retained as archived/non-launch context or invite-only proof-artifact OCR beta support.
 
 ## Launch Scope Boundaries
 
@@ -36,14 +38,14 @@ This document records a lightweight, repo-grounded architecture view. Statements
 
 ## Stack (Repo Truth)
 
-- Runtime: Node `20.20.0` is pinned in `.nvmrc`; `package.json` engines require `>=20.20.0 <21`. (source: .nvmrc, package.json)
+- Runtime: Node `24.15.0` is pinned in `.nvmrc`; `package.json` engines require `24.x`. (source: .nvmrc, package.json)
 - Framework: Next.js (App Router) + React + TypeScript. (source: package.json, src/app/, tsconfig.json)
 - Styling/UI: Tailwind CSS is configured in `tailwind.config.ts`; UI libs include Radix and shadcn-style components under `src/components/ui/`. (source: tailwind.config.ts, package.json, src/components/ui/)
 - Data: Supabase JS client and Postgres; ORM/schema via Drizzle. (source: package.json, drizzle.config.ts, src/db/schema.ts)
 - Observability: Sentry is integrated via Next.js config. (source: package.json, next.config.js)
 - Email: Resend + React Email dependencies are present. (source: package.json)
 - Testing: Vitest (unit) + Playwright (E2E). (source: package.json, vitest.config.ts, playwright.config.ts)
-- Hosting: Vercel cron schedules are configured in `vercel.json` for daily core business automation, while cron-job.org is reconciled through `scripts/sync-cron-job-org.mjs` for the sub-daily Python worker and approved observability jobs. (source: vercel.json, package.json, scripts/sync-cron-job-org.mjs)
+- Hosting: Vercel cron schedules are configured in `vercel.json` for daily core business automation, while cron-job.org is reconciled through `scripts/sync-cron-job-org.mjs` for approved observability jobs only. (source: vercel.json, package.json, scripts/sync-cron-job-org.mjs)
 
 ## Folder Map (Repo Truth)
 

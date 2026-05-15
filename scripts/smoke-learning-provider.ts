@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { courseraProvider } from '../src/lib/learning/coursera';
 
-// Ensure global fetch exists (Node 20+ has fetch; keep fallback)
+// Ensure global fetch exists (Node 24 has fetch; keep fallback for test runners)
 if (typeof fetch === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const undici = require('undici');
@@ -32,4 +32,3 @@ main().catch((err) => {
   console.error('coursera smoke failed', err);
   process.exit(1);
 });
-

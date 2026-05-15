@@ -1,8 +1,8 @@
 # Proofound Design Contract
 
 > Doc Class: `working-design`
-> Last Verified: `2026-04-02`
-> Last Updated: `2026-04-02`
+> Last Verified: `2026-05-14`
+> Last Updated: `2026-05-14`
 > Purpose: Give humans and agents one repo-native visual source of truth for UI work without overriding the locked MVP product authority.
 
 ## 1. How to use this document
@@ -22,7 +22,8 @@ Do not use this file to widen product scope. Product behavior and MVP boundaries
 2. `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`
 3. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`
 4. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
-5. `Proofound_Project_Specification_2026-03-11.md`
+5. `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`
+6. Fresh repo-grounded audits and evidence
 
 This document translates that scope into visual and interaction guidance.
 

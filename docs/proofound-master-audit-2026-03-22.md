@@ -4,7 +4,15 @@ Date: `2026-03-22`
 Scope: `Current workspace truth, focused canonical verification validation, and current launch-blocking status`
 Doc class: `governance`
 
+> Historical/superseded freshness banner added 2026-05-14:
+>
+> - Do not treat this March audit as current launch, route, or MVP truth without checking newer repo evidence first.
+> - The locked MVP definition remains `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`; this audit cannot broaden it.
+> - For narrow pilot-readiness evidence, prefer `project/changes/entries/2026-04-09__mvp-launch-audit-execution.md` or newer current evidence. That April 9 execution retired the March build/runtime, route breadth, launch smoke, and strict org corridor blockers unless those blockers are reproduced again in a fresh run.
+> - For release-clean status, use `audit/full-scale-audit-2026-04-16.md` or newer release evidence; April 16 found the repo structurally healthy but not release-clean.
+>
 > Superseded note added 2026-03-25:
+>
 > - This file is preserved as historical evidence only and does not override the locked MVP stack or newer `.artifacts/*` current-state evidence.
 > - Stale categories in or around this audit: mixed live verification transport conclusions, any `PageNotFoundError: /_document` build-blocker claims, any `pilot-launchable` or similar launch verdict treated as current truth, and older route-surface claims where newer route inventory disagrees.
 > - Current 2026-03-25 repo truth is narrower and different: `npm run lint`, `npm run typecheck`, and `npm run build` pass under Node `20.20.0`; focused verification/privacy packs pass; the strict org corridor and full org strict bundle both pass in prod mode; the smoke artifact and live monitors are fresh again; and route breadth remains the open launch risk.
@@ -142,9 +150,9 @@ Interpretation:
 | Proof Pack canonicality                                                  | `PASS`         | No active legacy skill/impact request-table references in `src/app` or `src/lib`; focused canonical verification reruns passed |
 | Bounded verification semantics                                           | `PASS`         | Skill and impact request creation, response, token review, and feed rendering passed focused reruns                            |
 | Distinct engagement verification                                         | `PASS`         | `tests/lib/engagement-verifications.test.ts` and `tests/lib/workflow-contracts.test.ts` passed                                 |
-| Assignment create/edit/publish                                           | `UNVERIFIED`   | Fresh protected prod rerun still missing; blocker 1 is closed, so the remaining gap shifts to block 2 evidence collection     |
-| Review -> intro -> reveal -> interview -> decision -> hire -> engagement | `UNVERIFIED`   | Fresh protected prod rerun still missing; blocker 1 is closed, so the remaining gap shifts to block 2 evidence collection     |
-| Launch readiness in current workspace                                    | `BLOCKED`      | Build/runtime blocker 1 is closed; launch is still blocked by missing fresh protected org-corridor evidence and stale smoke   |
+| Assignment create/edit/publish                                           | `UNVERIFIED`   | Fresh protected prod rerun still missing; blocker 1 is closed, so the remaining gap shifts to block 2 evidence collection      |
+| Review -> intro -> reveal -> interview -> decision -> hire -> engagement | `UNVERIFIED`   | Fresh protected prod rerun still missing; blocker 1 is closed, so the remaining gap shifts to block 2 evidence collection      |
+| Launch readiness in current workspace                                    | `BLOCKED`      | Build/runtime blocker 1 is closed; launch is still blocked by missing fresh protected org-corridor evidence and stale smoke    |
 
 ## Commands and results
 

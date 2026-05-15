@@ -1,7 +1,7 @@
 # Scoped Verification Implementation Context
 
 > This file is implementation context, not the canonical MVP product contract.
-> Launch scope is defined first by `Proofound_Project_Specification_2026-03-11.md`, then by `PRD_TECHNICAL_REQUIREMENTS.md`, then by `PRD_for_a_web_platform_MVP.master-latest.md`, then by `LAUNCH_RUNBOOK.md`.
+> Launch scope is defined first by `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then by `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, and fresh repo-grounded evidence. This document is implementation context only.
 
 ## Purpose
 

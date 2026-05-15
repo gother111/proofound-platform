@@ -1,5 +1,5 @@
 > Doc Class: `governance`
-> Last Verified: `2026-03-12`
+> Last Verified: `2026-05-14`
 
 # Repository Agent Instructions
 
@@ -10,8 +10,10 @@
   2. `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`
   3. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`
   4. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
-  5. `Proofound_Project_Specification_2026-03-11.md`
+  5. `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`
+  6. Fresh repo-grounded audits and evidence
 - `PRD_for_a_web_platform_MVP.master-latest.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `LAUNCH_RUNBOOK.md`, `README.md`, `project/Prompt.md`, `project/Architecture.md`, and audit docs are reference-only context. They must not broaden scope or override the stack above.
+- `Proofound_Project_Specification_2026-03-11.md` is preserved reference context only. It must not broaden or outrank the locked MVP, aligned PRD, technical requirements, launch runbook, GTM plan, or fresh evidence.
 
 ## Core Rule
 
@@ -25,15 +27,17 @@
 3. `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`
 4. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`
 5. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
-6. `Proofound_Project_Specification_2026-03-11.md`
-7. `project/Implement.md`
-8. `project/Prompt.md`
-9. `project/Architecture.md`
-10. `project/Plans.md`
-11. `project/Documentation.md`
-12. `agent/runbooks/setup.md`
-13. `agent/checklists/preflight.md`
-14. `agent/checklists/verification.md`
+6. `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`
+7. Fresh repo-grounded audits and evidence
+8. `Proofound_Project_Specification_2026-03-11.md`
+9. `project/Implement.md`
+10. `project/Prompt.md`
+11. `project/Architecture.md`
+12. `project/Plans.md`
+13. `project/Documentation.md`
+14. `agent/runbooks/setup.md`
+15. `agent/checklists/preflight.md`
+16. `agent/checklists/verification.md`
 
 For UI, landing, public-page, or visual-system work, also read `DESIGN.md` after the MVP authority stack and before editing.
 

@@ -841,3 +841,28 @@ Proofound MVP is a narrow, proof-first hiring credibility corridor centered on P
 It helps individuals turn real work into structured Proof Packs and publish a trustworthy proof portfolio.
 It helps organizations define stronger assignments and review candidates through privacy-safe, explainable proof-backed early review.
 It includes private contextual scaffolding, bounded verification, and an explicit intro-to-engagement flow.
+
+---
+
+## Appendix A. Narrow Optional AI Addendum
+
+This appendix is subordinate to the locked MVP source of truth. It does not change the product category, promise, user groups, or MVP corridor.
+
+Optional AI support may only reduce friction in existing flows:
+
+- Proof Pack clarity: suggest clearer ownership, context, outcomes, evidence gaps, and privacy flags.
+- Assignment clarity: suggest clearer outcomes, constraints, proof expectations, and ambiguity fixes.
+- Verification request wording: draft claim-scoped language that the user reviews before sending.
+- Privacy preflight: provide redaction hints and privacy checks on short sanitized text.
+
+AI product rules:
+
+- AI assistance is optional, explicit, and user-triggered.
+- AI output is draft-only until a human accepts or edits it.
+- AI must not score, rank, recommend, compare, shortlist, or evaluate candidates.
+- AI must not generate suitability judgments or fit verdicts.
+- AI must not make or influence hiring, reveal, verification, trust-state, engagement, or readiness decisions.
+- AI output must not create trust lift, proof-quality lift, verification lift, or readiness lift.
+- Proofound must not position the MVP as an AI-led recruiting, screening, or hiring product.
+
+The non-AI MVP corridor must remain complete and usable when AI is disabled, unavailable, over budget, or rejected by privacy controls.

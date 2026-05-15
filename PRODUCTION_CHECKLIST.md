@@ -94,8 +94,8 @@ Before deploying, ensure all required environment variables are set in Vercel:
 ## 🗄️ Supabase Configuration
 
 - [ ] **Database schema applied**
-  - Safety checkpoint (recommended before production DDL): `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:backup:checkpoint`
-  - Apply canonical migrations: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate`
+  - Safety checkpoint (recommended before production DDL): `PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:backup:checkpoint`
+  - Apply canonical migrations: `PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:migrate`
   - Note: Do not run `npm run db:push` against production. Use versioned SQL under `src/db/migrations/`.
   - Verify tables exist in Supabase Dashboard → Database → Tables
 
@@ -246,7 +246,7 @@ Before deploying, ensure all required environment variables are set in Vercel:
 
 **Solution**:
 
-1. Apply canonical migrations: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate`
+1. Apply canonical migrations: `PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:migrate`
 2. Verify RLS + triggers are applied (policies and triggers are included in `db:migrate`)
 3. Verify tables exist in Supabase Dashboard
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, type ComponentType } from 'react';
 import { Briefcase, FileUp } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
@@ -13,13 +13,58 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { StartFromCvDialog } from '@/components/profile/StartFromCvDialog';
 import { useStartFromCvBetaStatus } from '@/hooks/useStartFromCvBetaStatus';
 import type { Education, Experience, Volunteering } from '@/types/profile';
 
 import { JourneySection } from './JourneyTab';
 import { LearningSection } from './LearningTab';
 import { ServiceSection } from './ServiceTab';
+
+type StartFromCvDialogProps = {
+  onApplyComplete?: () => void;
+};
+
+let startFromCvDialogPromise: Promise<{
+  StartFromCvDialog: ComponentType<StartFromCvDialogProps>;
+}> | null = null;
+
+function loadStartFromCvDialog() {
+  startFromCvDialogPromise ??= import('@/components/profile/StartFromCvDialog');
+  return startFromCvDialogPromise;
+}
+
+function preloadStartFromCvDialog() {
+  void loadStartFromCvDialog();
+}
+
+function StartFromCvDialogSlot(props: StartFromCvDialogProps) {
+  const [StartFromCvDialog, setStartFromCvDialog] =
+    useState<ComponentType<StartFromCvDialogProps> | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void loadStartFromCvDialog().then((module) => {
+      if (!cancelled) {
+        setStartFromCvDialog(() => module.StartFromCvDialog);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!StartFromCvDialog) {
+    return (
+      <div className="rounded-lg border border-proofound-stone/60 p-4 text-sm text-muted-foreground">
+        Preparing CV import...
+      </div>
+    );
+  }
+
+  return <StartFromCvDialog {...props} />;
+}
 
 type ContextTabProps = {
   experiences: Experience[];
@@ -55,6 +100,10 @@ export function ContextTab({
   const [isImportOpen, setIsImportOpen] = useState(false);
   const startFromCvStatus = useStartFromCvBetaStatus();
   const startFromCvEnabled = startFromCvStatus.visible && startFromCvStatus.available;
+  const openImport = () => {
+    preloadStartFromCvDialog();
+    setIsImportOpen(true);
+  };
 
   return (
     <TabsContent value="context" className="space-y-6">
@@ -73,7 +122,13 @@ export function ContextTab({
             </div>
           </div>
           {startFromCvEnabled ? (
-            <Button type="button" variant="outline" onClick={() => setIsImportOpen(true)}>
+            <Button
+              type="button"
+              variant="outline"
+              onFocus={preloadStartFromCvDialog}
+              onMouseEnter={preloadStartFromCvDialog}
+              onClick={openImport}
+            >
               <FileUp className="mr-2 h-4 w-4" />
               Start from CV
             </Button>
@@ -94,7 +149,9 @@ export function ContextTab({
             <Button
               type="button"
               className="shrink-0 bg-proofound-forest hover:bg-proofound-forest/90"
-              onClick={() => setIsImportOpen(true)}
+              onFocus={preloadStartFromCvDialog}
+              onMouseEnter={preloadStartFromCvDialog}
+              onClick={openImport}
             >
               <FileUp className="mr-2 h-4 w-4" />
               Start from CV
@@ -111,7 +168,7 @@ export function ContextTab({
               Review private drafts before applying anything to your profile context.
             </DialogDescription>
           </DialogHeader>
-          <StartFromCvDialog
+          <StartFromCvDialogSlot
             onApplyComplete={() => {
               setIsImportOpen(false);
               onImportComplete?.();

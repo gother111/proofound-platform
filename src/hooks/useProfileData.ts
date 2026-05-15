@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useTransition } from 'react';
+import { useState, useEffect, useCallback, useMemo, useTransition } from 'react';
 import type {
   ProfileData,
   BasicInfo,
@@ -116,9 +116,12 @@ export function useProfileData(initialProfile: ProfileData | null = null) {
   const [isLoading, setIsLoading] = useState(!initialProfile);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
-  const [profileCompletion, setProfileCompletion] = useState(5);
   const [pending, setPending] = useState<PendingState>(initialPending);
   const [isPending, startTransition] = useTransition();
+  const profileCompletion = useMemo(
+    () => (profile ? calculateProfileCompletion(profile) : 5),
+    [profile]
+  );
 
   const retryLoad = useCallback(() => {
     setLoadError(null);
@@ -129,7 +132,6 @@ export function useProfileData(initialProfile: ProfileData | null = null) {
   useEffect(() => {
     if (initialProfile && loadAttempt === 0) {
       setProfile(initialProfile);
-      setProfileCompletion(calculateProfileCompletion(initialProfile));
       setIsLoading(false);
       setLoadError(null);
       return;
@@ -149,7 +151,6 @@ export function useProfileData(initialProfile: ProfileData | null = null) {
             return;
           }
           setProfile(data);
-          setProfileCompletion(calculateProfileCompletion(data));
           return;
         } catch (error) {
           if (!active) {
@@ -201,12 +202,6 @@ export function useProfileData(initialProfile: ProfileData | null = null) {
       active = false;
     };
   }, [initialProfile, loadAttempt]);
-
-  useEffect(() => {
-    if (profile) {
-      setProfileCompletion(calculateProfileCompletion(profile));
-    }
-  }, [profile]);
 
   const runWithPending = useCallback(
     async <T>(key: keyof PendingState, fn: () => Promise<T>): Promise<T | undefined> => {

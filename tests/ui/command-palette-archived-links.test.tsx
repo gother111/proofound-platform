@@ -23,12 +23,12 @@ describe('CommandPalette archived surface links', () => {
     Element.prototype.scrollIntoView = vi.fn();
   });
 
-  it('does not expose archived expertise commands and keeps verifications accessible', () => {
+  it('does not expose archived expertise commands and keeps verifications accessible', async () => {
     render(<CommandPalette />);
 
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
 
-    expect(screen.getByText('Overview')).toBeInTheDocument();
+    expect(await screen.findByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('Matching')).toBeInTheDocument();
     expect(screen.getByText('Portfolio visibility')).toBeInTheDocument();
     expect(screen.getByText('Review verifications')).toBeInTheDocument();

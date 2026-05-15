@@ -18,9 +18,9 @@ describe('launch gate package configuration', () => {
     const nvmrc = fs.readFileSync(path.join(repoRoot, '.nvmrc'), 'utf8').trim();
     const npmrc = fs.readFileSync(path.join(repoRoot, '.npmrc'), 'utf8');
 
-    expect(nvmrc).toBe('20.20.0');
-    expect(packageJson.engines?.node).toBe('>=20.20.0 <21');
-    expect(packageJson.packageManager).toBe('npm@10.8.2');
+    expect(nvmrc).toBe('24.15.0');
+    expect(packageJson.engines?.node).toBe('24.x');
+    expect(packageJson.packageManager).toBe('npm@11.12.1');
     expect(npmrc).toContain('engine-strict=true');
   });
 

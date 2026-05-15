@@ -737,3 +737,41 @@ The technical requirements are considered aligned when:
 The Proofound MVP technical contract supports a narrow, proof-first, privacy-safe hiring and credibility corridor.
 
 It stores private context, surfaces structured proof, enforces scoped verification, preserves blind review until consented reveal, and supports a lean hiring-to-engagement flow without expanding into generic recruiting middleware.
+
+---
+
+## Appendix A. Narrow Optional AI Technical Addendum
+
+This appendix is optional implementation scope beneath the locked MVP authority. It must not broaden matching, review, trust, verification, or decision semantics.
+
+### A.1 Allowed capabilities
+
+AI routes may support only:
+
+- Proof Pack clarity suggestions
+- assignment clarity suggestions
+- claim-scoped verification request wording
+- privacy preflight and redaction hints
+- friction reduction inside existing MVP flows
+
+AI routes must not support candidate scoring, ranking, recommendations, shortlisting, suitability judgments, fit verdicts, trust-state decisions, verification decisions, reveal decisions, or hiring decisions.
+
+### A.2 Required controls
+
+- Use a server-side provider abstraction; provider and model IDs are environment-configured implementation details.
+- Gate every AI surface behind a feature flag and an operator kill switch.
+- Enforce spend caps in application or service code before provider invocation.
+- Apply redaction and privacy rules before model invocation; full private files, original filenames, signed URLs, private storage URLs, API keys, cookies, session IDs, tokens, hidden identity-bearing review data, protected-trait information, and raw PII are not sent by default.
+- Store audit metadata for actor, organization where applicable, feature name, object type and ID, provider, model ID, token counts, cost, redaction summary, policy decision, fallback status, and timestamp.
+- Do not log raw PII, private file content, original filenames, signed URLs, credentials, session material, or raw prompts by default.
+- Validate inputs with Zod or equivalent structured validation and validate model output against a JSON schema before display or storage.
+- Treat AI output as draft-only user assistance; it must not create trust lift, proof-quality lift, verification lift, readiness lift, match lift, or review lift.
+
+### A.3 Fallback behavior
+
+When AI is disabled, unavailable, over budget, rate limited, privacy-blocked, or schema-invalid:
+
+- core MVP flows must continue without AI
+- users receive deterministic checklists, static templates, or no suggestion rather than a broken workflow
+- failures are auditable through metadata without storing raw sensitive content
+- no hiring, verification, trust, reveal, or engagement state may change because an AI call failed or succeeded

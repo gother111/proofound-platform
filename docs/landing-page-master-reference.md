@@ -3,6 +3,13 @@
 Date generated: 2026-03-21  
 Workspace: `/Users/yuriibakurov/proofound`
 
+> Historical/superseded freshness banner added 2026-05-14:
+>
+> - Do not treat this March landing reference as current public-page truth without checking newer code, design guidance, and launch evidence first.
+> - The locked MVP definition remains `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`; this reference cannot broaden the MVP into an old broad-product or marketplace story.
+> - For narrow pilot-readiness and public-surface evidence, prefer `project/changes/entries/2026-04-09__mvp-launch-audit-execution.md` or newer current evidence. That April 9 execution retired the March build/runtime, route breadth, launch smoke, and strict org corridor blockers unless those blockers are reproduced again in a fresh run.
+> - For release-clean status, use `audit/full-scale-audit-2026-04-16.md` or newer release evidence; April 16 found the repo structurally healthy but not release-clean.
+
 ## Purpose
 
 This document is the code-grounded reference for the current homepage implementation at `/`. It replaces the older March 17 reference, which described a different landing composition.

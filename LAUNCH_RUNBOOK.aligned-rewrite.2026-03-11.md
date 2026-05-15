@@ -316,3 +316,29 @@ The runbook must not assume launch support for:
 The Proofound MVP should be operated as a narrow, trust-sensitive, manually supervised launch corridor.
 
 If speed, automation, or apparent growth conflicts with proof integrity, privacy, or assignment quality, the trust-preserving option wins.
+
+---
+
+## Appendix A. Narrow Optional AI Launch Addendum
+
+This appendix does not change launch scope. It only defines operating gates for optional assistive AI inside the existing MVP corridor.
+
+Before enabling any AI surface in production or pilot traffic, confirm:
+
+- the surface is allowed by the locked MVP AI addendum
+- feature flag and operator kill switch are available and tested
+- provider abstraction is configured server-side only
+- spend caps are enforced before provider invocation
+- redaction and privacy rules block raw PII, private files, original filenames, signed URLs, credentials, tokens, session material, hidden identity-bearing review data, and protected-trait information by default
+- audit metadata records feature name, actor, object, provider, model, token count, cost, redaction summary, fallback status, and timestamp without raw sensitive content
+- deterministic fallback behavior is visible when AI is disabled, unavailable, over budget, or privacy-blocked
+- AI output is draft-only and reviewed by a user before any wording is saved, sent, or published
+- AI output cannot create trust lift, proof-quality lift, verification lift, readiness lift, matching lift, or review lift
+
+Immediate disable is required if AI behavior:
+
+- scores, ranks, recommends, compares, shortlists, or evaluates candidates
+- generates suitability judgments or fit verdicts
+- influences hiring, reveal, verification, trust-state, engagement, or readiness decisions
+- leaks or logs raw PII or private content
+- appears in product positioning as an AI-led recruiting, screening, or hiring product

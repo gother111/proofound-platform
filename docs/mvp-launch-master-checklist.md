@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-04-29`
+> Last Verified: `2026-05-14`
 
 # Proofound MVP Launch Master Checklist
 
@@ -16,6 +16,9 @@ Use this checklist for the final launch review. Do not treat older partial check
   - [PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md](../PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md)
   - [PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md](../PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md)
   - [LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md](../LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md)
+  - [Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md](../Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md)
+  - fresh repo-grounded audits and evidence
+- Reference-only context:
   - [Proofound_Project_Specification_2026-03-11.md](../Proofound_Project_Specification_2026-03-11.md)
 - Supporting launch surfaces:
   - [agent/checklists/verification.md](../agent/checklists/verification.md)

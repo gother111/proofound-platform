@@ -2,41 +2,28 @@
 
 > Canonical status: use Vercel Cron for daily core business automation and cron-job.org only for observability jobs.
 
-## Current Scheduler Ownership
+## Canonical Cron Classification
 
-### Vercel Cron
+The canonical machine-readable registry is `CRON_JOB_CLASSIFICATION_TABLE` in `scripts/lib/cron-job-org-config.mjs`. Keep this human table aligned with that registry.
 
-These are the only jobs that should be scheduled in `vercel.json`:
-
-- `/api/cron/decision-reminders` at `10:00 UTC`
-- `/api/cron/refresh-matches` at `03:00 UTC`
-- `/api/cron/refresh-matches-worker` at `03:15 UTC`
-- `/api/cron/sla-enforcement` at `08:00 UTC`
-
-### cron-job.org
-
-These are the only external jobs that should be enabled:
-
-- `/api/cron/health-check` every 3 hours
-- `/api/cron/performance-check` daily at `06:00 Europe/Stockholm`
-
-These should stay disabled externally:
-
-- `/api/cron/account-deletion-workflow`
-- `/api/cron/python-internal-worker`
-- `/api/cron/cv-import-temp-cleanup`
-- `/api/cron/send-deletion-reminders`
-- `/api/cron/process-deletions`
-- `/api/cron/refresh-matches`
-- `/api/cron/sla-enforcement`
-
-### Unscheduled Compatibility or Manual Routes
-
-These routes may remain callable but should not be scheduled:
-
-- `/api/cron/account-deletion-workflow`
-- `/api/cron/send-deletion-reminders`
-- `/api/cron/process-deletions`
+| Route                                 | Classification           | Owner                      | Schedule                         | Launch reason                                                                      | Test coverage                                                                       |
+| ------------------------------------- | ------------------------ | -------------------------- | -------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `/api/cron/decision-reminders`        | active_launch_automation | Vercel Cron                | 0 10 \* \* \* UTC                | Sends launch-critical decision reminders from the MVP workflow corridor.           | tests/scripts/cron-scheduling.test.ts verifies the Vercel cron entry.               |
+| `/api/cron/refresh-matches`           | active_launch_automation | Vercel Cron                | 0 3 \* \* \* UTC                 | Enqueues the daily MVP match refresh workload.                                     | tests/scripts/cron-scheduling.test.ts verifies the Vercel cron entry.               |
+| `/api/cron/refresh-matches-worker`    | active_launch_automation | Vercel Cron                | 15 3 \* \* \* UTC                | Drains the MVP match refresh queue after enqueue.                                  | tests/scripts/cron-scheduling.test.ts verifies the Vercel cron entry.               |
+| `/api/cron/sla-enforcement`           | active_launch_automation | Vercel Cron                | 0 8 \* \* \* UTC                 | Maintains launch-critical SLA state for the hiring workflow.                       | tests/scripts/cron-scheduling.test.ts verifies the Vercel cron entry.               |
+| `/api/cron/health-check`              | active_observability     | cron-job.org               | Every 3 hours, Europe/Stockholm  | External health signal for launch monitoring.                                      | tests/scripts/cron-scheduling.test.ts verifies the managed cron-job.org job.        |
+| `/api/cron/performance-check`         | active_observability     | cron-job.org               | Daily at 06:00, Europe/Stockholm | External performance signal for launch monitoring.                                 | tests/scripts/cron-scheduling.test.ts verifies the managed cron-job.org job.        |
+| `/api/cron/launch-synthetic-checks`   | manual_launch_ops        | Manual/internal launch ops | Not scheduled                    | Available for explicit launch synthetic checks, not recurring infrastructure.      | tests/api/launch-surface-inventory.test.ts covers internal-only launch surface.     |
+| `/api/cron/account-deletion-workflow` | archived_compatibility   | None                       | Not scheduled                    | Archived compatibility route; not active launch infrastructure.                    | tests/api/launch-surface-inventory.test.ts covers archived route status.            |
+| `/api/cron/send-deletion-reminders`   | archived_compatibility   | None                       | Not scheduled                    | Archived standalone deletion reminder route; not active launch infrastructure.     | tests/api/launch-surface-inventory.test.ts covers archived route status.            |
+| `/api/cron/process-deletions`         | archived_compatibility   | None                       | Not scheduled                    | Archived standalone deletion processing route; not active launch infrastructure.   | tests/api/launch-surface-inventory.test.ts covers archived route status.            |
+| `/api/cron/python-internal-worker`    | removed_non_mvp          | None                       | Not scheduled                    | Removed from the locked MVP launch surface; not active launch infrastructure.      | tests/api/launch-surface-inventory.test.ts covers archived route status.            |
+| `/api/cron/cv-import-temp-cleanup`    | removed_non_mvp          | None                       | Not scheduled                    | CV import cleanup is outside the locked MVP launch surface.                        | tests/api/launch-surface-inventory.test.ts covers archived route status.            |
+| `/api/cron/weekly-digest`             | removed_non_mvp          | None                       | Not scheduled                    | Weekly digest delivery is disabled and not active launch infrastructure.           | tests/scripts/cron-scheduling.test.ts verifies cron-job.org disables it if present. |
+| `/api/cron/fairness-note`             | removed_non_mvp          | None                       | Not scheduled                    | Fairness-note automation is archived outside the locked MVP launch surface.        | src/lib/launch/surface-policy.ts classifies it as archived.                         |
+| `/api/cron/fairness-report`           | removed_non_mvp          | None                       | Not scheduled                    | Fairness-report automation is archived outside the locked MVP launch surface.      | src/lib/launch/surface-policy.ts classifies it as archived.                         |
+| `/api/cron/generate-fairness-note`    | removed_non_mvp          | None                       | Not scheduled                    | Legacy fairness-note generation is archived outside the locked MVP launch surface. | src/lib/launch/surface-policy.ts classifies it as archived.                         |
 
 ## Required Environment
 
@@ -55,7 +42,7 @@ npm run cron:sync
 The sync script:
 
 - keeps the intended external jobs enabled
-- disables retired or overlapping external jobs
+- disables retired, non-MVP, manual-only, or Vercel-owned jobs if they exist in cron-job.org
 
 ## Manual Validation
 

@@ -1,7 +1,7 @@
 # Proofound MVP
 
 > Doc Class: `active`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-14`
 
 Production-ready scaffold for a proof-first, privacy-first hiring corridor centered on Proof Packs, with one individual side and one organization side.
 
@@ -16,7 +16,7 @@ Proofound is a narrow proof-first hiring corridor. It centers the product on Pro
 
 Launch contract highlights:
 
-- Active MVP implementation authority starts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then `Proofound_Project_Specification_2026-03-11.md`.
+- Active MVP implementation authority starts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded audits and evidence.
 - Interactive web auth uses Supabase SSR session cookies.
 - Public portfolio publication is explicit and non-indexed by default until publication criteria are met.
 - Uploads are quarantine-first and private by default, with public promotion limited to approved safe image types.
@@ -62,8 +62,8 @@ flowchart LR
 
 ## Documentation map
 
-- MVP implementation authority: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_Project_Specification_2026-03-11.md`.
-- Reference-only broader strategy and diagnostics: `PRD_for_a_web_platform_MVP.master-latest.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `LAUNCH_RUNBOOK.md`, `docs/proofound-hard-audit-2026-03-12.md`, `project/Prompt.md`, `project/Architecture.md`, `README.md`.
+- MVP implementation authority: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, and fresh repo-grounded audits/evidence.
+- Reference-only broader strategy and diagnostics: `Proofound_Project_Specification_2026-03-11.md`, `PRD_for_a_web_platform_MVP.master-latest.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `LAUNCH_RUNBOOK.md`, `docs/proofound-hard-audit-2026-03-12.md`, `project/Prompt.md`, `project/Architecture.md`, `README.md`.
 - Repo-grounded implementation snapshots and readiness aids: `project/Architecture.md`, `project/Plans.md`, `project/Implement.md`, `PRODUCTION_CHECKLIST.md`.
 - Historical architecture context only: `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
 - APIs: `docs/API_REFERENCE.md` (generated from `src/app/api/**/route.ts` via `node scripts/generate-api-reference.mjs`; historical API specs remain archived under `docs/archive/legacy-platform/api-reference-history/`).
@@ -92,7 +92,7 @@ Design system extracted from Figma "Proofound Style Guidelines":
 
 ## Prerequisites
 
-- Node.js 20.20.0 (see `.nvmrc`) and npm 10.8.2 (pinned in `package.json`)
+- Node.js 24.15.0 (see `.nvmrc`) and npm 11.12.1 (pinned in `package.json`)
 - Python 3.12 recommended for local document-intelligence work (`.venv311` or `python3.11` also work for the bundled Python tests)
 - Supabase account (free tier works)
 - Resend account (free tier works)
@@ -109,8 +109,8 @@ npm ci
 ```
 
 `npm ci` is the launch-gate install path. The repo uses `package-lock.json`, pins
-`packageManager: npm@10.8.2`, and enables `engine-strict=true`; installs must run
-on Node `>=20.20.0 <21`.
+`packageManager: npm@11.12.1`, and enables `engine-strict=true`; installs must run
+on Node `24.x`.
 
 ### 2. Set Up Supabase
 
@@ -177,10 +177,10 @@ Run migrations and triggers:
 
 ```bash
 # Apply ordered SQL migrations + policy/trigger supplements
-PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate
+PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:migrate
 
 # Optional but recommended for matching
-PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:seed-taxonomy
+PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:seed-taxonomy
 ```
 
 **Quick guide to DB scripts:**
@@ -313,15 +313,15 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
 
 ## Cron Jobs (Ops Quick Reference)
 
-- Primary scheduler: Vercel Cron for daily core business automation. Use cron-job.org for the sub-daily Python worker plus explicitly managed observability jobs.
+- Primary scheduler: Vercel Cron for daily core business automation. Use cron-job.org only for explicitly managed observability jobs.
 - Auth: cron routes require `Authorization: Bearer ${CRON_SECRET}` unless explicitly documented otherwise, such as `/api/cron/health-check`.
 - Routes and schedules (UTC):
   - `/api/cron/decision-reminders` — 10:00 (decision reminders and performance-health summary; weekly digest temporarily disabled)
   - `/api/cron/refresh-matches` — 03:00 (enqueue match refresh jobs)
   - `/api/cron/refresh-matches-worker` — 03:15 (drain queued refresh jobs)
   - `/api/cron/sla-enforcement` — 08:00 (expire stale matches and flag overdue interview decisions)
-  - `/api/cron/python-internal-worker` — every minute via cron-job.org on Hobby (`npm run cron:sync`)
-  - `/api/cron/cv-import-temp-cleanup` — 04:20 daily via cron-job.org (removes expired private CV upload objects)
+  - `/api/cron/python-internal-worker` — archived/non-MVP compatibility route; not scheduled
+  - `/api/cron/cv-import-temp-cleanup` — removed from active launch infrastructure; not scheduled
 - Env requirements:
   - `CRON_SECRET` (for inbound cron calls)
   - `CRON_API_KEY` (optional, for syncing cron-job.org jobs from the repo)
@@ -342,16 +342,14 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - `CV_IMPORT_ENGINE_MODE` (default `auto`)
   - `CV_IMPORT_TEMP_TTL_HOURS` (default `24`, controls private temp CV upload retention)
   - `PERF_API_P95_BUDGET_MS` (default `1500`)
-- Observability/optional routes (if scheduled via cron-job.org):
-  - `/api/cron/fairness-note` — daily at 02:00 Europe/Stockholm
-  - `/api/cron/fairness-report` — tracked in cron-job.org but intentionally kept disabled
+- Observability routes managed through cron-job.org:
   - `/api/cron/performance-check` — daily at 06:00 Europe/Stockholm
   - `/api/cron/health-check` — every 3 hours (no auth required by the route)
 - Unscheduled compatibility/manual routes:
   - `/api/cron/account-deletion-workflow` — retired compatibility route; returns 410 because account deletion is immediate
   - `/api/cron/send-deletion-reminders` — retired compatibility route; returns 410 because grace-period reminders are not part of the locked launch MVP
   - `/api/cron/process-deletions` — retired compatibility route; returns 410 because scheduled deletion processing is not part of the locked launch MVP
-  - `/api/cron/generate-fairness-note` — manual fairness-note trigger with alert fan-out
+  - `/api/cron/generate-fairness-note` — archived compatibility route outside the locked launch MVP
   - `/api/cron/weekly-digest` — manual compatibility route; weekly digest delivery is temporarily disabled
 - Tracking & troubleshooting:
   - cron-job.org History for status/body; enable notifications on non-200.
@@ -518,7 +516,7 @@ Proofound does not run database migrations automatically in the Vercel build.
 Apply schema changes out of band using canonical SQL migrations (`src/db/migrations/*.sql`) and:
 
 ```bash
-PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate
+PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:migrate
 ```
 
 ## CI/CD

@@ -1,7 +1,7 @@
 # Proofound MVP — Locked Source of Truth
 
 > Doc Class: `active`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-14`
 
 **Status:** Locked for MVP planning and implementation  
 **Date:** 2026-03-11  
@@ -17,10 +17,13 @@ When this document conflicts with older narrative, exploratory, audit, or implem
 Precedence order:
 
 1. `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
-2. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `Proofound_Project_Specification_2026-03-11.md`, and `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md` for implementation and product detail that do not conflict with this document
-3. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` for operating guidance only
-4. `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md` for market framing and launch messaging only
-5. Audits, reviews, and older exploratory materials as advisory only
+2. `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md` for launch-bound product behavior
+3. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` for implementation and technical requirements
+4. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` for operating guidance only
+5. `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md` for market framing and launch messaging only
+6. Fresh repo-grounded audits and evidence for current-state verification only
+
+`Proofound_Project_Specification_2026-03-11.md` is preserved reference context. It must not broaden or outrank the active stack above.
 
 ### AI assistive layer note
 
@@ -1412,3 +1415,35 @@ Excluded:
 - taxonomy shortlist or reranker
 - Cloud Vision OCR
 - moving core infrastructure from Vercel/Supabase to Google Cloud
+
+---
+
+## Appendix B. Narrow Optional AI Addendum
+
+This appendix does not rewrite the MVP definition. It only permits a small optional assistive layer inside the existing proof-first hiring corridor.
+
+Allowed AI support is limited to:
+
+- improving Proof Pack clarity
+- improving assignment clarity
+- drafting claim-scoped verification request wording for user review
+- providing privacy preflight and redaction hints on short sanitized text
+- reducing user friction inside existing MVP flows
+
+AI must not:
+
+- score, rank, shortlist, recommend, or compare candidates
+- generate suitability judgments or fit verdicts
+- make, automate, or influence hiring, reveal, verification, trust-state, or engagement decisions
+- create trust lift, proof-quality lift, verification lift, or readiness lift from model output alone
+- become product positioning or be marketed as an AI-led recruiting, screening, or hiring product
+
+Required controls:
+
+- provider abstraction, feature flag, and kill switch
+- spend caps enforced in application or service code
+- redaction and privacy rules before model invocation
+- audit metadata for feature name, actor, object, provider, model, token count, cost, redaction summary, and fallback status
+- deterministic fallback behavior when AI is disabled, unavailable, over budget, or unsafe
+- no raw PII, private file content, original filenames, signed URLs, API keys, tokens, cookies, session IDs, or raw prompts in logs by default
+- user review before any AI-assisted wording is saved, sent, or published

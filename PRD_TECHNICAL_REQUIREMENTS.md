@@ -6,7 +6,7 @@
 **Status:** Aligned rewrite for current MVP  
 **Date:** 2026-03-11  
 **Audience:** Engineering, product, QA, operations  
-**Authority:** This document aligns to `Proofound_Project_Specification_2026-03-11.md`. If any implementation detail conflicts with the Project Specification, the Project Specification wins.
+**Authority:** Reference-only legacy technical context. If this document conflicts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, or fresh repo-grounded evidence, the active stack wins.
 
 ---
 

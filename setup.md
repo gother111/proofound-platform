@@ -18,9 +18,9 @@ Use `nvm` to ensure you run the same Node version Vercel will use for this repo:
 ```bash
 export NVM_DIR="$HOME/.nvm"
 . "$NVM_DIR/nvm.sh"
-nvm install 20.20.0
-nvm use 20.20.0
-node -v  # expect v20.20.0
+nvm install
+nvm use
+node -v  # expect v24.15.0
 ```
 
 ## Environment Variables (Repo Truth)

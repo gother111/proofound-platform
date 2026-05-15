@@ -1,7 +1,7 @@
 # Proofound — Core User Flows v1.0
 
 > Reference note: this file is reference or historical design material. It is not the canonical MVP launch contract.
-> Current precedence: `Proofound_Project_Specification_2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `PRD_for_a_web_platform_MVP.master-latest.md`, `LAUNCH_RUNBOOK.md`.
+> Current precedence: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded evidence. This document is reference context only.
 
 _A concise, thorough blueprint for MVP software documentation. Forty (40) flows: 20 for Individuals and 20 for Organizations. Each flow uses the same mini-spec template to support design, product, and engineering._
 

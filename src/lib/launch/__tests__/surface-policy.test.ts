@@ -138,7 +138,6 @@ describe('launch surface policy', () => {
       '/api/portfolio/visibility',
       '/api/profile',
       '/api/profile/privacy-settings',
-      '/api/data-export',
       '/api/upload/document',
       '/api/user/export',
       '/api/verification/requests/skill',

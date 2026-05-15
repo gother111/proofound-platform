@@ -58,11 +58,11 @@ NEXT_PUBLIC_WIREFRAME_MODE=false
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX=30
 PYTHON_CV_IMPORT_BASE_URL=https://python-internal.proofound.internal
-PYTHON_INTERNAL_JOBS_ENABLED=true
-PYTHON_INTERNAL_WORKER_BATCH_SIZE=10
-PYTHON_INTERNAL_WORKER_CONCURRENCY=2
-PYTHON_INTERNAL_WORKER_LEASE_SECONDS=180
-PYTHON_INTERNAL_MAX_ATTEMPTS=3
+PYTHON_INTERNAL_JOBS_ENABLED=false # legacy/non-launch helper toggle only
+PYTHON_INTERNAL_WORKER_BATCH_SIZE=10 # legacy/non-launch helper only
+PYTHON_INTERNAL_WORKER_CONCURRENCY=2 # legacy/non-launch helper only
+PYTHON_INTERNAL_WORKER_LEASE_SECONDS=180 # legacy/non-launch helper only
+PYTHON_INTERNAL_MAX_ATTEMPTS=3 # legacy/non-launch helper only
 AI_ASSISTANTS_ENABLED=false
 AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
 AI_MODEL_FALLBACK=
@@ -370,13 +370,16 @@ CRON_SECRET=K7x9mP2nQ4vL8wR6yT3zC5bN1aM0hF
 
 **Used By**:
 
+Active launch and observability routes:
+
 - `/api/cron/decision-reminders`
 - `/api/cron/refresh-matches`
 - `/api/cron/refresh-matches-worker`
 - `/api/cron/sla-enforcement`
 - `/api/cron/performance-check`
 - `/api/cron/health-check`
-- Legacy/manual compatibility routes such as `/api/cron/account-deletion-workflow`
+
+Manual or archived compatibility routes may still check the same secret if explicitly invoked, but they are not active launch infrastructure. The canonical schedule classification is in [CRON_SETUP.md](./CRON_SETUP.md).
 
 **How to Generate**:
 
@@ -420,7 +423,7 @@ CRON_API_KEY=your_cron_job_org_api_token
 
 - Lets the repo reconcile the managed cron-job.org job set via `npm run cron:sync`.
 - Ensures the intended observability jobs remain enabled or disabled according to repo policy.
-- Disables overlapping or retired external jobs such as `/api/cron/account-deletion-workflow`, `/api/cron/python-internal-worker`, `/api/cron/cv-import-temp-cleanup`, `/api/cron/send-deletion-reminders`, `/api/cron/process-deletions`, `/api/cron/refresh-matches`, and `/api/cron/sla-enforcement`.
+- Disables overlapping, manual-only, retired, or non-MVP external jobs such as Vercel-owned launch jobs, `/api/cron/account-deletion-workflow`, `/api/cron/python-internal-worker`, `/api/cron/cv-import-temp-cleanup`, `/api/cron/weekly-digest`, `/api/cron/fairness-note`, and `/api/cron/fairness-report`.
 - Intended for Hobby deployments where Vercel cron cannot run sub-daily schedules.
 
 **Without This**:

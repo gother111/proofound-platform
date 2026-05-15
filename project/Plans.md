@@ -1,10 +1,10 @@
 > Doc Class: `governance`
 > Sync Pair: `Plans.md`
-> Last Verified: `2026-03-12`
+> Last Verified: `2026-05-14`
 
 # MVP Milestones (Proposal)
 
-Context: This repo already contains substantial implementation. Use this file as stable milestone framing plus validation checklists only. Active MVP implementation authority starts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then `Proofound_Project_Specification_2026-03-11.md`; this file must not widen that scope. Historical status snapshots are archived; use `docs/archive/status-reports/root-historical/IMPLEMENTATION_STATUS_CURRENT.md` for point-in-time history and `PRODUCTION_CHECKLIST.md` for current launch readiness checks. (source: Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md, PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md, PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md, LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md, Proofound_Project_Specification_2026-03-11.md, docs/archive/status-reports/root-historical/IMPLEMENTATION_STATUS_CURRENT.md, PRODUCTION_CHECKLIST.md)
+Context: This repo already contains substantial implementation. Use this file as stable milestone framing plus validation checklists only. Active MVP implementation authority starts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded audits and evidence; this file must not widen that scope. Historical status snapshots are archived; use `docs/archive/status-reports/root-historical/IMPLEMENTATION_STATUS_CURRENT.md` for point-in-time history and `PRODUCTION_CHECKLIST.md` for current launch readiness checks. (source: Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md, PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md, PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md, LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md, Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md, PRODUCTION_CHECKLIST.md)
 
 ## Milestone 1: Foundations (Local Dev + CI Parity Baseline)
 
