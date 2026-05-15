@@ -28,6 +28,10 @@ vi.mock('@/lib/analytics/events', () => ({
   emitIndividualOnboardingCompleted: vi.fn(),
 }));
 
+vi.mock('@/lib/uploads/lifecycle', () => ({
+  attachUploadedFile: vi.fn(),
+}));
+
 vi.mock('@/lib/launch/trace', () => ({
   startLaunchTrace: vi.fn(() => ({
     objectRefs: {},
@@ -43,6 +47,8 @@ import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 
 function buildFormData(contextType: 'experience' | 'education' | 'volunteering') {
   const formData = new FormData();
+  formData.set('firstName', 'Jordan');
+  formData.set('lastName', 'Proof');
   formData.set('displayName', 'Jordan Proof');
   formData.set('handle', `jordan-${contextType}`);
   formData.set('headline', 'Proof builder');
@@ -63,6 +69,7 @@ function buildFormData(contextType: 'experience' | 'education' | 'volunteering')
   formData.set('proofPackClaim', 'Proof claim');
   formData.set('proofPackOwnership', 'I owned this work.');
   formData.set('proofPackOutcome', 'Proof outcome');
+  formData.set('proofPackSkills', 'Proof writing, artifact review, onboarding design');
   return formData;
 }
 

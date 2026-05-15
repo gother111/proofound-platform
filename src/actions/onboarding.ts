@@ -13,6 +13,8 @@ import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 import { validateProofPackAnchor } from '@/lib/proofs/pack-anchor';
+import { attachUploadedFile } from '@/lib/uploads/lifecycle';
+import { resolveArtifactDisplayName } from '@/lib/uploads/privacy';
 
 const choosePersonaSchema = z.object({
   persona: z.enum(['individual', 'org_member']),
@@ -31,6 +33,27 @@ const INDIVIDUAL_DAY_ONE_FIELD_VISIBILITY = {
 } as const;
 
 type OnboardingContextType = 'experience' | 'education' | 'volunteering';
+type OnboardingArtifactInputMode = 'link' | 'file';
+
+const ONBOARDING_ARTIFACT_TYPES = new Set([
+  'project',
+  'document',
+  'credential',
+  'media',
+  'reference',
+  'other',
+]);
+type OnboardingContextKind = 'work' | 'volunteering' | 'education_learning' | 'other_safe';
+
+const ONBOARDING_COMPANY_SIZE_VALUES = new Set([
+  '1-10',
+  '11-50',
+  '51-200',
+  '201-500',
+  '501-1000',
+  '1001-5000',
+  '5001+',
+]);
 
 function buildPublicPortfolioUrl(pathname: string) {
   const baseUrl = resolvePublicSnippetBaseUrl();
@@ -42,8 +65,32 @@ function isOnboardingContextType(value: string): value is OnboardingContextType 
   return value === 'experience' || value === 'education' || value === 'volunteering';
 }
 
+function isOnboardingContextKind(value: string): value is OnboardingContextKind {
+  return (
+    value === 'work' ||
+    value === 'volunteering' ||
+    value === 'education_learning' ||
+    value === 'other_safe'
+  );
+}
+
 function normalizeHandle(value: string): string {
   return value.trim().toLowerCase();
+}
+
+function slugifyHandleSeed(value: string): string {
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  return slug || 'proof-builder';
+}
+
+function generateOnboardingHandle(displayName: string, userId: string): string {
+  return `${slugifyHandleSeed(displayName)}-${userId.replace(/-/g, '').slice(0, 8)}`;
 }
 
 function validateHandle(value: string): string | null {
@@ -77,6 +124,41 @@ function resolveOnboardingProofItemSubtype(proofUrl: string) {
     return 'repo';
   }
   return null;
+}
+
+function normalizeArtifactInputMode(value: string): OnboardingArtifactInputMode {
+  return value === 'file' ? 'file' : 'link';
+}
+
+function normalizeOnboardingArtifactType(value: string) {
+  return ONBOARDING_ARTIFACT_TYPES.has(value) ? value : 'project';
+}
+
+function resolveScaffoldSkills(proofPackSkills: string[], artifactType: string) {
+  if (proofPackSkills.length >= 3 && proofPackSkills.length <= 5) {
+    return proofPackSkills;
+  }
+
+  const artifactLabel =
+    artifactType === 'credential'
+      ? 'Credential evidence'
+      : artifactType === 'document'
+        ? 'Documented evidence'
+        : artifactType === 'media'
+          ? 'Media evidence'
+          : artifactType === 'reference'
+            ? 'Reference evidence'
+            : 'Project evidence';
+
+  return [artifactLabel, 'Proof documentation', 'Outcome communication'];
+}
+
+function resolveProofArtifactKind(inputMode: OnboardingArtifactInputMode, artifactType: string) {
+  if (inputMode === 'link') return 'link';
+  if (artifactType === 'credential') return 'credential';
+  if (artifactType === 'media') return 'image';
+  if (artifactType === 'reference') return 'reference';
+  return 'document';
 }
 
 export async function choosePersona(formData: FormData) {
@@ -114,26 +196,67 @@ export async function completeIndividualOnboarding(formData: FormData) {
     actorType: 'user_account',
   });
 
-  const displayName = formData.get('displayName') as string;
-  const handle = formData.get('handle') as string;
-  const headline = formData.get('headline') as string;
-  const location = String(formData.get('location') || '').trim();
-  const timezone = String(formData.get('timezone') || '').trim();
-  const focusArea = String(formData.get('focusArea') || '').trim();
-  const workMode = String(formData.get('workMode') || '').trim();
-  const engagementType = String(formData.get('engagementType') || '').trim();
-  const contextTypeValue = String(formData.get('contextType') || '').trim();
-  const contextTitle = String(formData.get('contextTitle') || '').trim();
-  const contextOrganizationName = String(formData.get('contextOrganizationName') || '').trim();
-  const contextSummary = String(formData.get('contextSummary') || '').trim();
-  const contextDuration = String(formData.get('contextDuration') || '').trim();
-  const contextOutcome = String(formData.get('contextOutcome') || '').trim();
+  const firstName = String(formData.get('firstName') || '').trim();
+  const lastName = String(formData.get('lastName') || '').trim();
+  const cityOrResidence = String(
+    formData.get('cityOrResidence') || formData.get('residence') || ''
+  ).trim();
+  const displayName = String(formData.get('displayName') || `${firstName} ${lastName}`).trim();
+  const handle = String(
+    formData.get('handle') || generateOnboardingHandle(displayName, user.id)
+  ).trim();
+  const headline = String(
+    formData.get('headline') || `First proof artifact from ${displayName}`
+  ).trim();
+  const location = String(formData.get('location') || cityOrResidence).trim();
+  const timezone = String(formData.get('timezone') || 'Europe/Stockholm').trim();
+  const focusArea = String(formData.get('focusArea') || 'First proof artifact').trim();
+  const workMode = String(formData.get('workMode') || 'remote').trim();
+  const engagementType = String(formData.get('engagementType') || 'project_based').trim();
+  const contextKindValue = String(formData.get('contextKind') || '').trim();
+  const contextTypeValue = String(formData.get('contextType') || 'experience').trim();
+  const contextCompanySize = String(formData.get('contextCompanySize') || '').trim();
+  const contextIndustryDomain = String(formData.get('contextIndustryDomain') || '').trim();
+  const contextFocusArea = String(formData.get('contextFocusArea') || '').trim();
+  const contextScope = String(formData.get('contextScope') || '').trim();
+  const contextOperatingEnvironment = String(
+    formData.get('contextOperatingEnvironment') || ''
+  ).trim();
+  const secondaryContextNote = String(formData.get('secondaryContextNote') || '').trim();
+  const proofInputType = normalizeArtifactInputMode(
+    String(formData.get('proofInputType') || formData.get('artifactInputMode') || 'link')
+  );
+  const proofArtifactType = normalizeOnboardingArtifactType(
+    String(formData.get('proofArtifactType') || formData.get('artifactType') || '')
+  );
+  const uploadedFileId = String(
+    formData.get('uploadedFileId') || formData.get('proofUploadedFileId') || ''
+  ).trim();
+  const proofFileName = String(formData.get('proofFileName') || '').trim();
   const proofUrl = String(formData.get('proofUrl') || '').trim();
   const proofTitle = String(formData.get('proofTitle') || '').trim();
   const proofSummary = String(formData.get('proofSummary') || '').trim();
+  const contextTitle = String(
+    formData.get('contextTitle') || `First proof: ${proofTitle || proofFileName || 'artifact'}`
+  ).trim();
+  const contextOrganizationName = String(
+    formData.get('contextOrganizationName') || location || 'Self-directed proof context'
+  ).trim();
+  const contextSummary = String(
+    formData.get('contextSummary') ||
+      `Starter proof context for ${displayName || 'this individual'} in ${location}.`
+  ).trim();
+  const contextDuration = String(formData.get('contextDuration') || 'First proof setup').trim();
+  const contextOutcome = String(formData.get('contextOutcome') || proofSummary).trim();
   const proofPackClaim = String(formData.get('proofPackClaim') || '').trim();
   const proofPackOwnership = String(formData.get('proofPackOwnership') || '').trim();
   const proofPackOutcome = String(formData.get('proofPackOutcome') || '').trim();
+  const proofPackSkills = String(formData.get('proofPackSkills') || '')
+    .split(/[\n,]/)
+    .map((skill) => skill.trim())
+    .filter(Boolean)
+    .slice(0, 5);
+  const scaffoldSkills = resolveScaffoldSkills(proofPackSkills, proofArtifactType);
 
   if (!isOnboardingContextType(contextTypeValue)) {
     emitLaunchTrace(trace, {
@@ -145,56 +268,54 @@ export async function completeIndividualOnboarding(formData: FormData) {
   }
 
   const contextType = contextTypeValue as OnboardingContextType;
+  const contextKind = isOnboardingContextKind(contextKindValue)
+    ? contextKindValue
+    : contextType === 'education'
+      ? 'education_learning'
+      : contextType === 'volunteering'
+        ? 'volunteering'
+        : 'work';
+  const normalizedCompanySize = ONBOARDING_COMPANY_SIZE_VALUES.has(contextCompanySize)
+    ? contextCompanySize
+    : null;
 
-  if (
-    !displayName ||
-    !handle ||
-    !headline ||
-    !location ||
-    !timezone ||
-    !focusArea ||
-    !workMode ||
-    !engagementType
-  ) {
+  if (!displayName || !handle || !location) {
     emitLaunchTrace(trace, {
       outcome: 'rejected',
       state: 'portfolio_publish_validation_failed',
       failureClass: 'missing_required_fields',
     });
-    return { error: 'Finish the safe shell before publishing.' };
+    return { error: 'Finish the basic identity shell before saving your first Proof Pack.' };
   }
 
-  if (
-    !contextTitle ||
-    !contextOrganizationName ||
-    !contextSummary ||
-    !contextDuration ||
-    !contextOutcome
-  ) {
+  if (!contextTitle || !contextOrganizationName || !contextSummary || !contextDuration) {
     emitLaunchTrace(trace, {
       outcome: 'rejected',
       state: 'portfolio_publish_validation_failed',
       failureClass: 'missing_context_fields',
     });
-    return { error: 'Add one real context with a short anchor and outcome before publishing.' };
+    return {
+      error: 'Add one real context with a short anchor before saving your first Proof Pack.',
+    };
   }
 
-  if (!proofUrl || !proofTitle || !proofSummary) {
+  const isFileProof = proofInputType === 'file';
+  if (!proofTitle || !proofSummary || (isFileProof ? !uploadedFileId : !proofUrl)) {
     emitLaunchTrace(trace, {
       outcome: 'rejected',
       state: 'portfolio_publish_validation_failed',
       failureClass: 'missing_proof_fields',
     });
-    return { error: 'Add your first proof before publishing.' };
+    return { error: 'Add your first proof before saving your first Proof Pack.' };
   }
 
-  if (!proofPackClaim || !proofPackOwnership || !proofPackOutcome) {
+  if (!proofPackClaim || !proofPackOwnership) {
     emitLaunchTrace(trace, {
       outcome: 'rejected',
       state: 'portfolio_publish_validation_failed',
       failureClass: 'missing_proof_pack_fields',
     });
-    return { error: 'Structure your first Proof Pack before publishing.' };
+    return { error: 'Structure your first Proof Pack before saving it.' };
   }
 
   const normalizedHandle = normalizeHandle(handle);
@@ -244,8 +365,8 @@ export async function completeIndividualOnboarding(formData: FormData) {
 
     const individualInsert = await supabase.from('individual_profiles').upsert({
       user_id: user.id,
-      headline: headline || null,
-      location: location || null,
+      headline: headline || `First proof: ${proofTitle}`,
+      location: location || cityOrResidence || null,
       visibility: 'public',
       field_visibility: INDIVIDUAL_DAY_ONE_FIELD_VISIBILITY,
     });
@@ -265,10 +386,10 @@ export async function completeIndividualOnboarding(formData: FormData) {
 
     const matchingProfileInsert = await supabase.from('matching_profiles').upsert({
       profile_id: user.id,
-      timezone,
-      desired_roles: [focusArea],
-      work_mode: workMode,
-      engagement_type: engagementType,
+      timezone: timezone || null,
+      desired_roles: [focusArea || contextFocusArea || contextTitle].filter(Boolean),
+      work_mode: workMode || null,
+      engagement_type: engagementType || null,
       updated_at: nowIso,
     });
 
@@ -294,11 +415,14 @@ export async function completeIndividualOnboarding(formData: FormData) {
         user_id: user.id,
         title: contextTitle,
         organization_name: contextOrganizationName,
+        organization_industry: contextIndustryDomain || contextFocusArea || null,
+        organization_industry_legacy_text: contextIndustryDomain || contextFocusArea || null,
+        organization_employee_amount: normalizedCompanySize,
         org_description: contextSummary,
         duration: contextDuration,
         outcomes: contextOutcome,
         projects: contextSummary,
-        colleagues: contextSummary,
+        colleagues: contextOperatingEnvironment || contextScope || contextSummary,
         achievements: contextOutcome,
         verified: false,
       });
@@ -310,8 +434,11 @@ export async function completeIndividualOnboarding(formData: FormData) {
         institution: contextOrganizationName,
         degree: contextTitle,
         duration: contextDuration,
-        skills: contextSummary,
-        projects: contextOutcome,
+        skills:
+          [contextFocusArea || contextIndustryDomain, contextOperatingEnvironment]
+            .filter(Boolean)
+            .join(' · ') || contextSummary,
+        projects: [contextOutcome, contextScope].filter(Boolean).join(' · ') || contextOutcome,
         verified: false,
       });
       contextInsertError = error;
@@ -320,12 +447,14 @@ export async function completeIndividualOnboarding(formData: FormData) {
         id: contextId,
         user_id: user.id,
         title: contextTitle,
-        org_description: `${contextOrganizationName}: ${contextSummary}`,
+        org_description: [contextOrganizationName, contextSummary, contextOperatingEnvironment]
+          .filter(Boolean)
+          .join(': '),
         duration: contextDuration,
-        cause: contextSummary,
+        cause: contextFocusArea || contextIndustryDomain || contextSummary,
         impact: contextOutcome,
         skills_deployed: contextTitle,
-        personal_why: contextSummary,
+        personal_why: secondaryContextNote || contextSummary,
         verified: false,
       });
       contextInsertError = error;
@@ -344,18 +473,59 @@ export async function completeIndividualOnboarding(formData: FormData) {
     const artifactId = randomUUID();
     const packId = randomUUID();
     const proofItemSubtype = resolveOnboardingProofItemSubtype(proofUrl);
+    const attachedUpload = uploadedFileId
+      ? await attachUploadedFile(uploadedFileId, user.id, 'proof_pack', packId)
+      : null;
+
+    if (uploadedFileId && !attachedUpload) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'portfolio_publish_validation_failed',
+        failureClass: 'uploaded_file_not_attachable',
+      });
+      return { error: 'Uploaded file is awaiting privacy review or failed checks.' };
+    }
+
+    const uploadedFileStoragePath =
+      attachedUpload?.quarantine_path ||
+      attachedUpload?.durable_path ||
+      attachedUpload?.public_path ||
+      null;
+    const uploadedFileDisplayName = attachedUpload
+      ? resolveArtifactDisplayName({
+          sanitizedFilename: attachedUpload.sanitized_filename ?? null,
+          originalFilename: attachedUpload.original_filename ?? null,
+          detectedMime: attachedUpload.detected_mime ?? null,
+          uploadKind: attachedUpload.upload_kind ?? null,
+        })
+      : null;
     const proofMetadata = {
       imported_from: 'onboarding',
+      context_kind: contextKind,
       context_type: contextType,
       context_title: contextTitle,
       context_organization_name: contextOrganizationName,
       context_duration: contextDuration,
       context_summary: contextSummary,
       context_outcome: contextOutcome,
-      focus_area: focusArea,
+      context_company_size: normalizedCompanySize,
+      context_industry_domain: contextIndustryDomain || null,
+      context_focus_area: contextFocusArea || null,
+      context_scope: contextScope || null,
+      context_operating_environment: contextOperatingEnvironment || null,
+      secondary_context_note: secondaryContextNote || null,
+      secondary_context_links_optional: true,
+      primary_anchor_required_for_intro_eligibility: true,
+      context_visibility: 'private_anchor_public_safe_pack',
+      focus_area: focusArea || contextFocusArea || contextTitle,
+      proof_pack_skills: scaffoldSkills,
       candidate_evidence: true,
-      public_signal: true,
+      public_signal: false,
       artifactSubtype: proofItemSubtype,
+      proofInputType,
+      proofArtifactType,
+      proofFileName: uploadedFileDisplayName || proofFileName,
+      uploadedFileId: uploadedFileId || null,
     };
 
     const proofArtifactInsert = await supabase.from('proof_artifacts').insert({
@@ -364,13 +534,16 @@ export async function completeIndividualOnboarding(formData: FormData) {
       owner_id: user.id,
       subject_type: contextType,
       subject_id: contextId,
-      artifact_kind: 'link',
+      artifact_kind: resolveProofArtifactKind(proofInputType, proofArtifactType),
       lifecycle_state: 'active',
       title: proofTitle,
       description: proofSummary,
-      source_url: proofUrl,
+      source_url: proofUrl || null,
+      uploaded_file_id: uploadedFileId || null,
+      storage_path: uploadedFileStoragePath,
+      mime_type: attachedUpload?.detected_mime || null,
       activated_at: nowIso,
-      visibility: 'public',
+      visibility: 'owner_only',
       reveal_gate: 'none',
       metadata: proofMetadata,
       created_at: nowIso,
@@ -411,7 +584,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       pack_kind: 'verification_bundle',
       primary_subject_type: contextType,
       primary_subject_id: contextId,
-      lifecycle_state: 'published',
+      lifecycle_state: 'ready',
       primary_claim_type: proofPackOutcome ? 'outcome' : 'contribution',
       title: proofTitle,
       summary: proofPackClaim,
@@ -420,26 +593,40 @@ export async function completeIndividualOnboarding(formData: FormData) {
       timeframe_label: contextDuration,
       context_json: {
         importedFrom: 'onboarding',
+        contextKind,
         contextType,
         contextId,
-        focusArea,
-        workMode,
-        engagementType,
+        focusArea: focusArea || contextFocusArea || contextTitle,
+        workMode: workMode || null,
+        engagementType: engagementType || null,
         contextTitle,
         contextOrganizationName,
         contextDuration,
         contextSummary,
         contextOutcome,
+        contextCompanySize: normalizedCompanySize,
+        contextIndustryDomain,
+        contextFocusArea,
+        contextScope,
+        contextOperatingEnvironment,
+        secondaryContextNote,
+        secondaryContextLinksOptional: true,
+        primaryAnchorRequiredForIntroEligibility: true,
         evidenceTitle: proofTitle,
         evidenceUrl: proofUrl,
+        proofInputType,
+        proofArtifactType,
+        uploadedFileId,
+        proofFileName,
         proofPackClaim,
         proofPackOwnership,
         proofPackOutcome,
+        proofPackSkills: scaffoldSkills,
       },
       evidence_summary: proofSummary,
-      outcomes_summary: proofPackOutcome,
+      outcomes_summary: proofPackOutcome || null,
       verification_summary: 'No scoped verification is recorded for this Proof Pack yet.',
-      visibility: 'public',
+      visibility: 'owner_only',
       reveal_gate: 'none',
       created_by: user.id,
       verification_status: 'unverified',
@@ -451,9 +638,10 @@ export async function completeIndividualOnboarding(formData: FormData) {
       portability_meta: {
         completenessState: 'context_anchored',
         importedFrom: 'onboarding',
+        firstProofMilestone: 'portfolio_started',
+        verificationOptionalAtCreation: true,
       },
       metadata: proofMetadata,
-      published_at: nowIso,
       created_at: nowIso,
       updated_at: nowIso,
     });
@@ -472,8 +660,12 @@ export async function completeIndividualOnboarding(formData: FormData) {
       pack_id: packId,
       artifact_id: artifactId,
       position: 0,
-      item_class: proofItemSubtype ? 'repo_activity' : 'url_link',
-      subtype_metadata: proofItemSubtype ? { subtype: proofItemSubtype, artifactKind: 'link' } : {},
+      item_class: isFileProof ? 'file_upload' : proofItemSubtype ? 'repo_activity' : 'url_link',
+      subtype_metadata: {
+        ...(proofItemSubtype ? { subtype: proofItemSubtype } : {}),
+        artifactKind: resolveProofArtifactKind(proofInputType, proofArtifactType),
+        proofArtifactType,
+      },
       included_fields: ['title', 'description', 'sourceUrl', 'issuedAt', 'expiresAt'],
       created_at: nowIso,
       updated_at: nowIso,
@@ -515,7 +707,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
 
     emitLaunchTrace(trace, {
       outcome: 'success',
-      state: 'public_portfolio_live',
+      state: 'first_proof_pack_created',
       details: {
         highestState: readiness.highestState,
       },
@@ -525,6 +717,8 @@ export async function completeIndividualOnboarding(formData: FormData) {
       success: true,
       handle: normalizedHandle,
       publicPortfolioUrl: buildPublicPortfolioUrl(publicPortfolioPath),
+      scaffoldProfilePath: '/app/i/profile',
+      firstProofPackCreated: true,
       portfolioReady: readiness.flags.portfolioReady,
       browseReady: readiness.flags.browseReady,
       qualifiedIntroReady: readiness.flags.qualifiedIntroReady,

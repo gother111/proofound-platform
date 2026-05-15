@@ -181,15 +181,15 @@ function buildGuidedSteps(
     },
     {
       id: 'verification',
-      label: 'Required verification',
+      label: 'Optional trust checkpoint',
       detail:
-        'Request one accepted non-self verification tied to anchored proof before the public portfolio can unlock.',
+        'You can finish the first Proof Pack without sending emails. Later, one accepted non-self verification helps unlock stronger trust and intro eligibility.',
       state: resolveStepState(4, activeIndex),
       icon: BadgeCheck,
       actions: [
         {
           id: 'verification',
-          label: checks.hasRequiredVerification ? 'Review verification' : 'Request verification',
+          label: checks.hasRequiredVerification ? 'Review verification' : 'Add verification later',
           onClick: handlers.onOpenVerification,
           variant: 'outline',
           disabled: !checks.hasStructuredProofPack,
@@ -262,7 +262,7 @@ export function GuidedProfileSetupView({
         }
       : !completionState.checks.hasRequiredVerification
         ? {
-            label: 'Request verification',
+            label: 'Review trust options',
             onClick: onOpenVerification,
             testId: 'guided-dominant-proof-cta',
           }
@@ -287,8 +287,8 @@ export function GuidedProfileSetupView({
               Start with proof, not profile polish
             </h1>
             <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-              Build only the parts that make a public proof link credible: safe shell, one real
-              context, one structured proof, one verification, then publish.
+              Build only the parts that make the first proof credible: safe shell, one real context,
+              one structured Proof Pack, then decide what trust signal comes next.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">

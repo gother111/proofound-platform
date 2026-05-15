@@ -40,7 +40,7 @@ vi.mock('@/lib/profile/completion-flow.server', () => ({
 }));
 
 vi.mock('@/components/onboarding/OnboardingClient', () => ({
-  OnboardingClient: ({ initialPersona }: { initialPersona: string | null }) => null,
+  OnboardingClient: 'first-proof-onboarding',
 }));
 
 import OnboardingPage from '@/app/onboarding/page';
@@ -73,6 +73,7 @@ describe('OnboardingPage', () => {
   it('redirects legacy individual users without handles to the dashboard', async () => {
     getIndividualProfileCompletionStateMock.mockResolvedValue({
       isCoreProfileComplete: true,
+      checks: { hasStructuredProofPack: true },
     });
 
     await expect(OnboardingPage()).rejects.toThrow('NEXT_REDIRECT');
@@ -82,14 +83,16 @@ describe('OnboardingPage', () => {
     expect(redirectMock).toHaveBeenCalledWith('/app/i/home');
   });
 
-  it('shows individual onboarding for users who have not completed the core profile steps', async () => {
+  it('routes new individual users into first-proof onboarding instead of profile completion setup', async () => {
     getIndividualProfileCompletionStateMock.mockResolvedValue({
       isCoreProfileComplete: false,
+      checks: { hasStructuredProofPack: false },
     });
 
     const result = await OnboardingPage();
 
     expect(result).toMatchObject({
+      type: 'first-proof-onboarding',
       props: { initialPersona: 'individual' },
     });
     expect(resolveUserHomePathMock).not.toHaveBeenCalled();

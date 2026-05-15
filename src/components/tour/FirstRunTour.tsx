@@ -49,9 +49,9 @@ interface TourStep {
 const individualTourSteps: TourStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to Proofound! ✨',
+    title: 'Welcome to Proofound',
     description:
-      "Your first win is simple: publish a clean, proof-based portfolio link and share it today. Let's take a quick tour.",
+      "Your first win is simple: create one artifact-backed Proof Pack. Let's take a quick tour.",
     icon: Home,
     placement: 'center',
   },
@@ -59,7 +59,7 @@ const individualTourSteps: TourStep[] = [
     id: 'navigation',
     title: 'Your Navigation',
     description:
-      'This sidebar is your command center. Access your overview, profile, public portfolio link, matching, and more from here.',
+      'This sidebar is your command center. Access your overview, profile, Proof Packs, matching, and more from here.',
     icon: Compass,
     target: '[data-tour="left-nav"]',
     placement: 'right',
@@ -78,7 +78,7 @@ const individualTourSteps: TourStep[] = [
     id: 'profile',
     title: 'Your Profile',
     description:
-      'Build your profile to showcase your skills, experience, mission, and values. A complete profile helps organizations understand who you are and what drives you.',
+      'Profile is where your Proof Packs, real contexts, and visibility choices live. Start with proof before broad profile polish.',
     icon: User,
     target: '[data-tour="profile-link"]',
     placement: 'right',
@@ -112,9 +112,9 @@ const individualTourSteps: TourStep[] = [
   },
   {
     id: 'complete',
-    title: "You're All Set! 🎉",
+    title: "You're all set",
     description:
-      "You can restart this tour anytime from Settings → Help. Start by sharing your public portfolio link, then use matching when you're ready.",
+      "You can restart this tour anytime from Settings → Help. Start with one Proof Pack, then use matching when you're ready.",
     icon: Home,
     placement: 'center',
   },

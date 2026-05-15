@@ -23,7 +23,7 @@ export function OnboardingClient({ initialPersona = null }: OnboardingClientProp
               Welcome to Proofound
             </h1>
             <p className="text-lg text-proofound-charcoal/70 dark:text-muted-foreground">
-              Let&apos;s publish your public portfolio link
+              Let&apos;s create your first Proof Pack
             </p>
           </div>
           <PersonaChoice onSelect={setSelectedPersona} />

@@ -5,14 +5,14 @@ export const individualTourSteps: Step[] = [
   {
     target: 'body',
     content:
-      "Welcome to Proofound! Let's take a quick tour to help you get started. This will only take a minute.",
+      "Welcome to Proofound! Let's take a quick tour to help you create your first Proof Pack.",
     placement: 'center',
     disableBeacon: true,
   },
   {
     target: '[data-tour="profile-section"]',
     content:
-      'This is your profile hub. Complete your mission, vision, values, and causes to help us find purpose-aligned opportunities for you.',
+      'This is your profile hub. Start with one artifact-backed Proof Pack before broad profile polish.',
     placement: 'bottom',
   },
   {
@@ -41,7 +41,7 @@ export const individualTourSteps: Step[] = [
   },
   {
     target: '[data-tour="opportunities-section"]',
-    content: `Once your profile is complete, matched opportunities will appear here. We use ${UI_VOCABULARY.pacLabel} scoring to find work that aligns with your values and causes.`,
+    content: `Once proof and privacy are ready, matched opportunities will appear here. We use ${UI_VOCABULARY.pacLabel} scoring to find work that aligns with your values and causes.`,
     placement: 'bottom',
   },
   {
@@ -53,7 +53,7 @@ export const individualTourSteps: Step[] = [
   {
     target: '[data-tour="profile-completion"]',
     content:
-      'Track your profile completion here. Reach 60% to become "matchable" and start receiving opportunities.',
+      'Track your proof readiness here. Start with one Proof Pack, then strengthen trust when it matters.',
     placement: 'left',
   },
 ];

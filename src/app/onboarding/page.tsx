@@ -19,7 +19,8 @@ export default async function OnboardingPage() {
     redirect('/login');
   }
 
-  // Check if user profile is complete based on their persona
+  // Resolve the persona-specific first-run path. Individuals enter first-proof onboarding, not a
+  // broad profile-completion setup.
   const persona = await getPersona(user.id);
 
   // For organization members: check if they have an organization
@@ -31,8 +32,8 @@ export default async function OnboardingPage() {
     }
   } else if (persona === 'individual') {
     const completionState = await getIndividualProfileCompletionState(user.id);
-    if (!completionState.isCoreProfileComplete) {
-      // Show individual onboarding
+    if (!completionState.checks.hasStructuredProofPack) {
+      // Show individual first-proof onboarding until one context-anchored Proof Pack exists.
       return <OnboardingClient initialPersona="individual" />;
     }
   } else if (persona === 'unknown') {
@@ -52,11 +53,16 @@ export default async function OnboardingPage() {
     // Check if they have an individual profile
     const profile = await getCurrentUser();
     if (profile?.handle) {
-      // They have a profile - update persona and redirect to individual home
+      // They have a profile shell. Keep empty/no-proof users in first-proof onboarding.
       await supabase
         .from('profiles')
         .update({ persona: 'individual', updated_at: new Date().toISOString() })
         .eq('id', user.id);
+
+      const completionState = await getIndividualProfileCompletionState(user.id);
+      if (!completionState.checks.hasStructuredProofPack) {
+        return <OnboardingClient initialPersona="individual" />;
+      }
 
       redirect('/app/i/home');
     }

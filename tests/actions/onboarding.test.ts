@@ -7,6 +7,7 @@ import { reconcileVerifierContradictions } from '@/lib/verification/contradictio
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 import { emitIndividualOnboardingCompleted } from '@/lib/analytics/events';
+import { attachUploadedFile } from '@/lib/uploads/lifecycle';
 
 vi.mock('@/lib/auth', () => ({
   requireAuth: vi.fn(),
@@ -34,6 +35,10 @@ vi.mock('@/lib/readiness/individual-state', () => ({
 
 vi.mock('@/lib/analytics/events', () => ({
   emitIndividualOnboardingCompleted: vi.fn(),
+}));
+
+vi.mock('@/lib/uploads/lifecycle', () => ({
+  attachUploadedFile: vi.fn(),
 }));
 
 vi.mock('@/lib/launch/trace', () => ({
@@ -98,6 +103,8 @@ describe('onboarding actions', () => {
     );
 
     const formData = new FormData();
+    formData.set('firstName', 'Jane');
+    formData.set('lastName', 'Founder');
     formData.set('displayName', 'Jane Founder');
     formData.set('handle', 'Jane_Founder');
     formData.set('headline', 'Builder');
@@ -107,11 +114,17 @@ describe('onboarding actions', () => {
     formData.set('workMode', 'remote');
     formData.set('engagementType', 'contract');
     formData.set('contextType', 'experience');
+    formData.set('contextKind', 'work');
     formData.set('contextTitle', 'Onboarding lead');
     formData.set('contextOrganizationName', 'Proofound');
     formData.set('contextSummary', 'Led the MVP onboarding corridor.');
     formData.set('contextDuration', '2025 to present');
     formData.set('contextOutcome', 'Reduced the corridor to one calm proof-first path.');
+    formData.set('contextCompanySize', '11-50');
+    formData.set('contextIndustryDomain', 'Proof-first hiring');
+    formData.set('contextScope', 'global');
+    formData.set('contextOperatingEnvironment', 'Remote launch team');
+    formData.set('secondaryContextNote', 'Also touched founder operations.');
     formData.set('proofUrl', 'https://example.com/projects/proof-first');
     formData.set('proofTitle', 'Proof-first corridor launch');
     formData.set('proofSummary', 'Launch note showing the first proof-backed onboarding launch.');
@@ -121,17 +134,20 @@ describe('onboarding actions', () => {
       'I owned the contribution shown in this proof inside this context.'
     );
     formData.set('proofPackOutcome', 'Reduced the corridor to one calm proof-first path.');
+    formData.set('proofPackSkills', 'Product strategy, stakeholder interviews, onboarding design');
 
     const result = await completeIndividualOnboarding(formData);
 
-    expect(result).toEqual({
-      success: true,
-      handle: 'jane_founder',
-      publicPortfolioUrl: 'https://proofound.io/portfolio/jane_founder',
-      portfolioReady: true,
-      browseReady: false,
-      qualifiedIntroReady: false,
-    });
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        handle: 'jane_founder',
+        publicPortfolioUrl: 'https://proofound.io/portfolio/jane_founder',
+        portfolioReady: true,
+        browseReady: false,
+        qualifiedIntroReady: false,
+      })
+    );
 
     expect(individualUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -153,8 +169,12 @@ describe('onboarding actions', () => {
     expect(experienceInsert).toHaveBeenCalledWith(
       expect.objectContaining({
         org_description: 'Led the MVP onboarding corridor.',
+        organization_industry: 'Proof-first hiring',
+        organization_industry_legacy_text: 'Proof-first hiring',
+        organization_employee_amount: '11-50',
         outcomes: 'Reduced the corridor to one calm proof-first path.',
         projects: 'Led the MVP onboarding corridor.',
+        colleagues: 'Remote launch team',
         achievements: 'Reduced the corridor to one calm proof-first path.',
       })
     );
@@ -175,8 +195,30 @@ describe('onboarding actions', () => {
         context_json: expect.objectContaining({
           contextSummary: 'Led the MVP onboarding corridor.',
           contextOutcome: 'Reduced the corridor to one calm proof-first path.',
+          contextKind: 'work',
+          contextCompanySize: '11-50',
+          contextIndustryDomain: 'Proof-first hiring',
+          contextScope: 'global',
+          contextOperatingEnvironment: 'Remote launch team',
+          secondaryContextNote: 'Also touched founder operations.',
+          secondaryContextLinksOptional: true,
+          primaryAnchorRequiredForIntroEligibility: true,
           evidenceTitle: 'Proof-first corridor launch',
           evidenceUrl: 'https://example.com/projects/proof-first',
+          proofPackSkills: ['Product strategy', 'stakeholder interviews', 'onboarding design'],
+        }),
+      })
+    );
+    expect(proofArtifactInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          context_kind: 'work',
+          context_industry_domain: 'Proof-first hiring',
+          context_company_size: '11-50',
+          context_operating_environment: 'Remote launch team',
+          secondary_context_links_optional: true,
+          primary_anchor_required_for_intro_eligibility: true,
+          proof_pack_skills: ['Product strategy', 'stakeholder interviews', 'onboarding design'],
         }),
       })
     );
@@ -184,7 +226,10 @@ describe('onboarding actions', () => {
     expect(proofPackItemInsert).toHaveBeenCalledWith(
       expect.objectContaining({
         item_class: 'url_link',
-        subtype_metadata: {},
+        subtype_metadata: expect.objectContaining({
+          artifactKind: 'link',
+          proofArtifactType: 'project',
+        }),
       })
     );
     expect(reconcileVerifierContradictions).toHaveBeenCalledWith({
@@ -290,6 +335,8 @@ describe('onboarding actions', () => {
     );
 
     const formData = new FormData();
+    formData.set('firstName', 'Jane');
+    formData.set('lastName', 'Founder');
     formData.set('displayName', 'Jane Founder');
     formData.set('handle', 'jane_founder');
     formData.set('headline', 'Builder');
@@ -313,6 +360,7 @@ describe('onboarding actions', () => {
       'I owned the contribution shown in this proof inside this context.'
     );
     formData.set('proofPackOutcome', 'Built a proof-first onboarding prototype.');
+    formData.set('proofPackSkills', 'Product strategy, proof systems, onboarding design');
 
     const result = await completeIndividualOnboarding(formData);
 
@@ -351,5 +399,111 @@ describe('onboarding actions', () => {
       })
     );
     expect(proofPackItemInsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('accepts the narrow first-proof file payload and attaches the uploaded artifact', async () => {
+    const profileEq = vi.fn().mockResolvedValue({ error: null });
+    const profileUpdate = vi.fn().mockReturnValue({ eq: profileEq });
+    const individualUpsert = vi.fn().mockResolvedValue({ error: null });
+    const matchingProfileUpsert = vi.fn().mockResolvedValue({ error: null });
+    const experienceInsert = vi.fn().mockResolvedValue({ error: null });
+    const proofArtifactInsert = vi.fn().mockResolvedValue({ error: null });
+    const proofPackInsert = vi.fn().mockResolvedValue({ error: null });
+    const proofPackItemInsert = vi.fn().mockResolvedValue({ error: null });
+
+    (attachUploadedFile as any).mockResolvedValue({
+      durable_path: 'individual_profile/user-1/proof/launch-proof.pdf',
+      public_path: null,
+      quarantine_path: null,
+      detected_mime: 'application/pdf',
+      declared_mime: 'application/pdf',
+      sanitized_filename: 'launch-proof.pdf',
+      upload_kind: 'proof',
+    });
+
+    (createClient as any).mockResolvedValue(
+      createSupabaseFromMap({
+        profiles: { update: profileUpdate },
+        individual_profiles: { upsert: individualUpsert },
+        matching_profiles: { upsert: matchingProfileUpsert },
+        experiences: { insert: experienceInsert },
+        proof_artifacts: { insert: proofArtifactInsert },
+        proof_packs: { insert: proofPackInsert },
+        proof_pack_items: { insert: proofPackItemInsert },
+      })
+    );
+
+    const formData = new FormData();
+    formData.set('firstName', 'Jane');
+    formData.set('lastName', 'Founder');
+    formData.set('displayName', 'Jane Founder');
+    formData.set('residence', 'Stockholm');
+    formData.set('timezone', 'Europe/Stockholm');
+    formData.set('location', 'Stockholm');
+    formData.set('contextType', 'experience');
+    formData.set('contextKind', 'work');
+    formData.set('contextTitle', 'First proof: Launch proof');
+    formData.set('contextOrganizationName', 'Stockholm');
+    formData.set('contextSummary', 'A first proof onboarding artifact.');
+    formData.set('contextDuration', '2026');
+    formData.set('proofInputType', 'file');
+    formData.set('proofArtifactType', 'document');
+    formData.set('uploadedFileId', '00000000-0000-4000-8000-000000000001');
+    formData.set('proofFileName', 'launch-proof.pdf');
+    formData.set('proofTitle', 'Launch proof');
+    formData.set('proofSummary', 'Shows the first proof artifact.');
+    formData.set('proofPackClaim', 'Launch proof');
+    formData.set(
+      'proofPackOwnership',
+      'I owned or contributed to the work represented by this proof artifact.'
+    );
+    formData.set('proofPackOutcome', 'Shows the first proof artifact.');
+    formData.set('proofPackSkills', 'Proof writing, artifact review, onboarding design');
+
+    const result = await completeIndividualOnboarding(formData);
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        handle: 'jane-founder-user1',
+      })
+    );
+    expect(profileUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        handle: 'jane-founder-user1',
+        display_name: 'Jane Founder',
+      })
+    );
+    expect(experienceInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'First proof: Launch proof',
+        organization_name: 'Stockholm',
+      })
+    );
+    expect(proofArtifactInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        artifact_kind: 'document',
+        uploaded_file_id: '00000000-0000-4000-8000-000000000001',
+        storage_path: 'individual_profile/user-1/proof/launch-proof.pdf',
+        mime_type: 'application/pdf',
+        source_url: null,
+        visibility: 'owner_only',
+        metadata: expect.objectContaining({
+          proofInputType: 'file',
+          proofArtifactType: 'document',
+        }),
+      })
+    );
+    expect(attachUploadedFile).toHaveBeenCalledWith(
+      '00000000-0000-4000-8000-000000000001',
+      'user-1',
+      'proof_pack',
+      expect.any(String)
+    );
+    expect(proofPackItemInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        item_class: 'file_upload',
+      })
+    );
   });
 });
