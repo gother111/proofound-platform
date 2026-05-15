@@ -56,6 +56,10 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/i/matching'
     );
+    expect(screen.getAllByRole('link', { name: /^settings$/i })[0]).toHaveAttribute(
+      'href',
+      '/app/i/settings'
+    );
     expect(screen.queryByRole('link', { name: /public portfolio/i })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /public portfolio \(locked\)/i })
@@ -63,7 +67,6 @@ describe('LeftNav portfolio gating', () => {
     expect(screen.queryByRole('link', { name: /^messages$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /^interviews$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /^verifications$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /^settings$/i })).not.toBeInTheDocument();
   });
 
   it('does not re-add Public Portfolio when the gate is inactive', () => {

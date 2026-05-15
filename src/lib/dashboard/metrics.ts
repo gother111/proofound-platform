@@ -1,12 +1,15 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
-import { getProfileData } from '@/actions/profile';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { capabilities, matches } from '@/db/schema';
+import { matches, verificationRecords } from '@/db/schema';
 import { isMockSupabaseEnabled } from '@/lib/env';
+import {
+  listCanonicalProofPackAggregatesForOwner,
+  summarizeCanonicalProofOwnerAggregates,
+} from '@/lib/proofs/canonical-pack';
 
 const QUALITY_MATCH_THRESHOLD = 0.8;
 
@@ -38,15 +41,20 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     };
   }
 
-  const profileDataPromise = getProfileData();
-
-  const [capabilitiesRows, matchRows, profileData] = await Promise.all([
+  const [canonicalAggregates, verificationStatsRow, matchRows] = await Promise.all([
+    listCanonicalProofPackAggregatesForOwner('individual_profile', user.id),
     db
       .select({
-        verificationStatus: capabilities.verificationStatus,
+        pending: sql<number>`count(${verificationRecords.id}) filter (where ${verificationRecords.status} = 'pending')::int`,
+        verified: sql<number>`count(${verificationRecords.id}) filter (where ${verificationRecords.status} = 'verified' and ${verificationRecords.integrityStatus} = 'clear')::int`,
       })
-      .from(capabilities)
-      .where(eq(capabilities.profileId, user.id)),
+      .from(verificationRecords)
+      .where(
+        and(
+          eq(verificationRecords.ownerType, 'individual_profile'),
+          eq(verificationRecords.ownerId, user.id)
+        )
+      ),
     db
       .select({
         score: matches.score,
@@ -54,16 +62,11 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
       })
       .from(matches)
       .where(eq(matches.profileId, user.id)),
-    profileDataPromise,
   ]);
 
-  const verifiedSkills = capabilitiesRows.filter(
-    (capability) => capability.verificationStatus === 'verified'
-  ).length;
-
-  const pendingVerifications = capabilitiesRows.filter(
-    (capability) => capability.verificationStatus === 'pending'
-  ).length;
+  const canonicalSummary = summarizeCanonicalProofOwnerAggregates(canonicalAggregates);
+  const verifiedSkills = verificationStatsRow[0]?.verified ?? 0;
+  const pendingVerifications = verificationStatsRow[0]?.pending ?? 0;
 
   const qualifiedMatches = matchRows.filter(
     (match) => Number(match.score) >= QUALITY_MATCH_THRESHOLD
@@ -75,7 +78,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     return total + highIntent;
   }, 0);
 
-  const proofStoriesCount = profileData.impactStories.length;
+  const proofStoriesCount = canonicalSummary.packCount;
 
   return {
     proofStoriesCount,

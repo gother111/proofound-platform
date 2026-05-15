@@ -72,7 +72,7 @@ export default async function IndividualHomePage() {
   const readinessTone = hasProof
     ? hasTrustAnchor
       ? 'Proof and trust anchor present'
-      : 'Proof present, trust anchor optional'
+      : 'Proof present; trust anchor is next'
     : 'Start with one proof record';
 
   const proofRecords = [
@@ -82,8 +82,8 @@ export default async function IndividualHomePage() {
       detail: hasProof
         ? `${metrics.proofStoriesCount} proof-backed signal${metrics.proofStoriesCount === 1 ? '' : 's'}`
         : 'No proof yet. Start with one private record.',
-      status: hasProof ? 'Verified' : 'Pending',
-      tone: hasProof ? 'success' : 'warning',
+      status: hasProof ? 'Present' : 'Pending',
+      tone: hasProof ? 'info' : 'warning',
       href: '/app/i/profile?profileView=full&tab=proof_packs',
     },
     {
@@ -91,10 +91,10 @@ export default async function IndividualHomePage() {
       title: 'Trust anchors',
       detail:
         metrics.verifiedSkills > 0
-          ? `${metrics.verifiedSkills} verified skill${metrics.verifiedSkills === 1 ? '' : 's'}`
+          ? `${metrics.verifiedSkills} accepted trust signal${metrics.verifiedSkills === 1 ? '' : 's'}`
           : metrics.pendingVerifications > 0
             ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
-            : 'No verifier yet. You can add this after the first proof.',
+            : 'No trust anchor yet. You can add this after the first proof.',
       status:
         metrics.verifiedSkills > 0
           ? 'Verified'
@@ -142,10 +142,10 @@ export default async function IndividualHomePage() {
             ? 'Trust anchor in review'
             : 'Trust anchor missing',
       detail:
-        metrics.pendingVerifications > 0
-          ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
-          : metrics.verifiedSkills > 0
-            ? `${metrics.verifiedSkills} verified skill${metrics.verifiedSkills === 1 ? '' : 's'} attached to your proof.`
+        metrics.verifiedSkills > 0
+          ? `${metrics.verifiedSkills} accepted trust signal${metrics.verifiedSkills === 1 ? '' : 's'} attached to your proof.`
+          : metrics.pendingVerifications > 0
+            ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
             : 'Nothing is exposed yet. Add one trusted source when you are ready.',
       action: metrics.pendingVerifications > 0 ? 'View request' : 'Plan anchor',
       href: '/app/i/verifications',
@@ -203,7 +203,7 @@ export default async function IndividualHomePage() {
 
   const scoreItems = [
     {
-      label: `${metrics.verifiedSkills} verified skill${metrics.verifiedSkills === 1 ? '' : 's'}`,
+      label: `${metrics.verifiedSkills} accepted trust signal${metrics.verifiedSkills === 1 ? '' : 's'}`,
       state: hasTrustAnchor ? 'ok' : 'warn',
     },
     {
@@ -273,7 +273,7 @@ export default async function IndividualHomePage() {
                       Your Proof Wallet
                     </h2>
                     <Badge variant="outline" className="bg-[#fbf8f1]">
-                      {proofRecords.length} records
+                      {proofRecords.length} checks
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">

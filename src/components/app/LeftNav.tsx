@@ -15,6 +15,7 @@ import {
   Building,
   ClipboardList,
   MessageCircle,
+  Settings,
 } from 'lucide-react';
 import { ORG_MVP_NAV_ITEMS } from '@/lib/org/mvp-surface-policy';
 
@@ -48,6 +49,7 @@ interface NavItem {
   href: string;
   icon: typeof Home;
   label: string;
+  mobileLabel?: string;
   dataTour?: string;
   activeHrefs?: string[];
   locked?: boolean;
@@ -68,6 +70,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
       href: `${basePath}/communications`,
       icon: MessageCircle,
       label: 'Communications',
+      mobileLabel: 'Inbox',
       dataTour: 'communications-link',
       activeHrefs: [`${basePath}/messages`, `${basePath}/interviews`, `${basePath}/verifications`],
     },
@@ -76,6 +79,12 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
       icon: Users,
       label: 'Matching',
       dataTour: 'matching-link',
+    },
+    {
+      href: `${basePath}/settings`,
+      icon: Settings,
+      label: 'Settings',
+      dataTour: 'settings-link',
     },
   ];
 
@@ -253,6 +262,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
           {/* Show the retained mobile navigation corridor. */}
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
+            const mobileLabel = item.mobileLabel ?? item.label;
             const isLocked = Boolean(item.locked);
             const activeHrefs = item.activeHrefs ?? [];
             const isActive =
@@ -273,7 +283,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
                 >
                   <Icon className="w-6 h-6 relative z-10" aria-hidden="true" />
                   <span className="w-full max-w-full truncate text-center text-[11px] font-medium leading-none relative z-10">
-                    {item.label}
+                    {mobileLabel}
                   </span>
                 </button>
               );
@@ -298,7 +308,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
 
                 <Icon className="w-6 h-6 relative z-10" aria-hidden="true" />
                 <span className="w-full max-w-full truncate text-center text-[11px] font-medium leading-none relative z-10">
-                  {item.label}
+                  {mobileLabel}
                 </span>
               </Link>
             );

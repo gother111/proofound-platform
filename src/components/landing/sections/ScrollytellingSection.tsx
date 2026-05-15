@@ -1910,6 +1910,7 @@ function HeroToBlindBackground({
   const [videoActive, setVideoActive] = useState(false);
   const clampedProgress = clamp01(progress);
   const clampedTarget = clamp01(target);
+  const backgroundImageSizes = '(min-width: 1024px) 50vw, 100vw';
 
   useEffect(() => {
     const video = videoRef.current;
@@ -2011,7 +2012,7 @@ function HeroToBlindBackground({
           }
           alt=""
           fill
-          sizes="100vw"
+          sizes={backgroundImageSizes}
           priority
           className="object-cover object-center opacity-[0.96]"
         />
@@ -2021,7 +2022,7 @@ function HeroToBlindBackground({
             src="/hero-transition-video/hero-bg-first.png"
             alt=""
             fill
-            sizes="100vw"
+            sizes={backgroundImageSizes}
             priority
             className="object-cover object-center"
             style={{ opacity: 1 - clampedProgress }}
@@ -2030,7 +2031,7 @@ function HeroToBlindBackground({
             src="/hero-transition-video/hero-bg-last.png"
             alt=""
             fill
-            sizes="100vw"
+            sizes={backgroundImageSizes}
             priority
             className="object-cover object-center"
             style={{ opacity: clampedProgress }}
