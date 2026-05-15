@@ -2,26 +2,20 @@ import { requireAuth } from '@/lib/auth';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getDashboardMetrics } from '@/lib/dashboard/metrics';
-import { ArrowRight, Briefcase, Eye, FileCheck2, ShieldCheck } from 'lucide-react';
+import {
+  ArrowRight,
+  Briefcase,
+  Download,
+  Eye,
+  FileCheck2,
+  History,
+  LockKeyhole,
+  ShieldCheck,
+} from 'lucide-react';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { Badge } from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';
-
-function ReadinessMeter({ value, label }: { value: number; label: string }) {
-  return (
-    <div
-      role="progressbar"
-      aria-label={label}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={value}
-      className="h-2 w-full overflow-hidden rounded-full bg-proofound-stone/45"
-    >
-      <div className="h-full rounded-full bg-proofound-forest" style={{ width: `${value}%` }} />
-    </div>
-  );
-}
 
 type ReadinessState = 'ok' | 'warn' | 'wait' | 'neutral';
 
@@ -61,7 +55,6 @@ export default async function IndividualHomePage() {
     console.error('Failed to load dashboard metrics:', error);
     // Fallback to default values if metrics fail to load
     metrics = {
-      portfolioReadinessPercent: 0,
       proofStoriesCount: 0,
       verifiedSkills: 0,
       pendingVerifications: 0,
@@ -72,16 +65,15 @@ export default async function IndividualHomePage() {
 
   const userName = user.displayName || user.handle || 'there';
   const firstName = userName.split(' ')[0];
-  const readinessPercent = Math.max(0, Math.min(100, metrics.portfolioReadinessPercent));
   const hasProof = metrics.proofStoriesCount > 0;
+  const hasTrustAnchor = metrics.verifiedSkills > 0;
+  const hasPendingTrustAnchor = metrics.pendingVerifications > 0;
   const primaryProofLabel = hasProof ? 'Review Proof Packs' : 'Start proof record';
-  const readinessScore = readinessPercent;
-  const readinessTone =
-    readinessScore >= 80
-      ? 'Ready to share'
-      : readinessScore >= 55
-        ? 'Review before sharing'
-        : 'Build the proof base';
+  const readinessTone = hasProof
+    ? hasTrustAnchor
+      ? 'Proof and trust anchor present'
+      : 'Proof present, trust anchor optional'
+    : 'Start with one proof record';
 
   const proofRecords = [
     {
@@ -119,12 +111,12 @@ export default async function IndividualHomePage() {
     },
     {
       icon: Eye,
-      title: 'Portfolio visibility',
+      title: 'Public Page visibility',
       detail: hasProof
         ? 'Public-safe sharing controls'
         : 'Private by default until you choose to share',
-      status: readinessPercent >= 70 ? 'Shared' : 'Review',
-      tone: readinessPercent >= 70 ? 'info' : 'neutral',
+      status: hasProof ? 'Review' : 'Locked',
+      tone: hasProof ? 'info' : 'neutral',
       href: '/app/i/profile?profileView=full&tab=visibility',
     },
   ];
@@ -167,15 +159,14 @@ export default async function IndividualHomePage() {
     },
     {
       icon: Eye,
-      title: readinessPercent >= 80 ? 'Portfolio can be shared' : 'Portfolio visibility review',
-      detail:
-        readinessPercent >= 80
-          ? 'Your proof surface is ready for a final sharing pass.'
-          : 'Sharing stays off by default until your proof and trust signals are clearer.',
-      action: 'Set visibility',
+      title: hasProof ? 'Portfolio visibility review' : 'Public Page not ready yet',
+      detail: hasProof
+        ? 'Your proof surface is ready for a final sharing pass.'
+        : 'Sharing stays off by default until your first proof record is clearer.',
+      action: 'Manage visibility',
       href: '/app/i/profile?profileView=full&tab=visibility',
-      status: readinessPercent >= 80 ? 'Ready' : readinessPercent >= 55 ? 'Review' : 'Locked',
-      state: readinessPercent >= 80 ? 'ok' : readinessPercent >= 55 ? 'wait' : 'warn',
+      status: hasProof ? 'Review' : 'Locked',
+      state: hasProof ? 'wait' : 'warn',
     },
   ] satisfies Array<{
     icon: typeof FileCheck2;
@@ -187,23 +178,45 @@ export default async function IndividualHomePage() {
     state: ReadinessState;
   }>;
   const unresolvedReadinessSteps = readinessSteps.filter((step) => step.state !== 'ok').length;
+  const trustControls = [
+    {
+      icon: LockKeyhole,
+      title: 'Privacy controls',
+      href: '/app/i/settings/privacy',
+    },
+    {
+      icon: Eye,
+      title: 'Manage visibility',
+      href: '/app/i/profile?profileView=full&tab=visibility',
+    },
+    {
+      icon: Download,
+      title: 'Export or delete',
+      href: '/app/i/settings?tab=privacy',
+    },
+    {
+      icon: History,
+      title: 'Audit log',
+      href: '/app/i/settings/audit-log',
+    },
+  ];
 
   const scoreItems = [
     {
       label: `${metrics.verifiedSkills} verified skill${metrics.verifiedSkills === 1 ? '' : 's'}`,
-      state: metrics.verifiedSkills > 0 ? 'ok' : 'warn',
+      state: hasTrustAnchor ? 'ok' : 'warn',
     },
     {
       label: `${metrics.pendingVerifications} pending verification${metrics.pendingVerifications === 1 ? '' : 's'}`,
-      state: metrics.pendingVerifications > 0 ? 'warn' : 'ok',
+      state: hasPendingTrustAnchor ? 'warn' : 'ok',
     },
     {
       label: `${metrics.proofStoriesCount} proof item${metrics.proofStoriesCount === 1 ? '' : 's'} ready`,
       state: hasProof ? 'ok' : 'warn',
     },
     {
-      label: `Profile ${readinessPercent}% complete`,
-      state: readinessPercent >= 70 ? 'ok' : 'warn',
+      label: hasProof ? 'Public Page can be reviewed' : 'Public Page waits for first proof',
+      state: hasProof ? 'wait' : 'warn',
     },
   ];
 
@@ -373,16 +386,10 @@ export default async function IndividualHomePage() {
                   Proof Readiness
                 </h2>
                 <span className="rounded-md bg-[#eef3e8] px-2 py-1 text-xs font-medium text-proofound-forest">
-                  /100
+                  Checklist
                 </span>
               </div>
-              <div className="mt-6 flex items-end gap-2">
-                <p className="font-display text-5xl text-proofound-forest">{readinessScore}</p>
-                <p className="pb-2 text-sm text-muted-foreground">{readinessTone}</p>
-              </div>
-              <div className="mt-4">
-                <ReadinessMeter value={readinessScore} label="Proof readiness" />
-              </div>
+              <p className="mt-5 text-sm leading-6 text-muted-foreground">{readinessTone}</p>
               <div className="mt-5 space-y-3">
                 {scoreItems.map((item) => (
                   <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
@@ -402,6 +409,32 @@ export default async function IndividualHomePage() {
                 {hasProof ? 'Review proof readiness' : 'Start proof readiness'}
                 <ArrowRight className="h-4 w-4" />
               </Link>
+            </div>
+
+            <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <h2 className="font-display text-xl font-medium text-proofound-charcoal">
+                  Trust Controls
+                </h2>
+                <span className="rounded-md bg-[#eef3e8] px-2 py-1 text-xs font-medium text-proofound-forest">
+                  Account
+                </span>
+              </div>
+              <div className="grid gap-2">
+                {trustControls.map(({ icon: Icon, title, href }) => (
+                  <Link
+                    key={title}
+                    href={href}
+                    className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-proofound-stone/60 bg-[#fbf8f1]/55 px-3 py-2 text-sm font-medium text-proofound-charcoal transition-colors hover:border-proofound-forest/30 hover:bg-[#fbf8f1]"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Icon className="h-4 w-4 shrink-0 text-proofound-forest" />
+                      <span className="truncate">{title}</span>
+                    </span>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </Link>
+                ))}
+              </div>
             </div>
           </aside>
         </section>

@@ -9,11 +9,8 @@ import {
   Lock,
   User,
   Users,
-  ShieldCheck,
-  Settings,
   ChevronLeft,
   ChevronRight,
-  Video,
   Briefcase,
   Building,
   ClipboardList,
@@ -52,6 +49,7 @@ interface NavItem {
   icon: typeof Home;
   label: string;
   dataTour?: string;
+  activeHrefs?: string[];
   locked?: boolean;
   lockReason?: string | null;
 }
@@ -67,30 +65,18 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
     { href: `${basePath}/home`, icon: Home, label: 'Overview', dataTour: 'home-link' },
     { href: `${basePath}/profile`, icon: User, label: 'Profile', dataTour: 'profile-link' },
     {
+      href: `${basePath}/communications`,
+      icon: MessageCircle,
+      label: 'Communications',
+      dataTour: 'communications-link',
+      activeHrefs: [`${basePath}/messages`, `${basePath}/interviews`, `${basePath}/verifications`],
+    },
+    {
       href: `${basePath}/matching`,
       icon: Users,
       label: 'Matching',
       dataTour: 'matching-link',
     },
-    {
-      href: `${basePath}/messages`,
-      icon: MessageCircle,
-      label: 'Messages',
-      dataTour: 'messages-link',
-    },
-    {
-      href: `${basePath}/interviews`,
-      icon: Video,
-      label: 'Interviews',
-      dataTour: 'interviews-link',
-    },
-    {
-      href: `${basePath}/verifications`,
-      icon: ShieldCheck,
-      label: 'Verifications',
-      dataTour: 'verifications-link',
-    },
-    { href: `${basePath}/settings`, icon: Settings, label: 'Settings', dataTour: 'settings-link' },
   ];
 
   const orgIconMap = {
@@ -98,6 +84,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
     briefcase: Briefcase,
     building: Building,
     clipboard: ClipboardList,
+    messageCircle: MessageCircle,
   } as const;
 
   const orgNavItems: NavItem[] = ORG_MVP_NAV_ITEMS.map((item) => ({
@@ -107,8 +94,8 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
     dataTour:
       item.hrefSuffix === '/home'
         ? 'home-link'
-        : item.hrefSuffix === '/matching'
-          ? 'matching-link'
+        : item.hrefSuffix === '/assignments'
+          ? 'assignments-link'
           : item.hrefSuffix === '/profile'
             ? 'org-profile'
             : 'portfolio-link',
@@ -116,14 +103,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
 
   const navItems = isOrg ? orgNavItems : individualNavItems;
   const filteredNavItems = navItems;
-  const settingsHref = `${basePath}/settings`;
-  const settingsNavItem = filteredNavItems.find((item) => item.href === settingsHref);
-  const mobileNavItems = settingsNavItem
-    ? [
-        ...filteredNavItems.filter((item) => item.href !== settingsHref).slice(0, 4),
-        settingsNavItem,
-      ]
-    : filteredNavItems.slice(0, 5);
+  const mobileNavItems = filteredNavItems.slice(0, 5);
 
   const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
 
@@ -147,8 +127,12 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
             {filteredNavItems.map((item) => {
               const Icon = item.icon;
               const isLocked = Boolean(item.locked);
+              const activeHrefs = item.activeHrefs ?? [];
               const isActive =
-                !isLocked && (pathname === item.href || pathname?.startsWith(item.href));
+                !isLocked &&
+                (pathname === item.href ||
+                  pathname?.startsWith(item.href) ||
+                  activeHrefs.some((href) => pathname === href || pathname?.startsWith(href)));
               const tooltipText = !isExpanded
                 ? isLocked
                   ? `${item.label} (Locked)`
@@ -266,12 +250,16 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
         aria-label="Mobile primary navigation"
       >
         <div className="flex items-center gap-1 px-1 py-2 safe-area-inset-bottom pointer-events-none">
-          {/* Show mobile nav items with settings always included */}
+          {/* Show the retained mobile navigation corridor. */}
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
             const isLocked = Boolean(item.locked);
+            const activeHrefs = item.activeHrefs ?? [];
             const isActive =
-              !isLocked && (pathname === item.href || pathname?.startsWith(item.href));
+              !isLocked &&
+              (pathname === item.href ||
+                pathname?.startsWith(item.href) ||
+                activeHrefs.some((href) => pathname === href || pathname?.startsWith(href)));
 
             if (isLocked) {
               return (

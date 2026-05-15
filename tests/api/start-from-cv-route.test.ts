@@ -43,7 +43,12 @@ vi.mock('@/db', () => ({
 
 vi.mock('@/lib/ai/start-from-cv', () => ({
   StartFromCvError: mocks.StartFromCvError,
-  StartFromCvConsentSchema: z.object({ consentToProcessCv: z.literal(true) }).strict(),
+  StartFromCvConsentSchema: z
+    .object({
+      consentToProcessCv: z.literal(true),
+      surface: z.literal('guest_first_proof_private_scaffolding'),
+    })
+    .strict(),
   resolveStartFromCvConfig: () => ({
     maxFileSizeBytes: 5 * 1024 * 1024,
   }),
@@ -76,6 +81,7 @@ import { POST as acceptSession } from '@/app/api/ai/start-from-cv/sessions/[sess
 import { POST as discardSession } from '@/app/api/ai/start-from-cv/sessions/[sessionId]/discard/route';
 
 const sessionId = '11111111-1111-4111-8111-111111111111';
+const approvedSurface = 'guest_first_proof_private_scaffolding';
 
 function jsonRequest(url: string, body: unknown, headers: Record<string, string> = {}) {
   return new NextRequest(url, {
@@ -140,6 +146,7 @@ describe('Start from CV API routes', () => {
     const response = await createSession(
       jsonRequest('http://localhost/api/ai/start-from-cv/sessions', {
         consentToProcessCv: true,
+        surface: approvedSurface,
       })
     );
 
@@ -151,6 +158,7 @@ describe('Start from CV API routes', () => {
     const response = await createSession(
       jsonRequest('http://localhost/api/ai/start-from-cv/sessions', {
         consentToProcessCv: false,
+        surface: approvedSurface,
       })
     );
 
@@ -166,12 +174,24 @@ describe('Start from CV API routes', () => {
     const response = await createSession(
       jsonRequest('http://localhost/api/ai/start-from-cv/sessions', {
         consentToProcessCv: true,
+        surface: approvedSurface,
       })
     );
     const payload = await response.json();
 
     expect(response.status).toBe(403);
     expect(payload.error).toBe('Start from CV beta is not available for this account.');
+  });
+
+  it('rejects profile-context session creation without the approved private scaffolding surface', async () => {
+    const response = await createSession(
+      jsonRequest('http://localhost/api/ai/start-from-cv/sessions', {
+        consentToProcessCv: true,
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.createStartFromCvSession).not.toHaveBeenCalled();
   });
 
   it('rejects unsupported MIME types through the extraction boundary', async () => {

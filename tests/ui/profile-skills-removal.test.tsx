@@ -26,29 +26,30 @@ const profileData: ProfileData = {
   volunteering: [],
   fieldVisibility: {},
   redactMode: false,
+  guidedSetup: {
+    handle: 'jane-doe',
+    headline: 'Impact-driven builder',
+    timezone: 'Europe/Stockholm',
+    desiredRoles: ['Product builder'],
+    workMode: 'remote',
+    engagementType: 'contract',
+  },
 };
 
 describe('Profile skills block removal', () => {
-  it('does not render a skills block in the editable profile sidebar', () => {
-    render(
-      <ProfileSidebar
-        profile={profileData}
-        onOpenMission={() => {}}
-        onOpenVision={() => {}}
-        onOpenValues={() => {}}
-        onOpenCauses={() => {}}
-      />
-    );
+  it('does not render individual purpose blocks in the editable profile sidebar', () => {
+    render(<ProfileSidebar profile={profileData} />);
 
-    expect(screen.getByText('Mission')).toBeInTheDocument();
-    expect(screen.getByText('Core Values')).toBeInTheDocument();
-    expect(screen.getByText('Causes')).toBeInTheDocument();
+    expect(screen.getByText('Proof readiness')).toBeInTheDocument();
+    expect(screen.queryByText('Mission')).not.toBeInTheDocument();
+    expect(screen.queryByText('Core Values')).not.toBeInTheDocument();
+    expect(screen.queryByText('Causes')).not.toBeInTheDocument();
     expect(screen.queryByText('Skills')).not.toBeInTheDocument();
     expect(screen.queryByText('Skills & Expertise')).not.toBeInTheDocument();
     expect(screen.queryByText('Manage in Expertise Atlas')).not.toBeInTheDocument();
   });
 
-  it('does not render a skills block in the legacy profile view', () => {
+  it('does not render individual purpose blocks in the legacy profile view', () => {
     render(
       <ProfileView
         data={{
@@ -72,9 +73,10 @@ describe('Profile skills block removal', () => {
       />
     );
 
-    expect(screen.getByText('Mission')).toBeInTheDocument();
-    expect(screen.getByText('Core Values')).toBeInTheDocument();
-    expect(screen.getByText('Causes')).toBeInTheDocument();
+    expect(screen.getByText('Proof profile')).toBeInTheDocument();
+    expect(screen.queryByText('Mission')).not.toBeInTheDocument();
+    expect(screen.queryByText('Core Values')).not.toBeInTheDocument();
+    expect(screen.queryByText('Causes')).not.toBeInTheDocument();
     expect(screen.queryByText('Skills')).not.toBeInTheDocument();
     expect(screen.queryByText('Skills & Expertise')).not.toBeInTheDocument();
     expect(screen.queryByText('Manage in Expertise Atlas')).not.toBeInTheDocument();

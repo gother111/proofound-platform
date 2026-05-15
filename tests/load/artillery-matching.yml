@@ -4,38 +4,38 @@
 # Run with: artillery run tests/load/artillery-matching.yml
 
 config:
-  target: "http://localhost:3000"  # Change to production URL for prod testing
+  target: 'http://localhost:3000' # Change to production URL for prod testing
   phases:
     # Warm-up phase
     - duration: 60
       arrivalRate: 5
-      name: "Warm up"
+      name: 'Warm up'
 
     # Normal load
     - duration: 180
       arrivalRate: 20
-      name: "Sustained load"
+      name: 'Sustained load'
 
     # Peak load
     - duration: 120
       arrivalRate: 50
-      name: "Peak load"
+      name: 'Peak load'
 
     # Spike test
     - duration: 60
       arrivalRate: 100
-      name: "Spike"
+      name: 'Spike'
 
     # Cool down
     - duration: 60
       arrivalRate: 10
-      name: "Cool down"
+      name: 'Cool down'
 
   # Performance targets
   ensure:
-    maxErrorRate: 1  # Max 1% error rate
-    p95: 500         # 95th percentile under 500ms
-    p99: 1000        # 99th percentile under 1000ms
+    maxErrorRate: 1 # Max 1% error rate
+    p95: 500 # 95th percentile under 500ms
+    p99: 1000 # 99th percentile under 1000ms
 
   # Plugins
   plugins:
@@ -43,43 +43,41 @@ config:
       stripQueryString: true
 
 scenarios:
-  - name: "Match profile request"
+  - name: 'Match profile request'
     flow:
       # Get CSRF token
       - get:
-          url: "/api/csrf-token"
+          url: '/api/csrf-token'
           capture:
-            - json: "$.token"
-              as: "csrfToken"
+            - json: '$.token'
+              as: 'csrfToken'
 
       # Request matches
       - post:
-          url: "/api/core/matching/profile"
+          url: '/api/core/matching/profile'
           headers:
-            Content-Type: "application/json"
-            x-csrf-token: "{{ csrfToken }}"
+            Content-Type: 'application/json'
+            x-csrf-token: '{{ csrfToken }}'
           json:
-            mode: "balanced"
             k: 20
           expect:
             - statusCode: 200
             - contentType: json
             - hasProperty: items
           capture:
-            - json: "$.items[0].score"
-              as: "topScore"
+            - json: '$.items[0].score'
+              as: 'topScore'
 
       # Think time (simulate user reviewing results)
       - think: 3
 
       # Request with different mode
       - post:
-          url: "/api/core/matching/profile"
+          url: '/api/core/matching/profile'
           headers:
-            Content-Type: "application/json"
-            x-csrf-token: "{{ csrfToken }}"
+            Content-Type: 'application/json'
+            x-csrf-token: '{{ csrfToken }}'
           json:
-            mode: "skills-first"
             k: 10
           expect:
             - statusCode: 200

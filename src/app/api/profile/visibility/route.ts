@@ -13,16 +13,24 @@ const UpdateVisibilitySchema = z.object({
   avatar: ProfileVisibilityLevelSchema.optional(),
   headline: ProfileVisibilityLevelSchema.optional(),
   location: ProfileVisibilityLevelSchema.optional(),
-  mission: ProfileVisibilityLevelSchema.optional(),
-  vision: ProfileVisibilityLevelSchema.optional(),
-  values: ProfileVisibilityLevelSchema.optional(),
-  causes: ProfileVisibilityLevelSchema.optional(),
   experiences: ProfileVisibilityLevelSchema.optional(),
   education: ProfileVisibilityLevelSchema.optional(),
   volunteering: ProfileVisibilityLevelSchema.optional(),
   skills: ProfileVisibilityLevelSchema.optional(),
   impactStories: ProfileVisibilityLevelSchema.optional(),
 });
+
+const INDIVIDUAL_MVP_VISIBILITY_DEFAULTS = {
+  displayName: PROFILE_VISIBILITY_DEFAULTS.displayName,
+  avatar: PROFILE_VISIBILITY_DEFAULTS.avatar,
+  headline: PROFILE_VISIBILITY_DEFAULTS.headline,
+  location: PROFILE_VISIBILITY_DEFAULTS.location,
+  experiences: PROFILE_VISIBILITY_DEFAULTS.experiences,
+  education: PROFILE_VISIBILITY_DEFAULTS.education,
+  volunteering: PROFILE_VISIBILITY_DEFAULTS.volunteering,
+  skills: PROFILE_VISIBILITY_DEFAULTS.skills,
+  impactStories: PROFILE_VISIBILITY_DEFAULTS.impactStories,
+} as const;
 
 /**
  * GET /api/profile/visibility
@@ -45,7 +53,7 @@ export async function GET() {
       .limit(1);
 
     if (!visibility) {
-      return NextResponse.json(PROFILE_VISIBILITY_DEFAULTS);
+      return NextResponse.json(INDIVIDUAL_MVP_VISIBILITY_DEFAULTS);
     }
 
     return NextResponse.json({
@@ -53,10 +61,6 @@ export async function GET() {
       avatar: visibility.avatar,
       headline: visibility.headline,
       location: visibility.location,
-      mission: visibility.mission,
-      vision: visibility.vision,
-      values: visibility.values,
-      causes: visibility.causes,
       experiences: visibility.experiences,
       education: visibility.education,
       volunteering: visibility.volunteering,
@@ -109,10 +113,6 @@ export async function POST(request: NextRequest) {
         avatar: validated.avatar || PROFILE_VISIBILITY_DEFAULTS.avatar,
         headline: validated.headline || PROFILE_VISIBILITY_DEFAULTS.headline,
         location: validated.location || PROFILE_VISIBILITY_DEFAULTS.location,
-        mission: validated.mission || PROFILE_VISIBILITY_DEFAULTS.mission,
-        vision: validated.vision || PROFILE_VISIBILITY_DEFAULTS.vision,
-        values: validated.values || PROFILE_VISIBILITY_DEFAULTS.values,
-        causes: validated.causes || PROFILE_VISIBILITY_DEFAULTS.causes,
         experiences: validated.experiences || PROFILE_VISIBILITY_DEFAULTS.experiences,
         education: validated.education || PROFILE_VISIBILITY_DEFAULTS.education,
         volunteering: validated.volunteering || PROFILE_VISIBILITY_DEFAULTS.volunteering,

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 import {
   toExpertiseStatsPresentation,
-  toProfileCompletenessPresentation,
+  toProofReadinessChecklistPresentation,
 } from '@/lib/readiness/presentation';
 import { listCanonicalSkillProofSummariesForOwner } from '@/lib/proofs/canonical-pack';
 
@@ -19,13 +19,11 @@ export interface NextBestAction {
   completed: boolean;
 }
 
-export type ProfileCompletenessData = {
-  percentage: number;
+export type ProofReadinessChecklistData = {
   missing: string[];
   actions: NextBestAction[];
   skillCount?: number;
   proofCount?: number;
-  valuesCount?: number;
 };
 
 export type ExpertiseStatsData = {
@@ -51,7 +49,7 @@ export type ExpertiseStatsData = {
       remaining: {
         skillsWithRecency: number;
         proofCount: number;
-        purpose: number;
+        intentSignal: number;
         constraints: number;
       };
     };
@@ -61,10 +59,10 @@ export type ExpertiseStatsData = {
   };
 };
 
-export async function getProfileCompleteness(): Promise<ProfileCompletenessData> {
+export async function getProofReadinessChecklist(): Promise<ProofReadinessChecklistData> {
   const user = await requireAuth();
   const readiness = await getIndividualReadinessState(user.id);
-  return toProfileCompletenessPresentation(readiness);
+  return toProofReadinessChecklistPresentation(readiness);
 }
 
 export async function getExpertiseStats(): Promise<ExpertiseStatsData> {

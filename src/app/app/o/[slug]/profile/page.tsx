@@ -64,10 +64,10 @@ export default async function OrganizationProfilePage({
             <CardHeader>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <CardTitle className="text-2xl">Organization trust profile</CardTitle>
+                  <CardTitle className="text-2xl">Organization Profile</CardTitle>
                   <CardDescription className="max-w-2xl leading-6">
-                    This is the launch-facing org profile used to support one assignment path and a
-                    clean review queue.
+                    This is the launch-facing organization profile used to support one assignment
+                    path and a clean review queue.
                   </CardDescription>
                 </div>
                 <Badge variant={canEdit ? 'default' : 'secondary'}>
@@ -77,9 +77,9 @@ export default async function OrganizationProfilePage({
             </CardHeader>
             <CardContent className="space-y-5 text-sm text-muted-foreground">
               <p className="max-w-3xl leading-6">
-                Keep this page limited to the calm trust story that supports one clear assignment
-                corridor. Culture hubs, governance showcases, and other org-suite surfaces stay
-                outside the MVP.
+                Keep this page limited to the calm organization story that supports one clear
+                assignment corridor. Culture hubs, governance showcases, and other org-suite
+                surfaces stay outside the MVP.
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {trustItems.map((item) => (
@@ -113,7 +113,7 @@ export default async function OrganizationProfilePage({
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 h-4 w-4 text-foreground/70" />
                 <div>
-                  <p className="font-medium text-foreground">Trust profile</p>
+                  <p className="font-medium text-foreground">Organization profile</p>
                   <p>Mission, why the work matters, verified domain path, and operating context.</p>
                 </div>
               </div>
@@ -127,13 +127,13 @@ export default async function OrganizationProfilePage({
               <div className="flex items-start gap-3">
                 <Globe2 className="mt-0.5 h-4 w-4 text-foreground/70" />
                 <div>
-                  <p className="font-medium text-foreground">Public trust profile</p>
+                  <p className="font-medium text-foreground">Public preview</p>
                   <p>
                     <Link
                       className="underline underline-offset-4"
                       href={`/app/o/${slug}/portfolio`}
                     >
-                      View the public org page
+                      View the public organization page
                     </Link>{' '}
                     to confirm the launch story.
                   </p>

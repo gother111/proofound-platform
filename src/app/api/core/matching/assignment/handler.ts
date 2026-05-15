@@ -14,7 +14,7 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher';
-import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
+import { getPreset, normalizeWeights } from '@/lib/core/matching/presets';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { resolveFeatureFlags } from '@/lib/feature-flags/server';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
@@ -42,7 +42,7 @@ export const dynamic = 'force-dynamic';
 const MatchRequestSchema = z.object({
   assignmentId: z.string().uuid(),
   weights: z.record(z.number()).optional(),
-  mode: z.enum(['mission-first', 'skills-first', 'balanced']).optional(),
+  mode: z.string().optional(),
   k: z.number().positive().max(100).optional(), // Top k results
   useTwoStage: z.boolean().optional(), // Enable two-stage matching (ANN + re-rank)
   annLimit: z.number().positive().max(1000).optional(), // Stage-1 ANN retrieval limit
@@ -79,7 +79,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const validatedData = MatchRequestSchema.parse(body);
-    const { assignmentId, mode, k = 20, useTwoStage = false, annLimit = 500 } = validatedData;
+    const { assignmentId, k = 20, annLimit = 500 } = validatedData;
+    const useTwoStage = false;
     const refresh = validatedData.refresh === true;
     trace.objectRefs.assignmentId = assignmentId;
 
@@ -266,9 +267,7 @@ export async function POST(request: NextRequest) {
 
     const weights = validatedData.weights
       ? normalizeWeights(validatedData.weights)
-      : mode
-        ? getPreset(mode as PresetKey)
-        : getPreset('balanced');
+      : getPreset('balanced');
 
     const { items, meta } = await computeAssignmentMatches({
       assignmentId,

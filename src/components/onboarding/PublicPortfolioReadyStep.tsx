@@ -43,14 +43,12 @@ export function PublicPortfolioReadyStep({
   );
 
   const heading =
-    persona === 'organization'
-      ? 'Your organization portfolio is live'
-      : 'Your public portfolio is live';
+    persona === 'organization' ? 'Your organization portfolio is live' : 'Your Public Page is live';
 
   const description =
     persona === 'organization'
       ? 'Day 1 win unlocked. Your public organization link is shareable now, and search engines stay off until you opt in.'
-      : 'Day 1 win unlocked. Preview it, copy it, and share it right away. Search engines stay off until you opt in.';
+      : 'Day 1 win unlocked. Preview it, copy it, and share it by direct link. Search engines stay off for the MVP.';
 
   async function handleCopy() {
     try {
@@ -90,7 +88,7 @@ export function PublicPortfolioReadyStep({
       <CardContent className="space-y-5">
         <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/60 p-4 text-sm text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">
           <p className="mb-2 text-xs uppercase tracking-wide text-proofound-charcoal/60 dark:text-muted-foreground">
-            Public portfolio URL
+            {persona === 'organization' ? 'Public portfolio URL' : 'Public Page URL'}
           </p>
           <p className="break-all font-mono text-sm">{resolvedUrl}</p>
         </div>
@@ -121,7 +119,7 @@ export function PublicPortfolioReadyStep({
               }}
             >
               <ExternalLink className="h-4 w-4" />
-              Preview portfolio
+              {persona === 'organization' ? 'Preview portfolio' : 'Preview Public Page'}
             </Link>
           </Button>
           <Button

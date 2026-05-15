@@ -158,7 +158,7 @@ describe('core matching profile route', () => {
     expect(Array.isArray(payload.profile.skills)).toBe(true);
   });
 
-  it('hydrates valuesTags and causeTags from individual profile when omitted in payload', async () => {
+  it('ignores individual values and causes when saving matching preferences', async () => {
     const updatedProfile = {
       profileId: userId,
       valuesTags: ['Integrity', 'Innovation'],
@@ -193,11 +193,10 @@ describe('core matching profile route', () => {
     const res = await PUT(req);
 
     expect(res.status).toBe(200);
-    expect(values).toHaveBeenCalledWith(
+    const upsertPayload = values.mock.calls[0][0];
+    expect(upsertPayload).toEqual(
       expect.objectContaining({
         profileId: userId,
-        valuesTags: ['Integrity', 'Innovation'],
-        causeTags: ['Climate', 'Education'],
         desiredIndustries: ['Information and communication'],
         preferredIndustryKeys: ['information_and_communication'],
         preferredIndustryLabels: ['Information and communication'],
@@ -205,5 +204,7 @@ describe('core matching profile route', () => {
         engagementType: 'fractional_project',
       })
     );
+    expect(upsertPayload).not.toHaveProperty('valuesTags');
+    expect(upsertPayload).not.toHaveProperty('causeTags');
   });
 });

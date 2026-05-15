@@ -19,9 +19,9 @@ export const MATCH_SCORE_MAX_BPS = 10_000;
 export const MATCH_SCORE_COMPONENT_WEIGHTS = {
   skills_fit: 3500,
   proof_fit: 2000,
-  constraints_fit: 2000,
-  verification_fit: 1500,
-  purpose_fit: 1000,
+  constraints_fit: 2500,
+  verification_fit: 2000,
+  purpose_fit: 0,
 } as const;
 export const MATCH_SCORE_CONSTRAINT_LEAF_WEIGHTS = {
   availability: 3500,
@@ -30,11 +30,6 @@ export const MATCH_SCORE_CONSTRAINT_LEAF_WEIGHTS = {
   language: 1000,
   work_authorization: 1000,
 } as const;
-export const MATCH_SCORE_PURPOSE_LEAF_WEIGHTS = {
-  values: 6000,
-  causes: 4000,
-} as const;
-
 export type MatchScoreState = 'generated' | 'stale' | 'recomputed' | 'hidden_due_to_policy';
 export type MatchScoreComponent =
   | 'skills_fit'
@@ -169,22 +164,6 @@ function normalizeHours(
     min: Math.max(0, normalized.min),
     max: Math.max(Math.max(0, normalized.min), normalized.max || 0),
   };
-}
-
-function jaccard(a: string[], b: string[]): number {
-  if (a.length === 0 || b.length === 0) {
-    return 0;
-  }
-  const setA = new Set(a);
-  const setB = new Set(b);
-  let intersection = 0;
-  for (const entry of setA) {
-    if (setB.has(entry)) {
-      intersection += 1;
-    }
-  }
-  const union = new Set([...setA, ...setB]).size;
-  return union === 0 ? 0 : intersection / union;
 }
 
 function averageWeighted(values: Array<{ score: number; weight: number }>): number {
@@ -330,10 +309,6 @@ export function buildCanonicalMatchScoreArtifact(
   const reasonCodeInputs: Record<string, unknown> = {};
   const confidenceWeights: Array<{ weight: number; present: boolean }> = [];
 
-  const assignmentValues = normalizedArray(input.assignmentValuesTags);
-  const assignmentCauses = normalizedArray(input.assignmentCauseTags);
-  const profileValues = normalizedArray(input.profileValuesTags);
-  const profileCauses = normalizedArray(input.profileCauseTags);
   const verificationStatuses = deriveVerificationStatuses(input);
 
   const componentEntries: Array<{ key: MatchScoreComponent; weight: number }> = [];
@@ -606,50 +581,12 @@ export function buildCanonicalMatchScoreArtifact(
     componentStatus.verification_fit = 'not_applicable';
   }
 
-  const purposeLeaves: Array<{ score: number; weight: number; key: 'values' | 'causes' }> = [];
-  if (assignmentValues.length > 0) {
-    const score = toBps(jaccard(profileValues, assignmentValues));
-    leafScores.values_fit = score;
-    leafStatus.values_fit = profileValues.length > 0 ? 'applicable' : 'missing_candidate_data';
-    purposeLeaves.push({ score, weight: MATCH_SCORE_PURPOSE_LEAF_WEIGHTS.values, key: 'values' });
-    confidenceWeights.push({
-      weight: MATCH_SCORE_PURPOSE_LEAF_WEIGHTS.values,
-      present: profileValues.length > 0,
-    });
-  } else {
-    leafScores.values_fit = null;
-    leafStatus.values_fit = 'not_applicable';
-  }
-
-  if (assignmentCauses.length > 0) {
-    const score = toBps(jaccard(profileCauses, assignmentCauses));
-    leafScores.causes_fit = score;
-    leafStatus.causes_fit = profileCauses.length > 0 ? 'applicable' : 'missing_candidate_data';
-    purposeLeaves.push({ score, weight: MATCH_SCORE_PURPOSE_LEAF_WEIGHTS.causes, key: 'causes' });
-    confidenceWeights.push({
-      weight: MATCH_SCORE_PURPOSE_LEAF_WEIGHTS.causes,
-      present: profileCauses.length > 0,
-    });
-  } else {
-    leafScores.causes_fit = null;
-    leafStatus.causes_fit = 'not_applicable';
-  }
-
-  if (purposeLeaves.length > 0) {
-    componentScores.purpose_fit = averageWeighted(
-      purposeLeaves.map((entry) => ({ score: entry.score, weight: entry.weight }))
-    );
-    componentStatus.purpose_fit = purposeLeaves.some((entry) => entry.score === 0)
-      ? 'missing_candidate_data'
-      : 'applicable';
-    componentEntries.push({
-      key: 'purpose_fit',
-      weight: MATCH_SCORE_COMPONENT_WEIGHTS.purpose_fit,
-    });
-  } else {
-    componentScores.purpose_fit = null as never;
-    componentStatus.purpose_fit = 'not_applicable';
-  }
+  leafScores.values_fit = null;
+  leafStatus.values_fit = 'not_applicable';
+  leafScores.causes_fit = null;
+  leafStatus.causes_fit = 'not_applicable';
+  componentScores.purpose_fit = null as never;
+  componentStatus.purpose_fit = 'not_applicable';
 
   const totalWeight = componentEntries.reduce((sum, entry) => sum + entry.weight, 0);
   const scoreTotal =
@@ -672,14 +609,11 @@ export function buildCanonicalMatchScoreArtifact(
 
   const reasonCodes = new Set<MatchReasonCode>();
   const skillsFit = Number(componentScores.skills_fit ?? 0);
-  const purposeFit = Number(componentScores.purpose_fit ?? 0);
   const verificationFit = Number(componentScores.verification_fit ?? 0);
   const constraintsFit = Number(componentScores.constraints_fit ?? 0);
 
   if (skillsFit >= 8000) reasonCodes.add('skills_strong');
   if (skillsFit < 6500) reasonCodes.add('skills_gap');
-  if (purposeFit >= 7000) reasonCodes.add('purpose_alignment_strong');
-  else if (purposeFit >= 4000) reasonCodes.add('purpose_alignment_partial');
   if (verificationStatuses.length > 0 && verificationFit === 10000) {
     reasonCodes.add('verification_ready');
   } else if (verificationStatuses.length > 0) {
@@ -693,7 +627,6 @@ export function buildCanonicalMatchScoreArtifact(
   reasonCodeInputs.proof_fit = componentScores.proof_fit ?? null;
   reasonCodeInputs.constraints_fit = constraintsFit;
   reasonCodeInputs.verification_fit = verificationFit;
-  reasonCodeInputs.purpose_fit = purposeFit;
   reasonCodeInputs.compensation = leafScores.compensation ?? null;
   reasonCodeInputs.language = leafScores.language ?? null;
 
@@ -702,8 +635,6 @@ export function buildCanonicalMatchScoreArtifact(
       id: input.assignmentId,
       orgId: input.assignmentOrgId ?? null,
       status: input.assignmentStatus ?? null,
-      valuesTags: assignmentValues,
-      causeTags: assignmentCauses,
       startEarliest: normalizeDate(input.assignmentStartEarliest)?.toISOString() ?? null,
       startLatest: normalizeDate(input.assignmentStartLatest)?.toISOString() ?? null,
       hours: assignmentHours,
@@ -719,8 +650,6 @@ export function buildCanonicalMatchScoreArtifact(
     profile: {
       id: input.profileId,
       orgId: input.profileOrgId ?? null,
-      valuesTags: profileValues,
-      causeTags: profileCauses,
       availabilityEarliest: normalizeDate(input.profileAvailabilityEarliest)?.toISOString() ?? null,
       hours: profileHours,
       workMode: input.profileWorkMode ?? null,
@@ -763,7 +692,6 @@ export function buildCanonicalMatchScoreArtifact(
     constraints_fit: constraintsFit,
     proof_fit: Number(componentScores.proof_fit ?? 0),
     verification_fit: verificationFit,
-    purpose_fit: purposeFit,
     confidence_total: confidenceTotal,
     counterpart_id: input.assignmentId,
   };
@@ -858,11 +786,6 @@ export function compareCanonicalMatchOrder<
       'verification_fit',
       Number(leftSubscores['verification_fit'] ?? 0),
       Number(rightSubscores['verification_fit'] ?? 0),
-    ],
-    [
-      'purpose_fit',
-      Number(leftSubscores['purpose_fit'] ?? 0),
-      Number(rightSubscores['purpose_fit'] ?? 0),
     ],
     [
       'confidence_total',

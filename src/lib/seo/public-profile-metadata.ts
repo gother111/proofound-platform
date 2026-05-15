@@ -59,14 +59,14 @@ export function buildUnavailablePublicProfileMetadata(
   options?: { canonicalPath?: string | null }
 ): Metadata {
   return buildPublicProfileMetadata({
-    title: 'Public Profile Unavailable | Proofound',
+    title: 'Public Page Unavailable | Proofound',
     description:
-      'This public profile link is unavailable. It may be expired, hidden, or no longer active.',
+      'This Public Page link is unavailable. It may be expired, hidden, or no longer active.',
     path,
     canonicalPath: options?.canonicalPath ?? null,
-    ogTitle: 'Public Profile Unavailable',
+    ogTitle: 'Public Page Unavailable',
     ogDescription:
-      'This public profile link is unavailable. Ask the owner to share a new Proofound link.',
+      'This Public Page link is unavailable. Ask the owner to share a new Proofound link.',
     robots: {
       index: false,
       follow: false,

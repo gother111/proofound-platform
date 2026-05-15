@@ -1,0 +1,60 @@
+# npm run test:privacy
+startedAt=2026-05-14T10:39:44.773Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 test:privacy
+> PROOFOUND_VITEST_TIMEOUT_MS=120000 node ./scripts/run-vitest-with-timeout.mjs --config vitest.supabase.config.ts tests/privacy/rls-policies.test.ts tests/privacy/ai-redaction.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (10) from .env.test -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (10) from .env.test -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🔧 Setting up test users...
+
+ ✓ tests/privacy/ai-redaction.test.ts  (2 tests) 4ms
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+✅ Test users created successfully
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🧹 Cleaning up test data...
+
+ ✓ tests/privacy/rls-policies.test.ts  (20 tests) 36089ms
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+✅ Cleanup complete
+
+
+ Test Files  2 passed (2)
+      Tests  22 passed (22)
+   Start at  12:39:45
+   Duration  36.65s (transform 373ms, setup 34ms, collect 880ms, tests 36.09s, environment 0ms, prepare 92ms)
+
+
+
+completedAt=2026-05-14T10:40:22.140Z
+exitCode=0
+durationMs=37367
+timedOut=false

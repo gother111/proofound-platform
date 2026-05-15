@@ -1,0 +1,2276 @@
+# npm run test
+startedAt=2026-05-14T10:32:06.987Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+WebSocket server error:
+Error: listen EPERM: operation not permitted 0.0.0.0:24678
+    at Server.setupListenHandle [as _listen2] (node:net:1986:21)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
+    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
+    at Array.map (<anonymous>)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
+    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+ ✓ tests/lib/document-extraction-provider.test.ts  (24 tests) 36ms
+ ✓ tests/api/verify-impact-token-route.test.ts  (11 tests) 28ms
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > normalizes verifier email and sends token link using the configured canonical site url
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > fails closed when no canonical site url is configured in a production-like runtime
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > marks eligible interpersonal requests as bounded attestation mode
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > marks eligible interpersonal requests as bounded attestation mode
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > accepts verifier emails with surrounding whitespace
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > returns email_sent=false while keeping request persisted when email fails
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > returns email_sent=false while keeping request persisted when email fails
+Failed to send verification email: Email service not configured
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > persists the capability token reference instead of a legacy raw token column
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > persists the capability token reference instead of a legacy raw token column
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > runs only the active-duplicate precheck select before creating a canonical request
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > runs only the active-duplicate precheck select before creating a canonical request
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > accepts verifier emails with surrounding whitespace
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > blocks self verification requests by canonical email identity
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > blocks self verification requests by canonical email identity
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > returns 409 when a pending active duplicate exists
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > returns 409 when an accepted active duplicate exists
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > returns 409 when the canonical create step hits a duplicate race
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/api/expertise-skill-verification-request-route.test.ts > POST /api/verification/requests/skill > returns 409 when the canonical create step hits a duplicate race
+Error creating canonical verification request: Error: duplicate key
+    at /Users/yuriibakurov/proofound/tests/api/expertise-skill-verification-request-route.test.ts:531:21
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7 {
+  code: '23505'
+}
+
+ ✓ tests/api/expertise-skill-verification-request-route.test.ts  (15 tests) 175ms
+ ✓ tests/lib/public-portfolio-projection.test.ts  (12 tests) 61ms
+ ✓ tests/lib/launch-synthetic-monitors.test.ts  (17 tests) 75ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+ ✓ tests/lib/uploads-lifecycle-queue.test.ts  (13 tests) 19ms
+ ✓ tests/api/org-match-review-route.test.ts  (17 tests) 74ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stderr | tests/actions/profile.test.ts > profile purpose actions > falls back to values-only update when purpose link columns are missing
+Purpose link columns are unavailable, falling back to list-only update. { field: 'values' }
+
+stderr | tests/actions/profile.test.ts > profile purpose actions > normalizes legacy JSON string shapes when reading profile data
+Failed to fetch portfolio publication state: TypeError: __vite_ssr_import_4__.db.select(...).from(...).where(...).limit is not a function
+    at Module.getProfileData (/Users/yuriibakurov/proofound/src/actions/profile.ts:605:10)
+    at /Users/yuriibakurov/proofound/tests/actions/profile.test.ts:490:21
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:11)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+    at run (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:105:3)
+
+stderr | tests/actions/profile.test.ts > profile purpose actions > attaches latest impact verification summary to impact stories
+Failed to fetch portfolio publication state: TypeError: __vite_ssr_import_4__.db.select(...).from(...).where(...).limit is not a function
+    at Module.getProfileData (/Users/yuriibakurov/proofound/src/actions/profile.ts:605:10)
+    at /Users/yuriibakurov/proofound/tests/actions/profile.test.ts:590:21
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:11)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+    at run (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:105:3)
+
+stdout | tests/actions/profile.test.ts > profile purpose actions > updates mission when at least one value and one cause exist
+{"level":"info","event":"sus_survey.prompt_skipped","timestamp":"2026-05-14T10:32:10.398Z","userId":"test-user-id","trigger":"profile_activation","reason":"recent_prompt_exists"}
+
+ ✓ tests/actions/profile.test.ts  (18 tests) 44ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+ ✓ tests/lib/gcp-cv-ocr-service.test.ts  (24 tests) 69ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ src/lib/core/matching/__tests__/scorers.test.ts  (66 tests) 18ms
+ ✓ tests/api/custom-verification-routes.test.ts  (9 tests) 31ms
+stderr | tests/ui/verifications-page.test.tsx > VerificationsPage > renders the actual client without surfacing a custom verification request button
+Failed to load assistive AI feature flag [TypeError: Failed to parse URL from /api/feature-flags] {
+  [cause]: TypeError: Invalid URL: /api/feature-flags
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:32:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:41:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+
+ ✓ tests/ui/verifications-page.test.tsx  (6 tests) 663ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ tests/api/assignments-publish-route.test.ts  (13 tests) 61ms
+ ✓ tests/lib/matching-review-contract.test.ts  (14 tests) 12ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+ ✓ tests/ui/cvjd-auto-suggest.test.tsx  (10 tests) 1206ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/api/conversation-reveal-route.test.ts  (7 tests) 82ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/api/expertise-verifications-sent-delete-route.test.ts  (9 tests) 25ms
+stderr | tests/ui/edit-skill-window-proofs.test.tsx > EditSkillWindow proof refresh behavior > calls onSkillUpdated after successful proof add
+Failed to load assistive AI feature flag [TypeError: Failed to parse URL from /api/feature-flags] {
+  [cause]: TypeError: Invalid URL: /api/feature-flags
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:32:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:41:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+Failed to load proof artifact OCR beta status [TypeError: Failed to parse URL from /api/proof-artifacts/text-extraction/status] {
+  [cause]: TypeError: Invalid URL: /api/proof-artifacts/text-extraction/status
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:54:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:81:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stderr | tests/ui/edit-skill-window-proofs.test.tsx > EditSkillWindow proof refresh behavior > calls onSkillUpdated after successful proof delete
+Failed to load assistive AI feature flag [TypeError: Failed to parse URL from /api/feature-flags] {
+  [cause]: TypeError: Invalid URL: /api/feature-flags
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:32:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:41:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+Failed to load proof artifact OCR beta status [TypeError: Failed to parse URL from /api/proof-artifacts/text-extraction/status] {
+  [cause]: TypeError: Invalid URL: /api/proof-artifacts/text-extraction/status
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:54:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:81:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+
+ ✓ src/lib/launch/__tests__/final-launch-checklist.test.ts  (6 tests) 565ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/interviews-schedule-route.test.ts  (11 tests) 38ms
+stderr | tests/ui/edit-skill-window-proofs.test.tsx > EditSkillWindow proof refresh behavior > uploads a document proof and includes the uploaded file id payload
+Failed to load assistive AI feature flag [TypeError: Failed to parse URL from /api/feature-flags] {
+  [cause]: TypeError: Invalid URL: /api/feature-flags
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:32:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:41:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+Failed to load proof artifact OCR beta status [TypeError: Failed to parse URL from /api/proof-artifacts/text-extraction/status] {
+  [cause]: TypeError: Invalid URL: /api/proof-artifacts/text-extraction/status
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:54:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:81:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stderr | tests/ui/edit-skill-window-proofs.test.tsx > EditSkillWindow proof refresh behavior > submits issued and expiration dates for proofs
+Failed to load assistive AI feature flag [TypeError: Failed to parse URL from /api/feature-flags] {
+  [cause]: TypeError: Invalid URL: /api/feature-flags
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:32:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:41:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+Failed to load proof artifact OCR beta status [TypeError: Failed to parse URL from /api/proof-artifacts/text-extraction/status] {
+  [cause]: TypeError: Invalid URL: /api/proof-artifacts/text-extraction/status
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:54:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:81:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+
+stderr | tests/ui/edit-skill-window-proofs.test.tsx > EditSkillWindow proof refresh behavior > disables adding proofs once the per-skill proof limit is reached
+Failed to load assistive AI feature flag [TypeError: Failed to parse URL from /api/feature-flags] {
+  [cause]: TypeError: Invalid URL: /api/feature-flags
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:32:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:41:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+Failed to load proof artifact OCR beta status [TypeError: Failed to parse URL from /api/proof-artifacts/text-extraction/status] {
+  [cause]: TypeError: Invalid URL: /api/proof-artifacts/text-extraction/status
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:54:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:81:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stderr | tests/ui/edit-skill-window-proofs.test.tsx > EditSkillWindow proof refresh behavior > normalizes last_used_at to ISO datetime when saving edited skill details
+Failed to load assistive AI feature flag [TypeError: Failed to parse URL from /api/feature-flags] {
+  [cause]: TypeError: Invalid URL: /api/feature-flags
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:32:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:41:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+Failed to load proof artifact OCR beta status [TypeError: Failed to parse URL from /api/proof-artifacts/text-extraction/status] {
+  [cause]: TypeError: Invalid URL: /api/proof-artifacts/text-extraction/status
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:54:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:81:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+
+stderr | tests/ui/edit-skill-window-proofs.test.tsx > EditSkillWindow proof refresh behavior > normalizes verifier email before requesting verification from edit flow
+Failed to load assistive AI feature flag [TypeError: Failed to parse URL from /api/feature-flags] {
+  [cause]: TypeError: Invalid URL: /api/feature-flags
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:32:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:41:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+Failed to load proof artifact OCR beta status [TypeError: Failed to parse URL from /api/proof-artifacts/text-extraction/status] {
+  [cause]: TypeError: Invalid URL: /api/proof-artifacts/text-extraction/status
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:54:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:81:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+
+stderr | tests/api/verification-status-route.test.ts > GET /api/verification/status > fails honestly when required verification columns are missing
+Error fetching individual profile: {
+  code: '42703',
+  message: 'column individual_profiles.work_email_verified_at does not exist',
+  details: undefined,
+  hint: undefined
+}
+
+ ✓ tests/api/verification-status-route.test.ts  (10 tests) 26ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stderr | tests/ui/verifications-client.test.tsx > VerificationsClient > renders incoming and sent requests in separate top-level tabs
+Warning: An update to VerificationsClient inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at VerificationsClient (/Users/yuriibakurov/proofound/src/app/app/i/verifications/VerificationsClient.tsx:68:21)
+
+stderr | tests/ui/verifications-client.test.tsx > VerificationsClient > renders incoming impact-story requests in read-only mode
+Warning: An update to VerificationsClient inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at VerificationsClient (/Users/yuriibakurov/proofound/src/app/app/i/verifications/VerificationsClient.tsx:68:21)
+
+stderr | tests/ui/verifications-client.test.tsx > VerificationsClient > does not surface a custom verification request trigger in the current client
+Warning: An update to VerificationsClient inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at VerificationsClient (/Users/yuriibakurov/proofound/src/app/app/i/verifications/VerificationsClient.tsx:68:21)
+
+stderr | tests/actions/org-invitations.test.ts > organization invitations > keeps the invite live when email delivery cannot be confirmed
+Org invite email delivery could not be confirmed: Error: provider timeout
+    at /Users/yuriibakurov/proofound/tests/actions/org-invitations.test.ts:240:53
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+
+ ✓ tests/actions/org-invitations.test.ts  (6 tests) 13ms
+stderr | tests/actions/org-invitations.test.ts > organization invitations > rejects a tokenized invitation that still carries a legacy role
+Invitation contains non-canonical role: admin
+
+stderr | tests/ui/edit-skill-window-proofs.test.tsx > EditSkillWindow proof refresh behavior > deletes a pending verification request from edit flow
+Failed to load assistive AI feature flag [TypeError: Failed to parse URL from /api/feature-flags] {
+  [cause]: TypeError: Invalid URL: /api/feature-flags
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:32:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:41:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+Failed to load proof artifact OCR beta status [TypeError: Failed to parse URL from /api/proof-artifacts/text-extraction/status] {
+  [cause]: TypeError: Invalid URL: /api/proof-artifacts/text-extraction/status
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:54:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:81:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+
+ ✓ tests/ui/public-portfolio-page.test.tsx  (8 tests) 356ms
+stderr | tests/ui/edit-skill-window-proofs.test.tsx > EditSkillWindow proof refresh behavior > shows bundled request guidance when deleting a bundled verification request
+Failed to load assistive AI feature flag [TypeError: Failed to parse URL from /api/feature-flags] {
+  [cause]: TypeError: Invalid URL: /api/feature-flags
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:32:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useAssistiveAiFlag.ts:41:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+Failed to load proof artifact OCR beta status [TypeError: Failed to parse URL from /api/proof-artifacts/text-extraction/status] {
+  [cause]: TypeError: Invalid URL: /api/proof-artifacts/text-extraction/status
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:54:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useProofArtifactOcrBetaStatus.ts:81:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+
+ ✓ tests/ui/assignment-builder-mode-entry.test.tsx  (10 tests) 408ms
+ ✓ tests/ui/edit-skill-window-proofs.test.tsx  (9 tests) 1570ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+ ✓ tests/ui/verifications-client.test.tsx  (9 tests) 873ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/ui/proof-pack-assistant.test.tsx  (8 tests) 543ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/api/admin-internal-ops-queue-route.test.ts  (6 tests) 108ms
+ ✓ tests/api/assignments.test.ts  (14 tests) 41ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+ ✓ tests/actions/onboarding.test.ts  (3 tests) 10ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stderr | tests/actions/auth.test.ts > Auth Actions > signUp > should sign up an organization member and create profile
+Profile trigger did not fire, creating profile manually
+
+stderr | tests/actions/auth.test.ts > Auth Actions > signUp > should return error for invalid input
+SignUp Validation Failed: { _errors: [], email: { _errors: [ 'Invalid email' ] } }
+
+stderr | tests/actions/auth.test.ts > Auth Actions > signUp > returns retry-safe error and keeps email verification semantics when signup is rate-limited
+Supabase SignUp Error: { message: 'Over the email limit', status: 429 }
+
+stderr | tests/actions/auth.test.ts > Auth Actions > signUp > falls back to admin generateLink + Resend API when Supabase cannot send confirmation email
+Supabase SignUp Error: { message: 'Error sending confirmation email', status: 500 }
+
+stderr | tests/actions/auth.test.ts > Auth Actions > requestPasswordReset > returns success even when provider reset call errors
+Password reset request throttled or masked: { status: 429, message: 'Too many requests' }
+
+ ✓ tests/actions/auth.test.ts  (12 tests) 19ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/api/match-interest-route.test.ts  (6 tests) 124ms
+ ✓ tests/lib/workflow-email-privacy.test.ts  (11 tests) 25ms
+ ✓ tests/api/user-account-lifecycle-routes.test.ts  (8 tests) 54ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ src/lib/__tests__/csrf.test.ts  (26 tests) 97ms
+ ✓ tests/ui/schedule-interview-modal.test.tsx  (6 tests) 765ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/lib/workflow-decision-record.test.ts  (3 tests) 11ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+ ✓ tests/lib/internal-ops-queue.test.ts  (6 tests) 19ms
+ ✓ tests/lib/gcp-cv-ocr-config.test.ts  (16 tests) 6ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+ ✓ tests/ui/cv-import-wizard.test.tsx  (11 tests) 6369ms
+ ✓ tests/api/user-export-route.test.ts  (3 tests) 16ms
+ ✓ tests/lib/launch-smoke-artifact.test.ts  (9 tests) 10ms
+ ✓ src/lib/__tests__/matching-eligibility.test.ts  (4 tests) 18ms
+stderr | src/lib/__tests__/middleware-fail-closed.test.ts > middleware fail-closed behavior > returns a safe JSON 500 instead of passing through when API policy lookup throws
+[middleware] unexpected error Error: policy lookup unavailable
+    at /Users/yuriibakurov/proofound/src/lib/__tests__/middleware-fail-closed.test.ts:74:17
+    at mockCall (file:///Users/yuriibakurov/proofound/node_modules/@vitest/spy/dist/index.js:50:17)
+    at spy (file:///Users/yuriibakurov/proofound/node_modules/tinyspy/dist/index.js:42:80)
+    at middleware (/Users/yuriibakurov/proofound/src/middleware.ts:370:33)
+    at /Users/yuriibakurov/proofound/src/lib/__tests__/middleware-fail-closed.test.ts:80:28
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:11)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+
+stderr | src/lib/__tests__/middleware-fail-closed.test.ts > middleware fail-closed behavior > fails closed for active API routes when rate-limit code throws
+[middleware] rate limit check failed; failing closed for API route Error: rate limiter unavailable
+    at /Users/yuriibakurov/proofound/src/lib/__tests__/middleware-fail-closed.test.ts:139:17
+    at mockCall (file:///Users/yuriibakurov/proofound/node_modules/@vitest/spy/dist/index.js:50:17)
+    at spy (file:///Users/yuriibakurov/proofound/node_modules/tinyspy/dist/index.js:42:80)
+    at middleware (/Users/yuriibakurov/proofound/src/middleware.ts:387:45)
+    at /Users/yuriibakurov/proofound/src/lib/__tests__/middleware-fail-closed.test.ts:145:28
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:11)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+
+stderr | src/lib/__tests__/middleware-fail-closed.test.ts > middleware fail-closed behavior > fails closed for mutating API routes when CSRF enforcement code throws
+[middleware] unexpected error Error: csrf guard unavailable
+    at /Users/yuriibakurov/proofound/src/lib/__tests__/middleware-fail-closed.test.ts:290:17
+    at mockCall (file:///Users/yuriibakurov/proofound/node_modules/@vitest/spy/dist/index.js:50:17)
+    at spy (file:///Users/yuriibakurov/proofound/node_modules/tinyspy/dist/index.js:42:80)
+    at middleware (/Users/yuriibakurov/proofound/src/middleware.ts:449:31)
+    at /Users/yuriibakurov/proofound/src/lib/__tests__/middleware-fail-closed.test.ts:296:22
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:11)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+
+ ✓ tests/api/assignments-id-route.test.ts  (11 tests) 25ms
+ ✓ src/lib/__tests__/middleware-fail-closed.test.ts  (11 tests) 229ms
+stderr | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > returns 401 for unauthenticated user
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:17.818Z","flow":"invite_redemption","requestId":"uCpyAawJK2p4","actorId":null,"actorType":"anonymous","objectRefs":{},"outcome":"rejected","state":"invite_claim_unauthorized","latencyMs":0,"failureClass":"unauthorized"}
+
+stdout | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > claims invite when email matches and persona is individual
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T10:32:17.825Z","flow":"invite_redemption","requestId":"8bqqCU34gO8q","actorId":"11111111-1111-1111-1111-111111111111","actorType":"user_account","objectRefs":{"inviteId":"invite-1","assignmentId":null,"orgId":"org-1"},"outcome":"success","state":"invite_redeemed","latencyMs":0,"failureClass":null}
+
+stdout | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > creates test match and conversation for test_match invite acceptance
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T10:32:17.829Z","flow":"invite_redemption","requestId":"_RPi7kZ2QInC","actorId":"11111111-1111-1111-1111-111111111111","actorType":"user_account","objectRefs":{"inviteId":"invite-1","assignmentId":"assignment-1","orgId":"org-1"},"outcome":"success","state":"invite_redeemed","latencyMs":0,"failureClass":null,"flowType":"test_match"}
+
+stderr | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > fails closed when capability redemption rejects the invite recipient
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:17.830Z","flow":"invite_redemption","requestId":"pjQZjW56BAsX","actorId":"11111111-1111-1111-1111-111111111111","actorType":"user_account","objectRefs":{},"outcome":"rejected","state":"invite_claim_token_rejected","latencyMs":0,"failureClass":"actor_mismatch"}
+
+stderr | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > returns replay failure on second redemption attempt
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:17.831Z","flow":"invite_redemption","requestId":"NaMq4BJc9Av7","actorId":"11111111-1111-1111-1111-111111111111","actorType":"user_account","objectRefs":{},"outcome":"rejected","state":"invite_claim_token_rejected","latencyMs":0,"failureClass":"replayed"}
+
+stderr | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > uses one generic response when token redemption fails with invalid
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:17.836Z","flow":"invite_redemption","requestId":"VT5F9x3ICGvj","actorId":"11111111-1111-1111-1111-111111111111","actorType":"user_account","objectRefs":{},"outcome":"rejected","state":"invite_claim_token_rejected","latencyMs":0,"failureClass":"invalid"}
+
+stderr | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > uses one generic response when token redemption fails with expired
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:17.837Z","flow":"invite_redemption","requestId":"iJJUq5XxWLZb","actorId":"11111111-1111-1111-1111-111111111111","actorType":"user_account","objectRefs":{},"outcome":"rejected","state":"invite_claim_token_rejected","latencyMs":0,"failureClass":"expired"}
+
+stderr | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > uses one generic response when token redemption fails with revoked
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:17.837Z","flow":"invite_redemption","requestId":"aUhlREgLYBE2","actorId":"11111111-1111-1111-1111-111111111111","actorType":"user_account","objectRefs":{},"outcome":"rejected","state":"invite_claim_token_rejected","latencyMs":0,"failureClass":"revoked"}
+
+stderr | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > uses one generic response when token redemption fails with replayed
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:17.839Z","flow":"invite_redemption","requestId":"70N1wHnKUyMW","actorId":"11111111-1111-1111-1111-111111111111","actorType":"user_account","objectRefs":{},"outcome":"rejected","state":"invite_claim_token_rejected","latencyMs":0,"failureClass":"replayed"}
+
+stderr | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > uses one generic response when token redemption fails with actor_mismatch
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:17.842Z","flow":"invite_redemption","requestId":"tTygSB1WSOvL","actorId":"11111111-1111-1111-1111-111111111111","actorType":"user_account","objectRefs":{},"outcome":"rejected","state":"invite_claim_token_rejected","latencyMs":0,"failureClass":"actor_mismatch"}
+
+ ✓ tests/api/candidate-invite-claim-route.test.ts  (12 tests) 34ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ tests/ui/organization-interviews-page-actions.test.tsx  (3 tests) 415ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ src/lib/__tests__/rate-limit.test.ts  (21 tests) 65ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/api/expertise-taxonomy-route.test.ts  (4 tests) 30ms
+stdout | tests/api/expertise-taxonomy-route.test.ts > GET /api/expertise/taxonomy (search mode) > suppresses ambiguous short tokens outside cv_import context
+[Taxonomy API] Request params: {
+  l1: null,
+  l2: null,
+  l3Id: null,
+  hasSearch: true,
+  searchHash: '96f2f0811df88d8f',
+  searchClass: 'very_short_token'
+}
+
+stdout | tests/api/expertise-taxonomy-route.test.ts > GET /api/expertise/taxonomy (search mode) > allows ambiguous short tokens in cv_import context and returns ranked guesses
+[Taxonomy API] Request params: {
+  l1: null,
+  l2: null,
+  l3Id: null,
+  hasSearch: true,
+  searchHash: '96f2f0811df88d8f',
+  searchClass: 'very_short_token'
+}
+[Taxonomy API] Skills request completed {
+  mode: 'search',
+  searchHash: '96f2f0811df88d8f',
+  searchClass: 'very_short_token',
+  resultCount: 1
+}
+
+stdout | tests/api/expertise-taxonomy-route.test.ts > GET /api/expertise/taxonomy (search mode) > falls back to direct taxonomy search when atlas returns no ranked skills
+[Taxonomy API] Request params: {
+  l1: null,
+  l2: null,
+  l3Id: null,
+  hasSearch: true,
+  searchHash: 'acef2c15bcd349db',
+  searchClass: 'single_term'
+}
+[Taxonomy API] Skills request completed {
+  mode: 'search',
+  searchHash: 'acef2c15bcd349db',
+  searchClass: 'single_term',
+  resultCount: 1
+}
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/ui/public-org-portfolio-page.test.tsx  (5 tests) 228ms
+ ✓ tests/ui/editable-profile-purpose-gating.test.tsx  (6 tests) 189ms
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 195ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+ ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (6 tests) 26ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/api/assignment-clarity-route.test.ts  (10 tests) 30ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stderr | tests/ui/profile-artifact-edit-actions.test.tsx > profile launch IA > replaces legacy profile tabs with launch IA labels
+Failed to load Start from CV beta status [TypeError: Failed to parse URL from /api/ai/start-from-cv/status] {
+  [cause]: TypeError: Invalid URL: /api/ai/start-from-cv/status
+      at new URLImpl (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL-impl.js:20:13)
+      at Object.exports.setup (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:54:12)
+      at new URL (/Users/yuriibakurov/proofound/node_modules/jsdom/node_modules/whatwg-url/lib/URL.js:115:22)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at load (/Users/yuriibakurov/proofound/src/hooks/useStartFromCvBetaStatus.ts:44:32)
+      at /Users/yuriibakurov/proofound/src/hooks/useStartFromCvBetaStatus.ts:59:10
+      at commitHookEffectListMount (/Users/yuriibakurov/proofound/node_modules/react-dom/cjs/react-dom.development.js:23189:26)
+}
+
+ ✓ tests/ui/profile-artifact-edit-actions.test.tsx  (4 tests) 205ms
+ ✓ tests/api/decisions-route.test.ts  (10 tests) 33ms
+stderr | tests/api/expertise-verification-respond-route.test.ts > POST /api/verification/requests/skill/[requestId]/respond > records structured no verdicts for human-observed declines
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ ✓ tests/api/expertise-verification-respond-route.test.ts  (3 tests) 60ms
+ ✓ tests/api/org-candidate-invites-route.test.ts  (11 tests) 50ms
+ ✓ tests/lib/engagement-verifications.test.ts  (10 tests) 15ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ src/lib/launch/__tests__/surface-policy.test.ts  (9 tests) 11ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+ ✓ tests/ui/profile-dialogs-edit-routing.test.tsx  (1 test) 148ms
+ ✓ tests/ui/impact-story-form.test.tsx  (6 tests) 3085ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+ ✓ src/lib/analytics/__tests__/metrics.test.ts  (27 tests) 28ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/lib/python-cv-proxy.test.ts  (8 tests) 32ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+ ✓ tests/ui/step5-expertise-mapping.test.tsx  (5 tests) 843ms
+ ✓ tests/lib/verification-policy.test.ts  (7 tests) 4ms
+ ✓ tests/lib/gemini-config.test.ts  (7 tests) 8ms
+ ✓ tests/lib/verification-integrity-alignment.test.ts  (3 tests) 9ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+ ✓ tests/lib/canonical-proof-pack-projection.test.ts  (4 tests) 4ms
+ ✓ tests/api/interviews-edit-route.test.ts  (5 tests) 16ms
+stderr | tests/lib/cv-import-wizard-extractor.test.ts > cv-import wizard extractor > continues entity extraction when skill suggestion dependency fails
+[cv-import-wizard] skill suggestion dependency failed; continuing without skill candidates Error: relation "skills_taxonomy"
+    at /Users/yuriibakurov/proofound/tests/lib/cv-import-wizard-extractor.test.ts:233:57
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+
+ ✓ tests/lib/cv-import-wizard-extractor.test.ts  (5 tests) 1348ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stderr | tests/actions/create-impact-story.test.ts > createImpactStory verification email path > stores lowercase verifier email and marks verification as sent when email sends
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/actions/create-impact-story.test.ts > createImpactStory verification email path > returns warning and stores email error when verification email fails
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/actions/create-impact-story.test.ts > createImpactStory verification email path > returns warning and stores email error when verification email fails
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/actions/create-impact-story.test.ts > createImpactStory verification email path > keeps impact story save and blocks self verification request creation
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stderr | tests/actions/create-impact-story.test.ts > createImpactStory verification email path > keeps impact story save and blocks self verification request creation
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ ✓ tests/api/match-explain-route.test.ts  (3 tests) 93ms
+ ✓ tests/actions/create-impact-story.test.ts  (3 tests) 139ms
+ ✓ tests/lib/uploads-privacy.test.ts  (14 tests) 16ms
+ ✓ tests/lib/capability-tokens.test.ts  (9 tests) 7ms
+ ✓ tests/ui/admin-verification-dashboard.test.tsx  (3 tests) 453ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stderr | tests/actions/profile-impact-story-create.test.ts > createImpactStory schema-drift compatibility > reuses existing canonical impact verification requests and avoids duplicate inserts
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ ✓ tests/actions/profile-impact-story-create.test.ts  (3 tests) 67ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+ ✓ tests/lib/canonical-skill-proof-write.test.ts  (2 tests) 53ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/api/expertise-user-skill-proof-delete-route.test.ts  (4 tests) 43ms
+ ✓ tests/ui/edit-profile-modal.test.tsx  (4 tests) 251ms
+ ✓ tests/lib/individual-readiness-state.test.ts  (4 tests) 6ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stderr | tests/api/organizations-team-route.test.ts > GET /api/organizations/[orgId]/team > filters malformed member roles out of the response payload
+[organizations.team] skipping member with non-canonical role { orgId: 'org-1', userId: 'user-invalid', role: 'owner' }
+[organizations.team] skipping team stats row with non-canonical role { orgId: 'org-1', role: 'owner' }
+
+stderr | tests/api/organizations-team-route.test.ts > GET /api/organizations/[orgId]/team > keeps the dashboard fallback generic when team loading fails
+{"level":"error","event":"org.team.fetch.failed","timestamp":"2026-05-14T10:32:23.441Z","error":"[REDACTED_DATABASE_ERROR]"}
+
+ ✓ tests/api/organizations-team-route.test.ts  (9 tests) 50ms
+ ✓ tests/lib/canonical-verification-request-token-resolution.test.ts  (7 tests) 4ms
+ ✓ tests/api/engagement-verifications-route.test.ts  (5 tests) 25ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/organization-visibility-route.test.ts  (5 tests) 28ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 144ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ src/lib/__tests__/middleware-csrf.test.ts  (25 tests) 139ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+ ✓ tests/lib/taxonomy-mismatch-regressions.test.ts  (3 tests) 879ms
+stderr | src/lib/__tests__/api-fetch.test.ts > apiFetch > fails fast on mutating requests when CSRF token cannot be fetched
+Failed to fetch CSRF token 503
+Error fetching CSRF token Error: Security token could not be initialized. Please refresh and try again.
+    at /Users/yuriibakurov/proofound/src/lib/api/fetch.ts:161:15
+    at apiFetch (/Users/yuriibakurov/proofound/src/lib/api/fetch.ts:246:19)
+    at /Users/yuriibakurov/proofound/src/lib/__tests__/api-fetch.test.ts:84:5
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:11)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+
+ ✓ src/lib/__tests__/api-fetch.test.ts  (6 tests) 62ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/ui/organization-basic-info-editor.test.tsx  (4 tests) 461ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/ui/match-explainer-modal.test.tsx  (1 test) 275ms
+ ✓ tests/api/core-matching-profile-route.test.ts  (3 tests) 20ms
+stderr | tests/api/upload-document-route.test.ts > POST /api/upload/document > returns a generic production response for storage failures without exposing path or filename
+{"level":"error","event":"upload.document.failed","timestamp":"2026-05-14T10:32:24.889Z","status":500,"error":{"category":"storage","name":"Error","message":"[REDACTED_STORAGE_ERROR]"}}
+
+ ✓ tests/api/upload-document-route.test.ts  (7 tests) 30ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+ ✓ tests/lib/hiring-corridor-snapshot.test.ts  (4 tests) 6ms
+ ✓ tests/lib/auth-request-cache.test.ts  (6 tests) 1021ms
+ ✓ tests/lib/authz-policy.test.ts  (9 tests) 4ms
+ ✓ tests/api/work-email-verification-send-route.test.ts  (4 tests) 35ms
+stderr | tests/api/work-email-verification-send-route.test.ts > POST /api/verification/work-email/send > returns 500 when email delivery fails
+Error sending verification email: Error: Resend unavailable
+    at /Users/yuriibakurov/proofound/tests/api/work-email-verification-send-route.test.ts:215:60
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+
+ ✓ src/lib/__tests__/security-headers.test.ts  (6 tests) 40ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/ui/experience-form.test.tsx  (6 tests) 840ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/lib/profile-completion-flow.test.ts  (6 tests) 6ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ src/app/api/cron/decision-reminders/__tests__/route.test.ts  (5 tests) 9ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 71ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/lib/human-attestations.test.ts  (5 tests) 5ms
+ ✓ tests/ui/assignment-clarity-assistant.test.tsx  (4 tests) 315ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/ui/add-skill-drawer-proof-verification.test.tsx  (1 test) 127ms
+ ✓ tests/ui/matching-profile-setup-focus.test.tsx  (2 tests) 384ms
+ ✓ tests/api/core-matching-profile-performance.test.ts  (2 tests) 11ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+ ✓ tests/api/organizations-route.test.ts  (6 tests) 66ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+ ✓ tests/lib/gcp-cv-ocr-status.test.ts  (7 tests) 32ms
+ ✓ tests/lib/lifecycle-reconciliation.test.ts  (3 tests) 7ms
+ ✓ tests/api/expertise-verifications-custom-route.test.ts  (3 tests) 20ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/lib/momentum-activity.test.ts  (1 test) 7ms
+ ✓ tests/actions/onboarding-private-context-scaffolding.test.ts  (3 tests) 5ms
+ ✓ src/lib/core/matching/__tests__/adjacency.test.ts  (15 tests) 7ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/ui/add-skill-drawer-browse-location.test.tsx  (3 tests) 190ms
+ ✓ tests/lib/portfolio-text-pack.test.ts  (2 tests) 2ms
+ ✓ tests/ui/expertise-atlas-widget-visibility.test.tsx  (2 tests) 154ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+ ✓ tests/ui/add-skill-drawer-navigation.test.tsx  (2 tests) 198ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/api/core-matching-gating-routes.test.ts  (3 tests) 15ms
+ ✓ tests/lib/skill-candidate-fusion.test.ts  (4 tests) 10ms
+ ✓ tests/lib/feedback-invite-issuance.test.ts  (1 test) 4ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/api/interviews-cancel-route.test.ts  (3 tests) 10ms
+stdout | src/lib/launch/__tests__/final-launch-validation-runner.test.ts > final launch validation runner > writes the markdown report and commands artifact
+
+[launch:validate] Env and deploy readiness check: node ./scripts/check-deploy-readiness.mjs
+
+stdout | src/lib/launch/__tests__/final-launch-validation-runner.test.ts > final launch validation runner > writes the markdown report and commands artifact
+
+[launch:validate] Lint: npm run lint
+
+[launch:validate] Typecheck: npm run typecheck
+
+stdout | src/lib/launch/__tests__/final-launch-validation-runner.test.ts > final launch validation runner > writes the markdown report and commands artifact
+
+[launch:validate] Production build: npm run build
+
+[launch:validate] Launch surface inventory tests: npm run test:launch:routes
+
+[launch:validate] Launch page inventory tests: npm run test:launch:routes
+
+[launch:validate] Privacy/RLS baseline tests: npm run test:privacy
+
+[launch:validate] Privacy/RLS extended tests: npm run test:privacy:extended
+
+[launch:validate] Upload privacy tests: npm run test:launch:upload
+
+[launch:validate] Org review/reveal/decision/engagement tests: npm run test:launch:workflow
+
+[launch:validate] Export/delete tests: npm run test -- tests/api/user-export-route.test.ts tests/api/portfolio-export-route.test.ts tests/api/portfolio-org-export-route.test.ts tests/api/public-portfolio-export-route.test.ts tests/api/user-account-lifecycle-routes.test.ts tests/api/expertise-user-skill-proof-delete-route.test.ts tests/api/expertise-verifications-sent-delete-route.test.ts tests/lib/export-download-filename.test.ts tests/lib/portfolio-export-data.test.ts tests/lib/uploads-export.test.ts
+
+stdout | src/lib/launch/__tests__/final-launch-validation-runner.test.ts > final launch validation runner > writes the markdown report and commands artifact
+
+[launch:validate] Production dependency audit: npm audit --omit=dev
+
+ ✓ src/lib/launch/__tests__/final-launch-validation-runner.test.ts  (5 tests) 14ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+ ✓ tests/lib/residual-lifecycle-contracts.test.ts  (11 tests) 5ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+ ✓ tests/ui/portfolio-visibility-card-ai.test.tsx  (4 tests) 337ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/launch-page-inventory.test.ts  (5 tests) 280ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stderr | tests/api/interviews-complete-route.test.ts > POST /api/interviews/complete > returns success even if feedback invite issuance fails after completion
+Interview completion feedback invites failed Error: schema cache drift
+    at /Users/yuriibakurov/proofound/tests/api/interviews-complete-route.test.ts:130:50
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+
+ ✓ tests/api/interviews-complete-route.test.ts  (2 tests) 14ms
+ ✓ tests/scripts/proofound-ticket-finisher.test.ts  (7 tests) 5ms
+ ✓ tests/scripts/launch-gate-config.test.ts  (4 tests) 7ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ tests/ui/individual-setup-proof-first.test.tsx  (2 tests) 359ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/api/organization-assignments-route.test.ts  (9 tests) 18ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+ ✓ tests/api/admin/analytics-cv-import-spend-route.test.ts  (2 tests) 9ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/lib/cv-import-suggest.test.ts  (3 tests) 288ms
+ ✓ tests/ui/match-result-card.test.tsx  (1 test) 108ms
+ ✓ tests/lib/assignment-publish-validation.test.ts  (5 tests) 7ms
+ ✓ src/lib/launch/__tests__/status-report.test.ts  (3 tests) 3ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/ui/pilot-packaging-guardrails.test.tsx  (2 tests) 91ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/ui/archived-mvp-routes.test.ts  (2 tests) 9ms
+ ✓ tests/ui/verification-status-options.test.tsx  (2 tests) 186ms
+ ✓ tests/sweep-test-accounts-classifier.test.ts  (8 tests) 3ms
+ ✓ tests/lib/launch-hardening-contract.test.ts  (6 tests) 8ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+ ✓ tests/api/auth-callback-route.test.ts  (4 tests) 17ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stderr | tests/api/upload-cover-route.test.ts > POST /api/upload/cover > cleans up uploaded files when the organization update fails after ingest
+{"level":"error","event":"upload.cover_organization_update.failed","timestamp":"2026-05-14T10:32:30.461Z","orgId":"123e4567-e89b-42d3-a456-426614174000","status":500,"error":{"category":"unknown","message":"Unknown error"}}
+
+ ✓ tests/api/upload-cover-route.test.ts  (3 tests) 9ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/work-email-verification-verify-route.test.ts  (1 test) 10ms
+ ✓ tests/ui/step4-practicals-location-autocomplete.test.tsx  (2 tests) 140ms
+ ✓ tests/ui/profile-context-cv-import.test.tsx  (3 tests) 263ms
+ ✓ tests/ui/draggable-dashboard-while-away-visibility.test.tsx  (2 tests) 214ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | tests/ui/share-profile-dialog.test.tsx > ShareProfileDialog > builds embed code from the generated snippet URL
+profile.snippet.generated { format: 'card', theme: 'light' }
+
+ ✓ tests/ui/share-profile-dialog.test.tsx  (2 tests) 143ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+ ✓ tests/api/candidate-invite-proof-card-route.test.ts  (1 test) 11ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/api/user-privacy-settings-route.test.ts  (4 tests) 29ms
+ ✓ src/lib/integrations/__tests__/oauth-helpers.test.ts  (9 tests) 10ms
+ ✓ tests/ui/matching-organization-view-beta.test.tsx  (3 tests) 227ms
+ ✓ tests/ui/location-autocomplete-field.test.tsx  (5 tests) 96ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ tests/lib/verification-gates.test.ts  (2 tests) 3ms
+ ✓ tests/api/expertise-user-skill-route.test.ts  (3 tests) 16ms
+ ✓ tests/lib/workflow-idempotency.test.ts  (3 tests) 11ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/api/profile-privacy-settings-route.test.ts  (4 tests) 38ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/lib/pdf-client-extractor.test.ts  (4 tests) 33ms
+ ✓ tests/api/match-visible-fields-route.test.ts  (2 tests) 22ms
+ ✓ tests/ui/work-email-verification-form.test.tsx  (3 tests) 161ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | tests/api/conversations-route.test.ts > POST /api/conversations > creates or returns a conversation using canonical match participants only
+{"level":"info","event":"conversation.created","timestamp":"2026-05-14T10:32:32.384Z","conversationId":"conversation-1","matchId":"11111111-1111-4111-8111-111111111111","assignmentId":"22222222-2222-4222-8222-222222222222","participantOneId":"candidate-user","participantTwoId":"org-user"}
+
+ ✓ tests/api/conversations-route.test.ts  (2 tests) 16ms
+ ✓ tests/api/user-account-update-error-redaction.test.ts  (2 tests) 17ms
+ ✓ tests/lib/api-errors.test.ts  (4 tests) 11ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/actions/org-canonical-membership.test.ts  (2 tests) 7ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/lib/atlas-skill-verifier.test.ts  (2 tests) 557ms
+ ✓ tests/ui/first-run-tour-tooltip-position.test.ts  (6 tests) 5ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+ ✓ tests/lib/verification-tier.test.ts  (6 tests) 5ms
+ ✓ tests/ui/matching-page-gated.test.tsx  (1 test) 96ms
+ ✓ tests/lib/linkedin-verified.test.ts  (6 tests) 17ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ src/app/api/monitoring/__tests__/perf-status-route.test.ts  (5 tests) 15ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+ ✓ tests/api/decisions-window-route.test.ts  (2 tests) 15ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/lib/python-internal-worker.test.ts  (2 tests) 8ms
+ ✓ tests/ui/education-form-skill-picker.test.tsx  (2 tests) 153ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/location-autocomplete-route.test.ts  (4 tests) 37ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/ui/volunteer-form-skill-picker.test.tsx  (1 test) 301ms
+ ✓ tests/ui/mission-vision-editor-regression.test.tsx  (2 tests) 461ms
+ ✓ tests/api/org-audit-export-routes.test.ts  (3 tests) 18ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+ ✓ tests/lib/gemini-reranker.test.ts  (2 tests) 4ms
+ ✓ tests/api/mobile-practical-routes.test.ts  (4 tests) 13ms
+ ✓ tests/api/verification-work-email-send-route.test.ts  (2 tests) 33ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+ ✓ tests/api/cron-sla-enforcement-route.test.ts  (2 tests) 18ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ tests/hooks/use-responsive-modal-mode.test.tsx  (2 tests) 38ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+ ✓ tests/lib/api-auth.test.ts  (2 tests) 5ms
+ ✓ tests/ui/feedback-form.test.tsx  (2 tests) 136ms
+ ✓ tests/ui/left-nav-portfolio-gating.test.tsx  (4 tests) 173ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/lib/proof-pack-anchor.test.ts  (4 tests) 11ms
+ ✓ src/lib/core/matching/__tests__/firewall.test.ts  (7 tests) 7ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ tests/api/mobile-verification-status-route.test.ts  (2 tests) 15ms
+ ✓ tests/api/matches-snooze-route.test.ts  (2 tests) 11ms
+ ✓ tests/lib/skill-confidence.test.ts  (6 tests) 3ms
+ ✓ src/lib/core/matching/__tests__/language-resolution.test.ts  (5 tests) 2ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+ ✓ tests/ui/location-input-autocomplete.test.tsx  (2 tests) 51ms
+ ✓ tests/api/admin-organizations-verify-route.test.ts  (1 test) 11ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/ui/custom-verification-request-dialog.test.tsx  (1 test) 560ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/ui/launch-discoverability.test.tsx  (3 tests) 136ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ tests/dashboard-layout.test.ts  (5 tests) 4ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+ ✓ src/app/api/admin/__tests__/users-route.test.ts  (3 tests) 14ms
+ ✓ tests/lib/public-organization-portfolio.test.ts  (3 tests) 5ms
+ ✓ tests/ui/topbar-customize-visibility.test.tsx  (5 tests) 164ms
+stderr | warnOnce (file:/Users/yuriibakurov/proofound/node_modules/framer-motion/dist/es/utils/warn-once.mjs:5:13)
+motion() is deprecated. Use motion.create() instead.
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ tests/lib/public-snippet-privacy.test.ts  (2 tests) 5ms
+ ✓ tests/ui/profile-skills-removal.test.tsx  (2 tests) 210ms
+ ✓ tests/api/mobile-device-token-route.test.ts  (3 tests) 25ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/ui/tasks-card.test.tsx  (2 tests) 180ms
+ ✓ tests/routes/onboarding-page.test.ts  (2 tests) 4ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ tests/lib/work-email-delivery.test.ts  (4 tests) 49ms
+stderr | tests/lib/work-email-delivery.test.ts > sendWorkEmailVerification delivery handling > throws when resend returns an error payload without throwing
+{"level":"error","event":"transactional_email.delivery_failed","timestamp":"2026-05-14T10:32:37.544Z","workflow":"verification","provider":"resend","recipientCount":1,"reason":"exception","alert":true,"error":{"category":"stack","name":"Error","message":"[REDACTED_STACK]"}}
+
+stderr | tests/lib/work-email-delivery.test.ts > sendWorkEmailVerification delivery handling > fails closed before sending token-bearing links when production site url is unavailable
+{"level":"error","event":"transactional_email.delivery_failed","timestamp":"2026-05-14T10:32:37.556Z","workflow":"verification","provider":"resend","recipientCount":1,"reason":"exception","alert":true,"error":{"category":"stack","name":"Error","message":"[REDACTED_STACK]"}}
+
+ ✓ tests/api/individual-readiness-cache-flag-route.test.ts  (3 tests) 18ms
+ ✓ tests/scripts/cron-scheduling.test.ts  (4 tests) 4ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ src/app/api/admin/__tests__/fairness-report-route.test.ts  (2 tests) 34ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 308ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/ui/dashboard-status-chip-style.test.tsx  (3 tests) 131ms
+stderr | tests/ui/dashboard-status-chip-style.test.tsx > Dashboard status badge styling > uses shared status chip classes when portfolio status falls back to the first launch state
+Error: completeness failed
+    at /Users/yuriibakurov/proofound/tests/ui/dashboard-status-chip-style.test.tsx:59:30
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+
+ ✓ tests/lib/linkedin-redirect-uri.test.ts  (4 tests) 10ms
+ ✓ tests/routes/portfolio-shortcuts.test.tsx  (4 tests) 6ms
+ ✓ tests/lib/gemini-pricing.test.ts  (3 tests) 3ms
+ ✓ tests/scripts/check-deploy-readiness.test.ts  (5 tests) 559ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/lib/env.test.ts  (6 tests) 3ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | src/lib/supabase/__tests__/admin.test.ts > createAdminClient > keeps the mock admin client available outside production
+Using Mock Admin Client
+
+ ✓ src/lib/supabase/__tests__/admin.test.ts  (4 tests) 29ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+ ✓ tests/lib/effective-visibility.test.ts  (5 tests) 2ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/lib/public-json-ld.test.ts  (5 tests) 9ms
+ ✓ tests/api/archived-api-handlers-route.test.ts  (10 tests) 7ms
+ ✓ tests/lib/membership-normalization.test.ts  (4 tests) 4ms
+ ✓ tests/lib/normalize-individual-purpose-links.test.ts  (6 tests) 6ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/ui/guided-profile-setup-view.test.tsx  (1 test) 180ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+ ✓ src/lib/supabase/__tests__/server.test.ts  (4 tests) 30ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/ui/candidate-invite-client.test.tsx  (1 test) 153ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/lib/workflow-reveal-timeout.test.ts  (2 tests) 3ms
+ ✓ src/app/api/admin/__tests__/fairness-metrics-route.test.ts  (2 tests) 10ms
+ ✓ tests/api/user-audit-log-purpose-route.test.ts  (2 tests) 62ms
+ ✓ tests/ui/projects-card.test.tsx  (2 tests) 235ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+ ✓ tests/lib/auth-email-templates.test.ts  (3 tests) 11ms
+ ✓ tests/ui/public-portfolio-ready-step.test.tsx  (2 tests) 144ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/api/upload-status-route.test.ts  (2 tests) 19ms
+ ✓ tests/api/org-readiness-cache-flag-route.test.ts  (2 tests) 16ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/api/feedback-schema.test.ts  (4 tests) 6ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+ ✓ tests/lib/experience-timeline.test.ts  (4 tests) 12ms
+ ✓ tests/api/profile-route.test.ts  (2 tests) 10ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/ui/settings-integrations-discoverability.test.tsx  (1 test) 210ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ src/lib/__tests__/matching-focus.test.ts  (7 tests) 3ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/ui/metric-strip-chip-style.test.tsx  (1 test) 36ms
+ ✓ tests/lib/python-internal-service.test.ts  (4 tests) 6ms
+ ✓ tests/lib/fairness-note-generator.test.ts  (2 tests) 10ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ src/app/app/i/expertise/components/add-skill/api.test.ts  (3 tests) 7ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/ui/organization-trust-profile-page.test.tsx  (1 test) 161ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/api/sitemap.test.ts  (1 test) 6ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/lib/public-portfolio-contract.test.ts  (3 tests) 3ms
+ ✓ tests/ui/first-proof-dialog.test.tsx  (1 test) 180ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/ui/individual-portfolio-workspace.test.tsx  (1 test) 195ms
+ ✓ tests/ui/settings-privacy-visibility-placement.test.tsx  (1 test) 189ms
+ ✓ tests/lib/admin-break-glass.test.ts  (2 tests) 11ms
+ ✓ tests/lib/public-profile-metadata.test.ts  (5 tests) 3ms
+ ✓ tests/ui/cookie-banner.test.tsx  (3 tests) 162ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/csrf-token-route.test.ts  (2 tests) 35ms
+ ✓ tests/ui/while-away-card.test.tsx  (2 tests) 131ms
+ ✓ src/lib/__tests__/recovery-actions.test.ts  (4 tests) 3ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/lib/wellbeing-client.test.ts  (3 tests) 9ms
+ ✓ tests/api/organizations-list-route.test.ts  (2 tests) 13ms
+ ✓ tests/lib/ttl-cache.test.ts  (3 tests) 2ms
+ ✓ tests/ui/deferred-app-enhancements.test.tsx  (3 tests) 53ms
+ ✓ tests/ui/portfolio-readiness-checklist.test.tsx  (2 tests) 71ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ tests/lib/python-internal-trigger.test.ts  (3 tests) 10ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/lib/interviews-process-state.test.ts  (1 test) 2ms
+ ✓ tests/lib/momentum-summary-explicit-org-context.test.ts  (2 tests) 3ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/lib/feedback-service.test.ts  (4 tests) 4ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (3) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+
+ ✓ tests/scripts/sync-supabase-auth-templates.test.ts  (3 tests) 22ms
+ ✓ tests/lib/launch-trace.test.ts  (2 tests) 5ms
+ ✓ src/lib/launch/__tests__/synthetic-monitors.test.ts  (1 test) 25ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/ui/privacy-overview-copy.test.tsx  (1 test) 131ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/ui/matching-preferences-page.test.tsx  (2 tests) 116ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ src/lib/supabase/__tests__/client.test.ts  (2 tests) 21ms
+ ✓ tests/lib/uploads-export.test.ts  (1 test) 3ms
+ ✓ src/lib/notifications/__tests__/weekly-digest.test.ts  (2 tests) 2ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+ ✓ tests/ui/cookie-settings-page.test.tsx  (2 tests) 169ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ src/lib/__tests__/route-helpers.test.ts  (4 tests) 8ms
+ ✓ tests/lib/launch-operations-contract.test.ts  (3 tests) 18ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/lib/launch-assignment-publish-smoke.test.ts  (1 test) 9ms
+ ✓ tests/lib/assignments-activation.test.ts  (3 tests) 1ms
+ ✓ tests/ui/organizations-table.test.tsx  (1 test) 182ms
+ ✓ src/lib/__tests__/schema-compatibility.test.ts  (3 tests) 2ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+ ✓ tests/lib/workflow-contracts.test.ts  (4 tests) 4ms
+ ✓ src/lib/__tests__/gap-service.test.ts  (1 test) 537ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+ ✓ tests/ui/coverage-heatmap-visibility.test.tsx  (3 tests) 56ms
+ ✓ tests/lib/upload-validate-file.test.ts  (4 tests) 10ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+ ✓ tests/lib/api-latency-log.test.ts  (2 tests) 4ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+ ✓ tests/lib/sus-calculator.test.ts  (3 tests) 4ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+ ✓ tests/ui/matching-preferences-client.test.tsx  (2 tests) 145ms
+ ✓ src/lib/__tests__/matching-presets-bias.test.ts  (4 tests) 2ms
+ ✓ tests/ui/org-candidates-workspace.test.tsx  (1 test) 301ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ tests/ui/l4-card-proofs-focus.test.tsx  (1 test) 281ms
+ ✓ tests/lib/normalize-organization-website.test.ts  (5 tests) 4ms
+ ✓ tests/lib/cv-import-extract-job-store.test.ts  (1 test) 3ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/cron-account-deletion-workflow-route.test.ts  (2 tests) 6ms
+ ✓ tests/lib/compensation-normalization.test.ts  (3 tests) 1ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/lib/fairness-analytics.test.ts  (1 test) 686ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/lib/launch-alerting.test.ts  (3 tests) 2ms
+ ✓ tests/lib/copy-labels.test.ts  (5 tests) 2ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+ ✓ src/app/api/admin/__tests__/cron-summary-route.test.ts  (4 tests) 3ms
+ ✓ tests/ui/landing-copy-guardrails.test.tsx  (1 test) 31ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ tests/lib/portfolio-visibility.test.ts  (2 tests) 4ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+ ✓ tests/ui/command-palette-archived-links.test.tsx  (1 test) 222ms
+ ✓ tests/lib/taxonomy-normalization.test.ts  (4 tests) 4ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/app/llms-routes.test.ts  (2 tests) 7ms
+ ✓ tests/lib/org-membership-role.test.ts  (9 tests) 5ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/api/security-txt-route.test.ts  (2 tests) 13ms
+ ✓ src/lib/interviews/__tests__/calendar.test.ts  (2 tests) 6ms
+ ✓ tests/lib/skill-verification-email-links.test.ts  (1 test) 6ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+ ✓ src/lib/__tests__/python-internal-request-utils.test.ts  (4 tests) 5ms
+ ✓ tests/lib/nlp-extractor.test.ts  (2 tests) 82ms
+ ✓ tests/ui/widget-grid-skeleton.test.tsx  (2 tests) 59ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+ ✓ tests/lib/profile-snippet-url.test.ts  (3 tests) 3ms
+ ✓ tests/ui/landing-footer-links.test.tsx  (1 test) 161ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/lib/launch-ai-smoke-state.test.ts  (2 tests) 3ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ tests/lib/sanitize-return-path.test.ts  (3 tests) 3ms
+ ✓ tests/normalize-skill.test.ts  (1 test) 4ms
+ ✓ tests/api/mobile-bootstrap-route.test.ts  (1 test) 5ms
+ ✓ tests/lib/proof-trust-snapshots.test.ts  (3 tests) 2ms
+ ✓ src/actions/__tests__/auth-signup-schema.test.ts  (2 tests) 6ms
+ ✓ tests/ui/public-snippet-embed-page.test.tsx  (1 test) 9ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/lib/conversation-access.test.ts  (2 tests) 2ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/lib/matching-refresh-queue.test.ts  (2 tests) 1ms
+ ✓ tests/ui/public-snippet-page.test.tsx  (1 test) 6ms
+ ✓ tests/ui/public-fairness-note.test.tsx  (1 test) 7ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ tests/lib/export-download-filename.test.ts  (2 tests) 2ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/lib/launch-engagement-verification-smoke.test.ts  (1 test) 2ms
+ ✓ tests/api/feedback-submit-route.test.ts  (3 tests) 24ms
+ ✓ src/lib/__tests__/learning-provider.test.ts  (1 test) 298ms
+ ✓ tests/api/match-test-route.test.ts  (1 test) 8ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/lib/ai-provider-usage-controls.test.ts  (8 tests) 211ms
+ ✓ tests/lib/proof-artifact-text-extraction.test.ts  (9 tests) 16ms
+ ✓ src/lib/monitoring/__tests__/api-latency-percentile.test.ts  (4 tests) 2ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns a non-empty PDF response with expected headers
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T10:32:52.828Z","flow":"export","requestId":"RmGi18HmuWHG","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":1,"failureClass":null,"handle":"jane"}
+
+stderr | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns 401 when user is unauthenticated
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:52.821Z","flow":"export","requestId":"S58u0wBh23zT","actorId":null,"actorType":"anonymous","objectRefs":{},"outcome":"rejected","state":"portfolio_export_unauthorized","latencyMs":0,"failureClass":"unauthorized"}
+
+stderr | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns 404 when profile export data is unavailable
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:52.827Z","flow":"export","requestId":"NN3tlDiF-yXF","actorId":"user-1","actorType":"user_account","objectRefs":{},"outcome":"rejected","state":"portfolio_export_profile_missing","latencyMs":0,"failureClass":"profile_not_found"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > still returns PDF when analytics emission fails
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T10:32:52.830Z","flow":"export","requestId":"PBkNcjf7P8Qm","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns canonical JSON when format=json is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T10:32:52.831Z","flow":"export","requestId":"BRIP4mGvgbfU","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane","format":"json"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns text export when format=text is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T10:32:52.833Z","flow":"export","requestId":"B1glEZ6xus5Z","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane","format":"text"}
+
+ ✓ tests/api/portfolio-export-route.test.ts  (6 tests) 16ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/lib/gemini-taxonomy-shortlist.test.ts  (1 test) 3ms
+ ✓ tests/lib/ai-provider-gemini-client.test.ts  (12 tests) 17ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ src/app/api/monitoring/__tests__/launch-status-route.test.ts  (15 tests) 23ms
+stderr | src/app/api/monitoring/__tests__/launch-status-route.test.ts > /api/monitoring/launch-status > returns blocked stale persisted monitor evidence when live refresh fails entirely
+Live launch-status refresh failed; returning persisted status Error: network exploded
+    at /Users/yuriibakurov/proofound/src/app/api/monitoring/__tests__/launch-status-route.test.ts:792:7
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/lib/verification-composer.test.ts  (6 tests) 9ms
+ ✓ tests/api/start-from-cv-route.test.ts  (9 tests) 24ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/lib/proof-pack-assistant.test.ts  (6 tests) 16ms
+ ✓ tests/api/public-portfolio-export-route.test.ts  (9 tests) 13ms
+ ✓ tests/lib/canonical-proof-pack.test.ts  (5 tests) 13ms
+ ✓ tests/api/verification-composer-route.test.ts  (7 tests) 20ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/api/public-portfolio-summary-route.test.ts  (7 tests) 20ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/api/cron-launch-synthetic-checks-route.test.ts  (6 tests) 10ms
+ ✓ tests/api/portfolio-text-pack-route.test.ts  (3 tests) 15ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/lib/start-from-cv.test.ts  (13 tests) 15ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+ ✓ tests/canonical-domain.test.ts  (8 tests) 20ms
+ ✓ tests/lib/data-portability-contract.test.ts  (2 tests) 5ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/lib/ai-suggestion-cache.test.ts  (7 tests) 7ms
+ ✓ tests/lib/portfolio-export-data.test.ts  (1 test) 14ms
+ ✓ tests/api/proof-pack-assistant-route.test.ts  (6 tests) 45ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 401 when unauthenticated
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:54.230Z","flow":"export","requestId":"K3-Iwskhc0iP","actorId":null,"actorType":"anonymous","objectRefs":{},"outcome":"rejected","state":"org_export_unauthorized","latencyMs":0,"failureClass":"unauthorized"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 404 when organization export data is unavailable
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:54.263Z","flow":"export","requestId":"OXqO210veIkE","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_profile_unavailable","latencyMs":0,"failureClass":"organization_profile_unavailable"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 for canonical reviewer membership
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:54.341Z","flow":"export","requestId":"icWKbxOiQZRM","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":0,"failureClass":"forbidden"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 for inactive canonical owner membership
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:54.342Z","flow":"export","requestId":"zuuY9-cIThKc","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":1,"failureClass":"forbidden"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns a downloadable PDF on success
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T10:32:54.264Z","flow":"export","requestId":"_esGKiEF-MmL","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":0,"failureClass":null,"orgSlug":"acme"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns canonical JSON when format=json is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T10:32:54.334Z","flow":"export","requestId":"pvuoGsXyTgEE","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":4,"failureClass":null,"orgSlug":"acme","format":"json"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns text export when format=text is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T10:32:54.340Z","flow":"export","requestId":"RygqPGrkp4r1","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":0,"failureClass":null,"orgSlug":"acme","format":"text"}
+
+ ✓ tests/api/portfolio-org-export-route.test.ts  (9 tests) 117ms
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 404 when organization is missing
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:54.262Z","flow":"export","requestId":"MLZj8UhoMCKE","actorId":"user-1","actorType":"organization_member","objectRefs":{},"outcome":"rejected","state":"org_export_org_missing","latencyMs":0,"failureClass":"organization_not_found"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 when user is not an active org member
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T10:32:54.263Z","flow":"export","requestId":"sKt39o5ucri9","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":0,"failureClass":"forbidden"}
+
+ ✓ tests/lib/privacy-preflight.test.ts  (3 tests) 8ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/portfolio-trust-signals.test.ts  (3 tests) 46ms
+ ✓ tests/api/ai-suggestion-events-route.test.ts  (4 tests) 11ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+ ✓ tests/lib/ai-provider-smoke-artifact.test.ts  (4 tests) 44ms
+ ✓ tests/api/internal-health-diagnostics-route.test.ts  (2 tests) 7ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/lib/ai-request-safety.test.ts  (4 tests) 5ms
+ ✓ tests/api/cron-auth.test.ts  (9 tests) 7ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ ✓ tests/api/portfolio-visibility-route.test.ts  (2 tests) 15ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/api/public-health-route.test.ts  (2 tests) 5ms
+ ✓ tests/portfolio-visibility.test.ts  (2 tests) 52ms
+ ✓ tests/portfolio-pdf.test.ts  (1 test) 318ms
+ ✓ tests/api/privacy-preflight-route.test.ts  (5 tests) 18ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+ ✓ tests/lib/ai-usage-ledger-rate-limits.test.ts  (4 tests) 3ms
+ ✓ tests/lib/ai-launch-guardrails.test.ts  (5 tests) 50ms
+ ✓ tests/api/core-matching-assignment-route.test.ts  (1 test) 8ms
+ ✓ tests/api/feature-flags-route.test.ts  (1 test) 4ms
+ ✓ tests/lib/public-trust-export-data.test.ts  (3 tests) 2ms
+ ✓ tests/lib/verification-log-entries.test.ts  (3 tests) 2ms
+
+ Test Files  365 passed (365)
+      Tests  1783 passed (1783)
+   Start at  12:32:07
+   Duration  47.91s (transform 10.08s, setup 65.81s, collect 116.78s, tests 44.36s, environment 132.53s, prepare 23.77s)
+
+
+
+completedAt=2026-05-14T10:32:55.696Z
+exitCode=0
+durationMs=48709
+timedOut=false

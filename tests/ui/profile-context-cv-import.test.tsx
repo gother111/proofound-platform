@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ContextTab } from '@/components/profile/editable-profile/ContextTab';
 import { Tabs } from '@/components/ui/tabs';
+import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 
 vi.mock('@/components/profile/StartFromCvDialog', () => ({
   StartFromCvDialog: ({ onApplyComplete }: { onApplyComplete?: () => void }) => (
@@ -64,12 +65,25 @@ describe('profile context CV import', () => {
     expect(screen.queryByRole('button', { name: /Start from CV/i })).not.toBeInTheDocument();
   });
 
-  it('opens Start from CV from the Context tab and refreshes after apply', async () => {
+  it('keeps Start from CV hidden from generic profile context even when beta status is available', () => {
+    startFromCvStatus.visible = true;
+    startFromCvStatus.available = true;
+
+    renderContextTab({ ...baseProps, onImportComplete: vi.fn() });
+
+    expect(screen.queryByRole('button', { name: /Start from CV/i })).not.toBeInTheDocument();
+  });
+
+  it('opens Start from CV only from an explicitly approved private scaffolding surface', async () => {
     const onImportComplete = vi.fn();
     startFromCvStatus.visible = true;
     startFromCvStatus.available = true;
 
-    renderContextTab({ ...baseProps, onImportComplete });
+    renderContextTab({
+      ...baseProps,
+      cvScaffoldingSurface: START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE,
+      onImportComplete,
+    });
 
     fireEvent.click(screen.getAllByRole('button', { name: /Start from CV/i })[0]);
 
@@ -137,5 +151,63 @@ describe('profile context CV import', () => {
     expect(onEditExperience).toHaveBeenCalledTimes(1);
     expect(onEditEducation).toHaveBeenCalledTimes(1);
     expect(onEditVolunteering).toHaveBeenCalledTimes(1);
+  });
+
+  it('groups private context by supported type and surfaces proof signals', () => {
+    renderContextTab({
+      ...baseProps,
+      experiences: [
+        {
+          id: 'exp-1',
+          title: 'Product Lead',
+          organizationName: 'Acme',
+          orgDescription: 'Led onboarding delivery',
+          duration: '2020 - 2024',
+          outcomes: 'Reduced support load',
+          projects: 'Onboarding workflow',
+          colleagues: 'Product and support',
+          achievements: 'Launch owner',
+          measuredOutcomes: [
+            { id: 'outcome-1', name: 'Support tickets reduced', value: 23, unit: '%' },
+          ],
+          verified: true,
+        },
+      ],
+      education: [
+        {
+          id: 'edu-1',
+          institution: 'KTH',
+          degree: 'MSc Data Science',
+          duration: '2018 - 2020',
+          skills: 'Model evaluation',
+          projects: 'Capstone model audit',
+          verified: false,
+        },
+      ],
+      volunteering: [
+        {
+          id: 'vol-1',
+          title: 'Mentor',
+          orgDescription: 'Code Club',
+          duration: '2021 - 2022',
+          cause: 'Community learning',
+          impact: 'Mentored 12 students',
+          skillsDeployed: 'Workshop facilitation',
+          personalWhy: 'Local access',
+          verified: false,
+        },
+      ],
+    });
+
+    expect(screen.getByRole('heading', { name: 'Work' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Volunteering' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Education / learning' })).toBeInTheDocument();
+    expect(screen.getByText(/Support tickets reduced.*23 %/)).toBeInTheDocument();
+    expect(screen.getByText('Claimed outcome')).toBeInTheDocument();
+    expect(screen.getByText('Not independently verified')).toBeInTheDocument();
+    expect(screen.getByText('Model evaluation')).toBeInTheDocument();
+    expect(screen.getByText('Mentored 12 students')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /Proof Packs/i })).toHaveLength(3);
+    expect(screen.getByText('Verified')).toBeInTheDocument();
   });
 });

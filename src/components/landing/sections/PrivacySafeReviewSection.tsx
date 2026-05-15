@@ -28,9 +28,8 @@ export function PrivacySafeReviewSection() {
               Public does not mean exposed.
             </h2>
             <p className="mt-5 text-[1.08rem] leading-8 text-[var(--landing-text)]">
-              Proofound separates public portfolio publication from review-stage reveal. Early
-              review is blind by default. Identity-bearing reveal happens only when it is needed and
-              approved.
+              Proofound separates Public Page publication from review-stage reveal. Early review is
+              blind by default. Identity-bearing reveal happens only when it is needed and approved.
             </p>
           </div>
 

@@ -21,20 +21,17 @@ interface WeightsFiltersSheetProps {
 }
 
 const DEFAULT_WEIGHTS = {
-  values: 20,
-  causes: 15,
-  skills: 25,
+  skills: 30,
   experience: 15,
-  verifications: 8,
-  availability: 7,
-  location: 5,
-  compensation: 3,
-  language: 2,
+  verifications: 15,
+  availability: 12,
+  location: 10,
+  compensation: 8,
+  language: 5,
+  evidence: 5,
 };
 
 const WEIGHT_LABELS: Record<string, string> = {
-  values: 'Values Alignment',
-  causes: 'Causes & Impact',
   skills: 'Skills Match',
   experience: 'Experience',
   verifications: 'Verifications',
@@ -42,6 +39,7 @@ const WEIGHT_LABELS: Record<string, string> = {
   location: 'Location Match',
   compensation: 'Compensation Fit',
   language: 'Language',
+  evidence: 'Evidence Strength',
 };
 
 /**

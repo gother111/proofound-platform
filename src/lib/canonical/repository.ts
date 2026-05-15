@@ -1339,8 +1339,6 @@ export function deriveMatchReasonCodes(input: MatchAuditInput): MatchReasonCode[
 
   if ((subscores.skills || 0) >= 0.7) codes.add('skills_strong');
   if (missing.length > 0 || (input.gaps || []).length > 0) codes.add('skills_gap');
-  if ((subscores.pac || subscores.values || 0) >= 0.7) codes.add('purpose_alignment_strong');
-  else if ((subscores.pac || subscores.values || 0) >= 0.4) codes.add('purpose_alignment_partial');
   if ((subscores.verifications || 0) >= 0.7) codes.add('verification_ready');
   else if ((input.verificationGates || []).length > 0) codes.add('verification_gap');
   if ((subscores.availability || 0) >= 0.7 && (subscores.location || 0) >= 0.7) {

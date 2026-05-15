@@ -1,0 +1,60 @@
+# npm run test:privacy:extended
+startedAt=2026-05-14T10:40:22.140Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 test:privacy:extended
+> PROOFOUND_VITEST_TIMEOUT_MS=180000 node ./scripts/run-vitest-with-timeout.mjs --config vitest.supabase.config.ts tests/privacy/rls-policies-extended.test.ts tests/privacy/rls-mvp-isolation.test.ts
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (10) from .env.test -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (10) from .env.test -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+🔧 Setting up extended test users...
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+✅ Extended test users created
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+🧹 Cleaning up extended test data...
+
+ ✓ tests/privacy/rls-mvp-isolation.test.ts  (4 tests) 34496ms
+ ✓ tests/privacy/rls-policies-extended.test.ts  (27 tests) 37120ms
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+✅ Extended cleanup complete
+
+
+ Test Files  2 passed (2)
+      Tests  31 passed (31)
+   Start at  12:40:22
+   Duration  37.67s (transform 193ms, setup 46ms, collect 474ms, tests 71.62s, environment 1ms, prepare 101ms)
+
+
+
+completedAt=2026-05-14T10:41:00.556Z
+exitCode=0
+durationMs=38416
+timedOut=false

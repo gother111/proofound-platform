@@ -120,10 +120,14 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     await page.goto('/app/i/profile');
     await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
 
-    const completenessResponse = await page.request.get('/api/profile/completeness');
-    expect(completenessResponse.ok()).toBeTruthy();
-    const completenessPayload = (await completenessResponse.json()) as { percentage?: number };
-    expect(typeof completenessPayload.percentage).toBe('number');
+    const readinessResponse = await page.request.get('/api/individual/readiness');
+    expect(readinessResponse.ok()).toBeTruthy();
+    const readinessPayload = (await readinessResponse.json()) as {
+      states?: unknown[];
+      missingByState?: unknown;
+    };
+    expect(Array.isArray(readinessPayload.states)).toBe(true);
+    expect(readinessPayload.missingByState).toBeTruthy();
 
     let addSkillResponse = await apiPostJson(page.request, '/api/expertise/user-skills', {
       cat_id: 1,
@@ -193,14 +197,6 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     const nowIso = new Date().toISOString();
 
     // Seed matchability prerequisites so strict matching contracts exercise live result payloads.
-    const { error: purposeSeedError } = await supabase.from('individual_profiles').upsert(
-      {
-        user_id: individualUser.id,
-        mission: 'Strict mission statement for matchability seeding.',
-      },
-      { onConflict: 'user_id' }
-    );
-    expect(purposeSeedError).toBeNull();
 
     const { error: skillSeedError } = await supabase.from('skills').upsert(
       [
@@ -257,9 +253,9 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     const { error: matchingProfileError } = await supabase.from('matching_profiles').upsert(
       {
         profile_id: individualUser.id,
-        values_tags: ['integrity'],
-        cause_tags: ['education'],
+        desired_roles: ['Strict Full Stack Role'],
         work_mode: 'remote',
+        engagement_type: 'contract_consulting',
         country: 'US',
         city: 'New York',
         hours_min: 30,
@@ -267,13 +263,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
         comp_min: 80000,
         comp_max: 140000,
         currency: 'USD',
-        weights: {
-          mission: 0.25,
-          expertise: 0.35,
-          tools: 0.1,
-          logistics: 0.2,
-          recency: 0.1,
-        },
+        weights: {},
         availability_earliest: new Date().toISOString().slice(0, 10),
         availability_latest: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
           .toISOString()
@@ -474,14 +464,12 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     let updateVisibilityResponse = await apiPostJson(page.request, '/api/profile/visibility', {
       location: 'private',
-      mission: 'public',
       skills: 'network_only',
     });
     if (updateVisibilityResponse.status() === 403) {
       await page.goto('/app/i/settings');
       updateVisibilityResponse = await apiPostJson(page.request, '/api/profile/visibility', {
         location: 'private',
-        mission: 'public',
         skills: 'network_only',
       });
     }
@@ -493,17 +481,16 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     expect(getVisibilityResponse.ok()).toBeTruthy();
     const visibilityPayload = (await getVisibilityResponse.json()) as {
       location?: string;
-      mission?: string;
       skills?: string;
     };
     if (updateVisibilityStatus === 200) {
       expect(visibilityPayload.location).toBe('private');
-      expect(visibilityPayload.mission).toBe('public');
       expect(visibilityPayload.skills).toBe('network_only');
+      expect(visibilityPayload).not.toHaveProperty('mission');
     } else {
       expect(typeof visibilityPayload.location).toBe('string');
-      expect(typeof visibilityPayload.mission).toBe('string');
       expect(typeof visibilityPayload.skills).toBe('string');
+      expect(visibilityPayload).not.toHaveProperty('mission');
     }
 
     const dataExportResponse = await page.request.get('/api/data-export');

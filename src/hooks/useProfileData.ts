@@ -2,23 +2,17 @@ import { useState, useEffect, useCallback, useMemo, useTransition } from 'react'
 import type {
   ProfileData,
   BasicInfo,
-  PurposeLinks,
   ImpactStory,
   ImpactStoryVerificationRequestDispatchParams,
   ImpactStoryVerificationRequestDispatchResult,
   Experience,
   Education,
   Volunteering,
-  Value,
   Skill,
 } from '@/types/profile';
 import {
   getProfileData,
   updateBasicInfo as updateBasicInfoAction,
-  updateMission as updateMissionAction,
-  updateVision as updateVisionAction,
-  replaceValues,
-  replaceCauses,
   replaceSkills,
   createImpactStory,
   requestImpactStoryVerification as requestImpactStoryVerificationAction,
@@ -35,15 +29,10 @@ import {
   deleteVolunteering as deleteVolunteeringAction,
   toggleRedactMode as toggleRedactModeAction,
 } from '@/actions/profile';
-import { calculateProfileCompletion } from '@/lib/profileStorage';
 import { toast } from 'sonner';
 
 interface PendingState {
   updatingBasicInfo: boolean;
-  mission: boolean;
-  vision: boolean;
-  values: boolean;
-  causes: boolean;
   skills: boolean;
   impactStory: boolean;
   impactStoryVerification: boolean;
@@ -55,10 +44,6 @@ interface PendingState {
 
 const initialPending: PendingState = {
   updatingBasicInfo: false,
-  mission: false,
-  vision: false,
-  values: false,
-  causes: false,
   skills: false,
   impactStory: false,
   impactStoryVerification: false,
@@ -118,10 +103,6 @@ export function useProfileData(initialProfile: ProfileData | null = null) {
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [pending, setPending] = useState<PendingState>(initialPending);
   const [isPending, startTransition] = useTransition();
-  const profileCompletion = useMemo(
-    () => (profile ? calculateProfileCompletion(profile) : 5),
-    [profile]
-  );
 
   const retryLoad = useCallback(() => {
     setLoadError(null);
@@ -230,66 +211,6 @@ export function useProfileData(initialProfile: ProfileData | null = null) {
       startTransition(() => {
         runWithPending('updatingBasicInfo', () => updateBasicInfoAction(updates)).catch(() => {
           toast.error('Failed to update profile details.');
-        });
-      });
-    },
-    [profile, runWithPending]
-  );
-
-  const updateMission = useCallback(
-    (mission: string, links: PurposeLinks, visibility?: 'public' | 'network' | 'private') => {
-      if (!profile) return;
-      setProfile((prev) => (prev ? { ...prev, mission, missionLinks: links } : prev));
-      startTransition(() => {
-        runWithPending('mission', () => updateMissionAction(mission, links, visibility)).catch(
-          (error) => {
-            toast.error(
-              error instanceof Error && error.message ? error.message : 'Failed to update mission.'
-            );
-          }
-        );
-      });
-    },
-    [profile, runWithPending]
-  );
-
-  const updateVision = useCallback(
-    (vision: string, links: PurposeLinks, visibility?: 'public' | 'network' | 'private') => {
-      if (!profile) return;
-      setProfile((prev) => (prev ? { ...prev, vision, visionLinks: links } : prev));
-      startTransition(() => {
-        runWithPending('vision', () => updateVisionAction(vision, links, visibility)).catch(
-          (error) => {
-            toast.error(
-              error instanceof Error && error.message ? error.message : 'Failed to update vision.'
-            );
-          }
-        );
-      });
-    },
-    [profile, runWithPending]
-  );
-
-  const onReplaceValues = useCallback(
-    (values: Value[]) => {
-      if (!profile) return;
-      setProfile((prev) => (prev ? { ...prev, values } : prev));
-      startTransition(() => {
-        runWithPending('values', () => replaceValues(values)).catch(() => {
-          toast.error('Failed to update values.');
-        });
-      });
-    },
-    [profile, runWithPending]
-  );
-
-  const onReplaceCauses = useCallback(
-    (causes: string[]) => {
-      if (!profile) return;
-      setProfile((prev) => (prev ? { ...prev, causes } : prev));
-      startTransition(() => {
-        runWithPending('causes', () => replaceCauses(causes)).catch(() => {
-          toast.error('Failed to update causes.');
         });
       });
     },
@@ -731,12 +652,7 @@ export function useProfileData(initialProfile: ProfileData | null = null) {
     retryLoad,
     isPending,
     pending,
-    profileCompletion,
     updateBasicInfo,
-    updateMission,
-    updateVision,
-    replaceValues: onReplaceValues,
-    replaceCauses: onReplaceCauses,
     replaceSkills: onReplaceSkills,
     addImpactStory,
     sendImpactStoryVerificationRequest,

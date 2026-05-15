@@ -1,0 +1,290 @@
+# LAUNCH_MONITOR_PERSIST=0 LAUNCH_SMOKE_ARTIFACT_PATH=.artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json BASE_URL=http://localhost:3000 npm run monitor:launch
+startedAt=2026-05-14T10:59:40.803Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 monitor:launch
+> node --import tsx ./scripts/run-launch-synthetic-monitors.ts
+
+{
+  "ok": false,
+  "status": "fail",
+  "generatedAt": "2026-05-14T10:59:41.812Z",
+  "results": [
+    {
+      "monitorKey": "site_root",
+      "monitorGroup": "endpoint",
+      "status": "fail",
+      "severity": "p2",
+      "responseTimeMs": null,
+      "expectedState": "landing_live",
+      "observedState": "monitor_execution_failed",
+      "failureClass": "availability_regression",
+      "details": {
+        "kind": "http",
+        "path": "/",
+        "error": "fetch failed"
+      },
+      "checkedAt": "2026-05-14T10:59:43.315Z"
+    },
+    {
+      "monitorKey": "login_entry",
+      "monitorGroup": "endpoint",
+      "status": "fail",
+      "severity": "p1",
+      "responseTimeMs": null,
+      "expectedState": "login_live",
+      "observedState": "monitor_execution_failed",
+      "failureClass": "auth_entry_unavailable",
+      "details": {
+        "kind": "http",
+        "path": "/login",
+        "error": "fetch failed"
+      },
+      "checkedAt": "2026-05-14T10:59:43.322Z"
+    },
+    {
+      "monitorKey": "api_health",
+      "monitorGroup": "endpoint",
+      "status": "fail",
+      "severity": "p1",
+      "responseTimeMs": null,
+      "expectedState": "health_contract_ok",
+      "observedState": "monitor_execution_failed",
+      "failureClass": "health_contract_broken",
+      "details": {
+        "kind": "http",
+        "path": "/api/health",
+        "error": "fetch failed"
+      },
+      "checkedAt": "2026-05-14T10:59:43.323Z"
+    },
+    {
+      "monitorKey": "public_org_trust_page",
+      "monitorGroup": "endpoint",
+      "status": "fail",
+      "severity": "p2",
+      "responseTimeMs": null,
+      "expectedState": "seeded_public_org_trust_page_live",
+      "observedState": "monitor_execution_failed",
+      "failureClass": "seeded_public_org_trust_page_unavailable",
+      "details": {
+        "kind": "http",
+        "path": "/portfolio/org/proofound-labs",
+        "error": "fetch failed"
+      },
+      "checkedAt": "2026-05-14T10:59:43.325Z"
+    },
+    {
+      "monitorKey": "public_individual_portfolio_visible",
+      "monitorGroup": "synthetic-smoke",
+      "status": "pass",
+      "severity": "p1",
+      "responseTimeMs": 5462,
+      "expectedState": "public_individual_portfolio_visible",
+      "observedState": "public_individual_portfolio_visible",
+      "failureClass": null,
+      "details": {
+        "artifactPath": ".artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-05-14T10:59:40.787Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_failing",
+        "smokeStatus": "pass",
+        "smokeMessage": null,
+        "artifactMessage": "launch smoke artifact is fresh but failing and blocks launch readiness (failing scenarios: full_org_corridor_review_to_engagement_verification)",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-05-14T10:59:41.812Z",
+      "blocking": false
+    },
+    {
+      "monitorKey": "proof_creation_case",
+      "monitorGroup": "synthetic-smoke",
+      "status": "pass",
+      "severity": "p1",
+      "responseTimeMs": 2272,
+      "expectedState": "proof_creation_case_live",
+      "observedState": "proof_creation_case_live",
+      "failureClass": null,
+      "details": {
+        "artifactPath": ".artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-05-14T10:59:40.787Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_failing",
+        "smokeStatus": "pass",
+        "smokeMessage": null,
+        "artifactMessage": "launch smoke artifact is fresh but failing and blocks launch readiness (failing scenarios: full_org_corridor_review_to_engagement_verification)",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-05-14T10:59:41.812Z",
+      "blocking": false
+    },
+    {
+      "monitorKey": "public_org_trust_fixture_live",
+      "monitorGroup": "synthetic-smoke",
+      "status": "pass",
+      "severity": "p2",
+      "responseTimeMs": 30286,
+      "expectedState": "public_org_trust_fixture_live",
+      "observedState": "public_org_trust_fixture_live",
+      "failureClass": null,
+      "details": {
+        "artifactPath": ".artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-05-14T10:59:40.787Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_failing",
+        "smokeStatus": "pass",
+        "smokeMessage": null,
+        "artifactMessage": "launch smoke artifact is fresh but failing and blocks launch readiness (failing scenarios: full_org_corridor_review_to_engagement_verification)",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-05-14T10:59:41.812Z",
+      "blocking": false
+    },
+    {
+      "monitorKey": "full_org_corridor_review_to_engagement_verification",
+      "monitorGroup": "synthetic-smoke",
+      "status": "fail",
+      "severity": "p1",
+      "responseTimeMs": 86,
+      "expectedState": "full_org_corridor_review_to_engagement_verification_live",
+      "observedState": "smoke_artifact_check_failed",
+      "failureClass": "full_org_corridor_review_to_engagement_verification_regression",
+      "details": {
+        "artifactPath": ".artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-05-14T10:59:40.787Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_failing",
+        "smokeStatus": "fail",
+        "smokeMessage": "Full org corridor review to engagement verification case failed",
+        "artifactMessage": "launch smoke artifact is fresh but failing and blocks launch readiness (failing scenarios: full_org_corridor_review_to_engagement_verification)",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-05-14T10:59:41.812Z",
+      "blocking": true
+    },
+    {
+      "monitorKey": "hidden_portfolio_protected",
+      "monitorGroup": "synthetic-smoke",
+      "status": "pass",
+      "severity": "p1",
+      "responseTimeMs": 1945,
+      "expectedState": "hidden_portfolio_protected",
+      "observedState": "hidden_portfolio_protected",
+      "failureClass": null,
+      "details": {
+        "artifactPath": ".artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-05-14T10:59:40.787Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_failing",
+        "smokeStatus": "pass",
+        "smokeMessage": null,
+        "artifactMessage": "launch smoke artifact is fresh but failing and blocks launch readiness (failing scenarios: full_org_corridor_review_to_engagement_verification)",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-05-14T10:59:41.812Z",
+      "blocking": false
+    },
+    {
+      "monitorKey": "privacy_no_leak_case",
+      "monitorGroup": "synthetic-smoke",
+      "status": "pass",
+      "severity": "p1",
+      "responseTimeMs": 2721,
+      "expectedState": "privacy_no_leak_enforced",
+      "observedState": "privacy_no_leak_enforced",
+      "failureClass": null,
+      "details": {
+        "artifactPath": ".artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-05-14T10:59:40.787Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_failing",
+        "smokeStatus": "pass",
+        "smokeMessage": null,
+        "artifactMessage": "launch smoke artifact is fresh but failing and blocks launch readiness (failing scenarios: full_org_corridor_review_to_engagement_verification)",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-05-14T10:59:41.812Z",
+      "blocking": false
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "pass": 5,
+    "degraded": 0,
+    "fail": 5,
+    "p1Failures": 3,
+    "p2Failures": 2
+  },
+  "alertSummary": [
+    {
+      "monitorKey": "site_root",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "login_entry",
+      "alertStatus": "p1"
+    },
+    {
+      "monitorKey": "api_health",
+      "alertStatus": "p1"
+    },
+    {
+      "monitorKey": "public_org_trust_page",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "public_individual_portfolio_visible",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "proof_creation_case",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "public_org_trust_fixture_live",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "full_org_corridor_review_to_engagement_verification",
+      "alertStatus": "p1"
+    },
+    {
+      "monitorKey": "hidden_portfolio_protected",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "privacy_no_leak_case",
+      "alertStatus": "healthy"
+    }
+  ],
+  "evidence": {
+    "source": "live",
+    "artifactPath": ".artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json",
+    "smokeArtifactSchemaVersion": 2,
+    "smokeArtifactGeneratedAt": "2026-05-14T10:59:40.787Z",
+    "smokeArtifactAgeMinutes": 0,
+    "smokeFreshnessThresholdMinutes": 60,
+    "smokeFreshnessState": "fresh",
+    "smokeEvidenceSource": "artifact",
+    "persisted": false
+  },
+  "lastSuccessfulByMonitorKey": {}
+}
+
+
+completedAt=2026-05-14T10:59:43.340Z
+exitCode=1
+durationMs=2537
+timedOut=false

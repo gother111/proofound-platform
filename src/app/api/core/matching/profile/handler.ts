@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import {
@@ -30,7 +30,6 @@ import {
   buildCanonicalMatchScoreArtifact,
   compareCanonicalMatchOrder,
 } from '@/lib/matching/match-score-contract';
-import { annRetrieveSimilarAssignments } from '@/lib/matching/semantic';
 import { buildCanonicalMatchPersistenceFields } from '@/lib/matching/review-contract';
 import { CONSENT_TYPES } from '@/lib/privacy/consent-contract';
 
@@ -43,7 +42,7 @@ const MAX_ASSIGNMENT_SCAN_LIMIT = 500;
 
 const MatchRequestSchema = z.object({
   weights: z.record(z.number()).optional(),
-  mode: z.enum(['mission-first', 'skills-first', 'balanced']).optional(),
+  mode: z.string().optional(),
   useSemanticMatching: z.boolean().optional(),
   k: z.number().positive().max(100).optional(),
 });
@@ -62,12 +61,6 @@ interface MatchResult {
   gaps: Array<{ id: string; required: number; have: number }>;
   missing: string[];
   assignment: unknown;
-  pac: {
-    total: number;
-    valuesScore: number;
-    causesScore: number;
-    missionVisionScore: number;
-  };
   focusBoost: {
     total: number;
     matched: {
@@ -84,23 +77,13 @@ interface MatchResult {
   artifact: NonNullable<ReturnType<typeof buildCanonicalMatchScoreArtifact>>;
 }
 
-type CandidatePoolSource = 'full_scan' | 'ann_hybrid';
+type CandidatePoolSource = 'full_scan';
 
 function resolveAssignmentScanLimit(k: number): number {
   return Math.min(
     MAX_ASSIGNMENT_SCAN_LIMIT,
     Math.max(MIN_ASSIGNMENT_SCAN_LIMIT, k * DEFAULT_ASSIGNMENT_SCAN_MULTIPLIER)
   );
-}
-
-function resolveTwoStageEnabled(requestedSemanticFlag: boolean): boolean {
-  if (requestedSemanticFlag) {
-    return true;
-  }
-  const raw = process.env.MATCHING_TWO_STAGE_ENABLED?.trim().toLowerCase();
-  if (raw === 'true') return true;
-  if (raw === 'false') return false;
-  return true;
 }
 
 function parseVector(vector: unknown) {
@@ -117,15 +100,11 @@ function parseVector(vector: unknown) {
 
 function toLegacySubscores(subscoresJson: Record<string, unknown>): Record<string, number> {
   const skillsFit = Number(subscoresJson.skills_fit ?? 0) / 10000;
-  const purposeFit = Number(subscoresJson.purpose_fit ?? 0) / 10000;
   const constraintsFit = Number(subscoresJson.constraints_fit ?? 0) / 10000;
   const verificationFit = Number(subscoresJson.verification_fit ?? 0) / 10000;
   const proofFit = Number(subscoresJson.proof_fit ?? 0) / 10000;
   return {
-    values: Number(subscoresJson.values_fit ?? 0) / 10000,
-    causes: Number(subscoresJson.causes_fit ?? 0) / 10000,
     skills: skillsFit,
-    pac: purposeFit,
     constraints: constraintsFit,
     verifications: verificationFit,
     recency: proofFit,
@@ -173,9 +152,9 @@ export async function POST(request: NextRequest) {
       user = { id: authResult.user.id };
     }
 
-    const { k = 20, useSemanticMatching = false } = validatedData;
+    const { k = 20 } = validatedData;
     const assignmentScanLimit = resolveAssignmentScanLimit(k);
-    const twoStageEnabled = resolveTwoStageEnabled(useSemanticMatching);
+    const twoStageEnabled = false;
 
     const eligibility = await evaluateIndividualMatchability(user.id);
     if (!eligibility.eligible) {
@@ -269,41 +248,6 @@ export async function POST(request: NextRequest) {
     let activeAssignments: Array<any> = [];
     let candidatePoolSource: CandidatePoolSource = 'full_scan';
 
-    if (twoStageEnabled) {
-      const annMatches = await annRetrieveSimilarAssignments(user.id, assignmentScanLimit);
-      const annAssignmentIds = Array.from(new Set(annMatches.map((match) => match.id)));
-
-      if (annAssignmentIds.length > 0) {
-        candidatePoolSource = 'ann_hybrid';
-        const annAssignments = await db
-          .select(assignmentSelect)
-          .from(assignments)
-          .where(and(eq(assignments.status, 'active'), inArray(assignments.id, annAssignmentIds)));
-
-        const annOrder = new Map(annAssignmentIds.map((id, index) => [id, index]));
-        annAssignments.sort(
-          (left, right) => (annOrder.get(left.id) ?? 0) - (annOrder.get(right.id) ?? 0)
-        );
-
-        activeAssignments = annAssignments.slice(0, assignmentScanLimit);
-
-        const remaining = assignmentScanLimit - activeAssignments.length;
-        if (remaining > 0) {
-          const existingIds = activeAssignments.map((assignment) => assignment.id);
-          const fallbackAssignments = await db
-            .select(assignmentSelect)
-            .from(assignments)
-            .where(
-              existingIds.length > 0
-                ? and(eq(assignments.status, 'active'), notInArray(assignments.id, existingIds))
-                : eq(assignments.status, 'active')
-            )
-            .limit(remaining);
-          activeAssignments = [...activeAssignments, ...fallbackAssignments];
-        }
-      }
-    }
-
     if (activeAssignments.length === 0) {
       activeAssignments = await db
         .select(assignmentSelect)
@@ -392,8 +336,8 @@ export async function POST(request: NextRequest) {
         candidateSkills: skillsMap,
         assignmentValuesTags: assignment.valuesRequired || [],
         assignmentCauseTags: assignment.causeTags || [],
-        profileValuesTags: profile.valuesTags || [],
-        profileCauseTags: profile.causeTags || [],
+        profileValuesTags: [],
+        profileCauseTags: [],
         assignmentStartEarliest: assignment.startEarliest,
         assignmentStartLatest: assignment.startLatest,
         profileAvailabilityEarliest: profile.availabilityEarliest,
@@ -438,17 +382,10 @@ export async function POST(request: NextRequest) {
           proof_fit: Number(artifact.subscoresJson.proof_fit ?? 0) / 10000,
           constraints_fit: Number(artifact.subscoresJson.constraints_fit ?? 0) / 10000,
           verification_fit: Number(artifact.subscoresJson.verification_fit ?? 0) / 10000,
-          purpose_fit: Number(artifact.subscoresJson.purpose_fit ?? 0) / 10000,
         },
         gaps: [],
         missing: [],
         assignment: scrubDisallowedFields(assignment),
-        pac: {
-          total: legacySubscores.pac ?? 0,
-          valuesScore: legacySubscores.values ?? 0,
-          causesScore: legacySubscores.causes ?? 0,
-          missionVisionScore: 0,
-        },
         focusBoost: {
           total: 0,
           matched: {
@@ -591,7 +528,6 @@ export async function POST(request: NextRequest) {
         gaps: item.gaps,
         missing: item.missing,
         assignment: item.assignment,
-        pac: item.pac,
         focusBoost: item.focusBoost,
         reasonCodes: item.artifact.reasonCodes,
       })),

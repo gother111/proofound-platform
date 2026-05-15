@@ -3,15 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sparkles, Plus, BookOpen, FileText } from 'lucide-react';
+import { Sparkles, Plus, BookOpen } from 'lucide-react';
 import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
 
 interface EmptyStateProps {
   onAddSkill: () => void;
-  onImportCV?: () => void;
 }
 
-export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
+export function EmptyState({ onAddSkill }: EmptyStateProps) {
   const router = useRouter();
   const remediationActions = getIndividualRecoveryActions('expertise-empty');
 
@@ -33,33 +32,16 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
 
           {/* Description */}
           <p className="text-muted-foreground mb-8 max-w-lg text-center">
-            Add your first 3 skills to unlock charts and matching. Import from your CV/resume,
-            choose from over 18,000 curated skills, or create your own.
+            Add your first 3 skills to unlock charts and matching. Choose from over 18,000 curated
+            skills, attach proof, or create your own.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center items-center w-full">
-            {onImportCV && (
-              <Button
-                size="lg"
-                onClick={onImportCV}
-                className="flex items-center justify-center bg-proofound-forest text-white hover:bg-proofound-forest/90 w-full sm:w-auto"
-              >
-                <span className="flex items-center">
-                  <FileText className="mr-2 h-5 w-5" />
-                  Import from CV/Resume
-                </span>
-              </Button>
-            )}
             <Button
               size="lg"
               onClick={onAddSkill}
-              variant={onImportCV ? 'outline' : 'default'}
-              className={`flex items-center justify-center w-full sm:w-auto ${
-                onImportCV
-                  ? 'border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5'
-                  : 'bg-proofound-forest text-white hover:bg-proofound-forest/90'
-              }`}
+              className="flex items-center justify-center bg-proofound-forest text-white hover:bg-proofound-forest/90 w-full sm:w-auto"
             >
               <span className="flex items-center">
                 <Plus className="mr-2 h-5 w-5" />

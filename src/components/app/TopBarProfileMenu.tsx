@@ -1,23 +1,50 @@
 'use client';
 
 import { signOut } from '@/actions/auth';
+import Link from 'next/link';
 
 interface TopBarProfileMenuProps {
   userName: string;
+  basePath: string;
   onClose: () => void;
 }
 
-export function TopBarProfileMenu({ userName, onClose }: TopBarProfileMenuProps) {
+export function TopBarProfileMenu({ userName, basePath, onClose }: TopBarProfileMenuProps) {
+  const isIndividual = basePath === '/app/i';
+  const menuLinks = isIndividual
+    ? [
+        { href: '/app/i/settings', label: 'Account settings' },
+        { href: '/app/i/settings/privacy', label: 'Privacy controls' },
+        { href: '/app/i/settings?tab=privacy', label: 'Export or delete data' },
+        { href: '/app/i/settings/audit-log', label: 'Audit log' },
+      ]
+    : [
+        { href: `${basePath}/profile`, label: 'Organization profile' },
+        { href: `${basePath}/portfolio`, label: 'Public preview' },
+      ];
+
   return (
     <div
       role="menu"
       aria-label="Profile menu"
-      className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-proofound-stone/60 bg-white p-1 text-proofound-charcoal shadow-lg"
+      className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-proofound-stone/60 bg-white p-1 text-proofound-charcoal shadow-lg"
     >
       <div className="flex flex-col px-2 py-1.5">
         <span className="text-sm font-medium">{userName}</span>
         <span className="text-xs text-muted-foreground">Signed in</span>
       </div>
+      <div className="-mx-1 my-1 h-px bg-proofound-stone/60" />
+      {menuLinks.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          role="menuitem"
+          onClick={onClose}
+          className="block rounded-md px-2 py-1.5 text-sm outline-none hover:bg-proofound-stone/30 focus:bg-proofound-stone/30"
+        >
+          {item.label}
+        </Link>
+      ))}
       <div className="-mx-1 my-1 h-px bg-proofound-stone/60" />
       <form action={signOut}>
         <button

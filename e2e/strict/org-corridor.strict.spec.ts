@@ -312,7 +312,7 @@ test.describe('Strict Authenticated Org Corridor', () => {
     await expect(page.getByLabel('Launch role')).toBeVisible();
 
     await gotoWithReadyState(page, `/app/o/${organization.slug}/profile`, async () => {
-      await expect(page.getByRole('heading', { name: 'Organization trust profile' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Organization Profile' })).toBeVisible();
     });
 
     await gotoWithReadyState(page, `/app/o/${organization.slug}/home`, async () => {
@@ -473,7 +473,6 @@ test.describe('Strict Authenticated Org Corridor', () => {
       '/api/match/assignment',
       {
         assignmentId,
-        mode: 'balanced',
         k: 20,
       },
       {
@@ -542,7 +541,6 @@ test.describe('Strict Authenticated Org Corridor', () => {
       '/api/match/assignment',
       {
         assignmentId,
-        mode: 'balanced',
         k: 20,
       }
     );

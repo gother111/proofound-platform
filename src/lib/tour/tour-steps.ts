@@ -41,7 +41,7 @@ export const individualTourSteps: Step[] = [
   },
   {
     target: '[data-tour="opportunities-section"]',
-    content: `Once proof and privacy are ready, matched opportunities will appear here. We use ${UI_VOCABULARY.pacLabel} scoring to find work that aligns with your values and causes.`,
+    content: `Once proof and privacy are ready, matched opportunities will appear here. We use ${UI_VOCABULARY.pacLabel} scoring to compare skills, evidence, freshness, verification, and practical constraints.`,
     placement: 'bottom',
   },
   {
@@ -51,7 +51,7 @@ export const individualTourSteps: Step[] = [
     placement: 'bottom',
   },
   {
-    target: '[data-tour="profile-completion"]',
+    target: '[data-tour="proof-readiness"]',
     content:
       'Track your proof readiness here. Start with one Proof Pack, then strengthen trust when it matters.',
     placement: 'left',

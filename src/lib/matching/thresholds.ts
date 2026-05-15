@@ -18,11 +18,11 @@ export type MatchabilityTier = 'none' | 'lite' | 'strong';
 export function resolveMatchabilityTier(input: {
   skillsWithRecency: number;
   proofCount: number;
-  hasPurpose: boolean;
+  hasIntentSignal: boolean;
   hasConstraints: boolean;
 }): MatchabilityTier {
   const baseCriteriaMet =
-    input.proofCount >= MATCHABILITY_MIN_PROOFS && input.hasPurpose && input.hasConstraints;
+    input.proofCount >= MATCHABILITY_MIN_PROOFS && input.hasIntentSignal && input.hasConstraints;
 
   if (!baseCriteriaMet || input.skillsWithRecency < MATCHABILITY_LITE_SKILLS_WITH_RECENCY) {
     return 'none';

@@ -199,15 +199,15 @@ function buildGuidedSteps(
     },
     {
       id: 'publish_portfolio',
-      label: 'Publish portfolio',
+      label: 'Publish Public Page',
       detail:
-        'Publish when one proof-backed signal is public-safe. Values, causes, and broad skill setup are not required for day one.',
+        'Publish a direct-link proof snapshot when one proof-backed signal is public-safe. Broad profile setup is not required for day one.',
       state: resolveStepState(5, activeIndex),
       icon: Rocket,
       actions: [
         {
           id: 'publish',
-          label: checks.hasProofForPublishing ? 'Publish portfolio' : 'Choose what to publish',
+          label: checks.hasProofForPublishing ? 'Publish Public Page' : 'Choose what to publish',
           onClick: checks.hasProofForPublishing ? handlers.onOpenPortfolio : handlers.onOpenProofs,
           testId: 'guided-publish-cta',
         },
@@ -273,7 +273,7 @@ export function GuidedProfileSetupView({
               testId: 'guided-dominant-proof-cta',
             }
           : {
-              label: 'Publish portfolio',
+              label: 'Publish Public Page',
               onClick: onOpenPortfolio,
               testId: 'guided-dominant-proof-cta',
             };

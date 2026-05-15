@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  ArrowDownWideNarrow,
   User,
   Briefcase,
   ExternalLink,
@@ -15,6 +16,7 @@ import {
   Send,
   Trash2,
   Wand2,
+  ListFilter,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -60,18 +62,97 @@ type ResendSentRequestResponse = {
   bundled?: boolean;
 };
 
-type RequestStatusFilter = 'pending' | 'accepted' | 'declined' | 'all';
+type RequestStatusFilter =
+  | 'all'
+  | 'active'
+  | 'pending'
+  | 'needs_attention'
+  | 'declined'
+  | 'expired_stale'
+  | 'revoked_corrected';
+type RequestSortMode = 'recency' | 'scope';
 
-const STATUS_FILTERS: RequestStatusFilter[] = ['pending', 'accepted', 'declined', 'all'];
+const STATUS_FILTERS: Array<{ value: RequestStatusFilter; label: string }> = [
+  { value: 'all', label: 'All' },
+  { value: 'active', label: 'Active' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'needs_attention', label: 'Needs attention' },
+  { value: 'declined', label: 'Declined' },
+  { value: 'expired_stale', label: 'Expired / stale' },
+  { value: 'revoked_corrected', label: 'Revoked / corrected' },
+];
+
+const ATTENTION_STATUSES = new Set<VerificationRequest['status']>([
+  'failed',
+  'contradicted',
+  'disputed',
+]);
+const REVOKED_OR_CORRECTED_STATUSES = new Set<VerificationRequest['status']>([
+  'revoked',
+  'corrected',
+  'cancelled',
+]);
+
+function parseTime(value: string | null | undefined): number {
+  if (!value) return 0;
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
+function isPastExpiry(request: VerificationRequest, nowMs: number) {
+  const expiresAtMs = parseTime(request.expiresAt);
+  return expiresAtMs > 0 && expiresAtMs < nowMs;
+}
+
+function isExpiredOrStale(request: VerificationRequest, nowMs: number) {
+  return request.status === 'expired' || isPastExpiry(request, nowMs);
+}
+
+function isActiveVerification(request: VerificationRequest, nowMs: number) {
+  return request.status === 'accepted' && !isExpiredOrStale(request, nowMs);
+}
+
+function isPendingVerification(request: VerificationRequest, nowMs: number) {
+  return request.status === 'pending' && !isExpiredOrStale(request, nowMs);
+}
+
+function isNeedsAttention(request: VerificationRequest, nowMs: number) {
+  if (ATTENTION_STATUSES.has(request.status)) {
+    return true;
+  }
+
+  const expiresAtMs = parseTime(request.expiresAt);
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  return request.status === 'pending' && expiresAtMs > nowMs && expiresAtMs - nowMs <= sevenDaysMs;
+}
 
 function filterByStatus(
   requests: VerificationRequest[],
-  filter: RequestStatusFilter
+  filter: RequestStatusFilter,
+  nowMs: number
 ): VerificationRequest[] {
   if (filter === 'all') {
     return requests;
   }
-  return requests.filter((request) => request.status === filter);
+
+  return requests.filter((request) => {
+    if (filter === 'active') {
+      return isActiveVerification(request, nowMs);
+    }
+    if (filter === 'pending') {
+      return isPendingVerification(request, nowMs);
+    }
+    if (filter === 'needs_attention') {
+      return isNeedsAttention(request, nowMs);
+    }
+    if (filter === 'declined') {
+      return request.status === 'declined';
+    }
+    if (filter === 'expired_stale') {
+      return isExpiredOrStale(request, nowMs);
+    }
+    return REVOKED_OR_CORRECTED_STATUSES.has(request.status);
+  });
 }
 
 export function VerificationsClient({
@@ -91,6 +172,10 @@ export function VerificationsClient({
   const [composerOpen, setComposerOpen] = useState(false);
   const [deletingRequestIds, setDeletingRequestIds] = useState<Record<string, boolean>>({});
   const [resendingRequestIds, setResendingRequestIds] = useState<Record<string, boolean>>({});
+  const [incomingFilter, setIncomingFilter] = useState<RequestStatusFilter>('all');
+  const [sentFilter, setSentFilter] = useState<RequestStatusFilter>('all');
+  const [sortMode, setSortMode] = useState<RequestSortMode>('recency');
+  const nowMs = Date.now();
 
   const handleRespond = (request: VerificationRequest, action: 'accept' | 'decline') => {
     setSelectedRequest(request);
@@ -127,7 +212,8 @@ export function VerificationsClient({
       return (
         request.status === 'pending' ||
         request.status === 'declined' ||
-        request.status === 'expired'
+        request.status === 'expired' ||
+        request.status === 'revoked'
       );
     }
 
@@ -135,7 +221,8 @@ export function VerificationsClient({
       return (
         request.status === 'pending' ||
         request.status === 'declined' ||
-        request.status === 'expired'
+        request.status === 'expired' ||
+        request.status === 'revoked'
       );
     }
 
@@ -143,7 +230,8 @@ export function VerificationsClient({
       request.status === 'pending' ||
       request.status === 'failed' ||
       request.status === 'declined' ||
-      request.status === 'expired'
+      request.status === 'expired' ||
+      request.status === 'revoked'
     );
   };
 
@@ -361,6 +449,22 @@ export function VerificationsClient({
     return 'This skill keeps a bounded attestation linked to the attached proof.';
   };
 
+  const getScopeLabel = (request: VerificationRequest): string => {
+    if (request.subjectType === 'custom_bundle') {
+      return 'Proof Pack bundle';
+    }
+
+    if (request.subjectType === 'impact_story') {
+      return 'Proof Pack outcome';
+    }
+
+    if (request.requestKind === 'human_observed_attestation') {
+      return 'Skill observed in context';
+    }
+
+    return 'Skill claim';
+  };
+
   const getRequestedPersonLabel = (request: VerificationRequest): string => {
     const source = request.verifierRelationship || request.verifierSource || 'verifier';
     return request.verifierEmail ? `${request.verifierEmail} (${source})` : source;
@@ -472,8 +576,14 @@ export function VerificationsClient({
     if (status === 'accepted') {
       return 'border-emerald-500 text-emerald-500 bg-emerald-100 dark:bg-emerald-500/10';
     }
-    if (status === 'declined' || status === 'failed') {
+    if (status === 'declined' || status === 'failed' || status === 'contradicted') {
       return 'border-destructive text-destructive bg-destructive/10';
+    }
+    if (status === 'revoked' || status === 'corrected' || status === 'cancelled') {
+      return 'border-slate-500 text-slate-600 bg-slate-100 dark:bg-slate-500/10 dark:text-slate-300';
+    }
+    if (status === 'disputed') {
+      return 'border-orange-500 text-orange-600 bg-orange-100 dark:bg-orange-500/10';
     }
     return 'border-muted-foreground text-muted-foreground bg-muted';
   };
@@ -497,8 +607,13 @@ export function VerificationsClient({
       {request.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
       {request.status === 'accepted' && <CheckCircle2 className="w-3 h-3 mr-1" />}
       {request.status === 'declined' && <XCircle className="w-3 h-3 mr-1" />}
-      {request.status === 'failed' && <AlertCircle className="w-3 h-3 mr-1" />}
+      {(request.status === 'failed' ||
+        request.status === 'contradicted' ||
+        request.status === 'disputed') && <AlertCircle className="w-3 h-3 mr-1" />}
       {request.status === 'expired' && <Clock className="w-3 h-3 mr-1" />}
+      {(request.status === 'revoked' ||
+        request.status === 'corrected' ||
+        request.status === 'cancelled') && <XCircle className="w-3 h-3 mr-1" />}
       {verificationStatusLabel(request.status)}
     </Badge>
   );
@@ -520,7 +635,13 @@ export function VerificationsClient({
   };
 
   const renderIncomingRequestCard = (request: VerificationRequest) => (
-    <Card variant="bento" key={`${request.subjectType}-${request.id}`} className="p-4 sm:p-6">
+    <Card
+      variant="bento"
+      key={`${request.subjectType}-${request.id}`}
+      className="p-4 sm:p-6"
+      role="listitem"
+      data-testid="verification-request-row"
+    >
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-proofound-stone text-proofound-charcoal dark:bg-muted dark:text-foreground">
           <span className="text-sm font-medium">{getRequesterInitials(request)}</span>
@@ -542,27 +663,50 @@ export function VerificationsClient({
             </div>
           </div>
 
-          <div className="mb-3 p-3 rounded-lg bg-proofound-parchment dark:bg-muted/50">
-            <div className="flex items-center gap-2 mb-1">
-              <ShieldCheck className="w-4 h-4 text-proofound-forest dark:text-primary" />
-              <span className="font-medium text-sm text-proofound-charcoal dark:text-foreground">
-                {getRequestSubject(request)}
-              </span>
+          <div className="mb-3 grid gap-3 rounded-lg bg-proofound-parchment p-3 dark:bg-muted/50 sm:grid-cols-2">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                Scope
+              </p>
+              <p className="mt-1 text-sm font-medium text-proofound-charcoal dark:text-foreground">
+                {getScopeLabel(request)}
+              </p>
             </div>
-            <p className="text-xs ml-6 text-muted-foreground">Claim: {getClaimSummary(request)}</p>
-            <p className="text-xs ml-6 mt-1 text-muted-foreground">
-              If confirmed: {getConfirmationOutcome(request)}
-            </p>
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                Tied to
+              </p>
+              <p className="mt-1 flex items-center gap-2 text-sm font-medium text-proofound-charcoal dark:text-foreground">
+                <ShieldCheck className="h-4 w-4 text-proofound-forest dark:text-primary" />
+                {getRequestSubject(request)}
+              </p>
+            </div>
+            <div className="sm:col-span-2">
+              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                Claim
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">{getClaimSummary(request)}</p>
+            </div>
+            <div className="sm:col-span-2">
+              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                Outcome if confirmed
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {getConfirmationOutcome(request)}
+              </p>
+            </div>
             {getBreadcrumb(request) && (
-              <p className="text-xs ml-6 text-muted-foreground">{getBreadcrumb(request)}</p>
+              <p className="text-xs text-muted-foreground sm:col-span-2">
+                {getBreadcrumb(request)}
+              </p>
             )}
             {request.subjectType === 'skill' && request.skills?.competency_level && (
-              <p className="text-xs ml-6 mt-1 text-muted-foreground">
+              <p className="text-xs text-muted-foreground sm:col-span-2">
                 Competency: {getCompetencyLabel(request.skills.competency_level)}
               </p>
             )}
             {request.subjectType === 'impact_story' && request.verifierRelationship && (
-              <p className="text-xs ml-6 mt-1 text-muted-foreground">
+              <p className="text-xs text-muted-foreground sm:col-span-2">
                 Relationship: {request.verifierRelationship}
               </p>
             )}
@@ -626,7 +770,13 @@ export function VerificationsClient({
   );
 
   const renderSentRequestCard = (request: VerificationRequest) => (
-    <Card variant="bento" key={`${request.subjectType}-${request.id}`} className="p-4 sm:p-6">
+    <Card
+      variant="bento"
+      key={`${request.subjectType}-${request.id}`}
+      className="p-4 sm:p-6"
+      role="listitem"
+      data-testid="verification-request-row"
+    >
       <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-base mb-1 flex items-center gap-2 text-proofound-charcoal dark:text-foreground">
@@ -645,30 +795,52 @@ export function VerificationsClient({
         </div>
       </div>
 
-      <div className="mb-3 p-3 rounded-lg bg-proofound-parchment dark:bg-muted/50">
-        <div className="flex items-center gap-2 mb-1">
-          <ShieldCheck className="w-4 h-4 text-proofound-forest dark:text-primary" />
-          <span className="font-medium text-sm text-proofound-charcoal dark:text-foreground">
-            {getRequestSubject(request)}
-          </span>
+      <div className="mb-3 grid gap-3 rounded-lg bg-proofound-parchment p-3 dark:bg-muted/50 sm:grid-cols-2">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Scope
+          </p>
+          <p className="mt-1 text-sm font-medium text-proofound-charcoal dark:text-foreground">
+            {getScopeLabel(request)}
+          </p>
         </div>
-        <p className="text-xs ml-6 text-muted-foreground">Claim: {getClaimSummary(request)}</p>
-        <p className="text-xs ml-6 mt-1 text-muted-foreground">
-          Asked: {getRequestedPersonLabel(request)}
-        </p>
-        <p className="text-xs ml-6 mt-1 text-muted-foreground">
-          If confirmed: {getConfirmationOutcome(request)}
-        </p>
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Tied to
+          </p>
+          <p className="mt-1 flex items-center gap-2 text-sm font-medium text-proofound-charcoal dark:text-foreground">
+            <ShieldCheck className="h-4 w-4 text-proofound-forest dark:text-primary" />
+            {getRequestSubject(request)}
+          </p>
+        </div>
+        <div className="sm:col-span-2">
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Claim
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{getClaimSummary(request)}</p>
+        </div>
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Requested from
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{getRequestedPersonLabel(request)}</p>
+        </div>
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Outcome if confirmed
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{getConfirmationOutcome(request)}</p>
+        </div>
         {getBreadcrumb(request) && (
-          <p className="text-xs ml-6 text-muted-foreground">{getBreadcrumb(request)}</p>
+          <p className="text-xs text-muted-foreground sm:col-span-2">{getBreadcrumb(request)}</p>
         )}
         {request.subjectType !== 'skill' && request.verifierRelationship && (
-          <p className="text-xs ml-6 mt-1 text-muted-foreground">
+          <p className="text-xs text-muted-foreground sm:col-span-2">
             Relationship: {request.verifierRelationship}
           </p>
         )}
         {request.subjectType === 'custom_bundle' && request.bundleItemCount ? (
-          <p className="text-xs ml-6 mt-1 text-muted-foreground">
+          <p className="text-xs text-muted-foreground sm:col-span-2">
             {request.bundleItemCount} artifact{request.bundleItemCount === 1 ? '' : 's'}
           </p>
         ) : null}
@@ -746,7 +918,8 @@ export function VerificationsClient({
 
   const renderEmptyState = (status: RequestStatusFilter, mode: 'incoming' | 'sent') => {
     const modeText = mode === 'incoming' ? 'incoming' : 'sent';
-    const statusText = status === 'all' ? '' : `${verificationStatusLabel(status).toLowerCase()} `;
+    const statusLabel = STATUS_FILTERS.find((item) => item.value === status)?.label ?? 'filtered';
+    const statusText = status === 'all' ? '' : `${statusLabel.toLowerCase()} `;
 
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-proofound-stone/80 bg-white/55 px-4 py-14">
@@ -766,47 +939,134 @@ export function VerificationsClient({
     );
   };
 
-  const renderStatusTabs = (requests: VerificationRequest[], mode: 'incoming' | 'sent') => (
-    <Tabs defaultValue="pending" className="w-full">
-      <TabsList className="mb-6 max-w-full overflow-x-auto">
-        {STATUS_FILTERS.map((status) => {
-          const filteredCount = filterByStatus(requests, status).length;
-          const label = status.charAt(0).toUpperCase() + status.slice(1);
+  const sortRequests = (requests: VerificationRequest[]) =>
+    [...requests].sort((left, right) => {
+      const recencyDelta = parseTime(right.createdAt) - parseTime(left.createdAt);
+      if (sortMode === 'recency') {
+        return recencyDelta;
+      }
 
-          return (
-            <TabsTrigger key={status} value={status} className="relative">
-              {label}
-              {filteredCount > 0 && (
-                <span
-                  className={cn(
-                    'ml-2 px-2 py-0.5 rounded-full text-xs font-medium',
-                    status === 'pending'
-                      ? 'bg-amber-500 text-white dark:bg-amber-500/10 dark:text-amber-500'
-                      : 'bg-proofound-stone text-proofound-charcoal dark:bg-muted dark:text-foreground'
-                  )}
-                >
-                  {filteredCount}
-                </span>
-              )}
-            </TabsTrigger>
-          );
-        })}
-      </TabsList>
+      const leftScope = `${getScopeLabel(left)} ${getRequestSubject(left)}`.toLowerCase();
+      const rightScope = `${getScopeLabel(right)} ${getRequestSubject(right)}`.toLowerCase();
+      const scopeDelta = leftScope.localeCompare(rightScope);
+      return scopeDelta === 0 ? recencyDelta : scopeDelta;
+    });
 
-      {STATUS_FILTERS.map((status) => {
-        const filteredRequests = filterByStatus(requests, status);
-        return (
-          <TabsContent key={status} value={status} className="space-y-4">
-            {filteredRequests.length === 0
-              ? renderEmptyState(status, mode)
-              : filteredRequests.map(
-                  mode === 'incoming' ? renderIncomingRequestCard : renderSentRequestCard
+  const renderListControls = (
+    requests: VerificationRequest[],
+    mode: 'incoming' | 'sent',
+    activeFilter: RequestStatusFilter,
+    onFilterChange: (filter: RequestStatusFilter) => void
+  ) => (
+    <div className="mb-6 space-y-4 rounded-xl border border-proofound-stone/70 bg-white/80 p-3 dark:border-border dark:bg-background/70">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div
+          role="group"
+          aria-label={`${mode} verification filters`}
+          className="flex max-w-full flex-wrap gap-2"
+        >
+          {STATUS_FILTERS.map((filter) => {
+            const filteredCount = filterByStatus(requests, filter.value, nowMs).length;
+            const isSelected = activeFilter === filter.value;
+
+            return (
+              <Button
+                key={filter.value}
+                type="button"
+                size="sm"
+                variant={isSelected ? 'default' : 'outline'}
+                aria-pressed={isSelected}
+                onClick={() => onFilterChange(filter.value)}
+                className={cn(
+                  'h-auto min-h-9 justify-start gap-2 rounded-md px-3 py-2 text-xs',
+                  isSelected
+                    ? 'bg-proofound-forest text-white hover:bg-proofound-forest/90'
+                    : 'bg-white text-muted-foreground hover:text-foreground dark:bg-background'
                 )}
-          </TabsContent>
-        );
-      })}
-    </Tabs>
+              >
+                {filter.label}
+                {filteredCount > 0 && (
+                  <span
+                    className={cn(
+                      'rounded-full px-2 py-0.5 text-[11px] font-medium',
+                      isSelected
+                        ? 'bg-white/20 text-white'
+                        : 'bg-proofound-stone text-proofound-charcoal dark:bg-muted dark:text-foreground'
+                    )}
+                  >
+                    {filteredCount}
+                  </span>
+                )}
+              </Button>
+            );
+          })}
+        </div>
+
+        <div role="group" aria-label="Sort verifications" className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant={sortMode === 'recency' ? 'default' : 'outline'}
+            aria-pressed={sortMode === 'recency'}
+            onClick={() => setSortMode('recency')}
+            className={cn(
+              'h-auto min-h-9 rounded-md px-3 py-2 text-xs',
+              sortMode === 'recency'
+                ? 'bg-proofound-charcoal text-white hover:bg-proofound-charcoal/90'
+                : 'bg-white dark:bg-background'
+            )}
+          >
+            <ArrowDownWideNarrow className="mr-2 h-3.5 w-3.5" />
+            Newest
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={sortMode === 'scope' ? 'default' : 'outline'}
+            aria-pressed={sortMode === 'scope'}
+            onClick={() => setSortMode('scope')}
+            className={cn(
+              'h-auto min-h-9 rounded-md px-3 py-2 text-xs',
+              sortMode === 'scope'
+                ? 'bg-proofound-charcoal text-white hover:bg-proofound-charcoal/90'
+                : 'bg-white dark:bg-background'
+            )}
+          >
+            <ListFilter className="mr-2 h-3.5 w-3.5" />
+            Scope
+          </Button>
+        </div>
+      </div>
+      <p className="text-xs leading-5 text-muted-foreground">
+        Active means accepted and current. Pending requests are waiting for a response and do not
+        count as active proof.
+      </p>
+    </div>
   );
+
+  const renderRequestList = (
+    requests: VerificationRequest[],
+    mode: 'incoming' | 'sent',
+    activeFilter: RequestStatusFilter,
+    onFilterChange: (filter: RequestStatusFilter) => void
+  ) => {
+    const filteredRequests = sortRequests(filterByStatus(requests, activeFilter, nowMs));
+
+    return (
+      <div>
+        {renderListControls(requests, mode, activeFilter, onFilterChange)}
+        {filteredRequests.length === 0 ? (
+          renderEmptyState(activeFilter, mode)
+        ) : (
+          <div role="list" className="space-y-4">
+            {filteredRequests.map(
+              mode === 'incoming' ? renderIncomingRequestCard : renderSentRequestCard
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <AppSurface>
@@ -853,10 +1113,12 @@ export function VerificationsClient({
           </TabsList>
 
           <TabsContent value="incoming">
-            {renderStatusTabs(incomingRequests, 'incoming')}
+            {renderRequestList(incomingRequests, 'incoming', incomingFilter, setIncomingFilter)}
           </TabsContent>
 
-          <TabsContent value="sent">{renderStatusTabs(sentRequests, 'sent')}</TabsContent>
+          <TabsContent value="sent">
+            {renderRequestList(sentRequests, 'sent', sentFilter, setSentFilter)}
+          </TabsContent>
         </Tabs>
       </div>
 

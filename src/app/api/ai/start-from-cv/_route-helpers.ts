@@ -118,6 +118,8 @@ export function safeStartFromCvMessage(code: string) {
   switch (code) {
     case 'START_FROM_CV_DISABLED':
       return 'Start from CV is not available.';
+    case 'START_FROM_CV_APPROVED_SCAFFOLDING_REQUIRED':
+      return 'Start from CV is archived unless enabled for approved private first-proof scaffolding.';
     case 'BROWSER_CV_OCR_MUST_STAY_DISABLED':
       return 'Start from CV is not available while browser OCR is enabled.';
     case 'START_FROM_CV_NOT_INVITED':

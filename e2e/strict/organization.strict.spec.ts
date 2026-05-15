@@ -139,7 +139,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     await expect(page.getByText('You are currently signed in as Owner.')).toBeVisible();
 
     await gotoWithReadyState(page, `/app/o/${organization.slug}/profile`, async () => {
-      await expect(page.getByRole('heading', { name: 'Organization trust profile' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Organization Profile' })).toBeVisible();
     });
     await expect(page.getByRole('textbox', { name: 'Organization name' })).toHaveValue(
       organization.displayName
@@ -303,7 +303,6 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       '/api/match/assignment',
       {
         assignmentId,
-        mode: 'balanced',
         k: 20,
       },
       {
@@ -317,7 +316,6 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
         '/api/match/assignment',
         {
           assignmentId,
-          mode: 'balanced',
           k: 20,
         },
         {

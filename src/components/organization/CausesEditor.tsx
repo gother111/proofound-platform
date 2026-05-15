@@ -183,8 +183,8 @@ export function OrganizationCausesEditor({
       {causes.length === 0 && !disabled && (
         <Card className="p-4 bg-muted/30">
           <p className="text-sm text-muted-foreground">
-            💡 Tip: Select causes that align with your organization&apos;s mission and values. These
-            help candidates understand your impact focus and will be used in PAC Score matching.
+            Tip: select causes that clarify your organization&apos;s context. These help candidates
+            understand the work, but they do not drive individual matching scores.
           </p>
         </Card>
       )}

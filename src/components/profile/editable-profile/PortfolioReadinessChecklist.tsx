@@ -60,7 +60,7 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
             </div>
             <div>
               <h2 className="font-display text-lg font-semibold text-proofound-charcoal">
-                Public portfolio readiness
+                Public Page readiness
               </h2>
               <p className="text-xs leading-5 text-muted-foreground">
                 Complete one clear proof path before publishing.
@@ -72,7 +72,7 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
               Next
             </p>
             <p className="mt-1 text-sm text-proofound-charcoal">
-              {nextItem ? nextItem.nextAction : 'Portfolio is ready to review'}
+              {nextItem ? nextItem.nextAction : 'Public Page is ready to review'}
             </p>
           </div>
         </div>

@@ -24,22 +24,17 @@ import { triggerProfileActivationSurvey } from '@/lib/surveys/sus-triggers';
 import { sendEmail } from '@/lib/email/sender';
 import { resolveCanonicalSiteUrl } from '@/lib/env';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
+import {
+  normalizeOutcomeSkillLinks,
+  resolveContextOutcomeClaimStatus,
+  resolveContextOutcomeVerificationStatus,
+} from '@/lib/profile/context-outcomes';
 import { resolveIndustryFromInputs } from '@/lib/industry/options';
 import {
   EXPERIENCE_EMPLOYEE_AMOUNT_OPTIONS,
   EXPERIENCE_ORGANIZATION_TYPE_OPTIONS,
   EXPERIENCE_PARTICIPATION_CAPACITY_OPTIONS,
 } from '@/lib/profile/experience-options';
-import { isMissingColumnError } from '@/lib/db/schemaCompatibility';
-import {
-  createIndividualDefaultPurposeLinks,
-  normalizeIndividualCauses,
-  normalizeIndividualValues,
-  normalizeIndividualPurposeLinks,
-  normalizeIndividualValueLabels,
-  pruneIndividualPurposeLinks,
-} from '@/lib/profile/normalizePurposeLinks';
-import { hasRequiredPurposeLinks } from '@/lib/purpose/normalizePurposeLinks';
 import {
   hasPrimaryAnchorContext,
   listCanonicalProofPackAggregatesForOwner,
@@ -69,6 +64,7 @@ import type {
   PurposeLinks,
   Value,
   Skill,
+  ProfileProofPack,
   ImpactStory,
   ImpactStoryArtifact,
   ImpactStoryOutcome,
@@ -79,6 +75,7 @@ import type {
   ImpactStoryVerificationRequestDispatchResult,
   ImpactStoryVerificationRequestInput,
   ImpactStoryVerificationRequestStatus,
+  ContextMeasuredOutcome,
   Experience,
   ExperienceMeasuredOutcome,
   ExperienceProjectEntry,
@@ -134,170 +131,32 @@ function toJsonbArrayLiteral(value: unknown[]): ReturnType<typeof sql.raw> {
   return sql.raw(`'${escapedJson}'::jsonb`);
 }
 
-type PurposeVisibility = 'public' | 'network' | 'private';
-type PurposeTextField = 'mission' | 'vision';
-type PurposeListField = 'values' | 'causes';
+const ARCHIVED_INDIVIDUAL_PURPOSE_LINKS: PurposeLinks = Object.freeze({
+  values: [],
+  causes: [],
+});
 
-const purposeTextColumnMap = {
-  mission: individualProfiles.mission,
-  vision: individualProfiles.vision,
-} as const;
+const ARCHIVED_INDIVIDUAL_PURPOSE_VISIBILITY_FIELDS = new Set([
+  'mission',
+  'vision',
+  'values',
+  'causes',
+]);
 
-async function updatePurposeTextField(
-  field: PurposeTextField,
-  value: string | null,
-  links: PurposeLinks | undefined,
-  visibility: PurposeVisibility | undefined,
-  defaultVisibility: PurposeVisibility
-) {
-  const user = await requireAuth();
-
-  const current = await db
-    .select({
-      value: purposeTextColumnMap[field],
-      fieldVisibility: individualProfiles.fieldVisibility,
-      values: individualProfiles.values,
-      causes: individualProfiles.causes,
-      missionLinks: individualProfiles.missionLinks,
-      visionLinks: individualProfiles.visionLinks,
-    })
-    .from(individualProfiles)
-    .where(eq(individualProfiles.userId, user.id))
-    .limit(1);
-
-  const currentValues = normalizeIndividualValueLabels(current[0]?.values);
-  const currentCauses = normalizeIndividualCauses(current[0]?.causes);
-  const normalizedValue = typeof value === 'string' ? value.trim() : '';
-  const isSettingPurpose = normalizedValue.length > 0;
-
-  if (isSettingPurpose) {
-    const missingRequirements: string[] = [];
-    if (currentValues.length === 0) {
-      missingRequirements.push('at least one value');
-    }
-    if (currentCauses.length === 0) {
-      missingRequirements.push('at least one cause');
-    }
-    if (missingRequirements.length > 0) {
-      throw new Error(`Add ${missingRequirements.join(' and ')} before updating your ${field}.`);
-    }
-  }
-
-  const oldValue = (current[0]?.value as string | null | undefined) || null;
-  const currentFieldVisibility = (current[0]?.fieldVisibility as FieldVisibility) || {};
-  const currentLinksRaw = field === 'mission' ? current[0]?.missionLinks : current[0]?.visionLinks;
-  const existingLinks = pruneIndividualPurposeLinks(
-    normalizeIndividualPurposeLinks(currentLinksRaw),
-    currentValues,
-    currentCauses
+function rejectArchivedIndividualPurposeMutation(): never {
+  throw new Error(
+    'Individual mission, vision, values, and causes are archived for the MVP. Update proof, context, skills, and matching preferences instead.'
   );
-  const requestedLinks = links ? normalizeIndividualPurposeLinks(links) : existingLinks;
-  const nextLinks = pruneIndividualPurposeLinks(requestedLinks, currentValues, currentCauses);
-
-  if (isSettingPurpose && !hasRequiredPurposeLinks(nextLinks)) {
-    throw new Error(
-      `Select at least one linked value and one linked cause before updating your ${field}.`
-    );
-  }
-
-  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit(user.id, field, oldValue, normalizedValue);
-
-  const linksField = field === 'mission' ? 'missionLinks' : 'visionLinks';
-  const updateData: Record<string, unknown> = {
-    [field]: normalizedValue || null,
-    [linksField]: isSettingPurpose ? nextLinks : createIndividualDefaultPurposeLinks([], []),
-  };
-  if (visibility) {
-    updateData.fieldVisibility = {
-      ...currentFieldVisibility,
-      [field]: visibility,
-    };
-  }
-
-  await db.update(individualProfiles).set(updateData).where(eq(individualProfiles.userId, user.id));
-
-  const { emitEvent } = await import('@/lib/analytics/events');
-  await emitEvent({
-    eventType: 'purpose_updated',
-    userId: user.id,
-    properties: {
-      field,
-      wordCount: normalizedValue.split(/\s+/).filter(Boolean).length,
-      hasValue: Boolean(normalizedValue),
-      visibility: visibility || currentFieldVisibility[field] || defaultVisibility,
-    },
-  });
-
-  await checkAndEmitProfileActivation(user.id);
-
-  revalidatePath('/app/i/profile');
-  await revalidatePublicPortfolioByProfileId(user.id);
 }
 
-async function replacePurposeListField(field: PurposeListField, values: Value[] | string[]) {
-  const user = await requireAuth();
-  const [current] = await db
-    .select({
-      values: individualProfiles.values,
-      causes: individualProfiles.causes,
-      missionLinks: individualProfiles.missionLinks,
-      visionLinks: individualProfiles.visionLinks,
-    })
-    .from(individualProfiles)
-    .where(eq(individualProfiles.userId, user.id))
-    .limit(1);
-
-  const nextValues = field === 'values' ? normalizeIndividualValueLabels(values) : current?.values;
-  const nextCauses = field === 'causes' ? normalizeIndividualCauses(values) : current?.causes;
-
-  const nextMissionLinks = pruneIndividualPurposeLinks(
-    normalizeIndividualPurposeLinks(current?.missionLinks),
-    nextValues,
-    nextCauses
-  );
-  const nextVisionLinks = pruneIndividualPurposeLinks(
-    normalizeIndividualPurposeLinks(current?.visionLinks),
-    nextValues,
-    nextCauses
-  );
-
-  try {
-    await db
-      .update(individualProfiles)
-      .set({
-        [field]: values,
-        missionLinks: nextMissionLinks,
-        visionLinks: nextVisionLinks,
-      } as Record<string, unknown>)
-      .where(eq(individualProfiles.userId, user.id));
-  } catch (error) {
-    if (!isMissingColumnError(error, ['mission_links', 'vision_links'])) {
-      throw error;
-    }
-
-    console.warn('Purpose link columns are unavailable, falling back to list-only update.', {
-      field,
-    });
-    await db
-      .update(individualProfiles)
-      .set({ [field]: values } as Record<string, unknown>)
-      .where(eq(individualProfiles.userId, user.id));
-  }
-
-  const { emitEvent } = await import('@/lib/analytics/events');
-  await emitEvent({
-    eventType: 'purpose_updated',
-    userId: user.id,
-    properties: {
-      field,
-      count: values.length,
-      hasValue: values.length > 0,
-    },
-  });
-
-  revalidatePath('/app/i/profile');
-  await revalidatePublicPortfolioByProfileId(user.id);
+function sanitizeIndividualFieldVisibility(
+  value: FieldVisibility | Record<string, unknown> | null | undefined
+): FieldVisibility {
+  return Object.fromEntries(
+    Object.entries(value || {}).filter(
+      ([field]) => !ARCHIVED_INDIVIDUAL_PURPOSE_VISIBILITY_FIELDS.has(field)
+    )
+  ) as FieldVisibility;
 }
 
 /**
@@ -343,8 +202,6 @@ export async function getProfileData(): Promise<ProfileData> {
         await db.insert(individualProfiles).values({
           userId: user.id,
           skills: [],
-          causes: [],
-          values: [],
         });
       } catch (error) {
         console.error('Failed to create profile row:', error);
@@ -451,6 +308,7 @@ export async function getProfileData(): Promise<ProfileData> {
               duration: education.duration,
               skills: education.skills,
               projects: education.projects,
+              measuredOutcomes: education.measuredOutcomes,
               verified: education.verified,
             })
             .from(education)
@@ -465,6 +323,7 @@ export async function getProfileData(): Promise<ProfileData> {
               impact: volunteering.impact,
               skillsDeployed: volunteering.skillsDeployed,
               personalWhy: volunteering.personalWhy,
+              measuredOutcomes: volunteering.measuredOutcomes,
               verified: volunteering.verified,
             })
             .from(volunteering)
@@ -534,6 +393,9 @@ export async function getProfileData(): Promise<ProfileData> {
     let anchoredProofPackCount = 0;
     let acceptedVerificationCount = 0;
     let publicProofCount = 0;
+    let canonicalProofAggregates: Awaited<
+      ReturnType<typeof listCanonicalProofPackAggregatesForOwner>
+    > = [];
     try {
       const skillProofSummaries = await listCanonicalSkillProofSummariesForOwner(user.id);
       proofArtifactCount = skillProofSummaries.reduce(
@@ -554,7 +416,7 @@ export async function getProfileData(): Promise<ProfileData> {
     }
 
     try {
-      const canonicalProofAggregates = await listCanonicalProofPackAggregatesForOwner(
+      canonicalProofAggregates = await listCanonicalProofPackAggregatesForOwner(
         'individual_profile',
         user.id
       );
@@ -598,6 +460,53 @@ export async function getProfileData(): Promise<ProfileData> {
         id: row.id,
         name: skillName,
         verified: trustedSkillIds.has(row.id),
+      };
+    });
+    const skillNameById = new Map(mappedSkills.map((skill) => [skill.id, skill.name]));
+    const proofPacks: ProfileProofPack[] = canonicalProofAggregates.map((aggregate) => {
+      const { pack, ownerFull, publicSafe } = aggregate;
+      const { contract } = ownerFull;
+
+      return {
+        id: ownerFull.id,
+        title: ownerFull.title,
+        summary: ownerFull.summary,
+        primaryClaim: contract.primaryClaim.statement,
+        contextType: ownerFull.primarySubjectType,
+        contextLabel: contract.primaryAnchor.label,
+        outcomesSummary: ownerFull.outcomesSummary ?? contract.outcomeSummary,
+        evidenceSummary: ownerFull.evidenceSummary,
+        ownershipStatement: contract.ownershipStatement,
+        roleContext: contract.roleContext,
+        timeframeLabel: contract.timeframe.label,
+        verificationStatus: ownerFull.verificationStatus,
+        verificationSummary: contract.verificationSummary.summary,
+        freshnessState: ownerFull.freshnessState,
+        visibility: ownerFull.visibility,
+        revealGate: ownerFull.revealGate,
+        proofQualityScore: contract.proofQualityScore,
+        createdAt: toIsoStringOrNull(pack.createdAt),
+        updatedAt: toIsoStringOrNull(pack.updatedAt),
+        lastVerifiedAt: ownerFull.lastVerifiedAt,
+        lastRefreshedAt: ownerFull.lastRefreshedAt,
+        artifacts: ownerFull.items.map((item) => ({
+          id: item.artifact.id,
+          title: item.artifact.title,
+          kind: item.artifact.artifactKind,
+          description: item.artifact.description,
+          displayName: item.artifact.artifactDisplayName,
+          sourceUrl: item.artifact.sourceUrl,
+          visibility: item.artifact.visibility,
+          effectiveVisibility: item.effectiveVisibility,
+          issuedAt: item.artifact.issuedAt,
+          expiresAt: item.artifact.expiresAt,
+        })),
+        linkedSkills: contract.linkedSkills.map((skill) => ({
+          id: skill.skillId,
+          name: skillNameById.get(skill.skillId) ?? 'Linked skill',
+          evidenceClasses: skill.evidenceClasses,
+        })),
+        isPublicSafe: publicSafe !== null,
       };
     });
 
@@ -662,25 +571,6 @@ export async function getProfileData(): Promise<ProfileData> {
       };
     });
 
-    const mappedValues = normalizeIndividualValues(profile?.values);
-    const mappedCauses = normalizeIndividualCauses(profile?.causes);
-    const missionLinks = pruneIndividualPurposeLinks(
-      normalizeIndividualPurposeLinks(profile?.missionLinks),
-      mappedValues,
-      mappedCauses
-    );
-    const visionLinks = pruneIndividualPurposeLinks(
-      normalizeIndividualPurposeLinks(profile?.visionLinks),
-      mappedValues,
-      mappedCauses
-    );
-    const defaultPurposeLinks = createIndividualDefaultPurposeLinks(mappedValues, mappedCauses);
-    const resolvedMissionLinks =
-      profile?.mission && !hasRequiredPurposeLinks(missionLinks)
-        ? defaultPurposeLinks
-        : missionLinks;
-    const resolvedVisionLinks =
-      profile?.vision && !hasRequiredPurposeLinks(visionLinks) ? defaultPurposeLinks : visionLinks;
     const latestImpactVerificationByStory = new Map<
       string,
       {
@@ -716,6 +606,16 @@ export async function getProfileData(): Promise<ProfileData> {
       };
     });
 
+    const mappedEducation: EducationType[] = educationRows.map((row: any) => ({
+      ...row,
+      measuredOutcomes: normalizeContextMeasuredOutcomes(row.measuredOutcomes),
+    }));
+
+    const mappedVolunteering: VolunteeringType[] = volunteeringRows.map((row: any) => ({
+      ...row,
+      measuredOutcomes: normalizeContextMeasuredOutcomes(row.measuredOutcomes),
+    }));
+
     return {
       basicInfo: {
         name: profileBasics?.displayName ?? user.displayName ?? 'Your Name',
@@ -726,31 +626,32 @@ export async function getProfileData(): Promise<ProfileData> {
           year: 'numeric',
         }),
         avatar: profileBasics?.avatarUrl ?? user.avatarUrl ?? null,
-        coverImage: profile?.coverImageUrl ?? null,
+        coverImage: null,
       },
-      mission: profile?.mission ?? null,
-      vision: profile?.vision ?? null,
-      missionLinks: resolvedMissionLinks,
-      visionLinks: resolvedVisionLinks,
-      values: mappedValues,
-      causes: mappedCauses,
+      mission: null,
+      vision: null,
+      missionLinks: ARCHIVED_INDIVIDUAL_PURPOSE_LINKS,
+      visionLinks: ARCHIVED_INDIVIDUAL_PURPOSE_LINKS,
+      values: [],
+      causes: [],
       skills: mappedSkills, // Now fetched from L4 skills table
       proofArtifactCount,
       anchoredProofPackCount,
       acceptedVerificationCount,
       publicProofCount,
       publishedPortfolio,
+      proofPacks,
       impactStories: impactStoriesWithVerification,
       experiences: mappedExperiences,
-      education: educationRows,
-      volunteering: volunteeringRows,
+      education: mappedEducation,
+      volunteering: mappedVolunteering,
       fieldVisibility:
         profile?.fieldVisibility && typeof profile.fieldVisibility === 'object'
           ? ({
               experiences: 'private',
               education: 'private',
               volunteering: 'private',
-              ...(profile.fieldVisibility as FieldVisibility),
+              ...sanitizeIndividualFieldVisibility(profile.fieldVisibility as FieldVisibility),
             } as FieldVisibility)
           : {
               experiences: 'private',
@@ -797,13 +698,14 @@ export async function getProfileData(): Promise<ProfileData> {
       },
       mission: null,
       vision: null,
-      missionLinks: createIndividualDefaultPurposeLinks([], []),
-      visionLinks: createIndividualDefaultPurposeLinks([], []),
+      missionLinks: ARCHIVED_INDIVIDUAL_PURPOSE_LINKS,
+      visionLinks: ARCHIVED_INDIVIDUAL_PURPOSE_LINKS,
       values: [],
       causes: [],
       skills: [],
       proofArtifactCount: 0,
       acceptedVerificationCount: 0,
+      proofPacks: [],
       impactStories: [],
       experiences: [],
       education: [],
@@ -832,7 +734,6 @@ export async function updateBasicInfo(updates: Partial<BasicInfo>) {
   const individualUpdates: Record<string, unknown> = {};
   if (updates.tagline !== undefined) individualUpdates.tagline = updates.tagline;
   if (updates.location !== undefined) individualUpdates.location = updates.location;
-  if (updates.coverImage !== undefined) individualUpdates.coverImageUrl = updates.coverImage;
 
   if (Object.keys(individualUpdates).length > 0) {
     await db
@@ -858,7 +759,10 @@ export async function updateMission(
   links?: PurposeLinks,
   visibility?: 'public' | 'network' | 'private'
 ) {
-  await updatePurposeTextField('mission', mission, links, visibility, 'public');
+  void mission;
+  void links;
+  void visibility;
+  rejectArchivedIndividualPurposeMutation();
 }
 
 export async function updateVision(
@@ -866,15 +770,20 @@ export async function updateVision(
   links?: PurposeLinks,
   visibility?: 'public' | 'network' | 'private'
 ) {
-  await updatePurposeTextField('vision', vision, links, visibility, 'network');
+  void vision;
+  void links;
+  void visibility;
+  rejectArchivedIndividualPurposeMutation();
 }
 
 export async function replaceValues(values: Value[]) {
-  await replacePurposeListField('values', values);
+  void values;
+  rejectArchivedIndividualPurposeMutation();
 }
 
 export async function replaceCauses(causes: string[]) {
-  await replacePurposeListField('causes', causes);
+  void causes;
+  rejectArchivedIndividualPurposeMutation();
 }
 
 export async function replaceSkills(skills: Skill[]) {
@@ -949,7 +858,7 @@ const EXPERIENCE_EMPLOYEE_AMOUNT_SET = new Set(
   EXPERIENCE_EMPLOYEE_AMOUNT_OPTIONS.map((option) => option.value)
 );
 
-function normalizeExperienceMeasuredOutcomes(value: unknown): ExperienceMeasuredOutcome[] {
+function normalizeContextMeasuredOutcomes(value: unknown): ContextMeasuredOutcome[] {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -959,16 +868,29 @@ function normalizeExperienceMeasuredOutcomes(value: unknown): ExperienceMeasured
     name: string;
     value: number | null;
     unit: string | null;
+    timeframe: string | null;
+    supportingSkills: string[];
+    proofPackId: string | null;
+    proofPackTitle: string | null;
+    proofItemId: string | null;
+    claimStatus: NonNullable<ContextMeasuredOutcome['claimStatus']>;
+    verificationStatus: NonNullable<ContextMeasuredOutcome['verificationStatus']>;
+    visibility: NonNullable<ContextMeasuredOutcome['visibility']>;
   };
 
   const normalized: NormalizedOutcomeRow[] = value
-    .map((entry, index) => {
+    .map<NormalizedOutcomeRow | null>((entry, index) => {
       if (!entry || typeof entry !== 'object') {
         return null;
       }
 
       const row = entry as Record<string, unknown>;
-      const name = typeof row.name === 'string' ? row.name.trim() : '';
+      const name =
+        typeof row.name === 'string'
+          ? row.name.trim()
+          : typeof row.statement === 'string'
+            ? row.statement.trim()
+            : '';
       if (!name) {
         return null;
       }
@@ -979,7 +901,37 @@ function normalizeExperienceMeasuredOutcomes(value: unknown): ExperienceMeasured
           ? null
           : Number(rawValue);
 
-      return {
+      const proofPackId =
+        typeof row.proofPackId === 'string' && row.proofPackId.trim().length > 0
+          ? row.proofPackId.trim()
+          : null;
+      const proofPackTitle =
+        typeof row.proofPackTitle === 'string' && row.proofPackTitle.trim().length > 0
+          ? row.proofPackTitle.trim()
+          : null;
+      const proofItemId =
+        typeof row.proofItemId === 'string' && row.proofItemId.trim().length > 0
+          ? row.proofItemId.trim()
+          : null;
+      const rawClaimStatus: NonNullable<ContextMeasuredOutcome['claimStatus']> =
+        row.claimStatus === 'proof_linked' || row.claimStatus === 'verified'
+          ? row.claimStatus
+          : 'claimed';
+      const rawVerificationStatus: NonNullable<ContextMeasuredOutcome['verificationStatus']> =
+        row.verificationStatus === 'proof_linked' || row.verificationStatus === 'verified'
+          ? row.verificationStatus
+          : 'unverified';
+      const candidateOutcome: Pick<
+        ContextMeasuredOutcome,
+        'claimStatus' | 'verificationStatus' | 'proofPackId' | 'proofItemId'
+      > = {
+        proofPackId,
+        proofItemId,
+        claimStatus: rawClaimStatus,
+        verificationStatus: rawVerificationStatus,
+      };
+
+      const normalizedRow: NormalizedOutcomeRow = {
         id:
           typeof row.id === 'string' && row.id.trim().length > 0
             ? row.id.trim()
@@ -987,11 +939,30 @@ function normalizeExperienceMeasuredOutcomes(value: unknown): ExperienceMeasured
         name,
         value: parsedValue !== null && Number.isFinite(parsedValue) ? parsedValue : null,
         unit: typeof row.unit === 'string' && row.unit.trim().length > 0 ? row.unit.trim() : null,
+        timeframe:
+          typeof row.timeframe === 'string' && row.timeframe.trim().length > 0
+            ? row.timeframe.trim()
+            : null,
+        supportingSkills: normalizeOutcomeSkillLinks(
+          row.supportingSkills || row.supporting_skills || row.skills
+        ),
+        proofPackId,
+        proofPackTitle,
+        proofItemId,
+        claimStatus: resolveContextOutcomeClaimStatus(candidateOutcome),
+        verificationStatus: resolveContextOutcomeVerificationStatus(candidateOutcome),
+        visibility: row.visibility === 'public_safe' ? 'public_safe' : 'private_context',
       };
+
+      return normalizedRow;
     })
     .filter((entry): entry is NormalizedOutcomeRow => entry !== null);
 
   return normalized;
+}
+
+function normalizeExperienceMeasuredOutcomes(value: unknown): ExperienceMeasuredOutcome[] {
+  return normalizeContextMeasuredOutcomes(value) as ExperienceMeasuredOutcome[];
 }
 
 function normalizeExperienceProjectEntries(value: unknown): ExperienceProjectEntry[] {
@@ -2499,6 +2470,7 @@ export async function deleteExperience(id: string) {
 
 export async function createEducation(data: Omit<EducationType, 'id'>) {
   const user = await requireAuth();
+  const normalizedMeasuredOutcomes = normalizeContextMeasuredOutcomes(data.measuredOutcomes);
   const [inserted] = await db
     .insert(education)
     .values({
@@ -2508,16 +2480,24 @@ export async function createEducation(data: Omit<EducationType, 'id'>) {
       duration: data.duration,
       skills: data.skills,
       projects: data.projects,
+      measuredOutcomes: toJsonbArrayLiteral(normalizedMeasuredOutcomes),
       verified: data.verified ?? false,
     })
     .returning();
 
   revalidatePath('/app/i/profile');
-  return inserted;
+  return {
+    ...(inserted as any),
+    measuredOutcomes: normalizeContextMeasuredOutcomes((inserted as any).measuredOutcomes),
+  };
 }
 
 export async function updateEducation(id: string, data: Omit<EducationType, 'id'>) {
   const user = await requireAuth();
+  const measuredOutcomesJsonb =
+    data.measuredOutcomes !== undefined
+      ? toJsonbArrayLiteral(normalizeContextMeasuredOutcomes(data.measuredOutcomes))
+      : undefined;
   const [updated] = await db
     .update(education)
     .set({
@@ -2526,6 +2506,7 @@ export async function updateEducation(id: string, data: Omit<EducationType, 'id'
       duration: data.duration,
       skills: data.skills,
       projects: data.projects,
+      measuredOutcomes: measuredOutcomesJsonb,
       verified: data.verified ?? false,
     })
     .where(and(eq(education.id, id), eq(education.userId, user.id)))
@@ -2536,7 +2517,10 @@ export async function updateEducation(id: string, data: Omit<EducationType, 'id'
   }
 
   revalidatePath('/app/i/profile');
-  return updated;
+  return {
+    ...(updated as any),
+    measuredOutcomes: normalizeContextMeasuredOutcomes((updated as any).measuredOutcomes),
+  };
 }
 
 export async function deleteEducation(id: string) {
@@ -2547,6 +2531,7 @@ export async function deleteEducation(id: string) {
 
 export async function createVolunteering(data: Omit<VolunteeringType, 'id'>) {
   const user = await requireAuth();
+  const normalizedMeasuredOutcomes = normalizeContextMeasuredOutcomes(data.measuredOutcomes);
   const [inserted] = await db
     .insert(volunteering)
     .values({
@@ -2558,16 +2543,24 @@ export async function createVolunteering(data: Omit<VolunteeringType, 'id'>) {
       impact: data.impact,
       skillsDeployed: data.skillsDeployed,
       personalWhy: data.personalWhy,
+      measuredOutcomes: toJsonbArrayLiteral(normalizedMeasuredOutcomes),
       verified: data.verified ?? false,
     })
     .returning();
 
   revalidatePath('/app/i/profile');
-  return inserted;
+  return {
+    ...(inserted as any),
+    measuredOutcomes: normalizeContextMeasuredOutcomes((inserted as any).measuredOutcomes),
+  };
 }
 
 export async function updateVolunteering(id: string, data: Omit<VolunteeringType, 'id'>) {
   const user = await requireAuth();
+  const measuredOutcomesJsonb =
+    data.measuredOutcomes !== undefined
+      ? toJsonbArrayLiteral(normalizeContextMeasuredOutcomes(data.measuredOutcomes))
+      : undefined;
   const [updated] = await db
     .update(volunteering)
     .set({
@@ -2578,6 +2571,7 @@ export async function updateVolunteering(id: string, data: Omit<VolunteeringType
       impact: data.impact,
       skillsDeployed: data.skillsDeployed,
       personalWhy: data.personalWhy,
+      measuredOutcomes: measuredOutcomesJsonb,
       verified: data.verified ?? false,
     })
     .where(and(eq(volunteering.id, id), eq(volunteering.userId, user.id)))
@@ -2588,7 +2582,10 @@ export async function updateVolunteering(id: string, data: Omit<VolunteeringType
   }
 
   revalidatePath('/app/i/profile');
-  return updated;
+  return {
+    ...(updated as any),
+    measuredOutcomes: normalizeContextMeasuredOutcomes((updated as any).measuredOutcomes),
+  };
 }
 
 export async function deleteVolunteering(id: string) {

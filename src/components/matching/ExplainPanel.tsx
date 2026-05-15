@@ -18,8 +18,6 @@ interface ExplainPanelProps {
 }
 
 const SUBSCORE_LABELS: Record<string, string> = {
-  values: 'Values Alignment',
-  causes: 'Causes & Impact',
   skills: 'Skills Match',
   experience: 'Experience Level',
   verifications: 'Verifications',
@@ -30,8 +28,6 @@ const SUBSCORE_LABELS: Record<string, string> = {
 };
 
 const SUBSCORE_DESCRIPTIONS: Record<string, string> = {
-  values: 'How well their values align with yours',
-  causes: 'Shared impact areas and causes',
   skills: 'Technical and functional skill match',
   experience: 'Years of relevant experience',
   verifications: 'Completed identity and credential verifications',
@@ -87,9 +83,9 @@ export function ExplainPanel({ result, className }: ExplainPanelProps) {
         </h3>
         <p className="text-sm" style={{ color: '#6B6760' }}>
           {scorePercent >= 80
-            ? 'This is an exceptional match. Strong alignment across skills, values, and logistics makes this a high-potential collaboration.'
+            ? 'This is an exceptional match. Strong alignment across skills, proof, and logistics makes this a high-potential collaboration.'
             : scorePercent >= 60
-              ? 'This is a solid match. Key requirements are met with good alignment on values and practical considerations.'
+              ? 'This is a solid match. Key requirements are met with good proof and practical fit.'
               : scorePercent >= 40
                 ? 'This is a moderate match. Some requirements are met, but there are gaps that may need consideration.'
                 : 'This match has significant gaps. Review carefully to see if flexibility is possible.'}

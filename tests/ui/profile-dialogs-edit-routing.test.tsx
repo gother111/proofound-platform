@@ -7,18 +7,6 @@ import { ProfileDialogs } from '@/components/profile/editable-profile/ProfileDia
 vi.mock('@/components/profile/EditProfileModal', () => ({
   EditProfileModal: () => null,
 }));
-vi.mock('@/components/profile/MissionEditor', () => ({
-  MissionEditor: () => null,
-}));
-vi.mock('@/components/profile/VisionEditor', () => ({
-  VisionEditor: () => null,
-}));
-vi.mock('@/components/profile/ValuesEditor', () => ({
-  ValuesEditor: () => null,
-}));
-vi.mock('@/components/profile/CausesEditor', () => ({
-  CausesEditor: () => null,
-}));
 vi.mock('@/components/profile/forms/ImpactStoryForm', () => ({
   ImpactStoryForm: ({ onSave, onSaveExisting }: any) => (
     <button
@@ -178,14 +166,6 @@ describe('ProfileDialogs edit routing', () => {
         }}
         isEditProfileOpen={false}
         setIsEditProfileOpen={() => {}}
-        isMissionEditorOpen={false}
-        setIsMissionEditorOpen={() => {}}
-        isVisionEditorOpen={false}
-        setIsVisionEditorOpen={() => {}}
-        isValuesEditorOpen={false}
-        setIsValuesEditorOpen={() => {}}
-        isCausesEditorOpen={false}
-        setIsCausesEditorOpen={() => {}}
         isImpactStoryFormOpen={true}
         setIsImpactStoryFormOpen={() => {}}
         isExperienceFormOpen={true}
@@ -263,10 +243,6 @@ describe('ProfileDialogs edit routing', () => {
         }}
         availableSkillNames={['React']}
         onUpdateBasicInfo={() => {}}
-        onUpdateMission={() => {}}
-        onUpdateVision={() => {}}
-        onReplaceValues={() => {}}
-        onReplaceCauses={() => {}}
         onAddImpactStory={onAddImpactStory}
         onRequestImpactStoryVerification={vi.fn()}
         onUpdateImpactStory={onUpdateImpactStory}

@@ -18,7 +18,7 @@ export default async function OrganizationSettingsPage({
       primaryHref={getOrgSurfaceFallbackHref(slug, 'settings')}
       primaryLabel="Back to overview"
       secondaryHref={`/app/o/${slug}/profile`}
-      secondaryLabel="Open trust profile"
+      secondaryLabel="Open organization profile"
     />
   );
 }

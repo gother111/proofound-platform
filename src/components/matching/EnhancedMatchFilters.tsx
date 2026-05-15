@@ -2,7 +2,6 @@
  * Enhanced Match Filters Component
  *
  * Allows users to filter matches by:
- * - Causes
  * - Skill domains (L1)
  * - Location mode
  * - Work mode
@@ -27,13 +26,11 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SlidersHorizontal, X, Save, Search } from 'lucide-react';
+import { SlidersHorizontal, X, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ActiveFilters {
-  causes: string[];
   skillDomains: string[];
-  values: string[];
   locationMode?: string;
   workMode?: string;
   minComp?: number;
@@ -44,19 +41,6 @@ interface EnhancedMatchFiltersProps {
   onFiltersChange: (filters: ActiveFilters) => void;
   activeFilters: ActiveFilters;
 }
-
-const COMMON_CAUSES = [
-  'Climate Action',
-  'Education',
-  'Healthcare',
-  'Poverty Alleviation',
-  'Human Rights',
-  'Gender Equality',
-  'Clean Water',
-  'Sustainable Energy',
-  'Mental Health',
-  'Food Security',
-];
 
 const SKILL_DOMAINS = [
   'Technology & Engineering',
@@ -69,18 +53,6 @@ const SKILL_DOMAINS = [
 
 const LOCATION_MODES = ['Remote', 'Onsite', 'Hybrid'];
 const WORK_MODES = ['Full-time', 'Part-time', 'Contract', 'Volunteer'];
-const VALUES_OPTIONS = [
-  'Integrity',
-  'Collaboration',
-  'Sustainability',
-  'Equity',
-  'Innovation',
-  'Transparency',
-  'Accountability',
-  'Empathy',
-  'Courage',
-  'Curiosity',
-];
 
 const COMP_BANDS = [
   { label: 'Any', min: undefined, max: undefined },
@@ -96,7 +68,6 @@ export function EnhancedMatchFilters({
 }: EnhancedMatchFiltersProps) {
   const [open, setOpen] = useState(false);
   const [localFilters, setLocalFilters] = useState<ActiveFilters>(activeFilters);
-  const [searchQuery, setSearchQuery] = useState('');
   const [savedFilters, setSavedFilters] = useState<Array<{ name: string; filters: ActiveFilters }>>(
     []
   );
@@ -120,15 +91,6 @@ export function EnhancedMatchFilters({
     }
   }, []);
 
-  const handleToggleCause = (cause: string) => {
-    setLocalFilters((prev) => {
-      const causes = prev.causes.includes(cause)
-        ? prev.causes.filter((c) => c !== cause)
-        : [...prev.causes, cause];
-      return { ...prev, causes };
-    });
-  };
-
   const handleToggleSkillDomain = (domain: string) => {
     setLocalFilters((prev) => {
       const skillDomains = prev.skillDomains.includes(domain)
@@ -143,7 +105,6 @@ export function EnhancedMatchFilters({
     setOpen(false);
 
     const activeCount =
-      localFilters.causes.length +
       localFilters.skillDomains.length +
       (localFilters.locationMode ? 1 : 0) +
       (localFilters.workMode ? 1 : 0);
@@ -155,9 +116,7 @@ export function EnhancedMatchFilters({
 
   const handleClearAll = () => {
     const emptyFilters: ActiveFilters = {
-      causes: [],
       skillDomains: [],
-      values: [],
       locationMode: undefined,
       workMode: undefined,
       minComp: undefined,
@@ -188,19 +147,6 @@ export function EnhancedMatchFilters({
     toast.success('Filter loaded');
   };
 
-  const filteredCauses = COMMON_CAUSES.filter((cause) =>
-    cause.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleValuesToggle = (value: string) => {
-    setLocalFilters((prev) => {
-      const values = prev.values.includes(value)
-        ? prev.values.filter((v) => v !== value)
-        : [...prev.values, value];
-      return { ...prev, values };
-    });
-  };
-
   const handleCompBandSelect = (index: number) => {
     setCompBandIndex(index);
     const band = COMP_BANDS[index];
@@ -212,9 +158,7 @@ export function EnhancedMatchFilters({
   };
 
   const activeFilterCount =
-    activeFilters.causes.length +
     activeFilters.skillDomains.length +
-    activeFilters.values.length +
     (activeFilters.locationMode ? 1 : 0) +
     (activeFilters.workMode ? 1 : 0) +
     (activeFilters.minComp || activeFilters.maxComp ? 1 : 0);
@@ -245,8 +189,7 @@ export function EnhancedMatchFilters({
             Filter Matches
           </SheetTitle>
           <SheetDescription className="text-[#4A4A4A]">
-            Narrow down opportunities by causes, values, skills, location, work mode, and
-            compensation
+            Narrow down opportunities by skills, location, work mode, and compensation
           </SheetDescription>
         </SheetHeader>
 
@@ -270,59 +213,6 @@ export function EnhancedMatchFilters({
               </div>
             </div>
           )}
-
-          {/* Causes */}
-          <div>
-            <Label className="text-sm font-semibold text-foreground mb-2">Causes</Label>
-            <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search causes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 text-foreground"
-              />
-            </div>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {filteredCauses.map((cause) => (
-                <div key={cause} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`cause-${cause}`}
-                    checked={localFilters.causes.includes(cause)}
-                    onCheckedChange={() => handleToggleCause(cause)}
-                  />
-                  <Label htmlFor={`cause-${cause}`} className="text-sm font-normal cursor-pointer">
-                    {cause}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Values */}
-          <div>
-            <Label className="text-sm font-semibold text-foreground mb-2">Values</Label>
-            <div className="flex flex-wrap gap-2">
-              {VALUES_OPTIONS.map((val) => {
-                const selected = localFilters.values.includes(val);
-                return (
-                  <Button
-                    key={val}
-                    variant={selected ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleValuesToggle(val)}
-                    className={
-                      selected
-                        ? 'bg-proofound-forest text-white'
-                        : 'border-proofound-forest/40 text-proofound-forest'
-                    }
-                  >
-                    {val}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
 
           {/* Skill Domains */}
           <div>

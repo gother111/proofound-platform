@@ -161,10 +161,10 @@ export function buildRevealConversationUrl(input: RevealConversationUrlInput) {
     if (!orgSlug) {
       return null;
     }
-    return `${baseUrl}/app/o/${encodeURIComponent(orgSlug)}/messages?conversation=${conversationParam}`;
+    return `${baseUrl}/app/o/${encodeURIComponent(orgSlug)}/communications?section=messages&conversation=${conversationParam}`;
   }
 
-  return `${baseUrl}/app/i/messages?conversation=${conversationParam}`;
+  return `${baseUrl}/app/i/communications?section=messages&conversation=${conversationParam}`;
 }
 
 export function buildRevealNotificationEmail(input: RevealNotificationEmailInput) {

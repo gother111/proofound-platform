@@ -17,10 +17,6 @@ vi.mock('framer-motion', () => ({
   },
 }));
 
-vi.mock('@/components/matching/PACScoreExplainer', () => ({
-  PACScoreExplainer: () => <div>PAC explainer</div>,
-}));
-
 vi.mock('@/components/matching/MatchExplainerModal', () => ({
   MatchExplainerModal: () => <div>Match explainer modal</div>,
 }));

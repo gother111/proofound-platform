@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
+import { NextStepsHelper } from '@/components/dashboard/NextStepsHelper';
 import { FALLBACK_COPY, type OperationalFallbackMode } from '@/lib/contracts/launch-operations';
 import type { IndividualReadiness } from '@/lib/momentum/types';
 import {
@@ -130,13 +131,14 @@ export function ReadinessSprintPanel() {
           </div>
 
           {!data.flags.introEligible && fallbackCopy ? (
-            <div className="rounded-2xl border border-proofound-stone/60 bg-white p-4">
-              <p className="text-sm font-semibold text-proofound-charcoal">Best next steps</p>
-              <ul className="mt-3 grid gap-2 text-sm leading-6 text-muted-foreground sm:grid-cols-3">
-                {fallbackCopy.nextActions.map((action) => (
-                  <li key={action}>{action}</li>
-                ))}
-              </ul>
+            <div className="flex flex-col items-start gap-3 rounded-2xl border border-proofound-stone/60 bg-white p-4">
+              <p className="text-sm leading-6 text-muted-foreground">
+                Suggested follow-up work is available when needed without staying pinned open.
+              </p>
+              <NextStepsHelper
+                actions={fallbackCopy.nextActions.map((action) => ({ title: action }))}
+                description="Open readiness sprint next steps."
+              />
             </div>
           ) : null}
 

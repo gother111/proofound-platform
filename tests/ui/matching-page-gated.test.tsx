@@ -78,7 +78,7 @@ describe('MatchingPage soft-gated state', () => {
       topActions: [
         {
           id: 'update-public-portfolio',
-          title: 'Strengthen public portfolio',
+          title: 'Strengthen Public Page proof',
           description: 'Refresh proof-backed work examples and trust signals.',
           actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
         },
@@ -129,6 +129,6 @@ describe('MatchingPage soft-gated state', () => {
     });
 
     expect(screen.getByText('Recent skills')).toBeInTheDocument();
-    expect(screen.getByText('Strengthen public portfolio')).toBeInTheDocument();
+    expect(screen.getByText('Strengthen Public Page proof')).toBeInTheDocument();
   });
 });

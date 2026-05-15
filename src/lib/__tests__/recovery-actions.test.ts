@@ -13,7 +13,7 @@ describe('recovery actions', () => {
     expect(actions.map((action) => action.title)).toEqual(
       expect.arrayContaining([
         'Add a proof',
-        'Strengthen your public portfolio',
+        'Strengthen your Public Page proof',
         'Turn on matchable',
       ])
     );

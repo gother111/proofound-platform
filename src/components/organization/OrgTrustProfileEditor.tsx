@@ -98,17 +98,17 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || error.message || 'Failed to update trust profile');
+        throw new Error(error.error || error.message || 'Failed to update organization profile');
       }
 
       toast({
-        title: 'Trust profile updated',
-        description: 'The launch-facing org trust profile has been saved.',
+        title: 'Organization profile updated',
+        description: 'The launch-facing organization profile has been saved.',
       });
       router.refresh();
     } catch (error) {
       toast({
-        title: 'Unable to save trust profile',
+        title: 'Unable to save organization profile',
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive',
       });
@@ -122,7 +122,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
       <CardHeader>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle>Trust profile</CardTitle>
+            <CardTitle>Organization profile</CardTitle>
             <CardDescription className="max-w-2xl leading-6">
               Keep the launch story narrow and credible: org name, verified domain path, mission,
               why the work matters, and the essential operating context.
@@ -219,7 +219,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
             </div>
             {canEdit ? (
               <Button type="submit" className="w-full" disabled={isPending || !hasUnsavedChanges}>
-                {isPending ? 'Saving...' : 'Save trust profile'}
+                {isPending ? 'Saving...' : 'Save organization profile'}
               </Button>
             ) : null}
           </div>

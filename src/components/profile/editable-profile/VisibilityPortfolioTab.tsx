@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Globe } from 'lucide-react';
+import { Download, Globe, History, LockKeyhole } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -18,6 +18,23 @@ export function VisibilityPortfolioTab({
   onCompleteSafeShell,
 }: VisibilityPortfolioTabProps) {
   const isSafeShellLocked = completionState.portfolioLockCode === 'safe_shell';
+  const trustLinks = [
+    {
+      icon: LockKeyhole,
+      label: 'Privacy controls',
+      href: '/app/i/settings/privacy',
+    },
+    {
+      icon: Download,
+      label: 'Export or delete',
+      href: '/app/i/settings?tab=privacy',
+    },
+    {
+      icon: History,
+      label: 'Audit log',
+      href: '/app/i/settings/audit-log',
+    },
+  ];
 
   return (
     <TabsContent value="visibility" className="space-y-6">
@@ -28,10 +45,10 @@ export function VisibilityPortfolioTab({
           </div>
           <div className="min-w-0 space-y-4">
             <div className="space-y-1">
-              <h3 className="text-lg font-semibold text-foreground">Visibility / Portfolio</h3>
+              <h3 className="text-lg font-semibold text-foreground">Public Page visibility</h3>
               <p className="text-sm text-muted-foreground">
-                Public portfolio publication is an explicit share surface. It never weakens blind
-                review or bypasses consent-based reveal.
+                Public Page publication is an explicit direct-link proof snapshot. It never weakens
+                blind review or bypasses consent-based reveal.
               </p>
             </div>
 
@@ -41,7 +58,7 @@ export function VisibilityPortfolioTab({
               </p>
               <p className="mt-2 text-sm font-medium text-foreground">
                 {completionState.checks.hasPublishedPortfolio
-                  ? 'Your public portfolio is published and accessible.'
+                  ? 'Your Public Page is published and accessible by direct link.'
                   : completionState.portfolioLockReason ||
                     'Choose one proof-backed and verified public signal when it is ready and public-safe.'}
               </p>
@@ -53,11 +70,22 @@ export function VisibilityPortfolioTab({
               </Button>
             ) : (
               <Button asChild variant="outline">
-                <Link href="/app/i/profile?profileView=full&tab=visibility">
-                  Review portfolio visibility
-                </Link>
+                <Link href="/app/i/profile?profileView=full&tab=visibility">Manage visibility</Link>
               </Button>
             )}
+
+            <div className="grid gap-2 sm:grid-cols-3">
+              {trustLinks.map(({ icon: Icon, label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="flex min-h-11 items-center gap-2 rounded-lg border border-proofound-stone/60 bg-[#fbf8f1]/70 px-3 py-2 text-sm font-medium text-proofound-charcoal transition-colors hover:border-proofound-forest/30 hover:bg-[#fbf8f1]"
+                >
+                  <Icon className="h-4 w-4 shrink-0 text-proofound-forest" />
+                  <span className="min-w-0 truncate">{label}</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </Card>

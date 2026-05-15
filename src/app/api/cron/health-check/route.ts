@@ -98,12 +98,12 @@ export async function GET(request: Request) {
         checks.ttfqi = { status: 'healthy' };
       }
 
-      // Check PAC (Purpose-Alignment Contribution)
+      // Check proof-fit lift.
       if (metrics.pacLift) {
         if (metrics.pacLift.lift < 15) {
           checks.pac_acceptance = {
             status: 'warning',
-            message: `PAC acceptance lift ${metrics.pacLift.lift.toFixed(1)}% below target of 20%`,
+            message: `Proof-fit acceptance lift ${metrics.pacLift.lift.toFixed(1)}% below target of 20%`,
           };
         } else {
           checks.pac_acceptance = { status: 'healthy' };
@@ -112,7 +112,7 @@ export async function GET(request: Request) {
         if (metrics.pacLift.lift < 12) {
           checks.pac_contract = {
             status: 'warning',
-            message: `PAC contract lift ${metrics.pacLift.lift.toFixed(1)}% below target of 15%`,
+            message: `Proof-fit contract lift ${metrics.pacLift.lift.toFixed(1)}% below target of 15%`,
           };
         } else {
           checks.pac_contract = { status: 'healthy' };

@@ -32,11 +32,18 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
   const experiences = compact ? viewModel.experiences.slice(0, 2) : viewModel.experiences;
   const education = compact ? viewModel.education.slice(0, 2) : viewModel.education;
   const impactEntries = compact ? viewModel.impactEntries.slice(0, 2) : viewModel.impactEntries;
-  const causes = compact ? viewModel.causes.slice(0, 4) : viewModel.causes;
-  const values = compact ? viewModel.values.slice(0, 4) : viewModel.values;
-  const culture = compact
-    ? viewModel.workCultureHighlights.slice(0, 4)
-    : viewModel.workCultureHighlights;
+  const causes =
+    viewModel.profileType === 'organization'
+      ? compact
+        ? viewModel.causes.slice(0, 4)
+        : viewModel.causes
+      : [];
+  const culture =
+    viewModel.profileType === 'organization'
+      ? compact
+        ? viewModel.workCultureHighlights.slice(0, 4)
+        : viewModel.workCultureHighlights
+      : [];
 
   return (
     <PublicProfileShell
@@ -185,26 +192,9 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
             </div>
           ) : null}
 
-          {values.length > 0 || causes.length > 0 || culture.length > 0 ? (
-            <PublicProfileSection title="Values, causes, and culture">
+          {causes.length > 0 || culture.length > 0 ? (
+            <PublicProfileSection title="Organization context">
               <div className="space-y-3">
-                {values.length > 0 ? (
-                  <div>
-                    <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
-                      Values
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {values.map((value) => (
-                        <span
-                          key={value}
-                          className="rounded-full border border-[#D9D5CC] bg-japandi-bg px-2.5 py-1 text-xs text-foreground"
-                        >
-                          {value}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
                 {causes.length > 0 ? (
                   <div>
                     <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">

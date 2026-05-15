@@ -94,38 +94,38 @@ describe('Gap 3: Fairness Reporting', () => {
 });
 
 describe('Gap 4: Match Explainer UI', () => {
-  test('should calculate composite match score', () => {
+  test('should calculate proof-first composite match score', () => {
     const subscores = {
-      values: 80,
-      causes: 75,
       skills: 90,
-      location: 100,
-      compensation: 85,
+      proof: 85,
+      verification: 80,
+      constraints: 95,
     };
 
     const weights = {
-      mission: 30,
-      expertise: 40,
-      logistics: 20,
-      recency: 10,
+      skills: 35,
+      proof: 20,
+      verification: 20,
+      constraints: 25,
     };
 
-    // Mission = (values*0.6 + causes*0.4) * weight
-    const missionScore =
-      (subscores.values * 0.6 + subscores.causes * 0.4) * (weights.mission / 100);
-    expect(missionScore).toBeGreaterThan(0);
+    const compositeScore =
+      subscores.skills * (weights.skills / 100) +
+      subscores.proof * (weights.proof / 100) +
+      subscores.verification * (weights.verification / 100) +
+      subscores.constraints * (weights.constraints / 100);
+    expect(compositeScore).toBeGreaterThan(0);
   });
 
-  test('should calculate PAC (Purpose-Alignment Contribution)', () => {
-    const pac = 12; // 0-15% boost
-    expect(pac).toBeGreaterThanOrEqual(0);
-    expect(pac).toBeLessThanOrEqual(15);
+  test('should not include retired purpose-fit boost', () => {
+    const purposeFitBoost = 0;
+    expect(purposeFitBoost).toBe(0);
   });
 
   test('should generate improvement tips', () => {
     const tips = [
-      'Add more values that align with this organization',
-      'Consider adding relevant causes',
+      'Add a proof artifact tied to a required skill',
+      'Add verification for the strongest proof pack',
     ];
     expect(tips.length).toBeGreaterThan(0);
   });

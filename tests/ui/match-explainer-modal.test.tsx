@@ -122,20 +122,11 @@ describe('MatchExplainerModal', () => {
         }}
         subscores={{
           skills: 0.9,
-          pac: 0.7,
           constraints: 0.8,
           recency: 0.75,
           evidence: 0.9,
         }}
         skillsMatch={{ required: [], nice: [] }}
-        pac={{
-          valuesOverlap: 0.5,
-          causesOverlap: 0.5,
-          sharedValues: ['privacy'],
-          sharedCauses: ['education'],
-          totalValues: 2,
-          totalCauses: 2,
-        }}
         constraints={{
           location: { match: true, details: 'Remote' },
           salary: { match: true, details: 'USD 100000-120000' },

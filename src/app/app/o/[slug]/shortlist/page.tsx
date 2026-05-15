@@ -5,5 +5,5 @@ export const dynamic = 'force-dynamic';
 export default async function OrgShortlistPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  redirect(`/app/o/${slug}/matching`);
+  redirect(`/app/o/${slug}/assignments`);
 }

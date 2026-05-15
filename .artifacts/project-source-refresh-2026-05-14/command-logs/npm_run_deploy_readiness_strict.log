@@ -1,0 +1,14 @@
+# npm run deploy:readiness:strict
+startedAt=2026-05-14T10:33:03.462Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 deploy:readiness:strict
+> FORCE_STRICT_DEPLOY_CHECK=true node ./scripts/check-deploy-readiness.mjs
+
+✅ Deploy readiness: all required env vars present.
+
+
+completedAt=2026-05-14T10:33:03.707Z
+exitCode=0
+durationMs=245
+timedOut=false

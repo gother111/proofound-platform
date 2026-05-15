@@ -197,6 +197,51 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
     expect(sendCandidateInviteEmail).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps proof-card invites tied to an assignment when provided', async () => {
+    const assignmentId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+
+    mockAuthenticatedUser({ role: 'org_manager', state: 'active', status: null });
+    mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
+    mockSelectWithWhere([]); // no existing invite
+    (resolveCandidateInvitePolicyContext as any).mockResolvedValueOnce({
+      organization: { id: orgId, orgTrustTier: 'reviewed', trustStatus: 'platform_reviewed' },
+      assignment: { id: assignmentId },
+      policyEvaluation: {
+        decision: 'allow',
+        orgTrustTier: 'reviewed',
+        reasons: [],
+      },
+    });
+
+    const insertValues = vi.fn().mockResolvedValue(undefined);
+    (db.insert as any).mockReturnValue({ values: insertValues });
+    (sendCandidateInviteEmail as any).mockResolvedValue(undefined);
+
+    const request = new NextRequest('http://localhost/api/organizations/org/candidate-invites', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: 'candidate@example.com',
+        flowType: 'proof_card',
+        assignmentId,
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.flowType).toBe('proof_card');
+    expect(payload.assignmentId).toBe(assignmentId);
+    expect(insertValues).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          flowType: 'proof_card',
+          assignmentId,
+        }),
+      ])
+    );
+  });
+
   it('rejects test_match invite creation for non-beta users', async () => {
     mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
     mockSelectWithLimit([{ isBetaTesting: false }]); // inviter profile flags

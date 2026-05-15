@@ -49,8 +49,6 @@ import {
   verificationRecords,
   volunteering,
 } from '@/db/schema';
-import { requireApiAuthContext } from '@/lib/auth';
-import { GET as getProfileCompleteness } from '@/app/api/profile/completeness/route';
 import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
 import * as canonicalPack from '@/lib/proofs/canonical-pack';
 import { getIndividualReadiness } from '@/lib/readiness/individual';
@@ -99,7 +97,6 @@ describe('verification integrity alignment', () => {
     });
     queryDb.individualProfiles.findFirst.mockResolvedValue({
       headline: 'Engineer',
-      mission: 'Build reliable systems',
     });
     (computeSkillGaps as any).mockResolvedValue({ gaps: [] });
 
@@ -160,7 +157,7 @@ describe('verification integrity alignment', () => {
           }
           if (table === individualProfiles) {
             return {
-              limit: vi.fn().mockResolvedValue([{ values: ['impact'], causes: ['climate'] }]),
+              limit: vi.fn().mockResolvedValue([{}]),
             };
           }
           if (table === matchingProfiles) {
@@ -200,100 +197,5 @@ describe('verification integrity alignment', () => {
     const state = await getIndividualProfileCompletionState('user-1');
 
     expect(state.counts.acceptedVerifications).toBe(1);
-  });
-
-  it('uses integrity_status clear in profile completeness verification count', async () => {
-    vi.mocked(canonicalPack.summarizeCanonicalProofOwnerAggregates).mockReturnValue({
-      packCount: 0,
-      publicPackCount: 0,
-      artifactCount: 0,
-      publicArtifactCount: 0,
-      publicProofSignalCount: 0,
-      verificationReferenceCount: 2,
-      activeVerificationCount: 2,
-      verifiedVerificationCount: 1,
-      subjectSummaries: [],
-    } as any);
-    (requireApiAuthContext as any).mockResolvedValue({
-      user: { id: 'user-1' },
-      supabase: {
-        from: vi.fn((table: string) => ({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn().mockResolvedValue({
-                data:
-                  table === 'profiles'
-                    ? { display_name: 'Jane Doe', avatar_url: 'https://example.com/a.png' }
-                    : table === 'individual_profiles'
-                      ? { headline: 'Engineer', bio: 'Bio', mission: 'Mission' }
-                      : { location: 'Stockholm' },
-                error: null,
-              }),
-            })),
-          })),
-        })),
-      },
-    });
-
-    const selectSpy = db.select as any;
-
-    selectSpy.mockImplementation(() => ({
-      from: vi.fn((table: unknown) => ({
-        where: vi.fn(() => {
-          if (table === skills) {
-            return Promise.resolve([{ count: 5 }]);
-          }
-          if (table === skillProofs) {
-            return Promise.resolve([{ count: 2 }]);
-          }
-          if (table === experiences) {
-            return Promise.resolve([{ count: 1 }]);
-          }
-          if (
-            table === proofPacks ||
-            table === proofPackItems ||
-            table === proofArtifacts ||
-            table === verificationRecords
-          ) {
-            return Promise.resolve([]);
-          }
-          throw new Error('Unexpected table in profile completeness select');
-        }),
-      })),
-    }));
-
-    (db.query as any).profiles.findFirst.mockResolvedValue({
-      displayName: 'Jane Doe',
-      avatarUrl: 'https://example.com/a.png',
-    });
-    (db.query as any).individualProfiles.findFirst.mockResolvedValue({
-      headline: 'Engineer',
-      mission: 'Mission',
-    });
-    (db.query as any).verificationRecords = {
-      findMany: vi.fn(async () => [
-        {
-          id: 'verification-clear',
-          ownerType: 'individual_profile',
-          ownerId: 'user-1',
-          status: 'verified',
-          integrityStatus: 'clear',
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 'verification-warning',
-          ownerType: 'individual_profile',
-          ownerId: 'user-1',
-          status: 'verified',
-          integrityStatus: 'warning',
-          updatedAt: new Date().toISOString(),
-        },
-      ]),
-    };
-
-    const response = await getProfileCompleteness();
-    expect(response.status).toBe(200);
-    const payload = await response.json();
-    expect(payload.proofCount).toBe(0);
   });
 });

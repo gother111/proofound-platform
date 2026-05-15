@@ -30,6 +30,7 @@ import {
   StartFromCvDraftOutputSchema,
   StartFromCvUnsupportedSkillDraftSchema,
 } from '@/lib/ai/start-from-cv';
+import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 
 describe('Start from CV guardrails', () => {
   beforeEach(() => {
@@ -40,6 +41,7 @@ describe('Start from CV guardrails', () => {
     const config = resolveStartFromCvConfig({});
 
     expect(config.enabled).toBe(false);
+    expect(config.guestFirstProofScaffoldingEnabled).toBe(false);
     expect(config.openBetaEnabled).toBe(false);
     expect(config.publicBrowserOcrEnabled).toBe(false);
     expect(config.maxFileSizeMb).toBe(5);
@@ -56,13 +58,14 @@ describe('Start from CV guardrails', () => {
         orgIds: [],
         env: {
           START_FROM_CV_BETA_ENABLED: 'true',
+          START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
           NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
         },
       })
     ).rejects.toMatchObject({ code: 'START_FROM_CV_NOT_INVITED' });
   });
 
-  it('opens beta access to authenticated individual users when open beta is enabled', async () => {
+  it('keeps open beta closed until the guest first-proof scaffolding gate is approved', async () => {
     await expect(
       assertStartFromCvAccess({
         userId: '11111111-1111-4111-8111-111111111111',
@@ -70,6 +73,22 @@ describe('Start from CV guardrails', () => {
         orgIds: [],
         env: {
           START_FROM_CV_BETA_ENABLED: 'true',
+          START_FROM_CV_OPEN_BETA_ENABLED: 'true',
+          NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
+        },
+      })
+    ).rejects.toMatchObject({ code: 'START_FROM_CV_APPROVED_SCAFFOLDING_REQUIRED' });
+  });
+
+  it('opens beta access only when the approved guest first-proof scaffolding gate is enabled', async () => {
+    await expect(
+      assertStartFromCvAccess({
+        userId: '11111111-1111-4111-8111-111111111111',
+        persona: 'individual',
+        orgIds: [],
+        env: {
+          START_FROM_CV_BETA_ENABLED: 'true',
+          START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
           START_FROM_CV_OPEN_BETA_ENABLED: 'true',
           NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
         },
@@ -85,6 +104,7 @@ describe('Start from CV guardrails', () => {
         orgIds: [],
         env: {
           START_FROM_CV_BETA_ENABLED: 'true',
+          START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
           START_FROM_CV_OPEN_BETA_ENABLED: 'true',
           NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
         },
@@ -100,35 +120,46 @@ describe('Start from CV guardrails', () => {
 
     expect(summary.enabled).toBe(true);
     expect(summary.ok).toBe(false);
+    expect(summary.blockers).toContain('guest_first_proof_scaffolding_not_approved');
     expect(summary.blockers).toContain('invite_audience_not_configured');
   });
 
-  it('reports authenticated-user beta readiness without requiring invite lists', () => {
+  it('reports authenticated-user beta readiness only after the guest scaffolding approval gate', () => {
     const summary = getStartFromCvLaunchSummary({
       START_FROM_CV_BETA_ENABLED: 'true',
+      START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
       START_FROM_CV_OPEN_BETA_ENABLED: 'true',
       NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
     });
 
     expect(summary.enabled).toBe(true);
+    expect(summary.guestFirstProofScaffoldingEnabled).toBe(true);
     expect(summary.openBetaEnabled).toBe(true);
     expect(summary.authenticatedUserBeta).toBe(true);
     expect(summary.inviteOnly).toBe(false);
     expect(summary.allowedUserCount).toBe(0);
     expect(summary.allowedOrgCount).toBe(0);
     expect(summary.ok).toBe(true);
+    expect(summary.blockers).not.toContain('guest_first_proof_scaffolding_not_approved');
     expect(summary.blockers).not.toContain('invite_audience_not_configured');
   });
 
   it('blocks launch status if browser CV OCR is enabled with Start from CV', () => {
     const summary = getStartFromCvLaunchSummary({
       START_FROM_CV_BETA_ENABLED: 'true',
+      START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
       START_FROM_CV_OPEN_BETA_ENABLED: 'true',
       NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'true',
     });
 
     expect(summary.ok).toBe(false);
     expect(summary.blockers).toContain('browser_cv_import_ocr_enabled');
+  });
+
+  it('uses a single explicit surface name for approved private scaffolding requests', () => {
+    expect(START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE).toBe(
+      'guest_first_proof_private_scaffolding'
+    );
   });
 
   it('counts PDF pages and applies image page defaults', () => {

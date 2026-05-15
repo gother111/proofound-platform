@@ -14,7 +14,7 @@ export default async function OrgCandidatesPage({ params }: { params: Promise<{ 
       primaryHref={getOrgSurfaceFallbackHref(slug, 'candidates')}
       primaryLabel="Open assignments & matches"
       secondaryHref={`/app/o/${slug}/profile`}
-      secondaryLabel="Open trust profile"
+      secondaryLabel="Open organization profile"
     />
   );
 }

@@ -8,35 +8,24 @@ import {
   GraduationCap,
   HandHeart,
   Heart,
-  Target,
   Sparkles,
   Edit3,
   Plus,
   MapPin,
   Calendar,
-  Upload,
-  CircleDashed,
   Compass,
-  Lightbulb,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 import { AvatarUpload } from './AvatarUpload';
-import { CoverUpload } from './CoverUpload';
 import type { BasicInfo } from '@/types/profile';
 
 interface EmptyProfileStateViewProps {
   basicInfo: BasicInfo;
-  profileCompletion: number;
   isPending: boolean;
   pending: {
     updatingBasicInfo: boolean;
-    mission: boolean;
-    values: boolean;
-    causes: boolean;
     skills: boolean;
     impactStory: boolean;
     experience: boolean;
@@ -44,9 +33,6 @@ interface EmptyProfileStateViewProps {
     volunteering: boolean;
   };
   onEditProfile: () => void;
-  onOpenMission: () => void;
-  onOpenValues: () => void;
-  onOpenCauses: () => void;
   onOpenSkills: () => void;
   onAddImpactStory: () => void;
   onAddExperience: () => void;
@@ -57,13 +43,9 @@ interface EmptyProfileStateViewProps {
 
 export function EmptyProfileStateView({
   basicInfo,
-  profileCompletion,
   isPending,
   pending,
   onEditProfile,
-  onOpenMission,
-  onOpenValues,
-  onOpenCauses,
   onOpenSkills,
   onAddImpactStory,
   onAddExperience,
@@ -87,28 +69,25 @@ export function EmptyProfileStateView({
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg">Welcome to Proofound!</h3>
-                  <span className="text-sm text-muted-foreground">
-                    {profileCompletion}% complete
-                  </span>
+                  <span className="text-sm text-muted-foreground">Proof-first setup</span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Your profile is a space to share your impact, values, and growth journey. Add
-                  meaningful context to help others understand who you are and what you care about.
+                  Start with one context-backed Proof Pack, then add privacy and trust signals when
+                  they strengthen the work.
                 </p>
-                <Progress value={profileCompletion} className="h-2 mb-4" />
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Compass className="w-3 h-3" />
-                  <span>Start by adding a photo, tagline, and your mission</span>
+                  <span>First proof, Public Page, preferences, then non-self verification</span>
                 </div>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Hero section with cover upload and avatar placeholder */}
+        {/* Hero section with avatar placeholder */}
         <div className="mb-12">
           <Card className="relative overflow-hidden border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-all duration-300 group cursor-pointer">
-            {/* Cover Area with Network Visualization - Empty State */}
+            {/* Proof Area with Network Visualization - Empty State */}
             <div className="h-48 bg-gradient-to-br from-[#7A9278]/10 via-[#C67B5C]/5 to-[#5C8B89]/10 relative">
               <div className="absolute inset-0 opacity-20">
                 {/* Subtle network pattern */}
@@ -145,18 +124,17 @@ export function EmptyProfileStateView({
                 </svg>
               </div>
 
-              {/* Upload Cover CTA */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 flex items-center justify-center">
                 <div className="bg-background/90 backdrop-blur-sm rounded-full px-6 py-3 flex items-center gap-2">
-                  <Upload className="w-4 h-4 text-[#7A9278]" />
-                  <span className="text-sm">Add cover image</span>
+                  <Sparkles className="w-4 h-4 text-[#7A9278]" />
+                  <span className="text-sm">Add your first proof</span>
                 </div>
               </div>
             </div>
 
             {/* Profile Info */}
             <div className="px-8 pb-8">
-              {/* Avatar - overlapping cover */}
+              {/* Avatar - overlapping proof area */}
               <div className="-mt-16 mb-6">
                 <div className="flex items-end gap-6">
                   <motion.div
@@ -222,96 +200,27 @@ export function EmptyProfileStateView({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left column with mission, values, and causes */}
+          {/* Left column with proof-first readiness */}
           <div className="space-y-6">
-            {/* Mission - Empty State */}
-            <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors group cursor-pointer">
+            <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors group">
               <div className="flex items-center gap-2 mb-4">
-                <Target className="w-5 h-5 text-[#7A9278]" />
-                <h3>Mission</h3>
+                <Shield className="w-5 h-5 text-[#7A9278]" />
+                <h3>Proof readiness</h3>
               </div>
               <div className="space-y-3">
-                <p className="text-sm text-muted-foreground/60 leading-relaxed italic">
-                  What drives your work? Share the change you want to create in the world.
+                <p className="text-sm text-muted-foreground/70 leading-relaxed">
+                  Build this profile from one real context, one proof pack, and one scoped
+                  verification request.
                 </p>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start text-xs group-hover:bg-[#7A9278]/10"
-                  onClick={onOpenMission}
-                  disabled={pending.mission || isPending}
+                  onClick={onAddImpactStory}
+                  disabled={pending.impactStory || isPending}
                 >
                   <Plus className="w-3 h-3 mr-2" />
-                  Add your mission
-                </Button>
-              </div>
-            </Card>
-
-            {/* Core Values - Empty State */}
-            <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#C67B5C]/40 transition-colors group cursor-pointer">
-              <div className="flex items-center gap-2 mb-4">
-                <Heart className="w-5 h-5 text-[#C67B5C]" />
-                <h3>Core Values</h3>
-              </div>
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground/60 leading-relaxed italic">
-                  The principles that guide your decisions and actions.
-                </p>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <Badge
-                    variant="outline"
-                    className="text-xs text-muted-foreground/40 border-dashed"
-                  >
-                    <CircleDashed className="w-3 h-3 mr-1" />
-                    Value 1
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="text-xs text-muted-foreground/40 border-dashed"
-                  >
-                    <CircleDashed className="w-3 h-3 mr-1" />
-                    Value 2
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="text-xs text-muted-foreground/40 border-dashed"
-                  >
-                    <CircleDashed className="w-3 h-3 mr-1" />
-                    Value 3
-                  </Badge>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-xs group-hover:bg-[#C67B5C]/10"
-                  onClick={onOpenValues}
-                  disabled={pending.values || isPending}
-                >
-                  <Plus className="w-3 h-3 mr-2" />
-                  Define your values
-                </Button>
-              </div>
-            </Card>
-
-            {/* Causes - Empty State */}
-            <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#5C8B89]/40 transition-colors group cursor-pointer">
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-5 h-5 text-[#5C8B89]" />
-                <h3>Causes I Support</h3>
-              </div>
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground/60 leading-relaxed italic">
-                  The issues and movements you&apos;re passionate about.
-                </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-xs group-hover:bg-[#5C8B89]/10"
-                  onClick={onOpenCauses}
-                  disabled={pending.causes || isPending}
-                >
-                  <Plus className="w-3 h-3 mr-2" />
-                  Add causes
+                  Add your first proof
                 </Button>
               </div>
             </Card>
@@ -464,8 +373,8 @@ export function EmptyProfileStateView({
                     <div className="space-y-2">
                       <h3 className="text-lg">Share Your Volunteering</h3>
                       <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                        Highlight your volunteer work and community involvement. Explain why these
-                        causes matter to you and what impact you&apos;ve created.
+                        Highlight your volunteer work and community involvement. Emphasize the
+                        context, outcomes, skills used, and proof you can attach.
                       </p>
                     </div>
                     <Button
@@ -478,8 +387,8 @@ export function EmptyProfileStateView({
                     </Button>
                     <div className="pt-4 text-xs text-muted-foreground">
                       <p>
-                        💡 Tip: Connect your service to your values and explain your personal
-                        motivation
+                        Tip: Connect your service to concrete outcomes and the proof that supports
+                        them
                       </p>
                     </div>
                   </div>

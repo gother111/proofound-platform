@@ -1,0 +1,14 @@
+# LAUNCH_CHECKLIST_SCOPE=repo npm run launch:checklist -- --scope repo --skip-full-validation
+startedAt=2026-05-14T10:33:04.035Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 launch:checklist
+> node --import tsx ./scripts/final-launch-checklist-status.ts --scope repo --skip-full-validation
+
+Final launch checklist generation failed: listen EPERM: operation not permitted 127.0.0.1
+
+
+completedAt=2026-05-14T10:35:14.051Z
+exitCode=1
+durationMs=130016
+timedOut=false

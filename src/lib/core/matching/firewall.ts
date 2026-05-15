@@ -4,7 +4,7 @@
  * Removes PII and identifying information from objects before scoring
  * and before rendering Stage 1 (blind) match results.
  *
- * Stage 1 (blind): Skills, values, causes, location mode, availability
+ * Stage 1 (blind): Skills, proof, practical constraints, availability
  * Stage 2 (revealed): All fields after mutual interest
  */
 
@@ -38,6 +38,10 @@ const DISALLOWED_FIELDS = [
   'orgName',
   'legalName',
   'employerName',
+  // Legacy purpose tags are not part of the individual MVP matching surface.
+  'valuesTags',
+  'valuesRequired',
+  'causeTags',
 ] as const;
 
 type DisallowedField = (typeof DISALLOWED_FIELDS)[number];

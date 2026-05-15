@@ -15,8 +15,6 @@ function buildState(overrides: Parameters<typeof evaluateIndividualProfileComple
     workPreference: 'remote',
     engagementType: 'contract',
     contextCount: 0,
-    valuesCount: 0,
-    causesCount: 0,
     skillsCount: 0,
     proofCount: 0,
     proofArtifactCount: 0,

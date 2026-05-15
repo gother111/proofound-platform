@@ -51,7 +51,7 @@ test.describe('Individual Flows - Unauthenticated Contract Profile Setup (I-05 t
     await expectAuthRedirect(page, '/app/i/profile');
   });
 
-  test('I-06: Mission & Vision section exists', async ({ page }) => {
+  test('I-06: Proof-first profile setup remains protected', async ({ page }) => {
     await expectAuthRedirect(page, '/app/i/profile');
   });
 });

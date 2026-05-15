@@ -70,6 +70,31 @@ const ARCHIVED_PAGE_CASES = [
     surfaceLabel: 'Organization Pages',
   },
   {
+    pathname: '/app/o/[slug]/culture',
+    file: 'src/app/app/o/[slug]/culture/page.tsx',
+    surfaceLabel: 'Organization Pages',
+  },
+  {
+    pathname: '/app/o/[slug]/goals',
+    file: 'src/app/app/o/[slug]/goals/page.tsx',
+    surfaceLabel: 'Organization Pages',
+  },
+  {
+    pathname: '/app/o/[slug]/impact',
+    file: 'src/app/app/o/[slug]/impact/page.tsx',
+    surfaceLabel: 'Organization Pages',
+  },
+  {
+    pathname: '/app/o/[slug]/partnerships',
+    file: 'src/app/app/o/[slug]/partnerships/page.tsx',
+    surfaceLabel: 'Organization Pages',
+  },
+  {
+    pathname: '/app/o/[slug]/structure',
+    file: 'src/app/app/o/[slug]/structure/page.tsx',
+    surfaceLabel: 'Organization Pages',
+  },
+  {
     pathname: '/app/o/[slug]/settings/goals',
     file: 'src/app/app/o/[slug]/settings/goals/page.tsx',
     surfaceLabel: 'Organization Pages',

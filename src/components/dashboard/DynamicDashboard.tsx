@@ -243,16 +243,18 @@ function getWidgetContent(widgetId: string): {
         </div>
       ),
     },
-    'profile-completion': {
-      icon: '📊',
-      title: 'Profile Progress',
+    'proof-readiness': {
+      icon: '✓',
+      title: 'Proof Readiness',
       content: (
         <div className="text-sm text-muted-foreground">
-          <p className="overline mb-3">Your profile is 75% complete</p>
-          <div className="h-3 bg-secondary/10 rounded-full overflow-hidden mb-2">
-            <div className="h-full w-3/4 bg-primary" />
-          </div>
-          <p className="text-xs">Add 5 more skills to reach 100%</p>
+          <p className="overline mb-3">Proof-first launch checklist</p>
+          <ul className="space-y-2">
+            <li>First Proof Pack created</li>
+            <li>Public Page ready</li>
+            <li>Matching preferences saved</li>
+            <li>One non-self verification planned</li>
+          </ul>
         </div>
       ),
     },

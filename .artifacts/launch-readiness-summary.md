@@ -4,6 +4,13 @@ Date: `2026-03-25`
 Workspace: `/Users/yuriibakurov/proofound`  
 Verdict: `NOT READY`
 
+> Historical/superseded freshness banner added 2026-05-14:
+>
+> - Do not treat this March launch verdict as current truth without checking newer evidence first.
+> - The locked MVP definition remains `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`; this memo cannot broaden it.
+> - For narrow pilot-readiness evidence, prefer `project/changes/entries/2026-04-09__mvp-launch-audit-execution.md` or newer current evidence. That April 9 execution retired the March build/runtime, route breadth, launch smoke, and strict org corridor blockers unless those blockers are reproduced again in a fresh run.
+> - For release-clean status, use `audit/full-scale-audit-2026-04-16.md` or newer release evidence; April 16 found the repo structurally healthy but not release-clean.
+
 ## Current Conclusion
 
 Fresh current-state evidence from `2026-03-25` does not support launch.
@@ -93,7 +100,7 @@ Proofound has fresh evidence that the live site can still serve key public and c
 
 ## Final Launch Checklist Artifact
 
-- Latest operational checklist: `.artifacts/launch-validation-2026-05-02/final-launch-checklist-status.md`
-- Latest machine-readable bundle: `.artifacts/launch-validation-2026-05-02/final-launch-checklist-status.json`
-- Generated at: `2026-05-02T21:22:38.745Z`
+- Latest operational checklist: `.artifacts/launch-validation-2026-05-14/final-launch-checklist-status.md`
+- Latest machine-readable bundle: `.artifacts/launch-validation-2026-05-14/final-launch-checklist-status.json`
+- Generated at: `2026-05-14T10:43:52.237Z`
 <!-- final-launch-checklist:end -->

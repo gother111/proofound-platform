@@ -255,8 +255,8 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground">Ready to find great talent! 🎉</h2>
         <p className="text-sm text-muted-foreground">
-          Start by sharing your public portfolio link, then create your first{' '}
-          <strong>Assignment</strong> to define what you're looking for.
+          Start by sharing your Public Page link, then create your first <strong>Assignment</strong>{' '}
+          to define what you're looking for.
         </p>
       </div>
     ),

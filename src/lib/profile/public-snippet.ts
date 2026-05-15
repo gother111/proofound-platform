@@ -56,7 +56,6 @@ export type PublicSnippetViewModel = {
   skills: Array<{ id: string; name: string; level: number | null }>;
   experiences: Array<{ id: string; title: string; orgDescription: string; duration: string }>;
   education: Array<{ id: string; institution: string; degree: string; duration: string }>;
-  values: string[];
   causes: string[];
   workCultureHighlights: string[];
   impactEntries: Array<{
@@ -81,8 +80,6 @@ type PublicSnippetAnalyticsSource = 'public_snippet_page' | 'public_snippet_embe
 const INDIVIDUAL_VISIBILITY_DEFAULTS: Record<string, 'public' | 'network' | 'private'> = {
   headline: 'public',
   location: 'network',
-  values: 'public',
-  causes: 'public',
   skills: 'public',
   experiences: 'private',
   education: 'private',
@@ -195,23 +192,15 @@ function asStringArray(value: unknown): string[] {
 
 function buildIndividualAbout(
   bio: string | null,
-  mission: string | null,
-  vision: string | null
+  _mission: string | null,
+  _vision: string | null
 ): string | null {
   const cleanBio = bio?.trim();
   if (cleanBio) {
     return cleanBio;
   }
 
-  const sections: string[] = [];
-  if (mission?.trim()) {
-    sections.push(`Mission: ${mission.trim()}`);
-  }
-  if (vision?.trim()) {
-    sections.push(`Vision: ${vision.trim()}`);
-  }
-
-  return sections.length > 0 ? sections.join('\n\n') : null;
+  return null;
 }
 
 function buildWorkCultureHighlights(workCulture: unknown): string[] {
@@ -366,10 +355,6 @@ async function buildIndividualSnippetViewModel(
       ip.tagline,
       ip.bio,
       ip.location,
-      ip.values,
-      ip.causes,
-      ip.mission,
-      ip.vision,
       ip.cover_image_url,
       ip.field_visibility,
       ip.redact_mode
@@ -406,7 +391,6 @@ async function buildIndividualSnippetViewModel(
       skills: [],
       experiences: [],
       education: [],
-      values: [],
       causes: [],
       workCultureHighlights: [],
       impactEntries: [],
@@ -426,23 +410,11 @@ async function buildIndividualSnippetViewModel(
     canInclude('headline', 'headline') && (profile.headline?.trim() || profile.tagline?.trim())
       ? profile.headline?.trim() || profile.tagline?.trim()
       : null;
-  const about =
-    canInclude('bio') || canInclude('bio', 'mission') || canInclude('bio', 'vision')
-      ? buildIndividualAbout(profile.bio, profile.mission, profile.vision)
-      : null;
+  const about = canInclude('bio') ? buildIndividualAbout(profile.bio, null, null) : null;
   const location = canInclude('location', 'location') ? (profile.location ?? null) : null;
   const avatarImage = canInclude('profileImage', 'avatar') ? (profile.avatar_url ?? null) : null;
   const heroImage = canInclude('profileImage') ? (profile.cover_image_url ?? null) : null;
-  const values = canInclude('values', 'values')
-    ? Array.isArray(profile.values)
-      ? profile.values
-          .map((entry: any) =>
-            typeof entry?.label === 'string' ? entry.label.trim() : String(entry ?? '').trim()
-          )
-          .filter((label: string) => label.length > 0)
-      : []
-    : [];
-  const causes = canInclude('causes', 'causes') ? asStringArray(profile.causes) : [];
+  const causes: string[] = [];
 
   let skills: PublicSnippetViewModel['skills'] = [];
   if (canInclude('skills', 'skills')) {
@@ -507,7 +479,6 @@ async function buildIndividualSnippetViewModel(
 
   const hasVisibleFields =
     Boolean(subtitle || about || location || avatarImage || heroImage) ||
-    values.length > 0 ||
     causes.length > 0 ||
     skills.length > 0 ||
     experiences.length > 0 ||
@@ -529,7 +500,6 @@ async function buildIndividualSnippetViewModel(
     skills,
     experiences,
     education,
-    values,
     causes,
     workCultureHighlights: [],
     impactEntries: [],
@@ -659,7 +629,6 @@ async function buildOrganizationSnippetViewModel(
     skills: [],
     experiences: [],
     education: [],
-    values: [],
     causes,
     workCultureHighlights,
     impactEntries,

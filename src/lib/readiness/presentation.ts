@@ -4,8 +4,7 @@ import type {
   TrustLevelOrNone,
 } from '@/lib/readiness/individual-state';
 
-export type ProfileCompletenessPresentation = {
-  percentage: number;
+export type ProofReadinessChecklistPresentation = {
   missing: string[];
   actions: Array<
     ReadinessAction & {
@@ -14,7 +13,6 @@ export type ProfileCompletenessPresentation = {
   >;
   skillCount?: number;
   proofCount?: number;
-  valuesCount?: number;
   states: ReadinessState[];
   highestState: ReadinessState | null;
 };
@@ -43,7 +41,7 @@ export type ExpertiseStatsPresentation = {
       remaining: {
         skillsWithRecency: number;
         proofCount: number;
-        purpose: number;
+        intentSignal: number;
         constraints: number;
         trustedSignal?: number;
       };
@@ -58,25 +56,10 @@ export type ExpertiseStatsPresentation = {
   >;
 };
 
-export function toProfileCompletenessPresentation(
+export function toProofReadinessChecklistPresentation(
   readiness: IndividualReadinessStateSnapshot
-): ProfileCompletenessPresentation {
-  const totalRequirements =
-    readiness.missingByState.portfolio_ready.length +
-    readiness.missingByState.browse_ready.length +
-    readiness.missingByState.qualified_intro_ready.length +
-    readiness.states.length * 2;
-  const unmetCount =
-    readiness.missingByState.portfolio_ready.length +
-    readiness.missingByState.browse_ready.length +
-    readiness.missingByState.qualified_intro_ready.length;
-  const percentage =
-    totalRequirements === 0
-      ? 100
-      : Math.max(8, Math.round(((totalRequirements - unmetCount) / totalRequirements) * 100));
-
+): ProofReadinessChecklistPresentation {
   return {
-    percentage,
     missing: [
       ...readiness.missingByState.portfolio_ready.map((item) => item.id),
       ...readiness.missingByState.browse_ready.map((item) => item.id),
@@ -88,7 +71,6 @@ export function toProfileCompletenessPresentation(
     })),
     skillCount: readiness.counts.skillsCount,
     proofCount: readiness.counts.proofCount,
-    valuesCount: 0,
     states: readiness.states,
     highestState: readiness.highestState,
   };
@@ -137,7 +119,7 @@ export function toExpertiseStatsPresentation(
               remaining: {
                 skillsWithRecency: Math.max(0, 3 - readiness.counts.skillsWithRecency),
                 proofCount: 0,
-                purpose: readiness.flags.hasIntentSignal ? 0 : 1,
+                intentSignal: readiness.flags.hasIntentSignal ? 0 : 1,
                 constraints: readiness.flags.hasLogisticsSignal ? 0 : 1,
               },
             }
@@ -149,7 +131,7 @@ export function toExpertiseStatsPresentation(
                 remaining: {
                   skillsWithRecency: Math.max(0, 5 - readiness.counts.skillsWithRecency),
                   proofCount: Math.max(0, 4 - readiness.counts.qualifyingProofLinkedL4Count),
-                  purpose: readiness.flags.hasPurposeBlock ? 0 : 1,
+                  intentSignal: readiness.flags.hasIntentSignal ? 0 : 1,
                   constraints: readiness.flags.hasIntroConstraints ? 0 : 1,
                   trustedSignal: readiness.flags.hasTrustedSignal ? 0 : 1,
                 },

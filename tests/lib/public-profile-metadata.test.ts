@@ -7,13 +7,13 @@ import {
 describe('public profile metadata helpers', () => {
   it('builds canonical metadata for public profile paths', () => {
     const metadata = buildPublicProfileMetadata({
-      title: 'Jane Doe | Proofound Public Portfolio',
-      description: 'Public profile summary',
+      title: 'Proofound Public Page',
+      description: 'Public Page summary',
       path: '/portfolio/jane',
     });
 
-    expect(metadata.title).toBe('Jane Doe | Proofound Public Portfolio');
-    expect(metadata.description).toBe('Public profile summary');
+    expect(metadata.title).toBe('Proofound Public Page');
+    expect(metadata.description).toBe('Public Page summary');
     expect(metadata.alternates?.canonical).toContain('/portfolio/jane');
     expect(metadata.openGraph?.type).toBe('website');
     expect(metadata.twitter?.card).toBe('summary_large_image');
@@ -52,7 +52,7 @@ describe('public profile metadata helpers', () => {
 
   it('returns safe unavailable metadata copy', () => {
     const metadata = buildUnavailablePublicProfileMetadata('/p/missing-token');
-    expect(metadata.title).toBe('Public Profile Unavailable | Proofound');
+    expect(metadata.title).toBe('Public Page Unavailable | Proofound');
     expect(String(metadata.description)).toContain('unavailable');
     expect(metadata.alternates?.canonical).toBeUndefined();
   });

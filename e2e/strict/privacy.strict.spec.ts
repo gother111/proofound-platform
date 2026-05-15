@@ -92,7 +92,6 @@ test.describe('Strict MVP Privacy and Security Flows', () => {
     let updateVisibilityResponse = await apiPostJson(page.request, '/api/profile/visibility', {
       displayName: 'public',
       location: 'private',
-      mission: 'network_only',
       skills: 'match_only',
     });
 
@@ -101,7 +100,6 @@ test.describe('Strict MVP Privacy and Security Flows', () => {
       updateVisibilityResponse = await apiPostJson(page.request, '/api/profile/visibility', {
         displayName: 'public',
         location: 'private',
-        mission: 'network_only',
         skills: 'match_only',
       });
     }
@@ -114,20 +112,19 @@ test.describe('Strict MVP Privacy and Security Flows', () => {
     const visibilityPayload = (await getVisibilityResponse.json()) as {
       displayName?: string;
       location?: string;
-      mission?: string;
       skills?: string;
     };
 
     if (updateVisibilityStatus === 200) {
       expect(visibilityPayload.displayName).toBe('public');
       expect(visibilityPayload.location).toBe('private');
-      expect(visibilityPayload.mission).toBe('network_only');
       expect(visibilityPayload.skills).toBe('match_only');
+      expect(visibilityPayload).not.toHaveProperty('mission');
     } else {
       expect(typeof visibilityPayload.displayName).toBe('string');
       expect(typeof visibilityPayload.location).toBe('string');
-      expect(typeof visibilityPayload.mission).toBe('string');
       expect(typeof visibilityPayload.skills).toBe('string');
+      expect(visibilityPayload).not.toHaveProperty('mission');
     }
   });
 

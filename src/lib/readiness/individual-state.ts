@@ -85,7 +85,6 @@ export type IndividualReadinessFlags = {
   hasMatchingProfile: boolean;
   hasIntentSignal: boolean;
   hasLogisticsSignal: boolean;
-  hasPurposeBlock: boolean;
   hasIntroConstraints: boolean;
   hasTrustedSignal: boolean;
 };
@@ -145,7 +144,7 @@ type PortfolioCompletionProfileRow = Pick<
 > | null;
 type PortfolioCompletionIndividualRow = Pick<
   typeof individualProfiles.$inferSelect,
-  'userId' | 'headline' | 'bio' | 'location' | 'values' | 'causes'
+  'userId' | 'headline' | 'bio' | 'location'
 > | null;
 type PortfolioCompletionMatchingRow = Pick<
   typeof matchingProfiles.$inferSelect,
@@ -193,23 +192,24 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
     id: 'request-required-verification',
     title: 'Request required verification',
     description:
-      'Add one accepted non-self verification tied to anchored proof before the portfolio can be public-ready.',
+      'Add one accepted non-self verification tied to anchored proof before the Public Page can be ready.',
     priority: 'high',
     category: 'verification',
     actionUrl: '/app/i/verifications',
   },
   publish_portfolio: {
     id: 'publish-portfolio',
-    title: 'Publish portfolio',
-    description: 'Choose one proof-backed public signal and publish the portfolio.',
+    title: 'Publish Public Page',
+    description:
+      'Choose one proof-backed public signal and publish the direct-link proof snapshot.',
     priority: 'high',
     category: 'profile',
     actionUrl: '/app/i/profile?profileView=full&tab=visibility',
   },
   preview_portfolio: {
     id: 'preview-portfolio',
-    title: 'Preview your public portfolio',
-    description: 'Open your public portfolio and confirm the proof you want to share.',
+    title: 'Preview your Public Page',
+    description: 'Open your Public Page and confirm the proof you want to share.',
     priority: 'medium',
     category: 'profile',
     actionUrl: '/app/i/profile?profileView=full&tab=visibility',
@@ -589,8 +589,6 @@ function buildPortfolioCompletionSnapshotInput(input: PortfolioCompletionSnapsho
     workPreference: input.matching?.workMode ?? null,
     engagementType: input.matching?.engagementType ?? null,
     contextCount: input.contextCount,
-    valuesCount: Array.isArray(input.individual?.values) ? input.individual.values.length : 0,
-    causesCount: Array.isArray(input.individual?.causes) ? input.individual.causes.length : 0,
     skillsCount: input.skillsCount,
     proofCount: input.proofCount,
     proofArtifactCount: input.proofArtifactCount,
@@ -660,8 +658,6 @@ export async function getIndividualPortfolioReadinessMap(
           headline: true,
           bio: true,
           location: true,
-          values: true,
-          causes: true,
         },
       })
     ),
@@ -719,10 +715,7 @@ export async function getIndividualPortfolioReadinessMap(
   const individualByUserId = new Map(
     (
       individualRows as Array<
-        Pick<
-          typeof individualProfiles.$inferSelect,
-          'userId' | 'headline' | 'bio' | 'location' | 'values' | 'causes'
-        >
+        Pick<typeof individualProfiles.$inferSelect, 'userId' | 'headline' | 'bio' | 'location'>
       >
     ).map((row) => [row.userId, row])
   );
@@ -1013,10 +1006,6 @@ export async function getIndividualReadinessState(
   const hasPublicProofSignal = publicProofCount >= 1;
   const hasMatchingProfile = Boolean(matching);
   const hasDesiredRoles = hasArrayContent(matching?.desiredRoles);
-  const hasPurposeBlock =
-    hasContent(individual?.mission) ||
-    hasArrayContent(individual?.values) ||
-    hasArrayContent(individual?.causes);
   const hasIntentSignal = hasDesiredRoles;
   const hasEngagementPreference = hasContent(matching?.engagementType);
   const hasLocationConstraint = hasContent(matching?.country) || hasContent(matching?.city);
@@ -1343,7 +1332,6 @@ export async function getIndividualReadinessState(
       hasMatchingProfile,
       hasIntentSignal,
       hasLogisticsSignal,
-      hasPurposeBlock,
       hasIntroConstraints,
       hasTrustedSignal,
     },

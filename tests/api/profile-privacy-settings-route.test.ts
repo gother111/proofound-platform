@@ -52,6 +52,7 @@ describe('profile privacy settings route', () => {
   it('merges private-by-default context fields into fetched visibility settings', async () => {
     mocks.findFirst.mockResolvedValue({
       fieldVisibility: {
+        location: 'network_only',
         mission: 'public',
       },
       redactMode: false,
@@ -62,11 +63,12 @@ describe('profile privacy settings route', () => {
 
     expect(response.status).toBe(200);
     expect(body.fieldVisibility).toMatchObject({
-      mission: 'public',
+      location: 'network_only',
       experiences: 'private',
       education: 'private',
       volunteering: 'private',
     });
+    expect(body.fieldVisibility).not.toHaveProperty('mission');
   });
 
   it('does not expose backend error details when fetching visibility settings fails', async () => {
@@ -101,7 +103,7 @@ describe('profile privacy settings route', () => {
         method: 'POST',
         body: JSON.stringify({
           fieldVisibility: {
-            mission: 'public',
+            location: 'network_only',
           },
           redactMode: false,
         }),
@@ -112,7 +114,7 @@ describe('profile privacy settings route', () => {
     expect(mocks.updateSet).toHaveBeenCalledWith(
       expect.objectContaining({
         fieldVisibility: {
-          mission: 'public',
+          location: 'network_only',
           experiences: 'private',
           education: 'private',
           volunteering: 'private',
@@ -130,7 +132,6 @@ describe('profile privacy settings route', () => {
         body: JSON.stringify({
           fieldVisibility: {
             mission: 'public',
-            databaseTable: 'public',
           },
           redactMode: false,
         }),

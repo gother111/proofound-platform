@@ -12,15 +12,13 @@ import {
   CheckCircle2,
   User,
   Target,
+  ShieldCheck,
   Briefcase,
   GraduationCap,
   HandHeart,
   Network,
   FolderOpen,
 } from 'lucide-react';
-import { MissionCard } from './MissionCard';
-import { ValuesCard } from './ValuesCard';
-import { CausesCard } from './CausesCard';
 import { SkillsCard } from './SkillsCard';
 import { getTaxonomyLabel, CAUSES_TAXONOMY } from '@/lib/taxonomy/data';
 import { verificationStatusLabel } from '@/lib/copy/labels';
@@ -35,9 +33,6 @@ interface ProfileViewProps {
       avatarUrl: string | null;
       tagline: string;
       verified: boolean;
-      mission: string;
-      values: Array<{ icon: string; label: string; verified: boolean }>;
-      causes: string[];
       skills: string[];
     };
     impactStories: ImpactStory[];
@@ -225,9 +220,16 @@ export function ProfileView({ data }: ProfileViewProps) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
             {/* Left Sidebar */}
             <div className="space-y-6">
-              <MissionCard mission={profile.mission} />
-              <ValuesCard values={profile.values} />
-              <CausesCard causes={profile.causes} />
+              <GlassCard className="p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <ShieldCheck className="h-5 w-5 text-[#7A9278]" />
+                  <h2 className="font-display font-medium">Proof profile</h2>
+                </div>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  This MVP profile emphasizes proof, context, skills, freshness, and scoped
+                  verification.
+                </p>
+              </GlassCard>
             </div>
 
             {/* Main Content - Tabs */}

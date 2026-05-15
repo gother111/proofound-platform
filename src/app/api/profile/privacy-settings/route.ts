@@ -28,10 +28,6 @@ const PRIVATE_CONTEXT_VISIBILITY_DEFAULTS = {
 
 const FieldVisibilitySchema = z
   .object({
-    mission: ProfileVisibilityLevelSchema.optional(),
-    vision: ProfileVisibilityLevelSchema.optional(),
-    values: ProfileVisibilityLevelSchema.optional(),
-    causes: ProfileVisibilityLevelSchema.optional(),
     avatar: ProfileVisibilityLevelSchema.optional(),
     tagline: ProfileVisibilityLevelSchema.optional(),
     location: ProfileVisibilityLevelSchema.optional(),
@@ -41,6 +37,18 @@ const FieldVisibilitySchema = z
     impactStories: ProfileVisibilityLevelSchema.optional(),
   })
   .strict();
+
+const INDIVIDUAL_PURPOSE_VISIBILITY_FIELDS = new Set(['mission', 'vision', 'values', 'causes']);
+
+function sanitizeIndividualFieldVisibility(
+  value: Record<string, unknown> | null | undefined
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(value || {}).filter(
+      ([field]) => !INDIVIDUAL_PURPOSE_VISIBILITY_FIELDS.has(field)
+    )
+  );
+}
 
 const PrivacySettingsUpdateSchema = z
   .object({
@@ -78,7 +86,9 @@ export async function GET() {
     return NextResponse.json({
       fieldVisibility: {
         ...PRIVATE_CONTEXT_VISIBILITY_DEFAULTS,
-        ...((profile.fieldVisibility as Record<string, unknown> | null) || {}),
+        ...sanitizeIndividualFieldVisibility(
+          profile.fieldVisibility as Record<string, unknown> | null
+        ),
       },
       redactMode: profile.redactMode || false,
     });
@@ -119,7 +129,7 @@ export async function POST(request: NextRequest) {
       .set({
         fieldVisibility: {
           ...PRIVATE_CONTEXT_VISIBILITY_DEFAULTS,
-          ...((fieldVisibility as Record<string, unknown> | null) || {}),
+          ...sanitizeIndividualFieldVisibility(fieldVisibility as Record<string, unknown> | null),
         },
         redactMode: redactMode || false,
       })

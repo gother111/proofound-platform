@@ -30,18 +30,8 @@ import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import {
-  Info,
-  Heart,
-  Target,
-  CheckCircle2,
-  TrendingUp,
-  Award,
-  AlertCircle,
-  Zap,
-} from 'lucide-react';
+import { Info, CheckCircle2, TrendingUp, Award, AlertCircle, Zap } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
 import {
   buildMatchExplainerContract,
   MATCH_EXPLAINER_TEST_IDS,
@@ -61,7 +51,6 @@ interface MatchExplainerProps {
   // Subscore breakdown
   subscores: {
     skills?: number; // 0-1
-    pac?: number; // 0-1 (Purpose-Alignment Contribution)
     constraints?: number; // 0-1 (location, salary, hours match)
     recency?: number; // 0-1 (skill freshness)
     evidence?: number; // 0-1 (verification strength)
@@ -81,16 +70,6 @@ interface MatchExplainerProps {
       yourLevel: number;
       met: boolean;
     }>;
-  };
-
-  // PAC breakdown
-  pac?: {
-    valuesOverlap: number; // 0-1
-    causesOverlap: number; // 0-1
-    sharedValues: string[];
-    sharedCauses: string[];
-    totalValues: number;
-    totalCauses: number;
   };
 
   // Constraints match
@@ -139,7 +118,6 @@ export function MatchExplainerModal({
   exactRankAvailable,
   subscores,
   skillsMatch,
-  pac,
   constraints,
   reasonSummary = [],
   reasonSections,
@@ -153,7 +131,6 @@ export function MatchExplainerModal({
   // Calculate percentages
   const overallPercent = Math.round(compositeScore * 100);
   const skillsPercent = Math.round((subscores.skills ?? 0) * 100);
-  const pacPercent = Math.round((subscores.pac ?? 0) * 100);
   const constraintsPercent = Math.round((subscores.constraints ?? 0) * 100);
   const recencyPercent = Math.round((subscores.recency ?? 0) * 100);
   const evidencePercent = Math.round((subscores.evidence ?? 0) * 100);
@@ -355,7 +332,6 @@ export function MatchExplainerModal({
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
-            <TabsTrigger value="purpose">Purpose</TabsTrigger>
             <TabsTrigger value="constraints">Constraints</TabsTrigger>
           </TabsList>
 
@@ -378,24 +354,6 @@ export function MatchExplainerModal({
                   </span>
                 </div>
                 <Progress value={skillsPercent} className="h-2" />
-              </div>
-            )}
-
-            {/* PAC */}
-            {subscores.pac !== undefined && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Heart className="w-4 h-4 text-proofound-terracotta" />
-                    <span className="text-sm font-medium text-foreground">
-                      {UI_VOCABULARY.pacLabel}
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-proofound-terracotta">
-                    {pacPercent}%
-                  </span>
-                </div>
-                <Progress value={pacPercent} className="h-2" />
               </div>
             )}
 
@@ -519,101 +477,6 @@ export function MatchExplainerModal({
               </>
             ) : (
               <p className="text-sm text-muted-foreground">No skills data available</p>
-            )}
-          </TabsContent>
-
-          {/* Purpose Tab */}
-          <TabsContent value="purpose" className="space-y-4 pt-4">
-            {pac ? (
-              <>
-                {/* Values Alignment */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Heart className="w-5 h-5 text-proofound-terracotta" />
-                    <h4 className="font-semibold text-sm text-foreground">Values Alignment</h4>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-muted-foreground">Overlap</span>
-                    <span className="text-sm font-semibold text-proofound-terracotta">
-                      {Math.round(pac.valuesOverlap * 100)}%
-                    </span>
-                  </div>
-                  <Progress value={pac.valuesOverlap * 100} className="h-2 mb-3" />
-
-                  {pac.sharedValues.length > 0 ? (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Shared values:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {pac.sharedValues.map((value, idx) => (
-                          <Badge
-                            key={idx}
-                            variant="secondary"
-                            className="bg-proofound-terracotta/10 text-proofound-terracotta border-[#C76B4A]/20"
-                          >
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            {value}
-                          </Badge>
-                        ))}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {pac.sharedValues.length} of {pac.totalValues} values in common
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">No values in common</p>
-                  )}
-                </div>
-
-                {/* Causes Alignment */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Target className="w-5 h-5 text-proofound-forest" />
-                    <h4 className="font-semibold text-sm text-foreground">Causes Alignment</h4>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-muted-foreground">Overlap</span>
-                    <span className="text-sm font-semibold text-proofound-forest">
-                      {Math.round(pac.causesOverlap * 100)}%
-                    </span>
-                  </div>
-                  <Progress value={pac.causesOverlap * 100} className="h-2 mb-3" />
-
-                  {pac.sharedCauses.length > 0 ? (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Shared causes:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {pac.sharedCauses.map((cause, idx) => (
-                          <Badge
-                            key={idx}
-                            variant="secondary"
-                            className="bg-proofound-forest/10 text-proofound-forest border-proofound-forest/20"
-                          >
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            {cause}
-                          </Badge>
-                        ))}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {pac.sharedCauses.length} of {pac.totalCauses} causes in common
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">No causes in common</p>
-                  )}
-                </div>
-
-                <div className="bg-japandi-bg rounded-lg p-4 border border-proofound-stone">
-                  <p className="text-xs leading-relaxed text-foreground">
-                    <strong className="font-semibold">{UI_VOCABULARY.pacLabel}</strong> uses value
-                    and cause overlap to estimate mission alignment. Higher scores mean this role
-                    aligns more closely with what matters to you.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">No purpose alignment data available</p>
             )}
           </TabsContent>
 

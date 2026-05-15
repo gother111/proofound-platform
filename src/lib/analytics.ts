@@ -218,15 +218,15 @@ export async function trackProfileCreated(
  * Track when profile is ready for matching.
  *
  * @param userId - User ID
- * @param completionScore - Profile completion percentage (0-100)
+ * @param readinessState - Plain-language readiness state for matching
  * @param request - Next.js Request object
  */
 export async function trackProfileReadyForMatch(
   userId: string,
-  completionScore: number,
+  readinessState: 'portfolio_ready' | 'browse_ready' | 'qualified_intro_ready',
   request: Request
 ): Promise<void> {
-  await trackEvent('profile_ready_for_match', { completionScore }, request, userId);
+  await trackEvent('profile_ready_for_match', { readinessState }, request, userId);
 }
 
 /**

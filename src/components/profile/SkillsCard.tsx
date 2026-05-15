@@ -57,11 +57,11 @@ export function SkillsCard({ skills, showManageLink = true }: SkillsCardProps) {
               </svg>
             </div>
             <p className="text-sm text-muted-foreground">
-              Strengthen your public portfolio with proof-backed examples of your work
+              Strengthen your Public Page with proof-backed examples of your work
             </p>
             <Button asChild variant="outline" size="sm" className="gap-2">
               <Link href="/app/i/profile?profileView=full&tab=visibility">
-                Review portfolio visibility
+                Review Public Page visibility
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </Button>
@@ -90,7 +90,7 @@ export function SkillsCard({ skills, showManageLink = true }: SkillsCardProps) {
               className="text-xs gap-1 text-muted-foreground hover:text-foreground"
             >
               <Link href="/app/i/profile?profileView=full&tab=proof_packs">
-                Review public portfolio
+                Review Public Page
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </Button>

@@ -46,8 +46,6 @@ describe('match visible fields route', () => {
           bio: 'Profile bio',
           skills: ['TypeScript'],
           location: 'Stockholm',
-          values: ['impact'],
-          causes: ['education'],
           linkedin_profile_url: 'https://linkedin.com/in/person',
         },
       ])
@@ -57,8 +55,6 @@ describe('match visible fields route', () => {
           display_name: 'private',
           headline: 'public',
           location: 'network_only',
-          values: 'public',
-          causes: 'public',
           skills: 'public',
         },
       ])
@@ -74,6 +70,8 @@ describe('match visible fields route', () => {
     expect(byField.get('name')?.isRedacted).toBe(true);
     expect(byField.get('headline')?.isRedacted).toBe(false);
     expect(byField.get('location')?.isRedacted).toBe(false);
+    expect(byField.has('values')).toBe(false);
+    expect(byField.has('causes')).toBe(false);
     expect(byField.get('compensation')?.value).toBe('Compensation overlap only');
     expect(byField.get('compensation')?.isRedacted).toBe(false);
   });
@@ -91,8 +89,6 @@ describe('match visible fields route', () => {
             bio: 'Profile bio',
             skills: ['TypeScript'],
             location: 'Stockholm',
-            values: ['impact'],
-            causes: ['education'],
             linkedin_profile_url: 'https://linkedin.com/in/person',
           },
         ];

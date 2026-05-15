@@ -7,13 +7,13 @@
  * PRD Reference: Part 5 F4 - Matching Hub with configurable weights
  *
  * Key changes from legacy:
- * - PAC (Purpose-Alignment Contribution) replaces separate values/causes weights
- * - Added recency and evidence weights for skill quality signals
+ * - Individual mission/values/causes weighting is disabled for the MVP.
+ * - Recency and evidence weights carry proof quality signals.
  * - Added workAuthorization for sponsorship compatibility
  */
 
 export interface WeightPreset {
-  // Legacy weights (kept for backward compatibility)
+  // Legacy purpose weights are kept for payload compatibility only.
   values: number;
   causes: number;
   // Core matching weights
@@ -25,7 +25,7 @@ export interface WeightPreset {
   compensation: number;
   language: number;
   // New PRD-aligned weights
-  pac: number; // Purpose-Alignment Contribution (combines values + causes + mission/vision)
+  pac: number; // Disabled for individual MVP matching.
   recency: number; // Skill recency factor
   evidence: number; // Evidence strength factor
   workAuthorization: number; // Work authorization compatibility
@@ -37,107 +37,95 @@ export interface WeightPreset {
  *
  * Total weights sum to 1.0 for each preset.
  *
- * Note: PAC is the primary purpose metric. Values and causes are kept
- * for backward compatibility but PAC should be used for new matching.
+ * Note: legacy purpose keys remain in saved payloads for compatibility, but
+ * active individual matching weights proof, skills, verification, and constraints.
  */
 export const MATCH_PRESETS: Record<string, WeightPreset> = {
   /**
-   * Mission-First: Prioritizes purpose alignment over skills.
-   * Best for impact-focused roles, NGOs, and values-driven organizations.
+   * Proof-first: prioritizes proof quality, freshness, and verified fit.
    */
-  'mission-first': {
-    // Legacy (sum to 0.60 of purpose weight)
-    values: 0.2,
-    causes: 0.15,
-    // Core weights
-    skills: 0.18,
-    experience: 0.08,
-    verifications: 0.03,
-    availability: 0.02,
-    location: 0.02,
-    compensation: 0.02,
-    language: 0.01,
-    // New PRD weights
-    pac: 0.35, // High PAC weight for mission-first
-    recency: 0.05,
-    evidence: 0.05,
+  'proof-first': {
+    values: 0,
+    causes: 0,
+    skills: 0.26,
+    experience: 0.12,
+    verifications: 0.12,
+    availability: 0.06,
+    location: 0.04,
+    compensation: 0.03,
+    language: 0.03,
+    pac: 0,
+    recency: 0.16,
+    evidence: 0.14,
     workAuthorization: 0.04,
   },
 
   /**
-   * Skills-First: Prioritizes technical skills and experience.
-   * Best for technical roles requiring specific expertise.
+   * Skills emphasis: prioritizes required skills and relevant experience.
    */
   'skills-first': {
-    // Legacy (lower purpose weight)
-    values: 0.06,
-    causes: 0.04,
+    values: 0,
+    causes: 0,
     // Core weights
-    skills: 0.35,
-    experience: 0.18,
+    skills: 0.32,
+    experience: 0.16,
     verifications: 0.08,
     availability: 0.05,
     location: 0.03,
     compensation: 0.02,
     language: 0.02,
-    // New PRD weights
-    pac: 0.1, // Lower PAC weight for skills-first
-    recency: 0.1,
-    evidence: 0.12,
+    pac: 0,
+    recency: 0.13,
+    evidence: 0.14,
     workAuthorization: 0.05,
   },
 
   /**
-   * Balanced: Equal consideration of purpose and skills.
+   * Balanced: even emphasis across proof, skills, verification, and constraints.
    * Default preset for general use cases.
    */
   balanced: {
-    // Legacy
-    values: 0.12,
-    causes: 0.08,
+    values: 0,
+    causes: 0,
     // Core weights
-    skills: 0.22,
-    experience: 0.12,
-    verifications: 0.06,
-    availability: 0.06,
-    location: 0.04,
-    compensation: 0.03,
-    language: 0.02,
-    // New PRD weights
-    pac: 0.2, // Moderate PAC weight
-    recency: 0.08,
-    evidence: 0.08,
+    skills: 0.25,
+    experience: 0.14,
+    verifications: 0.1,
+    availability: 0.08,
+    location: 0.05,
+    compensation: 0.04,
+    language: 0.03,
+    pac: 0,
+    recency: 0.18,
+    evidence: 0.09,
     workAuthorization: 0.04,
-  },
-
-  /**
-   * Purpose-Only: Maximum PAC weight for mission-critical matching.
-   * Use when cultural fit and values alignment are paramount.
-   */
-  'purpose-only': {
-    values: 0.25,
-    causes: 0.2,
-    skills: 0.08,
-    experience: 0.05,
-    verifications: 0.02,
-    availability: 0.02,
-    location: 0.02,
-    compensation: 0.01,
-    language: 0.01,
-    pac: 0.45, // Maximum PAC weight
-    recency: 0.03,
-    evidence: 0.03,
-    workAuthorization: 0.03,
   },
 };
 
 export type PresetKey = keyof typeof MATCH_PRESETS;
 
+const LEGACY_PRESET_ALIASES: Record<string, PresetKey> = {
+  'mission-first': 'proof-first',
+  'purpose-only': 'proof-first',
+};
+
+export function resolvePresetKey(key: string | null | undefined): PresetKey {
+  if (!key) {
+    return 'balanced';
+  }
+
+  if (key in MATCH_PRESETS) {
+    return key as PresetKey;
+  }
+
+  return LEGACY_PRESET_ALIASES[key] ?? 'balanced';
+}
+
 /**
  * Get a preset by key.
  */
-export function getPreset(key: PresetKey): WeightPreset {
-  return MATCH_PRESETS[key] || MATCH_PRESETS.balanced;
+export function getPreset(key: string | null | undefined): WeightPreset {
+  return MATCH_PRESETS[resolvePresetKey(key)];
 }
 
 /**
@@ -145,13 +133,20 @@ export function getPreset(key: PresetKey): WeightPreset {
  * Fills in missing weights from the balanced preset.
  */
 export function normalizeWeights(weights: Partial<WeightPreset>): WeightPreset {
-  const sum = Object.values(weights).reduce<number>((acc, val) => acc + (val ?? 0), 0);
+  const activeWeights = {
+    ...MATCH_PRESETS.balanced,
+    ...weights,
+    values: 0,
+    causes: 0,
+    pac: 0,
+  };
+  const sum = Object.values(activeWeights).reduce<number>((acc, val) => acc + (val ?? 0), 0);
 
   if (sum === 0) {
     return MATCH_PRESETS.balanced;
   }
 
-  const normalizedEntries = Object.entries(weights).reduce<Record<string, number>>(
+  const normalizedEntries = Object.entries(activeWeights).reduce<Record<string, number>>(
     (acc, [key, value]) => {
       acc[key] = (value ?? 0) / sum;
       return acc;
@@ -163,15 +158,10 @@ export function normalizeWeights(weights: Partial<WeightPreset>): WeightPreset {
 }
 
 /**
- * Get the PAC (Purpose-Alignment Contribution) weight from a preset.
- * This is the combined weight for all purpose-related scoring.
+ * Get the disabled legacy purpose weight from a preset.
  */
 export function getPACWeight(preset: WeightPreset): number {
-  // If pac weight exists, use it; otherwise combine values + causes
-  if (preset.pac > 0) {
-    return preset.pac;
-  }
-  return (preset.values || 0) + (preset.causes || 0);
+  return preset.pac || 0;
 }
 
 /**
@@ -230,10 +220,10 @@ function interpolateWeights(from: WeightPreset, to: WeightPreset, ratio: number)
 }
 
 /**
- * Convert a user-facing mission-vs-skills bias slider (0-100) into normalized weights.
- * 0: skills-first, 50: balanced, 100: mission-first
+ * Convert a user-facing proof-vs-skills bias slider (0-100) into normalized weights.
+ * 0: skills emphasis, 50: even emphasis, 100: proof emphasis
  */
-export function weightsFromMissionSkillsBias(value: number): WeightPreset {
+export function weightsFromProofSkillsBias(value: number): WeightPreset {
   const clampedValue = Math.max(0, Math.min(100, value));
 
   if (clampedValue <= 50) {
@@ -246,7 +236,7 @@ export function weightsFromMissionSkillsBias(value: number): WeightPreset {
 
   return interpolateWeights(
     MATCH_PRESETS.balanced,
-    MATCH_PRESETS['mission-first'],
+    MATCH_PRESETS['proof-first'],
     (clampedValue - 50) / 50
   );
 }

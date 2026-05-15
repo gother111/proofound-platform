@@ -242,10 +242,10 @@ export function OrganizationCausesEditor({
         <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg flex gap-3">
           <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-blue-900 dark:text-blue-300">
-            <p className="font-medium mb-1">Used in PAC Scoring</p>
+            <p className="font-medium mb-1">Used for organization context</p>
             <p className="text-blue-700 dark:text-blue-400">
-              Your causes are compared with candidate values during the matching process to assess
-              alignment. Choose up to 5 causes so the profile stays focused.
+              Causes help candidates understand the organization trust page and assignment context.
+              Choose up to 5 causes so the profile stays focused.
             </p>
           </div>
         </div>

@@ -21,7 +21,7 @@ export function OrgScopeNotice({
   primaryHref,
   primaryLabel,
   secondaryHref = `/app/o/${slug}/profile`,
-  secondaryLabel = 'Open trust profile',
+  secondaryLabel = 'Open organization profile',
 }: OrgScopeNoticeProps) {
   return (
     <AppSurface>

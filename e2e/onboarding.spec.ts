@@ -13,7 +13,7 @@ import {
  * - Individual users
  * - Organization users
  * - Skip functionality
- * - Profile completion
+ * - Proof-readiness onboarding
  */
 
 test.describe('Onboarding Wizard', () => {
@@ -326,29 +326,27 @@ test.describe('Onboarding Wizard', () => {
   });
 
   test.describe('Profile Completion Prompts', () => {
-    test('should show profile completion progress', async ({ page }) => {
+    test('should show proof-readiness setup language', async ({ page }) => {
       await page.goto('/app');
 
       await page.waitForTimeout(1000);
 
-      // Look for profile completion indicators
-      const completionIndicator = page.locator(
-        '[data-completion], .completion-badge, text=/profile.*complete|complete.*profile/i'
-      );
-      const hasIndicator = (await completionIndicator.count()) > 0;
+      // Look for proof-readiness indicators
+      const readinessIndicator = page.locator('text=/proof readiness|start proof|Proof Pack/i');
+      const hasIndicator = (await readinessIndicator.count()) > 0;
 
       // It's ok if no indicator exists - not all apps have this feature
       expect(true).toBeTruthy();
     });
 
-    test('should link to profile from completion prompts', async ({ page }) => {
+    test('should link to profile from proof-readiness prompts', async ({ page }) => {
       await page.goto('/app');
 
       await page.waitForTimeout(1000);
 
-      // Look for complete profile link/button
+      // Look for proof-readiness link/button
       const completeProfileButton = page.getByRole('link', {
-        name: /complete profile|finish profile/i,
+        name: /start proof|review proof|proof readiness/i,
       });
 
       if (await completeProfileButton.isVisible()) {

@@ -198,8 +198,8 @@ export const SUS_TARGET_SCORE = 75;
 export const WELLBEING_DELTA_TARGET_PERCENT = 60;
 
 /**
- * PAC (Purpose-Alignment Contribution) Lift
- * Target: Top-decile PAC matches show ≥20% higher intro acceptance
+ * Proof Fit Lift
+ * Target: top-decile proof-fit matches show at least 20% higher intro acceptance
  */
 export const PAC_LIFT_TARGET_PERCENT = 20;
 
@@ -276,7 +276,7 @@ export interface ProfileActivatedProperties {
 export interface MatchViewedProperties {
   match_id: string;
   match_score: number;
-  pac_value: number; // Purpose-Alignment Contribution
+  pac_value: number; // Legacy proof-fit lift value
   skills_score: number;
   constraints_score: number;
   verification_score: number;

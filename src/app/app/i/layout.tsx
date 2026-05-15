@@ -24,8 +24,6 @@ export default async function IndividualLayout({ children }: { children: React.R
     evaluateIndividualProfileCompletion({
       displayName: user.displayName,
       handle: user.handle,
-      valuesCount: 0,
-      causesCount: 0,
       skillsCount: 0,
       proofCount: 0,
       acceptedVerificationCount: 0,
@@ -54,7 +52,7 @@ export default async function IndividualLayout({ children }: { children: React.R
           isBetaTesting={user.isBetaTesting}
         />
         <div className="flex-1 flex flex-col min-w-0">
-          <TopBar userName={userName} userInitials={userInitials} />
+          <TopBar userName={userName} userInitials={userInitials} basePath="/app/i" />
           {/* Main content region with ID for skip-to-content link */}
           {/* Add bottom padding on mobile to account for bottom navigation (80px) */}
           <main

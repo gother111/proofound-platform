@@ -30,7 +30,10 @@ type CanonicalSkillRequestStatus =
   | 'expired'
   | 'failed'
   | 'cancelled'
-  | 'revoked';
+  | 'revoked'
+  | 'corrected'
+  | 'contradicted'
+  | 'disputed';
 
 type CanonicalSkillRequestMetadata = {
   requestTransport?: string;
@@ -129,6 +132,13 @@ function normalizeCanonicalStatus(
       return 'cancelled';
     case 'revoked':
       return 'revoked';
+    case 'superseded':
+    case 'downgraded':
+      return 'corrected';
+    case 'contradicted':
+      return 'contradicted';
+    case 'disputed':
+      return 'disputed';
     default:
       return 'pending';
   }

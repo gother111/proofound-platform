@@ -5,7 +5,7 @@
  * - TTFQI (Time to First Qualified Introduction)
  * - TTV (Time to Video Interview)
  * - TTSC (Time to Signed Contract)
- * - PAC Lift (Purpose-Alignment Contribution)
+ * - Proof Fit Lift
  * - SUS (System Usability Scale)
  * - Well-Being Delta
  *
@@ -210,16 +210,16 @@ export function MetricsDashboard() {
           icon={<Target className="w-5 h-5" />}
         />
 
-        {/* PAC Lift */}
+        {/* Proof Fit Lift */}
         <Card className="md:col-span-2">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Heart className="w-5 h-5 text-proofound-terracotta" />
-                  PAC Lift
+                  Proof Fit Lift
                 </CardTitle>
-                <CardDescription>Purpose-Alignment Contribution Impact</CardDescription>
+                <CardDescription>Proof-fit impact on introductions</CardDescription>
               </div>
               <Badge
                 variant={metrics.pacLift.onTrack ? 'default' : 'destructive'}
@@ -232,7 +232,7 @@ export function MetricsDashboard() {
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">With PAC</p>
+                <p className="text-sm text-muted-foreground mb-1">High proof fit</p>
                 <p className="text-2xl font-bold text-foreground">
                   {metrics.pacLift.withPAC.toFixed(1)}%
                 </p>
@@ -241,7 +241,7 @@ export function MetricsDashboard() {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Without PAC</p>
+                <p className="text-sm text-muted-foreground mb-1">Low proof fit</p>
                 <p className="text-2xl font-bold text-foreground">
                   {metrics.pacLift.withoutPAC.toFixed(1)}%
                 </p>

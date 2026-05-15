@@ -35,7 +35,7 @@ describe('Dashboard status badge styling', () => {
 
   it('uses shared status chip classes when portfolio status falls back to the first launch state', async () => {
     apiFetchMock
-      .mockRejectedValueOnce(new Error('completeness failed'))
+      .mockRejectedValueOnce(new Error('readiness failed'))
       .mockRejectedValueOnce(new Error('stats failed'));
 
     render(<ProfileActivationCard />);

@@ -1,9 +1,8 @@
 import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
 
 const PLAIN_VOCABULARY = {
-  pacLabel: 'Purpose fit',
-  pacTooltip:
-    'Purpose fit reflects how well your selected values and causes align with an organization.',
+  pacLabel: 'Proof fit',
+  pacTooltip: 'Proof fit reflects skills, evidence, freshness, verification, and constraints.',
   skillsLabel: 'skills',
   expertiseSystemLabel: 'Expertise Atlas',
   ttfqiLabel: 'Time to first good match',
@@ -11,8 +10,8 @@ const PLAIN_VOCABULARY = {
 } as const;
 
 const CANONICAL_VOCABULARY = {
-  pacLabel: 'PAC',
-  pacTooltip: 'PAC (Purpose-Alignment Contribution) quantifies values and causes alignment.',
+  pacLabel: 'Proof fit',
+  pacTooltip: 'Proof fit reflects skills, evidence, freshness, verification, and constraints.',
   skillsLabel: 'skills',
   expertiseSystemLabel: 'Expertise Atlas',
   ttfqiLabel: 'TTFQI',

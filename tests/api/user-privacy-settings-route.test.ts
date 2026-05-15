@@ -57,6 +57,7 @@ describe('user privacy settings route', () => {
   it('returns private-by-default context fields alongside stored visibility settings', async () => {
     mocks.findFirst.mockResolvedValue({
       fieldVisibility: {
+        location: 'network_only',
         mission: 'public',
       },
       redactMode: false,
@@ -67,11 +68,12 @@ describe('user privacy settings route', () => {
 
     expect(response.status).toBe(200);
     expect(body.fieldVisibility).toMatchObject({
-      mission: 'public',
+      location: 'network_only',
       experiences: 'private',
       education: 'private',
       volunteering: 'private',
     });
+    expect(body.fieldVisibility).not.toHaveProperty('mission');
   });
 
   it('writes private-by-default context fields when saving a partial payload', async () => {
@@ -83,7 +85,7 @@ describe('user privacy settings route', () => {
         method: 'POST',
         body: JSON.stringify({
           fieldVisibility: {
-            mission: 'public',
+            location: 'network_only',
           },
           redactMode: false,
         }),
@@ -93,7 +95,7 @@ describe('user privacy settings route', () => {
     expect(response.status).toBe(200);
     expect(mocks.updateSet).toHaveBeenCalledWith({
       fieldVisibility: {
-        mission: 'public',
+        location: 'network_only',
         experiences: 'private',
         education: 'private',
         volunteering: 'private',
@@ -111,7 +113,6 @@ describe('user privacy settings route', () => {
         body: JSON.stringify({
           fieldVisibility: {
             mission: 'public',
-            databaseTable: 'public',
           },
           redactMode: false,
         }),

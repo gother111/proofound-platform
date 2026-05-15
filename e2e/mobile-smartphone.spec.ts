@@ -108,7 +108,7 @@ test.describe('Smartphone UI regression', () => {
           ).toBeVisible();
           await expect(routePage.getByTestId('profile-skeleton')).toHaveCount(0);
           await expect(
-            routePage.getByRole('heading', { name: 'Public portfolio readiness' })
+            routePage.getByRole('heading', { name: 'Public Page readiness' })
           ).toBeVisible();
         },
       },
@@ -126,7 +126,7 @@ test.describe('Smartphone UI regression', () => {
         pathname: '/app/o/test-org/profile',
         assertLoaded: async (routePage) => {
           await expect(
-            routePage.getByRole('heading', { name: 'Organization trust profile' })
+            routePage.getByRole('heading', { name: 'Organization Profile' })
           ).toBeVisible();
         },
       },
@@ -252,7 +252,7 @@ test.describe('Smartphone UI regression', () => {
     if (isOrgMode) {
       await gotoStable(page, '/app/o/test-org/profile');
       const orgMobileNav = page.getByRole('navigation', { name: 'Mobile primary navigation' });
-      await expect(orgMobileNav.getByRole('link', { name: 'Public Trust Profile' })).toBeVisible();
+      await expect(orgMobileNav.getByRole('link', { name: 'Public Preview' })).toBeVisible();
       await expect(orgMobileNav.getByRole('link', { name: 'Settings' })).toHaveCount(0);
     }
   });
@@ -287,7 +287,7 @@ test.describe('Smartphone UI regression', () => {
 
     const publicTrustProfileLink = page
       .getByRole('navigation', { name: 'Mobile primary navigation' })
-      .getByRole('link', { name: 'Public Trust Profile' });
+      .getByRole('link', { name: 'Public Preview' });
     await expect(publicTrustProfileLink).toBeVisible();
     await publicTrustProfileLink.click({ trial: true });
   });
@@ -326,9 +326,7 @@ test.describe('Smartphone UI regression', () => {
           if (route.startsWith('/app/i/')) {
             await expect(mobileNav.getByRole('link', { name: 'Settings' })).toBeVisible();
           } else {
-            await expect(
-              mobileNav.getByRole('link', { name: 'Public Trust Profile' })
-            ).toBeVisible();
+            await expect(mobileNav.getByRole('link', { name: 'Public Preview' })).toBeVisible();
             await expect(mobileNav.getByRole('link', { name: 'Settings' })).toHaveCount(0);
           }
         } finally {

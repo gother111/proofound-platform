@@ -66,7 +66,6 @@ export function PortfolioVisibilityCard() {
   const assistiveAiEnabled = useAssistiveAiFlag();
   const [flags, setFlags] = useState<VisibilityFlags>(defaults);
   const [publicPageEnabled, setPublicPageEnabled] = useState(true);
-  const [searchIndexingEnabled, setSearchIndexingEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -81,7 +80,6 @@ export function PortfolioVisibilityCard() {
           const data = await res.json();
           if (data.visibility) setFlags(data.visibility);
           setPublicPageEnabled(data.publicPageEnabled !== false);
-          setSearchIndexingEnabled(Boolean(data.searchIndexingEnabled));
         }
       } catch (e) {
         console.error(e);
@@ -104,7 +102,7 @@ export function PortfolioVisibilityCard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           publicPageEnabled,
-          searchIndexingEnabled,
+          searchIndexingEnabled: false,
           ...flags,
         }),
       });
@@ -153,9 +151,9 @@ export function PortfolioVisibilityCard() {
   return (
     <Card variant="bento">
       <CardHeader>
-        <CardTitle>Public Portfolio Visibility</CardTitle>
+        <CardTitle>Public Page visibility</CardTitle>
         <CardDescription>
-          Shareable by link comes first. Search engines are off by default.
+          A direct-link proof snapshot comes first. Search engines stay off for the MVP.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-slate-700">
@@ -168,26 +166,19 @@ export function PortfolioVisibilityCard() {
           <>
             <VisibilityRow
               label="Public page enabled"
-              description="Anyone with the link can view your public portfolio."
+              description="Anyone with the link can view your Public Page."
               checked={publicPageEnabled}
               onCheckedChange={() => setPublicPageEnabled((prev) => !prev)}
             />
             <VisibilityRow
-              label="Allow search engines"
-              description="Only enable this when the page is meant to be searchable."
-              checked={searchIndexingEnabled}
-              onCheckedChange={() => setSearchIndexingEnabled((prev) => !prev)}
-              disabled={!publicPageEnabled}
-            />
-            <VisibilityRow
               label="Header (name, handle, headline)"
-              description="Required for a credible public portfolio."
+              description="Required for a credible Public Page."
               checked={flags.header}
               onCheckedChange={() => toggle('header')}
             />
             <VisibilityRow
               label="Proof bar block"
-              description="Shows proof-backed trust summary."
+              description="Shows proof-backed snapshot details."
               checked={flags.proofBar}
               onCheckedChange={() => toggle('proofBar')}
             />
@@ -226,9 +217,7 @@ export function PortfolioVisibilityCard() {
 
             <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
               {publicPageEnabled
-                ? searchIndexingEnabled
-                  ? 'Public page is on and eligible for search indexing when the content is safe to index.'
-                  : 'Public page is on and shareable by direct link. Search engines should not index it.'
+                ? 'Public page is on and shareable by direct link. Search engines should not index it.'
                 : 'Public page is off. The public route will be unavailable.'}
             </p>
 

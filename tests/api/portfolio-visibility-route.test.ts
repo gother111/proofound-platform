@@ -190,4 +190,27 @@ describe('POST /api/portfolio/visibility privacy preflight', () => {
     expect(supabase.__mocks.individualUpdate).toHaveBeenCalled();
     expect(supabase.__mocks.profileUpdate).toHaveBeenCalled();
   });
+
+  it('hard-disables individual search indexing even when requested', async () => {
+    const supabase = buildSupabase();
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const response = await POST(
+      request({
+        publicPageEnabled: true,
+        searchIndexingEnabled: true,
+        header: true,
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.searchIndexingEnabled).toBe(false);
+    expect(supabase.__mocks.profileUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        public_portfolio_state: 'public_link_only',
+        search_indexing_enabled_at: null,
+      })
+    );
+  });
 });

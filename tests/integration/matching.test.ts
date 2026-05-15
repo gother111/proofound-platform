@@ -59,7 +59,7 @@ describe('Matching API Integration', () => {
     // 5. Organization info is scrubbed
 
     // In a full integration test, we would:
-    // const response = await POST('/api/core/matching/profile', { mode: 'balanced', k: 10 });
+    // const response = await POST('/api/core/matching/profile', { k: 10 });
     // expect(response.status).toBe(200);
     // expect(response.items).toHaveLength(1);
     // expect(response.items[0].assignmentId).toBe(testAssignmentId);
@@ -75,9 +75,8 @@ describe('Matching API Integration', () => {
     expect(true).toBe(true); // Placeholder for actual test
   });
 
-  it('should apply PAC scoring correctly', async () => {
-    // Test that purpose-alignment contribution affects scoring
-    // High PAC matches should rank higher than low PAC matches
+  it('should ignore retired purpose-fit scoring', async () => {
+    // Test that proof-first scoring does not rank by mission, values, or causes.
     expect(true).toBe(true); // Placeholder for actual test
   });
 

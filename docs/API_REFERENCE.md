@@ -265,7 +265,6 @@ Canonical API documentation generated from the current App Router route handlers
 | Methods     | Path                            | Auth Tier | Notes | Source                                          |
 | ----------- | ------------------------------- | --------- | ----- | ----------------------------------------------- |
 | `GET`       | `/api/profile`                  | `session` | -     | `src/app/api/profile/route.ts`                  |
-| `GET`       | `/api/profile/completeness`     | `session` | -     | `src/app/api/profile/completeness/route.ts`     |
 | `GET\|POST` | `/api/profile/privacy-settings` | `session` | -     | `src/app/api/profile/privacy-settings/route.ts` |
 | `GET\|POST` | `/api/profile/visibility`       | `session` | -     | `src/app/api/profile/visibility/route.ts`       |
 

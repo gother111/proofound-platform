@@ -47,7 +47,7 @@ test.describe('Seeded public org trust smoke', () => {
     await expect(
       page.getByRole('heading', { name: SEEDED_PUBLIC_ORG_TRUST_FIXTURE.organization.displayName })
     ).toBeVisible();
-    await expect(page.getByText(/public organization trust card/i)).toBeVisible();
+    await expect(page.getByText(/public organization profile/i)).toBeVisible();
     await expect(page.getByText(/shareable by direct link/i)).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Mission / purpose' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'What work is offered' })).toBeVisible();

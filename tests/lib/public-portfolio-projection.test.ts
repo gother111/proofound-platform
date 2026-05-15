@@ -360,6 +360,67 @@ describe('public portfolio projection', () => {
     expect(JSON.stringify(projection)).not.toContain('Jane Doe Resume.pdf');
   });
 
+  it('builds the profile summary only from public-safe structured proof context tokens', async () => {
+    vi.mocked(db.execute as any).mockResolvedValueOnce(profileRow());
+    vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([
+      publicReadyAggregate({
+        pack: {
+          title: 'Launch corridor proof',
+          contextJson: {
+            contextCompanySize: '11-50',
+            contextFocusArea: 'Proof systems',
+            contextIndustryDomain: 'Proof-first hiring',
+            contextScope: 'global',
+            contextOperatingEnvironment: 'Remote launch team',
+          },
+          outcomesSummary: 'Do not promote this outcome as biography.',
+        },
+        contract: {
+          title: 'Launch corridor proof',
+          primaryClaim: { statement: 'Do not use this claim as summary copy.' },
+        },
+      }),
+    ]);
+
+    const projection = await getPublicIndividualPortfolioProjectionByHandle('jane');
+
+    expect(projection).not.toBeNull();
+    expect(projection?.traceableSummary).toMatchObject({
+      provenanceLabel: 'Generated from public-safe Proof Packs and context tokens',
+      hasEnoughData: true,
+      segments: [
+        expect.objectContaining({
+          key: 'scale',
+          state: 'ready',
+          value: 'Company size: 11-50',
+          sources: [
+            expect.objectContaining({
+              label: 'Launch corridor proof',
+              detail: 'Experience',
+            }),
+          ],
+        }),
+        expect.objectContaining({
+          key: 'focus',
+          state: 'ready',
+          value: 'Work area: Proof systems',
+        }),
+        expect.objectContaining({
+          key: 'context',
+          state: 'ready',
+          value:
+            'Industry: Proof-first hiring · Operating environment: Remote launch team · Scope: global',
+        }),
+      ],
+    });
+    expect(JSON.stringify(projection?.traceableSummary)).not.toContain(
+      'Do not promote this outcome as biography.'
+    );
+    expect(JSON.stringify(projection?.traceableSummary)).not.toContain(
+      'Do not use this claim as summary copy.'
+    );
+  });
+
   it('serves the local mock organization public trust page in mock Supabase mode', async () => {
     process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
 
@@ -523,7 +584,7 @@ describe('public portfolio projection', () => {
     expect(projection?.effectiveState).toBe('unavailable');
   });
 
-  it('allows search indexing only for explicit eligible public-safe portfolios', async () => {
+  it('keeps individual Public Pages noindex even when stale data requested search indexing', async () => {
     vi.mocked(db.execute as any).mockResolvedValueOnce(
       profileRow({
         public_portfolio_state: 'public_indexable',
@@ -537,12 +598,12 @@ describe('public portfolio projection', () => {
     const projection = await getPublicIndividualPortfolioProjectionByHandle('jane');
 
     expect(projection).not.toBeNull();
-    expect(projection?.effectiveState).toBe('public_indexable');
-    expect(projection?.metadata.useGenericPreview).toBe(false);
+    expect(projection?.effectiveState).toBe('public_noindex');
+    expect(projection?.metadata.useGenericPreview).toBe(true);
     expect(projection?.exportData.publication).toMatchObject({
       requestedState: 'public_indexable',
-      effectiveState: 'public_indexable',
-      searchIndexingEnabled: true,
+      effectiveState: 'public_noindex',
+      searchIndexingEnabled: false,
     });
   });
 
@@ -672,7 +733,7 @@ describe('public portfolio projection', () => {
     const serialized = JSON.stringify(projection);
 
     expect(projection).not.toBeNull();
-    expect(projection?.effectiveState).toBe('public_indexable');
+    expect(projection?.effectiveState).toBe('public_noindex');
     expect(projection?.publicDisplayName).toBe('jane');
     expect(projection?.publicHeadline).toBe('');
     expect(projection?.publicBio).toBeNull();

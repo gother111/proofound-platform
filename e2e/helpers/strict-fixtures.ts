@@ -439,24 +439,18 @@ export async function createRuntimeMatch(
     vector: {
       subscores: {
         skills: 0.9,
-        values: 0.8,
+        proof: 0.8,
         location: 1,
       },
       contributions: {
         skills: 0.4,
-        values: 0.3,
+        proof: 0.3,
         location: 0.3,
       },
       gaps: [],
       missing: [],
     },
-    weights: {
-      mission: 0.25,
-      expertise: 0.35,
-      tools: 0.1,
-      logistics: 0.2,
-      recency: 0.1,
-    },
+    weights: {},
   };
 
   const { data: match, error: matchError } = await supabase
@@ -651,8 +645,6 @@ export async function seedPortfolioReadyCandidate(
       comp_min: 90000,
       comp_max: 130000,
       currency: 'USD',
-      values_tags: ['integrity'],
-      cause_tags: ['education'],
     },
     { onConflict: 'profile_id' }
   );

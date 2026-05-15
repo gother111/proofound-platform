@@ -31,7 +31,7 @@ export function PersonaChoice({ onSelect }: PersonaChoiceProps) {
                 Individual
               </CardTitle>
               <CardDescription className="text-base text-proofound-charcoal/70 dark:text-muted-foreground">
-                Launch a clean public proof portfolio link you can share today, then unlock matching
+                Launch a clean Public Page link you can share today, then unlock matching
                 opportunities
               </CardDescription>
             </div>

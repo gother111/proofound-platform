@@ -1,0 +1,10 @@
+# node .artifacts/project-source-refresh-2026-05-14/generate-api-reference-evidence.mjs
+startedAt=2026-05-14T10:33:03.707Z
+cwd=/Users/yuriibakurov/proofound
+Generated /Users/yuriibakurov/proofound/.artifacts/project-source-refresh-2026-05-14/api-reference-generation-workspace-1778754783789/docs/API_REFERENCE.md with 138 endpoints across 31 families.
+
+
+completedAt=2026-05-14T10:33:04.035Z
+exitCode=0
+durationMs=328
+timedOut=false

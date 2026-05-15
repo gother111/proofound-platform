@@ -36,7 +36,7 @@ vi.mock('@/components/organization/OrgTrustProfileEditor', () => ({
   ),
 }));
 
-describe('Organization trust profile page', () => {
+describe('Organization profile page', () => {
   it('renders only the lean trust corridor and omits culture/value surfaces', async () => {
     const element = await OrganizationProfilePage({
       params: Promise.resolve({ slug: 'acme' }),
@@ -44,7 +44,7 @@ describe('Organization trust profile page', () => {
 
     render(element);
 
-    expect(screen.getByText(/organization trust profile/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Organization Profile' })).toBeInTheDocument();
     expect(
       screen.getByText(
         /mission, why the work matters, verified domain path, and operating context/i

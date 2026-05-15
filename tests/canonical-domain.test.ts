@@ -92,7 +92,6 @@ describe('match audit persistence helpers', () => {
     expect(first.inputsHash).toBe(second.inputsHash);
     expect(first.reasonCodes).toEqual([
       'skills_strong',
-      'purpose_alignment_strong',
       'verification_ready',
       'logistics_fit',
       'compensation_fit',
@@ -180,6 +179,22 @@ describe('match score contract v1', () => {
     expect(Number(artifact?.subscoresJson.confidence_total)).toBeLessThan(10000);
   });
 
+  it('does not score individual values or causes in the MVP match contract', () => {
+    const first = buildCanonicalMatchScoreArtifact(baseInput);
+    const second = buildCanonicalMatchScoreArtifact({
+      ...baseInput,
+      profileValuesTags: ['unrelated'],
+      profileCauseTags: ['unrelated'],
+    });
+
+    expect(first?.scoreTotal).toBe(second?.scoreTotal);
+    expect(first?.inputsHash).toBe(second?.inputsHash);
+    expect(first?.reasonCodes).not.toContain('purpose_alignment_strong');
+    expect(first?.reasonCodes).not.toContain('purpose_alignment_partial');
+    expect(first?.subscoresJson.values_fit).toBeNull();
+    expect(first?.subscoresJson.causes_fit).toBeNull();
+  });
+
   it('uses the documented tie breaker order', () => {
     const left = {
       scoreTotal: 8500,
@@ -188,7 +203,7 @@ describe('match score contract v1', () => {
         constraints_fit: 8000,
         proof_fit: 7000,
         verification_fit: 10000,
-        purpose_fit: 6000,
+        purpose_fit: null,
         confidence_total: 9000,
       },
       counterpartId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
@@ -200,7 +215,7 @@ describe('match score contract v1', () => {
         constraints_fit: 8000,
         proof_fit: 7000,
         verification_fit: 10000,
-        purpose_fit: 6000,
+        purpose_fit: null,
         confidence_total: 9000,
       },
       counterpartId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',

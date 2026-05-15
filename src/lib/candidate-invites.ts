@@ -4,7 +4,6 @@ export {
   CANDIDATE_INVITE_EXPIRY_DAYS,
   CANDIDATE_INVITE_FLOW_TYPE,
   CANDIDATE_INVITE_STATUS,
-  CANDIDATE_PROOF_CARD_DEFAULT_FIELDS,
 } from '@/lib/candidate-invites-shared';
 export type {
   CandidateInviteFlowType,

@@ -125,9 +125,30 @@ type PublicProofOverview = {
   publicProofCount: number;
   verifiedPublicProofPackCount: number;
   publicSkillIds: string[];
+  traceableSummaryBuckets: Record<TraceableProfileSummarySegment['key'], SummaryTokenBucket[]>;
   hasLinkOnlyContent: boolean;
   hasRevealGatedContent: boolean;
   hasPrivateContent: boolean;
+};
+
+export type TraceableProfileSummarySource = {
+  id: string;
+  label: string;
+  detail: string | null;
+};
+
+export type TraceableProfileSummarySegment = {
+  key: 'scale' | 'focus' | 'context';
+  label: 'Scale' | 'Focus' | 'Context';
+  value: string;
+  state: 'ready' | 'fallback';
+  sources: TraceableProfileSummarySource[];
+};
+
+export type TraceableProfileSummary = {
+  provenanceLabel: string;
+  segments: TraceableProfileSummarySegment[];
+  hasEnoughData: boolean;
 };
 
 const MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
@@ -146,6 +167,7 @@ export type PublicIndividualPortfolioProjection = {
   publicProofCount: number;
   verifiedPublicProofPackCount: number;
   featuredProofs: FeaturedProof[];
+  traceableSummary: TraceableProfileSummary;
   visibility: ReturnType<typeof mergeVisibilityFlags>;
   individual: {
     work_email: string | null;
@@ -501,6 +523,237 @@ function collectHiddenContextTerms(value: unknown): string[] {
   return terms;
 }
 
+type SummaryTokenField = {
+  label: string;
+  keys: string[];
+};
+
+type SummaryTokenBucket = {
+  source: TraceableProfileSummarySource;
+  values: string[];
+};
+
+const TRACEABLE_SUMMARY_FIELDS: Record<TraceableProfileSummarySegment['key'], SummaryTokenField[]> =
+  {
+    scale: [
+      {
+        label: 'Team size',
+        keys: ['teamSize', 'team_size', 'contextTeamSize', 'context_team_size'],
+      },
+      {
+        label: 'Budget scope',
+        keys: ['budgetScope', 'budget_scope', 'contextBudgetScope', 'context_budget_scope'],
+      },
+      {
+        label: 'Customer volume',
+        keys: [
+          'customerVolume',
+          'customer_volume',
+          'contextCustomerVolume',
+          'context_customer_volume',
+        ],
+      },
+      {
+        label: 'Company size',
+        keys: ['companySize', 'company_size', 'contextCompanySize', 'context_company_size'],
+      },
+      {
+        label: 'Project scope',
+        keys: ['projectScope', 'project_scope', 'contextProjectScope', 'context_project_scope'],
+      },
+    ],
+    focus: [
+      {
+        label: 'Work area',
+        keys: ['focusArea', 'focus_area', 'contextFocusArea', 'context_focus_area'],
+      },
+      {
+        label: 'Capability pattern',
+        keys: [
+          'capabilityPattern',
+          'capability_pattern',
+          'capabilityPatterns',
+          'capability_patterns',
+        ],
+      },
+      {
+        label: 'Work area',
+        keys: ['workArea', 'work_area', 'workAreas', 'work_areas'],
+      },
+      {
+        label: 'Role context',
+        keys: ['roleContext', 'role_context'],
+      },
+    ],
+    context: [
+      {
+        label: 'Industry',
+        keys: [
+          'industry',
+          'industryDomain',
+          'industry_domain',
+          'contextIndustryDomain',
+          'context_industry_domain',
+        ],
+      },
+      {
+        label: 'Operating environment',
+        keys: [
+          'operatingEnvironment',
+          'operating_environment',
+          'contextOperatingEnvironment',
+          'context_operating_environment',
+        ],
+      },
+      {
+        label: 'Scope',
+        keys: ['scope', 'contextScope', 'context_scope', 'localGlobalScope', 'local_global_scope'],
+      },
+      {
+        label: 'Company stage',
+        keys: ['companyStage', 'company_stage', 'contextCompanyStage', 'context_company_stage'],
+      },
+      {
+        label: 'Market type',
+        keys: ['marketType', 'market_type', 'marketModel', 'market_model', 'b2bB2c', 'b2b_b2c'],
+      },
+      {
+        label: 'Regulatory context',
+        keys: [
+          'regulatedContext',
+          'regulated_context',
+          'regulatedNonRegulated',
+          'regulated_non_regulated',
+          'regulation',
+        ],
+      },
+    ],
+  };
+
+const TRACEABLE_SUMMARY_FALLBACKS: Record<TraceableProfileSummarySegment['key'], string> = {
+  scale:
+    'Add public-safe scale tokens such as team size, customer volume, budget scope, company size, or project scope.',
+  focus: 'Add work-area, capability-pattern, or proof-supported skill tokens.',
+  context:
+    'Add public-safe context tokens such as industry, operating environment, stage, scope, market type, or regulated context.',
+};
+
+const TRACEABLE_SUMMARY_LABELS: Record<
+  TraceableProfileSummarySegment['key'],
+  TraceableProfileSummarySegment['label']
+> = {
+  scale: 'Scale',
+  focus: 'Focus',
+  context: 'Context',
+};
+
+function normalizeSummaryTokenValue(value: unknown): string[] {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return [String(value)];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap((entry) => normalizeSummaryTokenValue(entry));
+  }
+
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    return normalizeSummaryTokenValue(record.label ?? record.name ?? record.value);
+  }
+
+  return [];
+}
+
+function collectSummaryFieldTokens(input: {
+  record: Record<string, unknown>;
+  fields: SummaryTokenField[];
+  hiddenContextTerms: string[];
+}): string[] {
+  const tokens: string[] = [];
+
+  for (const field of input.fields) {
+    for (const key of field.keys) {
+      const values = normalizeSummaryTokenValue(input.record[key]);
+      for (const value of values) {
+        const sanitized = sanitizePublicText(value, input.hiddenContextTerms);
+        if (!sanitized || sanitized.includes('[redacted')) {
+          continue;
+        }
+        tokens.push(`${field.label}: ${sanitized}`);
+      }
+    }
+  }
+
+  return dedupeStrings(tokens);
+}
+
+function dedupeStrings(values: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const value of values) {
+    const normalized = value.trim();
+    const key = normalized.toLowerCase();
+    if (!normalized || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    result.push(normalized);
+  }
+
+  return result;
+}
+
+function buildTraceableProfileSummary(input: {
+  bucketsBySegment: Record<TraceableProfileSummarySegment['key'], SummaryTokenBucket[]>;
+  publicSkills: string[];
+}): TraceableProfileSummary {
+  const skillsFallback = input.publicSkills.slice(0, 4);
+  const segments: TraceableProfileSummarySegment[] = (['scale', 'focus', 'context'] as const).map(
+    (key) => {
+      const buckets = input.bucketsBySegment[key] ?? [];
+      let values = dedupeStrings(buckets.flatMap((bucket) => bucket.values)).slice(0, 4);
+      let sources = buckets
+        .filter((bucket) => bucket.values.length > 0)
+        .map((bucket) => bucket.source)
+        .slice(0, 3);
+
+      if (key === 'focus' && values.length === 0 && skillsFallback.length > 0) {
+        values = [`Proof-supported skills: ${skillsFallback.join(', ')}`];
+        sources = [
+          {
+            id: 'public-proof-supported-skills',
+            label: 'Public Proof Packs',
+            detail: 'Proof-supported skill links',
+          },
+        ];
+      }
+
+      const state: TraceableProfileSummarySegment['state'] =
+        values.length > 0 ? 'ready' : 'fallback';
+
+      return {
+        key,
+        label: TRACEABLE_SUMMARY_LABELS[key],
+        value: values.length > 0 ? values.join(' · ') : TRACEABLE_SUMMARY_FALLBACKS[key],
+        state,
+        sources,
+      };
+    }
+  );
+
+  return {
+    provenanceLabel: 'Generated from public-safe Proof Packs and context tokens',
+    segments,
+    hasEnoughData: segments.some((segment) => segment.state === 'ready'),
+  };
+}
+
 function sanitizePublicText(value: string | null | undefined, hiddenTerms: string[] = []) {
   return sanitizePrivacyPreflightTextForPublic(value, hiddenTerms);
 }
@@ -671,6 +924,14 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
   const publicSkillIds = new Set<string>();
   const featuredProofsByArtifactId = new Map<string, FeaturedProof & { sortKey: string }>();
   const publicProofPacks: PublicTrustExportData['proofPacks'] = [];
+  const traceableSummaryBuckets: Record<
+    TraceableProfileSummarySegment['key'],
+    SummaryTokenBucket[]
+  > = {
+    scale: [],
+    focus: [],
+    context: [],
+  };
   let verifiedPublicProofPackCount = 0;
 
   let hasLinkOnlyContent = false;
@@ -715,6 +976,37 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
       ...collectHiddenContextTerms(aggregate.pack.contextJson),
       ...collectHiddenContextTerms(aggregate.pack.metadata),
     ];
+    const publicPackTitle =
+      sanitizePublicText(publicSafePack.contract.title, hiddenContextTerms) ||
+      sanitizePublicText(publicSafePack.title, hiddenContextTerms) ||
+      sanitizePublicText(aggregate.pack.title, hiddenContextTerms) ||
+      'Proof Pack';
+    const publicPackContextLabel = resolvePublicProofPackContextLabel({
+      pack: aggregate.pack,
+      hiddenContextTerms,
+    });
+    const source = {
+      id: aggregate.pack.id,
+      label: publicPackTitle,
+      detail: publicPackContextLabel,
+    };
+    const summaryTokenRecord = {
+      ...toRecord(aggregate.pack.contextJson),
+      ...toRecord(aggregate.pack.metadata),
+      roleContext: publicSafePack.contract.roleContext ?? aggregate.pack.roleContext ?? null,
+      role_context: publicSafePack.contract.roleContext ?? aggregate.pack.roleContext ?? null,
+    };
+
+    for (const key of ['scale', 'focus', 'context'] as const) {
+      const values = collectSummaryFieldTokens({
+        record: summaryTokenRecord,
+        fields: TRACEABLE_SUMMARY_FIELDS[key],
+        hiddenContextTerms,
+      });
+      if (values.length > 0) {
+        traceableSummaryBuckets[key].push({ source, values });
+      }
+    }
 
     if (hasAcceptedPublicReadyVerification(aggregate)) {
       verifiedPublicProofPackCount += 1;
@@ -724,11 +1016,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
       id: aggregate.pack.id,
       scope: 'public_safe',
       status: publicSafePack.contract.status,
-      title:
-        sanitizePublicText(publicSafePack.contract.title, hiddenContextTerms) ||
-        sanitizePublicText(publicSafePack.title, hiddenContextTerms) ||
-        sanitizePublicText(aggregate.pack.title, hiddenContextTerms) ||
-        'Proof Pack',
+      title: publicPackTitle,
       summary:
         sanitizePublicText(publicSafePack.contract.primaryClaim.statement, hiddenContextTerms) ||
         '',
@@ -752,10 +1040,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
       proofQualityScore: publicSafePack.contract.proofQualityScore,
       schemaVersion: publicSafePack.contract.schemaVersion,
       artifactCount: publicSafePack.items.length,
-      contextLabel: resolvePublicProofPackContextLabel({
-        pack: aggregate.pack,
-        hiddenContextTerms,
-      }),
+      contextLabel: publicPackContextLabel,
       selectedEvidence: publicSafePack.items.slice(0, 3).map((item) => ({
         title: resolvePublicEvidenceTitle({
           title: item.title,
@@ -799,6 +1084,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
     publicProofCount: featuredProofsByArtifactId.size,
     verifiedPublicProofPackCount,
     publicSkillIds: [...publicSkillIds],
+    traceableSummaryBuckets,
     hasLinkOnlyContent,
     hasRevealGatedContent,
     hasPrivateContent,
@@ -909,7 +1195,9 @@ function buildIndividualExportData(input: {
     publication: {
       requestedState: resolveRequestedPublicPortfolioState(input.profile.public_portfolio_state),
       effectiveState: input.effectiveState,
-      searchIndexingEnabled: Boolean(input.profile.search_indexing_enabled_at),
+      searchIndexingEnabled:
+        Boolean(input.profile.search_indexing_enabled_at) &&
+        input.effectiveState === 'public_indexable',
     },
     signals,
     skills: input.visibility.skills
@@ -950,7 +1238,7 @@ function buildProofFirstDescription(input: {
   return (
     input.publicBio ||
     input.publicHeadline ||
-    `${input.publicDisplayName}'s proof-first public portfolio on Proofound.`
+    `${input.publicDisplayName}'s proof-first Public Page on Proofound.`
   );
 }
 
@@ -1011,6 +1299,10 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
     visibility.skills && isVisibleOnPublicPage(profile.skills_visibility ?? 'public')
       ? await loadPublicSkillLabels(profile.id, proofOverview.publicSkillIds)
       : [];
+  const traceableSummary = buildTraceableProfileSummary({
+    bucketsBySegment: proofOverview.traceableSummaryBuckets,
+    publicSkills,
+  });
 
   const minimumContentMet = Boolean(
     profile.handle &&
@@ -1022,6 +1314,7 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
   const effectiveState = deriveEffectivePublicPortfolioState({
     requestedState: resolveRequestedPublicPortfolioState(profile.public_portfolio_state),
     searchIndexingEnabled: Boolean(profile.search_indexing_enabled_at),
+    allowSearchIndexing: false,
     minimumContentMet,
     redactMode: Boolean(profile.redact_mode),
     hasLinkOnlyContent: proofOverview.hasLinkOnlyContent,
@@ -1076,6 +1369,7 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
     publicProofCount: proofOverview.publicProofCount,
     verifiedPublicProofPackCount: proofOverview.verifiedPublicProofPackCount,
     featuredProofs: proofOverview.featuredProofs,
+    traceableSummary,
     visibility,
     individual: {
       work_email: visibility.contact && visibility.workEmail ? profile.work_email : null,
@@ -1086,16 +1380,16 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
     metadata: {
       path: `/portfolio/${encodeURIComponent(profile.handle)}`,
       title: shouldUseGenericSharePreview(effectiveState)
-        ? 'Proofound public portfolio'
+        ? 'Proofound Public Page'
         : `${publicDisplayName} | Proofound`,
       description: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable by direct link on Proofound.'
+        ? 'A proof snapshot shared by direct link on Proofound.'
         : proofFirstDescription,
       ogTitle: shouldUseGenericSharePreview(effectiveState)
-        ? 'Proofound public portfolio'
+        ? 'Proofound Public Page'
         : `${publicDisplayName} on Proofound`,
       ogDescription: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable by direct link on Proofound.'
+        ? 'A proof snapshot shared by direct link on Proofound.'
         : proofFirstDescription,
       useGenericPreview: shouldUseGenericSharePreview(effectiveState),
     },
@@ -1245,13 +1539,13 @@ function buildMockPublicOrganizationPortfolioProjection(): PublicOrganizationPor
         ? 'Proofound organization portfolio'
         : `${organization.display_name} | Proofound`,
       description: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization trust card on Proofound.'
+        ? 'Shareable organization profile on Proofound.'
         : publicSummary,
       ogTitle: shouldUseGenericSharePreview(effectiveState)
         ? 'Proofound organization portfolio'
         : `${organization.display_name} on Proofound`,
       ogDescription: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization trust card on Proofound.'
+        ? 'Shareable organization profile on Proofound.'
         : publicSummary,
       useGenericPreview: shouldUseGenericSharePreview(effectiveState),
     },
@@ -1406,7 +1700,7 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
       : organization.tagline?.trim()) ||
     organization.tagline?.trim() ||
     verifiedDomainPath ||
-    'Public organization trust card on Proofound.';
+    'Public organization profile on Proofound.';
 
   const minimumContentMet = Boolean(
     organization.slug &&
@@ -1444,13 +1738,13 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
         ? 'Proofound organization portfolio'
         : `${publicDisplayName} | Proofound`,
       description: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization trust card on Proofound.'
+        ? 'Shareable organization profile on Proofound.'
         : publicSummary,
       ogTitle: shouldUseGenericSharePreview(effectiveState)
         ? 'Proofound organization portfolio'
         : `${publicDisplayName} on Proofound`,
       ogDescription: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization trust card on Proofound.'
+        ? 'Shareable organization profile on Proofound.'
         : publicSummary,
       useGenericPreview: shouldUseGenericSharePreview(effectiveState),
     },

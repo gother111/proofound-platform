@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 
 import { db } from '@/db';
-import { orgCandidateInvites } from '@/db/schema';
+import { orgCandidateInvites, proofPacks } from '@/db/schema';
 import {
   beginCapabilityTokenRedeemSession,
   CAPABILITY_REDEEM_SESSION_MAX_AGE_SECONDS,
@@ -15,6 +15,7 @@ import {
   buildCandidateInvitePolicyError,
   resolveCandidateInvitePolicyContext,
 } from '@/lib/candidate-invite-policy';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,6 +115,45 @@ export async function GET(
       entityId: invite.id,
     });
 
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const canShowPrivateProofPacks = Boolean(
+      user &&
+        invite.flowType === 'proof_card' &&
+        invite.claimedByProfileId === user.id &&
+        (invite.status === CANDIDATE_INVITE_STATUS.CLAIMED ||
+          invite.status === CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED)
+    );
+
+    const availableProofPacks = canShowPrivateProofPacks
+      ? await db
+          .select({
+            id: proofPacks.id,
+            title: proofPacks.title,
+            summary: proofPacks.summary,
+            evidenceSummary: proofPacks.evidenceSummary,
+            outcomesSummary: proofPacks.outcomesSummary,
+            verificationSummary: proofPacks.verificationSummary,
+            updatedAt: proofPacks.updatedAt,
+          })
+          .from(proofPacks)
+          .where(
+            and(
+              eq(proofPacks.ownerType, 'individual_profile'),
+              eq(proofPacks.ownerId, user!.id),
+              eq(proofPacks.visibility, 'owner_only'),
+              eq(proofPacks.revealGate, 'none'),
+              isNull(proofPacks.publishedAt),
+              isNull(proofPacks.deletedAt)
+            )
+          )
+          .orderBy(desc(proofPacks.updatedAt))
+          .limit(10)
+      : [];
+
     const response = NextResponse.json({
       invite: {
         id: invite.id,
@@ -135,10 +175,29 @@ export async function GET(
         ? {
             id: assignment.id,
             role: assignment.role,
+            description: assignment.description,
             status: assignment.status,
+            creationStatus: assignment.creationStatus,
+            engagementType: assignment.engagementType,
+            businessValue: assignment.businessValue,
+            expectedImpact: assignment.expectedImpact,
+            mustHaveSkills: assignment.mustHaveSkills ?? [],
+            niceToHaveSkills: assignment.niceToHaveSkills ?? [],
+            locationMode: assignment.locationMode,
+            country: assignment.country,
+            city: assignment.city,
+            compMin: assignment.compMin,
+            compMax: assignment.compMax,
+            currency: assignment.currency,
+            hoursMin: assignment.hoursMin,
+            hoursMax: assignment.hoursMax,
+            startEarliest: assignment.startEarliest,
+            startLatest: assignment.startLatest,
+            verificationGates: assignment.verificationGates ?? [],
             createdAt: assignment.createdAt,
           }
         : null,
+      availableProofPacks,
     });
 
     response.cookies.set(

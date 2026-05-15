@@ -189,14 +189,14 @@ export const FALLBACK_COPY: Record<
   },
   browse_only_low_assignment_supply: {
     individual: {
-      title: 'Your portfolio remains live and shareable.',
+      title: 'Your Public Page remains live and shareable.',
       detail:
-        'Assignment demand is still thin right now, so qualified introductions are conservative while your public portfolio keeps working.',
+        'Assignment demand is still thin right now, so qualified introductions are conservative while your Public Page keeps working.',
       statusLabel: 'Assignment supply thin',
       nextActions: [
-        'Improve your portfolio or proof',
+        'Improve your Public Page or proof',
         'Complete trust signals or constraints',
-        'Keep browsing and share your portfolio',
+        'Keep browsing and share your Public Page',
       ],
     },
     organization: {

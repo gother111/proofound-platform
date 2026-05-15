@@ -115,10 +115,10 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
       <CardHeader className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <div className="space-y-1">
-            <CardTitle className="text-lg">Public portfolio</CardTitle>
+            <CardTitle className="text-lg">Public Page</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Publish proof first. Search engines stay off by default, and browsing plus
-              introductions build on top of that once trust is strong enough.
+              Publish a direct-link proof snapshot first. Search engines stay off, and introductions
+              build on top once trust is strong enough.
             </p>
           </div>
           <Badge variant="outline" className={DASHBOARD_STATUS_CHIP_CLASS}>
@@ -157,7 +157,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
           <Button asChild className="bg-proofound-forest text-white hover:bg-proofound-forest/90">
             <Link href="/app/i/profile?profileView=full&tab=visibility">
               <ExternalLink className="mr-2 h-4 w-4" />
-              Preview portfolio
+              Preview Public Page
             </Link>
           </Button>
           <Button
@@ -167,7 +167,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
             disabled={!data?.publicPortfolioUrl}
           >
             <Copy className="mr-2 h-4 w-4" />
-            {copied ? 'Copied' : 'Copy portfolio link'}
+            {copied ? 'Copied' : 'Copy Public Page link'}
           </Button>
           <Button type="button" variant="outline" asChild>
             <Link href="/app/i/settings">
@@ -193,7 +193,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Your public portfolio is live and shareable by link. It remains useful even while
+            Your Public Page is live and shareable by link. It remains useful even while
             introductions stay protected until stronger proof and trust signals are in place.
           </p>
         )}

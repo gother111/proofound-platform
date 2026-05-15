@@ -1,28 +1,19 @@
 import { NextResponse } from 'next/server';
-import { requireApiAuthContext } from '@/lib/auth';
-import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
-import { toProfileCompletenessPresentation } from '@/lib/readiness/presentation';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/profile/completeness
  *
- * Calculate profile completeness and return next best actions
+ * Legacy non-MVP endpoint. The launch surface uses /api/individual/readiness
+ * so the active product does not expose legacy scoring.
  */
 export async function GET() {
-  try {
-    const authContext = await requireApiAuthContext();
-    if (!authContext) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const readiness = await getIndividualReadinessState(authContext.user.id);
-    return NextResponse.json(toProfileCompletenessPresentation(readiness));
-  } catch (error) {
-    console.error('Error calculating profile completeness:', error);
-    return NextResponse.json(
-      { error: 'Failed to calculate profile completeness' },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(
+    {
+      error: 'Profile completeness scoring is not part of the MVP launch surface.',
+      replacement: '/api/individual/readiness',
+    },
+    { status: 410 }
+  );
 }

@@ -1,0 +1,17 @@
+# npm run docs:freshness
+startedAt=2026-05-14T10:32:06.652Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 docs:freshness
+> node ./scripts/docs-freshness-check.mjs
+
+⚠️ docs:freshness reported 2 warning(s):
+- Orphan file missing from registry: .artifacts/mvp-ai-pilot-readiness-left-2026-05-11.md
+- Orphan file missing from registry: supabase/migrations/README.md
+ℹ️ Warning mode: not failing build. Set STRICT_DOCS_FRESHNESS=true to enforce.
+
+
+completedAt=2026-05-14T10:32:06.987Z
+exitCode=0
+durationMs=335
+timedOut=false

@@ -87,7 +87,7 @@ export function renderLlmsTxt({ detailed = false }: { detailed?: boolean } = {})
   const lines: string[] = [
     '# Proofound',
     '',
-    '> Proofound is a proof-first hiring corridor centered on Proof Packs, privacy-safe review, public proof portfolios, and organization trust pages.',
+    '> Proofound is a proof-first hiring corridor centered on Proof Packs, privacy-safe review, direct-link Public Pages, and organization trust pages.',
     '',
   ];
 
@@ -102,12 +102,18 @@ export function renderLlmsTxt({ detailed = false }: { detailed?: boolean } = {})
 
   lines.push('## Key Facts');
   lines.push('');
-  lines.push('- Proofound supports public proof portfolios for individuals and trust pages for organizations.');
-  lines.push('- Public portfolio visibility is explicit and privacy-constrained by default.');
   lines.push(
-    '- Search indexing is limited to portfolios and trust pages that satisfy publication requirements.'
+    '- Proofound supports direct-link Public Pages for individuals and trust pages for organizations.'
   );
-  lines.push('- Review stays blind by default until a reveal step is needed inside the hiring corridor.');
+  lines.push(
+    '- Public Page visibility is explicit, non-indexed for MVP, and privacy-constrained by default.'
+  );
+  lines.push(
+    '- Individual Public Pages stay out of search indexing; organization trust pages require publication requirements.'
+  );
+  lines.push(
+    '- Review stays blind by default until a reveal step is needed inside the hiring corridor.'
+  );
   lines.push('');
   lines.push('## Contact');
   lines.push('');
@@ -117,7 +123,7 @@ export function renderLlmsTxt({ detailed = false }: { detailed?: boolean } = {})
   lines.push('## Optional');
   lines.push('');
   lines.push(
-    '- Public portfolios are available on direct URLs only when the owner or organization explicitly publishes public-safe content.'
+    '- Public Pages and organization trust pages are available on direct URLs only when the owner or organization explicitly publishes public-safe content.'
   );
   lines.push(
     '- Dynamic portfolio routes are privacy-gated and should not be assumed to be indexable unless the portfolio is explicitly marked searchable.'

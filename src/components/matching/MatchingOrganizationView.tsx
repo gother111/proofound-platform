@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MatchResultCard } from './MatchResultCard';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
 import { getOrganizationRecoveryActions } from '@/lib/ui/recovery-actions';
@@ -20,6 +20,13 @@ interface Assignment {
   role: string;
   status: string;
   createdAt: string;
+  matchingSummary?: {
+    candidateCount: number;
+    reviewChangeCount: number;
+    lastCandidateAt: string | null;
+    lastReviewChangeAt: string | null;
+    lastActivityAt: string | null;
+  };
 }
 
 interface MatchingOrganizationViewProps {
@@ -51,10 +58,13 @@ export function MatchingOrganizationView({
 }: MatchingOrganizationViewProps) {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const rawSlug = (params as { slug?: string | string[] })?.slug;
   const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
+  const queryAssignmentId = searchParams.get('matching') || searchParams.get('assignment') || '';
 
-  const [selectedAssignment, setSelectedAssignment] = useState<string>(assignments[0]?.id || '');
+  const [selectedAssignment, setSelectedAssignment] = useState<string>(queryAssignmentId);
+  const [viewedAtByAssignment, setViewedAtByAssignment] = useState<Record<string, string>>({});
   const [matches, setMatches] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -65,18 +75,103 @@ export function MatchingOrganizationView({
     selectedAssignment || undefined
   );
 
+  const lastViewedStorageKey = slug
+    ? `proofound:org:${slug}:assignment-matching:last-viewed`
+    : null;
+
   useEffect(() => {
-    if (assignments.length === 0) {
+    if (!lastViewedStorageKey || typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      const stored = window.localStorage.getItem(lastViewedStorageKey);
+      const parsed = stored ? JSON.parse(stored) : {};
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        setViewedAtByAssignment(parsed as Record<string, string>);
+      }
+    } catch {
+      setViewedAtByAssignment({});
+    }
+  }, [lastViewedStorageKey]);
+
+  const markAssignmentViewed = useCallback(
+    (assignmentId: string) => {
+      if (!assignmentId || !lastViewedStorageKey || typeof window === 'undefined') {
+        return;
+      }
+
+      const viewedAt = new Date().toISOString();
+      setViewedAtByAssignment((current) => {
+        const next = { ...current, [assignmentId]: viewedAt };
+        try {
+          window.localStorage.setItem(lastViewedStorageKey, JSON.stringify(next));
+        } catch {
+          // The badge is intentionally lightweight; storage failures should not block review.
+        }
+        return next;
+      });
+    },
+    [lastViewedStorageKey]
+  );
+
+  useEffect(() => {
+    if (!queryAssignmentId) {
+      return;
+    }
+
+    const assignmentExists = assignments.some((assignment) => assignment.id === queryAssignmentId);
+    if (assignmentExists) {
+      setSelectedAssignment(queryAssignmentId);
+      markAssignmentViewed(queryAssignmentId);
+    }
+  }, [assignments, markAssignmentViewed, queryAssignmentId]);
+
+  useEffect(() => {
+    if (!selectedAssignment) {
+      setMatches([]);
       return;
     }
 
     const assignmentStillExists = assignments.some(
       (assignment) => assignment.id === selectedAssignment
     );
-    if (!selectedAssignment || !assignmentStillExists) {
-      setSelectedAssignment(assignments[0].id);
+
+    if (!assignmentStillExists) {
+      setSelectedAssignment('');
+      setMatches([]);
     }
   }, [assignments, selectedAssignment]);
+
+  const handleOpenMatching = (assignmentId: string) => {
+    setSelectedAssignment(assignmentId);
+    markAssignmentViewed(assignmentId);
+    if (slug) {
+      router.push(`/app/o/${slug}/assignments?matching=${encodeURIComponent(assignmentId)}`);
+    }
+  };
+
+  const getAssignmentBadgeLabel = (assignment: Assignment) => {
+    const summary = assignment.matchingSummary;
+    if (!summary?.lastActivityAt) return null;
+
+    const lastActivityAt = new Date(summary.lastActivityAt).getTime();
+    const parsedLastViewedAt = viewedAtByAssignment[assignment.id]
+      ? new Date(viewedAtByAssignment[assignment.id]).getTime()
+      : 0;
+    const lastViewedAt = Number.isFinite(parsedLastViewedAt) ? parsedLastViewedAt : 0;
+    const lastReviewChangeAt = summary.lastReviewChangeAt
+      ? new Date(summary.lastReviewChangeAt).getTime()
+      : 0;
+
+    if (!Number.isFinite(lastActivityAt) || lastActivityAt <= lastViewedAt) {
+      return null;
+    }
+
+    return Number.isFinite(lastReviewChangeAt) && lastReviewChangeAt > lastViewedAt
+      ? 'Review updates'
+      : 'New candidates';
+  };
 
   // Fetch matches when the selected assignment changes
   useEffect(() => {
@@ -90,7 +185,6 @@ export function MatchingOrganizationView({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             assignmentId: selectedAssignment,
-            mode: 'balanced',
           }),
         });
 
@@ -185,9 +279,9 @@ export function MatchingOrganizationView({
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-semibold mb-1">Matching</h1>
+              <h1 className="text-2xl font-semibold mb-1">Assignments</h1>
               <p className="text-sm" style={{ color: '#6B6760' }}>
-                Find proof-backed candidates aligned with your assignment needs
+                Keep candidate review attached to the assignment corridor it belongs to
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -201,47 +295,78 @@ export function MatchingOrganizationView({
 
         {/* Assignment list with quick actions */}
         <div className="grid gap-3 sm:grid-cols-2">
-          {assignments.map((assignment) => (
-            <Card
-              key={assignment.id}
-              className={`p-4 transition ${
-                selectedAssignment === assignment.id
-                  ? 'border-proofound-forest bg-proofound-parchment/50'
-                  : 'hover:border-primary/60'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <button
-                  type="button"
-                  data-testid={`assignment-selector-${assignment.id}`}
-                  className="flex-1 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
-                  aria-pressed={selectedAssignment === assignment.id}
-                  onClick={() => setSelectedAssignment(assignment.id)}
-                >
-                  <h3 className="text-base font-semibold">{assignment.role}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Created: {new Date(assignment.createdAt).toLocaleDateString()}
-                  </p>
-                  <Badge variant="secondary" className="mt-2">
-                    {assignmentStatusLabel(assignment.status)}
-                  </Badge>
-                </button>
-                <Button asChild variant="outline" size="sm">
-                  <Link href={slug ? `/app/o/${slug}/assignments/${assignment.id}/review` : '#'}>
-                    View / Edit
-                  </Link>
-                </Button>
-              </div>
-            </Card>
-          ))}
+          {assignments.map((assignment) => {
+            const updateBadgeLabel = getAssignmentBadgeLabel(assignment);
+            const candidateCount = assignment.matchingSummary?.candidateCount ?? 0;
+
+            return (
+              <Card
+                key={assignment.id}
+                className={`p-4 transition ${
+                  selectedAssignment === assignment.id
+                    ? 'border-proofound-forest bg-proofound-parchment/50'
+                    : 'hover:border-primary/60'
+                }`}
+              >
+                <div className="flex h-full flex-col gap-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-base font-semibold">{assignment.role}</h3>
+                        {updateBadgeLabel ? (
+                          <Badge className="border-proofound-forest/20 bg-[#eef4eb] text-proofound-forest">
+                            {updateBadgeLabel}
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Created: {new Date(assignment.createdAt).toLocaleDateString()}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <Badge variant="secondary">
+                          {assignmentStatusLabel(assignment.status)}
+                        </Badge>
+                        {candidateCount > 0 ? (
+                          <span className="text-xs text-muted-foreground">
+                            {candidateCount} candidate{candidateCount !== 1 ? 's' : ''}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-auto flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      data-testid={`assignment-matching-${assignment.id}`}
+                      className="bg-proofound-forest hover:bg-proofound-forest/90"
+                      aria-pressed={selectedAssignment === assignment.id}
+                      aria-label={`Matching for ${assignment.role}`}
+                      onClick={() => handleOpenMatching(assignment.id)}
+                    >
+                      <Users className="mr-2 h-4 w-4" />
+                      Matching
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link
+                        href={slug ? `/app/o/${slug}/assignments/${assignment.id}/review` : '#'}
+                      >
+                        View / Edit
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Matches for the currently selected assignment */}
         {selectedAssignment && (
-          <div className="mt-8 space-y-4">
+          <div className="mt-8 space-y-4" data-testid="assignment-matching-grid">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold">Matches</h2>
+                <h2 className="text-xl font-semibold">Matching</h2>
                 {currentAssignment && (
                   <p className="text-sm text-muted-foreground">
                     {currentAssignment.role} — {assignmentStatusLabel(currentAssignment.status)}

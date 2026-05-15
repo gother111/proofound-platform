@@ -9,7 +9,7 @@ const steps = [
   {
     number: '02',
     title: 'Publish trust',
-    body: 'A public proof portfolio or organization trust page becomes shareable without exposing review-stage data.',
+    body: 'A direct-link Public Page or organization trust page becomes shareable without exposing review-stage data.',
   },
   {
     number: '03',

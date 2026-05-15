@@ -5,7 +5,7 @@
  * - TTFQI: Time to First Qualified Introduction
  * - TTV: Time to Video Interview
  * - TTSC: Time to Signed Contract
- * - PAC Lift: Purpose-Alignment Contribution impact
+ * - Proof Fit Lift
  * - SUS: System Usability Scale
  * - Well-Being Delta: Change in well-being scores
  * - Fairness Gap: Demographic disparity in outcomes
@@ -352,20 +352,19 @@ export async function calculateTTSC(
 }
 
 // ============================================================================
-// PURPOSE-ALIGNMENT CONTRIBUTION (PAC) LIFT
+// PROOF-FIT LIFT
 // ============================================================================
 
 /**
- * Calculate PAC Lift: Impact of purpose alignment on match acceptance
- * PRD Target: ≥20% lift in acceptance rate for high-PAC matches
+ * Calculate proof-fit lift.
+ * PRD Target: at least 20% lift in acceptance rate for high-fit matches.
  */
 export async function calculatePACLift(startDate?: Date, endDate?: Date): Promise<PACLiftResult> {
   try {
     const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = endDate || new Date();
 
-    // High PAC: PAC score ≥ 70
-    // Low/No PAC: PAC score < 30
+    // Legacy metric buckets retained for compatibility with existing analytics data.
     const result = await db.execute(sql`
       WITH matches_with_pac AS (
         SELECT

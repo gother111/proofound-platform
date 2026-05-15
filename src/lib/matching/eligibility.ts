@@ -44,7 +44,6 @@ export interface EligibilityResult {
   counts: {
     skillsWithRecency: number;
     proofCount: number;
-    hasPurpose: boolean;
     hasConstraints: boolean;
     hasIntentSignal: boolean;
     hasLogisticsSignal: boolean;
@@ -59,7 +58,7 @@ export interface EligibilityResult {
     remaining: {
       skillsWithRecency: number;
       proofCount: number;
-      purpose: number;
+      intentSignal: number;
       constraints: number;
       trustedSignal: number;
     };
@@ -88,7 +87,7 @@ function toEligibilityAction(requirement: ReadinessRequirement): EligibilityActi
   if (requirement.actionUrl === '/app/i/profile') {
     return {
       id: requirement.id,
-      title: 'Add purpose signals',
+      title: 'Add role context',
       description: requirement.detail,
       actionUrl: '/app/i/profile',
     };
@@ -97,7 +96,7 @@ function toEligibilityAction(requirement: ReadinessRequirement): EligibilityActi
   if (requirement.actionUrl.includes('tab=proof_packs')) {
     return {
       id: requirement.id,
-      title: 'Strengthen public portfolio proof',
+      title: 'Strengthen Public Page proof',
       description: requirement.detail,
       actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
     };
@@ -154,12 +153,12 @@ export async function evaluateIndividualMatchability(
     },
     intentSignal: {
       id: 'intentSignal',
-      label: 'Intent signal',
+      label: 'Target role signal',
       met: flags.hasIntentSignal,
       status: flags.hasIntentSignal ? 'met' : 'unmet',
       current: flags.hasIntentSignal,
-      required: 'mission OR values OR causes OR desired roles',
-      detail: 'Add mission, values, causes, or desired roles to make browse results explainable.',
+      required: 'desired roles',
+      detail: 'Add desired roles so browse results stay grounded in the work you want.',
     },
     logisticsSignal: {
       id: 'logisticsSignal',
@@ -193,7 +192,7 @@ export async function evaluateIndividualMatchability(
           remaining: {
             skillsWithRecency: Math.max(0, 3 - counts.skillsWithRecency),
             proofCount: 0,
-            purpose: flags.hasIntentSignal ? 0 : 1,
+            intentSignal: flags.hasIntentSignal ? 0 : 1,
             constraints: flags.hasLogisticsSignal ? 0 : 1,
             trustedSignal: 0,
           },
@@ -206,7 +205,7 @@ export async function evaluateIndividualMatchability(
             remaining: {
               skillsWithRecency: Math.max(0, 5 - counts.skillsWithRecency),
               proofCount: Math.max(0, 4 - counts.qualifyingProofLinkedL4Count),
-              purpose: flags.hasPurposeBlock ? 0 : 1,
+              intentSignal: flags.hasIntentSignal ? 0 : 1,
               constraints: flags.hasIntroConstraints ? 0 : 1,
               trustedSignal: flags.hasTrustedSignal ? 0 : 1,
             },
@@ -230,7 +229,6 @@ export async function evaluateIndividualMatchability(
     counts: {
       skillsWithRecency: counts.skillsWithRecency,
       proofCount: counts.proofCount,
-      hasPurpose: flags.hasPurposeBlock,
       hasConstraints: flags.hasIntroConstraints,
       hasIntentSignal: flags.hasIntentSignal,
       hasLogisticsSignal: flags.hasLogisticsSignal,

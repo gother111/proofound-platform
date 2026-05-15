@@ -5,19 +5,16 @@
  * - Skills match
  * - Constraints satisfaction
  * - Verification status
- * - PAC (Purpose-Alignment Contribution)
  *
  * PRD References:
- * - Part 2: PAC visibility
  * - Part 7: Match detail transparency
  */
 
 'use client';
 
-import { PACBadge } from './PACBadge';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { CheckCircle2, Target, Shield, Heart } from 'lucide-react';
+import { CheckCircle2, Target, Shield } from 'lucide-react';
 import {
   Radar,
   RadarChart,
@@ -34,7 +31,6 @@ interface MatchScoreBreakdownProps {
     skills?: number;
     constraints?: number;
     verification?: number;
-    purposeAlignment?: number;
   };
   showDetails?: boolean;
 }
@@ -44,7 +40,7 @@ export function MatchScoreBreakdown({
   subscores,
   showDetails = true,
 }: MatchScoreBreakdownProps) {
-  const { skills = 0, constraints = 0, verification = 0, purposeAlignment = 0 } = subscores;
+  const { skills = 0, constraints = 0, verification = 0 } = subscores;
 
   const subscoreItems = [
     {
@@ -68,13 +64,6 @@ export function MatchScoreBreakdown({
       description: 'Verified skills and experience',
       color: 'text-purple-600',
     },
-    {
-      icon: Heart,
-      label: 'Purpose Alignment',
-      score: purposeAlignment,
-      description: 'Values and causes alignment',
-      color: 'text-rose-600',
-    },
   ];
 
   // Radar Chart Data Prep
@@ -82,7 +71,6 @@ export function MatchScoreBreakdown({
     { subject: 'Skills', score: skills },
     { subject: 'Constraints', score: constraints },
     { subject: 'Verification', score: verification },
-    { subject: 'Purpose', score: purposeAlignment },
   ];
 
   const CustomRadarTooltip = ({ active, payload }: any) => {
@@ -168,25 +156,6 @@ export function MatchScoreBreakdown({
                 </div>
               );
             })}
-          </div>
-        )}
-
-        {/* PAC Badge */}
-        {purposeAlignment > 0 && (
-          <div className="pt-4 border-t border-proofound-stone">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">
-                Purpose-Alignment Contribution
-              </span>
-              <PACBadge pacScore={purposeAlignment} showTooltip />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {purposeAlignment >= 71
-                ? 'This organization strongly aligns with your values and causes.'
-                : purposeAlignment >= 31
-                  ? 'This organization moderately aligns with your values and causes.'
-                  : 'Limited alignment with your stated values and causes.'}
-            </p>
           </div>
         )}
       </CardContent>

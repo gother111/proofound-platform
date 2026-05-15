@@ -84,16 +84,16 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
   },
   'next-best-actions': {
     id: 'next-best-actions',
-    name: 'Next Best Actions',
-    description: 'Recommended actions to improve your profile',
+    name: 'Proof Readiness Checklist',
+    description: 'Recommended proof and trust actions',
     category: 'growth',
     defaultSize: 'full',
     availableSizes: ['large', 'full'],
   },
   'profile-activation': {
     id: 'profile-activation',
-    name: 'Portfolio Status',
-    description: 'Public portfolio status and share actions',
+    name: 'Public Page status',
+    description: 'Public Page status and share actions',
     category: 'growth',
     defaultSize: 'default',
     availableSizes: ['default', 'large'],
@@ -371,17 +371,18 @@ export function reorderWidgets(
 }
 
 /**
- * Calculate profile completeness for Next Best Actions
+ * Build a plain-language readiness summary for proof-first dashboard helpers.
  */
-export function calculateProfileCompleteness(profile: any): {
-  percentage: number;
+export function calculateProfileReadiness(profile: any): {
+  completedItems: number;
+  totalItems: number;
   missingFields: string[];
   suggestions: string[];
 } {
   const missingFields: string[] = [];
   const suggestions: string[] = [];
   let completedFields = 0;
-  const totalFields = 10; // Critical fields for matching
+  const totalFields = 9; // Critical proof-first fields for matching
 
   // Check profile basics
   if (!profile.displayName) {
@@ -408,14 +409,6 @@ export function calculateProfileCompleteness(profile: any): {
   if (!profile.bio) {
     missingFields.push('bio');
     suggestions.push('Add your bio');
-  } else {
-    completedFields++;
-  }
-
-  // Check mission/values
-  if (!profile.mission) {
-    missingFields.push('mission');
-    suggestions.push('Define your personal mission');
   } else {
     completedFields++;
   }
@@ -447,10 +440,9 @@ export function calculateProfileCompleteness(profile: any): {
   if (hasExperiences) completedFields++;
   else suggestions.push('Add your work experience');
 
-  const percentage = Math.round((completedFields / totalFields) * 100);
-
   return {
-    percentage,
+    completedItems: completedFields,
+    totalItems: totalFields,
     missingFields,
     suggestions,
   };

@@ -87,7 +87,9 @@ describe('workflow email privacy helper', () => {
       role: 'candidate',
     });
 
-    expect(conversationUrl).toBe('https://proofound.io/app/i/messages?conversation=conversation-1');
+    expect(conversationUrl).toBe(
+      'https://proofound.io/app/i/communications?section=messages&conversation=conversation-1'
+    );
 
     const email = buildRevealNotificationEmail({
       kind: 'request',
@@ -98,7 +100,9 @@ describe('workflow email privacy helper', () => {
     const rendered = `${email.html}\n${email.text}`;
 
     expect(email.subject).toBe('Reveal request waiting in Proofound');
-    expect(rendered).toContain('/app/i/messages?conversation=conversation-1');
+    expect(rendered).toContain(
+      '/app/i/communications?section=messages&conversation=conversation-1'
+    );
     expect(rendered).not.toContain('Jordan Rivera');
     expect(rendered).not.toContain('jordan@example.com');
     expect(rendered).not.toContain('Stockholm');
@@ -115,7 +119,7 @@ describe('workflow email privacy helper', () => {
     });
 
     expect(conversationUrl).toBe(
-      'https://proofound.io/app/o/acme/messages?conversation=conversation-1'
+      'https://proofound.io/app/o/acme/communications?section=messages&conversation=conversation-1'
     );
 
     const email = buildRevealNotificationEmail({
@@ -127,7 +131,9 @@ describe('workflow email privacy helper', () => {
     const rendered = `${email.html}\n${email.text}`;
 
     expect(email.subject).toBe('Reveal approved in Proofound');
-    expect(rendered).toContain('/app/o/acme/messages?conversation=conversation-1');
+    expect(rendered).toContain(
+      '/app/o/acme/communications?section=messages&conversation=conversation-1'
+    );
     expect(rendered).toContain('Jordan Rivera');
     expect(rendered).not.toContain('jordan@example.com');
     expect(rendered).not.toContain('Stockholm');
@@ -146,7 +152,8 @@ describe('workflow email privacy helper', () => {
       const email = buildRevealNotificationEmail({
         kind: 'approved',
         recipientRole: 'organization',
-        conversationUrl: 'https://proofound.io/app/o/acme/messages?conversation=conversation-1',
+        conversationUrl:
+          'https://proofound.io/app/o/acme/communications?section=messages&conversation=conversation-1',
         revealedName,
       });
       const rendered = `${email.html}\n${email.text}`;
@@ -263,7 +270,8 @@ describe('workflow email privacy helper', () => {
     const revealRequestEmail = buildRevealNotificationEmail({
       kind: 'request',
       recipientRole: 'candidate',
-      conversationUrl: 'https://proofound.io/app/i/messages?conversation=conversation-1',
+      conversationUrl:
+        'https://proofound.io/app/i/communications?section=messages&conversation=conversation-1',
       revealedName: 'Jordan Rivera',
     });
 
@@ -332,7 +340,8 @@ describe('workflow email privacy helper', () => {
     const revealRequestEmail = buildRevealNotificationEmail({
       kind: 'request',
       recipientRole: 'candidate',
-      conversationUrl: 'https://proofound.io/app/i/messages?conversation=conversation-1',
+      conversationUrl:
+        'https://proofound.io/app/i/communications?section=messages&conversation=conversation-1',
       revealedName: 'Jordan Rivera',
     });
     expectNoHiddenLeakage(`${revealRequestEmail.html}\n${revealRequestEmail.text}`);

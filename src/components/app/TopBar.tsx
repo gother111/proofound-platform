@@ -24,14 +24,20 @@ import { cn } from '@/lib/utils';
 interface TopBarProps {
   userName?: string;
   userInitials?: string;
+  basePath?: string;
 }
 
 type ProfileMenuComponent = ComponentType<{
   userName: string;
+  basePath: string;
   onClose: () => void;
 }>;
 
-export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
+export function TopBar({
+  userName = 'User',
+  userInitials = 'U',
+  basePath = '/app/i',
+}: TopBarProps) {
   const pathname = usePathname();
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -49,6 +55,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
     if (!pathname) return 'Overview';
 
     if (pathname.includes('/home')) return 'Overview';
+    if (pathname.includes('/communications')) return 'Communications';
     if (pathname.includes('/matching')) return 'Matching';
     if (pathname.includes('/interviews')) return 'Interviews';
     if (pathname.includes('/messages')) return 'Messages';
@@ -157,7 +164,11 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
             </span>
           </button>
           {isProfileMenuOpen && ProfileMenu ? (
-            <ProfileMenu userName={userName} onClose={() => setIsProfileMenuOpen(false)} />
+            <ProfileMenu
+              userName={userName}
+              basePath={basePath}
+              onClose={() => setIsProfileMenuOpen(false)}
+            />
           ) : null}
         </div>
       </header>

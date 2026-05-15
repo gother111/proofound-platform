@@ -7,8 +7,6 @@
  * PRD Reference: Part 5 F4 - "Why This Match" transparency feature
  */
 
-import { jaccard } from '@/lib/core/matching/scorers';
-
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -17,7 +15,6 @@ export interface ScoreExplanation {
   overall: string;
   subscores: {
     skills: { score: number; explanation: string };
-    pac: { score: number; explanation: string };
     constraints: { score: number; explanation: string };
     recency: { score: number; explanation: string };
   };
@@ -29,19 +26,12 @@ export interface MatchData {
   compositeScore: number; // 0-1
   subscores: {
     skills: number;
-    pac: number;
     constraints: number;
     recency: number;
   };
   skillsMatch: {
     required: Array<{ skillName: string; requiredLevel: number; yourLevel: number; met: boolean }>;
     nice: Array<{ skillName: string; yourLevel: number; met: boolean }>;
-  };
-  pac: {
-    valuesOverlap: number;
-    causesOverlap: number;
-    sharedValues: string[];
-    sharedCauses: string[];
   };
 }
 
@@ -62,7 +52,7 @@ export function explainOverallScore(score: number): string {
     return `Excellent ${percent}% match! You align very well with this opportunity.`;
   }
   if (percent >= 70) {
-    return `Strong ${percent}% match. You meet most requirements and align with the organization's values.`;
+    return `Strong ${percent}% match. You meet most requirements with credible proof and practical fit.`;
   }
   if (percent >= 60) {
     return `Good ${percent}% match. You have solid alignment in key areas.`;
@@ -103,45 +93,6 @@ export function explainSkillsScore(
     const missing = required.filter((s) => !s.met);
     const examples = missing.slice(0, 2).map((s) => s.skillName);
     explanation += ` Missing: ${examples.join(', ')}${missing.length > 2 ? ', ...' : ''}.`;
-  }
-
-  return { score, explanation };
-}
-
-/**
- * Explain PAC (Purpose-Alignment Contribution) score
- */
-export function explainPACScore(
-  score: number,
-  valuesOverlap: number,
-  causesOverlap: number,
-  sharedValues: string[],
-  sharedCauses: string[]
-): { score: number; explanation: string } {
-  const percent = Math.round(score * 100);
-  const valuesPercent = Math.round(valuesOverlap * 100);
-  const causesPercent = Math.round(causesOverlap * 100);
-
-  let explanation = `${percent}% purpose alignment. `;
-
-  if (valuesPercent > 0 || causesPercent > 0) {
-    explanation += `Values: ${valuesPercent}% overlap`;
-    if (sharedValues.length > 0) {
-      explanation += ` (${sharedValues.slice(0, 2).join(', ')}${sharedValues.length > 2 ? ', ...' : ''})`;
-    }
-    explanation += `. Causes: ${causesPercent}% overlap`;
-    if (sharedCauses.length > 0) {
-      explanation += ` (${sharedCauses.slice(0, 2).join(', ')}${sharedCauses.length > 2 ? ', ...' : ''})`;
-    }
-    explanation += '.';
-  } else {
-    explanation += 'No shared values or causes found.';
-  }
-
-  if (percent >= 70) {
-    explanation += ' Strong mission fit!';
-  } else if (percent < 30) {
-    explanation += ' Consider if this aligns with your purpose.';
   }
 
   return { score, explanation };
@@ -208,7 +159,7 @@ export function explainRecencyScore(score: number): { score: number; explanation
  */
 export function generateImprovementTips(match: MatchData): string[] {
   const tips: string[] = [];
-  const { subscores, skillsMatch, pac } = match;
+  const { subscores, skillsMatch } = match;
 
   // Skills tips
   if (subscores.skills < 0.8) {
@@ -223,16 +174,6 @@ export function generateImprovementTips(match: MatchData): string[] {
     const lowLevel = skillsMatch.required.filter((s) => s.met && s.yourLevel < s.requiredLevel + 1);
     if (lowLevel.length > 0) {
       tips.push('Level up your existing skills to exceed requirements');
-    }
-  }
-
-  // PAC tips
-  if (subscores.pac < 0.7) {
-    if (pac.sharedValues.length === 0) {
-      tips.push('Add values that align with this organization to boost purpose fit');
-    }
-    if (pac.sharedCauses.length === 0) {
-      tips.push("Consider adding causes related to this organization's mission");
     }
   }
 
@@ -259,18 +200,12 @@ export function generateImprovementTips(match: MatchData): string[] {
  */
 export function identifyStrengths(match: MatchData): string[] {
   const strengths: string[] = [];
-  const { subscores, skillsMatch, pac } = match;
+  const { subscores, skillsMatch } = match;
 
   if (subscores.skills >= 0.9) {
     strengths.push('Exceptional skills match');
   } else if (subscores.skills >= 0.8) {
     strengths.push('Strong skills alignment');
-  }
-
-  if (subscores.pac >= 0.8) {
-    strengths.push('Outstanding purpose alignment');
-  } else if (subscores.pac >= 0.7) {
-    strengths.push('Strong values and causes fit');
   }
 
   if (subscores.constraints >= 0.95) {
@@ -289,14 +224,6 @@ export function identifyStrengths(match: MatchData): string[] {
     strengths.push(`Exceed requirements in ${exceededRequired.length} skill(s)`);
   }
 
-  // PAC specifics
-  if (pac.sharedValues.length >= 3) {
-    strengths.push(`${pac.sharedValues.length} shared values`);
-  }
-  if (pac.sharedCauses.length >= 2) {
-    strengths.push(`${pac.sharedCauses.length} shared causes`);
-  }
-
   return strengths;
 }
 
@@ -311,13 +238,6 @@ export function generateScoreExplanation(match: MatchData): ScoreExplanation {
         match.subscores.skills,
         match.skillsMatch.required,
         match.skillsMatch.nice
-      ),
-      pac: explainPACScore(
-        match.subscores.pac,
-        match.pac.valuesOverlap,
-        match.pac.causesOverlap,
-        match.pac.sharedValues,
-        match.pac.sharedCauses
       ),
       constraints: explainConstraintsScore(match.subscores.constraints, {
         location: { match: true },

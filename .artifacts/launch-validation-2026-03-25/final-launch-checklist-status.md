@@ -7,6 +7,13 @@ Verdict: `NOT_READY`
 Live base URL: `https://proofound.io`
 Latest launch-validation bundle: `.artifacts/launch-validation-2026-03-25`
 
+> Historical/superseded freshness banner added 2026-05-14:
+>
+> - Do not treat this March launch-validation status snapshot as current launch, route, or MVP truth without checking newer evidence first.
+> - The locked MVP definition remains `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`; this snapshot cannot broaden it.
+> - For narrow pilot-readiness evidence, prefer `project/changes/entries/2026-04-09__mvp-launch-audit-execution.md` or newer current evidence. That April 9 execution retired the March build/runtime, route breadth, launch smoke, and strict org corridor blockers unless those blockers are reproduced again in a fresh run.
+> - For release-clean status, use `audit/full-scale-audit-2026-04-16.md` or newer release evidence; April 16 found the repo structurally healthy but not release-clean.
+
 ## Summary
 
 - PASS: 21
@@ -16,7 +23,7 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-03-25`
 
 ## True Blockers
 
-- Engineering — `npm run build` passes cleanly under launch Node version: next build compiled but failed during page-data collection with PageNotFoundError for /_document, leaving no usable production build output.
+- Engineering — `npm run build` passes cleanly under launch Node version: next build compiled but failed during page-data collection with PageNotFoundError for /\_document, leaving no usable production build output.
 - Engineering — `next start` is stable: next start failed because .next did not contain a valid production build.
 - Engineering — Route surface is reduced to the launch allowlist: 18 compiled API routes remain outside the explicit launch/internal-only corridor.
 - Engineering — Legacy decision and non-MVP route drift are removed or hard-gated: 18 compiled API routes remain outside the explicit launch/internal-only corridor.
@@ -69,7 +76,7 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-03-25`
 ## Engineering
 
 - [FAIL] `npm run build` passes cleanly under launch Node version
-  - Summary: next build compiled but failed during page-data collection with PageNotFoundError for /_document, leaving no usable production build output.
+  - Summary: next build compiled but failed during page-data collection with PageNotFoundError for /\_document, leaving no usable production build output.
   - Evidence: Latest launch bundle prod build evidence: `.artifacts/launch-validation-2026-03-25/01_local_build.log`
   - Retired stale claims: Implementation status snapshot claimed build passed, but the later launch bundle is treated as current truth.
 - [FAIL] `next start` is stable

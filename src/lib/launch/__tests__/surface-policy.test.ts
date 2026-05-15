@@ -68,10 +68,35 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/profile/snippet')).toMatchObject({
       surfaceLabel: 'Profiles API',
     });
+    expect(classifyLaunchApiPath('/api/people')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/candidates')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/directory')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/marketplace')).toBe('archived');
     expect(getArchivedApiPolicy('/api/verification/skill/request')).toMatchObject({
       surfaceLabel: 'Legacy Verification API',
     });
     expect(getArchivedApiPolicy('/api/organizations/org-1/projects/project-1')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/organizations/org-1/goals')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/organizations/org-1/partnerships')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/organizations/org-1/structure')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/organizations/org-1/culture')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/organizations/org-1/impact')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/org/org-1/dashboard')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/org/org-1/coverage')).toMatchObject({
       surfaceLabel: 'Organization Suite API',
     });
     expect(getArchivedApiPolicy('/api/admin/users/user-1/role')).toMatchObject({
@@ -169,7 +194,20 @@ describe('launch surface policy', () => {
     expect(classifyLaunchPagePath('/app/i/notifications')).toBe('archived');
     expect(classifyLaunchPagePath('/app/i/settings/notifications')).toBe('archived');
     expect(classifyLaunchPagePath('/app/o/acme/candidates')).toBe('archived');
+    expect(classifyLaunchPagePath('/app/o/acme/projects')).toBe('archived');
+    expect(classifyLaunchPagePath('/app/o/acme/goals')).toBe('archived');
+    expect(classifyLaunchPagePath('/app/o/acme/culture')).toBe('archived');
+    expect(classifyLaunchPagePath('/app/o/acme/impact')).toBe('archived');
+    expect(classifyLaunchPagePath('/app/o/acme/structure')).toBe('archived');
+    expect(classifyLaunchPagePath('/app/o/acme/partnerships')).toBe('archived');
+    expect(classifyLaunchPagePath('/app/o/acme/analytics/fairness')).toBe('archived');
     expect(classifyLaunchPagePath('/app/o/acme/settings/profile')).toBe('archived');
+    expect(classifyLaunchPagePath('/app/o/acme/settings/goals')).toBe('archived');
+    expect(classifyLaunchPagePath('/people')).toBe('archived');
+    expect(classifyLaunchPagePath('/candidates')).toBe('archived');
+    expect(classifyLaunchPagePath('/directory')).toBe('archived');
+    expect(classifyLaunchPagePath('/marketplace')).toBe('archived');
+    expect(classifyLaunchPagePath('/portfolio')).toBe('archived');
     expect(classifyLaunchPagePath('/o/acme/assignments/new')).toBe('archived');
     expect(classifyLaunchPagePath('/about')).toBe('archived');
     expect(classifyLaunchPagePath('/contact')).toBe('archived');
@@ -190,6 +228,15 @@ describe('launch surface policy', () => {
     });
     expect(getArchivedPagePolicy('/app/i/notifications')).toMatchObject({
       surfaceLabel: 'Individual Pages',
+    });
+    expect(getArchivedPagePolicy('/app/o/acme/culture')).toMatchObject({
+      surfaceLabel: 'Organization Pages',
+    });
+    expect(getArchivedPagePolicy('/app/o/acme/partnerships')).toMatchObject({
+      surfaceLabel: 'Organization Pages',
+    });
+    expect(getArchivedPagePolicy('/app/o/acme/analytics/fairness')).toMatchObject({
+      surfaceLabel: 'Organization Pages',
     });
     expect(getArchivedPagePolicy('/o/acme/assignments/new')).toMatchObject({
       surfaceLabel: 'Compatibility Pages',

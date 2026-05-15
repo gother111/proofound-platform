@@ -17,6 +17,13 @@ export function normalizeAvailableSkills(skills: string[]): string[] {
 }
 
 export function mapLegacySkillsToAvailable(rawSkills: string, availableSkills: string[]): string[] {
+  return mapSkillListToAvailable(rawSkills, availableSkills);
+}
+
+export function mapSkillListToAvailable(
+  rawSkills: string | string[] | null | undefined,
+  availableSkills: string[]
+): string[] {
   const normalizedAvailable = normalizeAvailableSkills(availableSkills);
   const availableByLower = new Map(
     normalizedAvailable.map((skill) => [skill.toLocaleLowerCase(), skill])
@@ -24,8 +31,7 @@ export function mapLegacySkillsToAvailable(rawSkills: string, availableSkills: s
 
   const selected: string[] = [];
   const seen = new Set<string>();
-  const tokens = rawSkills
-    .split(/[\n,]/)
+  const tokens = (Array.isArray(rawSkills) ? rawSkills : (rawSkills?.split(/[\n,]/) ?? []))
     .map((token) => token.trim())
     .filter(Boolean);
 

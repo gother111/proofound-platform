@@ -18,11 +18,10 @@ import { RecencyScatter } from './widgets/RecencyScatter';
 import { SkillWheel } from './widgets/SkillWheel';
 import { VerificationSourcesPie } from './widgets/VerificationSourcesPie';
 import { NextBestActions } from './widgets/NextBestActions';
-import { CVJDAutoSuggest } from '@/components/expertise/CVJDAutoSuggest';
 import { SkillGapsClient } from '@/components/skill-gaps/SkillGapsClient';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, BookOpen, TrendingUp, FileText, Grid3x3 } from 'lucide-react';
+import { Plus, BookOpen, TrendingUp, Grid3x3 } from 'lucide-react';
 
 const CREDIBILITY_STATUS_LABELS = {
   verified: 'Verified skills',
@@ -51,7 +50,9 @@ export function ExpertiseAtlasClient({
 }: ExpertiseAtlasClientProps) {
   const router = useRouter();
   const [skills, setSkills] = useState(initialSkills);
-  const [activeTab, setActiveTab] = useState<string>(initialTab);
+  const [activeTab, setActiveTab] = useState<string>(
+    initialTab === 'import-cv' ? 'atlas' : initialTab
+  );
   const [selectedL1, setSelectedL1] = useState<number | null>(null);
   const [selectedL2, setSelectedL2] = useState<any | null>(null);
   const [selectedL3, setSelectedL3] = useState<any | null>(null);
@@ -120,7 +121,7 @@ export function ExpertiseAtlasClient({
 
   // Keep selected tab synced with deep-link query values.
   useEffect(() => {
-    setActiveTab(initialTab);
+    setActiveTab(initialTab === 'import-cv' ? 'atlas' : initialTab);
   }, [initialTab]);
 
   // Filter skills for side sheet (must be before early return)
@@ -190,10 +191,7 @@ export function ExpertiseAtlasClient({
   // Render empty state in a tab if no skills
   const emptyStateContent = (
     <>
-      <EmptyState
-        onAddSkill={() => setIsAddSkillDrawerOpen(true)}
-        onImportCV={() => setActiveTab('import-cv')}
-      />
+      <EmptyState onAddSkill={() => setIsAddSkillDrawerOpen(true)} />
       <AddSkillDrawer
         open={isAddSkillDrawerOpen}
         onOpenChange={setIsAddSkillDrawerOpen}
@@ -384,10 +382,6 @@ export function ExpertiseAtlasClient({
     shouldShowCoverage ||
     shouldShowNextBestActions;
 
-  const handleSkillsImportedFromCV = () => {
-    router.refresh();
-  };
-
   const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
   const bgClass = isV2 ? 'bg-transparent' : 'bg-proofound-parchment';
 
@@ -440,7 +434,7 @@ export function ExpertiseAtlasClient({
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="atlas" className="flex items-center gap-2">
               <Grid3x3 className="h-4 w-4" />
               Skills Atlas
@@ -452,14 +446,6 @@ export function ExpertiseAtlasClient({
             >
               <TrendingUp className="h-4 w-4" />
               Gap Analysis
-            </TabsTrigger>
-            <TabsTrigger
-              value="import-cv"
-              className="flex items-center gap-2"
-              data-tour="import-cv-tab"
-            >
-              <FileText className="h-4 w-4" />
-              Import from CV
             </TabsTrigger>
           </TabsList>
 
@@ -513,16 +499,6 @@ export function ExpertiseAtlasClient({
                           }}
                         >
                           Add skill or proof now
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            emitClientMetric('expertise_readiness_cta', { action: 'import_cv' });
-                            setActiveTab('import-cv');
-                          }}
-                        >
-                          Auto-suggest from CV
                         </Button>
                       </div>
                     </div>
@@ -675,22 +651,6 @@ export function ExpertiseAtlasClient({
           {/* Gap Analysis Tab */}
           <TabsContent value="gap-analysis">
             <SkillGapsClient />
-          </TabsContent>
-
-          {/* Import from CV Tab */}
-          <TabsContent value="import-cv">
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg p-6 shadow-sm border">
-                <h2 className="text-2xl font-semibold text-foreground mb-4">
-                  Import Skills from CV/Resume
-                </h2>
-                <p className="text-muted-foreground mb-6">
-                  Paste your CV, resume, or job description to automatically extract and suggest
-                  relevant skills.
-                </p>
-                <CVJDAutoSuggest onSkillsAdded={handleSkillsImportedFromCV} />
-              </div>
-            </div>
           </TabsContent>
         </Tabs>
 

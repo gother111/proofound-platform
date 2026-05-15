@@ -32,17 +32,7 @@ async function fetchPortfolioSitemapRows(): Promise<{
   organizationRows: SitemapSlugRow[];
 }> {
   try {
-    const [individualRowsResult, organizationRowsResult] = await Promise.all([
-      db.execute(sql`
-        SELECT p.handle, p.updated_at
-        FROM profiles p
-        INNER JOIN portfolio_publication_states s
-          ON s.subject_type = 'individual_profile'
-         AND s.subject_id = p.id
-        WHERE p.handle IS NOT NULL
-          AND COALESCE(p.deleted, false) = false
-          AND s.sitemap_state = 'included'
-      `),
+    const [organizationRowsResult] = await Promise.all([
       db.execute(sql`
         SELECT o.slug, o.updated_at
         FROM organizations o
@@ -55,7 +45,7 @@ async function fetchPortfolioSitemapRows(): Promise<{
     ]);
 
     return {
-      individualRows: getRows<SitemapSlugRow>(individualRowsResult as any),
+      individualRows: [],
       organizationRows: getRows<SitemapSlugRow>(organizationRowsResult as any),
     };
   } catch (error) {

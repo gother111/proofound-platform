@@ -33,8 +33,8 @@ export function HeroArtifact({ shouldReduceMotion }: HeroArtifactProps) {
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-sans max-w-[500px]">
-              Create a clean public portfolio from real work, verified outcomes, and trusted signals
-              — then use it for matching, hiring, and collaboration.
+              Create a clean Public Page from real work, verified outcomes, and trusted signals —
+              then use it for matching, hiring, and collaboration.
             </p>
           </div>
 

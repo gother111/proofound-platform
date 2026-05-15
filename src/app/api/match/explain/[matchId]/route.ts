@@ -20,6 +20,7 @@ import {
   getReasonLedgerEntries,
   normalizeFairnessStatus,
   renderExplanationFromReasonCodes,
+  sanitizeMatchReasonCodes,
 } from '@/lib/matching/review-contract';
 import { buildMatchExplainerContract } from '@/lib/matching/explainer-contract';
 import { resolveEffectiveScoreState } from '@/lib/matching/match-score-contract';
@@ -78,8 +79,6 @@ export async function GET(
         m.score_snapshot_json,
         m.weights,
         a.role,
-        a.values_required,
-        a.cause_tags,
         a.must_have_skills,
         a.nice_to_have_skills,
         a.location_mode,
@@ -89,12 +88,9 @@ export async function GET(
         a.currency,
         a.hours_min,
         a.hours_max,
-        a.org_id,
-        ip.values AS profile_values,
-        ip.causes AS profile_causes
+        a.org_id
       FROM matches m
       INNER JOIN assignments a ON a.id = m.assignment_id
-      LEFT JOIN individual_profiles ip ON ip.user_id = m.profile_id
       WHERE m.id = ${matchId}
       LIMIT 1
     `);
@@ -120,8 +116,6 @@ export async function GET(
       score_snapshot_json: Record<string, unknown> | null;
       weights: unknown;
       role: string | null;
-      values_required: unknown;
-      cause_tags: unknown;
       must_have_skills: unknown;
       nice_to_have_skills: unknown;
       location_mode: string | null;
@@ -132,8 +126,6 @@ export async function GET(
       hours_min: number | null;
       hours_max: number | null;
       org_id: string;
-      profile_values: unknown;
-      profile_causes: unknown;
     }>;
 
     const match = matchRows[0];
@@ -233,28 +225,6 @@ export async function GET(
       }),
     };
 
-    const userValues = asArray<string>(match.profile_values);
-    const userCauses = asArray<string>(match.profile_causes);
-    const assignmentValues = asArray<string>(match.values_required);
-    const assignmentCauses = asArray<string>(match.cause_tags);
-
-    const sharedValues = userValues.filter((value) => assignmentValues.includes(value));
-    const totalUniqueValues = new Set([...userValues, ...assignmentValues]).size;
-    const valuesOverlap = totalUniqueValues > 0 ? sharedValues.length / totalUniqueValues : 0;
-
-    const sharedCauses = userCauses.filter((cause) => assignmentCauses.includes(cause));
-    const totalUniqueCauses = new Set([...userCauses, ...assignmentCauses]).size;
-    const causesOverlap = totalUniqueCauses > 0 ? sharedCauses.length / totalUniqueCauses : 0;
-
-    const pac = {
-      valuesOverlap,
-      causesOverlap,
-      sharedValues,
-      sharedCauses,
-      totalValues: totalUniqueValues,
-      totalCauses: totalUniqueCauses,
-    };
-
     const constraints = {
       location: {
         match: true,
@@ -303,8 +273,11 @@ export async function GET(
       canRevealExactRank(orgRole, fairnessStatus) &&
       !fairnessUi.suppressExactRank;
     const ledgerEntries = await getReasonLedgerEntries(match.id);
+    const reasonCodes = sanitizeMatchReasonCodes(
+      Array.isArray(match.reason_codes) ? match.reason_codes : []
+    );
     const renderedExplanation = renderExplanationFromReasonCodes({
-      reasonCodes: Array.isArray(match.reason_codes) ? match.reason_codes : [],
+      reasonCodes,
       ledgerEntries: ledgerEntries.map((entry) => ({
         category: entry.category,
         reasonCode: entry.reasonCode,
@@ -322,7 +295,7 @@ export async function GET(
     const proofPackByProfileId = await getReviewCardProofPackMap([match.profile_id]);
     const reviewCard = buildProofFirstReviewCard({
       profileId: match.profile_id,
-      reasonCodes: Array.isArray(match.reason_codes) ? match.reason_codes : [],
+      reasonCodes,
       fairnessStatus,
       verificationCount: userSkills.filter(
         (skill) =>
@@ -351,7 +324,7 @@ export async function GET(
       explanationVersion: match.explanation_version,
       fairnessCheckVersion: match.fairness_check_version,
       inputsHash: match.inputs_hash,
-      reasonCodes: Array.isArray(match.reason_codes) ? match.reason_codes : [],
+      reasonCodes,
       generatedAt: match.generated_at,
       fairness: {
         status: fairnessStatus,
@@ -372,13 +345,11 @@ export async function GET(
         !fairnessUi.suppressExactRank,
       subscores: {
         skills: Number(subscores.skills_fit ?? 0) / 10000,
-        pac: Number(subscores.purpose_fit ?? 0) / 10000,
         constraints: Number(subscores.constraints_fit ?? 0) / 10000,
         recency: Number(subscores.proof_fit ?? 0) / 10000,
         evidence: Number(subscores.proof_fit ?? 0) / 10000,
       },
       skillsMatch,
-      pac,
       constraints,
     };
 

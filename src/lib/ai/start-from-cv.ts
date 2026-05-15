@@ -13,6 +13,7 @@ import {
   volunteering,
 } from '@/db/schema';
 import { generateJson, resolveAiAssistantsEnabled } from '@/lib/ai/provider';
+import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 import { AiProviderError } from '@/lib/ai/provider/types';
 import {
   createAiUsageLog,
@@ -158,6 +159,7 @@ export const StartFromCvDraftOutputSchema = z.object({
 export const StartFromCvConsentSchema = z
   .object({
     consentToProcessCv: z.literal(true),
+    surface: z.literal(START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE),
   })
   .strict();
 
@@ -233,6 +235,10 @@ export function resolveStartFromCvConfig(env: EnvReader = process.env) {
   );
   return {
     enabled: parseBoolean(env.START_FROM_CV_BETA_ENABLED, false),
+    guestFirstProofScaffoldingEnabled: parseBoolean(
+      env.START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED,
+      false
+    ),
     openBetaEnabled: parseBoolean(env.START_FROM_CV_OPEN_BETA_ENABLED, false),
     allowedUserIds: parseCsv(env.START_FROM_CV_ALLOWED_USER_IDS),
     allowedOrgIds: parseCsv(env.START_FROM_CV_ALLOWED_ORG_IDS),
@@ -260,6 +266,9 @@ export function getStartFromCvLaunchSummary(env: EnvReader = process.env) {
   const blockers: string[] = [];
   if (config.enabled && config.publicBrowserOcrEnabled) {
     blockers.push('browser_cv_import_ocr_enabled');
+  }
+  if (config.enabled && !config.guestFirstProofScaffoldingEnabled) {
+    blockers.push('guest_first_proof_scaffolding_not_approved');
   }
   if (
     config.enabled &&
@@ -292,6 +301,7 @@ export function getStartFromCvLaunchSummary(env: EnvReader = process.env) {
 
   return {
     enabled: config.enabled,
+    guestFirstProofScaffoldingEnabled: config.guestFirstProofScaffoldingEnabled,
     openBetaEnabled: config.openBetaEnabled,
     authenticatedUserBeta: config.openBetaEnabled,
     inviteOnly: !config.openBetaEnabled,
@@ -324,6 +334,9 @@ export async function assertStartFromCvAccess(context: StartFromCvEligibilityCon
   const config = resolveStartFromCvConfig(context.env);
   if (!config.enabled) {
     throw new StartFromCvError('START_FROM_CV_DISABLED', 404);
+  }
+  if (!config.guestFirstProofScaffoldingEnabled) {
+    throw new StartFromCvError('START_FROM_CV_APPROVED_SCAFFOLDING_REQUIRED', 410);
   }
   if (config.publicBrowserOcrEnabled) {
     throw new StartFromCvError('BROWSER_CV_OCR_MUST_STAY_DISABLED', 503);

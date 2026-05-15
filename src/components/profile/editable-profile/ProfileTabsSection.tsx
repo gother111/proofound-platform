@@ -6,7 +6,13 @@ import { motion } from 'framer-motion';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { IndividualProfileCompletionState } from '@/lib/profile/completion-flow';
-import type { Education, Experience, ImpactStory, Volunteering } from '@/types/profile';
+import type {
+  Education,
+  Experience,
+  ImpactStory,
+  ProfileProofPack,
+  Volunteering,
+} from '@/types/profile';
 
 import { ContextTab } from './ContextTab';
 import { ImpactTab } from './ImpactTab';
@@ -15,6 +21,7 @@ import { VisibilityPortfolioTab } from './VisibilityPortfolioTab';
 
 type ProfileTabsSectionProps = {
   impactStories: ImpactStory[];
+  proofPacks?: ProfileProofPack[];
   experiences: Experience[];
   education: Education[];
   volunteering: Volunteering[];
@@ -54,6 +61,7 @@ function isProfileTabId(value: string): value is ProfileTabId {
 
 export function ProfileTabsSection({
   impactStories,
+  proofPacks = [],
   experiences,
   education,
   volunteering,
@@ -147,6 +155,7 @@ export function ProfileTabsSection({
 
       <ImpactTab
         impactStories={impactStories}
+        proofPacks={proofPacks}
         onAddStory={onAddImpactStory}
         onEditStory={onEditImpactStory}
         onDeleteStory={onDeleteImpactStory}

@@ -29,8 +29,6 @@ describe('GuidedProfileSetupView', () => {
           },
           counts: {
             contexts: 1,
-            values: 0,
-            causes: 0,
             skills: 0,
             proofPacks: 0,
             anchoredProofPacks: 0,
@@ -66,7 +64,7 @@ describe('GuidedProfileSetupView', () => {
       'Add your first proof',
       'Structure your first Proof Pack',
       'Optional trust checkpoint',
-      'Publish portfolio',
+      'Publish Public Page',
     ];
 
     labels.forEach((label) => {

@@ -13,7 +13,7 @@ import { FocusAreasSection } from './FocusAreasSection';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import { BookOpen, ExternalLink } from 'lucide-react';
-import { weightsFromMissionSkillsBias } from '@/lib/core/matching/presets';
+import { weightsFromProofSkillsBias } from '@/lib/core/matching/presets';
 
 interface MatchingProfileSetupProps {
   onComplete: () => void;
@@ -127,7 +127,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         return;
       }
 
-      const weights = weightsFromMissionSkillsBias(weightBias);
+      const weights = weightsFromProofSkillsBias(weightBias);
       const response = await apiFetch('/api/matching-profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -187,7 +187,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           Set up your matching profile
         </h2>
         <p className="text-sm" style={{ color: '#6B6760' }}>
-          Save your focus, weighting, and work preferences to unlock better matches.
+          Save your focus, proof emphasis, and work preferences to unlock better matches.
         </p>
       </div>
 
@@ -235,10 +235,10 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         </section>
 
         <section className="rounded-lg border border-proofound-stone bg-white p-4 space-y-3">
-          <h3 className="text-lg font-medium text-foreground">Weights</h3>
+          <h3 className="text-lg font-medium text-foreground">Review emphasis</h3>
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium text-foreground">Skills-first</span>
-            <span className="font-medium text-foreground">Mission-first</span>
+            <span className="font-medium text-foreground">Skills emphasis</span>
+            <span className="font-medium text-foreground">Proof emphasis</span>
           </div>
           <Slider
             value={[weightBias]}
@@ -246,11 +246,11 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
             min={0}
             max={100}
             step={1}
-            aria-label="Mission vs skills weighting"
+            aria-label="Proof vs skills weighting"
           />
           <p className="text-xs text-muted-foreground">
             Current emphasis:{' '}
-            {weightBias < 40 ? 'Skills-first' : weightBias > 60 ? 'Mission-first' : 'Balanced'} ({' '}
+            {weightBias < 40 ? 'skills-heavy' : weightBias > 60 ? 'proof-heavy' : 'even'} (
             {weightBias}%)
           </p>
         </section>

@@ -1,41 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
 import { orgCandidateInvites, proofPacks } from '@/db/schema';
-import { getRows } from '@/lib/db/rows';
 import {
   CANDIDATE_INVITE_FLOW_TYPE,
   CANDIDATE_INVITE_STATUS,
   isInviteExpired,
 } from '@/lib/candidate-invites';
-import { buildPublicProfileURL } from '@/lib/profile/snippet-generator';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 import { createClient } from '@/lib/supabase/server';
 import {
   buildCandidateInvitePolicyError,
   resolveCandidateInvitePolicyContext,
 } from '@/lib/candidate-invite-policy';
-import {
-  CAPABILITY_TOKEN_CLASSES,
-  inspectCapabilityToken,
-  redeemCapabilityToken,
-} from '@/lib/security/capability-tokens';
+import { CAPABILITY_TOKEN_CLASSES, inspectCapabilityToken } from '@/lib/security/capability-tokens';
 import { upsertCanonicalProofCardSubmission } from '@/lib/canonical/submissions';
 
 export const dynamic = 'force-dynamic';
 
+const PRIVATE_PROOF_WORKSPACE_URL = '/app/i/profile?profileView=full&tab=proof_packs';
+const PROFILE_VISIBILITY_URL = '/app/i/profile?profileView=full&tab=visibility';
+const PRIVACY_DATA_CONTROLS_URL = '/app/i/settings/privacy';
+const VERIFICATION_WORKSPACE_URL = '/app/i/verifications';
+
+function buildAssignmentReviewUrl(conversationId: string | null | undefined) {
+  return conversationId
+    ? `/app/i/communications?section=messages&conversation=${encodeURIComponent(conversationId)}`
+    : '/app/i/matching';
+}
+
 const submitProofCardSchema = z
   .object({
-    shareToken: z.string().min(6).max(200).optional(),
-    snippetId: z.string().uuid().optional(),
+    proofPackId: z.string().uuid().optional(),
+    reviewConfirmed: z.boolean().optional(),
   })
   .superRefine((value, ctx) => {
-    if (!value.shareToken && !value.snippetId) {
+    if (!value.proofPackId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Either shareToken or snippetId must be provided.',
+        path: ['proofPackId'],
+        message: 'Owner-only Proof Pack ID is required.',
+      });
+    }
+
+    if (value.reviewConfirmed !== true) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['reviewConfirmed'],
+        message: 'Confirm the final visibility review before submitting.',
       });
     }
   });
@@ -162,63 +176,60 @@ export async function POST(
       return NextResponse.json({ error: 'Invite is not in a submittable state.' }, { status: 409 });
     }
 
-    let snippetCapabilityTokenId: string | null = null;
-    if (parsed.data.shareToken) {
-      const redeemedSnippet = await redeemCapabilityToken(parsed.data.shareToken, {
-        tokenClass: CAPABILITY_TOKEN_CLASSES.PROFILE_SNIPPET_SHARE,
-        consume: false,
-        actor: { profileId: user.id, principalType: 'user_account' },
-        metadata: { surface: 'candidate_invite_proof_card_submit' },
-      });
+    let canonicalPackId: string | null = null;
 
-      if (!redeemedSnippet.ok) {
-        return NextResponse.json({ error: 'Proof Card snippet not found.' }, { status: 404 });
+    if (parsed.data.proofPackId) {
+      const [proofPack] = await db
+        .select({
+          id: proofPacks.id,
+          visibility: proofPacks.visibility,
+          revealGate: proofPacks.revealGate,
+          publishedAt: proofPacks.publishedAt,
+        })
+        .from(proofPacks)
+        .where(
+          and(
+            eq(proofPacks.id, parsed.data.proofPackId),
+            eq(proofPacks.ownerType, 'individual_profile'),
+            eq(proofPacks.ownerId, user.id),
+            isNull(proofPacks.deletedAt)
+          )
+        )
+        .limit(1);
+
+      if (!proofPack) {
+        return NextResponse.json({ error: 'Proof Pack not found.' }, { status: 404 });
       }
 
-      snippetCapabilityTokenId = redeemedSnippet.token.id;
-    }
+      if (
+        proofPack.visibility !== 'owner_only' ||
+        proofPack.revealGate !== 'none' ||
+        proofPack.publishedAt
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'Assignment applications can only submit an owner-only Proof Pack. Public pages and share links are not accepted for this flow.',
+          },
+          { status: 409 }
+        );
+      }
 
-    const snippetResult = await db.execute(sql`
-      SELECT id, capability_token_id
-      FROM profile_snippets
-      WHERE user_id = ${user.id}
-        AND profile_type = 'individual'
-        AND deleted_at IS NULL
-        AND revoked_at IS NULL
-        AND public_surface_disabled_at IS NULL
-        AND (
-          (${snippetCapabilityTokenId} IS NOT NULL AND capability_token_id = ${snippetCapabilityTokenId}::uuid)
-          OR (${parsed.data.snippetId ?? null} IS NOT NULL AND id = ${parsed.data.snippetId ?? null})
-        )
-        AND (expires_at IS NULL OR expires_at > NOW())
-      LIMIT 1
-    `);
-
-    const [snippet] = getRows<{ id: string; capability_token_id: string | null }>(
-      snippetResult as any
-    );
-    if (!snippet) {
-      return NextResponse.json({ error: 'Proof Card snippet not found.' }, { status: 404 });
+      canonicalPackId = proofPack.id;
     }
 
     await db.execute(sql`
       UPDATE org_candidate_invites
       SET
         status = ${CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED},
-        proof_snippet_id = ${snippet.id}::uuid,
-        proof_capability_token_id = ${snippet.capability_token_id ?? null}::uuid,
+        proof_snippet_id = NULL,
+        proof_capability_token_id = NULL,
         proof_share_token = NULL,
         proof_submitted_at = NOW(),
+        public_surface_disabled_at = NOW(),
         updated_at = NOW()
       WHERE id = ${invite.id}::uuid
     `);
-
-    const canonicalPack = await db.query.proofPacks.findFirst({
-      where: and(
-        eq(proofPacks.legacySourceTable, 'profile_snippets'),
-        eq(proofPacks.legacySourceId, snippet.id)
-      ),
-    });
 
     const canonicalSubmission = await upsertCanonicalProofCardSubmission({
       inviteId: invite.id,
@@ -226,8 +237,8 @@ export async function POST(
       orgId: invite.orgId,
       assignmentId: invite.assignmentId ?? null,
       matchId: invite.matchId ?? null,
-      proofPackId: canonicalPack?.id ?? null,
-      proofSnippetId: snippet.id,
+      proofPackId: canonicalPackId,
+      proofSnippetId: null,
       conversationId: invite.conversationId ?? null,
     });
 
@@ -242,9 +253,32 @@ export async function POST(
     return NextResponse.json({
       success: true,
       status: CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED,
-      proofCardUrl: parsed.data.shareToken ? buildPublicProfileURL(parsed.data.shareToken) : null,
-      canonicalPackId: canonicalPack?.id ?? null,
+      canonicalPackId,
       canonicalSubmissionId: canonicalSubmission.id,
+      accountSave: {
+        state: 'saved_private_workspace',
+        accountId: user.id,
+        proofPackId: canonicalPackId,
+        canonicalSubmissionId: canonicalSubmission.id,
+        assignmentReviewState: {
+          inviteId: invite.id,
+          assignmentId: invite.assignmentId ?? null,
+          matchId: invite.matchId ?? null,
+          conversationId: invite.conversationId ?? null,
+        },
+        controls: {
+          proofWorkspaceUrl: PRIVATE_PROOF_WORKSPACE_URL,
+          profileVisibilityUrl: PROFILE_VISIBILITY_URL,
+          privacyDataControlsUrl: PRIVACY_DATA_CONTROLS_URL,
+          verificationWorkspaceUrl: VERIFICATION_WORKSPACE_URL,
+          assignmentReviewUrl: buildAssignmentReviewUrl(invite.conversationId),
+        },
+        publication: {
+          publicPageChanged: false,
+          publicDirectoryEntryCreated: false,
+          defaultVisibility: 'owner_only',
+        },
+      },
     });
   } catch (error) {
     console.error('Failed to submit proof card for invite:', error);

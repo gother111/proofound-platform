@@ -1,14 +1,25 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { completeIndividualOnboardingMock, pushMock, uploadFileMock, validateFileMock } = vi.hoisted(
-  () => ({
-    completeIndividualOnboardingMock: vi.fn(),
-    pushMock: vi.fn(),
-    uploadFileMock: vi.fn(),
-    validateFileMock: vi.fn(),
-  })
-);
+const {
+  completeIndividualOnboardingMock,
+  fetchMock,
+  pushMock,
+  startFromCvStatus,
+  uploadFileMock,
+  validateFileMock,
+} = vi.hoisted(() => ({
+  completeIndividualOnboardingMock: vi.fn(),
+  fetchMock: vi.fn(),
+  pushMock: vi.fn(),
+  startFromCvStatus: {
+    visible: false,
+    available: false,
+    blockers: [] as string[],
+  },
+  uploadFileMock: vi.fn(),
+  validateFileMock: vi.fn(),
+}));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -25,25 +36,94 @@ vi.mock('@/lib/upload', () => ({
   validateFile: validateFileMock,
 }));
 
+vi.mock('@/hooks/useStartFromCvBetaStatus', () => ({
+  useStartFromCvBetaStatus: () => startFromCvStatus,
+}));
+
+vi.mock('@/components/profile/StartFromCvDialog', () => ({
+  StartFromCvDialog: ({ onApplyComplete }: { onApplyComplete?: () => void }) => (
+    <div data-testid="start-from-cv-dialog">
+      <p>Private draft scaffolding mock</p>
+      <button type="button" onClick={() => onApplyComplete?.()}>
+        Continue manually
+      </button>
+    </div>
+  ),
+}));
+
 import { IndividualSetup } from '@/components/onboarding/IndividualSetup';
+import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 
 describe('IndividualSetup first-proof flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    startFromCvStatus.visible = false;
+    startFromCvStatus.available = false;
+    startFromCvStatus.blockers = [];
     validateFileMock.mockReturnValue({ valid: true });
     uploadFileMock.mockResolvedValue({
       success: true,
       uploadedFileId: 'upload-1',
+      fileName: 'starter-proof.pdf',
       artifactDisplayName: 'starter-proof.pdf',
+      url: 'https://proofound.test/uploads/starter-proof.pdf',
     });
     completeIndividualOnboardingMock.mockResolvedValue({
       success: true,
       portfolioReady: false,
       scaffoldProfilePath: '/app/i/profile',
+      firstProofVerificationArtifact: {
+        type: 'experience',
+        id: '11111111-1111-4111-8111-111111111111',
+      },
     });
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ request: { id: 'request-1' }, email_sent: true }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
   });
 
-  it('starts with only the basic identity shell instead of profile completion fields', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  function fillBasicDetails() {
+    fireEvent.change(screen.getByLabelText('First name *'), { target: { value: 'Jane' } });
+    fireEvent.change(screen.getByLabelText('Last name *'), { target: { value: 'Founder' } });
+    fireEvent.change(screen.getByLabelText('City or residence *'), {
+      target: { value: 'Stockholm' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /continue to proof artifact/i }));
+  }
+
+  function fillRequiredProofDetails() {
+    fireEvent.click(screen.getByLabelText('This was created with a team'));
+    fireEvent.change(screen.getByLabelText('What was your ownership? *'), {
+      target: { value: 'owned_scope' },
+    });
+    fireEvent.change(screen.getByLabelText('Concrete ownership note *'), {
+      target: { value: 'I owned the proof mapping and launch handoff.' },
+    });
+    fireEvent.change(screen.getByLabelText('3 to 5 skills this proof supports *'), {
+      target: { value: 'Proof writing, artifact review, onboarding design' },
+    });
+  }
+
+  function fillLinkProof() {
+    fireEvent.change(screen.getByLabelText('Proof link *'), {
+      target: { value: 'https://example.com/proof' },
+    });
+    fireEvent.change(screen.getByLabelText('Proof title *'), {
+      target: { value: 'Launch proof' },
+    });
+    fireEvent.change(screen.getByLabelText('What does this artifact show? *'), {
+      target: { value: 'Shows the first proof artifact.' },
+    });
+    fillRequiredProofDetails();
+  }
+
+  it('starts with only the basic identity shell instead of broad profile fields', () => {
     render(<IndividualSetup />);
 
     expect(screen.getByLabelText('First name *')).toBeInTheDocument();
@@ -55,23 +135,55 @@ describe('IndividualSetup first-proof flow', () => {
     expect(screen.queryByText(/resume wizard/i)).not.toBeInTheDocument();
   });
 
-  it('captures one link artifact as the first Proof Pack without required verification', async () => {
+  it('keeps Start from CV hidden unless the guest first-proof scaffolding surface is passed', () => {
+    startFromCvStatus.visible = true;
+    startFromCvStatus.available = true;
+
     render(<IndividualSetup />);
 
-    fireEvent.change(screen.getByLabelText('First name *'), { target: { value: 'Jane' } });
-    fireEvent.change(screen.getByLabelText('Last name *'), { target: { value: 'Founder' } });
-    fireEvent.change(screen.getByLabelText('City or residence *'), {
-      target: { value: 'Stockholm' },
-    });
-    fireEvent.submit(
-      screen.getByRole('button', { name: /continue to proof artifact/i }).closest('form')!
+    fillBasicDetails();
+
+    expect(screen.queryByRole('button', { name: /Start from CV/i })).not.toBeInTheDocument();
+  });
+
+  it('shows optional Start from CV only for the candidate-invite private scaffolding path', async () => {
+    startFromCvStatus.visible = true;
+    startFromCvStatus.available = true;
+
+    render(
+      <IndividualSetup
+        completionPath="/candidate-invite/token-value"
+        startFromCvScaffoldingSurface={START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE}
+      />
     );
+
+    fillBasicDetails();
+
+    expect(screen.getByText(/Optional private CV scaffolding/i)).toBeInTheDocument();
+    expect(screen.queryByText(/score|rank|shortlist/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Start from CV/i }));
+    expect(await screen.findByTestId('start-from-cv-dialog')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Continue manually/i }));
+
+    await waitFor(() =>
+      expect(screen.queryByTestId('start-from-cv-dialog')).not.toBeInTheDocument()
+    );
+  });
+
+  it('captures one link artifact before broad profile setup', async () => {
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
 
     expect(screen.getByLabelText('Artifact type *')).toBeInTheDocument();
     expect(screen.getByLabelText('Proof link *')).toBeInTheDocument();
-    expect(screen.queryByText(/anchor context/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/what context/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/3 to 5 skills/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/anchor the proof to real context/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/headline/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/ownership for this proof/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('This was created with a team')).toBeInTheDocument();
+    expect(screen.getByLabelText('3 to 5 skills this proof supports *')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Artifact type *'), { target: { value: 'document' } });
     fireEvent.change(screen.getByLabelText('Proof link *'), {
@@ -80,9 +192,19 @@ describe('IndividualSetup first-proof flow', () => {
     fireEvent.change(screen.getByLabelText('Proof title *'), {
       target: { value: 'Launch proof' },
     });
-    fireEvent.change(screen.getByLabelText('Short proof note *'), {
+    fireEvent.change(screen.getByLabelText('What does this artifact show? *'), {
       target: { value: 'Shows the first proof artifact.' },
     });
+    fireEvent.change(screen.getByLabelText('What changed?'), {
+      target: { value: 'Reduced review time' },
+    });
+    fireEvent.change(screen.getByLabelText('Measure'), {
+      target: { value: '23%' },
+    });
+    fireEvent.change(screen.getByLabelText('Scope'), {
+      target: { value: 'Q1 pilot' },
+    });
+    fillRequiredProofDetails();
     fireEvent.submit(
       screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
     );
@@ -97,25 +219,75 @@ describe('IndividualSetup first-proof flow', () => {
     expect(payload.get('proofArtifactType')).toBe('document');
     expect(payload.get('proofUrl')).toBe('https://example.com/proof');
     expect(payload.get('proofPackClaim')).toBe('Launch proof');
-    expect(payload.get('proofPackOutcome')).toBe('Shows the first proof artifact.');
+    expect(payload.get('proofPackOutcome')).toBe('Reduced review time · 23% · Q1 pilot');
+    expect(JSON.parse(String(payload.get('proofPackMeasuredOutcomes')))).toEqual([
+      {
+        id: 'outcome-1',
+        statement: 'Reduced review time',
+        value: '23%',
+        timeframe: 'Q1 pilot',
+      },
+    ]);
     expect(payload.get('contextTitle')).toBeNull();
-    expect(payload.get('proofPackSkills')).toBeNull();
+    expect(payload.get('proofPackSkills')).toBe(
+      'Proof writing, artifact review, onboarding design'
+    );
+    expect(payload.get('proofContributionMode')).toBe('team');
+    expect(payload.get('proofOwnershipLevel')).toBe('owned_scope');
+    expect(payload.get('proofOwnershipNote')).toBe('I owned the proof mapping and launch handoff.');
+    expect(payload.get('proofPackOwnership')).toBe(
+      'Created as part of a team effort. I owned a defined part of the work. I owned the proof mapping and launch handoff.'
+    );
     expect(screen.getByText(/first proof pack created/i)).toBeInTheDocument();
+    expect(screen.getByText(/new proof pack/i)).toBeInTheDocument();
+    expect(screen.getByText(/claimed outcome: reduced review time/i)).toBeInTheDocument();
+    expect(screen.getByText(/public page readiness/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/matching preferences/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/optional non-self verification/i)).toBeInTheDocument();
+    expect(screen.getByText(/stronger intro eligibility/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /continue to scaffold profile/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/% complete/i)).not.toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it('hands off to the scaffold profile even when the portfolio already has a public URL', async () => {
+    completeIndividualOnboardingMock.mockResolvedValueOnce({
+      success: true,
+      portfolioReady: true,
+      publicPortfolioUrl: 'https://proofound.io/portfolio/jane-founder',
+      scaffoldProfilePath: '/app/i/profile?firstProof=created',
+    });
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fireEvent.change(screen.getByLabelText('Proof link *'), {
+      target: { value: 'https://example.com/proof' },
+    });
+    fireEvent.change(screen.getByLabelText('Proof title *'), {
+      target: { value: 'Launch proof' },
+    });
+    fireEvent.change(screen.getByLabelText('What does this artifact show? *'), {
+      target: { value: 'Shows the first proof artifact.' },
+    });
+    fillRequiredProofDetails();
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+    );
+
+    await waitFor(() => expect(screen.getByText(/first proof pack created/i)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /continue to scaffold profile/i }));
+
+    expect(pushMock).toHaveBeenCalledWith('/app/i/profile?firstProof=created');
+    expect(pushMock).not.toHaveBeenCalledWith('https://proofound.io/portfolio/jane-founder');
   });
 
   it('lets the first proof be a single uploaded file', async () => {
     render(<IndividualSetup />);
 
-    fireEvent.change(screen.getByLabelText('First name *'), { target: { value: 'Jane' } });
-    fireEvent.change(screen.getByLabelText('Last name *'), { target: { value: 'Founder' } });
-    fireEvent.change(screen.getByLabelText('City or residence *'), {
-      target: { value: 'Stockholm' },
-    });
-    fireEvent.submit(
-      screen.getByRole('button', { name: /continue to proof artifact/i }).closest('form')!
-    );
-    fireEvent.click(screen.getByLabelText('File upload'));
+    fillBasicDetails();
+    fireEvent.click(screen.getByRole('radio', { name: /file upload/i }));
 
     const file = new File(['proof'], 'starter-proof.pdf', { type: 'application/pdf' });
     fireEvent.change(screen.getByLabelText('Proof file *'), {
@@ -126,9 +298,10 @@ describe('IndividualSetup first-proof flow', () => {
     fireEvent.change(screen.getByLabelText('Proof title *'), {
       target: { value: 'Starter proof' },
     });
-    fireEvent.change(screen.getByLabelText('Short proof note *'), {
+    fireEvent.change(screen.getByLabelText('What does this artifact show? *'), {
       target: { value: 'A single uploaded artifact.' },
     });
+    fillRequiredProofDetails();
     fireEvent.submit(
       screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
     );
@@ -141,5 +314,93 @@ describe('IndividualSetup first-proof flow', () => {
     expect(payload.get('uploadedFileId')).toBe('upload-1');
     expect(payload.get('proofUploadedFileId')).toBe('upload-1');
     expect(payload.get('proofFileName')).toBe('starter-proof.pdf');
+    expect(payload.get('proofPackOutcome')).toBeNull();
+    expect(JSON.parse(String(payload.get('proofPackMeasuredOutcomes')))).toEqual([]);
+    expect(payload.get('contextTitle')).toBeNull();
+    expect(payload.get('proofPackSkills')).toBe(
+      'Proof writing, artifact review, onboarding design'
+    );
+    expect(payload.get('proofContributionMode')).toBe('team');
+  });
+
+  it('saves an optional scoped verification request preview without sending', async () => {
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fillLinkProof();
+    fireEvent.change(screen.getByLabelText('What changed?'), {
+      target: { value: 'Reduced review time' },
+    });
+    fireEvent.change(screen.getByLabelText('Measure'), {
+      target: { value: '23%' },
+    });
+    fireEvent.change(screen.getByLabelText('Scope'), {
+      target: { value: 'Q1 pilot' },
+    });
+
+    fireEvent.click(screen.getByLabelText('Save without sending'));
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Amina Client' } });
+    fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: 'client' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'Amina@Example.com' } });
+
+    expect(screen.getByText('Email preview')).toBeInTheDocument();
+    expect(screen.getByText(/Specific claim: Launch proof/i)).toBeInTheDocument();
+    expect(screen.getByText(/Artifact or evidence:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Ownership:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Observed behavior to confirm:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Optional outcome: Reduced review time/i)).toBeInTheDocument();
+
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save first proof pack/i }).closest('form')!
+    );
+
+    await waitFor(() => expect(completeIndividualOnboardingMock).toHaveBeenCalledTimes(1));
+    const payload = completeIndividualOnboardingMock.mock.calls[0][0] as FormData;
+    const confirmers = JSON.parse(String(payload.get('firstProofVerificationConfirmers')));
+
+    expect(payload.get('firstProofVerificationAction')).toBe('draft');
+    expect(String(payload.get('firstProofVerificationPreview'))).toContain(
+      'This is a scoped verification request'
+    );
+    expect(confirmers).toEqual([
+      {
+        name: 'Amina Client',
+        relationship: 'client',
+        email: 'amina@example.com',
+      },
+    ]);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText(/saved without sending/i)).toBeInTheDocument();
+  });
+
+  it('sends optional verification requests after the first Proof Pack is created', async () => {
+    render(<IndividualSetup />);
+
+    fillBasicDetails();
+    fillLinkProof();
+    fireEvent.click(screen.getByLabelText('Send now'));
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Program Teacher' } });
+    fireEvent.change(screen.getByLabelText('Relationship'), { target: { value: 'teacher' } });
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'teacher@example.com' },
+    });
+
+    fireEvent.submit(
+      screen.getByRole('button', { name: /save and send request/i }).closest('form')!
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(String(init.body));
+
+    expect(url).toBe('/api/verification/requests/custom');
+    expect(init.method).toBe('POST');
+    expect(body.verifierEmail).toBe('teacher@example.com');
+    expect(body.relationship).toBe('mentor_coach');
+    expect(body.message).toContain('Specific claim: Launch proof');
+    expect(body.artifacts).toEqual([
+      { type: 'experience', id: '11111111-1111-4111-8111-111111111111' },
+    ]);
+    expect(screen.getByText(/verification request sent to 1 confirmer/i)).toBeInTheDocument();
   });
 });

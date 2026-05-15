@@ -24,7 +24,7 @@ describe('TasksCard', () => {
           {
             id: 'complete-profile',
             title: 'Complete profile details',
-            description: 'Add mission and evidence to improve matching.',
+            description: 'Add proof and constraints to improve matching readiness.',
             priority: 'high',
             category: 'profile',
             actionUrl: '/app/i/profile',

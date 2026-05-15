@@ -18,7 +18,7 @@ export default async function OrgOpportunitiesPage({
       primaryHref={getOrgSurfaceFallbackHref(slug, 'opportunities')}
       primaryLabel="Open assignments & matches"
       secondaryHref={`/app/o/${slug}/profile`}
-      secondaryLabel="Open trust profile"
+      secondaryLabel="Open organization profile"
     />
   );
 }

@@ -154,10 +154,14 @@ export function proofTypeLabel(value: string | null | undefined) {
 const VERIFICATION_STATUS_LABELS: Record<string, string> = {
   accepted: 'Accepted',
   cancelled: 'Cancelled',
+  contradicted: 'Contradicted',
+  corrected: 'Corrected',
   declined: 'Declined',
+  disputed: 'Disputed',
   expired: 'Expired',
   failed: 'Failed',
   pending: 'Pending',
+  revoked: 'Revoked',
   verified: 'Verified',
 };
 

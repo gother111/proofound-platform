@@ -27,6 +27,66 @@ export interface Skill {
   verified: boolean;
 }
 
+export type ProfileProofPackVerificationStatus =
+  | 'unverified'
+  | 'partially_verified'
+  | 'verified'
+  | 'disputed';
+
+export type ProfileProofPackFreshnessState = 'fresh' | 'review_soon' | 'stale' | 'expired';
+export type ProfileProofPackVisibility =
+  | 'public'
+  | 'link_only'
+  | 'matched_org'
+  | 'owner_only'
+  | 'internal_only';
+
+export interface ProfileProofPackArtifact {
+  id: string;
+  title: string;
+  kind: string;
+  description: string | null;
+  displayName: string | null;
+  sourceUrl: string | null;
+  visibility: ProfileProofPackVisibility;
+  effectiveVisibility: ProfileProofPackVisibility;
+  issuedAt: string | null;
+  expiresAt: string | null;
+}
+
+export interface ProfileProofPackSkill {
+  id: string;
+  name: string;
+  evidenceClasses: string[];
+}
+
+export interface ProfileProofPack {
+  id: string;
+  title: string;
+  summary: string | null;
+  primaryClaim: string;
+  contextType: string;
+  contextLabel: string | null;
+  outcomesSummary: string | null;
+  evidenceSummary: string | null;
+  ownershipStatement: string | null;
+  roleContext: string | null;
+  timeframeLabel: string | null;
+  verificationStatus: ProfileProofPackVerificationStatus;
+  verificationSummary: string;
+  freshnessState: ProfileProofPackFreshnessState;
+  visibility: ProfileProofPackVisibility;
+  revealGate: string;
+  proofQualityScore: number | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  lastVerifiedAt: string | null;
+  lastRefreshedAt: string | null;
+  artifacts: ProfileProofPackArtifact[];
+  linkedSkills: ProfileProofPackSkill[];
+  isPublicSafe: boolean;
+}
+
 export type ImpactStoryTimelineMode = 'single' | 'range';
 export type ImpactStoryTimelinePrecision = 'date' | 'year';
 export type ImpactStoryAffiliationType = 'organization' | 'individual';
@@ -129,12 +189,26 @@ export interface ImpactStory {
   saveWarning?: string | null;
 }
 
-export interface ExperienceMeasuredOutcome {
+export type ContextOutcomeClaimStatus = 'claimed' | 'proof_linked' | 'verified';
+export type ContextOutcomeVerificationStatus = 'unverified' | 'proof_linked' | 'verified';
+export type ContextOutcomeVisibility = 'private_context' | 'public_safe';
+
+export interface ContextMeasuredOutcome {
   id: string;
   name: string;
   value?: number | null;
   unit?: string | null;
+  timeframe?: string | null;
+  supportingSkills?: string[];
+  proofPackId?: string | null;
+  proofPackTitle?: string | null;
+  proofItemId?: string | null;
+  claimStatus?: ContextOutcomeClaimStatus;
+  verificationStatus?: ContextOutcomeVerificationStatus;
+  visibility?: ContextOutcomeVisibility;
 }
+
+export interface ExperienceMeasuredOutcome extends ContextMeasuredOutcome {}
 
 export interface ExperienceProjectEntry {
   id: string;
@@ -173,6 +247,7 @@ export interface Education {
   duration: string;
   skills: string;
   projects: string;
+  measuredOutcomes?: ContextMeasuredOutcome[];
   verified: boolean | null;
 }
 
@@ -185,6 +260,7 @@ export interface Volunteering {
   impact: string;
   skillsDeployed: string;
   personalWhy: string;
+  measuredOutcomes?: ContextMeasuredOutcome[];
   verified: boolean | null;
 }
 
@@ -195,10 +271,6 @@ export type PurposeLinks = {
 };
 
 export interface FieldVisibility {
-  mission?: VisibilityLevel;
-  vision?: VisibilityLevel;
-  values?: VisibilityLevel;
-  causes?: VisibilityLevel;
   skills?: VisibilityLevel;
   experiences?: VisibilityLevel;
   education?: VisibilityLevel;
@@ -230,6 +302,7 @@ export interface ProfileData {
   acceptedVerificationCount?: number;
   publicProofCount?: number;
   publishedPortfolio?: boolean;
+  proofPacks?: ProfileProofPack[];
   impactStories: ImpactStory[];
   experiences: Experience[];
   education: Education[];

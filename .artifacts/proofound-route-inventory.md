@@ -1,7 +1,14 @@
 # Proofound Route Inventory
 
-Generated: 2026-03-25  
+Generated: 2026-05-14
 Workspace: `/Users/yuriibakurov/proofound`
+
+> Historical/superseded freshness banner added 2026-05-14:
+>
+> - Do not treat this March route inventory as current route-surface truth without checking newer compiled inventory, tests, and launch evidence first.
+> - The locked MVP definition remains `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`; this snapshot cannot broaden the launch corridor.
+> - For narrow pilot-readiness evidence, prefer `project/changes/entries/2026-04-09__mvp-launch-audit-execution.md` or newer current evidence. That April 9 execution retired the March build/runtime, route breadth, launch smoke, and strict org corridor blockers unless those blockers are reproduced again in a fresh run.
+> - For release-clean status, use `audit/full-scale-audit-2026-04-16.md` or newer release evidence; April 16 found the repo structurally healthy but not release-clean.
 
 ## Purpose
 
@@ -21,29 +28,29 @@ This is a code-grounded route-surface snapshot for the current workspace. It is 
 ## Current Counts
 
 - API route handlers under `src/app/api/**`: `138`
-- App page routes under `src/app/**/page.tsx`: `50`
+- App page routes under `src/app/**/page.tsx`: `49`
 - Launch-surface classification from `src/lib/launch/surface-policy.ts`:
-  - API routes: `106` active launch, `14` internal-only launch ops, `18` archived
-  - Page routes: `38` active launch, `3` internal-only launch ops, `9` archived
+  - API routes: `109` active launch, `16` internal-only launch ops, `13` archived compiled compatibility handlers
+  - Page routes: `46` active launch, `3` internal-only launch ops, `0` archived compiled page handlers
 - Cross-check:
-  - filesystem counts and the 2026-03-25 build route table match the reduced current workspace
+  - filesystem counts and focused launch inventory tests match the reduced current workspace
 
 ## Highest-Volume API Families
 
-| Family | Count |
-| --- | ---: |
-| `cron` | 17 |
-| `verification` | 12 |
-| `user` | 12 |
-| `match` | 11 |
-| `organizations` | 8 |
-| `portfolio` | 7 |
-| `assignments` | 6 |
-| `expertise` | 6 |
-| `interviews` | 6 |
-| `admin` | 5 |
-| `core` | 5 |
-| `upload` | 4 |
+| Family          | Count |
+| --------------- | ----: |
+| `verification`  |    12 |
+| `user`          |    11 |
+| `ai`            |    11 |
+| `expertise`     |    10 |
+| `cron`          |    10 |
+| `match`         |     9 |
+| `organizations` |     8 |
+| `portfolio`     |     6 |
+| `assignments`   |     6 |
+| `interviews`    |     6 |
+| `admin`         |     5 |
+| `upload`        |     4 |
 
 ## Launch-Critical Route Families
 
@@ -64,7 +71,7 @@ These are the narrowest current routes that still matter most for the locked MVP
 
 ## Route-Surface Truth For This Pass
 
-- The stale `187` API / `91` page claims are retired. Fresh current-state counts are `138` APIs and `50` pages.
+- The stale `187` API / `91` page claims are retired. Fresh current-state counts are `138` APIs and `49` pages.
 - Fresh protected corridor evidence is now green:
   - isolated strict corridor rerun: `1 passed (3.4m)`
   - full org strict bundle: `7 passed (5.7m)`

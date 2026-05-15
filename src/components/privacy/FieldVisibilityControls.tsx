@@ -100,35 +100,6 @@ const PROFILE_FIELDS: FieldConfig[] = [
     category: 'professional',
     defaultVisibility: 'public',
   },
-  {
-    name: 'mission',
-    label: 'Mission',
-    description: 'Your purpose statement',
-    category: 'professional',
-    defaultVisibility: 'public',
-  },
-  {
-    name: 'vision',
-    label: 'Vision',
-    description: 'Your aspirations',
-    category: 'professional',
-    defaultVisibility: 'public',
-  },
-  {
-    name: 'values',
-    label: 'Values',
-    description: 'Core values',
-    category: 'professional',
-    defaultVisibility: 'public',
-  },
-  {
-    name: 'causes',
-    label: 'Causes',
-    description: 'Causes you support',
-    category: 'professional',
-    defaultVisibility: 'public',
-  },
-
   // Sensitive
   {
     name: 'workEmailOrgId',

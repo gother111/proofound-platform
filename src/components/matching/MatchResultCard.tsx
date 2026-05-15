@@ -63,9 +63,6 @@ interface MatchResultCardProps {
       compMin?: number;
       compMax?: number;
       currency?: string;
-      valuesTags?: string[];
-      valuesRequired?: string[];
-      causeTags?: string[];
     };
     assignment?: {
       role?: string;
@@ -77,9 +74,6 @@ interface MatchResultCardProps {
       compMin?: number;
       compMax?: number;
       currency?: string;
-      valuesRequired?: string[];
-      valuesTags?: string[];
-      causeTags?: string[];
     };
     gaps?: Array<{ id: string; required: number; have: number }>;
   };
@@ -111,9 +105,6 @@ export function MatchResultCard({
   const [MatchExplainerModalView, setMatchExplainerModalView] = useState<DeferredComponent | null>(
     null
   );
-  const [PACScoreExplainerView, setPACScoreExplainerView] = useState<DeferredComponent | null>(
-    null
-  );
   const [SnoozeDialogView, setSnoozeDialogView] = useState<DeferredComponent | null>(null);
   const [ConsentToShareDialogView, setConsentToShareDialogView] =
     useState<DeferredComponent | null>(null);
@@ -132,12 +123,6 @@ export function MatchResultCard({
   const contributions = Object.entries(result.contributions ?? {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
-  const shouldShowPacExplainer = Boolean(
-    !result.id &&
-      result.subscores &&
-      (result.subscores.pac || result.subscores.values || result.subscores.causes)
-  );
-
   useEffect(() => {
     if (!matchExplanation || MatchExplainerModalView) {
       return;
@@ -155,24 +140,6 @@ export function MatchResultCard({
       cancelled = true;
     };
   }, [MatchExplainerModalView, matchExplanation]);
-
-  useEffect(() => {
-    if (!shouldShowPacExplainer || PACScoreExplainerView) {
-      return;
-    }
-
-    let cancelled = false;
-
-    void import('./PACScoreExplainer').then((module) => {
-      if (!cancelled) {
-        setPACScoreExplainerView(() => module.PACScoreExplainer);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [PACScoreExplainerView, shouldShowPacExplainer]);
 
   useEffect(() => {
     if (!isSnoozeDialogOpen || SnoozeDialogView) {
@@ -348,7 +315,6 @@ export function MatchResultCard({
                   reasonSections={matchExplanation.reasonSections}
                   subscores={matchExplanation.subscores}
                   skillsMatch={matchExplanation.skillsMatch}
-                  pac={matchExplanation.pac}
                   constraints={matchExplanation.constraints}
                   reviewCard={matchExplanation.reviewCard}
                 />
@@ -517,7 +483,6 @@ export function MatchResultCard({
                       reasonSections={matchExplanation.reasonSections}
                       subscores={matchExplanation.subscores}
                       skillsMatch={matchExplanation.skillsMatch}
-                      pac={matchExplanation.pac}
                       constraints={matchExplanation.constraints}
                     />
                     {/* Rank Display - Show candidate's ranking */}
@@ -574,34 +539,6 @@ export function MatchResultCard({
                 )}
               </div>
             )}
-
-            {/* Fallback PAC Explainer if no match ID */}
-            {shouldShowPacExplainer && (
-              <div className="mt-2">
-                {PACScoreExplainerView ? (
-                  <PACScoreExplainerView
-                    pacScore={result.subscores?.pac || result.score}
-                    valuesOverlap={result.subscores?.values || 0}
-                    causesOverlap={result.subscores?.causes || 0}
-                    sharedValues={data?.valuesTags || []}
-                    sharedCauses={data?.causeTags || []}
-                    totalValues={data?.valuesTags?.length || 0}
-                    totalCauses={data?.causeTags?.length || 0}
-                  />
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs gap-1"
-                    style={{ color: '#1C4D3A' }}
-                    disabled
-                  >
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    Loading...
-                  </Button>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -617,24 +554,6 @@ export function MatchResultCard({
                   style={{ backgroundColor: '#E8E6DD' }}
                 >
                   {skillDisplayLabel({ label: skill.label, id: skill.id })} L{skill.level}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Values/Causes */}
-        {(data?.valuesTags || data?.valuesRequired) && (
-          <div className="mb-3">
-            <div className="flex flex-wrap gap-1">
-              {(data.valuesTags || data.valuesRequired || []).slice(0, 3).map((tag: string) => (
-                <Badge
-                  key={tag}
-                  variant="outline"
-                  className="text-xs px-2 py-0.5"
-                  style={{ borderColor: '#7A9278', color: '#1C4D3A' }}
-                >
-                  {tag}
                 </Badge>
               ))}
             </div>

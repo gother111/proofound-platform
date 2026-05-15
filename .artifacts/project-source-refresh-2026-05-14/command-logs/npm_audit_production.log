@@ -1,0 +1,20 @@
+# npm audit --omit=dev --json
+startedAt=2026-05-14T10:32:59.100Z
+cwd=/Users/yuriibakurov/proofound
+npm warn audit request to https://registry.npmjs.org/-/npm/v1/security/advisories/bulk failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org
+npm error audit endpoint returned an error
+{
+  "message": "request to https://registry.npmjs.org/-/npm/v1/security/advisories/bulk failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org",
+  "error": {
+    "summary": "",
+    "detail": ""
+  }
+}
+npm error Log files were not written due to an error writing to the directory: /Users/yuriibakurov/.npm/_logs
+npm error You can rerun the command with `--loglevel=verbose` to see the logs in your terminal
+
+
+completedAt=2026-05-14T10:32:59.774Z
+exitCode=1
+durationMs=674
+timedOut=false

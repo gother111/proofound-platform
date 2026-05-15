@@ -25,10 +25,6 @@ export function getEmptyProfile(): ProfileData {
     education: [],
     volunteering: [],
     fieldVisibility: {
-      mission: 'public',
-      vision: 'public',
-      values: 'public',
-      causes: 'public',
       skills: 'public',
       experiences: 'private',
       education: 'private',
@@ -98,52 +94,4 @@ export function clearProfile(): void {
   } catch (error) {
     console.error('Error clearing profile from localStorage:', error);
   }
-}
-
-export function calculateProfileCompletion(profile: ProfileData): number {
-  let totalFields = 0;
-  let completedFields = 0;
-
-  // Basic info (40% weight)
-  totalFields += 5;
-  if (profile.basicInfo.avatar) completedFields += 1;
-  if (profile.basicInfo.coverImage) completedFields += 0.5; // Half weight
-  if (profile.basicInfo.tagline) completedFields += 1;
-  if (profile.basicInfo.location) completedFields += 0.5; // Half weight
-  if (profile.basicInfo.name !== 'Your Name') completedFields += 1;
-
-  // Mission (10% weight)
-  totalFields += 2;
-  if (profile.mission) completedFields += 2;
-
-  // Values (10% weight)
-  totalFields += 2;
-  if (profile.values.length > 0) completedFields += 2;
-
-  // Causes (5% weight)
-  totalFields += 1;
-  if (profile.causes.length > 0) completedFields += 1;
-
-  // Skills (5% weight)
-  totalFields += 1;
-  if (profile.skills.length > 0) completedFields += 1;
-
-  // Impact Stories (15% weight)
-  totalFields += 3;
-  if (profile.impactStories.length > 0) completedFields += 3;
-
-  // Experiences (10% weight)
-  totalFields += 2;
-  if (profile.experiences.length > 0) completedFields += 2;
-
-  // Education (5% weight)
-  totalFields += 1;
-  if (profile.education.length > 0) completedFields += 1;
-
-  // Volunteering (5% weight)
-  totalFields += 1;
-  if (profile.volunteering.length > 0) completedFields += 1;
-
-  const percentage = Math.round((completedFields / totalFields) * 100);
-  return Math.min(100, Math.max(5, percentage)); // Minimum 5%, maximum 100%
 }

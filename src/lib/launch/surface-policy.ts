@@ -84,7 +84,7 @@ const ACTIVE_API_POLICIES = [
     classification: 'active_launch_path',
     surfaceLabel: 'Start from CV Beta API',
     detail:
-      'Invite-only Start from CV routes remain active only for candidate-controlled private draft onboarding, never employer CV parsing or candidate evaluation.',
+      'Start from CV routes remain hard-gated to approved guest first-proof private scaffolding, never profile-first import, employer CV parsing, or candidate evaluation.',
     matches: (pathname: string) => matchExactOrPrefix('/api/ai/start-from-cv')(pathname),
   },
   {
@@ -171,7 +171,7 @@ const ACTIVE_API_POLICIES = [
     classification: 'active_launch_path',
     surfaceLabel: 'Organization API',
     detail:
-      'Organization trust profile, assignment, visibility, and team membership routes remain active for launch.',
+      'Organization profile, assignment, visibility, and team membership routes remain active for launch.',
     matches: (pathname: string) =>
       pathname === '/api/organizations' ||
       /^\/api\/organizations\/[^/]+$/.test(pathname) ||
@@ -193,7 +193,6 @@ const ACTIVE_API_POLICIES = [
     detail: 'Profile readiness and privacy routes remain active for launch.',
     matches: (pathname: string) =>
       pathname === '/api/profile' ||
-      pathname === '/api/profile/completeness' ||
       pathname === '/api/profile/privacy-settings' ||
       pathname === '/api/profile/visibility',
   },
@@ -618,6 +617,7 @@ const ACTIVE_PAGE_POLICIES = [
       pathname === '/app/i/portfolio' ||
       pathname === '/app/i/matching' ||
       pathname === '/app/i/matching/preferences' ||
+      pathname === '/app/i/communications' ||
       pathname === '/app/i/messages' ||
       pathname === '/app/i/interviews' ||
       pathname === '/app/i/verifications' ||
@@ -637,6 +637,7 @@ const ACTIVE_PAGE_POLICIES = [
       /^\/app\/o\/[^/]+\/assignments\/new$/.test(pathname) ||
       /^\/app\/o\/[^/]+\/assignments\/[^/]+\/review$/.test(pathname) ||
       /^\/app\/o\/[^/]+\/shortlist$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/communications$/.test(pathname) ||
       /^\/app\/o\/[^/]+\/messages$/.test(pathname) ||
       /^\/app\/o\/[^/]+\/interviews$/.test(pathname) ||
       /^\/app\/o\/[^/]+\/profile$/.test(pathname) ||
@@ -709,7 +710,9 @@ const ARCHIVED_PAGE_POLICIES = [
     detail: 'This organization page is archived outside the locked launch MVP corridor.',
     matches: (pathname: string) =>
       /^\/app\/o\/[^/]+\/analytics(?:\/.*)?$/.test(pathname) ||
-      /^\/app\/o\/[^/]+\/(?:candidates|members|opportunities|projects)$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/(?:candidates|culture|goals|impact|members|opportunities|partnerships|projects|structure)$/.test(
+        pathname
+      ) ||
       /^\/app\/o\/[^/]+\/settings\/(?:goals|integrations|profile)(?:\/.*)?$/.test(pathname) ||
       /^\/app\/o\/[^/]+\/team\/coverage$/.test(pathname),
   },

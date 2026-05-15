@@ -28,7 +28,7 @@ export function BuiltForSection({
       title: 'For Individuals',
       description: 'Own your professional narrative and let your evidence speak for itself.',
       benefits: [
-        'Build a verified public portfolio in minutes',
+        'Build a verified Public Page in minutes',
         'Aggregate evidence, signals, and outcomes',
         'Get matched based on proven capability, not resume keywords',
       ],

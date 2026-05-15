@@ -117,7 +117,7 @@ export function HeroSection({
               </button>
             </div>
             <p className="text-sm text-muted-foreground ml-2 pt-2">
-              Share a clean public portfolio link today. No CV-first workflow.
+              Share a clean Public Page link today. No CV-first workflow.
             </p>
           </motion.div>
         </motion.div>

@@ -128,8 +128,6 @@ type CandidateProjectionInput = {
   employerNames?: string[] | null;
   schoolNames?: string[] | null;
   desiredRoles?: string[] | null;
-  valuesTags?: string[] | null;
-  causeTags?: string[] | null;
   verified?: Record<string, unknown> | null;
   publicPortfolioPublished?: boolean | null;
 };
@@ -350,8 +348,6 @@ const SHORTLIST_VISIBLE_FIELDS = [
   'tagline',
   'desiredRoles',
   'workMode',
-  'valuesTags',
-  'causeTags',
   'verificationSummary',
 ] as const;
 
@@ -366,6 +362,15 @@ const FULL_VISIBLE_FIELDS = [
   'schoolNames',
   'locationSummary',
 ] as const;
+
+const LEGACY_PURPOSE_REASON_CODES = new Set([
+  'purpose_alignment_strong',
+  'purpose_alignment_partial',
+]);
+
+export function sanitizeMatchReasonCodes(reasonCodes: string[]): string[] {
+  return reasonCodes.filter((reasonCode) => !LEGACY_PURPOSE_REASON_CODES.has(reasonCode));
+}
 
 function getStableCandidateLabel(profileId: string) {
   const suffix = profileId.replace(/-/g, '').slice(-4).toUpperCase();
@@ -963,8 +968,9 @@ export function buildVisibilitySafeWhy(input: {
   fallbackState: CanonicalFallbackState;
   rankBand?: string | null;
 }) {
+  const reasonCodes = sanitizeMatchReasonCodes(input.reasonCodes);
   const rendered = renderExplanationFromReasonCodes({
-    reasonCodes: input.reasonCodes,
+    reasonCodes,
     fairnessStatus: input.fairnessStatus,
     audience: 'org',
   });
@@ -997,8 +1003,8 @@ export function buildVisibilitySafeWhy(input: {
   return {
     explanationVersion: CANONICAL_EXPLANATION_VERSION,
     reasonCodes: fallbackReasonCode
-      ? Array.from(new Set([...input.reasonCodes, fallbackReasonCode]))
-      : input.reasonCodes,
+      ? Array.from(new Set([...reasonCodes, fallbackReasonCode]))
+      : reasonCodes,
     fairnessStatus: input.fairnessStatus,
     fallbackState: input.fallbackState,
     rankBand: input.rankBand ?? null,
@@ -1389,8 +1395,6 @@ export function buildCandidateReviewProjection(
     id: source.profileId,
     workMode: source.workMode ?? null,
     desiredRoles: source.desiredRoles ?? [],
-    valuesTags: source.valuesTags ?? [],
-    causeTags: source.causeTags ?? [],
     verificationSummary,
     email: null,
     portfolioUrl: null,
@@ -1903,7 +1907,8 @@ export function renderExplanationFromReasonCodes(input: {
     fairness: [],
   };
 
-  const currentEntries = input.reasonCodes
+  const reasonCodes = sanitizeMatchReasonCodes(input.reasonCodes);
+  const currentEntries = reasonCodes
     .filter((reasonCode): reasonCode is MatchReasonCode =>
       MATCH_REASON_CODE_VALUES.includes(reasonCode as MatchReasonCode)
     )
@@ -1917,7 +1922,9 @@ export function renderExplanationFromReasonCodes(input: {
     }));
 
   const manualEntries = (input.ledgerEntries || []).filter(
-    (entry) => entry.source !== 'system' || !input.reasonCodes.includes(entry.reasonCode)
+    (entry) =>
+      !LEGACY_PURPOSE_REASON_CODES.has(entry.reasonCode) &&
+      (entry.source !== 'system' || !reasonCodes.includes(entry.reasonCode))
   );
 
   for (const entry of [...currentEntries, ...manualEntries]) {
@@ -1960,8 +1967,9 @@ export function buildProofFirstReviewCard(input: {
   fallbackHeadline?: string | null;
   fitBand?: string | null;
 }): ProofFirstReviewCard {
+  const reasonCodes = sanitizeMatchReasonCodes(input.reasonCodes);
   const rendered = renderExplanationFromReasonCodes({
-    reasonCodes: input.reasonCodes,
+    reasonCodes,
     fairnessStatus: input.fairnessStatus,
     audience: 'org',
   });
@@ -2055,7 +2063,7 @@ export function buildProofFirstReviewCard(input: {
         fitBullets.length > 0
           ? fitBullets
           : ['Review the strongest proof summary and corridor state for this candidate.'],
-      reasonCodes: input.reasonCodes,
+      reasonCodes,
     },
     privacy: {
       reviewState: privacyState.reviewState,

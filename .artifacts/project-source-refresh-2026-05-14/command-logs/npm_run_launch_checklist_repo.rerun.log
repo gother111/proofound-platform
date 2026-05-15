@@ -1,0 +1,58 @@
+# LAUNCH_CHECKLIST_SCOPE=repo npm run launch:checklist -- --scope repo --skip-full-validation
+startedAt=2026-05-14T10:41:02.118Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 launch:checklist
+> node --import tsx ./scripts/final-launch-checklist-status.ts --scope repo --skip-full-validation
+
+{
+  "scope": "repo",
+  "verdict": "NOT_READY",
+  "generatedAt": "2026-05-14T10:43:52.237Z",
+  "outputs": {
+    "markdownPath": ".artifacts/launch-validation-2026-05-14/final-launch-checklist-status.md",
+    "jsonPath": ".artifacts/launch-validation-2026-05-14/final-launch-checklist-status.json"
+  },
+  "statusCounts": {
+    "PASS": 35,
+    "FAIL": 3,
+    "BLOCKED": 1,
+    "UNVERIFIED": 1
+  },
+  "trueBlockers": [
+    {
+      "id": "product_public_portfolio_safe_and_separate",
+      "label": "Public portfolio is calm, safe, and separate from review reveal",
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "product_org_trust_page_live",
+      "label": "Org trust page is minimal and live",
+      "status": "FAIL"
+    },
+    {
+      "id": "engineering_launch_status_fresh_evidence",
+      "label": "Launch-status and smoke-artifact logic run on fresh evidence",
+      "status": "FAIL"
+    },
+    {
+      "id": "qa_public_org_trust_smoke",
+      "label": "Public-org trust smoke passes",
+      "status": "FAIL"
+    }
+  ],
+  "externalPrerequisites": [
+    {
+      "id": "founder_go_no_go_signed_after_green",
+      "label": "Go/no-go is signed only after fresh evidence is green",
+      "status": "BLOCKED"
+    }
+  ],
+  "executionChecklistPath": null
+}
+
+
+completedAt=2026-05-14T10:43:57.238Z
+exitCode=0
+durationMs=175120
+timedOut=false

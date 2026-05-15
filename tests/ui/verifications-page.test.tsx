@@ -614,8 +614,9 @@ describe('VerificationsPage', () => {
     );
 
     expect(screen.getByText(/Proof verification requests/i)).toBeInTheDocument();
+    expect(screen.getByText('Claim')).toBeInTheDocument();
     expect(
-      screen.getByText(/Claim: That this proof demonstrates Systems Thinking in real work\./i)
+      screen.getByText(/That this proof demonstrates Systems Thinking in real work\./i)
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /Custom verification request/i })

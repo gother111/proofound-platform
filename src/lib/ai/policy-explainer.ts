@@ -63,7 +63,7 @@ Proofound Terms of Service
 Use the platform ethically. Do not discriminate, harass, or misuse others' information.
 
 2. MATCHING
-Matches are generated using our values-aware algorithm. Match scores are estimates, not guarantees.
+Matches are generated using proof, skill, constraint, verification, and logistics signals. Match scores are estimates, not guarantees.
 
 3. VERIFICATION
 Identity and skill verifications are for trust-building. False attestations violate our terms.

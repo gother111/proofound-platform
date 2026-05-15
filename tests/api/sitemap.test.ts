@@ -38,13 +38,9 @@ function expectedSiteUrl() {
 describe('sitemap launch surfaces', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    executeMock
-      .mockResolvedValueOnce({
-        rows: [{ handle: 'alex', updated_at: '2026-03-20T00:00:00.000Z' }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ slug: 'acme', updated_at: '2026-03-21T00:00:00.000Z' }],
-      });
+    executeMock.mockResolvedValueOnce({
+      rows: [{ slug: 'acme', updated_at: '2026-03-21T00:00:00.000Z' }],
+    });
   });
 
   it('excludes archived marketing pages and keeps the launch-safe allowlist', async () => {
@@ -61,8 +57,8 @@ describe('sitemap launch surfaces', () => {
     expect(urls).toContain(`${siteUrl}/terms`);
     expect(urls).toContain(`${siteUrl}/cookies`);
     expect(urls).toContain(`${siteUrl}/cookies/settings`);
-    expect(urls).toContain(`${siteUrl}/portfolio/alex`);
     expect(urls).toContain(`${siteUrl}/portfolio/org/acme`);
+    expect(urls).not.toContain(`${siteUrl}/portfolio/alex`);
 
     expect(urls).not.toContain(`${siteUrl}/about`);
     expect(urls).not.toContain(`${siteUrl}/manifesto`);

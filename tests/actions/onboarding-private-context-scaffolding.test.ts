@@ -70,6 +70,9 @@ function buildFormData(contextType: 'experience' | 'education' | 'volunteering')
   formData.set('proofPackOwnership', 'I owned this work.');
   formData.set('proofPackOutcome', 'Proof outcome');
   formData.set('proofPackSkills', 'Proof writing, artifact review, onboarding design');
+  formData.set('proofContributionMode', 'solo');
+  formData.set('proofOwnershipLevel', 'created_all');
+  formData.set('proofOwnershipNote', 'I owned the proof artifact from start to finish.');
   return formData;
 }
 

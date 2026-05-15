@@ -27,6 +27,7 @@ export async function GET() {
         visible: summary.ok,
         available: summary.ok,
         enabled: config.enabled,
+        guestFirstProofScaffoldingEnabled: summary.guestFirstProofScaffoldingEnabled,
         inviteOnly: summary.inviteOnly,
         authenticatedUserBeta: summary.authenticatedUserBeta,
         blockers: summary.blockers,
@@ -52,9 +53,10 @@ export async function GET() {
           visible: false,
           available: false,
           enabled: summary.enabled,
+          guestFirstProofScaffoldingEnabled: summary.guestFirstProofScaffoldingEnabled,
           inviteOnly: summary.inviteOnly,
           authenticatedUserBeta: summary.authenticatedUserBeta,
-          blockers: [error.code.toLowerCase()],
+          blockers: [...new Set([...summary.blockers, error.code.toLowerCase()])],
         },
         {
           headers: {

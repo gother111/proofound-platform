@@ -5,7 +5,6 @@
  * Shows detailed breakdown of match score with:
  * - Overall composite score
  * - Subscore breakdown
- * - PAC (Purpose-Alignment Contribution)
  * - Improvement tips
  */
 
@@ -20,15 +19,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Heart, TrendingUp, AlertCircle } from 'lucide-react';
+import { TrendingUp, AlertCircle } from 'lucide-react';
 import { skillDisplayLabel } from '@/lib/copy/labels';
 
 interface MatchDetailPanelProps {
   match: {
     score: number; // 0-100
     subscores: {
-      values: number;
-      causes: number;
       skills: number;
       experience: number;
       location: number;
@@ -36,31 +33,24 @@ interface MatchDetailPanelProps {
       recency: number;
     };
     weights: {
-      mission: number; // Default 30
       expertise: number; // Default 40
       tools: number; // Default 10
       logistics: number; // Default 10
       recency: number; // Default 10
     };
-    pac: number; // Purpose-Alignment Contribution (0-15)
   };
   assignment: {
     role: string;
-    values: string[];
-    causes: string[];
     mustHaveSkills: any[];
     niceToHaveSkills: any[];
   };
   profile: {
-    values: string[];
-    causes: string[];
     skills: any[];
   };
 }
 
 export function MatchDetailPanel({ match, assignment, profile }: MatchDetailPanelProps) {
   // Calculate weighted scores
-  const missionScore = match.subscores.values * 0.6 + match.subscores.causes * 0.4;
   const expertiseScore = match.subscores.skills;
   const logisticsScore =
     match.subscores.location * 0.4 +
@@ -83,13 +73,6 @@ export function MatchDetailPanel({ match, assignment, profile }: MatchDetailPane
         {/* Overall Breakdown */}
         <div className="space-y-4">
           <ScoreBreakdown
-            label="Mission & Values Alignment"
-            score={missionScore}
-            weight={match.weights.mission}
-            color="bg-blue-500"
-          />
-
-          <ScoreBreakdown
             label="Skills & Expertise Match"
             score={expertiseScore}
             weight={match.weights.expertise}
@@ -104,44 +87,8 @@ export function MatchDetailPanel({ match, assignment, profile }: MatchDetailPane
           />
         </div>
 
-        {/* PAC Badge */}
-        {match.pac > 0 && (
-          <div className="p-4 bg-pink-50 rounded-lg border border-pink-200">
-            <div className="flex items-center gap-2 mb-2">
-              <Heart className="w-5 h-5 text-pink-600" />
-              <span className="font-semibold text-pink-900">Purpose Alignment Boost</span>
-            </div>
-            <p className="text-sm text-pink-800">
-              This role contributes <strong>+{match.pac}%</strong> to your purpose alignment score
-              based on shared values and causes.
-            </p>
-          </div>
-        )}
-
         {/* Detailed Subscores */}
         <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="values">
-            <AccordionTrigger>Values Alignment Detail</AccordionTrigger>
-            <AccordionContent>
-              <ValuesMatchDetail
-                profileValues={profile.values}
-                assignmentValues={assignment.values}
-                score={match.subscores.values}
-              />
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="causes">
-            <AccordionTrigger>Causes Alignment Detail</AccordionTrigger>
-            <AccordionContent>
-              <CausesMatchDetail
-                profileCauses={profile.causes}
-                assignmentCauses={assignment.causes}
-                score={match.subscores.causes}
-              />
-            </AccordionContent>
-          </AccordionItem>
-
           <AccordionItem value="skills">
             <AccordionTrigger>Skills Match Detail</AccordionTrigger>
             <AccordionContent>
@@ -213,78 +160,6 @@ function ScoreBreakdown({
         </span>
       </div>
       <Progress value={score} className="h-2" indicatorClassName={color} />
-    </div>
-  );
-}
-
-/**
- * Values Match Detail
- */
-function ValuesMatchDetail({
-  profileValues,
-  assignmentValues,
-  score,
-}: {
-  profileValues: string[];
-  assignmentValues: string[];
-  score: number;
-}) {
-  const overlap = profileValues.filter((v) => assignmentValues.includes(v));
-
-  return (
-    <div className="space-y-3">
-      <div className="text-sm text-muted-foreground">
-        Match Score: <strong>{score}%</strong>
-      </div>
-      <div>
-        <div className="text-sm font-medium mb-2">Shared Values ({overlap.length})</div>
-        <div className="flex flex-wrap gap-2">
-          {overlap.map((value, i) => (
-            <Badge key={i} variant="secondary">
-              {value}
-            </Badge>
-          ))}
-          {overlap.length === 0 && (
-            <span className="text-sm text-muted-foreground">No shared values</span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Causes Match Detail
- */
-function CausesMatchDetail({
-  profileCauses,
-  assignmentCauses,
-  score,
-}: {
-  profileCauses: string[];
-  assignmentCauses: string[];
-  score: number;
-}) {
-  const overlap = profileCauses.filter((c) => assignmentCauses.includes(c));
-
-  return (
-    <div className="space-y-3">
-      <div className="text-sm text-muted-foreground">
-        Match Score: <strong>{score}%</strong>
-      </div>
-      <div>
-        <div className="text-sm font-medium mb-2">Shared Causes ({overlap.length})</div>
-        <div className="flex flex-wrap gap-2">
-          {overlap.map((cause, i) => (
-            <Badge key={i} variant="secondary">
-              {cause}
-            </Badge>
-          ))}
-          {overlap.length === 0 && (
-            <span className="text-sm text-muted-foreground">No shared causes</span>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
@@ -379,14 +254,6 @@ function SkillsMatchDetail({
  */
 function generateImprovementTips(match: any, profile: any, assignment: any): string[] {
   const tips: string[] = [];
-
-  // Values/causes tips
-  if (match.subscores.values < 70) {
-    tips.push('Add more values that align with this organization to improve mission fit.');
-  }
-  if (match.subscores.causes < 70) {
-    tips.push('Consider adding causes that relate to this role to boost purpose alignment.');
-  }
 
   // Skills tips
   if (match.subscores.skills < 80) {

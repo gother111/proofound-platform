@@ -50,22 +50,20 @@ describe('Scorers', () => {
   });
 
   describe('scoreValues', () => {
-    it('should use jaccard similarity', () => {
+    it('is disabled for individual MVP matching', () => {
       const profile = ['collaboration', 'innovation'];
       const assignment = ['collaboration', 'sustainability'];
 
-      // Intersection: ['collaboration'] = 1
-      // Union: ['collaboration', 'innovation', 'sustainability'] = 3
-      expect(scoreValues(profile, assignment)).toBeCloseTo(1 / 3);
+      expect(scoreValues(profile, assignment)).toBe(0);
     });
   });
 
   describe('scoreCauses', () => {
-    it('should use jaccard similarity', () => {
+    it('is disabled for individual MVP matching', () => {
       const profile = ['climate-action'];
       const assignment = ['climate-action'];
 
-      expect(scoreCauses(profile, assignment)).toBe(1);
+      expect(scoreCauses(profile, assignment)).toBe(0);
     });
   });
 
@@ -321,12 +319,8 @@ describe('Scorers', () => {
     });
   });
 
-  // ============================================================================
-  // NEW PRD-ALIGNED SCORING FUNCTIONS (Phase 1-2)
-  // ============================================================================
-
   describe('scorePAC', () => {
-    it('should calculate combined PAC score without mission/vision', () => {
+    it('returns zero for legacy purpose-alignment inputs', () => {
       const result = scorePAC(
         ['innovation', 'sustainability'],
         ['climate-action'],
@@ -334,16 +328,13 @@ describe('Scorers', () => {
         ['climate-action', 'education']
       );
 
-      // Values: intersection = 1 (innovation), union = 3 → 1/3
-      // Causes: intersection = 1, union = 2 → 0.5
-      // Without mission/vision: 0.5 * (1/3) + 0.5 * 0.5 = 0.416...
-      expect(result.valuesScore).toBeCloseTo(1 / 3, 2);
-      expect(result.causesScore).toBeCloseTo(0.5, 2);
+      expect(result.valuesScore).toBe(0);
+      expect(result.causesScore).toBe(0);
       expect(result.missionVisionScore).toBe(0);
-      expect(result.total).toBeCloseTo(0.5 * (1 / 3) + 0.5 * 0.5, 2);
+      expect(result.total).toBe(0);
     });
 
-    it('should include mission/vision score when provided', () => {
+    it('ignores legacy purpose scores when provided', () => {
       const result = scorePAC(
         ['innovation'],
         ['climate-action'],
@@ -352,17 +343,8 @@ describe('Scorers', () => {
         0.8 // missionVisionScore
       );
 
-      // With mission/vision: 0.4 * 1 + 0.3 * 1 + 0.3 * 0.8 = 0.94
-      expect(result.missionVisionScore).toBe(0.8);
-      expect(result.total).toBeCloseTo(0.4 * 1 + 0.3 * 1 + 0.3 * 0.8, 2);
-    });
-
-    it('should return perfect score for identical values/causes', () => {
-      const result = scorePAC(['a', 'b'], ['x', 'y'], ['a', 'b'], ['x', 'y']);
-
-      expect(result.valuesScore).toBe(1);
-      expect(result.causesScore).toBe(1);
-      expect(result.total).toBe(1);
+      expect(result.missionVisionScore).toBe(0);
+      expect(result.total).toBe(0);
     });
   });
 

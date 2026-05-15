@@ -114,7 +114,7 @@ export default async function OrganizationPortfolioPage({
   const reviewSignals = [
     data.verifiedDomainPath
       ? `Verified domain path: ${data.verifiedDomainPath}`
-      : 'Public trust card only',
+      : 'Public profile only',
     data.organization.trust_status === 'platform_reviewed'
       ? 'Organization trust has been platform reviewed.'
       : data.organization.verified
@@ -179,12 +179,12 @@ export default async function OrganizationPortfolioPage({
                         : 'Shareable by direct link'}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">Public organization trust card</p>
+                  <p className="text-sm text-muted-foreground">Public organization profile</p>
                 </div>
               </div>
               <p className="text-sm text-foreground">
                 {data.publicSummary ||
-                  'Trust basics only. Rich company profile sections stay out of the launch path.'}
+                  'Profile basics only. Rich company profile sections stay out of the launch path.'}
               </p>
             </div>
 
@@ -215,7 +215,7 @@ export default async function OrganizationPortfolioPage({
       footer={
         <div className="flex items-center justify-between">
           <span>proofound.io/portfolio/org/{slug}</span>
-          <span>Minimal public trust card</span>
+          <span>Minimal public profile</span>
         </div>
       }
     >
@@ -307,7 +307,7 @@ export default async function OrganizationPortfolioPage({
             </div>
           </PublicProfileSection>
 
-          <PublicProfileSection title="Trust basics">
+          <PublicProfileSection title="Organization basics">
             <div className="space-y-3">
               <SummaryRow label="Organization" value={data.publicDisplayName} />
               <SummaryRow
@@ -317,7 +317,7 @@ export default async function OrganizationPortfolioPage({
               <SummaryRow label="Website" value={data.organization.website || 'Not published'} />
               <SummaryRow
                 label="Trust mode"
-                value={data.organization.verified ? 'Verified' : 'Public trust card'}
+                value={data.organization.verified ? 'Verified' : 'Public profile'}
               />
             </div>
           </PublicProfileSection>

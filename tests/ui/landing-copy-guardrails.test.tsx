@@ -9,7 +9,7 @@ describe('landing copy guardrails', () => {
     render(<EarlyProofSection />);
 
     expect(screen.getAllByText(/stronger signal than CVs/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/public proof portfolio/i)).toBeInTheDocument();
+    expect(screen.getByText(/public page proof snapshot/i)).toBeInTheDocument();
     expect(screen.getByText(/org trust page/i)).toBeInTheDocument();
     expect(screen.getByText(/privacy-safe proof/i)).toBeInTheDocument();
     expect(screen.getByText(/assignment corridor/i)).toBeInTheDocument();

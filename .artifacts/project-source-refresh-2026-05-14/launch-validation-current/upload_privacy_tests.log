@@ -1,0 +1,45 @@
+> proofound@0.1.0 test:launch:upload
+> npm run test -- tests/lib/uploads-privacy.test.ts tests/lib/upload-validate-file.test.ts tests/lib/uploads-lifecycle-queue.test.ts tests/api/upload-document-route.test.ts tests/api/upload-cover-route.test.ts tests/api/upload-status-route.test.ts
+
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/lib/uploads-privacy.test.ts tests/lib/upload-validate-file.test.ts tests/lib/uploads-lifecycle-queue.test.ts tests/api/upload-document-route.test.ts tests/api/upload-cover-route.test.ts tests/api/upload-status-route.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/lib/uploads-privacy.test.ts  (14 tests) 8ms
+ ✓ tests/api/upload-status-route.test.ts  (2 tests) 9ms
+ ✓ tests/lib/upload-validate-file.test.ts  (4 tests) 8ms
+stderr | tests/api/upload-cover-route.test.ts > POST /api/upload/cover > cleans up uploaded files when the organization update fails after ingest
+{"level":"error","event":"upload.cover_organization_update.failed","timestamp":"2026-05-14T11:25:45.757Z","orgId":"123e4567-e89b-42d3-a456-426614174000","status":500,"error":{"category":"unknown","message":"Unknown error"}}
+
+ ✓ tests/api/upload-cover-route.test.ts  (3 tests) 10ms
+stderr | tests/api/upload-document-route.test.ts > POST /api/upload/document > returns a generic production response for storage failures without exposing path or filename
+{"level":"error","event":"upload.document.failed","timestamp":"2026-05-14T11:25:45.760Z","status":500,"error":{"category":"storage","name":"Error","message":"[REDACTED_STORAGE_ERROR]"}}
+
+ ✓ tests/api/upload-document-route.test.ts  (7 tests) 20ms
+ ✓ tests/lib/uploads-lifecycle-queue.test.ts  (13 tests) 13ms
+
+ Test Files  6 passed (6)
+      Tests  43 passed (43)
+   Start at  13:25:44
+   Duration  1.51s (transform 452ms, setup 931ms, collect 1.01s, tests 68ms, environment 2.01s, prepare 492ms)

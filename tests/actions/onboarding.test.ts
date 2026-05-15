@@ -80,6 +80,12 @@ describe('onboarding actions', () => {
     };
   }
 
+  function setFirstProofOwnershipFields(formData: FormData) {
+    formData.set('proofContributionMode', 'team');
+    formData.set('proofOwnershipLevel', 'owned_scope');
+    formData.set('proofOwnershipNote', 'I owned the proof mapping and launch handoff.');
+  }
+
   it('returns individual public portfolio URL and applies day-1 privacy defaults', async () => {
     const profileEq = vi.fn().mockResolvedValue({ error: null });
     const profileUpdate = vi.fn().mockReturnValue({ eq: profileEq });
@@ -134,7 +140,45 @@ describe('onboarding actions', () => {
       'I owned the contribution shown in this proof inside this context.'
     );
     formData.set('proofPackOutcome', 'Reduced the corridor to one calm proof-first path.');
+    formData.set(
+      'proofPackMeasuredOutcomes',
+      JSON.stringify([
+        {
+          id: 'outcome-1',
+          statement: 'Reduced onboarding support tickets',
+          value: '23%',
+          timeframe: 'Q1 pilot',
+        },
+        {
+          id: 'outcome-2',
+          statement: 'Shortened first proof review',
+          value: '2 days faster',
+          timeframe: 'private beta',
+        },
+      ])
+    );
     formData.set('proofPackSkills', 'Product strategy, stakeholder interviews, onboarding design');
+    setFirstProofOwnershipFields(formData);
+    formData.set('firstProofVerificationAction', 'draft');
+    formData.set(
+      'firstProofVerificationPreview',
+      'Specific claim: Proof-first corridor launch\nObserved behavior to confirm: onboarding launch.'
+    );
+    formData.set(
+      'firstProofVerificationConfirmers',
+      JSON.stringify([
+        {
+          name: 'Verifier One',
+          relationship: 'client',
+          email: 'Verifier@Example.com',
+        },
+        {
+          name: 'Verifier Two',
+          relationship: 'organization_representative',
+          email: 'org@example.com',
+        },
+      ])
+    );
 
     const result = await completeIndividualOnboarding(formData);
 
@@ -188,7 +232,8 @@ describe('onboarding actions', () => {
         ownership_statement: 'I owned the contribution shown in this proof inside this context.',
         timeframe_label: '2025 to present',
         evidence_summary: 'Launch note showing the first proof-backed onboarding launch.',
-        outcomes_summary: 'Reduced the corridor to one calm proof-first path.',
+        outcomes_summary:
+          'Reduced onboarding support tickets · 23% · Q1 pilot; Shortened first proof review · 2 days faster · private beta',
         verification_summary: 'No scoped verification is recorded for this Proof Pack yet.',
         proof_quality_score: '0.60',
         schema_version: 'proof_pack/v2',
@@ -205,7 +250,59 @@ describe('onboarding actions', () => {
           primaryAnchorRequiredForIntroEligibility: true,
           evidenceTitle: 'Proof-first corridor launch',
           evidenceUrl: 'https://example.com/projects/proof-first',
+          proofPackOutcome:
+            'Reduced onboarding support tickets · 23% · Q1 pilot; Shortened first proof review · 2 days faster · private beta',
+          claimedMeasuredOutcomes: [
+            expect.objectContaining({
+              id: 'outcome-1',
+              statement: 'Reduced onboarding support tickets',
+              value: '23%',
+              timeframe: 'Q1 pilot',
+              supportingSkills: ['Product strategy', 'stakeholder interviews', 'onboarding design'],
+              proofPackId: expect.any(String),
+              proofPackTitle: 'Proof-first corridor launch',
+              claimStatus: 'proof_linked',
+              verificationStatus: 'proof_linked',
+              supportingProofLinked: true,
+            }),
+            expect.objectContaining({
+              id: 'outcome-2',
+              statement: 'Shortened first proof review',
+              value: '2 days faster',
+              timeframe: 'private beta',
+              supportingSkills: ['Product strategy', 'stakeholder interviews', 'onboarding design'],
+              proofPackId: expect.any(String),
+              proofPackTitle: 'Proof-first corridor launch',
+              claimStatus: 'proof_linked',
+              verificationStatus: 'proof_linked',
+              supportingProofLinked: true,
+            }),
+          ],
+          outcomeClaimStatus: 'proof_linked',
+          outcomeVerificationStatus: 'proof_linked',
           proofPackSkills: ['Product strategy', 'stakeholder interviews', 'onboarding design'],
+          proofContributionMode: 'team',
+          proofOwnershipLevel: 'owned_scope',
+          proofOwnershipNote: 'I owned the proof mapping and launch handoff.',
+          firstProofVerificationIntent: expect.objectContaining({
+            action: 'draft',
+            preview:
+              'Specific claim: Proof-first corridor launch\nObserved behavior to confirm: onboarding launch.',
+            confirmers: [
+              {
+                name: 'Verifier One',
+                relationship: 'client',
+                email: 'verifier@example.com',
+              },
+              {
+                name: 'Verifier Two',
+                relationship: 'organization_representative',
+                email: 'org@example.com',
+              },
+            ],
+            semantics:
+              'Scoped verification request draft only; email transport does not equal verification.',
+          }),
         }),
       })
     );
@@ -219,6 +316,41 @@ describe('onboarding actions', () => {
           secondary_context_links_optional: true,
           primary_anchor_required_for_intro_eligibility: true,
           proof_pack_skills: ['Product strategy', 'stakeholder interviews', 'onboarding design'],
+          proof_contribution_mode: 'team',
+          proof_ownership_level: 'owned_scope',
+          proof_ownership_note: 'I owned the proof mapping and launch handoff.',
+          claimed_outcome_count: 2,
+          outcome_claim_status: 'proof_linked',
+          outcome_verification_status: 'proof_linked',
+          claimed_measured_outcomes: [
+            expect.objectContaining({
+              statement: 'Reduced onboarding support tickets',
+              supportingSkills: ['Product strategy', 'stakeholder interviews', 'onboarding design'],
+              claimStatus: 'proof_linked',
+              verificationStatus: 'proof_linked',
+            }),
+            expect.objectContaining({
+              statement: 'Shortened first proof review',
+              supportingSkills: ['Product strategy', 'stakeholder interviews', 'onboarding design'],
+              claimStatus: 'proof_linked',
+              verificationStatus: 'proof_linked',
+            }),
+          ],
+          first_proof_verification_intent: expect.objectContaining({
+            action: 'draft',
+            confirmers: [
+              {
+                name: 'Verifier One',
+                relationship: 'client',
+                email: 'verifier@example.com',
+              },
+              {
+                name: 'Verifier Two',
+                relationship: 'organization_representative',
+                email: 'org@example.com',
+              },
+            ],
+          }),
         }),
       })
     );
@@ -302,6 +434,32 @@ describe('onboarding actions', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/portfolio/org/acme-impact');
   });
 
+  it('rejects first-proof submissions without 3 to 5 proof-supported skills', async () => {
+    const formData = new FormData();
+    formData.set('firstName', 'Jane');
+    formData.set('lastName', 'Founder');
+    formData.set('displayName', 'Jane Founder');
+    formData.set('handle', 'jane_founder');
+    formData.set('location', 'Stockholm');
+    formData.set('contextType', 'experience');
+    formData.set('contextTitle', 'First proof context');
+    formData.set('contextOrganizationName', 'Proofound');
+    formData.set('contextSummary', 'Starter proof context.');
+    formData.set('contextDuration', '2026');
+    formData.set('proofUrl', 'https://example.com/proof');
+    formData.set('proofTitle', 'Launch proof');
+    formData.set('proofSummary', 'Shows one proof artifact.');
+    formData.set('proofPackClaim', 'Launch proof');
+    formData.set('proofPackOwnership', 'Created as solo work. I created the artifact.');
+    formData.set('proofPackSkills', 'Documentation, onboarding design');
+    setFirstProofOwnershipFields(formData);
+
+    const result = await completeIndividualOnboarding(formData);
+
+    expect(result).toEqual({ error: 'Add 3 to 5 skills this proof actually supports.' });
+    expect(createClient).not.toHaveBeenCalled();
+  });
+
   it('creates onboarding proof seeds through canonical proof packs instead of skill_proofs', async () => {
     const profileEq = vi.fn().mockResolvedValue({ error: null });
     const profileUpdate = vi.fn().mockReturnValue({ eq: profileEq });
@@ -361,6 +519,7 @@ describe('onboarding actions', () => {
     );
     formData.set('proofPackOutcome', 'Built a proof-first onboarding prototype.');
     formData.set('proofPackSkills', 'Product strategy, proof systems, onboarding design');
+    setFirstProofOwnershipFields(formData);
 
     const result = await completeIndividualOnboarding(formData);
 
@@ -459,6 +618,7 @@ describe('onboarding actions', () => {
     );
     formData.set('proofPackOutcome', 'Shows the first proof artifact.');
     formData.set('proofPackSkills', 'Proof writing, artifact review, onboarding design');
+    setFirstProofOwnershipFields(formData);
 
     const result = await completeIndividualOnboarding(formData);
 

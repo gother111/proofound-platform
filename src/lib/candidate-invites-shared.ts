@@ -18,18 +18,3 @@ export const CANDIDATE_INVITE_FLOW_TYPE = {
 
 export type CandidateInviteFlowType =
   (typeof CANDIDATE_INVITE_FLOW_TYPE)[keyof typeof CANDIDATE_INVITE_FLOW_TYPE];
-
-// Enforced defaults for invite-driven proof cards.
-export const CANDIDATE_PROOF_CARD_DEFAULT_FIELDS: Record<string, boolean | number> = {
-  name: true,
-  headline: true,
-  bio: true,
-  skills: true,
-  topSkills: 8,
-  experience: true,
-  education: true,
-  location: true,
-  profileImage: true,
-  values: true,
-  causes: true,
-};

@@ -6,6 +6,7 @@ type EffectiveStateOptions = {
   requestedState: PublicPortfolioState | null | undefined;
   searchIndexingEnabled: boolean;
   minimumContentMet: boolean;
+  allowSearchIndexing?: boolean;
   redactMode?: boolean | null;
   hasLinkOnlyContent?: boolean;
   hasRevealGatedContent?: boolean;
@@ -42,6 +43,7 @@ export function deriveEffectivePublicPortfolioState({
   requestedState,
   searchIndexingEnabled,
   minimumContentMet,
+  allowSearchIndexing = true,
   redactMode = false,
   hasLinkOnlyContent = false,
   hasRevealGatedContent = false,
@@ -62,6 +64,7 @@ export function deriveEffectivePublicPortfolioState({
   }
 
   if (
+    !allowSearchIndexing ||
     !searchIndexingEnabled ||
     redactMode ||
     hasLinkOnlyContent ||

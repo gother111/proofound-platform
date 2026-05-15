@@ -24,15 +24,15 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
     },
     {
       id: 'strengthen-portfolio',
-      title: 'Strengthen public portfolio',
+      title: 'Strengthen Public Page proof',
       description: 'Refresh proof-backed work examples before opening matching further.',
       onClick: () => router.push('/app/i/profile?profileView=full&tab=proof_packs'),
     },
     {
-      id: 'complete-purpose',
-      title: 'Complete purpose section',
-      description: 'Add mission, values, or causes for better purpose fit.',
-      onClick: () => router.push('/app/i/profile'),
+      id: 'proof-readiness',
+      title: 'Strengthen proof readiness',
+      description: 'Connect recent proof and constraints before opening introductions.',
+      onClick: () => router.push('/app/i/profile?profileView=full&tab=proof_packs'),
     },
   ] as const;
 

@@ -338,27 +338,16 @@ export async function openOrgMatchExplainer(page: Page, matchIndex = 0) {
 }
 
 /**
- * Set matching weights/presets
+ * Set proof-vs-skills weighting when the launch matching surface exposes it.
  */
-export async function setMatchingWeights(
-  page: Page,
-  preset: 'mission-first' | 'skills-first' | 'balanced' = 'balanced'
-) {
-  const presetSelect = page
-    .locator('select, [role="combobox"]')
-    .filter({ hasText: /preset|strategy|weights/i })
+export async function setMatchingWeights(page: Page, proofBias = 50) {
+  const proofBiasSlider = page
+    .locator('input[type="range"], input[aria-label*="Proof vs skills"]')
     .first();
 
-  if (await presetSelect.isVisible()) {
-    await presetSelect.selectOption(preset);
+  if (await proofBiasSlider.isVisible()) {
+    await proofBiasSlider.fill(String(proofBias));
     await page.waitForTimeout(1000);
-  } else {
-    // Try button-based selection
-    const presetButton = page.getByRole('button', { name: new RegExp(preset, 'i') }).first();
-    if (await presetButton.isVisible()) {
-      await presetButton.click();
-      await page.waitForTimeout(1000);
-    }
   }
 }
 

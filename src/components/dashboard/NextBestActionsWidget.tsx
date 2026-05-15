@@ -1,8 +1,7 @@
 /**
  * Next Best Actions Widget
  *
- * Shows personalized recommendations to improve profile completeness
- * and increase matching opportunities (PRD F2 requirement)
+ * Shows personalized proof-readiness recommendations and launch checklist state.
  */
 
 'use client';
@@ -11,43 +10,31 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Sparkles,
-  ArrowRight,
-  CheckCircle2,
-  Circle,
-  Upload,
-  UserCheck,
-  Target,
-  FileText,
-  Award,
-} from 'lucide-react';
+import { Sparkles, ArrowRight, CheckCircle2, Circle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api/fetch';
 import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
+import { NextStepsHelper } from '@/components/dashboard/NextStepsHelper';
+import type { ReadinessAction } from '@/lib/momentum/types';
 
-interface NextBestAction {
-  id: string;
-  title: string;
-  description: string;
-  priority: 'high' | 'medium' | 'low';
-  category: 'profile' | 'expertise' | 'verification' | 'matching';
-  actionUrl: string;
-  completed: boolean;
-  icon?: string;
-}
+type ProofReadinessState = 'portfolio_ready' | 'browse_ready' | 'qualified_intro_ready';
 
-interface ProfileCompleteness {
-  percentage: number;
-  missing: string[];
-  actions: NextBestAction[];
-}
+type ProofReadinessData = {
+  actions?: ReadinessAction[];
+  topActions?: ReadinessAction[];
+  states?: ProofReadinessState[];
+  highestState?: ProofReadinessState | null;
+  flags?: {
+    portfolioReady?: boolean;
+    matchVisible?: boolean;
+    introEligible?: boolean;
+  };
+};
 
 type NextBestActionsWidgetProps = {
   useMockData?: boolean;
-  initialData?: ProfileCompleteness | null;
+  initialData?: ProofReadinessData | null;
   onActionClick?: (actionId: string) => void;
 };
 
@@ -56,33 +43,36 @@ export function NextBestActionsWidget({
   initialData,
   onActionClick,
 }: NextBestActionsWidgetProps) {
-  const [completeness, setCompleteness] = useState<ProfileCompleteness | null>(initialData || null);
+  const [readiness, setReadiness] = useState<ProofReadinessData | null>(initialData || null);
   const [loading, setLoading] = useState(!initialData && !useMockData);
   const router = useRouter();
 
   useEffect(() => {
     if (useMockData) {
-      setCompleteness({
-        percentage: 72,
-        missing: ['proof'],
-        actions: [
+      setReadiness({
+        states: ['portfolio_ready'],
+        highestState: 'portfolio_ready',
+        flags: {
+          portfolioReady: true,
+          matchVisible: false,
+          introEligible: false,
+        },
+        topActions: [
           {
             id: 'add-proof',
-            title: 'Upload proof for AI Ops',
-            description: 'Add a link or PDF to verify your AI Ops work.',
+            title: 'Structure first Proof Pack',
+            description: 'Turn one real artifact into a clean Proof Pack with context and outcome.',
             priority: 'high',
             category: 'verification',
-            actionUrl: '/app/i/profile?tab=proofs',
-            completed: false,
+            actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
           },
           {
-            id: 'add-values',
-            title: 'Add values & causes',
-            description: 'Choose up to 5 values to improve PAC.',
+            id: 'set-preferences',
+            title: 'Save matching preferences',
+            description: 'Add focus, work mode, and engagement preferences before browsing.',
             priority: 'medium',
-            category: 'profile',
-            actionUrl: '/app/i/profile',
-            completed: false,
+            category: 'matching',
+            actionUrl: '/app/i/matching/preferences',
           },
         ],
       });
@@ -94,10 +84,10 @@ export function NextBestActionsWidget({
 
     async function fetchNextBestActions() {
       try {
-        const response = await apiFetch('/api/profile/completeness');
+        const response = await apiFetch('/api/individual/readiness');
         if (response.ok) {
           const data = await response.json();
-          setCompleteness(data);
+          setReadiness(data);
         }
       } catch (error) {
         console.error('Failed to fetch next best actions:', error);
@@ -108,34 +98,6 @@ export function NextBestActionsWidget({
 
     fetchNextBestActions();
   }, [useMockData, initialData]);
-
-  const getIcon = (action: NextBestAction) => {
-    switch (action.category) {
-      case 'profile':
-        return <FileText className="h-4 w-4" />;
-      case 'expertise':
-        return <Target className="h-4 w-4" />;
-      case 'verification':
-        return <UserCheck className="h-4 w-4" />;
-      case 'matching':
-        return <Award className="h-4 w-4" />;
-      default:
-        return <Circle className="h-4 w-4" />;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-700 border-red-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'low':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
 
   if (loading) {
     return (
@@ -150,7 +112,7 @@ export function NextBestActionsWidget({
           <div className="space-y-4">
             <div className="space-y-2 mb-6">
               <Skeleton className="h-4 w-3/4 rounded-md" />
-              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="h-4 w-1/2 rounded-md" />
             </div>
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
@@ -173,19 +135,47 @@ export function NextBestActionsWidget({
     );
   }
 
-  const percentage = completeness?.percentage || 0;
-  const actions = completeness?.actions || [];
+  const actions = readiness?.topActions ?? readiness?.actions ?? [];
   const topActions = actions.slice(0, 5); // Show top 5 actions
 
-  // Determine the current readiness tier across proof freshness and intro progress.
-  const getProfileStatus = () => {
-    if (percentage >= 85) return { text: 'Qualified intro progress', color: 'text-green-600' };
-    if (percentage >= 60) return { text: 'Browse progress', color: 'text-blue-600' };
-    if (percentage >= 35) return { text: 'Portfolio progress', color: 'text-yellow-600' };
-    return { text: 'Getting started', color: 'text-gray-600' };
+  const getReadinessStatus = () => {
+    if (readiness?.highestState === 'qualified_intro_ready') {
+      return { text: 'Intro eligible', color: 'text-green-700' };
+    }
+    if (readiness?.highestState === 'browse_ready' || readiness?.flags?.matchVisible) {
+      return { text: 'Match visible', color: 'text-blue-700' };
+    }
+    if (readiness?.highestState === 'portfolio_ready' || readiness?.flags?.portfolioReady) {
+      return { text: 'Portfolio ready', color: 'text-proofound-forest' };
+    }
+    return { text: 'Proof setup', color: 'text-gray-600' };
   };
 
-  const status = getProfileStatus();
+  const status = getReadinessStatus();
+  const checklist = [
+    {
+      label: 'First Proof Pack created',
+      met: Boolean(
+        readiness?.states?.includes('portfolio_ready') || readiness?.flags?.portfolioReady
+      ),
+    },
+    {
+      label: 'Public Page ready',
+      met: Boolean(
+        readiness?.states?.includes('portfolio_ready') || readiness?.flags?.portfolioReady
+      ),
+    },
+    {
+      label: 'Matching preferences saved',
+      met: Boolean(readiness?.states?.includes('browse_ready') || readiness?.flags?.matchVisible),
+    },
+    {
+      label: 'Non-self verification added',
+      met: Boolean(
+        readiness?.states?.includes('qualified_intro_ready') || readiness?.flags?.introEligible
+      ),
+    },
+  ];
 
   return (
     <Card variant="bento">
@@ -193,25 +183,24 @@ export function NextBestActionsWidget({
         <div className="flex items-center justify-between">
           <CardTitle className="min-w-0 flex items-center gap-2 text-lg">
             <Sparkles className="h-5 w-5 text-proofound-forest" />
-            Next Best Actions
+            Proof Readiness Checklist
           </CardTitle>
           <Badge variant="outline" className={`${DASHBOARD_STATUS_CHIP_CLASS} ${status.color}`}>
             {status.text}
           </Badge>
         </div>
 
-        {/* Profile Completeness */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Readiness progress</span>
-            <span className="font-semibold text-foreground">{percentage}%</span>
-          </div>
-          <Progress value={percentage} className="h-2" />
-          {percentage < 60 && (
-            <p className="text-xs text-muted-foreground">
-              Start with public proof, then add just enough signal to browse without friction.
-            </p>
-          )}
+        <div className="grid gap-2 sm:grid-cols-2">
+          {checklist.map((item) => (
+            <div key={item.label} className="flex items-center gap-2 text-sm text-muted-foreground">
+              {item.met ? (
+                <CheckCircle2 className="h-4 w-4 text-proofound-forest" />
+              ) : (
+                <Circle className="h-4 w-4 text-muted-foreground" />
+              )}
+              <span>{item.label}</span>
+            </div>
+          ))}
         </div>
       </CardHeader>
 
@@ -225,50 +214,20 @@ export function NextBestActionsWidget({
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {topActions.map((action, index) => (
-              <button
-                key={action.id}
-                onClick={() => router.push(action.actionUrl)}
-                onMouseUp={() => onActionClick?.(action.id)}
-                className="w-full text-left p-3 rounded-lg border border-proofound-stone hover:border-proofound-forest hover:bg-japandi-bg transition-all group"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-1">
-                    {action.completed ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <div className="w-5 h-5 rounded-full border-2 border-proofound-forest flex items-center justify-center">
-                        <span className="text-xs font-semibold text-proofound-forest">
-                          {index + 1}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-foreground group-hover:text-proofound-forest">
-                        {action.title}
-                      </span>
-                      {action.priority === 'high' && (
-                        <Badge
-                          variant="outline"
-                          className="text-xs px-1.5 py-0 bg-red-50 text-red-600 border-red-200"
-                        >
-                          High Priority
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{action.description}</p>
-                  </div>
-
-                  <div className="flex-shrink-0">
-                    <ArrowRight className="h-4 w-4 text-[#A8B69D] group-hover:text-proofound-forest transition-colors" />
-                  </div>
-                </div>
-              </button>
-            ))}
+          <div className="flex flex-col items-start gap-3 rounded-lg border border-proofound-stone/70 bg-[#fbf8f1]/55 p-3">
+            <p className="text-sm leading-6 text-muted-foreground">
+              Keep suggested follow-up work available without making it the main dashboard surface.
+            </p>
+            <NextStepsHelper
+              actions={topActions.map((action) => ({
+                id: action.id,
+                title: action.title,
+                description: action.description,
+                actionUrl: action.actionUrl,
+              }))}
+              description="Open personalized proof-readiness next steps."
+              onActionSelect={(actionId) => onActionClick?.(actionId)}
+            />
 
             {actions.length > 5 && (
               <Button

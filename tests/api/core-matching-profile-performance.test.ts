@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 import { POST } from '@/app/api/core/matching/profile/handler';
-import { annRetrieveSimilarAssignments } from '@/lib/matching/semantic';
 
 const mockState = vi.hoisted(() => {
   const mockSelectQueue: Array<{ mode: 'direct' | 'limit'; rows: any[] }> = [];
@@ -106,11 +105,6 @@ vi.mock('@/lib/matching/eligibility', () => ({
   toNotMatchablePayload: vi.fn(),
 }));
 
-vi.mock('@/lib/matching/semantic', () => ({
-  annRetrieveSimilarAssignments: vi.fn(async () => []),
-  batchGetMissionVisionScoresForProfile: vi.fn(async () => new Map()),
-}));
-
 vi.mock('@/lib/log', () => ({
   log: {
     info: vi.fn(),
@@ -134,7 +128,7 @@ describe('/api/core/matching/profile performance metadata', () => {
     process.env.MATCHING_TWO_STAGE_ENABLED = 'true';
   });
 
-  it('returns full_scan metadata when ANN yields no assignments', async () => {
+  it('returns full_scan metadata when no active assignments are found', async () => {
     mockState.mockSelectQueue.push({ mode: 'limit', rows: [] });
 
     const request = new NextRequest('http://localhost/api/core/matching/profile', {
@@ -146,16 +140,12 @@ describe('/api/core/matching/profile performance metadata', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.meta.twoStageEnabled).toBe(true);
+    expect(body.meta.twoStageEnabled).toBe(false);
     expect(body.meta.candidatePoolSource).toBe('full_scan');
     expect(body.meta.candidatePoolSize).toBe(0);
   });
 
-  it('returns ann_hybrid metadata when ANN assignment candidates are available', async () => {
-    (annRetrieveSimilarAssignments as any).mockResolvedValueOnce([
-      { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', similarity: 0.91 },
-    ]);
-
+  it('returns full_scan metadata for active assignments after legacy ANN removal', async () => {
     mockState.mockSelectQueue.push({
       mode: 'direct',
       rows: [
@@ -203,8 +193,8 @@ describe('/api/core/matching/profile performance metadata', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.meta.candidatePoolSource).toBe('ann_hybrid');
+    expect(body.meta.candidatePoolSource).toBe('full_scan');
     expect(body.meta.candidatePoolSize).toBe(1);
-    expect(body.meta.twoStageEnabled).toBe(true);
+    expect(body.meta.twoStageEnabled).toBe(false);
   });
 });

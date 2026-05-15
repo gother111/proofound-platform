@@ -189,7 +189,7 @@ export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
       .fillColor(COLORS.charcoal)
       .font('Times-Bold')
       .fontSize(22)
-      .text('Public Profile Trust PDF', layout.contentX, layout.contentY, {
+      .text('Public Page Proof PDF', layout.contentX, layout.contentY, {
         width: layout.contentWidth,
       });
 
@@ -345,7 +345,7 @@ export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
       tokenY += 14;
     });
 
-    drawFooter(doc, layout, 'Proofound Public Profile PDF Template', 'Designed in Figma via MCP');
+    drawFooter(doc, layout, 'Proofound Public Page PDF Template', 'Designed in Figma via MCP');
   });
 }
 
@@ -404,7 +404,7 @@ export async function generateOrganizationProfilePdf(
       });
     const orgNarrative =
       input.organization.whyWorkMatters ||
-      'Public organization trust card with only the minimum credible launch fields.';
+      'Public organization profile with only the minimum credible launch fields.';
     doc
       .fillColor('#4D5A55')
       .fontSize(8)

@@ -90,7 +90,6 @@ export const DEFAULT_FIELD_VISIBILITY: Record<string, VisibilityLevel> = {
   // Individual profile
   headline: 'public',
   bio: 'public',
-  mission: 'public',
 
   // Matching profile
   location: 'matched_org',

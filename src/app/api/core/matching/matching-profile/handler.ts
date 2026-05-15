@@ -2,17 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
-import { individualProfiles, matchingProfiles, skills } from '@/db/schema';
+import { matchingProfiles, skills } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { getWeightBiasBucket } from '@/lib/core/matching/presets';
 import { mapIndustryListToCanonical } from '@/lib/industry/options';
-import {
-  normalizeIndividualCauses,
-  normalizeIndividualValueLabels,
-} from '@/lib/profile/normalizePurposeLinks';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import { normalizeEngagementType } from '@/lib/engagement-verifications/service';
 
@@ -53,8 +49,6 @@ const OptionalDateStringSchema = z.preprocess((value) => {
 }, z.string().optional());
 
 const MatchingProfileSchema = z.object({
-  valuesTags: z.array(z.string()).optional(),
-  causeTags: z.array(z.string()).optional(),
   timezone: z.string().optional(),
   languages: z.array(LanguageSchema).optional(),
   verified: z.record(z.boolean()).optional(),
@@ -143,9 +137,10 @@ function normalizeProfileResponse(
       ? profile.avoidIndustryKeys
       : profile.avoidIndustryLabels
   );
+  const { valuesTags: _valuesTags, causeTags: _causeTags, ...profileWithoutPurposeTags } = profile;
 
   return {
-    ...profile,
+    ...profileWithoutPurposeTags,
     engagementType:
       normalizeEngagementType(profile.engagementType) ?? profile.engagementType ?? null,
     desiredIndustries: preferred.labels,
@@ -231,37 +226,7 @@ export async function PUT(request: NextRequest) {
     // Validate input
     const validatedData = MatchingProfileSchema.parse(body);
 
-    // Extract fields that require custom handling.
-    const {
-      skills: skillsInput,
-      weightBias,
-      valuesTags,
-      causeTags,
-      ...profileData
-    } = validatedData;
-
-    let resolvedValuesTags = valuesTags;
-    let resolvedCauseTags = causeTags;
-
-    if (resolvedValuesTags === undefined || resolvedCauseTags === undefined) {
-      const individualProfile = await db.query.individualProfiles.findFirst({
-        where: eq(individualProfiles.userId, user.id),
-      });
-
-      if (resolvedValuesTags === undefined) {
-        const normalizedValues = normalizeIndividualValueLabels(individualProfile?.values);
-        if (normalizedValues.length > 0) {
-          resolvedValuesTags = normalizedValues;
-        }
-      }
-
-      if (resolvedCauseTags === undefined) {
-        const normalizedCauses = normalizeIndividualCauses(individualProfile?.causes);
-        if (normalizedCauses.length > 0) {
-          resolvedCauseTags = normalizedCauses;
-        }
-      }
-    }
+    const { skills: skillsInput, weightBias, ...profileData } = validatedData;
 
     const {
       availabilityEarliest,
@@ -287,8 +252,6 @@ export async function PUT(request: NextRequest) {
     const profileToUpsert: typeof matchingProfiles.$inferInsert = {
       profileId: user.id,
       ...restProfile,
-      ...(resolvedValuesTags !== undefined ? { valuesTags: resolvedValuesTags } : {}),
-      ...(resolvedCauseTags !== undefined ? { causeTags: resolvedCauseTags } : {}),
       ...(availabilityEarliest !== undefined ? { availabilityEarliest } : {}),
       ...(availabilityLatest !== undefined ? { availabilityLatest } : {}),
       ...(desiredRoles !== undefined ? { desiredRoles } : {}),

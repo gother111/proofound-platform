@@ -348,14 +348,14 @@ export function MetricsDashboard() {
             description="Median time to first scheduled interview."
           />
           <TargetMetricCard
-            title="PAC Lift"
+            title="Proof Fit Lift"
             value={metrics.pac.topDecileLift}
             target={PAC_LIFT_TARGET_PERCENT}
             unit="%"
             targetMet={metrics.pac.targetMet}
             count={metrics.pac.sampleSize}
             icon={Sparkles}
-            description="Intro acceptance lift from purpose alignment."
+            description="Intro acceptance lift from proof-fit signals."
           />
         </div>
       </div>

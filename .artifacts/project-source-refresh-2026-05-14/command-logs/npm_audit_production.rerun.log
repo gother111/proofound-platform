@@ -1,0 +1,31 @@
+# npm audit --omit=dev --json
+startedAt=2026-05-14T10:41:00.556Z
+cwd=/Users/yuriibakurov/proofound
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {},
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 883,
+      "dev": 438,
+      "optional": 163,
+      "peer": 49,
+      "peerOptional": 0,
+      "total": 1507
+    }
+  }
+}
+
+
+completedAt=2026-05-14T10:41:02.118Z
+exitCode=0
+durationMs=1562
+timedOut=false

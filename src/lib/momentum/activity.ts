@@ -186,7 +186,7 @@ export async function getIndividualActivityEvents(
       type: 'interview',
       text: label,
       timestamp: asEventTimestamp(row.scheduledAt),
-      actionUrl: '/app/i/interviews',
+      actionUrl: '/app/i/communications?section=interviews',
     });
   }
 

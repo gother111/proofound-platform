@@ -25,8 +25,6 @@ export interface IndividualProfileCompletionInput {
   workPreference?: string | null | undefined;
   engagementType?: string | null | undefined;
   contextCount?: number;
-  valuesCount: number;
-  causesCount: number;
   skillsCount: number;
   proofCount: number;
   proofArtifactCount?: number;
@@ -59,8 +57,6 @@ export interface IndividualProfileCompletionState {
   checks: IndividualProfileCompletionChecks;
   counts: {
     contexts: number;
-    values: number;
-    causes: number;
     skills: number;
     proofPacks: number;
     anchoredProofPacks: number;
@@ -95,8 +91,6 @@ export function evaluateIndividualProfileCompletion(
   input: IndividualProfileCompletionInput
 ): IndividualProfileCompletionState {
   const contextCount = toSafeCount(input.contextCount ?? 0);
-  const valuesCount = toSafeCount(input.valuesCount);
-  const causesCount = toSafeCount(input.causesCount);
   const skillsCount = toSafeCount(input.skillsCount);
   const proofPackCount = toSafeCount(input.proofCount);
   const anchoredProofPackCount = toSafeCount(input.anchoredProofPackCount ?? proofPackCount);
@@ -205,8 +199,6 @@ export function evaluateIndividualProfileCompletion(
     checks,
     counts: {
       contexts: contextCount,
-      values: valuesCount,
-      causes: causesCount,
       skills: skillsCount,
       proofPacks: proofPackCount,
       anchoredProofPacks: anchoredProofPackCount,

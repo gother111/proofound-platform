@@ -9,7 +9,7 @@ import { ensureOrganizationPrincipal } from '@/lib/authz';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import { resolveOrganizationReadiness } from '@/lib/organizations/trust-profile';
 
-const TRUST_PROFILE_KEYS = new Set([
+const ORGANIZATION_PROFILE_KEYS = new Set([
   'displayName',
   'whyWorkMatters',
   'mission',
@@ -74,12 +74,14 @@ export async function PUT(
       );
     }
 
-    const unsupportedFields = Object.keys(body).filter((key) => !TRUST_PROFILE_KEYS.has(key));
+    const unsupportedFields = Object.keys(body).filter(
+      (key) => !ORGANIZATION_PROFILE_KEYS.has(key)
+    );
     if (unsupportedFields.length > 0) {
       return NextResponse.json(
         {
           error:
-            'Only launch trust profile fields can be updated from this endpoint: displayName, whyWorkMatters, mission, operatingContext, and website.',
+            'Only launch organization profile fields can be updated from this endpoint: displayName, whyWorkMatters, mission, operatingContext, and website.',
           details: { unsupportedFields },
         },
         { status: 400 }

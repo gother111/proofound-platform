@@ -3,7 +3,7 @@ import { Page, expect } from '@playwright/test';
 /**
  * E2E Test Helpers for Matching Engine
  *
- * Utilities for testing matching flows, PAC scores, rank transparency, etc.
+ * Utilities for testing proof-first matching flows, rank transparency, etc.
  */
 
 /**
@@ -78,16 +78,15 @@ export async function verifyMatchScore(page: Page, matchIndex = 0) {
 }
 
 /**
- * Verify PAC badge/indicator
+ * Verify retired purpose-fit indicators are absent from an active match card.
  */
-export async function verifyPACBadge(page: Page, matchIndex = 0) {
+export async function verifyNoLegacyPurposeFitSignals(page: Page, matchIndex = 0) {
   const matchCard = getMatchCard(page, matchIndex);
+  const legacyPurposeIndicator = matchCard
+    .locator('text=/PAC|Purpose-Alignment|Values Alignment|mission-first|purpose-fit/i')
+    .first();
 
-  // Look for PAC-related text
-  const pacIndicator = matchCard.locator('text=/PAC|Purpose-Alignment|Values Alignment/i').first();
-
-  // PAC may or may not be visible depending on match
-  return await pacIndicator.isVisible();
+  await expect(legacyPurposeIndicator).not.toBeVisible();
 }
 
 /**
@@ -147,42 +146,6 @@ export async function clickSnooze(page: Page, matchIndex = 0) {
 }
 
 /**
- * Apply filter by causes
- */
-export async function filterByCauses(page: Page, causes: string[]) {
-  // Look for filter button or panel
-  const filterButton = page
-    .locator(
-      'button:has-text("Filter"), [data-testid="filter-button"], button[aria-label*="filter"]'
-    )
-    .first();
-
-  if (await filterButton.isVisible()) {
-    await filterButton.click();
-    await page.waitForTimeout(500);
-  }
-
-  // Select causes
-  for (const cause of causes) {
-    const causeCheckbox = page
-      .locator(`text=${cause}`)
-      .locator('..')
-      .locator('input[type="checkbox"]');
-    if (await causeCheckbox.isVisible()) {
-      await causeCheckbox.check();
-    }
-  }
-
-  // Apply filters
-  const applyButton = page.locator('button:has-text("Apply"), button:has-text("Filter")').first();
-  if (await applyButton.isVisible()) {
-    await applyButton.click();
-  }
-
-  await page.waitForTimeout(1000);
-}
-
-/**
  * Apply filter by location mode
  */
 export async function filterByLocationMode(page: Page, mode: 'remote' | 'hybrid' | 'onsite') {
@@ -207,17 +170,13 @@ export async function filterByLocationMode(page: Page, mode: 'remote' | 'hybrid'
  * Verify match explainer tabs
  */
 export async function verifyMatchExplainerTabs(page: Page) {
-  const tabs = ['Overview', 'Skills', 'Purpose', 'Constraints'];
+  const tabs = ['Overview', 'Skills', 'Constraints'];
 
   for (const tab of tabs) {
     const tabButton = page.locator(`button[role="tab"]:has-text("${tab}")`);
     if (await tabButton.isVisible()) {
       await tabButton.click();
       await page.waitForTimeout(500);
-
-      // Verify tab content is visible
-      const tabContent = page.locator(`[role="tabpanel"]:has-text("${tab}")`);
-      // Content may vary, just verify tab is clickable
     }
   }
 }
@@ -251,7 +210,7 @@ export async function completeMatchingProfileSetup(
   page: Page,
   options: {
     focusAreas?: string[];
-    weights?: { mission?: number; expertise?: number };
+    weights?: { proofBias?: number; expertise?: number };
     constraints?: {
       location?: string;
       workMode?: 'remote' | 'hybrid' | 'onsite';
@@ -273,13 +232,14 @@ export async function completeMatchingProfileSetup(
     }
   }
 
-  // Set weights if provided
+  // Set proof-vs-skills weighting if provided
   if (options.weights) {
-    // Look for weight sliders or inputs
-    if (options.weights.mission !== undefined) {
-      const missionSlider = page.locator('input[type="range"], input[name*="mission"]').first();
-      if (await missionSlider.isVisible()) {
-        await missionSlider.fill(options.weights.mission.toString());
+    if (options.weights.proofBias !== undefined) {
+      const proofBiasSlider = page
+        .locator('input[type="range"], input[aria-label*="Proof vs skills"]')
+        .first();
+      if (await proofBiasSlider.isVisible()) {
+        await proofBiasSlider.fill(options.weights.proofBias.toString());
       }
     }
   }

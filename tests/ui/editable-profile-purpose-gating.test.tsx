@@ -26,8 +26,8 @@ vi.mock('@/components/profile/ProfileSkeleton', () => ({
   ProfileSkeleton: () => <div data-testid="profile-skeleton" />,
 }));
 
-vi.mock('@/components/profile/editable-profile/ProfileCompletionBanner', () => ({
-  ProfileCompletionBanner: () => <div data-testid="profile-completion-banner" />,
+vi.mock('@/components/profile/editable-profile/ProfileReadinessBanner', () => ({
+  ProfileReadinessBanner: () => <div data-testid="profile-readiness-banner" />,
 }));
 
 vi.mock('@/components/profile/editable-profile/ProfileHeroSection', () => ({
@@ -62,28 +62,13 @@ vi.mock('@/components/profile/editable-profile/PortfolioReadinessChecklist', () 
 }));
 
 vi.mock('@/components/profile/editable-profile/ProfileSidebar', () => ({
-  ProfileSidebar: ({ onOpenMission, onOpenVision }: any) => (
-    <div data-testid="profile-sidebar">
-      <button onClick={onOpenMission}>sidebar-open-mission</button>
-      <button onClick={onOpenVision}>sidebar-open-vision</button>
-    </div>
-  ),
+  ProfileSidebar: () => <div data-testid="profile-sidebar" />,
 }));
 
 vi.mock('@/components/profile/editable-profile/ProfileDialogs', () => ({
-  ProfileDialogs: ({
-    isEditProfileOpen,
-    isMissionEditorOpen,
-    isVisionEditorOpen,
-    isValuesEditorOpen,
-    isCausesEditorOpen,
-  }: any) => (
+  ProfileDialogs: ({ isEditProfileOpen }: any) => (
     <div data-testid="profile-dialogs">
       {isEditProfileOpen && <span data-testid="edit-profile-open">edit-open</span>}
-      {isMissionEditorOpen && <span data-testid="mission-editor-open">mission-open</span>}
-      {isVisionEditorOpen && <span data-testid="vision-editor-open">vision-open</span>}
-      {isValuesEditorOpen && <span data-testid="values-editor-open">values-open</span>}
-      {isCausesEditorOpen && <span data-testid="causes-editor-open">causes-open</span>}
     </div>
   ),
 }));
@@ -153,7 +138,6 @@ function mockUseProfileData(profile: any) {
       volunteering: false,
       redactMode: false,
     },
-    profileCompletion: 100,
     updateBasicInfo: vi.fn(),
     updateMission: vi.fn(),
     updateVision: vi.fn(),
@@ -232,11 +216,10 @@ describe('EditableProfileView guided completion and purpose access', () => {
     expect(screen.queryByTestId('guided-profile-setup')).not.toBeInTheDocument();
     expect(screen.getByTestId('profile-sidebar')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'sidebar-open-mission' }));
-    expect(screen.getByTestId('mission-editor-open')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'sidebar-open-mission' })).not.toBeInTheDocument();
   });
 
-  it('shows full profile view and opens mission/vision editors when prerequisites are met', () => {
+  it('shows full profile view without individual purpose editors when prerequisites are met', () => {
     searchParamsState = new URLSearchParams('profileView=full');
     mockUseProfileData(
       createProfile({
@@ -251,11 +234,8 @@ describe('EditableProfileView guided completion and purpose access', () => {
     expect(screen.queryByTestId('guided-profile-setup')).not.toBeInTheDocument();
     expect(screen.getByTestId('profile-sidebar')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'sidebar-open-mission' }));
-    fireEvent.click(screen.getByRole('button', { name: 'sidebar-open-vision' }));
-
-    expect(screen.getByTestId('mission-editor-open')).toBeInTheDocument();
-    expect(screen.getByTestId('vision-editor-open')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'sidebar-open-mission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'sidebar-open-vision' })).not.toBeInTheDocument();
   });
 
   it('shows full profile when incomplete profile has profileView=full override', () => {

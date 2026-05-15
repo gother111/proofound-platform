@@ -120,7 +120,7 @@ describe('GET /api/expertise/taxonomy (search mode)', () => {
     dbExecuteMock.mockResolvedValue([]);
   });
 
-  it('returns atlas-ranked skills with match metadata in cv_import context', async () => {
+  it('returns a launch-safe archive response for legacy cv_import taxonomy context', async () => {
     const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     searchAtlasSkillMatchesMock.mockResolvedValue([
       {
@@ -193,20 +193,13 @@ describe('GET /api/expertise/taxonomy (search mode)', () => {
       );
       const body = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(searchAtlasSkillMatchesMock).toHaveBeenCalledWith({
-        query: 'node.js',
-        evidenceSnippets: ['Built Node.js services'],
-        category: 'technical',
-        limit: 50,
+      expect(response.status).toBe(410);
+      expect(searchAtlasSkillMatchesMock).not.toHaveBeenCalled();
+      expect(body).toMatchObject({
+        surface: 'Legacy Expertise API',
+        launchState: 'non_launch',
       });
-      expect(body.l4_skills).toHaveLength(2);
-      expect(body.l4_skills[0].code).toBe('skill_nodejs');
-      expect(body.l4_skills[0].matchMethod).toBe('exact');
-      expect(body.l4_skills[0].matchScore).toBe(0.99);
-      expect(body.l4_skills[0].matchSource).toBe('alias');
-      expect(body.l4_skills[0].matchedLabel).toBe('Node.js');
-      expect(body.l4_skills[0].l1.nameI18n.en).toBe('Tools & Technology');
+      expect(JSON.stringify(body)).not.toMatch(/score|rank|shortlist|verifiedAt|publishedAt/i);
       expect(JSON.stringify(consoleLog.mock.calls)).not.toContain('node.js');
       expect(JSON.stringify(consoleLog.mock.calls)).not.toContain('Built Node.js services');
     } finally {
@@ -225,7 +218,7 @@ describe('GET /api/expertise/taxonomy (search mode)', () => {
     expect(searchAtlasSkillMatchesMock).not.toHaveBeenCalled();
   });
 
-  it('allows ambiguous short tokens in cv_import context and returns ranked guesses', async () => {
+  it('keeps ambiguous short-token cv_import guesses archived', async () => {
     searchAtlasSkillMatchesMock.mockResolvedValue([
       {
         skill_id: 'skill_project_management',
@@ -275,16 +268,12 @@ describe('GET /api/expertise/taxonomy (search mode)', () => {
     );
     const body = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(searchAtlasSkillMatchesMock).toHaveBeenCalledWith({
-      query: 'pm',
-      evidenceSnippets: ['Led project delivery'],
-      category: undefined,
-      limit: 50,
+    expect(response.status).toBe(410);
+    expect(searchAtlasSkillMatchesMock).not.toHaveBeenCalled();
+    expect(body).toMatchObject({
+      surface: 'Legacy Expertise API',
+      launchState: 'non_launch',
     });
-    expect(body.l4_skills).toHaveLength(1);
-    expect(body.l4_skills[0].code).toBe('skill_project_management');
-    expect(body.l4_skills[0].matchMethod).toBe('semantic');
   });
 
   it('falls back to direct taxonomy search when atlas returns no ranked skills', async () => {

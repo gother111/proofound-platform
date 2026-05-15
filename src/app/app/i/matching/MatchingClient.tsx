@@ -52,17 +52,13 @@ export function MatchingClient() {
   const [filteredMatches, setFilteredMatches] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilters, setActiveFilters] = useState<{
-    causes: string[];
     skillDomains: string[];
-    values: string[];
     locationMode?: string;
     workMode?: string;
     minComp?: number;
     maxComp?: number;
   }>({
-    causes: [],
     skillDomains: [],
-    values: [],
   });
   const [showManageHiddenSnoozed, setShowManageHiddenSnoozed] = useState(false);
   const [blockedState, setBlockedState] = useState<MatchabilityBlockedPayload | null>(null);
@@ -77,8 +73,8 @@ export function MatchingClient() {
     const defaults = [
       {
         id: 'update-public-portfolio-default',
-        title: 'Strengthen public portfolio',
-        description: 'Refresh proof-backed work examples and trust signals on your portfolio.',
+        title: 'Strengthen Public Page proof',
+        description: 'Refresh proof-backed work examples and trust signals on your Public Page.',
         actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
       },
       {
@@ -88,10 +84,10 @@ export function MatchingClient() {
         actionUrl: '/app/i/matching/preferences',
       },
       {
-        id: 'complete-purpose-default',
-        title: 'Complete purpose section',
-        description: 'Add mission, values, or causes to improve purpose fit.',
-        actionUrl: '/app/i/profile',
+        id: 'proof-readiness-default',
+        title: 'Strengthen proof readiness',
+        description: 'Add recent proof and keep your matching preferences practical.',
+        actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
       },
     ] as const;
 
@@ -235,14 +231,6 @@ export function MatchingClient() {
   useEffect(() => {
     let filtered = [...matches];
 
-    // Filter by causes
-    if (activeFilters.causes.length > 0) {
-      filtered = filtered.filter((match: any) => {
-        const assignmentCauses = match.assignment?.causeTags || [];
-        return activeFilters.causes.some((cause) => assignmentCauses.includes(cause));
-      });
-    }
-
     // Filter by location mode
     if (activeFilters.locationMode) {
       filtered = filtered.filter((match: any) => {
@@ -254,14 +242,6 @@ export function MatchingClient() {
     if (activeFilters.workMode) {
       filtered = filtered.filter((match: any) => {
         return match.assignment?.workMode === activeFilters.workMode;
-      });
-    }
-
-    // Filter by values
-    if (activeFilters.values.length > 0) {
-      filtered = filtered.filter((match: any) => {
-        const assignmentValues = match.assignment?.valuesTags || [];
-        return activeFilters.values.some((val) => assignmentValues.includes(val));
       });
     }
 
@@ -338,7 +318,7 @@ export function MatchingClient() {
                 ? 'Browsing stays open. Add recent proof and one preference before introductions.'
                 : `${filteredMatches.length} opportunit${
                     filteredMatches.length === 1 ? 'y' : 'ies'
-                  } aligned with your skills and values`}
+                  } aligned with your skills, proof, and constraints`}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -460,7 +440,9 @@ export function MatchingClient() {
                   if (data.introApproved && data.conversationId) {
                     toast.success('Introduction approved. Opening messages...');
                     setTimeout(() => {
-                      router.push(`/app/i/messages?conversation=${data.conversationId}`);
+                      router.push(
+                        `/app/i/communications?section=messages&conversation=${data.conversationId}`
+                      );
                     }, 500);
                   } else if (data.requiresIntroApproval) {
                     toast.success(

@@ -5,7 +5,13 @@ import type { Experience } from '@/types/profile';
 import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Briefcase, CheckCircle2, FolderOpen, Pencil, Plus, Target, X } from 'lucide-react';
+import {
+  contextOutcomeClaimLabel,
+  contextOutcomeVerificationLabel,
+  formatContextOutcomeSummary,
+} from '@/lib/profile/context-outcomes';
 import {
   EXPERIENCE_PARTICIPATION_CAPACITY_OPTIONS,
   type ExperienceParticipationCapacity,
@@ -19,17 +25,30 @@ const participationLabels = EXPERIENCE_PARTICIPATION_CAPACITY_OPTIONS.reduce(
 function renderOutcomeSummary(experience: Experience) {
   if (experience.measuredOutcomes && experience.measuredOutcomes.length > 0) {
     return (
-      <ul className="space-y-1">
+      <ul className="space-y-2">
         {experience.measuredOutcomes.map((outcome) => {
-          const valueSuffix =
-            outcome.value !== null && outcome.value !== undefined
-              ? `: ${String(outcome.value)}${outcome.unit ? ` ${outcome.unit}` : ''}`
-              : '';
-
           return (
-            <li key={outcome.id} className="text-sm">
-              <span className="font-medium">{outcome.name}</span>
-              <span className="text-muted-foreground">{valueSuffix}</span>
+            <li key={outcome.id} className="space-y-1 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{formatContextOutcomeSummary(outcome)}</span>
+                <Badge variant="outline" className="bg-white text-[11px]">
+                  {contextOutcomeClaimLabel(outcome)}
+                </Badge>
+              </div>
+              {outcome.supportingSkills?.length ? (
+                <div className="flex flex-wrap gap-1">
+                  {outcome.supportingSkills.slice(0, 3).map((skill) => (
+                    <Badge key={skill} variant="secondary" className="px-1.5 py-0 text-[11px]">
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+              <p className="text-xs text-muted-foreground">
+                {outcome.proofPackTitle
+                  ? `Linked to ${outcome.proofPackTitle}. ${contextOutcomeVerificationLabel(outcome)}.`
+                  : contextOutcomeVerificationLabel(outcome)}
+              </p>
             </li>
           );
         })}

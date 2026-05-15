@@ -30,10 +30,10 @@ export interface EnhancedSkillScore extends SkillScore {
 }
 
 export interface PACScore {
-  total: number; // 0-1 combined PAC score
+  total: number; // Legacy score slot disabled for individual MVP matching
   valuesScore: number;
   causesScore: number;
-  missionVisionScore: number; // For semantic matching (defaults to tag-based if no embeddings)
+  missionVisionScore: number;
 }
 
 export interface WorkAuthorizationParams {
@@ -97,17 +97,17 @@ export function jaccard(a: string[], b: string[]): number {
 // ============================================================================
 
 /**
- * Score values alignment (mission fit)
+ * Legacy purpose signal. Individual values do not drive MVP matching.
  */
-export function scoreValues(profileValues: string[], assignmentValues: string[]): number {
-  return jaccard(profileValues, assignmentValues);
+export function scoreValues(_profileValues: string[], _assignmentValues: string[]): number {
+  return 0;
 }
 
 /**
- * Score causes alignment (impact focus)
+ * Legacy purpose signal. Individual causes do not drive MVP matching.
  */
-export function scoreCauses(profileCauses: string[], assignmentCauses: string[]): number {
-  return jaccard(profileCauses, assignmentCauses);
+export function scoreCauses(_profileCauses: string[], _assignmentCauses: string[]): number {
+  return 0;
 }
 
 // ============================================================================
@@ -115,50 +115,26 @@ export function scoreCauses(profileCauses: string[], assignmentCauses: string[])
 // ============================================================================
 
 /**
- * Calculate PAC (Purpose-Alignment Contribution) score.
- *
- * PAC is a composite metric that captures how well a candidate's purpose
- * aligns with an organization's mission. It combines:
- * - Values alignment (Jaccard similarity)
- * - Causes alignment (Jaccard similarity)
- * - Mission/Vision semantic similarity (cosine, if embeddings available)
- *
- * PRD Reference: Part 2 - PAC should show ≥20% higher intro acceptance for top-decile matches
- *
- * Formula (without embeddings): PAC = 0.5 * values + 0.5 * causes
- * Formula (with embeddings): PAC = 0.4 * values + 0.3 * causes + 0.3 * missionVision
+ * Retired compatibility wrapper for legacy purpose-alignment scoring.
+ * MVP matching intentionally ignores mission, values, and causes for individuals.
  */
 export function scorePAC(
-  profileValues: string[],
-  profileCauses: string[],
-  assignmentValues: string[],
-  assignmentCauses: string[],
-  missionVisionScore?: number // Optional: cosine similarity from embeddings
+  _profileValues: string[],
+  _profileCauses: string[],
+  _assignmentValues: string[],
+  _assignmentCauses: string[],
+  _missionVisionScore?: number
 ): PACScore {
-  const valuesScore = scoreValues(profileValues, assignmentValues);
-  const causesScore = scoreCauses(profileCauses, assignmentCauses);
-
-  let total: number;
-
-  if (missionVisionScore !== undefined && missionVisionScore >= 0) {
-    // With semantic matching: 40% values, 30% causes, 30% mission/vision
-    total = 0.4 * valuesScore + 0.3 * causesScore + 0.3 * missionVisionScore;
-  } else {
-    // Without semantic matching: 50% values, 50% causes
-    total = 0.5 * valuesScore + 0.5 * causesScore;
-  }
-
   return {
-    total: Math.min(total, 1.0),
-    valuesScore,
-    causesScore,
-    missionVisionScore: missionVisionScore ?? 0,
+    total: 0,
+    valuesScore: 0,
+    causesScore: 0,
+    missionVisionScore: 0,
   };
 }
 
 /**
  * Calculate cosine similarity between two vectors.
- * Used for semantic matching of mission/vision embeddings.
  *
  * @param a First embedding vector
  * @param b Second embedding vector

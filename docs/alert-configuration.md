@@ -160,14 +160,14 @@ if (metrics.ttsc && metrics.ttsc.median > 35) {
 - **Trigger**: Health check detects metric degradation
 - **Action**: Review matching algorithm and assignment pool
 
-### PAC (Purpose-Alignment Contribution)
+### Proof Fit Lift
 
-**Alert Name**: Low PAC Lift
+**Alert Name**: Low Proof Fit Lift
 
-- **Condition**: PAC acceptance lift < 15% for 7 consecutive days
+- **Condition**: Proof-fit acceptance lift < 15% for 7 consecutive days
 - **Severity**: Medium
 - **Trigger**: Health check detects metric degradation
-- **Action**: Review PAC scoring algorithm
+- **Action**: Review proof-fit scoring and assignment pool quality
 
 ---
 

@@ -27,6 +27,7 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/candidate-invites/[token]',
   '/api/candidate-invites/[token]/claim',
   '/api/candidate-invites/[token]/proof-card',
+  '/api/candidate-invites/[token]/workspace',
   '/api/conversations',
   '/api/conversations/[conversationId]',
   '/api/conversations/[conversationId]/messages',
@@ -81,7 +82,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/portfolio/text-pack',
   '/api/portfolio/visibility',
   '/api/profile',
-  '/api/profile/completeness',
   '/api/profile/privacy-settings',
   '/api/profile/visibility',
   '/api/proof-artifacts/[artifactId]/text-extraction',
@@ -198,13 +198,16 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/feedback/sus',
   '/api/surveys/sus',
   '/api/organizations/[orgId]/causes',
+  '/api/organizations/[orgId]/culture',
   '/api/organizations/[orgId]/goals',
   '/api/organizations/[orgId]/goals/[id]',
+  '/api/organizations/[orgId]/impact',
   '/api/organizations/[orgId]/ownership',
   '/api/organizations/[orgId]/ownership/[ownershipId]',
   '/api/organizations/[orgId]/partnerships',
   '/api/organizations/[orgId]/partnerships/[id]',
   '/api/organizations/[orgId]/projects',
+  '/api/organizations/[orgId]/structure',
   '/api/organizations/[orgId]/test-matches',
 ] as const;
 
@@ -222,6 +225,7 @@ const ALLOWED_ARCHIVED_COMPILED_ROUTES = [
   '/api/expertise/cv-import/wizard-suggest',
   '/api/match/test',
   '/api/performance/track',
+  '/api/profile/completeness',
 ] as const;
 
 async function collectRoutePaths(dir: string): Promise<string[]> {

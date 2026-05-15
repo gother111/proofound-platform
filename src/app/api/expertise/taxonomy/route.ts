@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { isManualReviewOnlyShortToken } from '@/lib/expertise/skill-confidence';
 import { searchAtlasSkillMatches } from '@/lib/expertise/atlas-skill-verifier';
+import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
 const SEARCH_RESULT_LIMIT = 50;
 const SEARCH_ATLAS_TIMEOUT_MS = 4_000;
@@ -319,6 +320,12 @@ export async function GET(request: Request) {
     const l3Id = searchParams.get('l3_id');
     const search = searchParams.get('search');
     const searchContext = searchParams.get('context');
+    if (searchContext === 'cv_import') {
+      return legacySurfaceJsonResponse(
+        'Legacy Expertise API',
+        'CV import taxonomy matching is archived outside the locked launch MVP corridor.'
+      );
+    }
     const searchCategory = searchParams.get('category');
     const evidenceSnippets = searchParams
       .getAll('evidence')

@@ -14,6 +14,7 @@ type ProfileSkillPickerProps = {
   onChange: (nextSkills: string[]) => void;
   inputId?: string;
   searchPlaceholder?: string;
+  maxSelections?: number;
 };
 
 export function ProfileSkillPicker({
@@ -22,6 +23,7 @@ export function ProfileSkillPicker({
   onChange,
   inputId = 'profile-skill-picker-search',
   searchPlaceholder = 'Search your Expertise Atlas skills',
+  maxSelections,
 }: ProfileSkillPickerProps) {
   const [query, setQuery] = useState('');
   const normalizedSkills = useMemo(
@@ -44,6 +46,9 @@ export function ProfileSkillPicker({
     const key = skill.toLocaleLowerCase();
     if (selectedSet.has(key)) {
       onChange(selectedSkills.filter((selected) => selected.toLocaleLowerCase() !== key));
+      return;
+    }
+    if (maxSelections && selectedSkills.length >= maxSelections) {
       return;
     }
     onChange([...selectedSkills, skill]);
@@ -88,12 +93,14 @@ export function ProfileSkillPicker({
         ) : (
           filteredSkills.map((skill) => {
             const isSelected = selectedSet.has(skill.toLocaleLowerCase());
+            const isAtMax = Boolean(maxSelections && selectedSkills.length >= maxSelections);
             return (
               <Button
                 key={skill}
                 type="button"
                 variant="ghost"
                 className="h-9 w-full justify-between px-2 text-left"
+                disabled={!isSelected && isAtMax}
                 onClick={() => toggleSkill(skill)}
               >
                 <span className="truncate">{skill}</span>

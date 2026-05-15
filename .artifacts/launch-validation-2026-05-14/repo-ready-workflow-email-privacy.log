@@ -1,0 +1,15 @@
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/lib/workflow-email-privacy.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/lib/workflow-email-privacy.test.ts  (11 tests) 28ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  12:43:33
+   Duration  1.39s (transform 204ms, setup 132ms, collect 550ms, tests 28ms, environment 242ms, prepare 50ms)

@@ -52,7 +52,7 @@ export function ConsentExplainer({
               Blind-by-default still applies until you approve this step
             </p>
             <p className="text-sm text-muted-foreground">
-              Public portfolio publication does not widen review-stage access on its own.
+              Public Page publication does not widen review-stage access on its own.
             </p>
             {privacyNote ? <p className="text-sm text-muted-foreground">{privacyNote}</p> : null}
           </div>

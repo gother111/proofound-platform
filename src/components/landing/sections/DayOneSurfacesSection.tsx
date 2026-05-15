@@ -11,7 +11,7 @@ function PortfolioSurface() {
       <div className="flex items-start justify-between border-b border-[var(--landing-border-soft)] pb-5">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--landing-muted)]">
-            Public proof portfolio
+            Public Page proof snapshot
           </div>
           <div className="mt-2 font-display text-[1.65rem] leading-none text-[var(--landing-dark)]">
             Selected proof
@@ -117,7 +117,7 @@ export function DayOneSurfacesSection() {
             One clear starting point for each side.
           </h2>
           <p className="mt-5 max-w-[46rem] text-[1.1rem] leading-8 text-[var(--landing-text)]">
-            The MVP starts with a public proof portfolio for individuals and a trust page plus
+            The MVP starts with a Public Page proof snapshot for individuals and a trust page plus
             assignment corridor for organizations.
           </p>
         </div>
@@ -129,11 +129,11 @@ export function DayOneSurfacesSection() {
                 For individuals
               </div>
               <h3 className="mt-4 font-display text-[2.2rem] leading-tight text-[var(--landing-dark)]">
-                Public proof portfolio
+                Public Page proof snapshot
               </h3>
               <p className="mt-4 text-[1.04rem] leading-7 text-[var(--landing-text)]">
-                Turn real work, volunteering, or learning into a calm public portfolio with 1 to 3
-                proof items, role context, outcomes, and scoped trust signals.
+                Turn real work, volunteering, or learning into a calm Public Page with 1 to 3 proof
+                items, role context, outcomes, and scoped trust signals.
               </p>
             </div>
 

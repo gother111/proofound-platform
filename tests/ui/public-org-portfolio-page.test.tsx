@@ -79,9 +79,9 @@ function buildProjection(overrides: Partial<any> = {}) {
     metadata: {
       path: '/portfolio/org/acme',
       title: 'Proofound organization portfolio',
-      description: 'Shareable organization trust card on Proofound.',
+      description: 'Shareable organization profile on Proofound.',
       ogTitle: 'Proofound organization portfolio',
-      ogDescription: 'Shareable organization trust card on Proofound.',
+      ogDescription: 'Shareable organization profile on Proofound.',
       useGenericPreview: true,
     },
     jsonLd: {
@@ -158,13 +158,13 @@ describe('Organization public portfolio page', () => {
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Acme' })).toBeInTheDocument();
-    expect(screen.getByText(/public organization trust card/i)).toBeInTheDocument();
+    expect(screen.getByText(/public organization profile/i)).toBeInTheDocument();
     expect(screen.getByText('Shareable by direct link')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /mission \/ purpose/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /what work is offered/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /assignment clarity/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /seriousness of review/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /trust basics/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /organization basics/i })).toBeInTheDocument();
     expect(screen.getByText('acme.org')).toBeInTheDocument();
     expect(screen.getByText(/proof-first product designer/i)).toBeInTheDocument();
     expect(screen.getByText(/own the assignment review loop/i)).toBeInTheDocument();

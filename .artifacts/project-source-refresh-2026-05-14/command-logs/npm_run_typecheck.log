@@ -1,0 +1,13 @@
+# npm run typecheck
+startedAt=2026-05-14T10:29:26.139Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 typecheck
+> node --max-old-space-size=6144 ./node_modules/typescript/bin/tsc --noEmit --incremental false
+
+
+
+completedAt=2026-05-14T10:29:56.159Z
+exitCode=0
+durationMs=30020
+timedOut=false

@@ -51,7 +51,7 @@ export async function GET() {
 
     return NextResponse.json({
       publicPageEnabled: portfolioState !== 'unavailable',
-      searchIndexingEnabled: Boolean((profile as any)?.search_indexing_enabled_at),
+      searchIndexingEnabled: false,
       visibility: {
         header: merged.header,
         proofBar: merged.proofBar,
@@ -113,12 +113,8 @@ export async function POST(request: Request) {
     };
 
     const publicPageEnabled = parsed.publicPageEnabled ?? true;
-    const searchIndexingEnabled = parsed.searchIndexingEnabled ?? false;
-    const nextState = publicPageEnabled
-      ? searchIndexingEnabled
-        ? 'public_indexable'
-        : 'public_link_only'
-      : 'unavailable';
+    const searchIndexingEnabled = false;
+    const nextState = publicPageEnabled ? 'public_link_only' : 'unavailable';
 
     if (publicPageEnabled) {
       const currentProfile = (current.data as any) ?? {};

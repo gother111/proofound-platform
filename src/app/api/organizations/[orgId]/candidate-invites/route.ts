@@ -219,10 +219,7 @@ export async function POST(
     }
 
     const flowType = parsed.data.flowType ?? CANDIDATE_INVITE_FLOW_TYPE.PROOF_CARD;
-    const assignmentId =
-      flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH
-        ? (parsed.data.assignmentId ?? null)
-        : null;
+    const assignmentId = parsed.data.assignmentId ?? null;
 
     if (flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH) {
       const inviterProfile = await getProfileFlags(user.id);
@@ -240,7 +237,7 @@ export async function POST(
       assignmentId
     );
 
-    if (flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH && assignmentId && !assignment) {
+    if (assignmentId && !assignment) {
       return NextResponse.json(
         { error: 'Assignment not found for this organization.' },
         { status: 404 }

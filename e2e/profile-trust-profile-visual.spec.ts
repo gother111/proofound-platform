@@ -31,7 +31,7 @@ async function stabilizeProfile(page: import('@playwright/test').Page) {
   });
 }
 
-test.describe('Profile and trust-profile visual contract', () => {
+test.describe('Profile visual contract', () => {
   test('individual profile keeps the proof-first setup focused', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'Profile visual baselines are Chromium-only');
     test.skip(isOrgMode, 'Run individual profile contract without MOCK_ORG_MODE=true');
@@ -59,23 +59,22 @@ test.describe('Profile and trust-profile visual contract', () => {
     });
   });
 
-  test('organization trust profile keeps launch essentials visible', async ({
-    page,
-    browserName,
-  }) => {
+  test('organization profile keeps launch essentials visible', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'Profile visual baselines are Chromium-only');
-    test.skip(!isOrgMode, 'Run organization trust-profile contract with MOCK_ORG_MODE=true');
+    test.skip(!isOrgMode, 'Run organization profile contract with MOCK_ORG_MODE=true');
 
     await prepareProfileViewport(page);
     await page.goto('/app/o/test-org/home', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: 'Corridor Queue' })).toBeVisible();
-    await page.getByRole('link', { name: 'Trust Profile', exact: true }).click();
+    await page.getByRole('link', { name: 'Organization Profile', exact: true }).click();
     await expect(page).toHaveURL(/\/app\/o\/test-org\/profile/);
     await stabilizeProfile(page);
 
-    await expect(page.getByRole('heading', { name: 'Organization trust profile' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Organization Profile' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Launch corridor' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Trust profile', exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Organization profile', exact: true })
+    ).toBeVisible();
     await expect(page.getByText('Launch essentials')).toBeVisible();
     await expect(page.locator('body')).not.toContainText('Selected corridor');
     await expect(page.locator('body')).not.toContainText('Policy & Trust');

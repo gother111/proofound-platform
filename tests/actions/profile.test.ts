@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   updateVision,
   replaceValues,
+  replaceCauses,
   updateMission,
   getProfileData,
   requestImpactStoryVerification,
@@ -12,13 +13,7 @@ import {
   updateVolunteering,
 } from '@/actions/profile';
 import { db } from '@/db';
-import {
-  education,
-  experiences,
-  impactStories,
-  individualProfiles,
-  volunteering,
-} from '@/db/schema';
+import { education, experiences, impactStories, volunteering } from '@/db/schema';
 
 const mockDb = vi.hoisted(() => ({
   select: vi.fn(),
@@ -60,10 +55,6 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('next/headers', () => ({
   headers: mockHeaders,
-}));
-
-vi.mock('@/lib/audit/purpose-log', () => ({
-  logPurposeEdit: vi.fn(),
 }));
 
 vi.mock('@/lib/verification/integrity', () => ({
@@ -113,7 +104,7 @@ vi.mock('@/lib/matching/eligibility', () => ({
     tier: 'baseline',
     counts: {
       skillsWithRecency: 0,
-      hasPurpose: false,
+      hasIntentSignal: false,
       hasConstraints: false,
       proofCount: 0,
     },
@@ -124,27 +115,6 @@ vi.mock('@/lib/matching/eligibility', () => ({
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
-
-function mockCurrentProfileRow(row: {
-  value: string | null;
-  fieldVisibility: Record<string, unknown>;
-  values: unknown[];
-  causes: string[];
-  missionLinks?: unknown;
-  visionLinks?: unknown;
-}) {
-  const limit = vi.fn().mockResolvedValue([row]);
-  const where = vi.fn().mockReturnValue({ limit });
-  const from = vi.fn().mockReturnValue({ where });
-  mockDb.select.mockReturnValue({ from });
-}
-
-function mockUpdateSuccess() {
-  const where = vi.fn().mockResolvedValue(undefined);
-  const set = vi.fn().mockReturnValue({ where });
-  mockDb.update.mockReturnValue({ set });
-  return { set, where };
-}
 
 function mockSelectWithLimit(result: unknown[]) {
   const limit = vi.fn().mockResolvedValue(result);
@@ -215,203 +185,24 @@ describe('profile purpose actions', () => {
     mockUpdateCanonicalImpactVerificationRequest.mockResolvedValue({});
   });
 
-  it('updates mission when at least one value and one cause exist', async () => {
-    mockCurrentProfileRow({
-      value: null,
-      fieldVisibility: {},
-      values: [{ id: 'v1', label: 'Integrity' }],
-      causes: ['Climate Justice'],
-      missionLinks: { values: ['Integrity'], causes: ['Climate Justice'] },
-    });
-    const { set } = mockUpdateSuccess();
-
-    await updateMission('Build trustworthy systems', {
-      values: ['Integrity'],
-      causes: ['Climate Justice'],
-    });
-
-    expect(db.update).toHaveBeenCalledWith(individualProfiles);
-    expect(set).toHaveBeenCalledWith({
-      mission: 'Build trustworthy systems',
-      missionLinks: { values: ['Integrity'], causes: ['Climate Justice'] },
-    });
-  });
-
-  it('rejects mission update when values are missing', async () => {
-    mockCurrentProfileRow({
-      value: null,
-      fieldVisibility: {},
-      values: [],
-      causes: ['Climate Justice'],
-    });
-    mockUpdateSuccess();
-
-    await expect(
-      updateMission('Build trustworthy systems', {
-        values: ['Integrity'],
-        causes: ['Climate Justice'],
-      })
-    ).rejects.toThrow('Add at least one value before updating your mission.');
-    expect(db.update).not.toHaveBeenCalled();
-  });
-
-  it('rejects mission update when causes are missing', async () => {
-    mockCurrentProfileRow({
-      value: null,
-      fieldVisibility: {},
-      values: [{ id: 'v1', label: 'Integrity' }],
-      causes: [],
-    });
-    mockUpdateSuccess();
-
-    await expect(
-      updateMission('Build trustworthy systems', {
-        values: ['Integrity'],
-        causes: ['Climate Justice'],
-      })
-    ).rejects.toThrow('Add at least one cause before updating your mission.');
-    expect(db.update).not.toHaveBeenCalled();
-  });
-
-  it('rejects vision update when prerequisites are missing', async () => {
-    mockCurrentProfileRow({
-      value: null,
-      fieldVisibility: {},
-      values: [],
-      causes: [],
-    });
-    mockUpdateSuccess();
-
-    await expect(
-      updateVision('A fair and open future', {
-        values: ['Integrity'],
-        causes: ['Climate Justice'],
-      })
-    ).rejects.toThrow('Add at least one value and at least one cause before updating your vision.');
-    expect(db.update).not.toHaveBeenCalled();
-  });
-
-  it('rejects mission update when links are missing', async () => {
-    mockCurrentProfileRow({
-      value: null,
-      fieldVisibility: {},
-      values: [{ id: 'v1', label: 'Integrity' }],
-      causes: ['Climate Justice'],
-      missionLinks: null,
-    });
-    mockUpdateSuccess();
+  it('hard-gates individual purpose mutations for the MVP', async () => {
+    const archivedPurposeMessage =
+      'Individual mission, vision, values, and causes are archived for the MVP.';
 
     await expect(updateMission('Build trustworthy systems')).rejects.toThrow(
-      'Select at least one linked value and one linked cause before updating your mission.'
+      archivedPurposeMessage
     );
-    expect(db.update).not.toHaveBeenCalled();
-  });
-
-  it('rejects mission update when links are outside available values/causes', async () => {
-    mockCurrentProfileRow({
-      value: null,
-      fieldVisibility: {},
-      values: [{ id: 'v1', label: 'Integrity' }],
-      causes: ['Climate Justice'],
-      missionLinks: { values: [], causes: [] },
-    });
-    mockUpdateSuccess();
-
+    await expect(updateVision('A fair and open future')).rejects.toThrow(archivedPurposeMessage);
     await expect(
-      updateMission('Build trustworthy systems', {
-        values: ['Courage'],
-        causes: ['Housing'],
-      })
-    ).rejects.toThrow(
-      'Select at least one linked value and one linked cause before updating your mission.'
-    );
+      replaceValues([{ id: 'v1', label: 'Integrity', icon: 'Shield', verified: false }])
+    ).rejects.toThrow(archivedPurposeMessage);
+    await expect(replaceCauses(['Climate Justice'])).rejects.toThrow(archivedPurposeMessage);
+
+    expect(db.select).not.toHaveBeenCalled();
     expect(db.update).not.toHaveBeenCalled();
   });
 
-  it('auto-prunes mission/vision links when values are replaced', async () => {
-    const limit = vi.fn().mockResolvedValue([
-      {
-        values: [
-          { id: 'v1', label: 'Integrity' },
-          { id: 'v2', label: 'Transparency' },
-        ],
-        causes: ['Climate Justice'],
-        missionLinks: {
-          values: ['Integrity', 'Transparency'],
-          causes: ['Climate Justice'],
-        },
-        visionLinks: {
-          values: ['Transparency'],
-          causes: ['Climate Justice'],
-        },
-      },
-    ]);
-    const whereSelect = vi.fn().mockReturnValue({ limit });
-    const from = vi.fn().mockReturnValue({ where: whereSelect });
-    mockDb.select.mockReturnValue({ from });
-
-    const whereUpdate = vi.fn().mockResolvedValue(undefined);
-    const set = vi.fn().mockReturnValue({ where: whereUpdate });
-    mockDb.update.mockReturnValue({ set });
-
-    await replaceValues([{ id: 'v1', label: 'Integrity', icon: 'Shield', verified: false }]);
-
-    expect(set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        values: [{ id: 'v1', label: 'Integrity', icon: 'Shield', verified: false }],
-        missionLinks: {
-          values: ['Integrity'],
-          causes: ['Climate Justice'],
-        },
-        visionLinks: {
-          values: [],
-          causes: ['Climate Justice'],
-        },
-      })
-    );
-  });
-
-  it('falls back to values-only update when purpose link columns are missing', async () => {
-    const nextValues = [{ id: 'v1', label: 'Integrity', icon: 'Shield', verified: false }];
-
-    const limit = vi.fn().mockResolvedValue([
-      {
-        values: nextValues,
-        causes: ['Climate Justice'],
-        missionLinks: {
-          values: ['Integrity'],
-          causes: ['Climate Justice'],
-        },
-        visionLinks: {
-          values: ['Integrity'],
-          causes: ['Climate Justice'],
-        },
-      },
-    ]);
-    const whereSelect = vi.fn().mockReturnValue({ limit });
-    const from = vi.fn().mockReturnValue({ where: whereSelect });
-    mockDb.select.mockReturnValue({ from });
-
-    const whereWithLinks = vi.fn().mockRejectedValue({
-      code: '42703',
-      message: 'column "mission_links" does not exist',
-    });
-    const setWithLinks = vi.fn().mockReturnValue({ where: whereWithLinks });
-
-    const whereFallback = vi.fn().mockResolvedValue(undefined);
-    const setFallback = vi.fn().mockReturnValue({ where: whereFallback });
-
-    mockDb.update
-      .mockReturnValueOnce({ set: setWithLinks })
-      .mockReturnValueOnce({ set: setFallback });
-
-    await replaceValues(nextValues as any);
-
-    expect(setFallback).toHaveBeenCalledWith({ values: nextValues });
-    expect(whereFallback).toHaveBeenCalledTimes(1);
-  });
-
-  it('normalizes legacy JSON string shapes when reading profile data', async () => {
+  it('returns legacy purpose data as inert archived fields when reading profile data', async () => {
     const profileRow = {
       values: JSON.stringify([
         { id: 'v1', icon: 'Shield', label: 'Integrity', verified: true },
@@ -432,7 +223,13 @@ describe('profile purpose actions', () => {
       tagline: null,
       location: null,
       coverImageUrl: null,
-      fieldVisibility: null,
+      fieldVisibility: {
+        mission: 'public',
+        vision: 'public',
+        values: 'public',
+        causes: 'public',
+        skills: 'public',
+      },
       redactMode: false,
     };
 
@@ -468,18 +265,22 @@ describe('profile purpose actions', () => {
 
     const profile = await getProfileData();
 
-    expect(profile.values).toEqual([
-      { id: 'v1', icon: 'Shield', label: 'Integrity', verified: true },
-      { id: 'legacy-1-trust', icon: 'Heart', label: 'Trust', verified: false },
-    ]);
-    expect(profile.missionLinks).toEqual({
-      values: ['Integrity'],
-      causes: ['Climate Justice'],
+    expect(profile.mission).toBeNull();
+    expect(profile.vision).toBeNull();
+    expect(profile.values).toEqual([]);
+    expect(profile.causes).toEqual([]);
+    expect(profile.missionLinks).toEqual({ values: [], causes: [] });
+    expect(profile.visionLinks).toEqual({ values: [], causes: [] });
+    expect(profile.fieldVisibility).toMatchObject({
+      experiences: 'private',
+      education: 'private',
+      volunteering: 'private',
+      skills: 'public',
     });
-    expect(profile.visionLinks).toEqual({
-      values: ['Trust'],
-      causes: ['Climate Justice'],
-    });
+    expect(profile.fieldVisibility).not.toHaveProperty('mission');
+    expect(profile.fieldVisibility).not.toHaveProperty('vision');
+    expect(profile.fieldVisibility).not.toHaveProperty('values');
+    expect(profile.fieldVisibility).not.toHaveProperty('causes');
   });
 
   it('attaches latest impact verification summary to impact stories', async () => {
@@ -597,10 +398,10 @@ describe('profile purpose actions', () => {
       const result = await updateEducation('edu-1', payload);
 
       expect(db.update).toHaveBeenCalledWith(education);
-      expect(setMock).toHaveBeenCalledWith(payload);
+      expect(setMock).toHaveBeenCalledWith(expect.objectContaining(payload));
       expect(whereMock).toHaveBeenCalledTimes(1);
       expect(returningMock).toHaveBeenCalledTimes(1);
-      expect(result).toEqual({ id: 'edu-1' });
+      expect(result).toMatchObject({ id: 'edu-1' });
     });
   });
 
@@ -1053,10 +854,10 @@ describe('profile purpose actions', () => {
       const result = await updateVolunteering('vol-1', payload);
 
       expect(db.update).toHaveBeenCalledWith(volunteering);
-      expect(setMock).toHaveBeenCalledWith(payload);
+      expect(setMock).toHaveBeenCalledWith(expect.objectContaining(payload));
       expect(whereMock).toHaveBeenCalledTimes(1);
       expect(returningMock).toHaveBeenCalledTimes(1);
-      expect(result).toEqual({ id: 'vol-1' });
+      expect(result).toMatchObject({ id: 'vol-1' });
     });
   });
 });

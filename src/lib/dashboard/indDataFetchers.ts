@@ -12,10 +12,10 @@ import {
 } from '@/db/schema';
 import { toCanonicalGoal, toLegacyGoal } from '@/lib/goals/canonical';
 import { computeSkillGaps } from '@/lib/skills/gap-service';
-import { getProfileCompleteness, getExpertiseStats } from '@/app/actions/dashboard';
+import { getProofReadinessChecklist, getExpertiseStats } from '@/app/actions/dashboard';
 import { getMomentumSummaryCached } from '@/lib/momentum/summary';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
-import { toProfileCompletenessPresentation } from '@/lib/readiness/presentation';
+import { toProofReadinessChecklistPresentation } from '@/lib/readiness/presentation';
 
 export async function getIndGoalsData(userId: string) {
   try {
@@ -91,13 +91,13 @@ export async function getIndSkillGapsData(userId: string) {
   }
 }
 
-export async function getIndProfileCompletenessData(userId: string) {
+export async function getIndProofReadinessData(userId: string) {
   try {
     const readiness = await getIndividualReadinessState(userId);
-    return toProfileCompletenessPresentation(readiness);
+    return toProofReadinessChecklistPresentation(readiness);
   } catch (error) {
-    console.error('Error in getIndProfileCompletenessData:', error);
-    return { percentage: 0, missing: [], actions: [] };
+    console.error('Error in getIndProofReadinessData:', error);
+    return { missing: [], actions: [] };
   }
 }
 
@@ -122,11 +122,11 @@ export async function getIndInterviewsData(userId: string) {
 
 export async function getIndProfileActivationData() {
   try {
-    const [completenessJson, statsJson] = await Promise.all([
-      getProfileCompleteness(),
+    const [readinessChecklistJson, statsJson] = await Promise.all([
+      getProofReadinessChecklist(),
       getExpertiseStats(),
     ]);
-    return { completenessJson, statsJson };
+    return { readinessChecklistJson, statsJson };
   } catch (error) {
     console.error('Error in getIndProfileActivationData:', error);
     return null;

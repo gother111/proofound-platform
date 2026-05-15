@@ -28,7 +28,7 @@ describe('organization non-MVP settings surfaces', () => {
     render(element);
 
     expect(screen.getByText(/broad org settings are gated for launch/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /open trust profile/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /open organization profile/i })).toHaveAttribute(
       'href',
       '/app/o/acme/profile'
     );

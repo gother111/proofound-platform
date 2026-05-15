@@ -51,6 +51,17 @@ describe('public portfolio publication contract', () => {
     ).toBe('public_noindex');
   });
 
+  it('keeps individual Public Pages noindex even when stale data requested indexing', () => {
+    expect(
+      deriveEffectivePublicPortfolioState({
+        requestedState: 'public_indexable',
+        searchIndexingEnabled: true,
+        allowSearchIndexing: false,
+        minimumContentMet: true,
+      })
+    ).toBe('public_noindex');
+  });
+
   it('downgrades search indexing when any selected proof content is not public-safe', () => {
     const base = {
       requestedState: 'public_indexable' as const,

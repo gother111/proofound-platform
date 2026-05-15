@@ -25,7 +25,6 @@ import {
 import {
   buildBreadcrumbJsonLd,
   buildProofoundWebsiteJsonLd,
-  buildPublicPersonPortfolioJsonLd,
   buildWebPageJsonLd,
 } from '@/lib/seo/json-ld';
 import { createClient } from '@/lib/supabase/server';
@@ -41,12 +40,12 @@ function renderUnavailablePage(handle: string) {
       footer={
         <div className="flex items-center justify-between gap-2">
           <span>proofound.io/portfolio/{handle}</span>
-          <span>Public portfolio unavailable</span>
+          <span>Public Page unavailable</span>
         </div>
       }
     >
-      <PublicProfileSection title="Portfolio unavailable">
-        <PublicProfileEmptyState message="This public portfolio link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing." />
+      <PublicProfileSection title="Public Page unavailable">
+        <PublicProfileEmptyState message="This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing." />
       </PublicProfileSection>
     </PublicProfileShell>
   );
@@ -67,13 +66,13 @@ export async function generateMetadata({
   const data = access.projection;
 
   return buildPublicProfileMetadata({
-    title: data.metadata.title,
-    description: data.metadata.description,
+    title: 'Proofound Public Page',
+    description: 'A proof snapshot shared by direct link on Proofound.',
     path: data.metadata.path,
-    ogTitle: data.metadata.ogTitle,
-    ogDescription: data.metadata.ogDescription,
-    ogType: 'profile',
-    robots: buildPortfolioRobots(data.effectiveState),
+    ogTitle: 'Proofound Public Page',
+    ogDescription: 'A proof snapshot shared by direct link on Proofound.',
+    ogType: 'website',
+    robots: buildPortfolioRobots('public_link_only'),
   });
 }
 
@@ -125,17 +124,17 @@ export default async function PortfolioPage({
 
   const viewerIsOwner = Boolean(user?.id && user.id === data.profileId);
   const displayName = data.publicDisplayName;
-  const headline = data.publicHeadline || 'Proof-first public portfolio';
+  const headline = data.publicHeadline || 'Proof-first Public Page';
   const publicBio = data.publicBio;
 
   const collaborationHref = collaborationMailto({
     subject: `Request introduction to ${displayName}`,
-    body: `Hi Proofound team, I would like to request an introduction to ${displayName}. Public portfolio: ${data.shareUrl}`,
+    body: `Hi Proofound team, I would like to request an introduction to ${displayName}. Public Page: ${data.shareUrl}`,
   });
 
   const requestContactHref = collaborationMailto({
     subject: `Request contact for ${displayName}`,
-    body: `Hi Proofound team, please help me connect with ${displayName}. Public portfolio: ${data.shareUrl}`,
+    body: `Hi Proofound team, please help me connect with ${displayName}. Public Page: ${data.shareUrl}`,
   });
 
   const publicSummaryEndpoint = `/api/portfolio/public/${encodeURIComponent(data.handle)}/summary`;
@@ -145,19 +144,13 @@ export default async function PortfolioPage({
     buildProofoundWebsiteJsonLd(),
     buildWebPageJsonLd({
       path: pagePath,
-      title: `${displayName} | Proofound Public Portfolio`,
+      title: `${displayName} | Proofound Public Page`,
       description: data.jsonLd.description,
     }),
     buildBreadcrumbJsonLd([
       { name: 'Home', path: '/' },
       { name: displayName, path: pagePath },
     ]),
-    buildPublicPersonPortfolioJsonLd({
-      path: pagePath,
-      name: displayName,
-      description: data.jsonLd.description,
-      skills: data.publicSkills,
-    }),
   ];
 
   return (
@@ -183,15 +176,20 @@ export default async function PortfolioPage({
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2.5 text-sm text-foreground">
               <Logo size="sm" />
-              <span className="font-medium">Proofound public portfolio</span>
+              <span className="font-medium">Proofound Public Page</span>
               <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
-                {data.effectiveState === 'public_indexable'
-                  ? 'Searchable'
-                  : 'Shareable by direct link'}
+                Direct-link proof snapshot
               </Badge>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              {viewerIsOwner ? (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/app/i/profile?profileView=full&tab=visibility">
+                    Manage visibility
+                  </Link>
+                </Button>
+              ) : null}
               <ShareLinkButton url={data.shareUrl} />
               <DownloadPdfButton endpoint={viewerIsOwner ? undefined : publicExportEndpoint} />
               <CopyTextButton endpoint={viewerIsOwner ? undefined : publicSummaryEndpoint} />
@@ -202,11 +200,7 @@ export default async function PortfolioPage({
       footer={
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
           <span>proofound.io/portfolio/{data.handle}</span>
-          <span>
-            {data.effectiveState === 'public_indexable'
-              ? 'Proof-first public portfolio'
-              : 'Direct-link public portfolio'}
-          </span>
+          <span>Direct-link Public Page</span>
         </div>
       }
     >
@@ -225,8 +219,7 @@ export default async function PortfolioPage({
                   </h1>
                   <p className="text-sm text-foreground">{headline}</p>
                   <p className="text-sm text-muted-foreground">
-                    Public link is live. Search engines are{' '}
-                    {data.effectiveState === 'public_indexable' ? 'allowed.' : 'off by default.'}
+                    Direct link is live. Search engines are off for the MVP.
                   </p>
                 </div>
               </div>
@@ -253,8 +246,13 @@ export default async function PortfolioPage({
               </div>
 
               <p className="text-sm text-muted-foreground">
-                {publicBio || 'A proof-first public portfolio with public-safe details only.'}
+                {publicBio || 'A proof-first Public Page with public-safe details only.'}
               </p>
+
+              <TraceableSummaryBlock
+                summary={data.traceableSummary}
+                viewerIsOwner={viewerIsOwner}
+              />
             </div>
 
             {!viewerIsOwner ? (
@@ -400,20 +398,18 @@ export default async function PortfolioPage({
           </div>
 
           <div className="space-y-4">
-            <PublicProfileSection title="Selected trust summary">
+            <PublicProfileSection title="Proof snapshot">
               <div className="space-y-2">
+                <SummaryStat label="Public Proof Packs" value={`${selectedProofPacks.length}`} />
+                <SummaryStat label="Outcomes shown" value={`${selectedOutcomeHighlights.length}`} />
+                <SummaryStat label="Proof-backed skills" value={`${data.publicSkills.length}`} />
                 <SummaryStat
-                  label="Publication"
-                  value={
-                    data.effectiveState === 'public_indexable'
-                      ? 'Indexable public portfolio'
-                      : 'Direct-link public portfolio'
-                  }
-                />
-                <SummaryStat label="Selected Proof Packs" value={`${selectedProofPacks.length}`} />
-                <SummaryStat
-                  label="Verified checks"
+                  label="Scoped verifications"
                   value={`${data.signals.verifications.count}`}
+                />
+                <SummaryStat
+                  label="Public credentials"
+                  value={`${countPublicCredentials(selectedProofPacks)}`}
                 />
               </div>
               {publicTrustBadges.length > 0 ? (
@@ -457,7 +453,7 @@ export default async function PortfolioPage({
                   ))}
                 </div>
               ) : (
-                <PublicProfileEmptyState message="Skills are not shared publicly in this portfolio." />
+                <PublicProfileEmptyState message="Skills are not shared publicly on this Public Page." />
               )}
             </PublicProfileSection>
 
@@ -515,6 +511,99 @@ function ContactPill({ href, label, icon }: { href: string; label: string; icon?
       <span>{label}</span>
       <ExternalLink className="ml-auto h-4 w-4 text-muted-foreground" />
     </a>
+  );
+}
+
+function countPublicCredentials(
+  packs: Array<{ selectedEvidence?: Array<{ artifactKind?: string | null }> }>
+) {
+  return packs.reduce(
+    (count, pack) =>
+      count +
+      (pack.selectedEvidence ?? []).filter((item) => item.artifactKind === 'credential').length,
+    0
+  );
+}
+
+function TraceableSummaryBlock({
+  summary,
+  viewerIsOwner,
+}: {
+  summary: {
+    provenanceLabel: string;
+    hasEnoughData: boolean;
+    segments: Array<{
+      key: string;
+      label: string;
+      value: string;
+      state: 'ready' | 'fallback';
+      sources: Array<{ id: string; label: string; detail: string | null }>;
+    }>;
+  };
+  viewerIsOwner: boolean;
+}) {
+  const sourceEditHref =
+    '/app/i/profile?profileView=full&tab=proof_packs&summarySource=traceable-profile-summary';
+  const refreshHref =
+    '/app/i/profile?profileView=full&tab=proof_packs&summaryRefresh=traceable-profile-summary';
+
+  return (
+    <section className="mt-3 space-y-3 rounded-xl border border-[#E6E0D6] bg-[#FCFBF8]/80 p-3 shadow-sm">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">Scale / Focus / Context</h2>
+          <p className="text-xs text-muted-foreground">{summary.provenanceLabel}</p>
+        </div>
+        <Badge
+          variant="outline"
+          className={
+            summary.hasEnoughData
+              ? 'w-fit border-[#D7E8DE] text-proofound-forest'
+              : 'w-fit border-[#E8E2D8] text-muted-foreground'
+          }
+        >
+          {summary.hasEnoughData ? 'Traceable summary' : 'Needs more context'}
+        </Badge>
+      </div>
+
+      <div className="grid gap-2 md:grid-cols-3">
+        {summary.segments.map((segment) => (
+          <div
+            key={segment.key}
+            className="rounded-lg border border-white/60 bg-white/60 px-3 py-2 shadow-sm"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              {segment.label}
+            </p>
+            <p className="mt-1 text-sm leading-5 text-foreground">{segment.value}</p>
+            {segment.sources.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {segment.sources.map((source) => (
+                  <span
+                    key={`${segment.key}-${source.id}`}
+                    className="inline-flex max-w-full items-center rounded-full border border-[#D9D5CC] bg-[#F8F6F0] px-2 py-0.5 text-[11px] text-muted-foreground"
+                    title={source.detail ? `${source.label}: ${source.detail}` : source.label}
+                  >
+                    <span className="truncate">{source.label}</span>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+
+      {viewerIsOwner ? (
+        <div className="flex flex-wrap gap-2 border-t border-[#EFECE5] pt-3">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={sourceEditHref}>Edit source Proof Packs</Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href={refreshHref}>Refresh from current Proof Packs</Link>
+          </Button>
+        </div>
+      ) : null}
+    </section>
   );
 }
 

@@ -1,0 +1,986 @@
+# npm run launch:validate -- --output-dir .artifacts/project-source-refresh-2026-05-14/launch-validation-current
+startedAt=2026-05-14T11:21:31.826Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 launch:validate
+> node --import tsx ./scripts/final-launch-validation.ts --output-dir .artifacts/project-source-refresh-2026-05-14/launch-validation-current
+
+
+[launch:validate] Env and deploy readiness check: node ./scripts/check-deploy-readiness.mjs
+✅ Deploy readiness: all required env vars present.
+
+[launch:validate] Lint: npm run lint
+
+> proofound@0.1.0 lint
+> node ./scripts/lint-or-skip.js
+
+
+[launch:validate] Typecheck: npm run typecheck
+
+> proofound@0.1.0 typecheck
+> node --max-old-space-size=6144 ./node_modules/typescript/bin/tsc --noEmit --incremental false
+
+
+[launch:validate] Production build: npm run build
+
+> proofound@0.1.0 prebuild
+> node ./scripts/prebuild-clean-generated-state.mjs && node ./scripts/postbuild-cleanup.mjs && node ./scripts/check-deploy-readiness.mjs
+
+Removed stale generated build state: .next
+Removed stale generated build state: .next-dev-3000
+Removed stale generated build state: .next-dev-33100
+ℹ️ Skipping Next.js cache cleanup. Set NEXT_CLEAN_BUILD_CACHE=1 to force it.
+✅ Deploy readiness: all required env vars present.
+
+> proofound@0.1.0 build
+> next build
+
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+   ▲ Next.js 15.5.18
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     · serverActions
+     ⨯ webpackBuildWorker
+     · clientTraceMetadata
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (193kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+ ✓ Compiled successfully in 63s
+   Linting and checking validity of types ...
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/48) ...
+   Generating static pages (12/48) 
+   Generating static pages (24/48) 
+   Generating static pages (36/48) 
+ ✓ Generating static pages (48/48)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                     Size  First Load JS
+┌ ƒ /                                                        28.2 kB         336 kB
+├ ƒ /_not-found                                                718 B         255 kB
+├ ƒ /.well-known/security.txt                                  718 B         255 kB
+├ ƒ /403                                                       362 B         256 kB
+├ ƒ /accept-invite                                             718 B         255 kB
+├ ƒ /admin                                                     362 B         256 kB
+├ ƒ /admin/audit                                             10.5 kB         275 kB
+├ ƒ /admin/verification                                      13.8 kB         286 kB
+├ ƒ /api/admin/audit                                           717 B         255 kB
+├ ƒ /api/admin/internal-ops/queues                             719 B         255 kB
+├ ƒ /api/admin/internal-ops/queues/[id]                        717 B         255 kB
+├ ƒ /api/admin/organizations/[orgId]/audit                     716 B         255 kB
+├ ƒ /api/admin/organizations/[orgId]/verify                    718 B         255 kB
+├ ƒ /api/ai/assignments/clarify                                719 B         255 kB
+├ ƒ /api/ai/privacy-preflight/check                            719 B         255 kB
+├ ƒ /api/ai/proof-pack/suggest                                 719 B         255 kB
+├ ƒ /api/ai/start-from-cv/sessions                             719 B         255 kB
+├ ƒ /api/ai/start-from-cv/sessions/[sessionId]                 720 B         255 kB
+├ ƒ /api/ai/start-from-cv/sessions/[sessionId]/accept          718 B         255 kB
+├ ƒ /api/ai/start-from-cv/sessions/[sessionId]/discard         719 B         255 kB
+├ ƒ /api/ai/start-from-cv/sessions/[sessionId]/extract         719 B         255 kB
+├ ƒ /api/ai/start-from-cv/status                               718 B         255 kB
+├ ƒ /api/ai/suggestions/events                                 719 B         255 kB
+├ ƒ /api/ai/verifications/compose                              718 B         255 kB
+├ ƒ /api/analytics/events                                      718 B         255 kB
+├ ƒ /api/analytics/tour-event                                  718 B         255 kB
+├ ƒ /api/analytics/track                                       718 B         255 kB
+├ ƒ /api/analytics/web-vitals                                  717 B         255 kB
+├ ƒ /api/assignments                                           718 B         255 kB
+├ ƒ /api/assignments/[id]                                      718 B         255 kB
+├ ƒ /api/assignments/[id]/expertise-matrix                     717 B         255 kB
+├ ƒ /api/assignments/[id]/outcomes                             717 B         255 kB
+├ ƒ /api/assignments/[id]/pipeline                             717 B         255 kB
+├ ƒ /api/assignments/[id]/publish                              717 B         255 kB
+├ ƒ /api/candidate-invites/[token]                             719 B         255 kB
+├ ƒ /api/candidate-invites/[token]/claim                       718 B         255 kB
+├ ƒ /api/candidate-invites/[token]/proof-card                  718 B         255 kB
+├ ƒ /api/conversations                                         719 B         255 kB
+├ ƒ /api/conversations/[conversationId]                        717 B         255 kB
+├ ƒ /api/conversations/[conversationId]/messages               719 B         255 kB
+├ ƒ /api/conversations/[conversationId]/reveal                 719 B         255 kB
+├ ƒ /api/cron/account-deletion-workflow                        718 B         255 kB
+├ ƒ /api/cron/decision-reminders                               720 B         255 kB
+├ ƒ /api/cron/health-check                                     722 B         255 kB
+├ ƒ /api/cron/launch-synthetic-checks                          718 B         255 kB
+├ ƒ /api/cron/performance-check                                719 B         255 kB
+├ ƒ /api/cron/process-deletions                                717 B         255 kB
+├ ƒ /api/cron/refresh-matches                                  718 B         255 kB
+├ ƒ /api/cron/refresh-matches-worker                           717 B         255 kB
+├ ƒ /api/cron/send-deletion-reminders                          719 B         255 kB
+├ ƒ /api/cron/sla-enforcement                                  718 B         255 kB
+├ ƒ /api/csrf-token                                            720 B         255 kB
+├ ƒ /api/decisions                                             718 B         255 kB
+├ ƒ /api/decisions/window/[interviewId]                        718 B         255 kB
+├ ƒ /api/engagement-verifications/[id]                         718 B         255 kB
+├ ƒ /api/expertise/cv-import/wizard-apply                      719 B         255 kB
+├ ƒ /api/expertise/cv-import/wizard-extract                    719 B         255 kB
+├ ƒ /api/expertise/cv-import/wizard-extract/status             719 B         255 kB
+├ ƒ /api/expertise/cv-import/wizard-suggest                    718 B         255 kB
+├ ƒ /api/expertise/jd-to-l4                                    720 B         255 kB
+├ ƒ /api/expertise/taxonomy                                    718 B         255 kB
+├ ƒ /api/expertise/user-skills                                 718 B         255 kB
+├ ƒ /api/expertise/user-skills/[id]                            719 B         255 kB
+├ ƒ /api/expertise/user-skills/[id]/proofs                     720 B         255 kB
+├ ƒ /api/expertise/user-skills/[id]/proofs/[proofId]           720 B         255 kB
+├ ƒ /api/feature-flags                                         718 B         255 kB
+├ ƒ /api/feedback/[interviewId]                                717 B         255 kB
+├ ƒ /api/feedback/submit                                       719 B         255 kB
+├ ƒ /api/feedback/token/[token]                                718 B         255 kB
+├ ƒ /api/health                                                719 B         255 kB
+├ ƒ /api/individual/readiness                                  720 B         255 kB
+├ ƒ /api/interviews                                            718 B         255 kB
+├ ƒ /api/interviews/cancel                                     720 B         255 kB
+├ ƒ /api/interviews/complete                                   718 B         255 kB
+├ ƒ /api/interviews/edit                                       719 B         255 kB
+├ ƒ /api/interviews/no-show                                    719 B         255 kB
+├ ƒ /api/interviews/schedule                                   718 B         255 kB
+├ ƒ /api/location/autocomplete                                 717 B         255 kB
+├ ƒ /api/match/assignment                                      718 B         255 kB
+├ ƒ /api/match/explain/[matchId]                               718 B         255 kB
+├ ƒ /api/match/gates                                           718 B         255 kB
+├ ƒ /api/match/hide                                            719 B         255 kB
+├ ƒ /api/match/interest                                        718 B         255 kB
+├ ƒ /api/match/profile                                         718 B         255 kB
+├ ƒ /api/match/snoozed                                         718 B         255 kB
+├ ƒ /api/match/test                                            719 B         255 kB
+├ ƒ /api/match/visible-fields/[matchId]                        719 B         255 kB
+├ ƒ /api/matches/[id]/snooze                                   719 B         255 kB
+├ ƒ /api/matching-profile                                      717 B         255 kB
+├ ƒ /api/monitoring/health-diagnostics                         718 B         255 kB
+├ ƒ /api/monitoring/launch-status                              719 B         255 kB
+├ ƒ /api/monitoring/perf-status                                718 B         255 kB
+├ ƒ /api/org/[id]/matches/[matchId]/review                     718 B         255 kB
+├ ƒ /api/org/[id]/shortlist                                    718 B         255 kB
+├ ƒ /api/org/readiness                                         716 B         255 kB
+├ ƒ /api/organizations                                         717 B         255 kB
+├ ƒ /api/organizations/[orgId]                                 717 B         255 kB
+├ ƒ /api/organizations/[orgId]/assignments                     717 B         255 kB
+├ ƒ /api/organizations/[orgId]/audit/export                    717 B         255 kB
+├ ƒ /api/organizations/[orgId]/candidate-invites               719 B         255 kB
+├ ƒ /api/organizations/[orgId]/candidate-invites/[inviteId]    716 B         255 kB
+├ ƒ /api/organizations/[orgId]/team                            719 B         255 kB
+├ ƒ /api/organizations/[orgId]/visibility                      719 B         255 kB
+├ ƒ /api/performance/track                                     717 B         255 kB
+├ ƒ /api/portfolio/export                                      718 B         255 kB
+├ ƒ /api/portfolio/org/[slug]/export                           719 B         255 kB
+├ ƒ /api/portfolio/public/[handle]/export                      717 B         255 kB
+├ ƒ /api/portfolio/public/[handle]/summary                     718 B         255 kB
+├ ƒ /api/portfolio/text-pack                                   720 B         255 kB
+├ ƒ /api/portfolio/visibility                                  719 B         255 kB
+├ ƒ /api/profile                                               718 B         255 kB
+├ ƒ /api/profile/completeness                                  718 B         255 kB
+├ ƒ /api/profile/privacy-settings                              719 B         255 kB
+├ ƒ /api/profile/visibility                                    718 B         255 kB
+├ ƒ /api/proof-artifacts/[artifactId]/text-extraction          718 B         255 kB
+├ ƒ /api/proof-artifacts/[artifactId]/text-extraction/apply    717 B         255 kB
+├ ƒ /api/proof-artifacts/text-extraction/status                718 B         255 kB
+├ ƒ /api/upload/avatar                                         718 B         255 kB
+├ ƒ /api/upload/cover                                          717 B         255 kB
+├ ƒ /api/upload/document                                       721 B         255 kB
+├ ƒ /api/upload/status/[fileId]                                719 B         255 kB
+├ ƒ /api/user/account                                          717 B         255 kB
+├ ƒ /api/user/account/cancel-deletion                          719 B         255 kB
+├ ƒ /api/user/audit-log                                        720 B         255 kB
+├ ƒ /api/user/audit-log/purpose                                718 B         255 kB
+├ ƒ /api/user/consent                                          720 B         255 kB
+├ ƒ /api/user/consent/check                                    718 B         255 kB
+├ ƒ /api/user/email                                            717 B         255 kB
+├ ƒ /api/user/export                                           718 B         255 kB
+├ ƒ /api/user/me                                               719 B         255 kB
+├ ƒ /api/user/password                                         718 B         255 kB
+├ ƒ /api/user/privacy-settings                                 718 B         255 kB
+├ ƒ /api/verification/requests                                 719 B         255 kB
+├ ƒ /api/verification/requests/bundles/[requestId]             718 B         255 kB
+├ ƒ /api/verification/requests/custom                          719 B         255 kB
+├ ƒ /api/verification/requests/custom/artifacts                718 B         255 kB
+├ ƒ /api/verification/requests/email-hint                      718 B         255 kB
+├ ƒ /api/verification/requests/impact-story/[requestId]        718 B         255 kB
+├ ƒ /api/verification/requests/skill                           718 B         255 kB
+├ ƒ /api/verification/requests/skill/[requestId]               718 B         255 kB
+├ ƒ /api/verification/requests/skill/[requestId]/respond       718 B         255 kB
+├ ƒ /api/verification/status                                   717 B         255 kB
+├ ƒ /api/verification/work-email/send                          718 B         255 kB
+├ ƒ /api/verification/work-email/verify                        720 B         255 kB
+├ ƒ /api/verify/[token]                                        718 B         255 kB
+├ ƒ /api/verify/custom/[token]                                 721 B         255 kB
+├ ƒ /app/i/home                                                364 B         256 kB
+├ ƒ /app/i/interviews                                        6.12 kB         281 kB
+├ ƒ /app/i/matching                                          2.18 kB         263 kB
+├ ƒ /app/i/matching/preferences                              14.4 kB         320 kB
+├ ƒ /app/i/messages                                          1.22 kB         262 kB
+├ ƒ /app/i/portfolio                                           718 B         255 kB
+├ ƒ /app/i/profile                                             761 B         255 kB
+├ ƒ /app/i/settings                                          2.41 kB         263 kB
+├ ƒ /app/i/settings/audit-log                                9.59 kB         301 kB
+├ ƒ /app/i/settings/privacy                                  1.02 kB         262 kB
+├ ƒ /app/i/verifications                                       699 B         255 kB
+├ ƒ /app/interviews/[id]/feedback                              311 B         267 kB
+├ ƒ /app/o/[slug]/assignments                                  367 B         266 kB
+├ ƒ /app/o/[slug]/assignments/[id]/review                    8.09 kB         269 kB
+├ ƒ /app/o/[slug]/assignments/new                            29.4 kB         335 kB
+├ ƒ /app/o/[slug]/home                                        5.5 kB         268 kB
+├ ƒ /app/o/[slug]/interviews                                 25.1 kB         331 kB
+├ ƒ /app/o/[slug]/invitations/[token]                          718 B         255 kB
+├ ƒ /app/o/[slug]/matching                                     349 B         264 kB
+├ ƒ /app/o/[slug]/messages                                   11.6 kB         326 kB
+├ ƒ /app/o/[slug]/portfolio                                    719 B         255 kB
+├ ƒ /app/o/[slug]/profile                                    8.16 kB         271 kB
+├ ƒ /app/o/[slug]/shortlist                                    718 B         255 kB
+├ ƒ /auth/callback                                             717 B         255 kB
+├ ƒ /auth/login                                                717 B         255 kB
+├ ƒ /candidate-invite/[token]                                9.18 kB         272 kB
+├ ƒ /cookies                                                   349 B         256 kB
+├ ƒ /cookies/settings                                        9.13 kB         281 kB
+├ ƒ /dev/resolve-home                                          719 B         255 kB
+├ ƒ /feedback/[token]                                          311 B         267 kB
+├ ƒ /llms-full.txt                                             718 B         255 kB
+├ ƒ /llms.txt                                                  718 B         255 kB
+├ ƒ /login                                                   7.79 kB         323 kB
+├ ƒ /onboarding                                              13.5 kB         327 kB
+├ ƒ /portfolio/[handle]                                      1.53 kB         273 kB
+├ ƒ /portfolio/org/[slug]                                    1.25 kB         267 kB
+├ ƒ /privacy                                                   862 B         257 kB
+├ ƒ /reset-password                                          6.09 kB         269 kB
+├ ƒ /reset-password/confirm                                  6.96 kB         320 kB
+├ ƒ /robots.txt                                                719 B         255 kB
+├ ƒ /security.txt                                              718 B         255 kB
+├ ƒ /signup                                                  2.55 kB         322 kB
+├ ƒ /signup/individual                                         368 B         314 kB
+├ ƒ /signup/organization                                       370 B         314 kB
+├ ƒ /sitemap.xml                                               719 B         255 kB
+├ ƒ /terms                                                     861 B         257 kB
+├ ƒ /verify-email                                            4.65 kB         267 kB
+├ ƒ /verify-work-email                                       4.96 kB         266 kB
+├ ƒ /verify/[token]                                          10.7 kB         291 kB
+└ ƒ /verify/custom/[token]                                   5.57 kB         286 kB
++ First Load JS shared by all                                 254 kB
+  ├ chunks/4bd1b696-60762fde855476c8.js                      54.4 kB
+  ├ chunks/52774a7f-c7072f5bcfc73fc8.js                      37.4 kB
+  ├ chunks/71-80a839db7f7215fd.js                             158 kB
+  └ other shared chunks (total)                              4.49 kB
+
+
+ƒ Middleware                                                 63.3 kB
+
+ƒ  (Dynamic)  server-rendered on demand
+
+
+> proofound@0.1.0 postbuild
+> node ./scripts/postbuild-cleanup.mjs
+
+ℹ️ Skipping Next.js cache cleanup. Set NEXT_CLEAN_BUILD_CACHE=1 to force it.
+
+[launch:validate] Launch surface inventory tests: npm run test:launch:routes
+
+> proofound@0.1.0 test:launch:routes
+> npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 62ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 42ms
+ ✓ tests/api/launch-page-inventory.test.ts  (5 tests) 128ms
+ ✓ tests/api/archived-api-handlers-route.test.ts  (10 tests) 7ms
+
+ Test Files  4 passed (4)
+      Tests  25 passed (25)
+   Start at  13:24:25
+   Duration  2.06s (transform 312ms, setup 1.07s, collect 866ms, tests 239ms, environment 2.29s, prepare 320ms)
+
+
+[launch:validate] Launch page inventory tests: npm run test:launch:routes
+
+> proofound@0.1.0 test:launch:routes
+> npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 67ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 44ms
+ ✓ tests/api/launch-page-inventory.test.ts  (5 tests) 141ms
+ ✓ tests/api/archived-api-handlers-route.test.ts  (10 tests) 7ms
+
+      Tests  25 passed (25)
+ Test Files  4 passed (4)
+   Start at  13:24:28
+   Duration  1.53s (transform 290ms, setup 582ms, collect 747ms, tests 259ms, environment 1.28s, prepare 272ms)
+
+
+[launch:validate] Privacy/RLS baseline tests: npm run test:privacy
+
+> proofound@0.1.0 test:privacy
+> PROOFOUND_VITEST_TIMEOUT_MS=120000 node ./scripts/run-vitest-with-timeout.mjs --config vitest.supabase.config.ts tests/privacy/rls-policies.test.ts tests/privacy/ai-redaction.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (5) from .env.test -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (5) from .env.test -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🔧 Setting up test users...
+
+ ✓ tests/privacy/ai-redaction.test.ts  (2 tests) 3ms
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+✅ Test users created successfully
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🧹 Cleaning up test data...
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+✅ Cleanup complete
+
+ ✓ tests/privacy/rls-policies.test.ts  (20 tests) 33551ms
+
+ Test Files  2 passed (2)
+      Tests  22 passed (22)
+   Start at  13:24:30
+   Duration  34.39s (transform 394ms, setup 42ms, collect 924ms, tests 33.55s, environment 0ms, prepare 108ms)
+
+
+[launch:validate] Privacy/RLS extended tests: npm run test:privacy:extended
+
+> proofound@0.1.0 test:privacy:extended
+> PROOFOUND_VITEST_TIMEOUT_MS=180000 node ./scripts/run-vitest-with-timeout.mjs --config vitest.supabase.config.ts tests/privacy/rls-policies-extended.test.ts tests/privacy/rls-mvp-isolation.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (5) from .env.test -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (5) from .env.test -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+🔧 Setting up extended test users...
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+✅ Extended test users created
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+🧹 Cleaning up extended test data...
+
+ ✓ tests/privacy/rls-mvp-isolation.test.ts  (4 tests) 33973ms
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+✅ Extended cleanup complete
+
+ ✓ tests/privacy/rls-policies-extended.test.ts  (27 tests) 37417ms
+
+ Test Files  2 passed (2)
+      Tests  31 passed (31)
+   Start at  13:25:05
+   Duration  37.94s (transform 185ms, setup 26ms, collect 465ms, tests 71.39s, environment 0ms, prepare 86ms)
+
+
+[launch:validate] Upload privacy tests: npm run test:launch:upload
+
+> proofound@0.1.0 test:launch:upload
+> npm run test -- tests/lib/uploads-privacy.test.ts tests/lib/upload-validate-file.test.ts tests/lib/uploads-lifecycle-queue.test.ts tests/api/upload-document-route.test.ts tests/api/upload-cover-route.test.ts tests/api/upload-status-route.test.ts
+
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/lib/uploads-privacy.test.ts tests/lib/upload-validate-file.test.ts tests/lib/uploads-lifecycle-queue.test.ts tests/api/upload-document-route.test.ts tests/api/upload-cover-route.test.ts tests/api/upload-status-route.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/lib/uploads-privacy.test.ts  (14 tests) 8ms
+ ✓ tests/api/upload-status-route.test.ts  (2 tests) 9ms
+ ✓ tests/lib/upload-validate-file.test.ts  (4 tests) 8ms
+ ✓ tests/api/upload-cover-route.test.ts  (3 tests) 10ms
+stderr | tests/api/upload-cover-route.test.ts > POST /api/upload/cover > cleans up uploaded files when the organization update fails after ingest
+{"level":"error","event":"upload.cover_organization_update.failed","timestamp":"2026-05-14T11:25:45.757Z","orgId":"123e4567-e89b-42d3-a456-426614174000","status":500,"error":{"category":"unknown","message":"Unknown error"}}
+
+stderr | tests/api/upload-document-route.test.ts > POST /api/upload/document > returns a generic production response for storage failures without exposing path or filename
+{"level":"error","event":"upload.document.failed","timestamp":"2026-05-14T11:25:45.760Z","status":500,"error":{"category":"storage","name":"Error","message":"[REDACTED_STORAGE_ERROR]"}}
+
+ ✓ tests/api/upload-document-route.test.ts  (7 tests) 20ms
+ ✓ tests/lib/uploads-lifecycle-queue.test.ts  (13 tests) 13ms
+
+   Start at  13:25:44
+ Test Files  6 passed (6)
+      Tests  43 passed (43)
+   Duration  1.51s (transform 452ms, setup 931ms, collect 1.01s, tests 68ms, environment 2.01s, prepare 492ms)
+
+
+[launch:validate] Org review/reveal/decision/engagement tests: npm run test:launch:workflow
+
+> proofound@0.1.0 test:launch:workflow
+> npm run test -- tests/api/org-match-review-route.test.ts tests/api/interviews-schedule-route.test.ts tests/api/interviews-edit-route.test.ts tests/api/interviews-complete-route.test.ts tests/api/interviews-cancel-route.test.ts tests/api/decisions-route.test.ts tests/api/decisions-window-route.test.ts tests/api/engagement-verifications-route.test.ts tests/api/conversation-reveal-route.test.ts tests/lib/workflow-contracts.test.ts tests/lib/workflow-decision-record.test.ts tests/lib/workflow-idempotency.test.ts tests/lib/workflow-email-privacy.test.ts tests/lib/workflow-reveal-timeout.test.ts
+
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/org-match-review-route.test.ts tests/api/interviews-schedule-route.test.ts tests/api/interviews-edit-route.test.ts tests/api/interviews-complete-route.test.ts tests/api/interviews-cancel-route.test.ts tests/api/decisions-route.test.ts tests/api/decisions-window-route.test.ts tests/api/engagement-verifications-route.test.ts tests/api/conversation-reveal-route.test.ts tests/lib/workflow-contracts.test.ts tests/lib/workflow-decision-record.test.ts tests/lib/workflow-idempotency.test.ts tests/lib/workflow-email-privacy.test.ts tests/lib/workflow-reveal-timeout.test.ts
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/api/decisions-route.test.ts  (10 tests) 19ms
+ ✓ tests/lib/workflow-decision-record.test.ts  (3 tests) 4ms
+ ✓ tests/api/interviews-schedule-route.test.ts  (11 tests) 36ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/api/org-match-review-route.test.ts  (17 tests) 76ms
+ ✓ tests/api/interviews-cancel-route.test.ts  (3 tests) 16ms
+ ✓ tests/api/engagement-verifications-route.test.ts  (5 tests) 20ms
+ ✓ tests/api/interviews-edit-route.test.ts  (5 tests) 22ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+ ✓ tests/lib/workflow-email-privacy.test.ts  (11 tests) 39ms
+ ✓ tests/api/conversation-reveal-route.test.ts  (7 tests) 38ms
+ ✓ tests/api/decisions-window-route.test.ts  (2 tests) 12ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+ ✓ tests/lib/workflow-idempotency.test.ts  (3 tests) 11ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stderr | tests/api/interviews-complete-route.test.ts > POST /api/interviews/complete > returns success even if feedback invite issuance fails after completion
+Interview completion feedback invites failed Error: schema cache drift
+    at /Users/yuriibakurov/proofound/tests/api/interviews-complete-route.test.ts:130:50
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+
+ ✓ tests/api/interviews-complete-route.test.ts  (2 tests) 13ms
+ ✓ tests/lib/workflow-contracts.test.ts  (4 tests) 3ms
+ ✓ tests/lib/workflow-reveal-timeout.test.ts  (2 tests) 2ms
+
+ Test Files  14 passed (14)
+      Tests  85 passed (85)
+   Start at  13:25:47
+   Duration  2.81s (transform 1.37s, setup 2.28s, collect 7.40s, tests 311ms, environment 4.58s, prepare 1.03s)
+
+
+[launch:validate] Export/delete tests: npm run test -- tests/api/user-export-route.test.ts tests/api/portfolio-export-route.test.ts tests/api/portfolio-org-export-route.test.ts tests/api/public-portfolio-export-route.test.ts tests/api/user-account-lifecycle-routes.test.ts tests/api/expertise-user-skill-proof-delete-route.test.ts tests/api/expertise-verifications-sent-delete-route.test.ts tests/lib/export-download-filename.test.ts tests/lib/portfolio-export-data.test.ts tests/lib/uploads-export.test.ts
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/user-export-route.test.ts tests/api/portfolio-export-route.test.ts tests/api/portfolio-org-export-route.test.ts tests/api/public-portfolio-export-route.test.ts tests/api/user-account-lifecycle-routes.test.ts tests/api/expertise-user-skill-proof-delete-route.test.ts tests/api/expertise-verifications-sent-delete-route.test.ts tests/lib/export-download-filename.test.ts tests/lib/portfolio-export-data.test.ts tests/lib/uploads-export.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stderr | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns 401 when user is unauthenticated
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T11:25:51.564Z","flow":"export","requestId":"SQtiHXZLBiCZ","actorId":null,"actorType":"anonymous","objectRefs":{},"outcome":"rejected","state":"portfolio_export_unauthorized","latencyMs":1,"failureClass":"unauthorized"}
+
+stderr | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns 404 when profile export data is unavailable
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T11:25:51.575Z","flow":"export","requestId":"gLM_1lk0pKUZ","actorId":"user-1","actorType":"user_account","objectRefs":{},"outcome":"rejected","state":"portfolio_export_profile_missing","latencyMs":0,"failureClass":"profile_not_found"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns a non-empty PDF response with expected headers
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T11:25:51.577Z","flow":"export","requestId":"_TAgkNhOHD5f","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":1,"failureClass":null,"handle":"jane"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > still returns PDF when analytics emission fails
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T11:25:51.581Z","flow":"export","requestId":"jmOzMcKhgzm-","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":1,"failureClass":null,"handle":"jane"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns canonical JSON when format=json is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T11:25:51.582Z","flow":"export","requestId":"aQo86SugRkO-","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane","format":"json"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns text export when format=text is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T11:25:51.583Z","flow":"export","requestId":"znpP0U3AJs0Y","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane","format":"text"}
+
+ ✓ tests/api/portfolio-export-route.test.ts  (6 tests) 22ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ tests/lib/uploads-export.test.ts  (1 test) 3ms
+ ✓ tests/lib/export-download-filename.test.ts  (2 tests) 1ms
+ ✓ tests/api/user-export-route.test.ts  (3 tests) 10ms
+ ✓ tests/api/user-account-lifecycle-routes.test.ts  (8 tests) 36ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+ ✓ tests/api/expertise-verifications-sent-delete-route.test.ts  (9 tests) 22ms
+ ✓ tests/api/public-portfolio-export-route.test.ts  (9 tests) 13ms
+ ✓ tests/lib/portfolio-export-data.test.ts  (1 test) 3ms
+ ✓ tests/api/expertise-user-skill-proof-delete-route.test.ts  (4 tests) 12ms
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 404 when organization is missing
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T11:25:52.219Z","flow":"export","requestId":"Ck3s8j7AOheX","actorId":"user-1","actorType":"organization_member","objectRefs":{},"outcome":"rejected","state":"org_export_org_missing","latencyMs":1,"failureClass":"organization_not_found"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 when user is not an active org member
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T11:25:52.219Z","flow":"export","requestId":"O2gIjUZP0kIv","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":0,"failureClass":"forbidden"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 404 when organization export data is unavailable
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T11:25:52.220Z","flow":"export","requestId":"BMAmA7zCrdeH","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_profile_unavailable","latencyMs":0,"failureClass":"organization_profile_unavailable"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 401 when unauthenticated
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T11:25:52.214Z","flow":"export","requestId":"fFox0iuNkijB","actorId":null,"actorType":"anonymous","objectRefs":{},"outcome":"rejected","state":"org_export_unauthorized","latencyMs":0,"failureClass":"unauthorized"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns a downloadable PDF on success
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T11:25:52.221Z","flow":"export","requestId":"ppodgsX5S7Or","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":0,"failureClass":null,"orgSlug":"acme"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns canonical JSON when format=json is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T11:25:52.223Z","flow":"export","requestId":"RLxCnODDFVvu","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":0,"failureClass":null,"orgSlug":"acme","format":"json"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns text export when format=text is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-14T11:25:52.225Z","flow":"export","requestId":"u8ILpgFW_Mj-","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":0,"failureClass":null,"orgSlug":"acme","format":"text"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 for canonical reviewer membership
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T11:25:52.225Z","flow":"export","requestId":"G1x_U86fXu3j","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":0,"failureClass":"forbidden"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 for inactive canonical owner membership
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-14T11:25:52.226Z","flow":"export","requestId":"Qs346ylyeEWu","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":0,"failureClass":"forbidden"}
+
+ ✓ tests/api/portfolio-org-export-route.test.ts  (9 tests) 14ms
+
+ Test Files  10 passed (10)
+      Tests  52 passed (52)
+   Start at  13:25:50
+   Duration  1.70s (transform 918ms, setup 1.40s, collect 3.85s, tests 136ms, environment 2.64s, prepare 972ms)
+
+
+[launch:validate] Strict org corridor E2E: npm run test:e2e:org:strict
+
+> proofound@0.1.0 test:e2e:org:strict
+> NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node24.mjs test e2e/strict/organization.strict.spec.ts e2e/strict/org-corridor.strict.spec.ts --project=chromium --reporter=line --workers=1
+
+[1A[2K
+[WebServer] (node:13386) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:13389) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K
+
+[1A[2K[WebServer] <w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[WebServer] <w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+[1A[2K[WebServer] <w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[WebServer] <w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[WebServer] <w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[WebServer] <w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+Running 7 tests using 1 worker
+
+[1A[2K(node:13424) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+
+[1A[2K[WebServer] <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (193kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+[1A[2K[WebServer] <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+
+[1A[2K[WebServer] <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+[1A[2K(node:13424) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[1A[2K[1/7] [chromium] › e2e/strict/org-corridor.strict.spec.ts:220:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end
+[1A[2K[WebServer] (node:13478) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:13481) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[WebServer] (node:13495) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:13497) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:13510) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[WebServer] (node:13513) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:14159) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer]  ⨯ [Error: aborted] { code: [32m'ECONNRESET'[39m, digest: [32m'3306081583'[39m }
+
+[1A[2K[WebServer] (node:14188) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14199) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14200) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14225) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14276) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14393) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14476) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14503) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14548) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14563) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14564) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14690) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14692) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14740) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[WebServer] (node:14744) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:14794) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[WebServer] (node:14797) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:14812) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:15035) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:15131) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:15285) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2/7] [chromium] › e2e/strict/organization.strict.spec.ts:73:3 › Strict MVP Organization Flows (O-01..O-20) › O-02..O-04 org setup, team roles, and profile contracts are verifiable
+
+[1A[2K[WebServer] (node:15788) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:15789) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:15790) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[3/7] [chromium] › e2e/strict/organization.strict.spec.ts:106:3 › Strict MVP Organization Flows (O-01..O-20) › O-05..O-07 and O-17 assignment create/publish/manage lifecycle is strict
+[1A[2K[WebServer] (node:15807) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:15821) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[WebServer] (node:15822) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:15824) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:15882) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:15883) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:15887) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:15900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[WebServer] (node:15983) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:16138) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[4/7] [chromium] › e2e/strict/organization.strict.spec.ts:199:3 › Strict MVP Organization Flows (O-01..O-20) › O-08..O-12 ranked matches, shortlist, messaging, and interview prep are strict
+[1A[2K[WebServer] (node:16506) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:16976) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[WebServer] (node:17755) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:17757) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17758) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17773) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17774) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17788) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17803) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[5/7] [chromium] › e2e/strict/organization.strict.spec.ts:272:3 › Strict MVP Organization Flows (O-01..O-20) › O-07b draft autosave/update and resume-to-publish contract is strict
+
+[1A[2K[WebServer] (node:17819) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:17820) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[WebServer] {"level":"warn","event":"assignment.create.unknown_matrix_skills","timestamp":"2026-05-14T11:34:37.595Z","requestId":"NyZiUXc6VEfn","path":"/api/assignments","method":"POST","userId":"eeb3364b-d380-4dcc-a8a9-3c3ae2209f51","orgId":"f2a6cdb1-563f-4f9f-a838-28fb4c744986","unknownSkillCodes":["strict.resume.skill.1","strict.resume.skill.2","strict.resume.skill.3"]}
+[1A[2K[WebServer] (node:17835) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[WebServer] (node:17837) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17851) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:17853) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17880) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[WebServer] (node:17895) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:17896) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[6/7] [chromium] › e2e/strict/organization.strict.spec.ts:373:3 › Strict MVP Organization Flows (O-01..O-20) › O-13..O-16 interview, archived contract gating, and verification surfaces stay aligned
+[1A[2K[WebServer] (node:17913) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[WebServer] (node:17914) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[1A[2K[WebServer] (node:17928) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[7/7] [chromium] › e2e/strict/organization.strict.spec.ts:389:3 › Strict MVP Organization Flows (O-01..O-20) › O-18..O-20 team permissions and compliance settings are strict
+[1A[2K[WebServer] (node:17963) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17966) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17967) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17980) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17988) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17990) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] (node:17991) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[WebServer] {"level":"warn","event":"database.health.timeout.recovered","timestamp":"2026-05-14T11:35:51.511Z","error":"Timed out after 1200ms"}
+
+[1A[2K  Slow test file: [chromium] › e2e/strict/org-corridor.strict.spec.ts (5.5m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  7 passed (10.1m)
+
+[launch:validate] Production dependency audit: npm audit --omit=dev
+found 0 vulnerabilities
+{
+  "verdict": "GO",
+  "statusCounts": {
+    "PASS": 13,
+    "FAIL": 0,
+    "UNVERIFIED": 0,
+    "NOT APPLICABLE": 1
+  },
+  "p0BlockingGateIds": [],
+  "reportPath": "/Users/yuriibakurov/proofound/.artifacts/project-source-refresh-2026-05-14/launch-validation-current/final-launch-checklist-status.md",
+  "commandsPath": "/Users/yuriibakurov/proofound/.artifacts/project-source-refresh-2026-05-14/launch-validation-current/commands.json"
+}
+
+
+completedAt=2026-05-14T11:36:01.457Z
+exitCode=0
+durationMs=869631
+timedOut=false

@@ -8,9 +8,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/lib/api/fetch';
+import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 import type { StartFromCvDraftOutput } from '@/lib/ai/start-from-cv';
+import type { StartFromCvScaffoldingSurface } from '@/lib/ai/start-from-cv-contract';
 
 type StartFromCvDialogProps = {
+  surface: StartFromCvScaffoldingSurface;
   onApplyComplete?: () => void;
 };
 
@@ -30,6 +33,24 @@ const DRAFT_BUCKETS: Array<{ key: DraftBucket; label: string }> = [
   { key: 'artifactLinkDrafts', label: 'Artifact and link suggestions' },
   { key: 'unsupportedSkillDrafts', label: 'Unsupported skill suggestions' },
 ];
+
+const DRAFT_TITLE_FIELDS: Record<DraftBucket, string> = {
+  workContextDrafts: 'roleTitle',
+  educationContextDrafts: 'programTitle',
+  volunteeringContextDrafts: 'roleTitle',
+  proofPackIdeaDrafts: 'titleSuggestion',
+  artifactLinkDrafts: 'label',
+  unsupportedSkillDrafts: 'skillLabel',
+};
+
+const DRAFT_BODY_FIELDS: Record<DraftBucket, { key: string; list?: true }> = {
+  workContextDrafts: { key: 'shortContextSummary' },
+  educationContextDrafts: { key: 'learningProjectHints', list: true },
+  volunteeringContextDrafts: { key: 'contributionSummary' },
+  proofPackIdeaDrafts: { key: 'possibleClaim' },
+  artifactLinkDrafts: { key: 'sourceContext' },
+  unsupportedSkillDrafts: { key: 'sourceContext' },
+};
 
 function getDraftTitle(item: Record<string, unknown>) {
   return (
@@ -53,7 +74,28 @@ function getDraftBody(item: Record<string, unknown>) {
   );
 }
 
-export function StartFromCvDialog({ onApplyComplete }: StartFromCvDialogProps) {
+function getEditableDraftText(item: Record<string, unknown>, field: { key: string; list?: true }) {
+  const value = item[field.key];
+  if (field.list) {
+    return Array.isArray(value)
+      ? value.filter((entry) => typeof entry === 'string').join('\n')
+      : '';
+  }
+  return typeof value === 'string' ? value : '';
+}
+
+function normalizeEditableDraftText(value: string, field: { key: string; list?: true }) {
+  if (field.list) {
+    return value
+      .split(/\n+/)
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+      .slice(0, 5);
+  }
+  return value;
+}
+
+export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialogProps) {
   const [consented, setConsented] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [session, setSession] = useState<StartFromCvDraftOutput | null>(null);
@@ -73,7 +115,10 @@ export function StartFromCvDialog({ onApplyComplete }: StartFromCvDialogProps) {
       const sessionResponse = await apiFetch('/api/ai/start-from-cv/sessions', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ consentToProcessCv: true }),
+        body: JSON.stringify({
+          consentToProcessCv: true,
+          surface,
+        }),
       });
       const created = await sessionResponse.json();
       if (!sessionResponse.ok) {
@@ -164,6 +209,33 @@ export function StartFromCvDialog({ onApplyComplete }: StartFromCvDialogProps) {
     });
   }
 
+  function updateDraftField(
+    bucket: DraftBucket,
+    id: string,
+    field: { key: string; list?: true } | string,
+    value: string
+  ) {
+    const fieldConfig = typeof field === 'string' ? { key: field } : field;
+
+    setSession((current) => {
+      if (!current) return current;
+
+      const items = ((current[bucket] as Array<Record<string, unknown>>) || []).map((item) =>
+        String(item.id) === id
+          ? {
+              ...item,
+              [fieldConfig.key]: normalizeEditableDraftText(value, fieldConfig),
+            }
+          : item
+      );
+
+      return {
+        ...current,
+        [bucket]: items,
+      };
+    });
+  }
+
   return (
     <div className="space-y-5">
       <div className="rounded-lg border border-proofound-stone/60 p-4">
@@ -179,6 +251,9 @@ export function StartFromCvDialog({ onApplyComplete }: StartFromCvDialogProps) {
               <li>CV processing is optional.</li>
               <li>The CV may be processed by Google Cloud Document AI and Gemini if enabled.</li>
               <li>Extracted information becomes private draft suggestions only.</li>
+              {surface === START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE ? (
+                <li>Use it only as optional scaffolding before creating assignment proof.</li>
+              ) : null}
               <li>
                 Nothing is used for scoring, ranking, shortlisting, matching, or hiring decisions.
               </li>
@@ -241,36 +316,56 @@ export function StartFromCvDialog({ onApplyComplete }: StartFromCvDialogProps) {
           {DRAFT_BUCKETS.map(({ key, label }) => {
             const items = (session[key] as Array<Record<string, unknown>>) || [];
             if (items.length === 0) return null;
+            const titleField = DRAFT_TITLE_FIELDS[key];
+            const bodyField = DRAFT_BODY_FIELDS[key];
             return (
               <section key={key} className="space-y-2">
                 <h4 className="text-sm font-semibold text-foreground">{label}</h4>
                 <div className="space-y-2">
                   {items.map((item) => {
                     const id = String(item.id);
+                    const draftTitle = String(getDraftTitle(item));
                     return (
-                      <label
+                      <div
                         key={id}
                         className="flex gap-3 rounded-lg border border-proofound-stone/60 p-3 text-sm"
                       >
                         <Checkbox
+                          aria-label={`Use ${label}: ${draftTitle}`}
                           checked={acceptedIds.has(id)}
                           onCheckedChange={(value) => toggleAccepted(id, value === true)}
                         />
-                        <span className="space-y-1">
-                          <span className="block font-medium text-foreground">
-                            {String(getDraftTitle(item))}
-                          </span>
-                          <span className="block text-muted-foreground">
-                            {String(getDraftBody(item))}
-                          </span>
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <Input
+                            aria-label={`${label} title`}
+                            value={
+                              typeof item[titleField] === 'string'
+                                ? String(item[titleField])
+                                : draftTitle
+                            }
+                            onChange={(event) =>
+                              updateDraftField(key, id, titleField, event.currentTarget.value)
+                            }
+                          />
+                          <textarea
+                            aria-label={`${label} details`}
+                            value={
+                              getEditableDraftText(item, bodyField) || String(getDraftBody(item))
+                            }
+                            rows={3}
+                            className="flex w-full rounded-md border border-proofound-stone/70 bg-white px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-proofound-forest"
+                            onChange={(event) =>
+                              updateDraftField(key, id, bodyField, event.currentTarget.value)
+                            }
+                          />
                           {key === 'unsupportedSkillDrafts' ? (
                             <span className="block text-xs text-amber-700">
                               Unsupported draft. Requires proof and user confirmation. No trust,
                               matching, or verification lift.
                             </span>
                           ) : null}
-                        </span>
-                      </label>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>

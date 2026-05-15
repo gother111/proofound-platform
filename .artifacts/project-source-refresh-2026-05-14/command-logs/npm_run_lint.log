@@ -1,0 +1,13 @@
+# npm run lint
+startedAt=2026-05-14T10:29:11.124Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 lint
+> node ./scripts/lint-or-skip.js
+
+
+
+completedAt=2026-05-14T10:29:26.139Z
+exitCode=0
+durationMs=15015
+timedOut=false

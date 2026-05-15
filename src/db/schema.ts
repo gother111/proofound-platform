@@ -4047,6 +4047,9 @@ export const education = pgTable('education', {
   duration: text('duration').notNull(),
   skills: text('skills').notNull(), // Skills gained
   projects: text('projects').notNull(), // Meaningful projects
+  measuredOutcomes: jsonb('measured_outcomes')
+    .default(sql`'[]'::jsonb`)
+    .notNull(),
   verified: boolean('verified').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -4066,6 +4069,9 @@ export const volunteering = pgTable('volunteering', {
   impact: text('impact').notNull(), // What changed
   skillsDeployed: text('skills_deployed').notNull(), // Skills used
   personalWhy: text('personal_why').notNull(), // Personal connection to cause
+  measuredOutcomes: jsonb('measured_outcomes')
+    .default(sql`'[]'::jsonb`)
+    .notNull(),
   verified: boolean('verified').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

@@ -3,7 +3,6 @@ import { FastAverageColor } from 'fast-average-color';
 import { useEffect, useState } from 'react';
 
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
-import { CoverUpload } from '@/components/profile/CoverUpload';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { ProfileData } from '@/types/profile';
@@ -20,7 +19,7 @@ type ProfileHeroSectionProps = {
   onEditProfile: () => void;
   onToggleRedact: (enabled: boolean) => void;
   onShare: () => void;
-  onUpdateBasicInfo: (updates: { avatar?: string; coverImage?: string }) => void;
+  onUpdateBasicInfo: (updates: { avatar?: string }) => void;
 };
 
 export function ProfileHeroSection({
@@ -52,19 +51,14 @@ export function ProfileHeroSection({
 
   return (
     <div className="relative">
-      <CoverUpload
-        coverImage={profile.basicInfo.coverImage}
-        onUpload={(base64) => onUpdateBasicInfo({ coverImage: base64 })}
-      />
-
       {/* Ambient Glow */}
       <div
-        className="absolute top-[150px] left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] blur-[120px] pointer-events-none z-0 transition-colors duration-1000 rounded-full"
+        className="absolute top-[40px] left-1/2 -translate-x-1/2 w-full max-w-4xl h-[320px] blur-[120px] pointer-events-none z-0 transition-colors duration-1000 rounded-full"
         style={{ backgroundColor: dominantColor }}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="relative -mt-16 mb-8">
+        <div className="relative py-8">
           <Card className="p-6 md:p-8 border border-white/40 dark:border-stone-800/50 shadow-[0_8px_30px_rgb(0,0,0,0.06)] bg-white/70 dark:bg-stone-900/60 backdrop-blur-md rounded-3xl overflow-hidden relative">
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#7A9278] via-[#E0D5C7] to-[#C9A57B]" />
             <div className="flex flex-col sm:flex-row gap-6 items-start mt-2">

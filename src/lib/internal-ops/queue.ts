@@ -373,7 +373,7 @@ export function buildInternalOpsQueueDetail(
       break;
   }
 
-  pushField(fields, 'Public portfolio', getString(metadata, 'publicPortfolioStatus'));
+  pushField(fields, 'Public Page', getString(metadata, 'publicPortfolioStatus'));
   pushField(fields, 'Export status', getString(metadata, 'exportStatus'));
   pushField(fields, 'Deletion status', getString(metadata, 'deletionStatus'));
   pushField(fields, 'Smoke status', getString(metadata, 'smokeStatus'));

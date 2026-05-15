@@ -93,6 +93,6 @@ This map narrows the repo to the files most worth loading first for the current 
 - `.artifacts/launch-validation-YYYY-MM-DD/final-launch-checklist-status.json`
   - Machine-readable bundle for the same checklist run.
 
-Current generated paths: `.artifacts/launch-validation-2026-05-02/final-launch-checklist-status.md`, `.artifacts/launch-validation-2026-05-02/final-launch-checklist-status.json`
+Current generated paths: `.artifacts/launch-validation-2026-05-14/final-launch-checklist-status.md`, `.artifacts/launch-validation-2026-05-14/final-launch-checklist-status.json`
 
 <!-- final-launch-checklist:end -->

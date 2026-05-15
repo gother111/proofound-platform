@@ -1,0 +1,11 @@
+# node -v && npm -v
+startedAt=2026-05-14T10:29:10.913Z
+cwd=/Users/yuriibakurov/proofound
+v24.15.0
+11.12.1
+
+
+completedAt=2026-05-14T10:29:11.124Z
+exitCode=0
+durationMs=211
+timedOut=false

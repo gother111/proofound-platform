@@ -2,7 +2,6 @@
 
 import { eq } from 'drizzle-orm';
 
-import { calculateProfileCompletion } from '@/lib/profileStorage';
 import { getProfileData } from '@/actions/profile';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
@@ -19,7 +18,6 @@ type MatchVector = {
 };
 
 export interface DashboardMetrics {
-  portfolioReadinessPercent: number;
   proofStoriesCount: number;
   verifiedSkills: number;
   pendingVerifications: number;
@@ -32,7 +30,6 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
 
   if (isMockSupabaseEnabled()) {
     return {
-      portfolioReadinessPercent: 35,
       proofStoriesCount: 0,
       verifiedSkills: 0,
       pendingVerifications: 0,
@@ -78,11 +75,9 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     return total + highIntent;
   }, 0);
 
-  const portfolioReadinessPercent = calculateProfileCompletion(profileData);
   const proofStoriesCount = profileData.impactStories.length;
 
   return {
-    portfolioReadinessPercent,
     proofStoriesCount,
     verifiedSkills,
     pendingVerifications,

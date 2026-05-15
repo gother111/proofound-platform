@@ -4,10 +4,6 @@ import { useState } from 'react';
 
 export function useProfileViewState() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [isMissionEditorOpen, setIsMissionEditorOpen] = useState(false);
-  const [isVisionEditorOpen, setIsVisionEditorOpen] = useState(false);
-  const [isValuesEditorOpen, setIsValuesEditorOpen] = useState(false);
-  const [isCausesEditorOpen, setIsCausesEditorOpen] = useState(false);
   const [isImpactStoryFormOpen, setIsImpactStoryFormOpen] = useState(false);
   const [isExperienceFormOpen, setIsExperienceFormOpen] = useState(false);
   const [isEducationFormOpen, setIsEducationFormOpen] = useState(false);
@@ -17,14 +13,6 @@ export function useProfileViewState() {
   return {
     isEditProfileOpen,
     setIsEditProfileOpen,
-    isMissionEditorOpen,
-    setIsMissionEditorOpen,
-    isVisionEditorOpen,
-    setIsVisionEditorOpen,
-    isValuesEditorOpen,
-    setIsValuesEditorOpen,
-    isCausesEditorOpen,
-    setIsCausesEditorOpen,
     isImpactStoryFormOpen,
     setIsImpactStoryFormOpen,
     isExperienceFormOpen,

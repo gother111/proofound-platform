@@ -1,0 +1,11 @@
+
+> proofound@0.1.0 start
+> next start -p 64104
+
+   ▲ Next.js 15.5.18
+   - Local:        http://localhost:64104
+   - Network:      http://192.168.1.155:64104
+
+ ✓ Starting...
+ ✓ Ready in 620ms
+{"level":"warn","event":"database.health.timeout.recovered","timestamp":"2026-05-14T10:43:26.189Z","error":"Timed out after 1200ms"}

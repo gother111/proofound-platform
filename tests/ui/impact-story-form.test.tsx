@@ -74,7 +74,7 @@ function fillRequiredFields() {
     target: { value: 'Program Lead' },
   });
 
-  fireEvent.change(screen.getByLabelText(/Primary cause/i), {
+  fireEvent.change(screen.getByLabelText(/Primary area/i), {
     target: { value: 'education' },
   });
 

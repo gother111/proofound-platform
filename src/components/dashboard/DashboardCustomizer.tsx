@@ -84,10 +84,10 @@ const AVAILABLE_WIDGETS: AvailableWidget[] = [
     defaultSize: 'default',
   },
   {
-    id: 'profile-completion',
-    name: 'Profile Progress',
-    description: 'Your profile completion status',
-    icon: '📊',
+    id: 'proof-readiness',
+    name: 'Proof Readiness',
+    description: 'Proof and trust checklist status',
+    icon: '✓',
     defaultSize: 'small',
   },
   {

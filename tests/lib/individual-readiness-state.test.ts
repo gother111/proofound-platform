@@ -132,9 +132,6 @@ describe('getIndividualReadinessState', () => {
       headline: 'Builder',
       bio: null,
       location: 'Stockholm, Sweden',
-      mission: null,
-      values: [],
-      causes: [],
     });
     matchingProfilesFindFirstMock.mockResolvedValue({
       profileId: 'user-1',

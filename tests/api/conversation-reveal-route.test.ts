@@ -240,8 +240,12 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
       expect.objectContaining({
         to: 'candidate-1@example.com',
         subject: 'Reveal request waiting in Proofound',
-        html: expect.stringContaining('/app/i/messages?conversation=conversation-1'),
-        text: expect.stringContaining('/app/i/messages?conversation=conversation-1'),
+        html: expect.stringContaining(
+          '/app/i/communications?section=messages&amp;conversation=conversation-1'
+        ),
+        text: expect.stringContaining(
+          '/app/i/communications?section=messages&conversation=conversation-1'
+        ),
       })
     );
     const emailPayload = mocks.resendSend.mock.calls[0]?.[0];
@@ -328,16 +332,24 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
       expect.objectContaining({
         to: 'user-1@example.com',
         subject: 'Reveal approved in Proofound',
-        html: expect.stringContaining('/app/o/acme/messages?conversation=conversation-1'),
-        text: expect.stringContaining('/app/o/acme/messages?conversation=conversation-1'),
+        html: expect.stringContaining(
+          '/app/o/acme/communications?section=messages&amp;conversation=conversation-1'
+        ),
+        text: expect.stringContaining(
+          '/app/o/acme/communications?section=messages&conversation=conversation-1'
+        ),
       })
     );
     expect(mocks.resendSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'candidate-1@example.com',
         subject: 'Reveal approved in Proofound',
-        html: expect.stringContaining('/app/i/messages?conversation=conversation-1'),
-        text: expect.stringContaining('/app/i/messages?conversation=conversation-1'),
+        html: expect.stringContaining(
+          '/app/i/communications?section=messages&amp;conversation=conversation-1'
+        ),
+        text: expect.stringContaining(
+          '/app/i/communications?section=messages&conversation=conversation-1'
+        ),
       })
     );
   });
@@ -503,7 +515,9 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
       expect.objectContaining({
         to: 'user-1@example.com',
         subject: 'Reveal approved in Proofound',
-        html: expect.stringContaining('/app/o/acme/messages?conversation=conversation-1'),
+        html: expect.stringContaining(
+          '/app/o/acme/communications?section=messages&amp;conversation=conversation-1'
+        ),
       })
     );
     expect(mocks.logError).toHaveBeenCalledWith(

@@ -1,0 +1,50 @@
+# npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts tests/ui/command-palette-archived-links.test.tsx
+startedAt=2026-05-14T10:32:59.775Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts tests/ui/command-palette-archived-links.test.tsx
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+WebSocket server error:
+Error: listen EPERM: operation not permitted 0.0.0.0:24678
+    at Server.setupListenHandle [as _listen2] (node:net:1986:21)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
+    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
+    at Array.map (<anonymous>)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
+    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (53) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ src/lib/launch/__tests__/surface-policy.test.ts  (9 tests) 6ms
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 47ms
+ ✓ tests/api/launch-page-inventory.test.ts  (5 tests) 93ms
+ ✓ tests/ui/command-palette-archived-links.test.tsx  (1 test) 128ms
+
+ Test Files  4 passed (4)
+      Tests  19 passed (19)
+   Start at  12:33:00
+   Duration  940ms (transform 116ms, setup 489ms, collect 165ms, tests 274ms, environment 940ms, prepare 196ms)
+
+
+
+completedAt=2026-05-14T10:33:01.317Z
+exitCode=0
+durationMs=1542
+timedOut=false

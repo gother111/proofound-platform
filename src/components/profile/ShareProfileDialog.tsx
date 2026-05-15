@@ -54,8 +54,6 @@ const INDIVIDUAL_FIELD_LABELS: Record<string, string> = {
   education: 'Education',
   location: 'Location',
   profileImage: 'Profile Image',
-  values: 'Values',
-  causes: 'Causes',
 };
 
 const ORGANIZATION_FIELD_LABELS: Record<string, string> = {
@@ -103,8 +101,6 @@ function getDefaultFields(profileType: ProfileType) {
     education: false,
     location: true,
     profileImage: true,
-    values: true,
-    causes: true,
   } as Record<string, boolean | number>;
 }
 

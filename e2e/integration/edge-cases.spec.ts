@@ -3,7 +3,7 @@
  *
  * Tests edge cases and error handling:
  * - Unmatched interest (individual interested, org not)
- * - Profile incomplete preventing matching
+ * - Proof readiness preventing matching
  * - Assignment closed while in conversation
  * - Interview rescheduling
  * - Offer expiration
@@ -33,18 +33,9 @@ import {
   waitForOrgMatches,
   createAssignmentViaUI,
 } from '../helpers/organization-helpers';
-import {
-  navigateToProfile,
-  verifyProfileCompletion,
-} from '../helpers/profile-helpers';
-import {
-  navigateToExpertise,
-  waitForL1Domains,
-} from '../helpers/expertise-helpers';
-import {
-  navigateToMessages,
-  verifyMessageInConversation,
-} from '../helpers/cross-user-helpers';
+import { navigateToProfile } from '../helpers/profile-helpers';
+import { navigateToExpertise, waitForL1Domains } from '../helpers/expertise-helpers';
+import { navigateToMessages, verifyMessageInConversation } from '../helpers/cross-user-helpers';
 
 test.describe('Edge Cases - Unmatched Interest', () => {
   test('Individual expresses interest but organization does not reciprocate', async ({ page }) => {
@@ -72,9 +63,7 @@ test.describe('Edge Cases - Unmatched Interest', () => {
       await page.waitForTimeout(2000);
 
       // Verify interest was recorded (should see waiting message, not conversation)
-      const waitingMessage = page.locator(
-        'text=/waiting|pending|recorded/i'
-      );
+      const waitingMessage = page.locator('text=/waiting|pending|recorded/i');
       const hasWaitingMessage = await waitingMessage.isVisible().catch(() => false);
 
       // Should NOT redirect to messages (no mutual interest yet)
@@ -98,18 +87,19 @@ test.describe('Edge Cases - Incomplete Profiles', () => {
     await page.waitForTimeout(2000);
 
     // Should either:
-    // 1. Show setup wizard requiring profile completion
-    // 2. Show empty state with prompt to complete profile
+    // 1. Show setup wizard requiring proof readiness
+    // 2. Show empty state with prompt to start proof setup
     // 3. Show matches but with lower quality/quantity
 
     const setupWizard = page.locator(
-      'text=/complete profile|set up|missing information/i'
+      'text=/proof readiness|start proof|set up|missing information/i'
     );
-    const emptyState = page.locator('text=/no matches|complete your profile/i');
-    const hasPrompt = await setupWizard.isVisible().catch(() => false) || 
-                      await emptyState.isVisible().catch(() => false);
+    const emptyState = page.locator('text=/no matches|start proof|proof readiness/i');
+    const hasPrompt =
+      (await setupWizard.isVisible().catch(() => false)) ||
+      (await emptyState.isVisible().catch(() => false));
 
-    // Should have some indication that profile needs completion
+    // Should have some indication that proof readiness needs attention
     expect(hasPrompt || page.url().includes('/matching')).toBeTruthy();
   });
 
@@ -158,8 +148,7 @@ test.describe('Edge Cases - Assignment States', () => {
     await page.waitForLoadState('networkidle');
 
     // Verify assignments page loads
-    const isAssignmentsPage = page.url().includes('/assignments') || 
-                               page.url().includes('/login');
+    const isAssignmentsPage = page.url().includes('/assignments') || page.url().includes('/login');
     expect(isAssignmentsPage).toBeTruthy();
   });
 
@@ -190,8 +179,7 @@ test.describe('Edge Cases - Interview Scheduling', () => {
     await page.waitForLoadState('networkidle');
 
     // Verify interviews page loads
-    const isInterviewsPage = page.url().includes('/interviews') || 
-                             page.url().includes('/login');
+    const isInterviewsPage = page.url().includes('/interviews') || page.url().includes('/login');
     expect(isInterviewsPage).toBeTruthy();
   });
 
@@ -203,7 +191,7 @@ test.describe('Edge Cases - Interview Scheduling', () => {
     // For now, verify timezone handling in interview scheduling
     const testSlug = 'test-org';
     await page.goto(`/app/o/${testSlug}/interviews`);
-    
+
     // Look for timezone indicators or settings
     const timezoneIndicator = page.locator('text=/timezone|UTC|GMT/i');
     const hasTimezone = await timezoneIndicator.isVisible().catch(() => false);
@@ -284,8 +272,7 @@ test.describe('Edge Cases - Data Validation', () => {
     await page.waitForLoadState('networkidle');
 
     // Verify assignment creation page loads
-    const isAssignmentPage = page.url().includes('/assignments') || 
-                             page.url().includes('/login');
+    const isAssignmentPage = page.url().includes('/assignments') || page.url().includes('/login');
     expect(isAssignmentPage).toBeTruthy();
   });
 });
@@ -305,30 +292,18 @@ test.describe('Edge Cases - Concurrent Actions', () => {
 
     try {
       // Both navigate to matching
-      await Promise.all([
-        navigateToMatching(page1),
-        navigateToMatching(page2),
-      ]);
+      await Promise.all([navigateToMatching(page1), navigateToMatching(page2)]);
 
-      await Promise.all([
-        waitForMatches(page1),
-        waitForMatches(page2),
-      ]);
+      await Promise.all([waitForMatches(page1), waitForMatches(page2)]);
 
       // Both try to express interest simultaneously
       const matchCards1 = await getMatchCards(page1);
       const matchCards2 = await getMatchCards(page2);
 
       if ((await matchCards1.count()) > 0 && (await matchCards2.count()) > 0) {
-        await Promise.all([
-          clickInterested(page1, 0),
-          clickInterested(page2, 0),
-        ]);
+        await Promise.all([clickInterested(page1, 0), clickInterested(page2, 0)]);
 
-        await Promise.all([
-          page1.waitForTimeout(2000),
-          page2.waitForTimeout(2000),
-        ]);
+        await Promise.all([page1.waitForTimeout(2000), page2.waitForTimeout(2000)]);
       }
 
       // Verify both actions completed
@@ -342,4 +317,3 @@ test.describe('Edge Cases - Concurrent Actions', () => {
     }
   });
 });
-

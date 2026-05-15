@@ -400,7 +400,7 @@ export function DraggableDashboard({
         return (
           <NextBestActionsWidget
             useMockData={mockMode}
-            initialData={initialData?.profileCompleteness}
+            initialData={initialData?.proofReadiness}
             onActionClick={(actionId) =>
               logDashboardEvent('next_best_action_clicked', { actionId })
             }

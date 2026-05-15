@@ -1,1 +1,1 @@
-export { IndividualSetup } from './IndividualFirstProofSetup';
+export { IndividualSetup } from './IndividualContextProofSetup';

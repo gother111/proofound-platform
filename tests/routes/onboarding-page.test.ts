@@ -44,6 +44,7 @@ vi.mock('@/components/onboarding/OnboardingClient', () => ({
 }));
 
 import OnboardingPage from '@/app/onboarding/page';
+import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 
 describe('OnboardingPage', () => {
   const supabase = {
@@ -76,25 +77,65 @@ describe('OnboardingPage', () => {
       checks: { hasStructuredProofPack: true },
     });
 
-    await expect(OnboardingPage()).rejects.toThrow('NEXT_REDIRECT');
+    await expect(OnboardingPage({})).rejects.toThrow('NEXT_REDIRECT');
 
     expect(getIndividualProfileCompletionStateMock).toHaveBeenCalledWith('user-1');
     expect(resolveUserHomePathMock).toHaveBeenCalledWith(supabase);
     expect(redirectMock).toHaveBeenCalledWith('/app/i/home');
   });
 
-  it('routes new individual users into first-proof onboarding instead of profile completion setup', async () => {
+  it('routes new individual users into first-proof onboarding instead of broad profile setup', async () => {
     getIndividualProfileCompletionStateMock.mockResolvedValue({
       isCoreProfileComplete: false,
       checks: { hasStructuredProofPack: false },
     });
 
-    const result = await OnboardingPage();
+    const result = await OnboardingPage({});
 
     expect(result).toMatchObject({
       type: 'first-proof-onboarding',
       props: { initialPersona: 'individual' },
     });
     expect(resolveUserHomePathMock).not.toHaveBeenCalled();
+  });
+
+  it('passes the approved Start from CV scaffolding surface only for candidate invite onboarding', async () => {
+    getIndividualProfileCompletionStateMock.mockResolvedValue({
+      isCoreProfileComplete: false,
+      checks: { hasStructuredProofPack: false },
+    });
+
+    const result = await OnboardingPage({
+      searchParams: Promise.resolve({ next: '/candidate-invite/token-value' }),
+    });
+
+    expect(result).toMatchObject({
+      type: 'first-proof-onboarding',
+      props: {
+        initialPersona: 'individual',
+        individualCompletionPath: '/candidate-invite/token-value',
+        startFromCvScaffoldingSurface: START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE,
+      },
+    });
+  });
+
+  it('keeps external next URLs from enabling guest CV scaffolding', async () => {
+    getIndividualProfileCompletionStateMock.mockResolvedValue({
+      isCoreProfileComplete: false,
+      checks: { hasStructuredProofPack: false },
+    });
+
+    const result = await OnboardingPage({
+      searchParams: Promise.resolve({ next: 'https://example.com/candidate-invite/token-value' }),
+    });
+
+    expect(result).toMatchObject({
+      type: 'first-proof-onboarding',
+      props: {
+        initialPersona: 'individual',
+        individualCompletionPath: undefined,
+        startFromCvScaffoldingSurface: undefined,
+      },
+    });
   });
 });

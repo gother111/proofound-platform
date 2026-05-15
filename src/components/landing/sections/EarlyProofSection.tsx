@@ -3,7 +3,7 @@
 const stories = [
   {
     title: 'From scattered links to one proof-backed profile',
-    body: 'A career-switching designer turns work samples, context, and stakeholder-backed proof into one calm public proof portfolio that gives hiring teams stronger signal than CVs.',
+    body: 'A career-switching designer turns work samples, context, and stakeholder-backed proof into one calm Public Page proof snapshot that gives hiring teams stronger signal than CVs.',
     detail:
       'Each claim resolves to visible work, reviewer-backed context, and public-safe evidence that can travel cleanly into a structured assignment corridor.',
   },

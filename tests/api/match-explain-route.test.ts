@@ -20,6 +20,12 @@ const mocks = vi.hoisted(() => ({
   getReasonLedgerEntries: vi.fn(),
   normalizeFairnessStatus: vi.fn(),
   renderExplanationFromReasonCodes: vi.fn(),
+  sanitizeMatchReasonCodes: vi.fn((reasonCodes: string[]) =>
+    reasonCodes.filter(
+      (reasonCode) =>
+        reasonCode !== 'purpose_alignment_strong' && reasonCode !== 'purpose_alignment_partial'
+    )
+  ),
   resolveEffectiveScoreState: vi.fn(),
   getReviewCardProofPackMap: vi.fn(),
   buildProofFirstReviewCard: vi.fn(),
@@ -49,6 +55,7 @@ vi.mock('@/lib/matching/review-contract', () => ({
   getReviewCardProofPackMap: mocks.getReviewCardProofPackMap,
   normalizeFairnessStatus: mocks.normalizeFairnessStatus,
   renderExplanationFromReasonCodes: mocks.renderExplanationFromReasonCodes,
+  sanitizeMatchReasonCodes: mocks.sanitizeMatchReasonCodes,
   buildProofFirstReviewCard: mocks.buildProofFirstReviewCard,
 }));
 
@@ -77,7 +84,7 @@ const baseMatchRow = {
   stale_at: null,
   subscores_json: {
     skills_fit: 9100,
-    purpose_fit: 8800,
+    purpose_fit: null,
     constraints_fit: 8600,
     proof_fit: 8400,
   },
@@ -96,8 +103,6 @@ const baseMatchRow = {
   hours_min: 40,
   hours_max: 40,
   org_id: 'org-1',
-  profile_values: ['clarity'],
-  profile_causes: ['climate'],
 };
 
 function buildRankRows() {
@@ -250,6 +255,8 @@ describe('GET /api/match/explain/[matchId]', () => {
     );
     expect(body.reviewCard).not.toHaveProperty('displayName');
     expect(body.reviewCard).not.toHaveProperty('avatarUrl');
+    expect(body).not.toHaveProperty('pac');
+    expect(body.subscores).not.toHaveProperty('pac');
     expect(JSON.stringify(body.reviewCard)).not.toContain('http');
     expect(body.rank).toBeUndefined();
     expect(body.rankMode).toBe('band');

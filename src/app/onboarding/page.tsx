@@ -3,8 +3,33 @@ import { createClient } from '@/lib/supabase/server';
 import { resolveUserHomePath, getPersona, getUserOrganizations, getCurrentUser } from '@/lib/auth';
 import { OnboardingClient } from '@/components/onboarding/OnboardingClient';
 import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
+import { START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE } from '@/lib/ai/start-from-cv-contract';
 
-export default async function OnboardingPage() {
+type OnboardingPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function normalizeInternalNextPath(value: string | string[] | undefined) {
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  const nextPath = rawValue?.trim();
+
+  if (!nextPath || !nextPath.startsWith('/') || nextPath.startsWith('//')) {
+    return undefined;
+  }
+
+  if (/^[a-z][a-z\d+\-.]*:\/\//i.test(nextPath)) {
+    return undefined;
+  }
+
+  return nextPath.slice(0, 2000);
+}
+
+export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const individualCompletionPath = normalizeInternalNextPath(resolvedSearchParams.next);
+  const startFromCvScaffoldingSurface = individualCompletionPath?.startsWith('/candidate-invite/')
+    ? START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_SURFACE
+    : undefined;
   const supabase = await createClient();
   const {
     data: { user },
@@ -19,8 +44,7 @@ export default async function OnboardingPage() {
     redirect('/login');
   }
 
-  // Resolve the persona-specific first-run path. Individuals enter first-proof onboarding, not a
-  // broad profile-completion setup.
+  // Resolve the persona-specific first-run path. Individuals enter first-proof onboarding.
   const persona = await getPersona(user.id);
 
   // For organization members: check if they have an organization
@@ -34,7 +58,13 @@ export default async function OnboardingPage() {
     const completionState = await getIndividualProfileCompletionState(user.id);
     if (!completionState.checks.hasStructuredProofPack) {
       // Show individual first-proof onboarding until one context-anchored Proof Pack exists.
-      return <OnboardingClient initialPersona="individual" />;
+      return (
+        <OnboardingClient
+          initialPersona="individual"
+          individualCompletionPath={individualCompletionPath}
+          startFromCvScaffoldingSurface={startFromCvScaffoldingSurface}
+        />
+      );
     }
   } else if (persona === 'unknown') {
     // Check if they have an existing organization (legacy users)
@@ -61,14 +91,26 @@ export default async function OnboardingPage() {
 
       const completionState = await getIndividualProfileCompletionState(user.id);
       if (!completionState.checks.hasStructuredProofPack) {
-        return <OnboardingClient initialPersona="individual" />;
+        return (
+          <OnboardingClient
+            initialPersona="individual"
+            individualCompletionPath={individualCompletionPath}
+            startFromCvScaffoldingSurface={startFromCvScaffoldingSurface}
+          />
+        );
       }
 
       redirect('/app/i/home');
     }
 
     // Truly new user - show persona choice
-    return <OnboardingClient initialPersona={null} />;
+    return (
+      <OnboardingClient
+        initialPersona={null}
+        individualCompletionPath={individualCompletionPath}
+        startFromCvScaffoldingSurface={startFromCvScaffoldingSurface}
+      />
+    );
   }
 
   // Profile is complete, redirect to their home page

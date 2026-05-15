@@ -229,7 +229,7 @@ export function OrgMatchingCard({
           </span>
         </div>
         <Link
-          href={`/app/o/${orgSlug}/matching`}
+          href={`/app/o/${orgSlug}/assignments`}
           className="text-xs hover:underline"
           style={{ color: '#1C4D3A' }}
         >
@@ -352,7 +352,7 @@ export function OrgMatchingCard({
           <Briefcase className="w-3 h-3" />
           <span>{assignments.total} total assignments</span>
         </div>
-        <Link href={`/app/o/${orgSlug}/matching`}>
+        <Link href={`/app/o/${orgSlug}/assignments`}>
           <Button
             size="sm"
             variant="ghost"

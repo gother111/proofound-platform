@@ -54,6 +54,51 @@ function buildProjection() {
     publicBio: 'I build measurable change.',
     publicSkills: ['Strategy'],
     publicProofCount: 1,
+    traceableSummary: {
+      provenanceLabel: 'Generated from public-safe Proof Packs and context tokens',
+      hasEnoughData: true,
+      segments: [
+        {
+          key: 'scale',
+          label: 'Scale',
+          value: 'Company size: 11-50',
+          state: 'ready',
+          sources: [
+            {
+              id: 'pack-1',
+              label: 'Proof Pack: Strategy delivery',
+              detail: 'Strategy',
+            },
+          ],
+        },
+        {
+          key: 'focus',
+          label: 'Focus',
+          value: 'Proof-supported skills: Strategy',
+          state: 'ready',
+          sources: [
+            {
+              id: 'public-proof-supported-skills',
+              label: 'Public Proof Packs',
+              detail: 'Proof-supported skill links',
+            },
+          ],
+        },
+        {
+          key: 'context',
+          label: 'Context',
+          value: 'Industry: Proof-first hiring',
+          state: 'ready',
+          sources: [
+            {
+              id: 'pack-1',
+              label: 'Proof Pack: Strategy delivery',
+              detail: 'Strategy',
+            },
+          ],
+        },
+      ],
+    },
     featuredProofs: [],
     visibility: {
       header: true,
@@ -143,10 +188,10 @@ function buildProjection() {
     },
     metadata: {
       path: '/portfolio/jane',
-      title: 'Proofound public portfolio',
-      description: 'Shareable by direct link on Proofound.',
-      ogTitle: 'Proofound public portfolio',
-      ogDescription: 'Shareable by direct link on Proofound.',
+      title: 'Proofound Public Page',
+      description: 'A proof snapshot shared by direct link on Proofound.',
+      ogTitle: 'Proofound Public Page',
+      ogDescription: 'A proof snapshot shared by direct link on Proofound.',
       useGenericPreview: true,
     },
     jsonLd: {
@@ -227,7 +272,7 @@ describe('public portfolio access consistency', () => {
       }
     );
 
-    expect(screen.getByRole('heading', { name: 'Portfolio unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Public Page unavailable' })).toBeInTheDocument();
     expect(summaryResponse.status).toBe(404);
     expect(await summaryResponse.json()).toEqual({ error: 'Profile not found' });
     expect(exportResponse.status).toBe(404);

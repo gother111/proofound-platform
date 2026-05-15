@@ -131,24 +131,18 @@ async function testProfileFlows(): Promise<void> {
   // I-05 to I-10: Profile Setup
   console.log('Testing Individual Flows: Profile Setup (I-05 to I-10)...');
 
-  // I-06: Mission & Vision - check profile fields
+  // I-06: Proof-first profile setup - check canonical proof pack table
   try {
-    const profileFields = await db
-      .select({
-        mission: profiles.mission,
-        vision: profiles.vision,
-      })
-      .from(profiles)
-      .limit(1);
+    await db.execute(sql`SELECT 1 FROM proof_packs LIMIT 1`);
     results.push({
-      flow: 'I-06: Mission & Vision (DB schema)',
+      flow: 'I-06: Proof-first profile setup (DB schema)',
       status: 'pass',
-      message: 'Mission and Vision fields exist',
+      message: 'Proof Pack table exists',
       dbVerified: true,
     });
   } catch (error) {
     results.push({
-      flow: 'I-06: Mission & Vision (DB schema)',
+      flow: 'I-06: Proof-first profile setup (DB schema)',
       status: 'fail',
       message: error instanceof Error ? error.message : 'Unknown error',
       dbVerified: false,

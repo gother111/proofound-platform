@@ -40,7 +40,13 @@ describe('ExperienceForm', () => {
     const onOpenChange = vi.fn();
 
     render(
-      <ExperienceForm open={true} onOpenChange={onOpenChange} onSave={onSave} {...overrides} />
+      <ExperienceForm
+        open={true}
+        onOpenChange={onOpenChange}
+        onSave={onSave}
+        availableSkills={['Product strategy', 'Operations design']}
+        {...overrides}
+      />
     );
 
     return { onSave, onOpenChange };
@@ -58,6 +64,7 @@ describe('ExperienceForm', () => {
     fireEvent.change(screen.getByPlaceholderText(/Hiring cycle time/i), {
       target: { value: 'Reduced hiring cycle time' },
     });
+    fireEvent.click(screen.getByRole('button', { name: 'Product strategy' }));
 
     if (!includeProject) {
       return;
@@ -100,6 +107,10 @@ describe('ExperienceForm', () => {
         measuredOutcomes: [
           expect.objectContaining({
             name: 'Reduced hiring cycle time',
+            supportingSkills: ['Product strategy'],
+            claimStatus: 'claimed',
+            verificationStatus: 'unverified',
+            visibility: 'private_context',
           }),
         ],
         projectEntries: [

@@ -149,7 +149,7 @@ export async function notifyIntroAccepted(
     type: 'intro_accepted',
     title: 'Intro Accepted!',
     message: `${matchedWithName} is interested in connecting with you`,
-    actionUrl: `/app/i/messages`,
+    actionUrl: `/app/i/communications?section=messages`,
     entityType: 'match',
     entityId: matchId,
   });
@@ -169,7 +169,7 @@ export async function notifyMessageReceived(
     type: 'message_received',
     title: `New message from ${senderName}`,
     message: messagePreview.substring(0, 100),
-    actionUrl: `/app/i/messages?conversation=${conversationId}`,
+    actionUrl: `/app/i/communications?section=messages&conversation=${conversationId}`,
     entityType: 'conversation',
     entityId: conversationId,
   });
@@ -250,7 +250,7 @@ export async function notifyInterviewScheduled(
     type: 'interview_scheduled',
     title: 'Interview Scheduled',
     message: `Your interview with ${orgName} is scheduled for ${interviewDate.toLocaleDateString()}`,
-    actionUrl: `/app/i/interviews/${interviewId}`,
+    actionUrl: `/app/i/communications?section=interviews&interview=${interviewId}`,
     entityType: 'interview',
     entityId: interviewId,
     metadata: { interviewDate: interviewDate.toISOString() },

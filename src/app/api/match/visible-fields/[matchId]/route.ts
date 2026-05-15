@@ -26,8 +26,6 @@ const PROFILE_VISIBILITY_DEFAULTS: Record<string, ProfileVisibilityLevel> = {
   display_name: 'public',
   headline: 'public',
   location: 'network_only',
-  values: 'public',
-  causes: 'public',
   skills: 'public',
 };
 
@@ -35,8 +33,6 @@ const FIELD_TO_VISIBILITY_COLUMN: Record<string, string> = {
   name: 'display_name',
   headline: 'headline',
   location: 'location',
-  values: 'values',
-  causes: 'causes',
   skills: 'skills',
 };
 
@@ -47,8 +43,6 @@ const SENSITIVE_FIELDS = new Set([
   'headline',
   'bio',
   'skills',
-  'values',
-  'causes',
   'linkedin_url',
   'compensation',
 ]);
@@ -103,7 +97,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
 
     // Get individual's profile (extended info)
     const profile = await db.execute(sql`
-      SELECT headline, bio, skills, location, values, causes, linkedin_profile_url
+      SELECT headline, bio, skills, location, linkedin_profile_url
       FROM individual_profiles
       WHERE user_id = ${user.id}
     `);
@@ -125,7 +119,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
     let visibilityResolutionFailed = false;
     try {
       const visibilityRows = await db.execute(sql`
-        SELECT display_name, headline, location, values, causes, skills
+        SELECT display_name, headline, location, skills
         FROM profile_field_visibility
         WHERE profile_id = ${user.id}
         LIMIT 1
@@ -153,8 +147,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
       },
       { field: 'bio', label: 'Biography', value: profileData.bio },
       { field: 'skills', label: 'Skills', value: profileData.skills || [] },
-      { field: 'values', label: 'Core Values', value: profileData.values || [] },
-      { field: 'causes', label: 'Causes', value: profileData.causes || [] },
       {
         field: 'linkedin_url',
         label: 'LinkedIn',

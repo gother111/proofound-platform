@@ -1,0 +1,104 @@
+# npm run test:privacy
+startedAt=2026-05-14T10:32:55.697Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 test:privacy
+> PROOFOUND_VITEST_TIMEOUT_MS=120000 node ./scripts/run-vitest-with-timeout.mjs --config vitest.supabase.config.ts tests/privacy/rls-policies.test.ts tests/privacy/ai-redaction.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+WebSocket server error:
+Error: listen EPERM: operation not permitted 0.0.0.0:24678
+    at Server.setupListenHandle [as _listen2] (node:net:1986:21)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
+    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
+    at Array.map (<anonymous>)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
+    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (10) from .env.test -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (10) from .env.test -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🔧 Setting up test users...
+
+stderr | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND cjpfrgmsxwxhuomnvciq.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'cjpfrgmsxwxhuomnvciq.supabase.co'
+  }
+}
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🧹 Cleaning up test data...
+
+ ❯ tests/privacy/rls-policies.test.ts  (20 tests) 33ms
+ ✓ tests/privacy/ai-redaction.test.ts  (2 tests) 3ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+Error: Failed to create test user alice_rls_test+1778754777152@test.com: fetch failed
+ ❯ createTestUser tests/privacy/helpers/supabase-test-client.ts:184:11
+ ❯ tests/privacy/rls-policies.test.ts:92:13
+
+    183|  * @param userId - UUID of the user to delete
+    184|  * 
+    185|  * Example:
+       |       ^
+    186|  * ```typescript
+    187|  * await deleteTestUser(alice.id);
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+TypeError: Cannot read properties of undefined (reading 'id')
+ ❯ tests/privacy/rls-policies.test.ts:127:33
+ FAIL  tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 passed (22)
+    126|       const { data, error } = await aliceClient
+    127|         .from('profiles')
+    128|         .select('*')
+       |       ^
+    129|         .eq('id', alice.id)
+    130|         .single();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+   Start at  12:32:56
+   Duration  1.20s (transform 464ms, setup 37ms, collect 1.08s, tests 36ms, environment 0ms, prepare 133ms)
+
+
+
+completedAt=2026-05-14T10:32:57.551Z
+exitCode=1
+durationMs=1854
+timedOut=false

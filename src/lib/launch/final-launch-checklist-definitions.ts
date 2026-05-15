@@ -181,7 +181,7 @@ export function buildFinalLaunchChecklistDefinitions({
     {
       id: 'product_public_portfolio_safe_and_separate',
       section: 'Product',
-      label: 'Public portfolio is calm, safe, and separate from review reveal',
+      label: 'Public Page is calm, safe, and separate from review reveal',
       authorityRefs: [
         'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
         'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md',
@@ -211,7 +211,7 @@ export function buildFinalLaunchChecklistDefinitions({
             sourceLabel: 'Launch bundle plus verification evidence',
             status: 'PASS',
             summary:
-              'Fresh smoke, blind-review coverage, and consented reveal evidence all point to a privacy-safe public portfolio that stays separate from reveal.',
+              'Fresh smoke, blind-review coverage, and consented reveal evidence all point to a privacy-safe Public Page that stays separate from reveal.',
             evidence: [
               {
                 label: 'Launch smoke gate',

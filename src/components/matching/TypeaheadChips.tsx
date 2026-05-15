@@ -22,7 +22,7 @@ interface TypeaheadChipsProps {
 
 /**
  * Multi-select chip input with typeahead filtering.
- * Used for values, causes, and skill selection from controlled taxonomies.
+ * Used for tag and skill selection from controlled taxonomies.
  */
 export function TypeaheadChips({
   options,

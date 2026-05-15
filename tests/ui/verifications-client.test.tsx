@@ -138,6 +138,71 @@ describe('VerificationsClient', () => {
     expect(screen.getByText('All')).toBeInTheDocument();
   });
 
+  it('filters verification state buckets and sorts the list by scope', () => {
+    const incomingRequests = [
+      makeRequest({
+        id: 'recent-active',
+        status: 'accepted',
+        proofLabel: 'Z skill proof',
+        claimSummary: 'A scoped TypeScript skill claim.',
+        createdAt: '2026-03-03T10:00:00.000Z',
+      }),
+      makeRequest({
+        id: 'attention-failed',
+        subjectType: 'impact_story',
+        subjectId: 'impact-1',
+        verificationKind: 'impact_attestation',
+        requestKind: 'impact_attestation',
+        status: 'failed',
+        proofLabel: 'Alpha outcome proof',
+        claimSummary: 'An outcome confirmation needs manual attention.',
+        createdAt: '2026-03-01T10:00:00.000Z',
+      }),
+      makeRequest({
+        id: 'stale-active',
+        status: 'accepted',
+        proofLabel: 'Gamma stale proof',
+        expiresAt: '2020-01-01T00:00:00.000Z',
+        createdAt: '2026-03-02T10:00:00.000Z',
+      }),
+      makeRequest({
+        id: 'corrected-record',
+        status: 'corrected',
+        proofLabel: 'Beta corrected proof',
+        createdAt: '2026-02-28T10:00:00.000Z',
+      }),
+    ];
+
+    render(
+      <VerificationsClient
+        incomingRequests={incomingRequests}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+      />
+    );
+
+    expect(screen.getAllByTestId('verification-request-row')[0]).toHaveTextContent('Z skill proof');
+
+    fireEvent.click(screen.getByRole('button', { name: /Needs attention/i }));
+    expect(screen.getByText('Alpha outcome proof')).toBeInTheDocument();
+    expect(screen.queryByText('Z skill proof')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Expired \/ stale/i }));
+    expect(screen.getByText('Gamma stale proof')).toBeInTheDocument();
+    expect(screen.queryByText('Alpha outcome proof')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Revoked \/ corrected/i }));
+    expect(screen.getByText('Beta corrected proof')).toBeInTheDocument();
+    expect(screen.queryByText('Gamma stale proof')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /^All/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Scope$/i }));
+
+    const rows = screen.getAllByTestId('verification-request-row');
+    expect(rows[0]).toHaveTextContent('Alpha outcome proof');
+    expect(rows[1]).toHaveTextContent('Beta corrected proof');
+  });
+
   it('renders incoming impact-story requests in read-only mode', () => {
     const incomingRequests = [
       makeRequest({
@@ -180,8 +245,9 @@ describe('VerificationsClient', () => {
     expect(
       screen.getByText('Use the emailed link to respond to this proof confirmation request.')
     ).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /accept/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /decline/i })).not.toBeInTheDocument();
+    const incomingRow = screen.getByText('Climate adaptation rollout').closest('[role="listitem"]');
+    expect(incomingRow).not.toBeNull();
+    expect(within(incomingRow as HTMLElement).queryByRole('button')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /^Sent/i })).toBeInTheDocument();
   });
 

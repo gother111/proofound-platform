@@ -1,0 +1,260 @@
+> proofound@0.1.0 prebuild
+> node ./scripts/prebuild-clean-generated-state.mjs && node ./scripts/postbuild-cleanup.mjs && node ./scripts/check-deploy-readiness.mjs
+
+Removed stale generated build state: .next
+Removed stale generated build state: .next-dev-3000
+Removed stale generated build state: .next-dev-33100
+ℹ️ Skipping Next.js cache cleanup. Set NEXT_CLEAN_BUILD_CACHE=1 to force it.
+✅ Deploy readiness: all required env vars present.
+
+> proofound@0.1.0 build
+> next build
+
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   ▲ Next.js 15.5.18
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     · serverActions
+     ⨯ webpackBuildWorker
+     · clientTraceMetadata
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (193kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+ ✓ Compiled successfully in 63s
+   Linting and checking validity of types ...
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/48) ...
+   Generating static pages (12/48) 
+   Generating static pages (24/48) 
+   Generating static pages (36/48) 
+ ✓ Generating static pages (48/48)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                     Size  First Load JS
+┌ ƒ /                                                        28.2 kB         336 kB
+├ ƒ /_not-found                                                718 B         255 kB
+├ ƒ /.well-known/security.txt                                  718 B         255 kB
+├ ƒ /403                                                       362 B         256 kB
+├ ƒ /accept-invite                                             718 B         255 kB
+├ ƒ /admin                                                     362 B         256 kB
+├ ƒ /admin/audit                                             10.5 kB         275 kB
+├ ƒ /admin/verification                                      13.8 kB         286 kB
+├ ƒ /api/admin/audit                                           717 B         255 kB
+├ ƒ /api/admin/internal-ops/queues                             719 B         255 kB
+├ ƒ /api/admin/internal-ops/queues/[id]                        717 B         255 kB
+├ ƒ /api/admin/organizations/[orgId]/audit                     716 B         255 kB
+├ ƒ /api/admin/organizations/[orgId]/verify                    718 B         255 kB
+├ ƒ /api/ai/assignments/clarify                                719 B         255 kB
+├ ƒ /api/ai/privacy-preflight/check                            719 B         255 kB
+├ ƒ /api/ai/proof-pack/suggest                                 719 B         255 kB
+├ ƒ /api/ai/start-from-cv/sessions                             719 B         255 kB
+├ ƒ /api/ai/start-from-cv/sessions/[sessionId]                 720 B         255 kB
+├ ƒ /api/ai/start-from-cv/sessions/[sessionId]/accept          718 B         255 kB
+├ ƒ /api/ai/start-from-cv/sessions/[sessionId]/discard         719 B         255 kB
+├ ƒ /api/ai/start-from-cv/sessions/[sessionId]/extract         719 B         255 kB
+├ ƒ /api/ai/start-from-cv/status                               718 B         255 kB
+├ ƒ /api/ai/suggestions/events                                 719 B         255 kB
+├ ƒ /api/ai/verifications/compose                              718 B         255 kB
+├ ƒ /api/analytics/events                                      718 B         255 kB
+├ ƒ /api/analytics/tour-event                                  718 B         255 kB
+├ ƒ /api/analytics/track                                       718 B         255 kB
+├ ƒ /api/analytics/web-vitals                                  717 B         255 kB
+├ ƒ /api/assignments                                           718 B         255 kB
+├ ƒ /api/assignments/[id]                                      718 B         255 kB
+├ ƒ /api/assignments/[id]/expertise-matrix                     717 B         255 kB
+├ ƒ /api/assignments/[id]/outcomes                             717 B         255 kB
+├ ƒ /api/assignments/[id]/pipeline                             717 B         255 kB
+├ ƒ /api/assignments/[id]/publish                              717 B         255 kB
+├ ƒ /api/candidate-invites/[token]                             719 B         255 kB
+├ ƒ /api/candidate-invites/[token]/claim                       718 B         255 kB
+├ ƒ /api/candidate-invites/[token]/proof-card                  718 B         255 kB
+├ ƒ /api/conversations                                         719 B         255 kB
+├ ƒ /api/conversations/[conversationId]                        717 B         255 kB
+├ ƒ /api/conversations/[conversationId]/messages               719 B         255 kB
+├ ƒ /api/conversations/[conversationId]/reveal                 719 B         255 kB
+├ ƒ /api/cron/account-deletion-workflow                        718 B         255 kB
+├ ƒ /api/cron/decision-reminders                               720 B         255 kB
+├ ƒ /api/cron/health-check                                     722 B         255 kB
+├ ƒ /api/cron/launch-synthetic-checks                          718 B         255 kB
+├ ƒ /api/cron/performance-check                                719 B         255 kB
+├ ƒ /api/cron/process-deletions                                717 B         255 kB
+├ ƒ /api/cron/refresh-matches                                  718 B         255 kB
+├ ƒ /api/cron/refresh-matches-worker                           717 B         255 kB
+├ ƒ /api/cron/send-deletion-reminders                          719 B         255 kB
+├ ƒ /api/cron/sla-enforcement                                  718 B         255 kB
+├ ƒ /api/csrf-token                                            720 B         255 kB
+├ ƒ /api/decisions                                             718 B         255 kB
+├ ƒ /api/decisions/window/[interviewId]                        718 B         255 kB
+├ ƒ /api/engagement-verifications/[id]                         718 B         255 kB
+├ ƒ /api/expertise/cv-import/wizard-apply                      719 B         255 kB
+├ ƒ /api/expertise/cv-import/wizard-extract                    719 B         255 kB
+├ ƒ /api/expertise/cv-import/wizard-extract/status             719 B         255 kB
+├ ƒ /api/expertise/cv-import/wizard-suggest                    718 B         255 kB
+├ ƒ /api/expertise/jd-to-l4                                    720 B         255 kB
+├ ƒ /api/expertise/taxonomy                                    718 B         255 kB
+├ ƒ /api/expertise/user-skills                                 718 B         255 kB
+├ ƒ /api/expertise/user-skills/[id]                            719 B         255 kB
+├ ƒ /api/expertise/user-skills/[id]/proofs                     720 B         255 kB
+├ ƒ /api/expertise/user-skills/[id]/proofs/[proofId]           720 B         255 kB
+├ ƒ /api/feature-flags                                         718 B         255 kB
+├ ƒ /api/feedback/[interviewId]                                717 B         255 kB
+├ ƒ /api/feedback/submit                                       719 B         255 kB
+├ ƒ /api/feedback/token/[token]                                718 B         255 kB
+├ ƒ /api/health                                                719 B         255 kB
+├ ƒ /api/individual/readiness                                  720 B         255 kB
+├ ƒ /api/interviews                                            718 B         255 kB
+├ ƒ /api/interviews/cancel                                     720 B         255 kB
+├ ƒ /api/interviews/complete                                   718 B         255 kB
+├ ƒ /api/interviews/edit                                       719 B         255 kB
+├ ƒ /api/interviews/no-show                                    719 B         255 kB
+├ ƒ /api/interviews/schedule                                   718 B         255 kB
+├ ƒ /api/location/autocomplete                                 717 B         255 kB
+├ ƒ /api/match/assignment                                      718 B         255 kB
+├ ƒ /api/match/explain/[matchId]                               718 B         255 kB
+├ ƒ /api/match/gates                                           718 B         255 kB
+├ ƒ /api/match/hide                                            719 B         255 kB
+├ ƒ /api/match/interest                                        718 B         255 kB
+├ ƒ /api/match/profile                                         718 B         255 kB
+├ ƒ /api/match/snoozed                                         718 B         255 kB
+├ ƒ /api/match/test                                            719 B         255 kB
+├ ƒ /api/match/visible-fields/[matchId]                        719 B         255 kB
+├ ƒ /api/matches/[id]/snooze                                   719 B         255 kB
+├ ƒ /api/matching-profile                                      717 B         255 kB
+├ ƒ /api/monitoring/health-diagnostics                         718 B         255 kB
+├ ƒ /api/monitoring/launch-status                              719 B         255 kB
+├ ƒ /api/monitoring/perf-status                                718 B         255 kB
+├ ƒ /api/org/[id]/matches/[matchId]/review                     718 B         255 kB
+├ ƒ /api/org/[id]/shortlist                                    718 B         255 kB
+├ ƒ /api/org/readiness                                         716 B         255 kB
+├ ƒ /api/organizations                                         717 B         255 kB
+├ ƒ /api/organizations/[orgId]                                 717 B         255 kB
+├ ƒ /api/organizations/[orgId]/assignments                     717 B         255 kB
+├ ƒ /api/organizations/[orgId]/audit/export                    717 B         255 kB
+├ ƒ /api/organizations/[orgId]/candidate-invites               719 B         255 kB
+├ ƒ /api/organizations/[orgId]/candidate-invites/[inviteId]    716 B         255 kB
+├ ƒ /api/organizations/[orgId]/team                            719 B         255 kB
+├ ƒ /api/organizations/[orgId]/visibility                      719 B         255 kB
+├ ƒ /api/performance/track                                     717 B         255 kB
+├ ƒ /api/portfolio/export                                      718 B         255 kB
+├ ƒ /api/portfolio/org/[slug]/export                           719 B         255 kB
+├ ƒ /api/portfolio/public/[handle]/export                      717 B         255 kB
+├ ƒ /api/portfolio/public/[handle]/summary                     718 B         255 kB
+├ ƒ /api/portfolio/text-pack                                   720 B         255 kB
+├ ƒ /api/portfolio/visibility                                  719 B         255 kB
+├ ƒ /api/profile                                               718 B         255 kB
+├ ƒ /api/profile/completeness                                  718 B         255 kB
+├ ƒ /api/profile/privacy-settings                              719 B         255 kB
+├ ƒ /api/profile/visibility                                    718 B         255 kB
+├ ƒ /api/proof-artifacts/[artifactId]/text-extraction          718 B         255 kB
+├ ƒ /api/proof-artifacts/[artifactId]/text-extraction/apply    717 B         255 kB
+├ ƒ /api/proof-artifacts/text-extraction/status                718 B         255 kB
+├ ƒ /api/upload/avatar                                         718 B         255 kB
+├ ƒ /api/upload/cover                                          717 B         255 kB
+├ ƒ /api/upload/document                                       721 B         255 kB
+├ ƒ /api/upload/status/[fileId]                                719 B         255 kB
+├ ƒ /api/user/account                                          717 B         255 kB
+├ ƒ /api/user/account/cancel-deletion                          719 B         255 kB
+├ ƒ /api/user/audit-log                                        720 B         255 kB
+├ ƒ /api/user/audit-log/purpose                                718 B         255 kB
+├ ƒ /api/user/consent                                          720 B         255 kB
+├ ƒ /api/user/consent/check                                    718 B         255 kB
+├ ƒ /api/user/email                                            717 B         255 kB
+├ ƒ /api/user/export                                           718 B         255 kB
+├ ƒ /api/user/me                                               719 B         255 kB
+├ ƒ /api/user/password                                         718 B         255 kB
+├ ƒ /api/user/privacy-settings                                 718 B         255 kB
+├ ƒ /api/verification/requests                                 719 B         255 kB
+├ ƒ /api/verification/requests/bundles/[requestId]             718 B         255 kB
+├ ƒ /api/verification/requests/custom                          719 B         255 kB
+├ ƒ /api/verification/requests/custom/artifacts                718 B         255 kB
+├ ƒ /api/verification/requests/email-hint                      718 B         255 kB
+├ ƒ /api/verification/requests/impact-story/[requestId]        718 B         255 kB
+├ ƒ /api/verification/requests/skill                           718 B         255 kB
+├ ƒ /api/verification/requests/skill/[requestId]               718 B         255 kB
+├ ƒ /api/verification/requests/skill/[requestId]/respond       718 B         255 kB
+├ ƒ /api/verification/status                                   717 B         255 kB
+├ ƒ /api/verification/work-email/send                          718 B         255 kB
+├ ƒ /api/verification/work-email/verify                        720 B         255 kB
+├ ƒ /api/verify/[token]                                        718 B         255 kB
+├ ƒ /api/verify/custom/[token]                                 721 B         255 kB
+├ ƒ /app/i/home                                                364 B         256 kB
+├ ƒ /app/i/interviews                                        6.12 kB         281 kB
+├ ƒ /app/i/matching                                          2.18 kB         263 kB
+├ ƒ /app/i/matching/preferences                              14.4 kB         320 kB
+├ ƒ /app/i/messages                                          1.22 kB         262 kB
+├ ƒ /app/i/portfolio                                           718 B         255 kB
+├ ƒ /app/i/profile                                             761 B         255 kB
+├ ƒ /app/i/settings                                          2.41 kB         263 kB
+├ ƒ /app/i/settings/audit-log                                9.59 kB         301 kB
+├ ƒ /app/i/settings/privacy                                  1.02 kB         262 kB
+├ ƒ /app/i/verifications                                       699 B         255 kB
+├ ƒ /app/interviews/[id]/feedback                              311 B         267 kB
+├ ƒ /app/o/[slug]/assignments                                  367 B         266 kB
+├ ƒ /app/o/[slug]/assignments/[id]/review                    8.09 kB         269 kB
+├ ƒ /app/o/[slug]/assignments/new                            29.4 kB         335 kB
+├ ƒ /app/o/[slug]/home                                        5.5 kB         268 kB
+├ ƒ /app/o/[slug]/interviews                                 25.1 kB         331 kB
+├ ƒ /app/o/[slug]/invitations/[token]                          718 B         255 kB
+├ ƒ /app/o/[slug]/matching                                     349 B         264 kB
+├ ƒ /app/o/[slug]/messages                                   11.6 kB         326 kB
+├ ƒ /app/o/[slug]/portfolio                                    719 B         255 kB
+├ ƒ /app/o/[slug]/profile                                    8.16 kB         271 kB
+├ ƒ /app/o/[slug]/shortlist                                    718 B         255 kB
+├ ƒ /auth/callback                                             717 B         255 kB
+├ ƒ /auth/login                                                717 B         255 kB
+├ ƒ /candidate-invite/[token]                                9.18 kB         272 kB
+├ ƒ /cookies                                                   349 B         256 kB
+├ ƒ /cookies/settings                                        9.13 kB         281 kB
+├ ƒ /dev/resolve-home                                          719 B         255 kB
+├ ƒ /feedback/[token]                                          311 B         267 kB
+├ ƒ /llms-full.txt                                             718 B         255 kB
+├ ƒ /llms.txt                                                  718 B         255 kB
+├ ƒ /login                                                   7.79 kB         323 kB
+├ ƒ /onboarding                                              13.5 kB         327 kB
+├ ƒ /portfolio/[handle]                                      1.53 kB         273 kB
+├ ƒ /portfolio/org/[slug]                                    1.25 kB         267 kB
+├ ƒ /privacy                                                   862 B         257 kB
+├ ƒ /reset-password                                          6.09 kB         269 kB
+├ ƒ /reset-password/confirm                                  6.96 kB         320 kB
+├ ƒ /robots.txt                                                719 B         255 kB
+├ ƒ /security.txt                                              718 B         255 kB
+├ ƒ /signup                                                  2.55 kB         322 kB
+├ ƒ /signup/individual                                         368 B         314 kB
+├ ƒ /signup/organization                                       370 B         314 kB
+├ ƒ /sitemap.xml                                               719 B         255 kB
+├ ƒ /terms                                                     861 B         257 kB
+├ ƒ /verify-email                                            4.65 kB         267 kB
+├ ƒ /verify-work-email                                       4.96 kB         266 kB
+├ ƒ /verify/[token]                                          10.7 kB         291 kB
+└ ƒ /verify/custom/[token]                                   5.57 kB         286 kB
++ First Load JS shared by all                                 254 kB
+  ├ chunks/4bd1b696-60762fde855476c8.js                      54.4 kB
+  ├ chunks/52774a7f-c7072f5bcfc73fc8.js                      37.4 kB
+  ├ chunks/71-80a839db7f7215fd.js                             158 kB
+  └ other shared chunks (total)                              4.49 kB
+
+
+ƒ Middleware                                                 63.3 kB
+
+ƒ  (Dynamic)  server-rendered on demand
+
+
+> proofound@0.1.0 postbuild
+> node ./scripts/postbuild-cleanup.mjs
+
+ℹ️ Skipping Next.js cache cleanup. Set NEXT_CLEAN_BUILD_CACHE=1 to force it.

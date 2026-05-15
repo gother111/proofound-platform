@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,10 @@ import {
   isIndustryKey,
   resolveIndustryFromInputs,
 } from '@/lib/industry/options';
+import { Badge } from '@/components/ui/badge';
+import { ProfileSkillPicker } from './ProfileSkillPicker';
+import { mapSkillListToAvailable } from './skill-selection-utils';
+import { MAX_CONTEXT_OUTCOME_SKILLS } from '@/lib/profile/context-outcomes';
 
 const monthInputRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -56,6 +61,10 @@ const outcomeSchema = z.object({
   name: z.string().min(1, 'Outcome name is required'),
   value: z.string().optional(),
   unit: z.string().optional(),
+  timeframe: z.string().optional(),
+  supportingSkills: z.array(z.string()).default([]),
+  proofPackId: z.string().optional(),
+  proofPackTitle: z.string().optional(),
 });
 
 const projectSchema = z.object({
@@ -148,15 +157,24 @@ interface ExperienceFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   experience?: Experience | null;
+  availableSkills: string[];
+  proofPackOptions?: Array<{ id: string; title: string }>;
   onSave: (experience: Omit<Experience, 'id'>) => void;
 }
 
-function createOutcomeDraft(seed?: Partial<ExperienceFormData['outcomes'][number]>) {
+function createOutcomeDraft(
+  seed?: Partial<ExperienceFormData['outcomes'][number]>,
+  availableSkills: string[] = []
+) {
   return {
     id: seed?.id || crypto.randomUUID(),
     name: seed?.name || '',
     value: seed?.value || '',
     unit: seed?.unit || '',
+    timeframe: seed?.timeframe || '',
+    supportingSkills: mapSkillListToAvailable(seed?.supportingSkills || [], availableSkills),
+    proofPackId: seed?.proofPackId || '',
+    proofPackTitle: seed?.proofPackTitle || '',
   };
 }
 
@@ -175,9 +193,11 @@ function summarizeOutcomes(outcomes: ExperienceFormData['outcomes']) {
       const name = outcome.name.trim();
       if (!name) return null;
       const value = outcome.value?.trim();
-      if (!value) return name;
+      const timeframe = outcome.timeframe?.trim();
+      if (!value && !timeframe) return name;
       const unitSuffix = outcome.unit?.trim() ? ` ${outcome.unit.trim()}` : '';
-      return `${name}: ${value}${unitSuffix}`;
+      const measure = value ? `${value}${unitSuffix}` : '';
+      return [name, measure, timeframe].filter(Boolean).join(' · ');
     })
     .filter((entry): entry is string => Boolean(entry))
     .join('; ');
@@ -206,7 +226,14 @@ function hasLegacyProjectText(value: string | null | undefined) {
   return Boolean(trimmed && trimmed.toLowerCase() !== 'not specified');
 }
 
-export function ExperienceForm({ open, onOpenChange, experience, onSave }: ExperienceFormProps) {
+export function ExperienceForm({
+  open,
+  onOpenChange,
+  experience,
+  availableSkills,
+  proofPackOptions = [],
+  onSave,
+}: ExperienceFormProps) {
   const {
     register,
     control,
@@ -214,6 +241,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
     reset,
     watch,
     setValue,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<ExperienceFormData>({
     resolver: zodResolver(experienceSchema),
@@ -227,7 +255,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
       startMonth: '',
       ongoing: false,
       endMonth: '',
-      outcomes: [createOutcomeDraft()],
+      outcomes: [createOutcomeDraft(undefined, availableSkills)],
       projects: [createProjectDraft()],
     },
   });
@@ -251,6 +279,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
   });
 
   const ongoing = watch('ongoing');
+  const watchedOutcomes = watch('outcomes');
   useEffect(() => {
     if (ongoing) {
       setValue('endMonth', '');
@@ -276,20 +305,30 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
       const outcomeDefaults =
         experience.measuredOutcomes && experience.measuredOutcomes.length > 0
           ? experience.measuredOutcomes.map((outcome) =>
-              createOutcomeDraft({
-                id: outcome.id,
-                name: outcome.name,
-                value:
-                  outcome.value !== null && outcome.value !== undefined
-                    ? String(outcome.value)
-                    : '',
-                unit: outcome.unit || '',
-              })
+              createOutcomeDraft(
+                {
+                  id: outcome.id,
+                  name: outcome.name,
+                  value:
+                    outcome.value !== null && outcome.value !== undefined
+                      ? String(outcome.value)
+                      : '',
+                  unit: outcome.unit || '',
+                  timeframe: outcome.timeframe || '',
+                  supportingSkills: outcome.supportingSkills || [],
+                  proofPackId: outcome.proofPackId || '',
+                  proofPackTitle: outcome.proofPackTitle || '',
+                },
+                availableSkills
+              )
             )
           : [
-              createOutcomeDraft({
-                name: experience.outcomes,
-              }),
+              createOutcomeDraft(
+                {
+                  name: experience.outcomes,
+                },
+                availableSkills
+              ),
             ];
 
       const projectDefaults =
@@ -337,12 +376,32 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
       startMonth: '',
       ongoing: false,
       endMonth: '',
-      outcomes: [createOutcomeDraft()],
+      outcomes: [createOutcomeDraft(undefined, availableSkills)],
       projects: [createProjectDraft()],
     });
-  }, [open, experience, reset]);
+  }, [open, experience, reset, availableSkills]);
 
   const onSubmit = (data: ExperienceFormData) => {
+    if (availableSkills.length === 0) {
+      setError('outcomes', {
+        type: 'manual',
+        message: 'Add proof-backed skills before saving measured outcomes.',
+      });
+      return;
+    }
+
+    const outcomeMissingSkillsIndex = data.outcomes.findIndex(
+      (outcome) => outcome.supportingSkills.length < 1 || outcome.supportingSkills.length > 3
+    );
+
+    if (outcomeMissingSkillsIndex !== -1) {
+      setError(`outcomes.${outcomeMissingSkillsIndex}.supportingSkills` as any, {
+        type: 'manual',
+        message: 'Link each outcome to 1 to 3 supporting skills.',
+      });
+      return;
+    }
+
     const timeline = buildExperienceTimeline({
       startDate: monthInputToIsoDate(data.startMonth),
       endDate: data.ongoing ? null : monthInputToIsoDate(data.endMonth),
@@ -353,6 +412,18 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
       name: outcome.name.trim(),
       value: outcome.value && outcome.value.trim().length > 0 ? Number(outcome.value) : null,
       unit: outcome.unit?.trim() ? outcome.unit.trim() : null,
+      timeframe: outcome.timeframe?.trim() ? outcome.timeframe.trim() : null,
+      supportingSkills: outcome.supportingSkills.slice(0, MAX_CONTEXT_OUTCOME_SKILLS),
+      proofPackId: outcome.proofPackId?.trim() || null,
+      proofPackTitle:
+        proofPackOptions.find((option) => option.id === outcome.proofPackId)?.title ||
+        outcome.proofPackTitle?.trim() ||
+        null,
+      claimStatus: outcome.proofPackId?.trim() ? ('proof_linked' as const) : ('claimed' as const),
+      verificationStatus: outcome.proofPackId?.trim()
+        ? ('proof_linked' as const)
+        : ('unverified' as const),
+      visibility: 'private_context' as const,
     }));
 
     const completedProjects = data.projects.filter(
@@ -402,7 +473,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
           <DialogTitle>{experience ? 'Edit Experience' : 'Add Experience'}</DialogTitle>
           <DialogDescription>
             Capture role context with structured outcomes and projects. Organization name is private
-            and not shown on public profile surfaces.
+            and not shown on Public Page surfaces.
           </DialogDescription>
         </DialogHeader>
 
@@ -553,11 +624,27 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => appendOutcome(createOutcomeDraft())}
+                onClick={() => appendOutcome(createOutcomeDraft(undefined, availableSkills))}
               >
                 Add outcome
               </Button>
             </div>
+            {availableSkills.length === 0 ? (
+              <div className="space-y-3 rounded-md border border-amber-200 bg-amber-50/40 p-3">
+                <p className="text-sm text-amber-900">
+                  Add proof-backed portfolio skills before linking measured outcomes to this
+                  context.
+                </p>
+                <Button asChild type="button" variant="outline" size="sm">
+                  <Link href="/app/i/profile?profileView=full&tab=proof_packs">
+                    Add proof-backed content
+                  </Link>
+                </Button>
+              </div>
+            ) : null}
+            {typeof errors.outcomes?.message === 'string' ? (
+              <p className="text-xs text-red-500">{errors.outcomes.message}</p>
+            ) : null}
 
             {outcomeFields.map((field, index) => (
               <div key={field.id} className="rounded-lg border p-3 space-y-2">
@@ -574,7 +661,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
                     </Button>
                   )}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                   <div className="space-y-1 sm:col-span-1">
                     <Label htmlFor={`outcomes.${index}.name`}>Name</Label>
                     <Input
@@ -616,6 +703,74 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
                         {errors.outcomes[index]?.unit?.message}
                       </p>
                     )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor={`outcomes.${index}.timeframe`}>Scope</Label>
+                    <Input
+                      id={`outcomes.${index}.timeframe`}
+                      {...register(`outcomes.${index}.timeframe`)}
+                      placeholder="e.g., Q1 pilot"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-3 pt-2 md:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <Label htmlFor={`outcomes.${index}.supportingSkills`}>
+                        1 to 3 supporting skills
+                      </Label>
+                      <Badge variant="outline" className="bg-white">
+                        Claimed until proof-linked
+                      </Badge>
+                    </div>
+                    <ProfileSkillPicker
+                      inputId={`outcomes.${index}.supportingSkills`}
+                      availableSkills={availableSkills}
+                      selectedSkills={watchedOutcomes?.[index]?.supportingSkills || []}
+                      maxSelections={MAX_CONTEXT_OUTCOME_SKILLS}
+                      searchPlaceholder="Search proof-backed skills"
+                      onChange={(nextSkills) =>
+                        setValue(`outcomes.${index}.supportingSkills`, nextSkills, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }
+                    />
+                    {errors.outcomes?.[index]?.supportingSkills ? (
+                      <p className="text-xs text-red-500">
+                        {errors.outcomes[index]?.supportingSkills?.message}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`outcomes.${index}.proofPackId`}>Supporting Proof Pack</Label>
+                    <select
+                      id={`outcomes.${index}.proofPackId`}
+                      value={watchedOutcomes?.[index]?.proofPackId || ''}
+                      onChange={(event) => {
+                        const selected = proofPackOptions.find(
+                          (option) => option.id === event.target.value
+                        );
+                        setValue(`outcomes.${index}.proofPackId`, event.target.value, {
+                          shouldDirty: true,
+                        });
+                        setValue(`outcomes.${index}.proofPackTitle`, selected?.title || '', {
+                          shouldDirty: true,
+                        });
+                      }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">No Proof Pack linked yet</option>
+                      {proofPackOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.title}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-muted-foreground">
+                      Optional. A Proof Pack link supports the claim but does not verify it by
+                      itself.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -717,7 +872,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || availableSkills.length === 0}>
               {experience ? 'Save Changes' : 'Add Experience'}
             </Button>
           </DialogFooter>

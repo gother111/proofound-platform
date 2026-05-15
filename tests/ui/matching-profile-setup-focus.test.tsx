@@ -98,7 +98,7 @@ describe('MatchingProfileSetup single-page form', () => {
     render(<MatchingProfileSetup onComplete={onComplete} onCancel={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'set focus' }));
-    fireEvent.change(screen.getByLabelText('Mission vs skills weighting'), {
+    fireEvent.change(screen.getByLabelText('Proof vs skills weighting'), {
       target: { value: '80' },
     });
 

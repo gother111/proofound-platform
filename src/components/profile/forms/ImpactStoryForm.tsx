@@ -804,9 +804,9 @@ export function ImpactStoryForm({
             </div>
 
             <div className="space-y-3">
-              <Label>Area of impact / Cause tags *</Label>
+              <Label>Impact area / context tags *</Label>
               <div className="space-y-2">
-                <Label htmlFor="primary-cause">Primary cause *</Label>
+                <Label htmlFor="primary-cause">Primary area *</Label>
                 <select
                   id="primary-cause"
                   value={primaryCause}
@@ -818,7 +818,7 @@ export function ImpactStoryForm({
                   }}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value="">Select primary cause</option>
+                  <option value="">Select primary area</option>
                   {CAUSES_TAXONOMY.map((cause) => (
                     <option key={cause.key} value={cause.key}>
                       {cause.label}
@@ -831,7 +831,7 @@ export function ImpactStoryForm({
               </div>
 
               <div className="space-y-2">
-                <Label>Secondary causes (optional)</Label>
+                <Label>Additional areas (optional)</Label>
                 <div className="flex flex-wrap gap-2">
                   {availableSecondaryCauses.map((cause) => (
                     <Button

@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import OrgMatchingPage from '@/app/app/o/[slug]/matching/page';
+import { DeferredOrgMatchingClient } from '@/app/app/o/[slug]/matching/DeferredOrgMatchingClient';
 import { OrgCandidateInvitesPanel } from '@/components/organization/OrgCandidateInvitesPanel';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 
@@ -27,7 +27,7 @@ export function OrgCandidatesWorkspace({ orgId }: OrgCandidatesWorkspaceProps) {
                 faster shortlisting.
               </p>
             </header>
-            <OrgMatchingPage />
+            <DeferredOrgMatchingClient />
           </TabsContent>
 
           <TabsContent value="invited-candidates">

@@ -59,6 +59,7 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { POST } from '@/app/api/candidate-invites/[token]/proof-card/route';
 import { resolveCandidateInvitePolicyContext } from '@/lib/candidate-invite-policy';
+import { upsertCanonicalProofCardSubmission } from '@/lib/canonical/submissions';
 
 function mockAuthUser(user: { id: string; email: string } | null) {
   (createClient as any).mockResolvedValue({
@@ -121,7 +122,10 @@ describe('POST /api/candidate-invites/[token]/proof-card', () => {
 
     const request = new NextRequest('http://localhost/api/candidate-invites/token/proof-card', {
       method: 'POST',
-      body: JSON.stringify({ shareToken: 'snippet-token' }),
+      body: JSON.stringify({
+        proofPackId: '22222222-2222-4222-8222-222222222222',
+        reviewConfirmed: true,
+      }),
       headers: { 'content-type': 'application/json' },
     });
 
@@ -131,5 +135,89 @@ describe('POST /api/candidate-invites/[token]/proof-card', () => {
     expect(response.status).toBe(403);
     expect(payload.code).toBe('INVITE_PROOF_SUBMISSION_BLOCKED');
     expect(payload.details.reasons).toContain('org_trust_restricted');
+  });
+
+  it('requires explicit final visibility review confirmation', async () => {
+    const request = new NextRequest('http://localhost/api/candidate-invites/token/proof-card', {
+      method: 'POST',
+      body: JSON.stringify({ proofPackId: '22222222-2222-4222-8222-222222222222' }),
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ token: 'token-value' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.details.fieldErrors.reviewConfirmed).toContain(
+      'Confirm the final visibility review before submitting.'
+    );
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
+  it('submits an owner-only Proof Pack without requiring a public snippet', async () => {
+    mockSelectWithLimit([
+      {
+        id: 'invite-1',
+        orgId: 'org-1',
+        flowType: 'proof_card',
+        status: 'claimed',
+        expiresAt: new Date(Date.now() + 60_000),
+        claimedByProfileId: '11111111-1111-1111-1111-111111111111',
+        assignmentId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        matchId: null,
+        conversationId: null,
+      },
+    ]);
+    mockSelectWithLimit([
+      {
+        id: '22222222-2222-4222-8222-222222222222',
+        visibility: 'owner_only',
+        revealGate: 'none',
+        publishedAt: null,
+      },
+    ]);
+    (resolveCandidateInvitePolicyContext as any).mockResolvedValueOnce({
+      organization: { id: 'org-1', orgTrustTier: 'reviewed', trustStatus: 'platform_reviewed' },
+      assignment: { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' },
+      policyEvaluation: {
+        decision: 'allow',
+        orgTrustTier: 'reviewed',
+        reasons: [],
+      },
+    });
+    (db.execute as any).mockResolvedValue({ rows: [] });
+    (upsertCanonicalProofCardSubmission as any).mockResolvedValue({
+      id: 'submission-1',
+    });
+
+    const request = new NextRequest('http://localhost/api/candidate-invites/token/proof-card', {
+      method: 'POST',
+      body: JSON.stringify({
+        proofPackId: '22222222-2222-4222-8222-222222222222',
+        reviewConfirmed: true,
+      }),
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ token: 'token-value' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual(
+      expect.objectContaining({
+        success: true,
+        canonicalPackId: '22222222-2222-4222-8222-222222222222',
+        canonicalSubmissionId: 'submission-1',
+      })
+    );
+    expect(db.query.proofPacks.findFirst).not.toHaveBeenCalled();
+    expect(upsertCanonicalProofCardSubmission).toHaveBeenCalledWith(
+      expect.objectContaining({
+        inviteId: 'invite-1',
+        assignmentId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        proofPackId: '22222222-2222-4222-8222-222222222222',
+        proofSnippetId: null,
+      })
+    );
   });
 });

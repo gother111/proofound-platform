@@ -69,7 +69,6 @@ const baseEligibility = {
   counts: {
     skillsWithRecency: 2,
     proofCount: 0,
-    hasPurpose: false,
     hasConstraints: false,
     hasIntentSignal: false,
     hasLogisticsSignal: false,
@@ -82,7 +81,7 @@ const baseEligibility = {
   nextTierTarget: {
     tier: 'lite',
     message: 'Add recent skills and one preference to unlock personalized browse results.',
-    remaining: { skillsWithRecency: 1, proofCount: 1, purpose: 1, constraints: 1 },
+    remaining: { skillsWithRecency: 1, proofCount: 1, intentSignal: 1, constraints: 1 },
   },
   criteria: {
     skillsWithRecency: { id: 'skillsWithRecency', label: 'Skills', met: false, detail: 'x' },
@@ -90,7 +89,7 @@ const baseEligibility = {
   topActions: [
     {
       id: 'update-public-portfolio',
-      title: 'Strengthen public portfolio',
+      title: 'Strengthen Public Page proof',
       description: 'Refresh proof-backed work examples and trust signals.',
       actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
     },

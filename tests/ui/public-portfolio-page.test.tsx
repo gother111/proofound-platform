@@ -51,6 +51,39 @@ function buildProjection(overrides: Partial<any> = {}) {
     publicBio: 'I build measurable change.',
     publicSkills: ['Strategy', 'Research ops'],
     publicProofCount: 1,
+    traceableSummary: {
+      provenanceLabel: 'Generated from public-safe Proof Packs and context tokens',
+      hasEnoughData: true,
+      segments: [
+        {
+          key: 'scale',
+          label: 'Scale',
+          value: 'Company size: 11-50',
+          state: 'ready',
+          sources: [
+            { id: 'pack-1', label: 'Proof Pack: Product Strategy', detail: 'Product Strategy' },
+          ],
+        },
+        {
+          key: 'focus',
+          label: 'Focus',
+          value: 'Work area: Product strategy',
+          state: 'ready',
+          sources: [
+            { id: 'pack-1', label: 'Proof Pack: Product Strategy', detail: 'Product Strategy' },
+          ],
+        },
+        {
+          key: 'context',
+          label: 'Context',
+          value: 'Industry: Proof-first hiring',
+          state: 'ready',
+          sources: [
+            { id: 'pack-1', label: 'Proof Pack: Product Strategy', detail: 'Product Strategy' },
+          ],
+        },
+      ],
+    },
     featuredProofs: [
       {
         id: 'proof-1',
@@ -169,10 +202,10 @@ function buildProjection(overrides: Partial<any> = {}) {
     },
     metadata: {
       path: '/portfolio/jane',
-      title: 'Proofound public portfolio',
-      description: 'Shareable by direct link on Proofound.',
-      ogTitle: 'Proofound public portfolio',
-      ogDescription: 'Shareable by direct link on Proofound.',
+      title: 'Proofound Public Page',
+      description: 'A proof snapshot shared by direct link on Proofound.',
+      ogTitle: 'Proofound Public Page',
+      ogDescription: 'A proof snapshot shared by direct link on Proofound.',
       useGenericPreview: true,
     },
     jsonLd: {
@@ -261,16 +294,23 @@ describe('Public individual portfolio page', () => {
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Jane Doe' })).toBeInTheDocument();
-    expect(screen.getByText('Shareable by direct link')).toBeInTheDocument();
+    expect(screen.getByText('Direct-link proof snapshot')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /selected proof packs/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /selected trust summary/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /scale \/ focus \/ context/i })).toBeInTheDocument();
+    expect(
+      screen.getByText('Generated from public-safe Proof Packs and context tokens')
+    ).toBeInTheDocument();
+    expect(screen.getByText('Company size: 11-50')).toBeInTheDocument();
+    expect(screen.getByText('Work area: Product strategy')).toBeInTheDocument();
+    expect(screen.getByText('Industry: Proof-first hiring')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /proof snapshot/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /selected outcomes/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /skills snapshot/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /contact & share/i })).toBeInTheDocument();
     expect(screen.getByText(/no selected proof packs are available yet/i)).toBeInTheDocument();
     expect(screen.getByText(/no public outcome summary is published yet/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/skills are not shared publicly in this portfolio/i)
+      screen.getByText(/skills are not shared publicly on this public page/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /request introduction/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /copy recruiter summary/i })).toBeInTheDocument();
@@ -304,7 +344,19 @@ describe('Public individual portfolio page', () => {
       'href',
       '/app/i/home'
     );
-    expect(screen.getByText(/search engines are off by default/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /edit source proof packs/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('summarySource=traceable-profile-summary')
+    );
+    expect(screen.getByRole('link', { name: /refresh from current proof packs/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('summaryRefresh=traceable-profile-summary')
+    );
+    expect(screen.getByText(/search engines are off for the MVP/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /manage visibility/i })).toHaveAttribute(
+      'href',
+      '/app/i/profile?profileView=full&tab=visibility'
+    );
     expect(screen.getByText(/work email/i)).toBeInTheDocument();
   });
 
@@ -372,11 +424,11 @@ describe('Public individual portfolio page', () => {
       index: false,
       follow: false,
     });
-    expect(metadata.title).toBe('Proofound public portfolio');
+    expect(metadata.title).toBe('Proofound Public Page');
     expect(metadata.alternates?.canonical).toContain('/portfolio/jane');
   });
 
-  it('returns page-specific metadata when indexing is explicitly enabled', async () => {
+  it('returns safe generic metadata even when stale projection data requested indexing', async () => {
     vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
       status: 'accessible',
       projection: buildProjection({
@@ -397,11 +449,11 @@ describe('Public individual portfolio page', () => {
     });
 
     expect(metadata.robots).toMatchObject({
-      index: true,
-      follow: true,
+      index: false,
+      follow: false,
     });
-    expect(metadata.title).toBe('Jane Doe | Proofound');
-    expect(metadata.openGraph?.title).toBe('Jane Doe on Proofound');
+    expect(metadata.title).toBe('Proofound Public Page');
+    expect(metadata.openGraph?.title).toBe('Proofound Public Page');
   });
 
   it('renders the existing unavailable state when the portfolio is not publicly accessible', async () => {
@@ -419,8 +471,8 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
-    expect(screen.getByRole('heading', { name: 'Portfolio unavailable' })).toBeInTheDocument();
-    expect(screen.getByText(/this public portfolio link is unavailable/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Public Page unavailable' })).toBeInTheDocument();
+    expect(screen.getByText(/this public page link is unavailable/i)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Jane Doe' })).not.toBeInTheDocument();
   });
 

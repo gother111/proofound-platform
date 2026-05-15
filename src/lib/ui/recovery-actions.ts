@@ -31,8 +31,9 @@ const INDIVIDUAL_BASE_ACTIONS: RecoveryAction[] = [
   },
   {
     id: 'add-skill',
-    title: 'Strengthen your public portfolio',
-    description: 'Refresh profile signals so matching can evaluate fit without legacy Atlas flows.',
+    title: 'Strengthen your Public Page proof',
+    description:
+      'Refresh proof-backed signals so matching can evaluate fit without legacy Atlas flows.',
     actionUrl: '/app/i/profile',
   },
   {
@@ -173,7 +174,7 @@ export function getOrganizationRecoveryActions(
         id: 'turn-on-candidate-matching',
         title: 'Turn on candidate matching',
         description: 'Open matching and activate candidate pipeline recovery actions.',
-        actionUrl: `${basePath}/matching?focus=matchable`,
+        actionUrl: `${basePath}/assignments?focus=matchable`,
       },
     ],
     'assignment-no-matches': [
@@ -193,7 +194,9 @@ export function getOrganizationRecoveryActions(
         id: 'turn-on-candidate-matching',
         title: 'Turn on candidate matching',
         description: 'Re-open matching and re-run candidate discovery for this assignment.',
-        actionUrl: `${basePath}/matching?focus=matchable`,
+        actionUrl: assignmentId
+          ? `${basePath}/assignments?matching=${encodeURIComponent(assignmentId)}`
+          : `${basePath}/assignments?focus=matchable`,
       },
     ],
   };

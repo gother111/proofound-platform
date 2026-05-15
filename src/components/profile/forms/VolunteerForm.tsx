@@ -11,14 +11,20 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Volunteering } from '@/types/profile';
+import { Badge } from '@/components/ui/badge';
+import { Volunteering, type ContextMeasuredOutcome } from '@/types/profile';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { ProfileSkillPicker } from './ProfileSkillPicker';
-import { mapLegacySkillsToAvailable, serializeSelectedSkills } from './skill-selection-utils';
+import {
+  mapLegacySkillsToAvailable,
+  mapSkillListToAvailable,
+  serializeSelectedSkills,
+} from './skill-selection-utils';
 import { useState } from 'react';
+import { MAX_CONTEXT_OUTCOME_SKILLS } from '@/lib/profile/context-outcomes';
 
 const volunteerSchema = z.object({
   title: z.string().min(1, 'Role/Title is required'),
@@ -36,7 +42,46 @@ interface VolunteerFormProps {
   onOpenChange: (open: boolean) => void;
   volunteering?: Volunteering | null;
   availableSkills: string[];
+  proofPackOptions?: Array<{ id: string; title: string }>;
   onSave: (volunteering: Omit<Volunteering, 'id'>) => void;
+}
+
+type OutcomeDraft = {
+  id: string;
+  name: string;
+  value: string;
+  unit: string;
+  timeframe: string;
+  supportingSkills: string[];
+  proofPackId: string;
+  proofPackTitle: string;
+};
+
+function createOutcomeDraft(
+  seed?: Partial<ContextMeasuredOutcome>,
+  availableSkills: string[] = []
+) {
+  return {
+    id: seed?.id || crypto.randomUUID(),
+    name: seed?.name || '',
+    value: seed?.value !== null && seed?.value !== undefined ? String(seed.value) : '',
+    unit: seed?.unit || '',
+    timeframe: seed?.timeframe || '',
+    supportingSkills: mapSkillListToAvailable(seed?.supportingSkills || [], availableSkills),
+    proofPackId: seed?.proofPackId || '',
+    proofPackTitle: seed?.proofPackTitle || '',
+  };
+}
+
+function outcomeHasInput(outcome: OutcomeDraft) {
+  return Boolean(
+    outcome.name.trim() ||
+      outcome.value.trim() ||
+      outcome.unit.trim() ||
+      outcome.timeframe.trim() ||
+      outcome.supportingSkills.length > 0 ||
+      outcome.proofPackId.trim()
+  );
 }
 
 export function VolunteerForm({
@@ -44,10 +89,13 @@ export function VolunteerForm({
   onOpenChange,
   volunteering,
   availableSkills,
+  proofPackOptions = [],
   onSave,
 }: VolunteerFormProps) {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [skillsError, setSkillsError] = useState<string | null>(null);
+  const [measuredOutcomes, setMeasuredOutcomes] = useState<OutcomeDraft[]>([]);
+  const [outcomeErrors, setOutcomeErrors] = useState<Record<string, string>>({});
 
   const {
     register,
@@ -79,6 +127,11 @@ export function VolunteerForm({
           personalWhy: volunteering.personalWhy,
         });
         setSelectedSkills(mapLegacySkillsToAvailable(volunteering.skillsDeployed, availableSkills));
+        setMeasuredOutcomes(
+          (volunteering.measuredOutcomes || []).map((outcome) =>
+            createOutcomeDraft(outcome, availableSkills)
+          )
+        );
       } else {
         reset({
           title: '',
@@ -89,8 +142,10 @@ export function VolunteerForm({
           personalWhy: '',
         });
         setSelectedSkills([]);
+        setMeasuredOutcomes([]);
       }
       setSkillsError(null);
+      setOutcomeErrors({});
     }
   }, [open, volunteering, reset, availableSkills]);
 
@@ -100,9 +155,54 @@ export function VolunteerForm({
       return;
     }
 
+    const nextOutcomeErrors: Record<string, string> = {};
+    measuredOutcomes.forEach((outcome, index) => {
+      if (!outcomeHasInput(outcome)) return;
+
+      if (!outcome.name.trim()) {
+        nextOutcomeErrors[`outcome-${index}-name`] = 'Outcome name is required';
+      }
+      if (outcome.value.trim() && Number.isNaN(Number(outcome.value))) {
+        nextOutcomeErrors[`outcome-${index}-value`] = 'Outcome value must be numeric';
+      }
+      if (outcome.value.trim() && !outcome.unit.trim()) {
+        nextOutcomeErrors[`outcome-${index}-unit`] =
+          'Measurement unit is required when value is provided';
+      }
+      if (outcome.supportingSkills.length < 1 || outcome.supportingSkills.length > 3) {
+        nextOutcomeErrors[`outcome-${index}-skills`] =
+          'Link each outcome to 1 to 3 supporting skills';
+      }
+    });
+
+    setOutcomeErrors(nextOutcomeErrors);
+    if (Object.keys(nextOutcomeErrors).length > 0) {
+      return;
+    }
+
+    const normalizedMeasuredOutcomes = measuredOutcomes.filter(outcomeHasInput).map((outcome) => ({
+      id: outcome.id,
+      name: outcome.name.trim(),
+      value: outcome.value.trim() ? Number(outcome.value) : null,
+      unit: outcome.unit.trim() || null,
+      timeframe: outcome.timeframe.trim() || null,
+      supportingSkills: outcome.supportingSkills.slice(0, MAX_CONTEXT_OUTCOME_SKILLS),
+      proofPackId: outcome.proofPackId.trim() || null,
+      proofPackTitle:
+        proofPackOptions.find((option) => option.id === outcome.proofPackId)?.title ||
+        outcome.proofPackTitle.trim() ||
+        null,
+      claimStatus: outcome.proofPackId.trim() ? ('proof_linked' as const) : ('claimed' as const),
+      verificationStatus: outcome.proofPackId.trim()
+        ? ('proof_linked' as const)
+        : ('unverified' as const),
+      visibility: 'private_context' as const,
+    }));
+
     onSave({
       ...data,
       skillsDeployed: serializeSelectedSkills(selectedSkills),
+      measuredOutcomes: normalizedMeasuredOutcomes,
       verified: false,
     });
     onOpenChange(false);
@@ -114,8 +214,8 @@ export function VolunteerForm({
         <DialogHeader>
           <DialogTitle>{volunteering ? 'Edit Volunteer Work' : 'Add Volunteer Work'}</DialogTitle>
           <DialogDescription>
-            Highlight your volunteer work and community involvement. Explain why these causes matter
-            to you.
+            Highlight your volunteer work and community involvement. Explain what changed, who
+            benefited, and what proof supports it.
           </DialogDescription>
         </DialogHeader>
 
@@ -252,6 +352,208 @@ export function VolunteerForm({
 
             {/* Skills Deployed */}
             <motion.div
+              className="space-y-3"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <Label>Measured outcomes</Label>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Optional. Outcomes stay claimed until linked to proof or scoped verification.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setMeasuredOutcomes((current) => [
+                      ...current,
+                      createOutcomeDraft(undefined, availableSkills),
+                    ])
+                  }
+                  disabled={availableSkills.length === 0}
+                >
+                  Add outcome
+                </Button>
+              </div>
+
+              {measuredOutcomes.length === 0 ? (
+                <p className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
+                  Add one only when the contribution has a concrete result to connect to skills.
+                </p>
+              ) : null}
+
+              {measuredOutcomes.map((outcome, index) => (
+                <div key={outcome.id} className="space-y-3 rounded-lg border p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium">Outcome {index + 1}</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-white">
+                        Claimed
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setMeasuredOutcomes((current) =>
+                            current.filter((item) => item.id !== outcome.id)
+                          )
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    <div className="space-y-1 sm:col-span-1">
+                      <Label htmlFor={`${outcome.id}-name`}>What changed?</Label>
+                      <Input
+                        id={`${outcome.id}-name`}
+                        value={outcome.name}
+                        onChange={(event) =>
+                          setMeasuredOutcomes((current) =>
+                            current.map((item) =>
+                              item.id === outcome.id ? { ...item, name: event.target.value } : item
+                            )
+                          )
+                        }
+                        placeholder="Reduced admin load"
+                        className={outcomeErrors[`outcome-${index}-name`] ? 'border-red-500' : ''}
+                      />
+                      {outcomeErrors[`outcome-${index}-name`] ? (
+                        <p className="text-xs text-red-500">
+                          {outcomeErrors[`outcome-${index}-name`]}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor={`${outcome.id}-value`}>Number</Label>
+                      <Input
+                        id={`${outcome.id}-value`}
+                        value={outcome.value}
+                        onChange={(event) =>
+                          setMeasuredOutcomes((current) =>
+                            current.map((item) =>
+                              item.id === outcome.id ? { ...item, value: event.target.value } : item
+                            )
+                          )
+                        }
+                        placeholder="30"
+                        className={outcomeErrors[`outcome-${index}-value`] ? 'border-red-500' : ''}
+                      />
+                      {outcomeErrors[`outcome-${index}-value`] ? (
+                        <p className="text-xs text-red-500">
+                          {outcomeErrors[`outcome-${index}-value`]}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor={`${outcome.id}-unit`}>Unit</Label>
+                      <Input
+                        id={`${outcome.id}-unit`}
+                        value={outcome.unit}
+                        onChange={(event) =>
+                          setMeasuredOutcomes((current) =>
+                            current.map((item) =>
+                              item.id === outcome.id ? { ...item, unit: event.target.value } : item
+                            )
+                          )
+                        }
+                        placeholder="%"
+                        className={outcomeErrors[`outcome-${index}-unit`] ? 'border-red-500' : ''}
+                      />
+                      {outcomeErrors[`outcome-${index}-unit`] ? (
+                        <p className="text-xs text-red-500">
+                          {outcomeErrors[`outcome-${index}-unit`]}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor={`${outcome.id}-timeframe`}>Scope</Label>
+                      <Input
+                        id={`${outcome.id}-timeframe`}
+                        value={outcome.timeframe}
+                        onChange={(event) =>
+                          setMeasuredOutcomes((current) =>
+                            current.map((item) =>
+                              item.id === outcome.id
+                                ? { ...item, timeframe: event.target.value }
+                                : item
+                            )
+                          )
+                        }
+                        placeholder="volunteer season"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
+                    <div className="space-y-2">
+                      <Label htmlFor={`${outcome.id}-skills`}>1 to 3 supporting skills</Label>
+                      <ProfileSkillPicker
+                        inputId={`${outcome.id}-skills`}
+                        availableSkills={availableSkills}
+                        selectedSkills={outcome.supportingSkills}
+                        maxSelections={MAX_CONTEXT_OUTCOME_SKILLS}
+                        searchPlaceholder="Search proof-backed skills"
+                        onChange={(nextSkills) =>
+                          setMeasuredOutcomes((current) =>
+                            current.map((item) =>
+                              item.id === outcome.id
+                                ? { ...item, supportingSkills: nextSkills }
+                                : item
+                            )
+                          )
+                        }
+                      />
+                      {outcomeErrors[`outcome-${index}-skills`] ? (
+                        <p className="text-xs text-red-500">
+                          {outcomeErrors[`outcome-${index}-skills`]}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`${outcome.id}-proof-pack`}>Supporting Proof Pack</Label>
+                      <select
+                        id={`${outcome.id}-proof-pack`}
+                        value={outcome.proofPackId}
+                        onChange={(event) => {
+                          const selected = proofPackOptions.find(
+                            (option) => option.id === event.target.value
+                          );
+                          setMeasuredOutcomes((current) =>
+                            current.map((item) =>
+                              item.id === outcome.id
+                                ? {
+                                    ...item,
+                                    proofPackId: event.target.value,
+                                    proofPackTitle: selected?.title || '',
+                                  }
+                                : item
+                            )
+                          );
+                        }}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">No Proof Pack linked yet</option>
+                        {proofPackOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.title}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-muted-foreground">
+                        A Proof Pack link supports the claim but does not verify it by itself.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+
+            <motion.div
               className="space-y-2"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -297,8 +599,8 @@ export function VolunteerForm({
             >
               <p className="font-medium mb-2">💡 Tip:</p>
               <p>
-                Connect your service to your values and explain your personal motivation. Authentic
-                connection matters more than polish.
+                Connect your service to the context and explain your concrete contribution.
+                Authentic evidence matters more than polish.
               </p>
             </motion.div>
           </motion.div>

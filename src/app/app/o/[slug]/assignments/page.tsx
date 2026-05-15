@@ -22,8 +22,7 @@ export default async function OrgAssignmentsAliasPage({
           </nav>
           <h1 className="text-2xl font-semibold text-primary-500">Assignments</h1>
           <p className="text-sm text-neutral-dark-600">
-            Assignments are managed from the matching workspace to keep role, candidate, and
-            pipeline context together.
+            Assignment cards own their matching corridor, candidate review, and pipeline context.
           </p>
         </header>
         <DeferredOrgMatchingClient />

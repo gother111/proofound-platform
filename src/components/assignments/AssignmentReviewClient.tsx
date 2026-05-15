@@ -112,7 +112,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
       });
 
       if (response.ok) {
-        router.push(`/app/o/${slug}/matching`);
+        router.push(`/app/o/${slug}/assignments?matching=${encodeURIComponent(assignmentId)}`);
       } else {
         const errorData = await response.json().catch(() => ({}));
         const blocks = Array.isArray(errorData.details?.blocks)

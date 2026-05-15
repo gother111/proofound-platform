@@ -7,6 +7,7 @@ import { ArrowRight, Compass, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
+import { NextStepsHelper } from '@/components/dashboard/NextStepsHelper';
 import { apiFetch } from '@/lib/api/fetch';
 import { FALLBACK_COPY, type OperationalFallbackMode } from '@/lib/contracts/launch-operations';
 import type { IndividualReadiness } from '@/lib/momentum/types';
@@ -155,16 +156,10 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
             <div className="mt-2 space-y-2">
               <p className="text-xs text-foreground">{missingIntro[0]?.detail}</p>
               {fallbackCopy ? (
-                <div className="rounded-md bg-japandi-bg/70 p-2">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    Best next steps
-                  </p>
-                  <ul className="mt-1 space-y-1 text-xs text-foreground">
-                    {fallbackCopy.nextActions.map((action) => (
-                      <li key={action}>{action}</li>
-                    ))}
-                  </ul>
-                </div>
+                <NextStepsHelper
+                  actions={fallbackCopy.nextActions.map((action) => ({ title: action }))}
+                  description="Open introduction-readiness next steps."
+                />
               ) : null}
             </div>
           ) : null}

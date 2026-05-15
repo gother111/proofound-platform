@@ -34,6 +34,35 @@ const INDIVIDUAL_DAY_ONE_FIELD_VISIBILITY = {
 
 type OnboardingContextType = 'experience' | 'education' | 'volunteering';
 type OnboardingArtifactInputMode = 'link' | 'file';
+type OnboardingContributionMode = 'solo' | 'team';
+type FirstProofVerificationAction = 'none' | 'draft' | 'send_now';
+type FirstProofVerificationConfirmerRelationship =
+  | 'client'
+  | 'peer'
+  | 'manager'
+  | 'teacher'
+  | 'collaborator'
+  | 'organization_representative';
+
+type FirstProofVerificationConfirmer = {
+  name: string;
+  relationship: FirstProofVerificationConfirmerRelationship;
+  email: string;
+};
+type ClaimedMeasuredOutcome = {
+  id: string;
+  statement: string;
+  value: string | null;
+  timeframe: string | null;
+  evidenceRelation: 'artifact_or_context';
+  supportingSkills: string[];
+  proofPackId: string | null;
+  proofPackTitle: string | null;
+  claimStatus: 'claimed' | 'proof_linked';
+  verificationStatus: 'unverified' | 'proof_linked';
+  supportingProofLinked: boolean;
+  source: 'individual_onboarding';
+};
 
 const ONBOARDING_ARTIFACT_TYPES = new Set([
   'project',
@@ -54,6 +83,24 @@ const ONBOARDING_COMPANY_SIZE_VALUES = new Set([
   '1001-5000',
   '5001+',
 ]);
+
+const ONBOARDING_CONTRIBUTION_MODES = new Set(['solo', 'team']);
+const ONBOARDING_OWNERSHIP_LEVELS = new Set([
+  'created_all',
+  'led_delivery',
+  'owned_scope',
+  'contributed_scope',
+]);
+
+const FIRST_PROOF_VERIFICATION_ACTIONS = new Set<FirstProofVerificationAction>([
+  'none',
+  'draft',
+  'send_now',
+]);
+
+const FIRST_PROOF_VERIFICATION_RELATIONSHIPS = new Set<FirstProofVerificationConfirmerRelationship>(
+  ['client', 'peer', 'manager', 'teacher', 'collaborator', 'organization_representative']
+);
 
 function buildPublicPortfolioUrl(pathname: string) {
   const baseUrl = resolvePublicSnippetBaseUrl();
@@ -134,31 +181,133 @@ function normalizeOnboardingArtifactType(value: string) {
   return ONBOARDING_ARTIFACT_TYPES.has(value) ? value : 'project';
 }
 
-function resolveScaffoldSkills(proofPackSkills: string[], artifactType: string) {
-  if (proofPackSkills.length >= 3 && proofPackSkills.length <= 5) {
-    return proofPackSkills;
-  }
-
-  const artifactLabel =
-    artifactType === 'credential'
-      ? 'Credential evidence'
-      : artifactType === 'document'
-        ? 'Documented evidence'
-        : artifactType === 'media'
-          ? 'Media evidence'
-          : artifactType === 'reference'
-            ? 'Reference evidence'
-            : 'Project evidence';
-
-  return [artifactLabel, 'Proof documentation', 'Outcome communication'];
-}
-
 function resolveProofArtifactKind(inputMode: OnboardingArtifactInputMode, artifactType: string) {
   if (inputMode === 'link') return 'link';
   if (artifactType === 'credential') return 'credential';
   if (artifactType === 'media') return 'image';
   if (artifactType === 'reference') return 'reference';
   return 'document';
+}
+
+function normalizeFirstProofVerificationAction(value: string): FirstProofVerificationAction {
+  return FIRST_PROOF_VERIFICATION_ACTIONS.has(value as FirstProofVerificationAction)
+    ? (value as FirstProofVerificationAction)
+    : 'none';
+}
+
+function parseFirstProofVerificationConfirmers(value: FormDataEntryValue | null) {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return [] as FirstProofVerificationConfirmer[];
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .map((item) => {
+        const record = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+        const name = typeof record.name === 'string' ? record.name.trim() : '';
+        const email = typeof record.email === 'string' ? record.email.trim().toLowerCase() : '';
+        const relationship =
+          typeof record.relationship === 'string' &&
+          FIRST_PROOF_VERIFICATION_RELATIONSHIPS.has(
+            record.relationship as FirstProofVerificationConfirmerRelationship
+          )
+            ? (record.relationship as FirstProofVerificationConfirmerRelationship)
+            : null;
+
+        if (!name || !email || !relationship) {
+          return null;
+        }
+
+        return {
+          name: name.slice(0, 120),
+          relationship,
+          email: email.slice(0, 254),
+        };
+      })
+      .filter((item): item is FirstProofVerificationConfirmer => Boolean(item))
+      .slice(0, 2);
+  } catch {
+    return [];
+  }
+}
+
+function parseClaimedMeasuredOutcomes(value: FormDataEntryValue | null): ClaimedMeasuredOutcome[] {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return [];
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    return [];
+  }
+
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+
+  return parsed
+    .map<ClaimedMeasuredOutcome | null>((entry, index) => {
+      if (!entry || typeof entry !== 'object') {
+        return null;
+      }
+
+      const row = entry as Record<string, unknown>;
+      const statement =
+        typeof row.statement === 'string'
+          ? row.statement.trim()
+          : typeof row.label === 'string'
+            ? row.label.trim()
+            : '';
+      if (!statement) {
+        return null;
+      }
+
+      const rawValue =
+        typeof row.value === 'string'
+          ? row.value.trim()
+          : row.value === null || row.value === undefined
+            ? ''
+            : String(row.value).trim();
+      const timeframe = typeof row.timeframe === 'string' ? row.timeframe.trim() : '';
+      const id =
+        typeof row.id === 'string' && row.id.trim() ? row.id.trim() : `outcome-${index + 1}`;
+
+      return {
+        id,
+        statement,
+        value: rawValue || null,
+        timeframe: timeframe || null,
+        evidenceRelation: 'artifact_or_context' as const,
+        supportingSkills: [] as string[],
+        proofPackId: null,
+        proofPackTitle: null,
+        claimStatus: 'claimed' as const,
+        verificationStatus: 'unverified' as const,
+        supportingProofLinked: false as const,
+        source: 'individual_onboarding' as const,
+      };
+    })
+    .filter((entry): entry is ClaimedMeasuredOutcome => entry !== null)
+    .slice(0, 3);
+}
+
+function buildClaimedOutcomeSummary(outcomes: ClaimedMeasuredOutcome[], fallback: string) {
+  if (outcomes.length === 0) {
+    return fallback;
+  }
+
+  return outcomes
+    .map((outcome) =>
+      [outcome.statement, outcome.value, outcome.timeframe].filter(Boolean).join(' · ')
+    )
+    .join('; ');
 }
 
 export async function choosePersona(formData: FormData) {
@@ -251,12 +400,44 @@ export async function completeIndividualOnboarding(formData: FormData) {
   const proofPackClaim = String(formData.get('proofPackClaim') || '').trim();
   const proofPackOwnership = String(formData.get('proofPackOwnership') || '').trim();
   const proofPackOutcome = String(formData.get('proofPackOutcome') || '').trim();
+  const proofContributionModeValue = String(formData.get('proofContributionMode') || '').trim();
+  const proofContributionMode = ONBOARDING_CONTRIBUTION_MODES.has(proofContributionModeValue)
+    ? (proofContributionModeValue as OnboardingContributionMode)
+    : null;
+  const proofOwnershipLevel = String(formData.get('proofOwnershipLevel') || '').trim();
+  const proofOwnershipNote = String(formData.get('proofOwnershipNote') || '').trim();
+  const claimedMeasuredOutcomes = parseClaimedMeasuredOutcomes(
+    formData.get('proofPackMeasuredOutcomes')
+  );
+  const effectiveProofPackOutcome = buildClaimedOutcomeSummary(
+    claimedMeasuredOutcomes,
+    proofPackOutcome
+  );
   const proofPackSkills = String(formData.get('proofPackSkills') || '')
     .split(/[\n,]/)
     .map((skill) => skill.trim())
-    .filter(Boolean)
-    .slice(0, 5);
-  const scaffoldSkills = resolveScaffoldSkills(proofPackSkills, proofArtifactType);
+    .filter(Boolean);
+  const scaffoldSkills = proofPackSkills;
+  const firstProofVerificationAction = normalizeFirstProofVerificationAction(
+    String(formData.get('firstProofVerificationAction') || 'none')
+  );
+  const firstProofVerificationPreview = String(formData.get('firstProofVerificationPreview') || '')
+    .trim()
+    .slice(0, 4000);
+  const firstProofVerificationConfirmers = parseFirstProofVerificationConfirmers(
+    formData.get('firstProofVerificationConfirmers')
+  );
+  const firstProofVerificationIntent =
+    firstProofVerificationAction === 'none'
+      ? null
+      : {
+          action: firstProofVerificationAction,
+          preview: firstProofVerificationPreview || null,
+          confirmers: firstProofVerificationConfirmers,
+          savedAt: new Date().toISOString(),
+          semantics:
+            'Scoped verification request draft only; email transport does not equal verification.',
+        };
 
   if (!isOnboardingContextType(contextTypeValue)) {
     emitLaunchTrace(trace, {
@@ -316,6 +497,30 @@ export async function completeIndividualOnboarding(formData: FormData) {
       failureClass: 'missing_proof_pack_fields',
     });
     return { error: 'Structure your first Proof Pack before saving it.' };
+  }
+
+  if (
+    !proofContributionMode ||
+    !ONBOARDING_OWNERSHIP_LEVELS.has(proofOwnershipLevel) ||
+    !proofOwnershipNote
+  ) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'portfolio_publish_validation_failed',
+      failureClass: 'missing_proof_ownership_fields',
+    });
+    return {
+      error: 'Choose whether the proof was solo or team work and describe what you owned.',
+    };
+  }
+
+  if (proofPackSkills.length < 3 || proofPackSkills.length > 5) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'portfolio_publish_validation_failed',
+      failureClass: 'invalid_proof_pack_skills_count',
+    });
+    return { error: 'Add 3 to 5 skills this proof actually supports.' };
   }
 
   const normalizedHandle = normalizeHandle(handle);
@@ -499,6 +704,16 @@ export async function completeIndividualOnboarding(formData: FormData) {
           uploadKind: attachedUpload.upload_kind ?? null,
         })
       : null;
+    const claimedMeasuredOutcomesWithLinks = claimedMeasuredOutcomes.map((outcome) => ({
+      ...outcome,
+      supportingSkills: scaffoldSkills.slice(0, 3),
+      proofPackId: packId,
+      proofPackTitle: proofTitle,
+      claimStatus: 'proof_linked' as const,
+      verificationStatus: 'proof_linked' as const,
+      supportingProofLinked: true,
+    }));
+
     const proofMetadata = {
       imported_from: 'onboarding',
       context_kind: contextKind,
@@ -519,6 +734,13 @@ export async function completeIndividualOnboarding(formData: FormData) {
       context_visibility: 'private_anchor_public_safe_pack',
       focus_area: focusArea || contextFocusArea || contextTitle,
       proof_pack_skills: scaffoldSkills,
+      proof_contribution_mode: proofContributionMode,
+      proof_ownership_level: proofOwnershipLevel,
+      proof_ownership_note: proofOwnershipNote,
+      claimed_measured_outcomes: claimedMeasuredOutcomesWithLinks,
+      claimed_outcome_count: claimedMeasuredOutcomes.length,
+      outcome_claim_status: claimedMeasuredOutcomes.length > 0 ? 'proof_linked' : null,
+      outcome_verification_status: claimedMeasuredOutcomes.length > 0 ? 'proof_linked' : null,
       candidate_evidence: true,
       public_signal: false,
       artifactSubtype: proofItemSubtype,
@@ -526,6 +748,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       proofArtifactType,
       proofFileName: uploadedFileDisplayName || proofFileName,
       uploadedFileId: uploadedFileId || null,
+      first_proof_verification_intent: firstProofVerificationIntent,
     };
 
     const proofArtifactInsert = await supabase.from('proof_artifacts').insert({
@@ -585,7 +808,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       primary_subject_type: contextType,
       primary_subject_id: contextId,
       lifecycle_state: 'ready',
-      primary_claim_type: proofPackOutcome ? 'outcome' : 'contribution',
+      primary_claim_type: effectiveProofPackOutcome ? 'outcome' : 'contribution',
       title: proofTitle,
       summary: proofPackClaim,
       role_context: contextTitle,
@@ -620,11 +843,18 @@ export async function completeIndividualOnboarding(formData: FormData) {
         proofFileName,
         proofPackClaim,
         proofPackOwnership,
-        proofPackOutcome,
+        proofContributionMode,
+        proofOwnershipLevel,
+        proofOwnershipNote,
+        proofPackOutcome: effectiveProofPackOutcome,
+        claimedMeasuredOutcomes: claimedMeasuredOutcomesWithLinks,
+        outcomeClaimStatus: claimedMeasuredOutcomes.length > 0 ? 'proof_linked' : null,
+        outcomeVerificationStatus: claimedMeasuredOutcomes.length > 0 ? 'proof_linked' : null,
         proofPackSkills: scaffoldSkills,
+        firstProofVerificationIntent,
       },
       evidence_summary: proofSummary,
-      outcomes_summary: proofPackOutcome || null,
+      outcomes_summary: effectiveProofPackOutcome || null,
       verification_summary: 'No scoped verification is recorded for this Proof Pack yet.',
       visibility: 'owner_only',
       reveal_gate: 'none',
@@ -640,6 +870,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
         importedFrom: 'onboarding',
         firstProofMilestone: 'portfolio_started',
         verificationOptionalAtCreation: true,
+        firstProofVerificationIntent,
       },
       metadata: proofMetadata,
       created_at: nowIso,
@@ -718,10 +949,15 @@ export async function completeIndividualOnboarding(formData: FormData) {
       handle: normalizedHandle,
       publicPortfolioUrl: buildPublicPortfolioUrl(publicPortfolioPath),
       scaffoldProfilePath: '/app/i/profile',
+      firstProofPackId: packId,
       firstProofPackCreated: true,
       portfolioReady: readiness.flags.portfolioReady,
       browseReady: readiness.flags.browseReady,
       qualifiedIntroReady: readiness.flags.qualifiedIntroReady,
+      firstProofVerificationArtifact: {
+        type: contextType,
+        id: contextId,
+      },
     };
   } catch (error: any) {
     console.error('Individual onboarding error:', error);

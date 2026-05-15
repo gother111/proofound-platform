@@ -104,7 +104,7 @@ export function RevealIdentityCard({
               nowVisible={[
                 'Name',
                 'Allowed avatar or photo',
-                'Public portfolio link if it is published and permitted',
+                'Public Page link if it is published and permitted',
                 'Permitted organization or school names',
               ]}
               hiddenUntilLater={[
@@ -196,7 +196,7 @@ export function RevealIdentityCard({
               nowVisible={[
                 'Name',
                 'Allowed avatar or photo',
-                'Public portfolio link if it is published and permitted',
+                'Public Page link if it is published and permitted',
                 'Permitted organization or school names',
               ]}
               hiddenUntilLater={[
@@ -233,7 +233,7 @@ export function RevealIdentityCard({
                   coordination requires them.
                 </p>
                 <p className="text-sm font-semibold">
-                  Public portfolio publication does not widen this reveal by itself.
+                  Public Page publication does not widen this reveal by itself.
                 </p>
               </AlertDialogDescription>
             </AlertDialogHeader>

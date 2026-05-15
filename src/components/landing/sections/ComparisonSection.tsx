@@ -22,7 +22,7 @@ export function ComparisonSection({ shouldReduceMotion }: ComparisonSectionProps
   ];
 
   const newWayItems = [
-    'One public proof portfolio',
+    'One direct-link Public Page',
     'Portable trust signals and verification',
     'Better matching based on evidence and alignment, not posture',
   ];

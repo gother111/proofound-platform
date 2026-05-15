@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Briefcase,
   FileCheck,
+  MessageSquare,
   LogOut,
   Settings,
 } from 'lucide-react';
@@ -76,6 +77,13 @@ export function CommandPaletteDialog({ open, onOpenChange }: CommandPaletteDialo
               >
                 <LayoutDashboard className="mr-2 h-4 w-4" />
                 <span>Overview</span>
+              </Command.Item>
+              <Command.Item
+                onSelect={() => runCommand(() => router.push('/app/i/communications'))}
+                className="relative flex cursor-default select-none items-center rounded-sm px-2 py-2.5 text-sm outline-none aria-selected:bg-proofound-forest aria-selected:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors"
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                <span>Communications</span>
               </Command.Item>
               <Command.Item
                 onSelect={() => runCommand(() => router.push('/app/i/matching'))}

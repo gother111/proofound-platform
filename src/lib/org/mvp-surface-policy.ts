@@ -4,6 +4,7 @@ export const ORG_SURFACE_STATUS = {
   home: 'mvp',
   matching: 'mvp',
   assignments: 'mvp',
+  communications: 'mvp',
   profile: 'mvp',
   portfolio: 'mvp',
   shortlist: 'mvp',
@@ -23,18 +24,23 @@ export const ORG_MVP_NAV_ITEMS = [
     icon: 'home',
   },
   {
-    hrefSuffix: '/matching',
-    label: 'Assignments & Matches',
+    hrefSuffix: '/assignments',
+    label: 'Assignments',
     icon: 'briefcase',
   },
   {
+    hrefSuffix: '/communications',
+    label: 'Communications',
+    icon: 'messageCircle',
+  },
+  {
     hrefSuffix: '/profile',
-    label: 'Trust Profile',
+    label: 'Organization Profile',
     icon: 'building',
   },
   {
     hrefSuffix: '/portfolio',
-    label: 'Public Trust Profile',
+    label: 'Public Preview',
     icon: 'clipboard',
   },
 ] as const;
@@ -50,7 +56,7 @@ export function getOrgSurfaceFallbackHref(slug: string, surface: string): string
   switch (surface) {
     case 'candidates':
     case 'opportunities':
-      return `/app/o/${slug}/matching`;
+      return `/app/o/${slug}/assignments`;
     case 'projects':
     case 'team':
     case 'members':
@@ -58,7 +64,7 @@ export function getOrgSurfaceFallbackHref(slug: string, surface: string): string
     case 'analytics':
       return `/app/o/${slug}/home`;
     case 'shortlist':
-      return `/app/o/${slug}/matching`;
+      return `/app/o/${slug}/assignments`;
     default:
       return `/app/o/${slug}/home`;
   }

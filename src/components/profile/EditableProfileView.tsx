@@ -7,7 +7,7 @@ import { GuidedProfileSetupView } from './GuidedProfileSetupView';
 import { ProfileSkeleton } from './ProfileSkeleton';
 import { useProfileViewState } from './editable-profile/useProfileViewState';
 import { PortfolioReadinessChecklist } from './editable-profile/PortfolioReadinessChecklist';
-import { ProfileCompletionBanner } from './editable-profile/ProfileCompletionBanner';
+import { ProfileReadinessBanner } from './editable-profile/ProfileReadinessBanner';
 import { ProfileDialogs } from './editable-profile/ProfileDialogs';
 import { ProfileHeroSection } from './editable-profile/ProfileHeroSection';
 import { ProfileSidebar } from './editable-profile/ProfileSidebar';
@@ -33,17 +33,17 @@ import type {
 function resolvePortfolioGateMessage(lockReason: string | null): string {
   switch (lockReason) {
     case 'safe_shell':
-      return 'Public portfolio is locked until your safe shell is complete.';
+      return 'Public Page is locked until your safe shell is complete.';
     case 'context':
-      return 'Public portfolio is locked until you add one real context.';
+      return 'Public Page is locked until you add one real context.';
     case 'proof':
-      return 'Public portfolio is locked until you add and structure your first proof from the profile Proof Packs tab.';
+      return 'Public Page is locked until you add and structure your first proof from the profile Proof Packs tab.';
     case 'verification':
-      return 'Public portfolio is locked until one accepted non-self verification is tied to anchored proof.';
+      return 'Public Page is locked until one accepted non-self verification is tied to anchored proof.';
     case 'publish':
-      return 'Public portfolio is locked until you choose one proof-backed signal to publish from the profile Visibility / Portfolio tab.';
+      return 'Public Page is locked until you choose one proof-backed signal to publish from the profile Public Page visibility tab.';
     default:
-      return 'Complete the required profile steps to unlock your public portfolio.';
+      return 'Complete the required profile steps to unlock your Public Page.';
   }
 }
 
@@ -62,12 +62,7 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
     retryLoad,
     isPending,
     pending,
-    profileCompletion,
     updateBasicInfo,
-    updateMission,
-    updateVision,
-    replaceValues,
-    replaceCauses,
     addImpactStory,
     sendImpactStoryVerificationRequest,
     deleteImpactStory,
@@ -87,14 +82,6 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
   const {
     isEditProfileOpen,
     setIsEditProfileOpen,
-    isMissionEditorOpen,
-    setIsMissionEditorOpen,
-    isVisionEditorOpen,
-    setIsVisionEditorOpen,
-    isValuesEditorOpen,
-    setIsValuesEditorOpen,
-    isCausesEditorOpen,
-    setIsCausesEditorOpen,
     isImpactStoryFormOpen,
     setIsImpactStoryFormOpen,
     isExperienceFormOpen,
@@ -128,8 +115,6 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
           (profile?.experiences.length ?? 0) +
           (profile?.education.length ?? 0) +
           (profile?.volunteering.length ?? 0),
-        valuesCount: profile?.values.length ?? 0,
-        causesCount: profile?.causes.length ?? 0,
         skillsCount: profile?.skills.length ?? 0,
         proofCount: profile?.anchoredProofPackCount ?? profile?.proofArtifactCount ?? 0,
         proofArtifactCount: profile?.proofArtifactCount ?? 0,
@@ -140,25 +125,6 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
       }),
     [profile]
   );
-
-  const openPurposeEditor = useCallback(
-    (field: 'mission' | 'vision') => {
-      if (field === 'mission') {
-        setIsMissionEditorOpen(true);
-      } else {
-        setIsVisionEditorOpen(true);
-      }
-    },
-    [setIsMissionEditorOpen, setIsVisionEditorOpen]
-  );
-
-  const openMissionEditor = useCallback(() => {
-    openPurposeEditor('mission');
-  }, [openPurposeEditor]);
-
-  const openVisionEditor = useCallback(() => {
-    openPurposeEditor('vision');
-  }, [openPurposeEditor]);
 
   const showPortfolioGateNotice = searchParams.get('portfolioLocked') === '1';
   const lockReasonFromRoute = searchParams.get('lockReason');
@@ -232,9 +198,6 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
         : [],
     [profile]
   );
-  const valuesCount = profile?.values.length ?? 0;
-  const causesCount = profile?.causes.length ?? 0;
-
   const openFullProfileView = useCallback(() => {
     setForceFullProfileView(true);
     const params = new URLSearchParams(searchParams.toString());
@@ -253,12 +216,10 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
         event_type: 'profile_guided_open_full',
         event_data: {
           stage: completionState.stage,
-          valuesCount,
-          causesCount,
         },
       }),
     }).catch(() => undefined);
-  }, [causesCount, completionState.stage, pathname, router, searchParams, valuesCount]);
+  }, [completionState.stage, pathname, router, searchParams]);
 
   const openProfileTab = useCallback(
     (tab: 'proof_packs' | 'verification' | 'visibility') => {
@@ -346,14 +307,6 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
       profile={profile}
       isEditProfileOpen={isEditProfileOpen}
       setIsEditProfileOpen={setIsEditProfileOpen}
-      isMissionEditorOpen={isMissionEditorOpen}
-      setIsMissionEditorOpen={setIsMissionEditorOpen}
-      isVisionEditorOpen={isVisionEditorOpen}
-      setIsVisionEditorOpen={setIsVisionEditorOpen}
-      isValuesEditorOpen={isValuesEditorOpen}
-      setIsValuesEditorOpen={setIsValuesEditorOpen}
-      isCausesEditorOpen={isCausesEditorOpen}
-      setIsCausesEditorOpen={setIsCausesEditorOpen}
       isImpactStoryFormOpen={isImpactStoryFormOpen}
       setIsImpactStoryFormOpen={handleImpactStoryFormOpenChange}
       isExperienceFormOpen={isExperienceFormOpen}
@@ -370,10 +323,6 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
       editingVolunteering={editingVolunteering}
       availableSkillNames={availableSkillNames}
       onUpdateBasicInfo={updateBasicInfo}
-      onUpdateMission={updateMission}
-      onUpdateVision={updateVision}
-      onReplaceValues={replaceValues}
-      onReplaceCauses={replaceCauses}
       onAddImpactStory={addImpactStory}
       onRequestImpactStoryVerification={sendImpactStoryVerificationRequest}
       onUpdateImpactStory={updateImpactStory}
@@ -414,7 +363,7 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
     );
   }
 
-  const showCompletionBanner = profileCompletion < 80;
+  const showReadinessBanner = !completionState.isPortfolioReady;
   const showGuidedFlow =
     !completionState.isPortfolioReady && !(fullProfileOverride || forceFullProfileView);
 
@@ -456,7 +405,7 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
       className={`min-h-[calc(100vh-3.5rem)] pb-12 ${bgClass}`}
       data-testid="individual-profile-root"
     >
-      {showCompletionBanner && <ProfileCompletionBanner profileCompletion={profileCompletion} />}
+      {showReadinessBanner && <ProfileReadinessBanner completionState={completionState} />}
 
       <MobileProfileHeader
         name={profile.basicInfo.name}
@@ -486,18 +435,13 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
         )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 relative items-start">
           <div className="space-y-8 lg:sticky lg:top-24 lg:self-start">
-            <ProfileSidebar
-              profile={profile}
-              onOpenMission={openMissionEditor}
-              onOpenVision={openVisionEditor}
-              onOpenValues={() => setIsValuesEditorOpen(true)}
-              onOpenCauses={() => setIsCausesEditorOpen(true)}
-            />
+            <ProfileSidebar profile={profile} />
           </div>
 
           <div className="lg:col-span-2">
             <ProfileTabsSection
               impactStories={profile.impactStories}
+              proofPacks={profile.proofPacks ?? []}
               experiences={profile.experiences}
               education={profile.education}
               volunteering={profile.volunteering}

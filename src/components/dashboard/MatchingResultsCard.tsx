@@ -264,8 +264,8 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
                       <Star className="w-3 h-3" style={{ color: '#F59E0B' }} />
                     </span>
                   )}
-                  {Number(match.subscores?.values ?? 0) >= 0.7 && (
-                    <span title="Values aligned">
+                  {Number(match.subscores?.verifications ?? 0) >= 0.7 && (
+                    <span title="Verification ready">
                       <Shield className="w-3 h-3" style={{ color: '#1C4D3A' }} />
                     </span>
                   )}

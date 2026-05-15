@@ -19,10 +19,6 @@ export type VisibilityContext = 'public' | 'network_only' | 'match_only' | 'admi
  * Default visibility settings (privacy-first)
  */
 export const DEFAULT_VISIBILITY: Record<string, VisibilityLevel> = {
-  mission: 'public',
-  vision: 'match_only',
-  values: 'public',
-  causes: 'public',
   avatar: 'public',
   tagline: 'public',
   location: 'network_only',

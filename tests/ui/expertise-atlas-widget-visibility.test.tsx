@@ -9,10 +9,6 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
-vi.mock('@/components/expertise/CVJDAutoSuggest', () => ({
-  CVJDAutoSuggest: () => null,
-}));
-
 vi.mock('@/components/skill-gaps/SkillGapsClient', () => ({
   SkillGapsClient: () => null,
 }));
@@ -113,6 +109,30 @@ function createBaseProps() {
 }
 
 describe('Expertise Atlas dashboard widget visibility', () => {
+  it('does not expose the archived CV import tab or CTA', () => {
+    render(
+      <ExpertiseAtlasClient
+        {...createBaseProps()}
+        widgetData={{
+          credibility: { verified: 0, proofOnly: 0, claimOnly: 1 },
+          relevance: { obsolete: 0, current: 1, emerging: 0 },
+          skillWheel: [],
+          verificationSources: { self: 0, peer: 0, manager: 0, external: 0 },
+          scatter: [],
+          coverage: [],
+          nextBestActions: [],
+        }}
+      />
+    );
+
+    expect(
+      screen.queryByRole('tab', { name: /import from cv|import from resume/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /auto-suggest from cv|import from cv/i })
+    ).not.toBeInTheDocument();
+  });
+
   it('hides verification and next-actions cards when those datasets are empty', () => {
     render(
       <ExpertiseAtlasClient

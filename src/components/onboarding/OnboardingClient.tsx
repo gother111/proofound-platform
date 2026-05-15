@@ -4,14 +4,21 @@ import { useState } from 'react';
 import { PersonaChoice } from '@/components/onboarding/PersonaChoice';
 import { IndividualSetup } from '@/components/onboarding/IndividualSetup';
 import { OrganizationSetup } from '@/components/onboarding/OrganizationSetup';
+import type { StartFromCvScaffoldingSurface } from '@/lib/ai/start-from-cv-contract';
 
 type Persona = 'individual' | 'organization' | null;
 
 export interface OnboardingClientProps {
   initialPersona?: Persona;
+  individualCompletionPath?: string;
+  startFromCvScaffoldingSurface?: StartFromCvScaffoldingSurface;
 }
 
-export function OnboardingClient({ initialPersona = null }: OnboardingClientProps) {
+export function OnboardingClient({
+  initialPersona = null,
+  individualCompletionPath,
+  startFromCvScaffoldingSurface,
+}: OnboardingClientProps) {
   const [selectedPersona, setSelectedPersona] = useState<Persona>(initialPersona);
 
   if (!selectedPersona) {
@@ -41,7 +48,14 @@ export function OnboardingClient({ initialPersona = null }: OnboardingClientProp
         >
           ← Back to persona choice
         </button>
-        {selectedPersona === 'individual' ? <IndividualSetup /> : <OrganizationSetup />}
+        {selectedPersona === 'individual' ? (
+          <IndividualSetup
+            completionPath={individualCompletionPath}
+            startFromCvScaffoldingSurface={startFromCvScaffoldingSurface}
+          />
+        ) : (
+          <OrganizationSetup />
+        )}
       </div>
     </div>
   );

@@ -24,15 +24,8 @@ import {
   setSkillLevel,
   saveSkill,
 } from '../helpers/expertise-helpers';
-import {
-  navigateToProfile,
-  editMission,
-  editVision,
-  addValues,
-  addCauses,
-  addWorkExperience,
-} from '../helpers/profile-helpers';
-import { createCompleteTestProfile, createMatchingProfile } from '../helpers/test-data-setup';
+import { navigateToProfile, addWorkExperience } from '../helpers/profile-helpers';
+import { createMatchingProfile } from '../helpers/test-data-setup';
 
 const TEST_USER = {
   email: 'demo@proofound.com',
@@ -45,23 +38,18 @@ test.describe('End-to-End - Complete Matching Journey', () => {
   });
 
   test('Complete matching journey: profile → skills → matching → interest', async ({ page }) => {
-    // Step 1: Create profile with mission/vision/values/causes
+    // Step 1: Add proof/context material without relying on individual purpose matching.
     await navigateToProfile(page);
 
     try {
-      await editMission(page, 'To build impactful software solutions');
-      await page.waitForTimeout(1000);
-
-      await editVision(page, 'A world where technology serves humanity');
-      await page.waitForTimeout(1000);
-
-      await addValues(page, ['Integrity', 'Innovation']);
-      await page.waitForTimeout(1000);
-
-      await addCauses(page, ['Climate Change', 'Education']);
+      await addWorkExperience(page, {
+        organization: 'Proofound Labs',
+        role: 'Software Engineer',
+        startDate: '2024',
+      });
       await page.waitForTimeout(1000);
     } catch (error) {
-      // Profile may already have these set
+      // Profile context may already be present
       console.log('Profile setup may already be complete');
     }
 
@@ -103,7 +91,6 @@ test.describe('End-to-End - Complete Matching Journey', () => {
           workMode: 'remote',
           salaryMin: 80000,
           salaryMax: 120000,
-          causes: ['Climate Change'],
         });
         await page.waitForTimeout(2000);
       } catch (error) {
@@ -252,29 +239,22 @@ test.describe('End-to-End - Profile → Matching Integration', () => {
     await loginUser(page, TEST_USER.email, TEST_USER.password);
   });
 
-  test('Purpose affects matching: update values/causes and verify PAC scores update', async ({ page }) => {
-    // Step 1: Update values/causes
-    await navigateToProfile(page);
-
-    try {
-      await addCauses(page, ['Healthcare', 'Social Justice']);
-      await page.waitForTimeout(2000);
-    } catch (error) {
-      console.log('Causes may already be set');
-    }
-
-    // Step 2: Navigate to matching
+  test('Matching stays proof-first without PAC or purpose-fit scoring', async ({ page }) => {
     await navigateToMatching(page);
     await waitForMatches(page);
 
-    // Step 3: Check for PAC scores
-    const pacContent = page.locator('text=/PAC|Purpose-Alignment/i');
-    const hasPAC = await pacContent.isVisible().catch(() => false);
-
-    expect(typeof hasPAC === 'boolean').toBeTruthy();
+    const matchCards = await getMatchCards(page);
+    if ((await matchCards.count()) > 0) {
+      const firstMatchText =
+        (await matchCards
+          .first()
+          .textContent()
+          .catch(() => '')) || '';
+      expect(firstMatchText).not.toMatch(/PAC|Purpose-Alignment|purpose-fit|mission-first/i);
+    }
   });
 
-  test('Purpose affects matching: matches re-ranked after purpose update', async ({ page }) => {
+  test('Profile context updates preserve available matching results', async ({ page }) => {
     // Step 1: Get initial match order
     await navigateToMatching(page);
     await waitForMatches(page);
@@ -283,17 +263,17 @@ test.describe('End-to-End - Profile → Matching Integration', () => {
     const initialCount = await initialMatches.count();
 
     if (initialCount > 0) {
-      // Get first match title/ID (simplified)
-      const firstMatch = initialMatches.first();
-      const firstMatchText = await firstMatch.textContent().catch(() => '');
-
-      // Step 2: Update purpose
+      // Step 2: Update proof/context material
       await navigateToProfile(page);
       try {
-        await addValues(page, ['Sustainability']);
+        await addWorkExperience(page, {
+          organization: 'Proofound Labs',
+          role: 'Context Engineer',
+          startDate: '2025',
+        });
         await page.waitForTimeout(2000);
       } catch (error) {
-        console.log('Values may already be set');
+        console.log('Profile context may already be set');
       }
 
       // Step 3: Return to matching
@@ -309,7 +289,7 @@ test.describe('End-to-End - Profile → Matching Integration', () => {
     }
   });
 
-  test('Purpose alignment shown in match explainer', async ({ page }) => {
+  test('Match explainer does not expose purpose alignment scoring', async ({ page }) => {
     await navigateToMatching(page);
     await waitForMatches(page);
 
@@ -318,18 +298,11 @@ test.describe('End-to-End - Profile → Matching Integration', () => {
       try {
         await openMatchExplainer(page, 0);
 
-        // Click Purpose tab
         const purposeTab = page.locator('button[role="tab"]:has-text("Purpose")');
-        if (await purposeTab.isVisible()) {
-          await purposeTab.click();
-          await page.waitForTimeout(500);
+        await expect(purposeTab).not.toBeVisible();
 
-          // Verify purpose alignment shown
-          const purposeContent = page.locator('text=/Values|Causes|Alignment|overlap/i');
-          const hasPurpose = await purposeContent.isVisible().catch(() => false);
-
-          expect(typeof hasPurpose === 'boolean').toBeTruthy();
-        }
+        const purposeContent = page.locator('text=/Values|Causes|Alignment|overlap|PAC/i');
+        await expect(purposeContent).not.toBeVisible();
       } catch (error) {
         expect(error).toBeDefined();
       }
@@ -342,10 +315,9 @@ test.describe('End-to-End - Cross-Feature Validation', () => {
     await loginUser(page, TEST_USER.email, TEST_USER.password);
   });
 
-  test('Profile completion affects matching eligibility', async ({ page }) => {
-    // Check profile completion
+  test('Proof readiness affects matching eligibility', async ({ page }) => {
+    // Check proof-readiness surface
     await navigateToProfile(page);
-    const completion = await verifyProfileCompletion(page);
 
     // Navigate to matching
     await navigateToMatching(page);
@@ -393,4 +365,3 @@ test.describe('End-to-End - Cross-Feature Validation', () => {
     }
   });
 });
-

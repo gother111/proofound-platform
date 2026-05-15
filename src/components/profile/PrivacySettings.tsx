@@ -22,10 +22,6 @@ import { Shield, Eye } from 'lucide-react';
 import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
 
 interface FieldVisibilitySettings {
-  mission: VisibilityLevel;
-  vision: VisibilityLevel;
-  values: VisibilityLevel;
-  causes: VisibilityLevel;
   avatar: VisibilityLevel;
   tagline: VisibilityLevel;
   location: VisibilityLevel;
@@ -38,10 +34,6 @@ interface FieldVisibilitySettings {
 interface PrivacySettingsProps {
   userId: string;
   currentProfile: {
-    mission?: string | null;
-    vision?: string | null;
-    values?: any[];
-    causes?: any[];
     avatar?: string | null;
     tagline?: string | null;
     location?: string | null;
@@ -53,10 +45,6 @@ interface PrivacySettingsProps {
 }
 
 const FIELD_VISIBILITY_KEYS: Array<keyof FieldVisibilitySettings> = [
-  'mission',
-  'vision',
-  'values',
-  'causes',
   'avatar',
   'tagline',
   'location',
@@ -68,10 +56,6 @@ const FIELD_VISIBILITY_KEYS: Array<keyof FieldVisibilitySettings> = [
 
 export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySettingsProps) {
   const [fieldVisibility, setFieldVisibility] = useState<FieldVisibilitySettings>({
-    mission: 'public',
-    vision: 'public',
-    values: 'public',
-    causes: 'public',
     avatar: 'public',
     tagline: 'public',
     location: 'network_only',
@@ -177,30 +161,6 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
   // Prepare fields for preview
   const previewFields = [
     {
-      name: 'mission',
-      label: 'Mission',
-      value: currentProfile.mission ?? null,
-      visibility: fieldVisibility.mission,
-    },
-    {
-      name: 'vision',
-      label: 'Vision',
-      value: currentProfile.vision ?? null,
-      visibility: fieldVisibility.vision,
-    },
-    {
-      name: 'values',
-      label: 'Values',
-      value: currentProfile.values?.length ? `${currentProfile.values.length} values` : null,
-      visibility: fieldVisibility.values,
-    },
-    {
-      name: 'causes',
-      label: 'Causes',
-      value: currentProfile.causes?.length ? `${currentProfile.causes.length} causes` : null,
-      visibility: fieldVisibility.causes,
-    },
-    {
       name: 'avatar',
       label: 'Avatar',
       value: currentProfile.avatar ? 'Set' : null,
@@ -288,35 +248,6 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
             {/* Field Visibility Tab */}
             <TabsContent value="visibility" className="space-y-4 mt-6">
               <div className="space-y-4">
-                <FieldVisibilityControl
-                  fieldName="mission"
-                  fieldLabel="Mission"
-                  value={fieldVisibility.mission}
-                  onChange={(value) => handleFieldVisibilityChange('mission', value)}
-                  description="Your professional purpose and what you're looking to achieve"
-                />
-                <FieldVisibilityControl
-                  fieldName="vision"
-                  fieldLabel="Vision"
-                  value={fieldVisibility.vision}
-                  onChange={(value) => handleFieldVisibilityChange('vision', value)}
-                  description="Your long-term career aspirations and goals"
-                />
-                <FieldVisibilityControl
-                  fieldName="values"
-                  fieldLabel="Values"
-                  value={fieldVisibility.values}
-                  onChange={(value) => handleFieldVisibilityChange('values', value)}
-                  description="Core values that guide your work"
-                />
-                <FieldVisibilityControl
-                  fieldName="causes"
-                  fieldLabel="Causes"
-                  value={fieldVisibility.causes}
-                  onChange={(value) => handleFieldVisibilityChange('causes', value)}
-                  description="Social and environmental causes you care about"
-                />
-                <div className="border-t border-proofound-stone my-4" />
                 <FieldVisibilityControl
                   fieldName="location"
                   fieldLabel="Location"

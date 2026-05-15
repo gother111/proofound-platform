@@ -203,7 +203,7 @@ export function buildOrganizationTextPack(data: OrganizationPortfolioExportData)
     `- Trust posture: ${
       data.organization.verifiedDomainPath
         ? `Domain verified (${data.organization.verifiedDomainPath})`
-        : 'Public trust card'
+        : 'Public profile'
     }`
   );
   lines.push(

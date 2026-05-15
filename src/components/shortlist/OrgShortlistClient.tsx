@@ -21,8 +21,6 @@ export interface ShortlistItem {
     tagline: string | null;
     desiredRoles: string[];
     workMode: string | null;
-    valuesTags: string[];
-    causeTags: string[];
     verificationSummary: number;
   };
   fairness: {

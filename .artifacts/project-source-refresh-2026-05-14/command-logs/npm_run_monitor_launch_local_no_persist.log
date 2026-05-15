@@ -1,0 +1,20 @@
+# LAUNCH_MONITOR_PERSIST=0 LAUNCH_SMOKE_ARTIFACT_PATH=.artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json BASE_URL=http://localhost:3000 npm run monitor:launch
+startedAt=2026-05-14T10:38:37.042Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 monitor:launch
+> node --import tsx ./scripts/run-launch-synthetic-monitors.ts
+
+Launch synthetic monitor run failed: Failed query: 
+    SELECT monitor_key, MAX(checked_at) AS last_successful_checked_at
+    FROM synthetic_monitor_runs
+    WHERE status = 'pass'
+    GROUP BY monitor_key
+  
+params: 
+
+
+completedAt=2026-05-14T10:38:37.923Z
+exitCode=1
+durationMs=881
+timedOut=false

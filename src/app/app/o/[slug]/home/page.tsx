@@ -86,19 +86,19 @@ export default async function OrganizationHomePage({
     : `/app/o/${slug}/assignments/new`;
   const primaryActionLabel = needsTrustWork
     ? canEditTrustProfile
-      ? 'Complete trust profile'
-      : 'Review trust profile'
+      ? 'Complete organization profile'
+      : 'Review organization profile'
     : 'Create assignment';
   const readinessActionLabel = needsTrustWork
     ? canEditTrustProfile
-      ? 'Complete trust profile'
-      : 'Review trust profile'
+      ? 'Complete organization profile'
+      : 'Review organization profile'
     : 'Create first assignment';
 
   const queueItems = [
     {
       icon: ShieldCheck,
-      label: 'Trust profile',
+      label: 'Organization profile',
       subject: org.displayName,
       detail: verifiedDomainPath
         ? `Verified path: ${verifiedDomainPath}`
@@ -115,7 +115,7 @@ export default async function OrganizationHomePage({
       subject: 'Proof expectations',
       detail: assignmentReady
         ? 'Purpose, real work, constraints, and evidence stay in one builder'
-        : 'This opens after the trust profile has enough context.',
+        : 'This opens after the organization profile has enough context.',
       priority: assignmentReady ? 'Ready' : 'Next',
       value: assignmentReady ? 'Can start' : 'Needs trust',
       tone: assignmentReady ? 'active' : 'pending',
@@ -131,7 +131,7 @@ export default async function OrganizationHomePage({
       priority: 'Guarded',
       value: assignmentReady ? 'Needs assignment' : 'Locked',
       tone: assignmentReady ? 'attention' : 'pending',
-      href: `/app/o/${slug}/matching`,
+      href: `/app/o/${slug}/assignments`,
     },
   ] as const;
 
@@ -156,7 +156,7 @@ export default async function OrganizationHomePage({
   const teamRows = [
     {
       label: 'Owner',
-      detail: 'Owns trust profile, launch setup, and collaborator access.',
+      detail: 'Owns organization profile, launch setup, and collaborator access.',
       current: roleLabel === 'Owner',
     },
     {
@@ -376,7 +376,7 @@ export default async function OrganizationHomePage({
                   <OrgCollaboratorInviteCard action={inviteAction} />
                 ) : (
                   <Button asChild variant="outline" className="w-full justify-between">
-                    <Link href={`/app/o/${slug}/matching`}>
+                    <Link href={`/app/o/${slug}/assignments`}>
                       Open review queue
                       <ArrowRight className="h-4 w-4" />
                     </Link>

@@ -30,10 +30,6 @@ export interface IndividualFieldVisibility {
   avatar: IndividualVisibilityLevel;
   headline: IndividualVisibilityLevel;
   location: IndividualVisibilityLevel;
-  mission: IndividualVisibilityLevel;
-  vision: IndividualVisibilityLevel;
-  values: IndividualVisibilityLevel;
-  causes: IndividualVisibilityLevel;
   experiences: IndividualVisibilityLevel;
   education: IndividualVisibilityLevel;
   volunteering: IndividualVisibilityLevel;
@@ -104,30 +100,6 @@ const FIELDS = [
     description: 'City/country information',
   },
   {
-    key: 'mission',
-    label: 'Mission statement',
-    recommended: 'public',
-    description: 'Your personal mission',
-  },
-  {
-    key: 'vision',
-    label: 'Vision statement',
-    recommended: 'public',
-    description: 'Your future vision',
-  },
-  {
-    key: 'values',
-    label: 'Core values',
-    recommended: 'public',
-    description: 'What you stand for',
-  },
-  {
-    key: 'causes',
-    label: 'Causes',
-    recommended: 'public',
-    description: 'Causes you support',
-  },
-  {
     key: 'skills',
     label: 'Skills',
     recommended: 'public',
@@ -169,10 +141,6 @@ export function IndividualFieldVisibilityControls({
     avatar: initialVisibility.avatar || 'public',
     headline: initialVisibility.headline || 'public',
     location: initialVisibility.location || 'network_only',
-    mission: initialVisibility.mission || 'public',
-    vision: initialVisibility.vision || 'public',
-    values: initialVisibility.values || 'public',
-    causes: initialVisibility.causes || 'public',
     experiences: initialVisibility.experiences || 'private',
     education: initialVisibility.education || 'private',
     volunteering: initialVisibility.volunteering || 'private',

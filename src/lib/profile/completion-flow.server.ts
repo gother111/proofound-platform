@@ -23,7 +23,18 @@ import {
 } from './completion-flow';
 
 function countItems(value: unknown): number {
-  return Array.isArray(value) ? value.length : 0;
+  if (Array.isArray(value)) {
+    return value.length;
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean).length;
+  }
+
+  return 0;
 }
 
 export async function getIndividualProfileCompletionState(
@@ -53,8 +64,6 @@ export async function getIndividualProfileCompletionState(
       .select({
         headline: individualProfiles.headline,
         bio: individualProfiles.bio,
-        values: individualProfiles.values,
-        causes: individualProfiles.causes,
         location: individualProfiles.location,
       })
       .from(individualProfiles)
@@ -97,8 +106,6 @@ export async function getIndividualProfileCompletionState(
     (experienceCountRow[0]?.count ?? 0) +
     (educationCountRow[0]?.count ?? 0) +
     (volunteeringCountRow[0]?.count ?? 0);
-  const valuesCount = countItems(individualRow[0]?.values);
-  const causesCount = countItems(individualRow[0]?.causes);
   const skillsCount = skillsCountRow[0]?.count ?? 0;
   const canonicalSummary = summarizeCanonicalProofOwnerAggregates(canonicalAggregates);
   const anchoredProofPackCount = canonicalAggregates.filter((aggregate) =>
@@ -127,8 +134,6 @@ export async function getIndividualProfileCompletionState(
     workPreference,
     engagementType,
     contextCount,
-    valuesCount,
-    causesCount,
     skillsCount,
     proofCount,
     proofArtifactCount,

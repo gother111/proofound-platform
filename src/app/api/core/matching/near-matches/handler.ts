@@ -8,8 +8,6 @@ import { log } from '@/lib/log';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 import {
-  scoreValues,
-  scoreCauses,
   scoreSkills,
   scoreExperience,
   scoreVerifications,
@@ -24,7 +22,7 @@ import {
   type Range,
   type LocationMode,
 } from '@/lib/core/matching/scorers';
-import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
+import { getPreset, normalizeWeights } from '@/lib/core/matching/presets';
 import { evaluateIndividualMatchability, toSoftGatedPayload } from '@/lib/matching/eligibility';
 import { calculateFocusBoost, isIndustryAvoided } from '@/lib/core/matching/focus';
 import {
@@ -57,7 +55,7 @@ function resolveNearMatchScanLimit(): number {
 // Validation schema
 const NearMatchRequestSchema = z.object({
   weights: z.record(z.number()).optional(),
-  mode: z.enum(['mission-first', 'skills-first', 'balanced']).optional(),
+  mode: z.string().optional(),
   k: z.number().positive().max(100).optional(), // Top k results
   threshold: z.number().min(0).max(1).optional(), // Minimum score threshold (default 0.3)
 });
@@ -111,7 +109,7 @@ export async function POST(request: NextRequest) {
 
     // Validate input
     const validatedData = NearMatchRequestSchema.parse(body);
-    const { mode, k = 10, threshold = 0.3 } = validatedData;
+    const { k = 10, threshold = 0.3 } = validatedData;
 
     const eligibility = await evaluateIndividualMatchability(user.id);
     if (!eligibility.eligible) {
@@ -196,11 +194,9 @@ export async function POST(request: NextRequest) {
     // Determine weights
     const weights = validatedData.weights
       ? normalizeWeights(validatedData.weights)
-      : mode
-        ? getPreset(mode as PresetKey)
-        : profile.weights
-          ? normalizeWeights(profile.weights as Record<string, number>)
-          : getPreset('balanced');
+      : profile.weights
+        ? normalizeWeights(profile.weights as Record<string, number>)
+        : getPreset('balanced');
 
     const assignmentScanLimit = resolveNearMatchScanLimit();
 
@@ -257,8 +253,6 @@ export async function POST(request: NextRequest) {
 
       // Compute subscores
       const subscores: Record<string, number> = {
-        values: scoreValues(profile.valuesTags || [], assignment.valuesRequired || []),
-        causes: scoreCauses(profile.causeTags || [], assignment.causeTags || []),
         skills: skillScore.score,
         experience: scoreExperience(
           Object.values(skillsMap).reduce((sum, s) => sum + (s.months || 0), 0) /
@@ -359,8 +353,6 @@ export async function POST(request: NextRequest) {
         reason = 'Availability timing mismatch';
       } else if (subscores.compensation < 0.5) {
         reason = 'Compensation range mismatch';
-      } else if (subscores.values < 0.5) {
-        reason = 'Some values alignment differences';
       }
 
       // Scrub org-identifying info

@@ -44,7 +44,9 @@ export function NotificationDropdown({
       ? `/app/o/${orgSlug}/settings`
       : '/app/i/settings/notifications';
   const viewAllPath =
-    shellType === 'organization' && orgSlug ? `/app/o/${orgSlug}/messages` : '/app/i/notifications';
+    shellType === 'organization' && orgSlug
+      ? `/app/o/${orgSlug}/communications?section=messages`
+      : '/app/i/notifications';
 
   const clearAutoCloseTimer = useCallback(() => {
     if (!autoCloseTimerRef.current) {

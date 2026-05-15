@@ -13,10 +13,6 @@ import { Page } from '@playwright/test';
 export async function createCompleteTestProfile(
   page: Page,
   options: {
-    mission?: string;
-    vision?: string;
-    values?: string[];
-    causes?: string[];
     skills?: Array<{ name: string; level: number }>;
     workExperience?: Array<{
       organization: string;
@@ -29,30 +25,6 @@ export async function createCompleteTestProfile(
   // Navigate to profile
   await page.goto('/app/i/profile');
   await page.waitForLoadState('networkidle');
-
-  // Add mission if provided
-  if (options.mission) {
-    const { editMission } = await import('./profile-helpers');
-    await editMission(page, options.mission);
-  }
-
-  // Add vision if provided
-  if (options.vision) {
-    const { editVision } = await import('./profile-helpers');
-    await editVision(page, options.vision);
-  }
-
-  // Add values if provided
-  if (options.values) {
-    const { addValues } = await import('./profile-helpers');
-    await addValues(page, options.values);
-  }
-
-  // Add causes if provided
-  if (options.causes) {
-    const { addCauses } = await import('./profile-helpers');
-    await addCauses(page, options.causes);
-  }
 
   // Add skills if provided
   if (options.skills) {
@@ -102,7 +74,6 @@ export async function createMatchingProfile(
     workMode?: 'remote' | 'hybrid' | 'onsite';
     salaryMin?: number;
     salaryMax?: number;
-    causes?: string[];
   }
 ) {
   await page.goto('/app/i/matching');

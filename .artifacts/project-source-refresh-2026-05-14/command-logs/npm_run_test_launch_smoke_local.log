@@ -1,0 +1,22 @@
+# npm run test:launch:smoke -- --artifact .artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json --base-url http://localhost:3000
+startedAt=2026-05-14T10:38:27.500Z
+cwd=/Users/yuriibakurov/proofound
+
+> proofound@0.1.0 test:launch:smoke
+> node --import tsx ./scripts/launch-smoke-runner.ts --artifact .artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json --base-url http://localhost:3000
+
+Running full launch smoke checks against http://localhost:3000 (local)
+AI assistant smoke state: disabled_local_fallback_verified
+PASS public_individual_portfolio_visible
+PASS proof_creation_case
+FAIL public_org_trust_fixture_live
+FAIL full_org_corridor_review_to_engagement_verification
+PASS hidden_portfolio_protected
+PASS privacy_no_leak_case
+Launch smoke artifact written to .artifacts/project-source-refresh-2026-05-14/launch-smoke-report.json
+
+
+completedAt=2026-05-14T10:38:37.042Z
+exitCode=1
+durationMs=9542
+timedOut=false

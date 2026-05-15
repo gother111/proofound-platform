@@ -103,7 +103,17 @@ export type VerificationRequestView = {
     skillLabels: string[];
   } | null;
   message?: string | null;
-  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
+  status:
+    | 'pending'
+    | 'accepted'
+    | 'declined'
+    | 'expired'
+    | 'failed'
+    | 'cancelled'
+    | 'revoked'
+    | 'corrected'
+    | 'contradicted'
+    | 'disputed';
   createdAt: string;
   respondedAt?: string | null;
   responseMessage?: string | null;
@@ -414,8 +424,7 @@ function mapSkillRequestToView(
     verifierRelationship: request.verifier_relationship || null,
     attestationRequest: toAttestationRequestShape(request.attestation_request),
     message: request.message || null,
-    status:
-      request.status === 'cancelled' || request.status === 'revoked' ? 'declined' : request.status,
+    status: request.status,
     createdAt: request.created_at,
     respondedAt: request.responded_at || null,
     responseMessage: request.response_message || null,
@@ -451,8 +460,7 @@ function mapImpactRequestToView(
     verifierName: request.verifier_name || null,
     verifierRelationship: request.verifier_relationship || null,
     message: request.message || null,
-    status:
-      request.status === 'cancelled' || request.status === 'revoked' ? 'declined' : request.status,
+    status: request.status,
     createdAt: request.created_at,
     respondedAt: request.responded_at || null,
     responseMessage: request.response_message || null,

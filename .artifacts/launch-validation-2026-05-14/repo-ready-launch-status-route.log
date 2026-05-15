@@ -1,0 +1,29 @@
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs src/app/api/monitoring/__tests__/launch-status-route.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ src/app/api/monitoring/__tests__/launch-status-route.test.ts  (15 tests) 19ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  12:43:29
+   Duration  1.34s (transform 283ms, setup 26ms, collect 739ms, tests 19ms, environment 0ms, prepare 57ms)
+
+
+stderr | src/app/api/monitoring/__tests__/launch-status-route.test.ts > /api/monitoring/launch-status > returns blocked stale persisted monitor evidence when live refresh fails entirely
+Live launch-status refresh failed; returning persisted status Error: network exploded
+    at /Users/yuriibakurov/proofound/src/app/api/monitoring/__tests__/launch-status-route.test.ts:792:7
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)

@@ -6,6 +6,7 @@ import {
   assignmentExpertiseMatrix,
   assignments,
   canonicalEngagementTypeValues,
+  matchReviewStates,
   matches,
   skillsTaxonomy,
 } from '@/db/schema';
@@ -283,6 +284,7 @@ export async function GET(request: NextRequest) {
       // Check if there are more results
       const hasMore = orgAssignments.length > limit;
       const assignmentsToReturn = hasMore ? orgAssignments.slice(0, limit) : orgAssignments;
+      const assignmentIdsForSummary = assignmentsToReturn.map((assignment: any) => assignment.id);
 
       // -----------------------------------------------------------------------
       // PRD safeguard: TTFQI 72h warning if <5 matches after 72 hours
@@ -314,6 +316,71 @@ export async function GET(request: NextRequest) {
           },
           {} as Record<string, number>
         );
+      }
+
+      const matchingSummaries: Record<
+        string,
+        {
+          candidateCount: number;
+          reviewChangeCount: number;
+          lastCandidateAt: string | null;
+          lastReviewChangeAt: string | null;
+          lastActivityAt: string | null;
+        }
+      > = {};
+
+      const toIsoString = (value: Date | string | null | undefined) => {
+        if (!value) return null;
+        if (value instanceof Date) return value.toISOString();
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? null : date.toISOString();
+      };
+
+      const latestIsoString = (...values: Array<Date | string | null | undefined>) => {
+        const timestamps = values
+          .map((value) => {
+            if (!value) return null;
+            const date = value instanceof Date ? value : new Date(value);
+            return Number.isNaN(date.getTime()) ? null : date.getTime();
+          })
+          .filter((value): value is number => typeof value === 'number');
+
+        if (timestamps.length === 0) return null;
+        return new Date(Math.max(...timestamps)).toISOString();
+      };
+
+      if (assignmentIdsForSummary.length > 0) {
+        try {
+          const rows = await db
+            .select({
+              assignmentId: matches.assignmentId,
+              candidateCount: sql<number>`count(distinct ${matches.id})::int`,
+              reviewChangeCount: sql<number>`count(distinct ${matchReviewStates.matchId}) filter (where ${matchReviewStates.reviewStage} <> 'blind_review')::int`,
+              lastCandidateAt: sql<Date | null>`max(${matches.updatedAt})`,
+              lastReviewChangeAt: sql<Date | null>`max(${matchReviewStates.updatedAt}) filter (where ${matchReviewStates.reviewStage} <> 'blind_review')`,
+            })
+            .from(matches)
+            .leftJoin(matchReviewStates, eq(matchReviewStates.matchId, matches.id))
+            .where(inArray(matches.assignmentId, assignmentIdsForSummary))
+            .groupBy(matches.assignmentId);
+
+          for (const row of rows) {
+            matchingSummaries[row.assignmentId] = {
+              candidateCount: row.candidateCount ?? 0,
+              reviewChangeCount: row.reviewChangeCount ?? 0,
+              lastCandidateAt: toIsoString(row.lastCandidateAt),
+              lastReviewChangeAt: toIsoString(row.lastReviewChangeAt),
+              lastActivityAt: latestIsoString(row.lastCandidateAt, row.lastReviewChangeAt),
+            };
+          }
+        } catch (error) {
+          log.warn('assignments.matching_summary_failed', {
+            requestId: ctx.requestId,
+            userId: user.id,
+            orgId,
+            error: sanitizeErrorForLog(error),
+          });
+        }
       }
 
       const itemsWithWarnings = assignmentsToReturn.map((assignment: any) => {
@@ -349,6 +416,13 @@ export async function GET(request: NextRequest) {
         return {
           ...assignment,
           ttfqiWarning: warn,
+          matchingSummary: matchingSummaries[assignment.id] ?? {
+            candidateCount: 0,
+            reviewChangeCount: 0,
+            lastCandidateAt: null,
+            lastReviewChangeAt: null,
+            lastActivityAt: null,
+          },
         };
       });
 

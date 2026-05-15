@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ImpactTab } from '@/components/profile/editable-profile/ImpactTab';
 import { ProfileTabsSection } from '@/components/profile/editable-profile/ProfileTabsSection';
 import { VisibilityPortfolioTab } from '@/components/profile/editable-profile/VisibilityPortfolioTab';
+import type { ProfileProofPack } from '@/types/profile';
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
@@ -50,6 +51,51 @@ function queryTabTrigger(pattern: RegExp) {
     .find((node) => node.hasAttribute('data-value') && pattern.test(node.textContent || ''));
 }
 
+function makeProofPack(overrides: Partial<ProfileProofPack>): ProfileProofPack {
+  return {
+    id: 'pack-1',
+    title: 'Launch proof pack',
+    summary: 'Proof of launch work.',
+    primaryClaim: 'Shipped a launch workflow with measurable outcomes.',
+    contextType: 'experience',
+    contextLabel: 'Primary work context',
+    outcomesSummary: 'Reduced review time by 23%.',
+    evidenceSummary: 'Launch memo and implementation artifact.',
+    ownershipStatement: 'Owned implementation and review flow.',
+    roleContext: 'Product engineering',
+    timeframeLabel: 'Q1 pilot',
+    verificationStatus: 'verified',
+    verificationSummary: 'Scoped verification supports this Proof Pack.',
+    freshnessState: 'fresh',
+    visibility: 'public',
+    revealGate: 'none',
+    proofQualityScore: 0.9,
+    createdAt: '2026-05-10T10:00:00.000Z',
+    updatedAt: '2026-05-10T10:00:00.000Z',
+    lastVerifiedAt: '2026-05-11T10:00:00.000Z',
+    lastRefreshedAt: '2026-05-11T10:00:00.000Z',
+    artifacts: [
+      {
+        id: 'artifact-1',
+        title: 'Launch memo',
+        kind: 'document',
+        description: null,
+        displayName: null,
+        sourceUrl: null,
+        visibility: 'public',
+        effectiveVisibility: 'public',
+        issuedAt: null,
+        expiresAt: null,
+      },
+    ],
+    linkedSkills: [
+      { id: 'skill-1', name: 'Product engineering', evidenceClasses: ['artifact_backed'] },
+    ],
+    isPublicSafe: true,
+    ...overrides,
+  };
+}
+
 describe('profile launch IA', () => {
   it('replaces legacy profile tabs with launch IA labels', () => {
     render(
@@ -79,8 +125,6 @@ describe('profile launch IA', () => {
           },
           counts: {
             contexts: 1,
-            values: 0,
-            causes: 0,
             skills: 0,
             proofPacks: 0,
             anchoredProofPacks: 0,
@@ -157,8 +201,6 @@ describe('profile launch IA', () => {
           },
           counts: {
             contexts: 1,
-            values: 0,
-            causes: 0,
             skills: 0,
             proofPacks: 0,
             anchoredProofPacks: 0,
@@ -178,11 +220,91 @@ describe('profile launch IA', () => {
       />
     );
 
-    expect(screen.getByText(/proof packs/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /proof packs/i })).toBeInTheDocument();
     expect(screen.getByText(/readiness blockers/i)).toBeInTheDocument();
     expect(screen.getByText(/add your first proof link or artifact/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /add your first proof/i }));
     expect(onAddFirstProof).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders Proof Packs as a sortable proof-first grid', () => {
+    render(
+      <ImpactTab
+        impactStories={[]}
+        proofPacks={[
+          makeProofPack({
+            id: 'older-private',
+            title: 'Private archive proof',
+            verificationStatus: 'unverified',
+            verificationSummary: 'No scoped verification is recorded for this Proof Pack yet.',
+            visibility: 'owner_only',
+            proofQualityScore: 0.3,
+            createdAt: '2026-04-01T10:00:00.000Z',
+          }),
+          makeProofPack({
+            id: 'newer-public',
+            title: 'Verified launch proof',
+            verificationStatus: 'verified',
+            visibility: 'public',
+            proofQualityScore: 0.95,
+            createdAt: '2026-05-12T10:00:00.000Z',
+          }),
+        ]}
+        onAddStory={vi.fn()}
+        onEditStory={vi.fn()}
+        onDeleteStory={vi.fn()}
+        actionsDisabled={false}
+        completionState={{
+          stage: 'publish_portfolio',
+          checks: {
+            hasDisplayName: true,
+            hasHandle: true,
+            hasHeadlineOrBio: true,
+            hasLocationOrTimezone: true,
+            hasTargetRoleFocus: true,
+            hasWorkPreference: true,
+            hasEngagementPreference: true,
+            hasLegacyShellCompatibility: true,
+            hasSafeShell: true,
+            hasRealContext: true,
+            hasFirstProof: true,
+            hasStructuredProofPack: true,
+            hasProofForPublishing: true,
+            hasPublishedPortfolio: true,
+            hasRequiredVerification: true,
+          },
+          counts: {
+            contexts: 1,
+            skills: 1,
+            proofPacks: 2,
+            anchoredProofPacks: 2,
+            proofArtifacts: 2,
+            acceptedVerifications: 1,
+          },
+          isCoreProfileComplete: true,
+          isPortfolioReady: true,
+          portfolioLockCode: null,
+          portfolioLockReason: null,
+        }}
+        proofArtifactCount={2}
+        acceptedVerificationCount={1}
+        onAddFirstProof={vi.fn()}
+        onCompleteSafeShell={vi.fn()}
+      />
+    );
+
+    const cardsByNewest = screen.getAllByTestId('proof-pack-card');
+    expect(cardsByNewest[0]).toHaveTextContent(/verified launch proof/i);
+    expect(cardsByNewest[0]).toHaveTextContent(/launch memo/i);
+    expect(cardsByNewest[0]).toHaveTextContent(/product engineering/i);
+    expect(cardsByNewest[0]).toHaveTextContent(/public/i);
+    expect(cardsByNewest[0]).toHaveTextContent(/verified/i);
+
+    fireEvent.change(screen.getByLabelText(/sort/i), { target: { value: 'verification' } });
+
+    const cardsByVerification = screen.getAllByTestId('proof-pack-card');
+    expect(cardsByVerification[0]).toHaveTextContent(/verified launch proof/i);
+    expect(cardsByVerification[1]).toHaveTextContent(/private archive proof/i);
   });
 
   it('prioritizes safe-shell completion before asking users to add more proof', () => {
@@ -217,8 +339,6 @@ describe('profile launch IA', () => {
           },
           counts: {
             contexts: 1,
-            values: 0,
-            causes: 0,
             skills: 0,
             proofPacks: 1,
             anchoredProofPacks: 1,
@@ -272,8 +392,6 @@ describe('profile launch IA', () => {
           },
           counts: {
             contexts: 1,
-            values: 0,
-            causes: 0,
             skills: 0,
             proofPacks: 1,
             anchoredProofPacks: 1,

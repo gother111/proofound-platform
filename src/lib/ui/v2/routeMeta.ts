@@ -26,6 +26,12 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
       description: 'Proof-first launch overview',
       icon: Home,
     };
+  if (path.includes('/communications'))
+    return {
+      title: 'Communications',
+      description: 'Process messages, reveals, interviews, decisions, and feedback',
+      icon: MessageSquare,
+    };
   if (path.includes('/matching'))
     return { title: 'Matching', description: 'Browse aligned introductions', icon: Users };
   if (path.includes('/interviews'))
@@ -39,6 +45,12 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
       title: 'Launch note',
       description: 'Opportunity browsing stays inside matching for the MVP corridor',
       icon: Briefcase,
+    };
+  if (path.includes('/app/o/') && path.includes('/profile'))
+    return {
+      title: 'Organization Profile',
+      description: 'Launch-safe organization context and trust basics',
+      icon: User,
     };
   if (path.includes('/profile'))
     return { title: 'Profile', description: 'Your core identity', icon: User };
@@ -58,6 +70,12 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
     return {
       title: 'Launch note',
       description: 'Project libraries remain outside the MVP corridor',
+      icon: Briefcase,
+    };
+  if (path.includes('/app/o/') && path.includes('/portfolio'))
+    return {
+      title: 'Public Preview',
+      description: 'Preview the public organization profile',
       icon: Briefcase,
     };
   if (path.includes('/portfolio'))

@@ -229,9 +229,9 @@ export function FieldVisibilityControls({
       <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
         <CardContent className="pt-6">
           <p className="text-sm text-blue-900 dark:text-blue-100">
-            💡 <strong>Tip:</strong> Public fields help candidates discover your organization during
-            search and matching. Consider keeping mission, vision, values, and causes public to
-            improve match quality.
+            <strong>Tip:</strong> Public fields help candidates understand your organization during
+            search and review. Keep purpose fields concise and public only when they clarify the
+            trust page.
           </p>
         </CardContent>
       </Card>

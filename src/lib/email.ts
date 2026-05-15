@@ -401,7 +401,9 @@ export async function sendInterviewScheduledEmail(
 
   try {
     const viewInterviewUrl = buildCanonicalEmailUrl(
-      `/app/i/interviews/${encodeURIComponent(interviewData.interviewId)}`
+      `/app/i/communications?section=interviews&interview=${encodeURIComponent(
+        interviewData.interviewId
+      )}`
     );
     await resend.emails.send({
       from: fromEmail,
