@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { useForm } from 'react-hook-form';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
+import { AlertTriangle, CheckCircle2, FileText, PencilLine, Wand2 } from 'lucide-react';
 
 import {
   Step1BusinessValue,
@@ -12,9 +13,15 @@ import {
   Step4Practicals,
 } from '@/components/matching/assignment-steps';
 import { AssignmentClarityAssistant } from '@/components/assignments/AssignmentClarityAssistant';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
+import {
+  extractAssignmentDraftFromJobDescription,
+  type ImportedAssignmentDraft,
+} from '@/lib/assignments/job-description-import';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,6 +54,13 @@ interface AssignmentFormData {
     linkedToBV?: boolean;
     linkedToTO?: boolean;
   }>;
+  niceToHaveSkills?: Array<{
+    id: string;
+    label: string;
+    level: number;
+    linkedToBV?: boolean;
+    linkedToTO?: boolean;
+  }>;
 }
 
 const STEPS = [
@@ -72,6 +86,16 @@ const DEFAULT_ASSIGNMENT_FORM_VALUES: AssignmentFormData = {
   hoursMax: 40,
   verificationGates: [],
   mustHaveSkills: [],
+  niceToHaveSkills: [],
+};
+
+type AssignmentEntryMode = 'scratch' | 'import';
+
+type ImportedDraftNotice = {
+  missingFields: string[];
+  guidance: string[];
+  mustHaveLabels: string[];
+  niceToHaveLabels: string[];
 };
 
 function dedupeAssignmentOutcomes(outcomes: AssignmentFormData['outcomes'] = []) {
@@ -124,6 +148,11 @@ export default function AssignmentBuilderPage() {
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
+  const [entryMode, setEntryMode] = useState<AssignmentEntryMode>('scratch');
+  const [jobDescriptionSource, setJobDescriptionSource] = useState('');
+  const [jobDescriptionImportError, setJobDescriptionImportError] = useState<string | null>(null);
+  const [jobDescriptionImportGuidance, setJobDescriptionImportGuidance] = useState<string[]>([]);
+  const [importedDraftNotice, setImportedDraftNotice] = useState<ImportedDraftNotice | null>(null);
   const [loadedAssignmentStatus, setLoadedAssignmentStatus] = useState<
     'draft' | 'active' | 'hold' | 'closed' | null
   >(null);
@@ -163,6 +192,7 @@ export default function AssignmentBuilderPage() {
       setLoadedAssignmentCreationStatus(null);
       setLastSaved(null);
       setHasHydratedDraft(false);
+      setImportedDraftNotice(null);
     }
 
     previousDraftIdRef.current = draftId;
@@ -213,6 +243,7 @@ export default function AssignmentBuilderPage() {
           startLatest: normalizeDateInput(assignment.startLatest),
           verificationGates: assignment.verificationGates || [],
           mustHaveSkills: assignment.requiredSkills || [],
+          niceToHaveSkills: assignment.niceToHaveSkills || [],
         });
 
         setAssignmentId(assignment.id);
@@ -258,6 +289,7 @@ export default function AssignmentBuilderPage() {
       status: overrides?.status ?? 'draft',
       creationStatus: overrides?.creationStatus ?? 'draft',
       mustHaveSkills: data.mustHaveSkills,
+      niceToHaveSkills: data.niceToHaveSkills || [],
       locationMode: data.locationMode,
       city: data.city,
       country: data.country,
@@ -281,9 +313,61 @@ export default function AssignmentBuilderPage() {
         data.description ||
         data.expectedImpact ||
         (data.outcomes && data.outcomes.length > 0) ||
-        (data.mustHaveSkills && data.mustHaveSkills.length > 0)
+        (data.mustHaveSkills && data.mustHaveSkills.length > 0) ||
+        (data.niceToHaveSkills && data.niceToHaveSkills.length > 0)
     );
   }, []);
+
+  const applyImportedDraft = useCallback(
+    (draft: ImportedAssignmentDraft) => {
+      form.reset({
+        ...DEFAULT_ASSIGNMENT_FORM_VALUES,
+        role: draft.role,
+        engagementType: draft.engagementType,
+        businessValue: draft.businessValue,
+        description: draft.description,
+        expectedImpact: draft.expectedImpact,
+        outcomes: draft.outcomes,
+        mustHaveSkills: draft.mustHaveSkills,
+        niceToHaveSkills: draft.niceToHaveSkills,
+        locationMode: draft.locationMode,
+        city: draft.city || '',
+        country: draft.country || '',
+        compMin: draft.compMin ?? DEFAULT_ASSIGNMENT_FORM_VALUES.compMin,
+        compMax: draft.compMax ?? DEFAULT_ASSIGNMENT_FORM_VALUES.compMax,
+        currency: draft.currency || DEFAULT_ASSIGNMENT_FORM_VALUES.currency,
+        hoursMin: draft.hoursMin ?? DEFAULT_ASSIGNMENT_FORM_VALUES.hoursMin,
+        hoursMax: draft.hoursMax ?? DEFAULT_ASSIGNMENT_FORM_VALUES.hoursMax,
+      });
+      setCurrentStep(1);
+      setLastSaved(null);
+    },
+    [form]
+  );
+
+  const handleImportJobDescription = useCallback(() => {
+    const result = extractAssignmentDraftFromJobDescription(jobDescriptionSource);
+
+    if (!result.ok) {
+      setJobDescriptionImportError(result.error);
+      setJobDescriptionImportGuidance(result.guidance);
+      setImportedDraftNotice(null);
+      return;
+    }
+
+    applyImportedDraft(result.draft);
+    setJobDescriptionImportError(null);
+    setJobDescriptionImportGuidance(result.guidance);
+    setImportedDraftNotice({
+      missingFields: result.draft.missingFields,
+      guidance: result.guidance,
+      mustHaveLabels: result.draft.mustHaveSkills.map((skill) => skill.label),
+      niceToHaveLabels: result.draft.niceToHaveSkills.map((skill) => skill.label),
+    });
+    setJobDescriptionSource('');
+    setEntryMode('scratch');
+    toast.success('Job description converted into editable assignment fields');
+  }, [applyImportedDraft, jobDescriptionSource]);
 
   const saveOutcomes = useCallback(
     async (targetAssignmentId: string) => {
@@ -575,14 +659,123 @@ export default function AssignmentBuilderPage() {
     <AppSurface>
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <Card className="p-4">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-foreground">Lean assignment corridor</p>
-            <p className="text-xs text-muted-foreground">
-              This builder stays narrow on purpose: one structured assignment, then internal review
-              before publish.
-            </p>
+          <div className="flex flex-col gap-4">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-foreground">Lean assignment corridor</p>
+              <p className="text-xs text-muted-foreground">
+                This builder stays narrow on purpose: one structured assignment, then internal
+                review before publish.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button
+                type="button"
+                variant={entryMode === 'scratch' ? 'default' : 'outline'}
+                className="justify-start"
+                onClick={() => {
+                  setEntryMode('scratch');
+                  setJobDescriptionImportError(null);
+                }}
+              >
+                <PencilLine className="mr-2 h-4 w-4" />
+                Create from scratch
+              </Button>
+              <Button
+                type="button"
+                variant={entryMode === 'import' ? 'default' : 'outline'}
+                className="justify-start"
+                onClick={() => setEntryMode('import')}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Import existing job description
+              </Button>
+            </div>
+
+            {entryMode === 'import' ? (
+              <div className="space-y-3 rounded-md border bg-muted/30 p-4">
+                <div className="space-y-1">
+                  <label
+                    htmlFor="job-description-import"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Existing job description
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    Paste the source text. It will be split into draft fields for review.
+                  </p>
+                </div>
+                <Textarea
+                  id="job-description-import"
+                  value={jobDescriptionSource}
+                  onChange={(event) => setJobDescriptionSource(event.target.value)}
+                  className="min-h-[220px]"
+                  placeholder="Paste the existing job description here..."
+                />
+                {jobDescriptionImportError ? (
+                  <div className="flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <div className="space-y-1">
+                      <p className="font-medium">{jobDescriptionImportError}</p>
+                      {jobDescriptionImportGuidance.map((item) => (
+                        <p key={item}>{item}</p>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                <div className="flex justify-end">
+                  <Button type="button" onClick={handleImportJobDescription}>
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    Convert to structured draft
+                  </Button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </Card>
+
+        {importedDraftNotice ? (
+          <Card className="p-4">
+            <div className="flex gap-3">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#5D7B5A]" />
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    Imported draft ready for review
+                  </p>
+                  {importedDraftNotice.guidance.map((item) => (
+                    <p key={item} className="text-xs text-muted-foreground">
+                      {item}
+                    </p>
+                  ))}
+                </div>
+                {importedDraftNotice.mustHaveLabels.length > 0 ||
+                importedDraftNotice.niceToHaveLabels.length > 0 ? (
+                  <div className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-2">
+                    {importedDraftNotice.mustHaveLabels.length > 0 ? (
+                      <div>
+                        <p className="font-medium text-foreground">Must-have capabilities</p>
+                        <p>{importedDraftNotice.mustHaveLabels.join(', ')}</p>
+                      </div>
+                    ) : null}
+                    {importedDraftNotice.niceToHaveLabels.length > 0 ? (
+                      <div>
+                        <p className="font-medium text-foreground">Secondary capabilities</p>
+                        <p>{importedDraftNotice.niceToHaveLabels.join(', ')}</p>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+                {importedDraftNotice.missingFields.length > 0 ? (
+                  <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950">
+                    <p className="font-medium">Missing or unclear fields</p>
+                    <p>{importedDraftNotice.missingFields.join(', ')}</p>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </Card>
+        ) : null}
 
         <div className="flex items-center justify-between">
           {STEPS.map((step, index) => {

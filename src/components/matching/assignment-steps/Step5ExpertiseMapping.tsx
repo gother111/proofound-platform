@@ -203,6 +203,7 @@ export function Step5ExpertiseMapping({
     () => new Set([...mustHaveSkills, ...niceToHaveSkills].map((skill) => skill.id)),
     [mustHaveSkills, niceToHaveSkills]
   );
+  const showNiceToHaveSkills = !hideOptionalSections || niceToHaveSkills.length > 0;
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -566,50 +567,52 @@ export function Step5ExpertiseMapping({
         )}
       </div>
 
+      {showNiceToHaveSkills ? (
+        <div className="space-y-4">
+          <Label>Nice-to-Have Skills</Label>
+          {niceToHaveSkills.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No nice-to-have skills added.</p>
+          ) : (
+            niceToHaveSkills.map((skill: AssignmentSkill, index: number) => (
+              <div key={`${skill.id}-${index}`} className="border rounded-lg p-4 space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium">{getSkillLabel(skill)}</p>
+                    {skillPathText(skill) && (
+                      <p className="text-xs text-muted-foreground">{skillPathText(skill)}</p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeNiceToHaveSkill(index)}
+                    type="button"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Proficiency Level</Label>
+                    <span className="text-sm font-medium">{skill.level}/5</span>
+                  </div>
+                  <Slider
+                    value={[skill.level]}
+                    onValueChange={(value) => updateNiceToHaveSkill(index, 'level', value[0])}
+                    min={1}
+                    max={5}
+                    step={1}
+                  />
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : null}
+
       {!hideOptionalSections ? (
         <>
-          <div className="space-y-4">
-            <Label>Nice-to-Have Skills</Label>
-            {niceToHaveSkills.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No nice-to-have skills added.</p>
-            ) : (
-              niceToHaveSkills.map((skill: AssignmentSkill, index: number) => (
-                <div key={`${skill.id}-${index}`} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{getSkillLabel(skill)}</p>
-                      {skillPathText(skill) && (
-                        <p className="text-xs text-muted-foreground">{skillPathText(skill)}</p>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeNiceToHaveSkill(index)}
-                      type="button"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm">Proficiency Level</Label>
-                      <span className="text-sm font-medium">{skill.level}/5</span>
-                    </div>
-                    <Slider
-                      value={[skill.level]}
-                      onValueChange={(value) => updateNiceToHaveSkill(index, 'level', value[0])}
-                      min={1}
-                      max={5}
-                      step={1}
-                    />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
           <div className="space-y-4 pt-4 border-t">
             <div className="flex items-center space-x-2">
               <Checkbox

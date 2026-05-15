@@ -169,6 +169,10 @@ describe('Assignment builder lean corridor', () => {
     render(<AssignmentBuilderPage />);
 
     expect(await screen.findByText(/lean assignment corridor/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create from scratch/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /import existing job description/i })
+    ).toBeInTheDocument();
     expect(screen.getByText('Why this role exists')).toBeInTheDocument();
     expect(screen.getByText('What work will actually be done')).toBeInTheDocument();
     expect(screen.getByText('What proof would count')).toBeInTheDocument();
@@ -177,6 +181,100 @@ describe('Assignment builder lean corridor', () => {
     expect(screen.queryByTestId('advanced-mode-opt-in')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
     expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();
+  });
+
+  it('imports a pasted job description into structured draft fields without saving the source blob', async () => {
+    const fetchMock = setupFetch();
+    const pastedJobDescription = `
+Title: Partner Launch Operations Lead
+
+About the role:
+We need this person to make partner onboarding reliable before the first pilot expansion. The role exists to turn vague launch requests into a repeatable proof-backed operating cadence.
+
+Responsibilities:
+- Own partner onboarding runbooks and launch readiness reviews.
+- Coordinate product, support, and founder updates every week.
+- Improve the handoff from signed partner to live proof review.
+
+Outcomes:
+- Launch the first three partners with clean readiness evidence within 90 days.
+- Reduce manual launch follow-up by half within 6 months.
+
+Requirements:
+- Partner operations
+- Program management
+- SaaS implementation
+
+Preferred:
+- Startup customer success
+
+Proof:
+Portfolio examples should show comparable rollout ownership, stakeholder coordination, and measured launch outcomes.
+
+Location: Stockholm, Sweden
+Compensation: USD 80000 - 110000
+Full-time
+`;
+
+    render(<AssignmentBuilderPage />);
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /import existing job description/i })
+    );
+    fireEvent.change(screen.getByLabelText(/existing job description/i), {
+      target: { value: pastedJobDescription },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /convert to structured draft/i }));
+
+    expect(await screen.findByText(/imported draft ready for review/i)).toBeInTheDocument();
+    expect(screen.getByText(/partner operations/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'next-step-1' }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/assignments',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+
+    const assignmentCreateCall = fetchMock.mock.calls.find(
+      ([url, init]) => url === '/api/assignments' && init?.method === 'POST'
+    );
+    const body = JSON.parse(String(assignmentCreateCall?.[1]?.body));
+
+    expect(body.title).toBe('Partner Launch Operations Lead');
+    expect(body.rolePurpose).toContain('partner onboarding reliable');
+    expect(body.description).toContain('Own partner onboarding runbooks');
+    expect(body.description).not.toBe(pastedJobDescription);
+    expect(body.proofExpectations).toContain('Portfolio examples');
+    expect(body.mustHaveSkills).toHaveLength(3);
+    expect(body.niceToHaveSkills).toHaveLength(1);
+    expect(body.locationMode).toBe('hybrid');
+    expect(body.city).toBe('Stockholm');
+    expect(body.country).toBe('Sweden');
+    expect(body.compMin).toBe(80000);
+    expect(body.compMax).toBe(110000);
+    expect(JSON.stringify(body)).not.toContain('Full-time');
+  });
+
+  it('shows useful guidance instead of importing very short pasted text', async () => {
+    setupFetch();
+
+    render(<AssignmentBuilderPage />);
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /import existing job description/i })
+    );
+    fireEvent.change(screen.getByLabelText(/existing job description/i), {
+      target: { value: 'Need a strong operator.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /convert to structured draft/i }));
+
+    expect(
+      await screen.findByText(/too short to turn into a useful assignment draft/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Paste the full job description/i)).toBeInTheDocument();
   });
 
   it('advances through the lean corridor and ends in internal review routing', async () => {
