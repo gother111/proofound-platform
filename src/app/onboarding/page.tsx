@@ -24,6 +24,13 @@ function normalizeInternalNextPath(value: string | string[] | undefined) {
   return nextPath.slice(0, 2000);
 }
 
+function isExpectedMissingAuthSession(error: unknown) {
+  return (
+    error instanceof Error &&
+    (error.name === 'AuthSessionMissingError' || error.message === 'Auth session missing!')
+  );
+}
+
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const individualCompletionPath = normalizeInternalNextPath(resolvedSearchParams.next);
@@ -36,7 +43,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
     error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError) {
+  if (userError && !isExpectedMissingAuthSession(userError)) {
     console.error('Failed to load authenticated user for onboarding:', userError);
   }
 
