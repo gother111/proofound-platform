@@ -16,10 +16,13 @@ const parsedBaseURL = (() => {
 const baseURLPort = parsedBaseURL?.port ? Number.parseInt(parsedBaseURL.port, 10) : NaN;
 const webServerPort = Number.isFinite(baseURLPort) ? baseURLPort : configuredPort;
 const baseURL = configuredBaseURL || `http://127.0.0.1:${webServerPort}`;
+const reuseExistingServer =
+  !process.env.CI &&
+  (Boolean(configuredBaseURL) || process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === '1');
 const webServerCommand =
   playwrightServerMode === 'prod'
     ? `npm run start -- -p ${webServerPort}`
-    : `npm run dev -- -p ${webServerPort}`;
+    : `PROOFOUND_NEXT_DEV_CLEAN=1 NEXT_DISABLE_WEBPACK_CACHE=1 npm run dev -- -p ${webServerPort}`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -61,7 +64,7 @@ export default defineConfig({
   webServer: {
     command: webServerCommand,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer,
     timeout: 240000, // CI startup can exceed 120s on cold runners
   },
 });

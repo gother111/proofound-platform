@@ -1,9 +1,10 @@
 import { createHash, randomUUID } from 'node:crypto';
 
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page, type TestInfo } from '@playwright/test';
 
 import {
   adminClient,
+  apiPatchJson,
   apiPostJson,
   apiPutJson,
   cleanupFixtureData,
@@ -95,109 +96,45 @@ async function browserRequestJson(
   url: string,
   data: unknown
 ) {
-  let response:
-    | {
-        ok: boolean;
-        status: number;
-        text: string;
-      }
-    | undefined;
-  let lastError: unknown = null;
+  let response: { ok: boolean; status: number; text: string } | undefined;
+  let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  const sanitizeRequestError = (error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    return new Error(
+      `${method} ${url} failed: ${message.split('\n')[0] || 'unknown request error'}`
+    );
+  };
+  const sendRequest = async () => {
+    const apiResponse =
+      method === 'POST'
+        ? await apiPostJson(page.request, url, data, {
+            retryTransient: true,
+            timeoutMs: 120_000,
+          })
+        : method === 'PUT'
+          ? await apiPutJson(page.request, url, data)
+          : await apiPatchJson(page.request, url, data, { timeoutMs: 120_000 });
+
+    return {
+      ok: apiResponse.ok(),
+      status: apiResponse.status(),
+      text: await apiResponse.text(),
+    };
+  };
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
-      response = await page.evaluate(
-        async ({ requestUrl, requestMethod, requestData }) => {
-          const fetchWithTimeout = async (input: string, init: RequestInit, timeoutMs: number) => {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), timeoutMs);
-            try {
-              return await fetch(input, {
-                ...init,
-                signal: controller.signal,
-              });
-            } finally {
-              clearTimeout(timeout);
-            }
-          };
-
-          const state = window as typeof window & {
-            __PROOFOUND_E2E_CSRF_TOKEN__?: string;
-          };
-          const fetchCsrfToken = async (forceRefresh = false) => {
-            if (!forceRefresh && state.__PROOFOUND_E2E_CSRF_TOKEN__) {
-              return state.__PROOFOUND_E2E_CSRF_TOKEN__;
-            }
-
-            const csrfResponse = await fetchWithTimeout(
-              `/api/csrf-token?ts=${Date.now()}`,
-              {
-                method: 'GET',
-                credentials: 'include',
-                cache: 'no-store',
-                headers: {
-                  'cache-control': 'no-store',
-                  pragma: 'no-cache',
-                },
-              },
-              15_000
-            );
-
-            const csrfPayload = (await csrfResponse.json()) as { token?: string };
-            if (!csrfResponse.ok || !csrfPayload.token) {
-              throw new Error(`Failed to fetch browser CSRF token: HTTP ${csrfResponse.status}`);
-            }
-
-            state.__PROOFOUND_E2E_CSRF_TOKEN__ = csrfPayload.token;
-            return csrfPayload.token;
-          };
-
-          const sendRequest = async (csrfToken: string) => {
-            return fetchWithTimeout(
-              requestUrl,
-              {
-                method: requestMethod,
-                credentials: 'include',
-                headers: {
-                  'content-type': 'application/json',
-                  'x-csrf-token': csrfToken,
-                },
-                body: JSON.stringify(requestData),
-              },
-              45_000
-            );
-          };
-
-          let response = await sendRequest(await fetchCsrfToken());
-          let text = await response.text();
-
-          if (
-            response.status === 403 &&
-            /csrf validation failed|invalid or missing csrf token/i.test(text)
-          ) {
-            response = await sendRequest(await fetchCsrfToken(true));
-            text = await response.text();
-          }
-
-          return {
-            ok: response.ok,
-            status: response.status,
-            text,
-          };
-        },
-        {
-          requestUrl: url,
-          requestMethod: method,
-          requestData: data,
-        }
-      );
+      response = await sendRequest();
       break;
     } catch (error) {
-      lastError = error;
-      if (attempt === 2) {
-        throw error;
+      lastError = sanitizeRequestError(error);
+      if (attempt === 4) {
+        throw lastError;
       }
-      await page.waitForTimeout(500 * (attempt + 1));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000 * (attempt + 1));
+      });
     }
   }
 
@@ -214,23 +151,41 @@ async function browserRequestJson(
 }
 
 async function browserGetJson(page: Page, url: string) {
-  const response = await page.evaluate(async (requestUrl) => {
-    const fetchResponse = await fetch(requestUrl, {
-      method: 'GET',
-      credentials: 'include',
-      cache: 'no-store',
-      headers: {
-        'cache-control': 'no-store',
-        pragma: 'no-cache',
-      },
-    });
+  let response: { ok: boolean; status: number; text: string } | undefined;
+  let lastError: Error | null = null;
 
-    return {
-      ok: fetchResponse.ok,
-      status: fetchResponse.status,
-      text: await fetchResponse.text(),
-    };
-  }, url);
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      const apiResponse = await page.request.get(url, {
+        headers: {
+          'cache-control': 'no-store',
+          pragma: 'no-cache',
+        },
+        timeout: 120_000,
+      });
+      response = {
+        ok: apiResponse.ok(),
+        status: apiResponse.status(),
+        text: await apiResponse.text(),
+      };
+      break;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      lastError = new Error(
+        `GET ${url} failed: ${message.split('\n')[0] || 'unknown request error'}`
+      );
+      if (attempt === 4) {
+        throw lastError;
+      }
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000 * (attempt + 1));
+      });
+    }
+  }
+
+  if (!response) {
+    throw lastError ?? new Error(`Failed request for GET ${url}`);
+  }
 
   return {
     ok: () => response.ok,
@@ -241,7 +196,7 @@ async function browserGetJson(page: Page, url: string) {
 }
 
 async function dismissBlockingOverlays(page: Page) {
-  const blockers = ['Essential Only', 'Skip for now'] as const;
+  const blockers = ['Essential Only', 'Skip for now', 'Skip tour'] as const;
 
   for (const name of blockers) {
     const button = page.getByRole('button', { name });
@@ -250,6 +205,50 @@ async function dismissBlockingOverlays(page: Page) {
       await button.click();
     }
   }
+}
+
+async function gotoWithRetry(page: Page, path: string, assertReady: () => Promise<void>) {
+  let lastError: unknown = null;
+
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      await page.goto(path);
+      await assertReady();
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 3) {
+        throw error;
+      }
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000 * attempt);
+      });
+    }
+  }
+
+  throw lastError ?? new Error(`Failed to load ${path}`);
+}
+
+function sanitizeDebugText(value: string) {
+  return value
+    .replace(/token=[^&\s]+/gi, 'token=<redacted>')
+    .replace(/strict-org-invite-[0-9a-f-]+/gi, 'strict-org-invite-<redacted>');
+}
+
+async function attachPageDebug(testInfo: TestInfo, name: string, page: Page) {
+  const url = sanitizeDebugText(page.url());
+  const bodyText = await page
+    .locator('body')
+    .innerText({ timeout: 5_000 })
+    .catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      return `Unable to read body text: ${message.split('\n')[0] || 'unknown error'}`;
+    });
+
+  await testInfo.attach(name, {
+    body: `url: ${url}\n\n${sanitizeDebugText(bodyText).slice(0, 4_000)}`,
+    contentType: 'text/plain',
+  });
 }
 
 test.describe('Strict Authenticated Org Corridor', () => {
@@ -301,7 +300,7 @@ test.describe('Strict Authenticated Org Corridor', () => {
   test('reruns the launch-binding authenticated org corridor end to end', async ({
     browser,
     page,
-  }) => {
+  }, testInfo) => {
     test.setTimeout(600_000);
 
     await loginWithUi(page, orgOwner);
@@ -312,15 +311,22 @@ test.describe('Strict Authenticated Org Corridor', () => {
     await expect(page.getByLabel('Launch role')).toBeVisible();
 
     await gotoWithReadyState(page, `/app/o/${organization.slug}/profile`, async () => {
-      await expect(page.getByRole('heading', { name: 'Organization Profile' })).toBeVisible();
+      await expect(
+        page.getByRole('main').getByRole('heading', { name: 'Organization Profile', exact: true })
+      ).toBeVisible();
     });
 
     await gotoWithReadyState(page, `/app/o/${organization.slug}/home`, async () => {
       await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
     });
+    await dismissBlockingOverlays(page);
     await page.getByLabel('Collaborator email').fill(reviewer.email);
     await page.getByLabel('Launch role').selectOption('org_reviewer');
     await page.getByRole('button', { name: 'Send collaborator invite' }).click();
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Invite sent' }),
+      'owner invite form should confirm the collaborator invite was queued before token materialization'
+    ).toBeVisible({ timeout: 30_000 });
 
     const rawInviteToken = await materializeKnownInviteToken({
       orgId: organization.id,
@@ -330,44 +336,59 @@ test.describe('Strict Authenticated Org Corridor', () => {
     const reviewerContext = await browser.newContext();
     try {
       const reviewerPage = await reviewerContext.newPage();
-      await loginWithUi(reviewerPage, reviewer);
-      await reviewerPage.goto(`/accept-invite?token=${rawInviteToken}`);
-      await reviewerPage.waitForLoadState('networkidle');
-      await reviewerPage.getByRole('button', { name: /accept invitation/i }).click();
-      await reviewerPage.waitForURL(`**/app/o/${organization.slug}/home`);
-      await expect(
-        reviewerPage.getByText('You are currently signed in as Reviewer.')
-      ).toBeVisible();
+      try {
+        await loginWithUi(reviewerPage, reviewer);
+        await dismissBlockingOverlays(reviewerPage);
+        const acceptInviteButton = reviewerPage.getByRole('button', {
+          name: /accept invitation/i,
+        });
+        await gotoWithRetry(reviewerPage, `/accept-invite?token=${rawInviteToken}`, async () => {
+          await dismissBlockingOverlays(reviewerPage);
+          await expect(
+            acceptInviteButton,
+            'reviewer invite page should expose the accept invitation action'
+          ).toBeVisible({ timeout: 30_000 });
+          await expect(
+            acceptInviteButton,
+            'reviewer invite accept action should be clickable'
+          ).toBeEnabled({ timeout: 30_000 });
+        });
+        await Promise.all([
+          reviewerPage.waitForURL(`**/app/o/${organization.slug}/home`, { timeout: 30_000 }),
+          acceptInviteButton.click({ timeout: 30_000 }),
+        ]);
+        await dismissBlockingOverlays(reviewerPage);
+        await expect(
+          reviewerPage.getByText('You are currently signed in as Reviewer.')
+        ).toBeVisible({ timeout: 30_000 });
+        await reviewerPage.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => null);
+      } catch (error) {
+        await attachPageDebug(testInfo, 'reviewer-invite-flow-failure', reviewerPage);
+        throw error;
+      }
     } finally {
       await reviewerContext.close();
     }
 
-    const assignmentDraftResponse = await apiPostJson(
-      page.request,
-      '/api/assignments',
-      {
-        orgId: organization.id,
-        role: 'Strict Corridor Assignment',
-        description:
-          'Lead the authenticated org corridor from shortlist through decision while keeping identity reveal consented.',
-        businessValue:
-          'Help the hiring team validate the launch corridor with proof-backed review and explicit reveal consent.',
-        expectedImpact:
-          'Strong candidates should show shipped work, proof-backed ownership, and honest tradeoff explanations.',
-        status: 'draft',
-        valuesRequired: ['integrity'],
-        causeTags: ['education'],
-        mustHaveSkills: skillRequirements,
-        niceToHaveSkills: [],
-        locationMode: 'remote',
-        compMin: 110000,
-        compMax: 150000,
-        currency: 'USD',
-      },
-      {
-        timeoutMs: 120_000,
-      }
-    );
+    const assignmentDraftResponse = await browserRequestJson(page, 'POST', '/api/assignments', {
+      orgId: organization.id,
+      role: 'Strict Corridor Assignment',
+      description:
+        'Lead the authenticated org corridor from shortlist through decision while keeping identity reveal consented.',
+      businessValue:
+        'Help the hiring team validate the launch corridor with proof-backed review and explicit reveal consent.',
+      expectedImpact:
+        'Strong candidates should show shipped work, proof-backed ownership, and honest tradeoff explanations.',
+      status: 'draft',
+      valuesRequired: ['integrity'],
+      causeTags: ['education'],
+      mustHaveSkills: skillRequirements,
+      niceToHaveSkills: [],
+      locationMode: 'remote',
+      compMin: 110000,
+      compMax: 150000,
+      currency: 'USD',
+    });
     const assignmentDraftText = await assignmentDraftResponse.text();
     expect(
       assignmentDraftResponse.status(),
@@ -382,8 +403,9 @@ test.describe('Strict Authenticated Org Corridor', () => {
     }
     fixture.assignmentIds.add(assignmentId);
 
-    const outcomesResponse = await apiPostJson(
-      page.request,
+    const outcomesResponse = await browserRequestJson(
+      page,
+      'POST',
       `/api/assignments/${assignmentId}/outcomes`,
       {
         orgId: organization.id,
@@ -400,8 +422,9 @@ test.describe('Strict Authenticated Org Corridor', () => {
     );
     expect(outcomesResponse.ok()).toBeTruthy();
 
-    const assignmentUpdateResponse = await apiPutJson(
-      page.request,
+    const assignmentUpdateResponse = await browserRequestJson(
+      page,
+      'PUT',
       `/api/assignments/${assignmentId}`,
       {
         orgId: organization.id,
@@ -412,7 +435,7 @@ test.describe('Strict Authenticated Org Corridor', () => {
     );
     expect(assignmentUpdateResponse.ok()).toBeTruthy();
 
-    const clarityResponse = await apiPostJson(page.request, '/api/ai/assignments/clarify', {
+    const clarityResponse = await browserRequestJson(page, 'POST', '/api/ai/assignments/clarify', {
       assignmentId,
       orgId: organization.id,
       title: 'Strict Corridor Assignment',
@@ -451,34 +474,29 @@ test.describe('Strict Authenticated Org Corridor', () => {
     };
     expect(clarityDraftStatePayload.assignment?.status).toBe('draft');
 
-    const publishResponse = await apiPostJson(
-      page.request,
+    const publishResponse = await browserRequestJson(
+      page,
+      'POST',
       `/api/assignments/${assignmentId}/publish`,
       {
         principalContext: {
           principalType: 'organization',
           orgId: organization.id,
         },
-      },
-      {
-        timeoutMs: 120_000,
       }
     );
-    expect(publishResponse.ok()).toBeTruthy();
+    const publishResponseText = await publishResponse.text();
+    expect(
+      publishResponse.ok(),
+      `publish response (${publishResponse.status()}): ${publishResponseText}`
+    ).toBeTruthy();
 
     const corridorMatch = await createRuntimeMatch(fixture, assignmentId, candidate.id);
 
-    const rankedMatchesResponse = await apiPostJson(
-      page.request,
-      '/api/match/assignment',
-      {
-        assignmentId,
-        k: 20,
-      },
-      {
-        timeoutMs: 120_000,
-      }
-    );
+    const rankedMatchesResponse = await browserRequestJson(page, 'POST', '/api/match/assignment', {
+      assignmentId,
+      k: 20,
+    });
     expect(rankedMatchesResponse.ok()).toBeTruthy();
     const rankedMatchesPayload = (await rankedMatchesResponse.json()) as {
       items?: Array<{
@@ -505,10 +523,14 @@ test.describe('Strict Authenticated Org Corridor', () => {
     expect(blindMatch?.profile?.handle ?? null).toBeNull();
 
     const explanationTrigger = page.getByTestId('match-explainer-trigger').first();
-    await gotoWithReadyState(page, `/app/o/${organization.slug}/matching`, async () => {
-      await dismissBlockingOverlays(page);
-      await expect(explanationTrigger).toBeVisible({ timeout: 30_000 });
-    });
+    await gotoWithReadyState(
+      page,
+      `/app/o/${organization.slug}/assignments?matching=${encodeURIComponent(assignmentId)}`,
+      async () => {
+        await dismissBlockingOverlays(page);
+        await expect(explanationTrigger).toBeVisible({ timeout: 30_000 });
+      }
+    );
     await expect(page.getByText(candidate.displayName)).toHaveCount(0);
     await expect(page.getByText(candidate.email)).toHaveCount(0);
 
@@ -645,6 +667,7 @@ test.describe('Strict Authenticated Org Corridor', () => {
     const introPayload = (await introResponse.json()) as {
       conversationId?: string;
       introApproved?: boolean;
+      introWorkflowId?: string;
       revealScope?: string;
       why?: { reasonCodes?: string[] };
       message?: string;

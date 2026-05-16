@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, type APIRequestContext, type APIResponse, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { randomUUID } from 'node:crypto';
 import { loadStrictEnv } from './load-strict-env';
@@ -75,6 +75,7 @@ const REQUEST_RETRY_DELAY_MS = Number.parseInt(
   process.env.STRICT_REQUEST_RETRY_DELAY_MS || '1000',
   10
 );
+const csrfTokenCache = new WeakMap<APIRequestContext, string>();
 
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim();
@@ -88,6 +89,11 @@ function isTransientRequestError(error: unknown): boolean {
   const message =
     error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
   return TRANSIENT_REQUEST_ERROR_PATTERNS.some((pattern) => message.includes(pattern));
+}
+
+function summarizeRequestError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.split('\n')[0] || 'unknown request error';
 }
 
 async function wait(ms: number): Promise<void> {
@@ -114,15 +120,23 @@ async function withTransientRequestRetry<T>(
         throw error;
       }
 
-      const reason = error instanceof Error ? error.message : String(error);
       console.warn(
-        `[strict-fixtures] transient ${operationName} error on attempt ${attempt}/${maxAttempts}: ${reason}`
+        `[strict-fixtures] transient ${operationName} error on attempt ${attempt}/${maxAttempts}: ${summarizeRequestError(error)}`
       );
       await wait(REQUEST_RETRY_DELAY_MS * attempt);
     }
   }
 
   throw new Error(`Unexpected retry exhaustion for ${operationName}`);
+}
+
+async function isCsrfRejection(response: APIResponse): Promise<boolean> {
+  if (response.status() !== 403) {
+    return false;
+  }
+
+  const text = await response.text().catch(() => '');
+  return /csrf validation failed|invalid or missing csrf token/i.test(text);
 }
 
 function uniqueSuffix(prefix: string): string {
@@ -988,22 +1002,46 @@ export async function gotoWithReadyState(
   throw lastError ?? new Error(`Failed to load ${path}`);
 }
 
-export async function getCsrfToken(request: APIRequestContext): Promise<string> {
-  const response = await request.get(`/api/csrf-token?ts=${Date.now()}`, {
-    headers: {
-      'cache-control': 'no-store',
-      pragma: 'no-cache',
-    },
-  });
-  if (!response.ok()) {
-    throw new Error(`Failed to fetch CSRF token: HTTP ${response.status()}`);
+export async function getCsrfToken(
+  request: APIRequestContext,
+  options?: { forceRefresh?: boolean }
+): Promise<string> {
+  if (!options?.forceRefresh) {
+    const cachedToken = csrfTokenCache.get(request);
+    if (cachedToken) {
+      return cachedToken;
+    }
   }
 
-  const payload = (await response.json()) as { token?: string };
-  if (!payload.token) {
-    throw new Error('CSRF token response did not include token');
+  let lastStatus = 0;
+  let lastText = '';
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const response = await request.get(`/api/csrf-token?ts=${Date.now()}`, {
+      headers: {
+        'cache-control': 'no-store',
+        pragma: 'no-cache',
+      },
+    });
+    lastStatus = response.status();
+    lastText = await response.text();
+
+    if (response.ok()) {
+      const payload = JSON.parse(lastText) as { token?: string };
+      if (!payload.token) {
+        throw new Error('CSRF token response did not include token');
+      }
+      csrfTokenCache.set(request, payload.token);
+      return payload.token;
+    }
+
+    if (response.status() !== 429 || attempt === 3) {
+      break;
+    }
+
+    await wait(500 * (attempt + 1));
   }
-  return payload.token;
+
+  throw new Error(`Failed to fetch CSRF token: HTTP ${lastStatus}: ${lastText.slice(0, 160)}`);
 }
 
 export async function apiPostJson(
@@ -1012,40 +1050,101 @@ export async function apiPostJson(
   data: unknown,
   options?: {
     timeoutMs?: number;
+    retryTransient?: boolean;
   }
 ) {
-  const csrfToken = await getCsrfToken(request);
-  return request.post(url, {
-    data,
-    headers: {
-      'x-csrf-token': csrfToken,
-    },
-    // Avoid retrying mutating requests after client-side timeouts.
-    timeout: options?.timeoutMs ?? 120_000,
-  });
-}
-
-export async function apiPutJson(request: APIRequestContext, url: string, data: unknown) {
-  return withTransientRequestRetry(`PUT ${url}`, async () => {
-    const csrfToken = await getCsrfToken(request);
-    return request.put(url, {
+  const send = async (forceRefresh = false) => {
+    const csrfToken = await getCsrfToken(request, { forceRefresh });
+    return request.post(url, {
       data,
       headers: {
         'x-csrf-token': csrfToken,
       },
+      // Avoid retrying mutating requests after client-side timeouts unless the caller opts in.
+      timeout: options?.timeoutMs ?? 120_000,
     });
+  };
+  const sendWithCsrfRefresh = async () => {
+    const response = await send();
+    if (await isCsrfRejection(response)) {
+      return send(true);
+    }
+
+    return response;
+  };
+
+  if (options?.retryTransient) {
+    return withTransientRequestRetry(`POST ${url}`, sendWithCsrfRefresh);
+  }
+
+  return sendWithCsrfRefresh();
+}
+
+export async function apiPutJson(request: APIRequestContext, url: string, data: unknown) {
+  return withTransientRequestRetry(`PUT ${url}`, async () => {
+    const send = async (forceRefresh = false) => {
+      const csrfToken = await getCsrfToken(request, { forceRefresh });
+      return request.put(url, {
+        data,
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
+      });
+    };
+    const response = await send();
+    if (await isCsrfRejection(response)) {
+      return send(true);
+    }
+
+    return response;
+  });
+}
+
+export async function apiPatchJson(
+  request: APIRequestContext,
+  url: string,
+  data: unknown,
+  options?: {
+    timeoutMs?: number;
+  }
+) {
+  return withTransientRequestRetry(`PATCH ${url}`, async () => {
+    const send = async (forceRefresh = false) => {
+      const csrfToken = await getCsrfToken(request, { forceRefresh });
+      return request.patch(url, {
+        data,
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
+        timeout: options?.timeoutMs ?? 120_000,
+      });
+    };
+    const response = await send();
+    if (await isCsrfRejection(response)) {
+      return send(true);
+    }
+
+    return response;
   });
 }
 
 export async function apiDeleteJson(request: APIRequestContext, url: string, data?: unknown) {
   return withTransientRequestRetry(`DELETE ${url}`, async () => {
-    const csrfToken = await getCsrfToken(request);
-    return request.delete(url, {
-      data,
-      headers: {
-        'x-csrf-token': csrfToken,
-      },
-    });
+    const send = async (forceRefresh = false) => {
+      const csrfToken = await getCsrfToken(request, { forceRefresh });
+      return request.delete(url, {
+        data,
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
+      });
+    };
+    const response = await send();
+    if (await isCsrfRejection(response)) {
+      return send(true);
+    }
+
+    return response;
   });
 }
 

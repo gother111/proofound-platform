@@ -34,8 +34,17 @@ const argv = process.argv.slice(2);
 const scriptPath = fileURLToPath(import.meta.url);
 
 function run(cmd, args, env) {
-  const child = spawn(cmd, args, { stdio: 'inherit', env });
+  const child = spawn(cmd, args, { stdio: ['ignore', 'inherit', 'inherit'], env });
+  const forwardSignal = (signal) => {
+    if (!child.killed) {
+      child.kill(signal);
+    }
+  };
+  process.once('SIGINT', forwardSignal);
+  process.once('SIGTERM', forwardSignal);
   child.on('exit', (code, signal) => {
+    process.removeListener('SIGINT', forwardSignal);
+    process.removeListener('SIGTERM', forwardSignal);
     if (typeof code === 'number') process.exit(code);
     process.exit(signal ? 1 : 0);
   });

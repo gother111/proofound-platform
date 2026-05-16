@@ -7,7 +7,7 @@
  */
 
 import { spawn } from 'child_process';
-import { mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import path from 'path';
 import process from 'process';
 import { fileURLToPath } from 'url';
@@ -55,13 +55,65 @@ function resolveDevDistDir() {
 }
 
 function ensureCommonJsDistPackage(distDir) {
+  const markerPath = path.join(distDir, 'package.json');
+  const markerContents = '{"type":"commonjs"}';
+
   mkdirSync(distDir, { recursive: true });
-  writeFileSync(path.join(distDir, 'package.json'), '{"type":"commonjs"}');
+  if (existsSync(markerPath)) {
+    try {
+      if (readFileSync(markerPath, 'utf8') === markerContents) {
+        return;
+      }
+    } catch {
+      // Rewrite unreadable markers so Next keeps generated server chunks in CJS mode.
+    }
+  }
+
+  writeFileSync(markerPath, markerContents);
+}
+
+function shouldCleanDevDistDir() {
+  const value = process.env.PROOFOUND_NEXT_DEV_CLEAN;
+  return value === '1' || value === 'true';
+}
+
+function cleanDevDistDir(distDir) {
+  if (!shouldCleanDevDistDir() || !existsSync(distDir)) {
+    return distDir;
+  }
+
+  try {
+    rmSync(distDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    return distDir;
+  } catch (error) {
+    const fallbackDistDir = `${distDir}-${Date.now()}-${process.pid}`;
+    const reason = error instanceof Error ? error.message : String(error);
+    console.warn(
+      `[next-dev-node24] Could not clean ${distDir}; using ${fallbackDistDir}. ${reason}`
+    );
+    return fallbackDistDir;
+  }
 }
 
 function run(cmd, args, env) {
-  const child = spawn(cmd, args, { stdio: 'inherit', env });
+  const child = spawn(cmd, args, { stdio: ['ignore', 'inherit', 'inherit'], env });
+  const forwardSignal = (signal) => {
+    if (!child.killed) {
+      child.kill(signal);
+    }
+  };
+  process.once('SIGINT', forwardSignal);
+  process.once('SIGTERM', forwardSignal);
   child.on('exit', (code, signal) => {
+    process.removeListener('SIGINT', forwardSignal);
+    process.removeListener('SIGTERM', forwardSignal);
+    if (code !== 0 || signal) {
+      console.error(
+        `[next-dev-node24] Child process exited with code=${code ?? 'null'} signal=${
+          signal ?? 'null'
+        }`
+      );
+    }
     if (typeof code === 'number') process.exit(code);
     process.exit(signal ? 1 : 0);
   });
@@ -77,8 +129,12 @@ if (!isSupportedNode(process.versions.node) && process.env.PROOFOUND_NODE24_REEX
   run(node24Path, [scriptPath, ...argv], env);
 } else {
   const nextBin = path.join(process.cwd(), 'node_modules', 'next', 'dist', 'bin', 'next');
-  const distDir = resolveDevDistDir();
+  const distDir = cleanDevDistDir(resolveDevDistDir());
   ensureCommonJsDistPackage(distDir);
+  const markerInterval = setInterval(() => {
+    ensureCommonJsDistPackage(distDir);
+  }, 500);
+  markerInterval.unref();
   run(process.execPath, [nextBin, 'dev', ...argv], {
     ...process.env,
     NEXT_DIST_DIR: distDir,

@@ -55,11 +55,28 @@ describe('cron scheduling ownership', () => {
   it('keeps the human cron table aligned to the canonical classification table', () => {
     const cronSetupPath = path.join(process.cwd(), 'docs/CRON_SETUP.md');
     const cronSetup = fs.readFileSync(cronSetupPath, 'utf8');
+    const tableRows = new Map(
+      cronSetup
+        .split('\n')
+        .filter((line) => line.trim().startsWith('| `/api/cron/'))
+        .map((line) => {
+          const cells = line
+            .split('|')
+            .slice(1, -1)
+            .map((cell) => cell.trim().replace(/\\\*/g, '*'));
+          return [cells[0], cells];
+        })
+    );
 
     for (const job of CRON_JOB_CLASSIFICATION_TABLE) {
-      expect(cronSetup).toContain(
-        `| \`${job.route}\` | ${job.classification} | ${job.owner} | ${job.schedule} | ${job.launchReason} | ${job.testCoverage} |`
-      );
+      expect(tableRows.get(`\`${job.route}\``)).toEqual([
+        `\`${job.route}\``,
+        job.classification,
+        job.owner,
+        job.schedule,
+        job.launchReason,
+        job.testCoverage,
+      ]);
     }
   });
 });

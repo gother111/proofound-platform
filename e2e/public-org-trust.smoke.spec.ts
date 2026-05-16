@@ -53,7 +53,7 @@ test.describe('Seeded public org trust smoke', () => {
     await expect(page.getByRole('heading', { name: 'What work is offered' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Assignment clarity' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Seriousness of review' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Trust basics' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Organization basics' })).toBeVisible();
     await expect(page.getByText('Platform reviewed').first()).toBeVisible();
     await expect(page.getByText(SEEDED_PUBLIC_ORG_TRUST_FIXTURE.assignment.role)).toBeVisible();
 

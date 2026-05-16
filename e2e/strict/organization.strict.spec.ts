@@ -126,8 +126,8 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       page.getByText('A focused launch desk for one clean hiring corridor')
     ).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Corridor Queue' })).toBeVisible();
-    await expect(page.getByText('Trust profile · Verified path:')).toBeVisible();
-    await expect(page.getByText('One assignment path · Purpose, real work')).toBeVisible();
+    await expect(page.getByText(/Organization profile · Verified path:/)).toBeVisible();
+    await expect(page.getByText(/One assignment path · Purpose, real work/)).toBeVisible();
     await expect(page.getByRole('link', { name: /Create first assignment/i })).toHaveAttribute(
       'href',
       `/app/o/${organization.slug}/assignments/new`
@@ -139,7 +139,12 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     await expect(page.getByText('You are currently signed in as Owner.')).toBeVisible();
 
     await gotoWithReadyState(page, `/app/o/${organization.slug}/profile`, async () => {
-      await expect(page.getByRole('heading', { name: 'Organization Profile' })).toBeVisible();
+      await expect(
+        page.getByRole('main').getByRole('heading', {
+          name: 'Organization Profile',
+          exact: true,
+        })
+      ).toBeVisible();
     });
     await expect(page.getByRole('textbox', { name: 'Organization name' })).toHaveValue(
       organization.displayName
@@ -208,7 +213,11 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
         ],
       }
     );
-    expect(outcomesResponse.ok()).toBeTruthy();
+    const outcomesResponseText = await outcomesResponse.text();
+    expect(
+      outcomesResponse.ok(),
+      `outcomes response (${outcomesResponse.status()}): ${outcomesResponseText}`
+    ).toBeTruthy();
 
     const internalReviewResponse = await apiPutJson(
       page.request,
@@ -505,7 +514,11 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
         ],
       }
     );
-    expect(outcomesResponse.ok()).toBeTruthy();
+    const outcomesResponseText = await outcomesResponse.text();
+    expect(
+      outcomesResponse.ok(),
+      `outcomes response (${outcomesResponse.status()}): ${outcomesResponseText}`
+    ).toBeTruthy();
 
     const pendingReviewResponse = await apiPutJson(page.request, `/api/assignments/${draftId}`, {
       orgId: organization.id,
