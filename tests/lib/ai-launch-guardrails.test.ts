@@ -33,6 +33,8 @@ const AI_LAUNCH_COVERAGE_SENTINELS = [
   'tests/api/admin/analytics-cv-import-spend-route.test.ts',
   'tests/api/archived-api-handlers-route.test.ts',
   'tests/api/proof-artifact-text-extraction-routes.test.ts',
+  'tests/api/jd-to-l4-route.test.ts',
+  'tests/api/portfolio-visibility-route.test.ts',
   'tests/ui/individual-setup-proof-first.test.tsx',
   'npm run test:ai:archived-admin',
 ] as const;
