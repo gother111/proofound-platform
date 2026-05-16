@@ -3562,37 +3562,37 @@ function MobileStoryCard({
 
   if (isHero) {
     return (
-      <article className="relative isolate flex min-h-[calc(100svh-5.4rem)] flex-col overflow-hidden rounded-[2rem] border border-white/70 bg-white/68 px-4 pb-4 pt-5 shadow-[0_22px_74px_-46px_rgba(45,51,48,0.42)] backdrop-blur-[22px] [@media(max-height:700px)]:min-h-[calc(100svh-5rem)] [@media(max-height:700px)]:rounded-[1.6rem] [@media(max-height:700px)]:pb-3 [@media(max-height:700px)]:pt-4">
+      <article className="relative isolate flex min-h-[calc(100svh-5.4rem)] flex-col overflow-hidden rounded-[2rem] border border-white/70 bg-white/68 px-4 pb-4 pt-5 shadow-[0_22px_74px_-46px_rgba(45,51,48,0.42)] backdrop-blur-[22px] [@media(max-height:760px)]:pb-3 [@media(max-height:760px)]:pt-4 [@media(max-height:700px)]:min-h-[calc(100svh-5rem)] [@media(max-height:700px)]:rounded-[1.6rem]">
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10 bg-[linear-gradient(155deg,rgba(255,255,255,0.88)_0%,rgba(247,242,233,0.58)_52%,rgba(226,235,223,0.44)_100%)]"
         />
-        <div className="flex min-h-0 flex-1 flex-col justify-between gap-4 [@media(max-height:700px)]:gap-3">
+        <div className="flex min-h-0 flex-1 flex-col justify-between gap-4 [@media(max-height:760px)]:gap-3">
           <div className="space-y-3">
-            <h1 className="max-w-[20rem] font-display text-[2.75rem] leading-[0.86] text-foreground sm:text-5xl [@media(max-height:700px)]:text-[2.05rem]">
+            <h1 className="max-w-[20rem] font-display text-[2.75rem] leading-[0.86] text-foreground sm:text-5xl [@media(max-height:760px)]:text-[2.42rem] [@media(max-height:700px)]:text-[2.05rem]">
               Proof behind the claim
             </h1>
-            <p className="max-w-[20.5rem] text-[1rem] leading-7 text-muted-foreground [@media(max-height:700px)]:text-[0.92rem] [@media(max-height:700px)]:leading-6">
+            <p className="max-w-[20.5rem] text-[1rem] leading-7 text-muted-foreground [@media(max-height:760px)]:text-[0.94rem] [@media(max-height:760px)]:leading-6 [@media(max-height:700px)]:text-[0.92rem]">
               {frame.body}
             </p>
           </div>
 
-          <div className="relative overflow-hidden rounded-[1.7rem] border border-white/66 bg-proofound-parchment/52 px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.58)] [@media(max-height:700px)]:rounded-[1.35rem] [@media(max-height:700px)]:py-2.5 [@media(max-width:370px)]:py-3">
+          <div className="relative overflow-hidden rounded-[1.7rem] border border-white/66 bg-proofound-parchment/52 px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.58)] [@media(max-height:760px)]:py-2.5 [@media(max-height:700px)]:rounded-[1.35rem] [@media(max-width:370px)]:py-3">
             <div
               aria-hidden="true"
               className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.52),rgba(255,255,255,0.05))]"
             />
             <HeroResumeStack
               compact
-              className="max-w-[16.1rem] [@media(max-height:700px)]:max-w-[12.7rem] [@media(max-width:370px)]:max-w-[13.35rem]"
+              className="max-w-[16.1rem] [@media(max-height:760px)]:max-w-[12.9rem] [@media(max-height:700px)]:max-w-[12.7rem] [@media(max-width:370px)]:max-w-[13.35rem] [@media(max-width:370px)_and_(max-height:760px)]:max-w-[12.65rem]"
             />
           </div>
 
-          <div className="grid gap-2.5 [@media(max-height:700px)]:gap-2">
+          <div className="grid gap-2.5 [@media(max-height:760px)]:gap-2">
             <button
               type="button"
               onClick={onOrganizationSignup}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-proofound-forest px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_-22px_rgba(28,77,58,0.56)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 [@media(max-height:700px)]:min-h-11 [@media(max-height:700px)]:py-2.5"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-proofound-forest px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_-22px_rgba(28,77,58,0.56)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 [@media(max-height:760px)]:min-h-11 [@media(max-height:760px)]:py-2.5"
             >
               Request a pilot
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -3600,7 +3600,7 @@ function MobileStoryCard({
             <button
               type="button"
               onClick={onIndividualSignup}
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-border/80 bg-white/76 px-5 py-3 text-sm font-medium text-foreground shadow-[0_12px_26px_-24px_rgba(45,51,48,0.34)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 [@media(max-height:700px)]:min-h-11 [@media(max-height:700px)]:py-2.5"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-border/80 bg-white/76 px-5 py-3 text-sm font-medium text-foreground shadow-[0_12px_26px_-24px_rgba(45,51,48,0.34)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 [@media(max-height:760px)]:min-h-11 [@media(max-height:760px)]:py-2.5"
             >
               Create your proof portfolio
             </button>
