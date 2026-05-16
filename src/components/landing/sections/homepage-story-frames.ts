@@ -20,8 +20,8 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   {
     id: 'hero',
     title: 'Proof behind the claim',
-    body: 'A hiring signal you can trust.',
-    microcopy: 'Faster shortlists. Stronger evidence. Fairer review.',
+    body: 'Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over.',
+    microcopy: 'Proof portfolios for individuals. Evidence-based review for teams.',
   },
   {
     id: 'blind',

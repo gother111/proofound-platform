@@ -63,9 +63,9 @@ const STORY_TRANSITION = {
 };
 const HERO_TO_BLIND_TRANSITION_SECONDS = 2.1;
 const DESKTOP_FRAME_HEIGHT_VH = 88;
-const DESKTOP_GESTURE_TRANSITION_MS = 1850;
-const DESKTOP_GESTURE_MIN_DELTA = 16;
-const DESKTOP_TOUCH_GESTURE_MIN_DELTA = 34;
+const DESKTOP_GESTURE_TRANSITION_MS = 1320;
+const DESKTOP_GESTURE_MIN_DELTA = 24;
+const DESKTOP_TOUCH_GESTURE_MIN_DELTA = 42;
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const easeIn = (value: number) => {
@@ -266,7 +266,7 @@ const outcomeExperienceRows = [
 
 const namedExperienceRows = [
   {
-    label: 'Northstar Cloud',
+    label: 'Growth-stage B2B team',
     sublabel: 'Operations lead · 2022 to present',
     bullets: [
       'Led cross-functional operations improvements',
@@ -274,7 +274,7 @@ const namedExperienceRows = [
     ],
   },
   {
-    label: 'Vector Logistics',
+    label: 'International operations network',
     sublabel: 'Systems manager · 2019 to 2022',
     bullets: [
       'Managed systems across global operations',
@@ -400,7 +400,7 @@ function HeroResumeSheet({ compact = false }: { compact?: boolean }) {
   return (
     <div className="absolute inset-x-[14%] inset-y-[8%] z-10">
       <Image
-        src="/hero-resume-stack/cv-sheet.png"
+        src="/hero-resume-stack/candidate-24-sheet.png"
         alt=""
         fill
         sizes={compact ? '10.5rem' : '22rem'}
@@ -410,14 +410,21 @@ function HeroResumeSheet({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function HeroResumeStack({ compact = false }: { compact?: boolean }) {
+function HeroResumeStack({
+  compact = false,
+  className,
+}: {
+  compact?: boolean;
+  className?: string;
+}) {
   return (
     <div
       role="img"
-      aria-label="Resume layered over a stack of supporting paper proof"
+      aria-label="Anonymized sample resume layered over a stack of supporting paper proof"
       className={cn(
         'relative isolate mx-auto',
-        compact ? 'w-full max-w-[12.25rem] aspect-[31/42]' : DESKTOP_CARD_FRAME
+        compact ? 'w-full max-w-[12.25rem] aspect-[31/42]' : DESKTOP_CARD_FRAME,
+        className
       )}
     >
       <HeroResumePaperPile compact={compact} />
@@ -919,7 +926,7 @@ function ProofPackCard({
                                 identityLabelSize
                               )}
                             >
-                              Sarah Jenkins
+                              Sample Candidate
                             </p>
                             <p
                               className={cn(
@@ -947,21 +954,21 @@ function ProofPackCard({
                               className="h-[0.85rem] w-[0.85rem] text-proofound-forest/75"
                               aria-hidden="true"
                             />
-                            sarah@northstar.work
+                            Contact hidden until reveal
                           </div>
                           <div className="inline-flex items-center gap-2 whitespace-nowrap">
                             <MapPin
                               className="h-[0.85rem] w-[0.85rem] text-proofound-forest/75"
                               aria-hidden="true"
                             />
-                            Stockholm, Sweden
+                            Region hidden until reveal
                           </div>
                           <div className="inline-flex items-center gap-2 whitespace-nowrap">
                             <Phone
                               className="h-[0.85rem] w-[0.85rem] text-proofound-forest/75"
                               aria-hidden="true"
                             />
-                            +46 70 111 22 33
+                            Phone hidden until reveal
                           </div>
                         </div>
                       </motion.div>
@@ -1911,6 +1918,9 @@ function HeroToBlindBackground({
   const clampedProgress = clamp01(progress);
   const clampedTarget = clamp01(target);
   const backgroundImageSizes = '(min-width: 1024px) 50vw, 100vw';
+  const shouldRenderLastBackground =
+    !reduceMotion && (motionKey > 0 || clampedTarget === 1 || clampedProgress > 0.001);
+  const shouldMountVideo = shouldRenderLastBackground;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -2003,45 +2013,34 @@ function HeroToBlindBackground({
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="absolute inset-0 bg-[#e9e1d5]" />
 
-      {reduceMotion ? (
+      <>
         <Image
-          src={
-            clampedTarget === 1
-              ? '/hero-transition-video/hero-bg-last.png'
-              : '/hero-transition-video/hero-bg-first.png'
-          }
+          src="/hero-transition-video/hero-bg-first.png"
           alt=""
           fill
           sizes={backgroundImageSizes}
           priority
-          className="object-cover object-center opacity-[0.96]"
+          className="object-cover object-center"
+          style={{ opacity: 1 - clampedProgress }}
         />
-      ) : (
-        <>
-          <Image
-            src="/hero-transition-video/hero-bg-first.png"
-            alt=""
-            fill
-            sizes={backgroundImageSizes}
-            priority
-            className="object-cover object-center"
-            style={{ opacity: 1 - clampedProgress }}
-          />
+        {shouldRenderLastBackground ? (
           <Image
             src="/hero-transition-video/hero-bg-last.png"
             alt=""
             fill
             sizes={backgroundImageSizes}
-            priority
+            loading="lazy"
             className="object-cover object-center"
             style={{ opacity: clampedProgress }}
           />
+        ) : null}
+        {shouldMountVideo ? (
           <video
             key={motionKey}
             ref={videoRef}
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
             onLoadedMetadata={(event) => {
               const nextDuration = event.currentTarget.duration;
               setDuration(Number.isFinite(nextDuration) ? nextDuration : null);
@@ -2059,8 +2058,8 @@ function HeroToBlindBackground({
             <source src="/hero-transition-video/hero-to-blind-browser.m4v" type="video/mp4" />
             <source src="/hero-transition-video/hero-to-blind.mp4" type="video/mp4" />
           </video>
-        </>
-      )}
+        ) : null}
+      </>
 
       <div
         className="absolute inset-0"
@@ -2597,6 +2596,7 @@ function HeroToBlindDesktopScene({
   const replacementResumeY = mix(460, 0, incomingSheetProgress);
   const originalResumeOpacity = outgoingSheetProgress < 0.995 ? 1 : 0;
   const replacementResumeOpacity = incomingSheetProgress > 0 ? 1 : 0;
+  const shouldRenderOrganizer = progress > 0.001;
   const originalResumeClipBottom = Math.max(
     0,
     STORY_RESUME_TOP_PX + STORY_RESUME_HEIGHT_PX + originalResumeSettleY - ORGANIZER_POCKET_LINE_PX
@@ -2733,7 +2733,7 @@ function HeroToBlindDesktopScene({
               clipBottom={replacementResumeClipBottom}
             />
 
-            <OrganizerBoxVisual slideY={organizerSlideY} />
+            {shouldRenderOrganizer ? <OrganizerBoxVisual slideY={organizerSlideY} /> : null}
           </div>
         </motion.div>
       </div>
@@ -3441,7 +3441,7 @@ function MobileProofSignalVisual({ frame }: { frame: HomepageStoryFrame }) {
   const isVerified = state.hasVerification;
 
   return (
-    <div className="mx-auto w-full max-w-[15.5rem] rounded-[1.45rem] border border-white/62 bg-white/54 p-4 shadow-[0_18px_50px_-38px_rgba(45,51,48,0.34)]">
+    <div className="mx-auto w-full max-w-[17rem] rounded-[1.45rem] border border-white/62 bg-white/58 p-4 shadow-[0_18px_50px_-38px_rgba(45,51,48,0.34)]">
       <div className="flex items-center gap-3">
         <div
           className={cn(
@@ -3468,9 +3468,14 @@ function MobileProofSignalVisual({ frame }: { frame: HomepageStoryFrame }) {
       </div>
 
       <div className="mt-4 rounded-[1.1rem] border border-border/45 bg-proofound-parchment/38 p-3">
-        <p className="text-[0.56rem] font-semibold uppercase tracking-[0.24em] text-foreground/46">
-          Proof snapshot
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[0.56rem] font-semibold uppercase tracking-[0.24em] text-foreground/46">
+            Proof snapshot
+          </p>
+          <span className="rounded-full border border-white/70 bg-white/52 px-2 py-0.5 text-[0.52rem] text-proofound-forest/78">
+            Reviewable
+          </span>
+        </div>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           {[
             { label: 'Team', value: '12', icon: UsersRound },
@@ -3479,13 +3484,21 @@ function MobileProofSignalVisual({ frame }: { frame: HomepageStoryFrame }) {
           ].map(({ label, value, icon: Icon }) => (
             <div
               key={label}
-              className="rounded-[0.85rem] border border-white/58 bg-white/54 px-2 py-2"
+              className="rounded-[0.85rem] border border-white/58 bg-white/58 px-2 py-2 shadow-[0_10px_24px_-22px_rgba(45,51,48,0.3)]"
             >
               <Icon className="mx-auto h-3.5 w-3.5 text-proofound-forest/72" aria-hidden="true" />
               <p className="mt-1 font-display text-sm leading-none text-foreground">{value}</p>
               <p className="mt-1 text-[0.5rem] text-muted-foreground">{label}</p>
             </div>
           ))}
+        </div>
+        <div className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-[0.95rem] border border-white/58 bg-white/42 px-2.5 py-2">
+          <SquareStack className="h-4 w-4 text-proofound-forest/72" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="truncate text-[0.62rem] font-medium text-foreground/78">
+              Outcome record, artifacts, and trust method stay together.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -3533,65 +3546,105 @@ function MobileStoryVisual({
 
 function MobileStoryCard({
   frame,
+  index,
   onIndividualSignup,
   onOrganizationSignup,
   reduceMotion,
 }: {
   frame: HomepageStoryFrame;
+  index: number;
   onIndividualSignup?: () => void;
   onOrganizationSignup?: () => void;
   reduceMotion: boolean;
 }) {
   const isHero = frame.id === 'hero';
+  const storyNumber = String(index + 1).padStart(2, '0');
+
+  if (isHero) {
+    return (
+      <article className="relative isolate flex min-h-[calc(100svh-5.4rem)] flex-col overflow-hidden rounded-[2rem] border border-white/70 bg-white/68 px-4 pb-4 pt-5 shadow-[0_22px_74px_-46px_rgba(45,51,48,0.42)] backdrop-blur-[22px] [@media(max-height:700px)]:min-h-[calc(100svh-5rem)] [@media(max-height:700px)]:rounded-[1.6rem] [@media(max-height:700px)]:pb-3 [@media(max-height:700px)]:pt-4">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-[linear-gradient(155deg,rgba(255,255,255,0.88)_0%,rgba(247,242,233,0.58)_52%,rgba(226,235,223,0.44)_100%)]"
+        />
+        <div className="flex min-h-0 flex-1 flex-col justify-between gap-4 [@media(max-height:700px)]:gap-3">
+          <div className="space-y-3">
+            <h1 className="max-w-[20rem] font-display text-[2.75rem] leading-[0.86] text-foreground sm:text-5xl [@media(max-height:700px)]:text-[2.05rem]">
+              Proof behind the claim
+            </h1>
+            <p className="max-w-[20.5rem] text-[1rem] leading-7 text-muted-foreground [@media(max-height:700px)]:text-[0.92rem] [@media(max-height:700px)]:leading-6">
+              {frame.body}
+            </p>
+          </div>
+
+          <div className="relative overflow-hidden rounded-[1.7rem] border border-white/66 bg-proofound-parchment/52 px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.58)] [@media(max-height:700px)]:rounded-[1.35rem] [@media(max-height:700px)]:py-2.5 [@media(max-width:370px)]:py-3">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.52),rgba(255,255,255,0.05))]"
+            />
+            <HeroResumeStack
+              compact
+              className="max-w-[16.1rem] [@media(max-height:700px)]:max-w-[12.7rem] [@media(max-width:370px)]:max-w-[13.35rem]"
+            />
+          </div>
+
+          <div className="grid gap-2.5 [@media(max-height:700px)]:gap-2">
+            <button
+              type="button"
+              onClick={onOrganizationSignup}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-proofound-forest px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_-22px_rgba(28,77,58,0.56)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 [@media(max-height:700px)]:min-h-11 [@media(max-height:700px)]:py-2.5"
+            >
+              Request a pilot
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={onIndividualSignup}
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-border/80 bg-white/76 px-5 py-3 text-sm font-medium text-foreground shadow-[0_12px_26px_-24px_rgba(45,51,48,0.34)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 [@media(max-height:700px)]:min-h-11 [@media(max-height:700px)]:py-2.5"
+            >
+              Create your proof portfolio
+            </button>
+          </div>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article
       className={cn(
-        'space-y-4 rounded-[1.55rem] border border-border/70 bg-white/70 shadow-[0_18px_60px_-40px_rgba(45,51,48,0.35)] backdrop-blur-md sm:space-y-5 sm:rounded-[2rem]',
-        isHero ? 'p-4 sm:p-5' : 'p-4 sm:p-5'
+        'relative space-y-4 overflow-hidden rounded-[1.55rem] border bg-white/70 p-4 shadow-[0_18px_60px_-40px_rgba(45,51,48,0.35)] backdrop-blur-md sm:space-y-5 sm:rounded-[2rem] sm:p-5',
+        index % 2 === 0 ? 'mr-2 border-white/70' : 'ml-2 border-proofound-forest/14 bg-white/74'
       )}
     >
-      <div className="space-y-3">
-        {isHero ? (
-          <h1 className="font-display text-[2rem] leading-[0.94] text-foreground sm:text-4xl">
-            Proof behind the claim
-          </h1>
-        ) : (
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-proofound-forest/18 to-transparent"
+      />
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-proofound-forest/12 bg-proofound-sage/16 text-[0.65rem] font-medium text-proofound-forest/78"
+        >
+          {storyNumber}
+        </span>
+        <div className="min-w-0 space-y-3">
           <h2 className="font-display text-[1.8rem] leading-tight text-foreground sm:text-3xl">
             {frame.title}
           </h2>
-        )}
-        <p className="text-[0.96rem] leading-7 text-muted-foreground sm:text-base">{frame.body}</p>
+          <p className="text-[0.96rem] leading-7 text-muted-foreground sm:text-base">
+            {frame.body}
+          </p>
+        </div>
       </div>
 
       <div
         className={cn(
-          'rounded-[1.35rem] border border-white/60 bg-proofound-parchment/55 px-3 sm:rounded-[1.7rem]',
-          isHero ? 'py-3' : 'py-5'
+          'rounded-[1.35rem] border border-white/60 bg-[linear-gradient(180deg,rgba(247,242,233,0.72),rgba(255,255,255,0.36))] px-3 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.56)] sm:rounded-[1.7rem]'
         )}
       >
         <MobileStoryVisual frame={frame} reduceMotion={reduceMotion} />
       </div>
-
-      {isHero ? (
-        <div className="grid gap-3">
-          <button
-            type="button"
-            onClick={onOrganizationSignup}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-proofound-forest px-5 py-3.5 text-sm font-medium text-white shadow-[0_14px_30px_-22px_rgba(28,77,58,0.56)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0"
-          >
-            Request a pilot
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={onIndividualSignup}
-            className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/75 px-5 py-3.5 text-sm font-medium text-foreground shadow-[0_12px_26px_-24px_rgba(45,51,48,0.34)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0"
-          >
-            Create your proof portfolio
-          </button>
-        </div>
-      ) : null}
     </article>
   );
 }
@@ -3711,7 +3764,7 @@ function PrivacyToCompatBackground({
           ref={videoRef}
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           onLoadedMetadata={(event) => {
             const nextDuration = event.currentTarget.duration;
             setDuration(Number.isFinite(nextDuration) ? nextDuration : null);
@@ -4295,13 +4348,17 @@ export function ScrollytellingSection({
       className="relative scroll-mt-24"
       data-testid="landing-story-section"
     >
-      <div className="px-4 pb-10 pt-24 md:px-8 lg:hidden">
-        <div className="mx-auto max-w-2xl space-y-6" data-testid="landing-mobile-story">
-          {mobileFrames.map((frame) => {
+      <div className="px-4 pb-12 pt-[4.75rem] md:px-8 lg:hidden">
+        <div
+          className="relative mx-auto max-w-2xl space-y-6 before:absolute before:left-[1.65rem] before:top-[calc(100svh-3.5rem)] before:hidden before:h-[calc(100%-100svh+2rem)] before:w-px before:bg-gradient-to-b before:from-proofound-forest/18 before:to-transparent sm:before:block"
+          data-testid="landing-mobile-story"
+        >
+          {mobileFrames.map((frame, index) => {
             return (
               <MobileStoryCard
                 key={frame.id}
                 frame={frame}
+                index={index}
                 onIndividualSignup={onIndividualSignup}
                 onOrganizationSignup={onOrganizationSignup}
                 reduceMotion={reduceMotion}
