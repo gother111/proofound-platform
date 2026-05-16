@@ -1,0 +1,153 @@
+{
+  "generatedAt": "2026-05-16T22:20:30.461Z",
+  "summary": {
+    "schema": "public",
+    "tableCount": 181,
+    "rlsEnabledCount": 181,
+    "rlsDisabledCount": 0,
+    "rlsDisabledExposedTableCount": 0,
+    "securityDefinerViewCount": 0,
+    "executableSecurityDefinerFunctionCount": 11,
+    "defaultPrivilegeFindingCount": 3
+  },
+  "findings": {
+    "rlsDisabledExposedTables": [],
+    "securityDefinerViews": [],
+    "executableSecurityDefinerFunctions": [
+      {
+        "schema_name": "public",
+        "function_name": "current_org_ids",
+        "arguments": "",
+        "language": "sql",
+        "anon_execute": true,
+        "authenticated_execute": true,
+        "has_search_path": true
+      },
+      {
+        "schema_name": "public",
+        "function_name": "get_assignment_invitation_by_token",
+        "arguments": "p_token text",
+        "language": "plpgsql",
+        "anon_execute": true,
+        "authenticated_execute": true,
+        "has_search_path": true
+      },
+      {
+        "schema_name": "public",
+        "function_name": "has_active_org_membership",
+        "arguments": "target_org_id uuid, actor_id uuid",
+        "language": "sql",
+        "anon_execute": true,
+        "authenticated_execute": true,
+        "has_search_path": true
+      },
+      {
+        "schema_name": "public",
+        "function_name": "has_org_role",
+        "arguments": "target_org_id uuid, allowed_roles text[], actor_id uuid",
+        "language": "sql",
+        "anon_execute": true,
+        "authenticated_execute": true,
+        "has_search_path": true
+      },
+      {
+        "schema_name": "public",
+        "function_name": "is_org_member",
+        "arguments": "p_org_id uuid, p_roles text[]",
+        "language": "sql",
+        "anon_execute": true,
+        "authenticated_execute": true,
+        "has_search_path": true
+      },
+      {
+        "schema_name": "public",
+        "function_name": "is_org_member",
+        "arguments": "p_org_id uuid, p_user_id uuid",
+        "language": "plpgsql",
+        "anon_execute": true,
+        "authenticated_execute": true,
+        "has_search_path": true
+      },
+      {
+        "schema_name": "public",
+        "function_name": "is_platform_admin",
+        "arguments": "p_user_id uuid",
+        "language": "plpgsql",
+        "anon_execute": true,
+        "authenticated_execute": true,
+        "has_search_path": true
+      },
+      {
+        "schema_name": "public",
+        "function_name": "is_trust_admin",
+        "arguments": "actor_id uuid",
+        "language": "sql",
+        "anon_execute": true,
+        "authenticated_execute": true,
+        "has_search_path": true
+      },
+      {
+        "schema_name": "public",
+        "function_name": "is_valid_conversation_link",
+        "arguments": "p_match_id uuid, p_assignment_id uuid, p_participant_one_id uuid, p_participant_two_id uuid",
+        "language": "sql",
+        "anon_execute": true,
+        "authenticated_execute": true,
+        "has_search_path": true
+      },
+      {
+        "schema_name": "public",
+        "function_name": "submit_assignment_response_by_token",
+        "arguments": "p_token text, p_section_name text, p_section_data jsonb",
+        "language": "plpgsql",
+        "anon_execute": true,
+        "authenticated_execute": true,
+        "has_search_path": true
+      },
+      {
+        "schema_name": "public",
+        "function_name": "submit_verification_response_by_token",
+        "arguments": "p_token text, p_response_type text, p_reason text, p_verifier_seniority integer, p_notes text, p_ip_address text, p_user_agent text",
+        "language": "plpgsql",
+        "anon_execute": true,
+        "authenticated_execute": true,
+        "has_search_path": true
+      }
+    ],
+    "defaultPrivileges": [
+      {
+        "owner_role": "supabase_admin",
+        "schema_name": "public",
+        "object_type": "S",
+        "acl": [
+          "postgres=rwU/supabase_admin",
+          "anon=rwU/supabase_admin",
+          "authenticated=rwU/supabase_admin",
+          "service_role=rwU/supabase_admin"
+        ]
+      },
+      {
+        "owner_role": "supabase_admin",
+        "schema_name": "public",
+        "object_type": "f",
+        "acl": [
+          "postgres=X/supabase_admin",
+          "anon=X/supabase_admin",
+          "authenticated=X/supabase_admin",
+          "service_role=X/supabase_admin"
+        ]
+      },
+      {
+        "owner_role": "supabase_admin",
+        "schema_name": "public",
+        "object_type": "r",
+        "acl": [
+          "postgres=arwdDxtm/supabase_admin",
+          "anon=arwdDxtm/supabase_admin",
+          "authenticated=arwdDxtm/supabase_admin",
+          "service_role=arwdDxtm/supabase_admin"
+        ]
+      }
+    ]
+  }
+}
