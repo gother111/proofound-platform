@@ -9,13 +9,22 @@ import {
   assertAiRawPromptLoggingAllowed,
   resolveAiRawPromptLoggingEnabled,
 } from '@/lib/ai/usage-ledger';
+import { parseJobDescription } from '@/lib/ai/jd-parser';
 
 const originalEnv = { ...process.env };
 const AI_ROUTE_ROOT = path.join(process.cwd(), 'src/app/api/ai');
+const ACTIVE_AI_SOURCE_ROOTS = [
+  AI_ROUTE_ROOT,
+  path.join(process.cwd(), 'src/app/api/expertise/jd-to-l4'),
+  path.join(process.cwd(), 'src/lib/ai'),
+  path.join(process.cwd(), 'src/lib/expertise/gemini'),
+] as const;
 const FORBIDDEN_AI_ROUTE_PATTERN =
   /\b(?:candidate[-_/]?score|candidate[-_/]?rank|scor(?:e|ing)|rank(?:ing)?)\b/i;
 const FORBIDDEN_RESPONSE_FIELD_PATTERN =
   /\b(?:candidateScore|candidateRank|candidate_score|candidate_rank|fitScore|fit_score|rankBand|scoreBand)\b/;
+const FORBIDDEN_LEGACY_PROVIDER_PATTERN =
+  /@anthropic-ai\/sdk|new\s+Anthropic|anthropic\.messages|ANTHROPIC_API_KEY|USE_ANTHROPIC_API|claude-3-5-sonnet/i;
 
 async function collectRouteFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -28,6 +37,24 @@ async function collectRouteFiles(dir: string): Promise<string[]> {
       continue;
     }
     if (entry.isFile() && entry.name === 'route.ts') {
+      files.push(absolutePath);
+    }
+  }
+
+  return files.sort();
+}
+
+async function collectSourceFiles(dir: string): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    const absolutePath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await collectSourceFiles(absolutePath)));
+      continue;
+    }
+    if (entry.isFile() && /\.(?:ts|tsx)$/.test(entry.name)) {
       files.push(absolutePath);
     }
   }
@@ -101,5 +128,34 @@ describe('AI launch no-go guardrails', () => {
         .flatMap((source) => source.match(FORBIDDEN_RESPONSE_FIELD_PATTERN) ?? [])
         .filter(Boolean)
     ).toEqual([]);
+  });
+
+  it('keeps active AI source off legacy direct Anthropic provider calls', async () => {
+    const sourceFiles = (
+      await Promise.all(ACTIVE_AI_SOURCE_ROOTS.map((root) => collectSourceFiles(root)))
+    ).flat();
+    const offenders: string[] = [];
+
+    for (const file of sourceFiles) {
+      const source = await readFile(file, 'utf8');
+      if (FORBIDDEN_LEGACY_PROVIDER_PATTERN.test(source)) {
+        offenders.push(path.relative(process.cwd(), file));
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('keeps JD-to-L4 parsing local even if legacy provider env is present', async () => {
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-legacy-test-key';
+    process.env.USE_ANTHROPIC_API = 'true';
+
+    const suggestions = await parseJobDescription(
+      'We need a senior Python developer with Django, AWS, SQL, and strong communication skills. Must have 5+ years building launch-critical systems.'
+    );
+
+    expect(suggestions.map((suggestion) => suggestion.l4_name)).toEqual(
+      expect.arrayContaining(['Python', 'SQL', 'AWS', 'Communication'])
+    );
   });
 });

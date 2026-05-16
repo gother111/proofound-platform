@@ -1,14 +1,10 @@
 /**
  * Job Description Parser
  *
- * Uses Claude AI to extract skills from job descriptions and map them to L4 taxonomy.
+ * Uses local deterministic rules to extract skills from job descriptions.
  * PRD Reference: Part 5 O6 - JD Mapping Feature
  */
 
-import Anthropic from '@anthropic-ai/sdk';
-import { db } from '@/db';
-import { skillsTaxonomy } from '@/db/schema';
-import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
 export interface JDSkillSuggestion {
@@ -30,222 +26,23 @@ export interface JDParseResult {
 }
 
 // ============================================================================
-// AI-POWERED JD PARSING
+// LOCAL JD PARSING
 // ============================================================================
 
 /**
- * Parse job description text and extract skills with Claude AI
+ * Parse job description text and extract skills without sending source text to an external model.
  */
 export async function parseJobDescription(jdText: string): Promise<JDSkillSuggestion[]> {
-  try {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-
-    if (!apiKey) {
-      log.warn('jd-parser.no_api_key', { textLength: jdText.length });
-      // Fall back to rule-based extraction
-      return parseJobDescriptionRuleBased(jdText);
-    }
-
-    const anthropic = new Anthropic({ apiKey });
-
-    // Build JD-specific prompts
-    const systemPrompt = buildJDSystemPrompt();
-    const userPrompt = buildJDUserPrompt(jdText);
-
-    // Call Claude
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 4096,
-      temperature: 0,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-    });
-
-    // Parse response
-    const content = response.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude');
-    }
-
-    const suggestions = parseAIResponse(content.text);
-
-    log.info('jd-parser.ai.success', {
-      textLength: jdText.length,
-      skillCount: suggestions.length,
-    });
-
-    // Match extracted skills to actual L4 taxonomy codes
-    const matchedSuggestions = await matchToTaxonomy(suggestions);
-
-    return matchedSuggestions;
-  } catch (error) {
-    log.error('jd-parser.ai.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    // Fall back to rule-based extraction
-    return parseJobDescriptionRuleBased(jdText);
-  }
-}
-
-/**
- * Build system prompt for JD parsing
- */
-function buildJDSystemPrompt(): string {
-  return `You are an expert job description analyzer for a professional talent matching platform. Your task is to extract technical and professional skills from job descriptions and structure them for matching.
-
-For each skill identified:
-1. Extract the skill name as it would appear in a standard skills taxonomy (e.g., "Python", "Project Management", "React", "Data Analysis")
-2. Estimate the required proficiency level based on context:
-   - 1 = Basic/Beginner (mentioned as "familiarity with", "exposure to")
-   - 2 = Elementary (mentioned as "basic knowledge", "some experience")
-   - 3 = Intermediate (mentioned as "experience with", "proficient in")
-   - 4 = Advanced (mentioned as "expert", "senior level", "5+ years")
-   - 5 = Master/Expert (mentioned as "world-class", "architect level", "10+ years")
-3. Provide a confidence score (0-1) based on how clearly the skill is mentioned
-4. Determine if the skill is required (must-have) or preferred (nice-to-have)
-5. Include the exact text excerpt that led to identifying this skill
-6. Explain WHY this skill maps to this proficiency level
-
-Focus on:
-- Technical skills (programming languages, frameworks, tools)
-- Domain expertise (cloud, security, data, etc.)
-- Soft skills when explicitly required (leadership, communication)
-- Certifications when mentioned
-
-Do NOT include:
-- Generic requirements like "team player" unless explicitly emphasized
-- Years of experience as a skill (but use it to inform proficiency levels)
-- Company-specific jargon that isn't a transferable skill`;
-}
-
-/**
- * Build user prompt for JD parsing
- */
-function buildJDUserPrompt(jdText: string): string {
-  return `Analyze the following job description and extract all required and preferred skills. Return ONLY valid JSON in this exact format:
-
-{
-  "skills": [
-    {
-      "skill_name": "Skill Name",
-      "proficiency_level": 3,
-      "confidence": 0.9,
-      "is_required": true,
-      "source_text": "exact quote from JD mentioning this skill",
-      "why": "explanation of why this proficiency level was assigned"
-    }
-  ],
-  "summary": "Brief 1-2 sentence summary of the role",
-  "role_title": "Extracted job title",
-  "experience_required": "e.g., 5+ years"
-}
-
-Job Description:
----
-${jdText.slice(0, 15000)}
----
-
-Return ONLY the JSON, no other text.`;
-}
-
-/**
- * Parse AI response into structured suggestions
- */
-function parseAIResponse(response: string): JDSkillSuggestion[] {
-  try {
-    // Extract JSON from response (in case there's wrapper text)
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No JSON found in response');
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
-
-    if (!parsed.skills || !Array.isArray(parsed.skills)) {
-      throw new Error('Invalid skills array in response');
-    }
-
-    return parsed.skills.map((s: any) => ({
-      l4_id: '', // Will be filled by taxonomy matching
-      l4_name: s.skill_name || 'Unknown',
-      proficiency_level: Math.min(Math.max(s.proficiency_level || 3, 1), 5),
-      confidence: Math.min(Math.max(s.confidence || 0.5, 0), 1),
-      why: s.why || 'Identified in job description',
-      source_text: s.source_text || '',
-      is_required: s.is_required !== false, // Default to required
-    }));
-  } catch (error) {
-    log.error('jd-parser.parse_failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return [];
-  }
+  log.info('jd-parser.local.start', { textLength: jdText.length });
+  return parseJobDescriptionRuleBased(jdText);
 }
 
 // ============================================================================
-// TAXONOMY MATCHING
+// RULE-BASED EXTRACTION
 // ============================================================================
 
 /**
- * Match extracted skills to actual L4 taxonomy codes
- */
-async function matchToTaxonomy(suggestions: JDSkillSuggestion[]): Promise<JDSkillSuggestion[]> {
-  const matched: JDSkillSuggestion[] = [];
-
-  for (const suggestion of suggestions) {
-    try {
-      // Search for exact or close matches in taxonomy
-      const taxonomyMatches = await db.query.skillsTaxonomy.findMany({
-        where: sql`
-          ${skillsTaxonomy.nameI18n}::text ILIKE ${`%${suggestion.l4_name}%`}
-          OR ${skillsTaxonomy.aliasesI18n}::text ILIKE ${`%${suggestion.l4_name}%`}
-          OR ${skillsTaxonomy.slug} ILIKE ${`%${suggestion.l4_name.toLowerCase().replace(/\s+/g, '-')}%`}
-        `,
-        limit: 1,
-      });
-
-      if (taxonomyMatches.length > 0) {
-        const match = taxonomyMatches[0];
-        const name = (match.nameI18n as any)?.en || suggestion.l4_name;
-        matched.push({
-          ...suggestion,
-          l4_id: match.code,
-          l4_name: name,
-        });
-      } else {
-        // No taxonomy match found, use skill name as-is with generated ID
-        matched.push({
-          ...suggestion,
-          l4_id: `custom-${suggestion.l4_name.toLowerCase().replace(/\s+/g, '-')}`,
-        });
-      }
-    } catch (error) {
-      log.error('jd-parser.taxonomy_match_failed', {
-        skillName: suggestion.l4_name,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      // Include with generated ID on error
-      matched.push({
-        ...suggestion,
-        l4_id: `custom-${suggestion.l4_name.toLowerCase().replace(/\s+/g, '-')}`,
-      });
-    }
-  }
-
-  return matched;
-}
-
-// ============================================================================
-// FALLBACK: RULE-BASED EXTRACTION
-// ============================================================================
-
-/**
- * Fallback rule-based JD parsing when AI is unavailable
+ * Rule-based JD parsing for the launch corridor.
  */
 function parseJobDescriptionRuleBased(jdText: string): JDSkillSuggestion[] {
   const suggestions: JDSkillSuggestion[] = [];

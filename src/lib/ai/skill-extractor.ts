@@ -1,17 +1,15 @@
 /**
  * AI-Powered Skill Extraction
  *
- * Primary method: Local AI using NLP + semantic embeddings (no API costs)
- * Secondary method: Claude API (optional, for higher accuracy when needed)
+ * Local-only extraction using NLP plus semantic embeddings.
  *
  * PRD Reference: Part 5 F3 - AI-assisted CV/JD parsing
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { log } from '@/lib/log';
 import { db } from '@/db';
 import { skillsTaxonomy } from '@/db/schema';
 import { sql } from 'drizzle-orm';
-import { log } from '@/lib/log';
 import {
   extractSkillsLocal,
   preloadLocalExtractor,
@@ -35,32 +33,21 @@ export interface SkillExtractionResult {
   totalExperienceYears?: number;
   industries?: string[];
   roles?: string[];
-  method?: 'local-ai' | 'api' | 'rule-based';
+  method?: 'local-ai' | 'rule-based';
   processingTimeMs?: number;
 }
 
 // ============================================================================
-// MAIN EXTRACTION FUNCTION (Uses Local AI by default)
+// MAIN EXTRACTION FUNCTION
 // ============================================================================
 
 /**
- * Extract skills from text - uses local AI as primary method
- *
- * Set USE_ANTHROPIC_API=true in env to use Claude API instead
+ * Extract skills from text without sending source text to an external model.
  */
 export async function extractSkillsWithAI(
   text: string,
   context: 'cv' | 'jd' | 'general'
 ): Promise<SkillExtractionResult> {
-  // Check if API mode is explicitly requested
-  const useApiMode = process.env.USE_ANTHROPIC_API === 'true';
-
-  if (useApiMode && process.env.ANTHROPIC_API_KEY) {
-    log.info('skill.extract.using_api', { context });
-    return await extractSkillsWithClaudeAPI(text, context);
-  }
-
-  // Use local AI extraction (default)
   log.info('skill.extract.using_local', { context });
   try {
     const localResult = await extractSkillsLocal(text, context);
@@ -98,255 +85,6 @@ export async function extractSkillsWithAI(
       method: 'rule-based',
     };
   }
-}
-
-// ============================================================================
-// CLAUDE API EXTRACTION (Optional, for higher accuracy)
-// ============================================================================
-
-/**
- * Extract skills from text using Claude AI (optional premium feature)
- */
-async function extractSkillsWithClaudeAPI(
-  text: string,
-  context: 'cv' | 'jd' | 'general'
-): Promise<SkillExtractionResult> {
-  const startTime = Date.now();
-
-  try {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-
-    if (!apiKey) {
-      log.warn('skill.extract.no_api_key', { context });
-      // Fall back to local extraction
-      return await extractSkillsWithAI(text, context);
-    }
-
-    const anthropic = new Anthropic({ apiKey });
-
-    // Build context-specific prompt
-    const systemPrompt = buildSystemPrompt(context);
-    const userPrompt = buildUserPrompt(text, context);
-
-    // Call Claude
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 4096,
-      temperature: 0,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-    });
-
-    // Parse response
-    const content = response.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude');
-    }
-
-    const result = parseAIResponse(content.text, context);
-
-    log.info('skill.extract.api_success', {
-      context,
-      skillCount: result.skills.length,
-      totalExperience: result.totalExperienceYears,
-    });
-
-    // Match extracted skills to taxonomy
-    const matchedSkills = await matchSkillsToTaxonomy(result.skills);
-
-    return {
-      ...result,
-      skills: matchedSkills,
-      method: 'api',
-      processingTimeMs: Date.now() - startTime,
-    };
-  } catch (error) {
-    log.error('skill.extract.api_failed', {
-      context,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-
-    // Fall back to local extraction
-    log.info('skill.extract.fallback_to_local', { context });
-    const localResult = await extractSkillsLocal(text, context);
-
-    return {
-      skills: localResult.skills.map((skill) => ({
-        skillName: skill.skillName,
-        taxonomyCode: skill.taxonomyCode,
-        level: skill.level,
-        confidence: skill.confidence,
-        context: skill.context,
-        monthsExperience: skill.monthsExperience,
-        yearsExperience: skill.yearsExperience,
-        relevance: skill.relevance,
-      })),
-      summary: localResult.summary,
-      totalExperienceYears: localResult.totalExperienceYears,
-      industries: localResult.industries,
-      roles: localResult.roles,
-      method: localResult.method,
-      processingTimeMs: localResult.processingTimeMs,
-    };
-  }
-}
-
-/**
- * Build system prompt based on context
- */
-function buildSystemPrompt(context: 'cv' | 'jd' | 'general'): string {
-  const basePrompt = `You are an expert skill extraction system for a professional platform. Your task is to extract technical and professional skills from text and structure them in a specific JSON format.
-
-For each skill identified:
-- Extract the exact skill name (e.g., "Python", "Project Management", "React")
-- Estimate proficiency level (1=Learning, 2=Competent, 3=Proficient, 4=Expert, 5=Master)
-- Provide confidence score (0-1, where 1 is extremely confident)
-- Include relevant context/evidence from the text
-- Determine relevance (current, past, or aspirational)
-- Extract experience duration where mentioned`;
-
-  const contextSpecific: Record<typeof context, string> = {
-    cv: `\n\nFor CV/Resume context:
-- Focus on skills the person HAS and has demonstrated
-- Extract years/months of experience for each skill where mentioned
-- Identify current vs past skills based on dates
-- Look for skill usage in job descriptions, projects, education`,
-
-    jd: `\n\nFor Job Description context:
-- Focus on skills REQUIRED for the role
-- All skills should be marked as 'aspirational' (desired by organization)
-- Note required vs preferred skills (use confidence score)
-- Extract minimum experience levels mentioned`,
-
-    general: `\n\nFor general text:
-- Be conservative - only extract clear skill mentions
-- Default to 'current' relevance unless context suggests otherwise`,
-  };
-
-  return basePrompt + contextSpecific[context];
-}
-
-/**
- * Build user prompt with text and examples
- */
-function buildUserPrompt(text: string, context: string): string {
-  return `Extract skills from the following ${context} text and return ONLY valid JSON in this exact format:
-
-{
-  "skills": [
-    {
-      "skillName": "Skill Name",
-      "level": 3,
-      "confidence": 0.9,
-      "context": "relevant quote from text",
-      "monthsExperience": 24,
-      "relevance": "current"
-    }
-  ],
-  "summary": "Brief 1-2 sentence summary",
-  "totalExperienceYears": 5,
-  "industries": ["Industry 1", "Industry 2"],
-  "roles": ["Role 1", "Role 2"]
-}
-
-Text to analyze:
----
-${text.slice(0, 15000)}
----
-
-Return ONLY the JSON, no other text.`;
-}
-
-/**
- * Parse AI response into structured result
- */
-function parseAIResponse(response: string, context: string): SkillExtractionResult {
-  try {
-    // Extract JSON from response (in case there's wrapper text)
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No JSON found in response');
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
-
-    // Validate structure
-    if (!parsed.skills || !Array.isArray(parsed.skills)) {
-      throw new Error('Invalid skills array in response');
-    }
-
-    return {
-      skills: parsed.skills.map((s: any) => ({
-        skillName: s.skillName || 'Unknown',
-        level: Math.min(Math.max(s.level || 2, 1), 5),
-        confidence: Math.min(Math.max(s.confidence || 0.5, 0), 1),
-        context: s.context || '',
-        monthsExperience: s.monthsExperience,
-        yearsExperience: s.monthsExperience ? Math.floor(s.monthsExperience / 12) : undefined,
-        relevance: s.relevance || 'current',
-      })),
-      summary: parsed.summary || '',
-      totalExperienceYears: parsed.totalExperienceYears,
-      industries: parsed.industries || [],
-      roles: parsed.roles || [],
-    };
-  } catch (error) {
-    log.error('skill.extract.parse_failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return {
-      skills: [],
-      summary: 'Failed to parse AI response',
-    };
-  }
-}
-
-// ============================================================================
-// TAXONOMY MATCHING
-// ============================================================================
-
-/**
- * Match extracted skills to taxonomy codes
- */
-async function matchSkillsToTaxonomy(skills: ExtractedSkill[]): Promise<ExtractedSkill[]> {
-  const matched: ExtractedSkill[] = [];
-
-  for (const skill of skills) {
-    try {
-      // Search for exact or close matches
-      const taxonomyMatches = await db.query.skillsTaxonomy.findMany({
-        where: sql`
-          ${skillsTaxonomy.nameI18n}::text ILIKE ${`%${skill.skillName}%`}
-          OR ${skillsTaxonomy.aliasesI18n}::text ILIKE ${`%${skill.skillName}%`}
-        `,
-        limit: 1,
-      });
-
-      if (taxonomyMatches.length > 0) {
-        const match = taxonomyMatches[0];
-        matched.push({
-          ...skill,
-          taxonomyCode: match.code,
-        });
-      } else {
-        // No match found, include anyway
-        matched.push(skill);
-      }
-    } catch (error) {
-      log.error('skill.match.failed', {
-        skillName: skill.skillName,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      matched.push(skill);
-    }
-  }
-
-  return matched;
 }
 
 // ============================================================================
