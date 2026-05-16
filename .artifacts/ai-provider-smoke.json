@@ -1,8 +1,14 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "provider": "gemini",
-  "generatedAt": "2026-05-16T10:51:24.166Z",
+  "generatedAt": "2026-05-16T11:00:26.184Z",
   "success": false,
+  "preflight": {
+    "databaseUrlConfigured": true,
+    "providerKeyConfigured": false,
+    "monthlyHardCapConfigured": false,
+    "productionLike": false
+  },
   "defaultModel": {
     "model": "gemini-3.1-flash-lite",
     "accepted": false,

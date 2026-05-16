@@ -18,10 +18,16 @@ const artifactPath = path.join(
 );
 
 const artifact: AiProviderSmokeArtifact = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   provider: 'gemini',
   generatedAt: '2026-05-04T09:00:00.000Z',
   success: true,
+  preflight: {
+    databaseUrlConfigured: true,
+    providerKeyConfigured: true,
+    monthlyHardCapConfigured: true,
+    productionLike: false,
+  },
   defaultModel: {
     model: 'gemini-3.1-flash-lite',
     accepted: true,
@@ -148,10 +154,11 @@ describe('AI provider smoke artifact', () => {
     await writeFile(
       artifactPath,
       JSON.stringify({
-        schemaVersion: 1,
+        schemaVersion: 2,
         provider: 'gemini',
         generatedAt: '2026-05-04T09:00:00.000Z',
         success: true,
+        preflight: artifact.preflight,
         fallbackModel: artifact.fallbackModel,
         jsonSchemaResponseWorks: true,
         disabledFailureSafe: true,
@@ -166,6 +173,106 @@ describe('AI provider smoke artifact', () => {
         expectedDefaultModel: 'gemini-3.1-flash-lite',
       })
     ).resolves.toBeNull();
+  });
+
+  it('treats legacy schema v1 artifacts without prerequisite proof as missing evidence', async () => {
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(
+      artifactPath,
+      JSON.stringify({
+        ...artifact,
+        schemaVersion: 1,
+      }),
+      'utf8'
+    );
+
+    await expect(readAiProviderSmokeArtifact({ artifactPath })).resolves.toBeNull();
+    await expect(
+      resolveLastSuccessfulAiProviderSmokeAt({
+        artifactPath,
+        expectedDefaultModel: 'gemini-3.1-flash-lite',
+      })
+    ).resolves.toBeNull();
+  });
+
+  it('requires successful smoke evidence to include database and provider prerequisites', async () => {
+    await writeAiProviderSmokeArtifact(
+      {
+        ...artifact,
+        preflight: {
+          ...artifact.preflight,
+          databaseUrlConfigured: false,
+        },
+      },
+      artifactPath
+    );
+
+    await expect(
+      resolveLastSuccessfulAiProviderSmokeAt({
+        artifactPath,
+        expectedDefaultModel: 'gemini-3.1-flash-lite',
+      })
+    ).resolves.toBeNull();
+
+    await writeAiProviderSmokeArtifact(
+      {
+        ...artifact,
+        preflight: {
+          ...artifact.preflight,
+          providerKeyConfigured: false,
+        },
+      },
+      artifactPath
+    );
+
+    await expect(
+      resolveLastSuccessfulAiProviderSmokeAt({
+        artifactPath,
+        expectedDefaultModel: 'gemini-3.1-flash-lite',
+      })
+    ).resolves.toBeNull();
+  });
+
+  it('requires production-like smoke prerequisite proof before accepting production evidence', async () => {
+    await writeAiProviderSmokeArtifact(
+      {
+        ...artifact,
+        preflight: {
+          ...artifact.preflight,
+          monthlyHardCapConfigured: false,
+          productionLike: false,
+        },
+      },
+      artifactPath
+    );
+
+    await expect(
+      resolveLastSuccessfulAiProviderSmokeAt({
+        artifactPath,
+        expectedDefaultModel: 'gemini-3.1-flash-lite',
+        env: { NODE_ENV: 'production' },
+      })
+    ).resolves.toBeNull();
+
+    await writeAiProviderSmokeArtifact(
+      {
+        ...artifact,
+        preflight: {
+          ...artifact.preflight,
+          monthlyHardCapConfigured: true,
+          productionLike: true,
+        },
+      },
+      artifactPath
+    );
+
+    await expect(
+      resolveLastSuccessfulAiProviderSmokeAt({
+        artifactPath,
+        expectedDefaultModel: 'gemini-3.1-flash-lite',
+        env: { NODE_ENV: 'production' },
+      })
+    ).resolves.toBe('2026-05-04T09:00:00.000Z');
   });
 
   it('treats successful artifacts with failed default smoke evidence as missing evidence', async () => {

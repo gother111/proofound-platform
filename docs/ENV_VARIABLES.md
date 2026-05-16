@@ -877,7 +877,7 @@ CV_IMPORT_GEMINI_MODEL_FALLBACK=
 
 - `AI_MODEL_DEFAULT` is the provider-wide default for assistive AI calls.
 - `AI_MODEL_FALLBACK` is optional, provider-wide, and is ignored unless `AI_MODEL_FALLBACK_VERIFIED=true`.
-- Run `npm run ai:provider:smoke` before marking a fallback model verified. The smoke writes `.artifacts/ai-provider-smoke.json` by default, and launch status requires that artifact to match the configured default and verified fallback model before it treats provider smoke as current evidence.
+- Run `npm run ai:provider:smoke` before marking a fallback model verified. The smoke writes `.artifacts/ai-provider-smoke.json` by default, and launch status requires that artifact to match the configured default and verified fallback model before it treats provider smoke as current evidence. Current smoke artifacts also record value-free prerequisite booleans for `DATABASE_URL`, server-only provider-key presence, production-like runtime, and AI monthly hard-cap presence so stale or under-configured smoke files cannot satisfy launch readiness.
 - `CV_IMPORT_GEMINI_MODEL_DEFAULT` remains accepted for the CV import feature, but `AI_MODEL_DEFAULT` takes precedence.
 - `CV_IMPORT_GEMINI_MODEL_FALLBACK` remains accepted only by legacy/non-launch CV import helpers. It must not act as the active assistive AI provider fallback.
 - Gemini API keys remain server-only and must not use `NEXT_PUBLIC_` prefixes.

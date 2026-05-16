@@ -8,11 +8,19 @@ export type AiProviderSmokeModelResult = {
   errorCode?: string | null;
 };
 
+export type AiProviderSmokePreflight = {
+  databaseUrlConfigured: boolean;
+  providerKeyConfigured: boolean;
+  monthlyHardCapConfigured: boolean;
+  productionLike: boolean;
+};
+
 export type AiProviderSmokeArtifact = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   provider: 'gemini';
   generatedAt: string;
   success: boolean;
+  preflight: AiProviderSmokePreflight;
   defaultModel: AiProviderSmokeModelResult;
   fallbackModel:
     | (AiProviderSmokeModelResult & {
@@ -47,11 +55,12 @@ export async function readAiProviderSmokeArtifact(
     const raw = await readFile(artifactPath, 'utf8');
     const parsed = JSON.parse(raw) as Partial<AiProviderSmokeArtifact>;
     if (
-      parsed.schemaVersion !== 1 ||
+      parsed.schemaVersion !== 2 ||
       parsed.provider !== 'gemini' ||
       typeof parsed.generatedAt !== 'string' ||
       !isValidSmokeTimestamp(parsed.generatedAt) ||
       typeof parsed.success !== 'boolean' ||
+      !isSmokePreflight(parsed.preflight) ||
       !isSmokeModelResult(parsed.defaultModel) ||
       !isSmokeFallbackModelResult(parsed.fallbackModel) ||
       typeof parsed.jsonSchemaResponseWorks !== 'boolean' ||
@@ -80,6 +89,20 @@ function isSmokeModelResult(value: unknown): value is AiProviderSmokeModelResult
     (candidate.errorCode === undefined ||
       candidate.errorCode === null ||
       typeof candidate.errorCode === 'string')
+  );
+}
+
+function isSmokePreflight(value: unknown): value is AiProviderSmokePreflight {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Partial<AiProviderSmokePreflight>;
+  return (
+    typeof candidate.databaseUrlConfigured === 'boolean' &&
+    typeof candidate.providerKeyConfigured === 'boolean' &&
+    typeof candidate.monthlyHardCapConfigured === 'boolean' &&
+    typeof candidate.productionLike === 'boolean'
   );
 }
 
@@ -135,6 +158,10 @@ export async function resolveLastSuccessfulAiProviderSmokeAt(
     return null;
   }
 
+  if (!isSmokePreflightSatisfied(artifact.preflight, env)) {
+    return null;
+  }
+
   if (
     artifact.defaultModel.accepted !== true ||
     artifact.jsonSchemaResponseWorks !== true ||
@@ -168,6 +195,21 @@ export async function resolveLastSuccessfulAiProviderSmokeAt(
   return artifact.generatedAt;
 }
 
+function isSmokePreflightSatisfied(
+  preflight: AiProviderSmokePreflight,
+  env: Record<string, string | undefined>
+): boolean {
+  if (!preflight.databaseUrlConfigured || !preflight.providerKeyConfigured) {
+    return false;
+  }
+
+  if (isProductionLikeEnv(env)) {
+    return preflight.productionLike && preflight.monthlyHardCapConfigured;
+  }
+
+  return true;
+}
+
 function normalizeModel(value: string | null | undefined): string | null {
   const normalized = value?.trim().toLowerCase();
   return normalized ? normalized : null;
@@ -175,4 +217,11 @@ function normalizeModel(value: string | null | undefined): string | null {
 
 function isValidSmokeTimestamp(value: string): boolean {
   return !Number.isNaN(Date.parse(value));
+}
+
+function isProductionLikeEnv(env: Record<string, string | undefined>): boolean {
+  const nodeEnv = env.NODE_ENV?.trim().toLowerCase();
+  const vercelEnv = env.VERCEL_ENV?.trim().toLowerCase();
+  const appEnv = (env.NEXT_PUBLIC_APP_ENV || env.APP_ENV)?.trim().toLowerCase();
+  return nodeEnv === 'production' || vercelEnv === 'production' || appEnv === 'production';
 }

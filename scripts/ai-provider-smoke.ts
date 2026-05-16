@@ -2,12 +2,9 @@
 import { config as loadEnv } from 'dotenv';
 import { z } from 'zod';
 
-import { generateJson } from '../src/lib/ai/provider';
-import { AiProviderError } from '../src/lib/ai/provider/types';
-import { resolveAiModelDefault, resolveAiModelFallback } from '../src/lib/ai/provider/config';
 import {
   type AiProviderSmokeModelResult,
-  writeAiProviderSmokeArtifact,
+  type AiProviderSmokePreflight,
 } from '../src/lib/ai/provider-smoke-artifact';
 
 loadEnv({ path: '.env.local', quiet: true });
@@ -27,16 +24,70 @@ const RESPONSE_JSON_SCHEMA = {
   required: ['ok', 'check'],
 } as const;
 
+const PROVIDER_KEY_ENV_NAMES = [
+  'AI_GEMINI_PROD_API_KEY',
+  'AI_GEMINI_API_KEY',
+  'GEMINI_API_KEY',
+  'AI_GEMINI_STAGING_API_KEY',
+  'CV_IMPORT_GEMINI_PRIMARY_API_KEY',
+] as const;
+
+function hasNonEmptyEnvValue(name: string): boolean {
+  return Boolean(process.env[name]?.trim());
+}
+
+function parseNonNegativeNumber(value: string | undefined): number | null {
+  if (value === undefined || value.trim().length === 0) {
+    return null;
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return null;
+  }
+  return parsed;
+}
+
+function hasMonthlyHardCap(): boolean {
+  return (
+    parseNonNegativeNumber(process.env.AI_MONTHLY_HARD_CAP_SEK) !== null ||
+    parseNonNegativeNumber(process.env.AI_PROD_MONTHLY_HARD_CAP_SEK) !== null
+  );
+}
+
+function isProductionLike(): boolean {
+  const nodeEnv = process.env.NODE_ENV?.trim().toLowerCase();
+  const vercelEnv = process.env.VERCEL_ENV?.trim().toLowerCase();
+  const appEnv = (process.env.NEXT_PUBLIC_APP_ENV || process.env.APP_ENV)?.trim().toLowerCase();
+  return nodeEnv === 'production' || vercelEnv === 'production' || appEnv === 'production';
+}
+
+function resolvePreflight(): AiProviderSmokePreflight {
+  return {
+    databaseUrlConfigured: hasNonEmptyEnvValue('DATABASE_URL'),
+    providerKeyConfigured: PROVIDER_KEY_ENV_NAMES.some((name) => hasNonEmptyEnvValue(name)),
+    monthlyHardCapConfigured: hasMonthlyHardCap(),
+    productionLike: isProductionLike(),
+  };
+}
+
 function usageMetadataState(totalTokens: number): AiProviderSmokeModelResult['usageMetadataState'] {
   return totalTokens > 0 ? 'returned' : 'missing_safe';
 }
 
-async function smokeModel(params: {
-  model: string;
-  label: 'default' | 'fallback';
-}): Promise<AiProviderSmokeModelResult> {
+type SmokeRuntime = {
+  generateJson: typeof import('../src/lib/ai/provider').generateJson;
+  AiProviderError: typeof import('../src/lib/ai/provider/types').AiProviderError;
+};
+
+async function smokeModel(
+  params: {
+    model: string;
+    label: 'default' | 'fallback';
+  },
+  runtime: SmokeRuntime
+): Promise<AiProviderSmokeModelResult> {
   try {
-    const result = await generateJson({
+    const result = await runtime.generateJson({
       requestId: `ai-provider-smoke-${params.label}-${Date.now()}`,
       promptVersion: 'ai-provider-smoke-v1',
       feature: 'ai_provider_smoke',
@@ -60,16 +111,19 @@ async function smokeModel(params: {
       model: params.model,
       accepted: false,
       usageMetadataState: 'missing_safe',
-      errorCode: error instanceof AiProviderError ? error.code : 'unknown',
+      errorCode: error instanceof runtime.AiProviderError ? error.code : 'unknown',
     };
   }
 }
 
-async function verifyDisabledFailureSafe(defaultModel: string): Promise<boolean> {
+async function verifyDisabledFailureSafe(
+  defaultModel: string,
+  runtime: SmokeRuntime
+): Promise<boolean> {
   const originalEnabled = process.env.AI_ASSISTANTS_ENABLED;
   process.env.AI_ASSISTANTS_ENABLED = 'false';
   try {
-    await generateJson({
+    await runtime.generateJson({
       requestId: `ai-provider-smoke-disabled-${Date.now()}`,
       promptVersion: 'ai-provider-smoke-v1',
       feature: 'ai_provider_smoke',
@@ -82,7 +136,7 @@ async function verifyDisabledFailureSafe(defaultModel: string): Promise<boolean>
     });
     return false;
   } catch (error) {
-    return error instanceof AiProviderError && error.code === 'assistants_disabled';
+    return error instanceof runtime.AiProviderError && error.code === 'assistants_disabled';
   } finally {
     if (originalEnabled === undefined) {
       delete process.env.AI_ASSISTANTS_ENABLED;
@@ -93,15 +147,28 @@ async function verifyDisabledFailureSafe(defaultModel: string): Promise<boolean>
 }
 
 async function main() {
+  const [
+    { generateJson },
+    { AiProviderError },
+    { resolveAiModelDefault, resolveAiModelFallback },
+    { writeAiProviderSmokeArtifact },
+  ] = await Promise.all([
+    import('../src/lib/ai/provider'),
+    import('../src/lib/ai/provider/types'),
+    import('../src/lib/ai/provider/config'),
+    import('../src/lib/ai/provider-smoke-artifact'),
+  ]);
+  const runtime = { generateJson, AiProviderError };
   const defaultModel = resolveAiModelDefault();
   const fallbackModel = resolveAiModelFallback();
+  const preflight = resolvePreflight();
   const originalEnabled = process.env.AI_ASSISTANTS_ENABLED;
   process.env.AI_ASSISTANTS_ENABLED = 'true';
 
-  const defaultResult = await smokeModel({ model: defaultModel, label: 'default' });
+  const defaultResult = await smokeModel({ model: defaultModel, label: 'default' }, runtime);
   const fallbackResult = fallbackModel
     ? {
-        ...(await smokeModel({ model: fallbackModel, label: 'fallback' })),
+        ...(await smokeModel({ model: fallbackModel, label: 'fallback' }, runtime)),
         configured: true as const,
       }
     : {
@@ -117,17 +184,18 @@ async function main() {
     process.env.AI_ASSISTANTS_ENABLED = originalEnabled;
   }
 
-  const disabledFailureSafe = await verifyDisabledFailureSafe(defaultModel);
+  const disabledFailureSafe = await verifyDisabledFailureSafe(defaultModel, runtime);
   const success =
     defaultResult.accepted &&
     (!fallbackResult.configured || fallbackResult.accepted === true) &&
     disabledFailureSafe;
 
   const artifact = {
-    schemaVersion: 1 as const,
+    schemaVersion: 2 as const,
     provider: 'gemini' as const,
     generatedAt: new Date().toISOString(),
     success,
+    preflight,
     defaultModel: defaultResult,
     fallbackModel: fallbackResult,
     jsonSchemaResponseWorks: defaultResult.accepted,
@@ -144,6 +212,13 @@ async function main() {
     fallbackResult.configured
       ? `Fallback model: ${fallbackResult.model} (${fallbackResult.accepted ? 'accepted' : 'rejected'})`
       : 'Fallback model: unset'
+  );
+  console.log(
+    `Preflight: database ${preflight.databaseUrlConfigured ? 'configured' : 'missing'}, provider key ${
+      preflight.providerKeyConfigured ? 'configured' : 'missing'
+    }, monthly hard cap ${preflight.monthlyHardCapConfigured ? 'configured' : 'missing'}, runtime ${
+      preflight.productionLike ? 'production-like' : 'non-production'
+    }`
   );
   console.log(`Disabled failure mode: ${disabledFailureSafe ? 'safe' : 'unsafe'}`);
 
