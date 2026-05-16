@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from 'node:fs/promises';
+import net from 'node:net';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
@@ -60,6 +61,78 @@ function collectCommandOutput(run: ReturnType<typeof spawnSync>) {
   return `${run.stdout ?? ''}\n${run.stderr ?? ''}`.trim();
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function getLocalBaseUrlSocket(baseUrl: string) {
+  try {
+    const parsed = new URL(baseUrl);
+    const port = parsed.port
+      ? Number.parseInt(parsed.port, 10)
+      : parsed.protocol === 'https:'
+        ? 443
+        : 80;
+
+    if (!Number.isFinite(port)) {
+      return null;
+    }
+
+    return {
+      host: parsed.hostname.replace(/^\[|\]$/g, ''),
+      port,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function isPortAcceptingConnections(host: string, port: number) {
+  return new Promise<boolean>((resolve) => {
+    const socket = net.createConnection({ host, port });
+    let settled = false;
+    const finish = (result: boolean) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      socket.destroy();
+      resolve(result);
+    };
+
+    socket.setTimeout(250);
+    socket.once('connect', () => finish(true));
+    socket.once('timeout', () => finish(false));
+    socket.once('error', () => finish(false));
+  });
+}
+
+async function waitForLocalPlaywrightServerRelease(baseUrl: string) {
+  if (!isLocalLaunchBaseUrl(baseUrl)) {
+    return;
+  }
+
+  const socket = getLocalBaseUrlSocket(baseUrl);
+  if (!socket) {
+    return;
+  }
+
+  const timeoutMs = Number.parseInt(
+    process.env.LAUNCH_SMOKE_LOCAL_SERVER_RELEASE_TIMEOUT_MS || '10000',
+    10
+  );
+  const deadline = Date.now() + Math.max(timeoutMs, 0);
+
+  while (Date.now() < deadline) {
+    if (!(await isPortAcceptingConnections(socket.host, socket.port))) {
+      return;
+    }
+    await sleep(250);
+  }
+}
+
 async function main() {
   const scope = readSmokeScope();
   const artifactPath =
@@ -73,7 +146,15 @@ async function main() {
   const reporter = process.env.LAUNCH_SMOKE_REPORTER ?? 'basic';
   const scenarios = getLaunchSmokeMatrix(scope);
   const checks: LaunchSmokeCheckResult[] = [];
-  const sharedEnv = { BASE_URL: baseUrl };
+  const sharedEnv = {
+    BASE_URL: baseUrl,
+    ...(executionMode === 'local'
+      ? {
+          PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK: '1',
+          PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE: '1',
+        }
+      : {}),
+  };
   const ai = buildAiLaunchSmokeState({ executionMode });
 
   console.log(`Running ${scope} launch smoke checks against ${baseUrl} (${executionMode})`);
@@ -147,6 +228,10 @@ async function main() {
       console.log(summaryLine);
     } else {
       console.error(summaryLine);
+    }
+
+    if (scenario.runner.kind === 'command') {
+      await waitForLocalPlaywrightServerRelease(baseUrl);
     }
   }
 

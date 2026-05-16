@@ -9,7 +9,7 @@ import {
   OrgCollaboratorInviteCard,
   type OrgInviteFormState,
 } from '@/components/org/OrgCollaboratorInviteCard';
-import { inviteMember } from '@/actions/org';
+import { inviteMemberFormAction } from '@/actions/org';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 import type { OrgRole } from '@/lib/authz';
 import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
@@ -171,28 +171,10 @@ export default async function OrganizationHomePage({
     },
   ];
 
-  const inviteAction = async (
-    _state: OrgInviteFormState,
+  const inviteAction = inviteMemberFormAction.bind(null, org.id) as (
+    state: OrgInviteFormState,
     formData: FormData
-  ): Promise<OrgInviteFormState> => {
-    'use server';
-
-    const result = await inviteMember(org.id, formData);
-
-    if (result.error) {
-      return {
-        status: 'error',
-        message: result.error,
-      };
-    }
-
-    return {
-      status: 'success',
-      message:
-        result.warning ??
-        'Invitation sent. The collaborator must accept their tokenized email invite before access is granted.',
-    };
-  };
+  ) => Promise<OrgInviteFormState>;
 
   return (
     <AppSurface density="comfortable" className="bg-[#f7f2ea]">

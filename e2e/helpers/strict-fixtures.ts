@@ -435,6 +435,7 @@ export async function createRuntimeMatch(
   profileId: string
 ): Promise<StrictRuntimeMatch> {
   const supabase = adminClient();
+  const nowIso = new Date().toISOString();
   const { data: assignmentRecord, error: assignmentLookupError } = await supabase
     .from('assignments')
     .select('org_id')
@@ -450,7 +451,11 @@ export async function createRuntimeMatch(
   const matchPayload = {
     assignment_id: assignmentId,
     profile_id: profileId,
-    score: '0.82',
+    score: '0.99',
+    score_total: 100,
+    is_test_match: true,
+    generated_at: nowIso,
+    updated_at: nowIso,
     vector: {
       subscores: {
         skills: 0.9,

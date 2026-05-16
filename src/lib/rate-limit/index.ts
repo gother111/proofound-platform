@@ -62,6 +62,7 @@ const DEFAULT_CONFIG: RateLimitConfig = {
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 const RATE_LIMIT_ENV_KEYS = ['KV_REST_API_URL', 'KV_REST_API_TOKEN'] as const;
+const LOCAL_SMOKE_RATE_LIMIT_FALLBACK_ENV_KEY = 'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK';
 
 interface LocalRateLimitEntry {
   count: number;
@@ -110,13 +111,18 @@ export function isLaunchRateLimitRequired(
   const nodeEnv = env.NODE_ENV?.trim().toLowerCase();
   const vercelEnv = env.VERCEL_ENV?.trim().toLowerCase();
   const appEnv = (env.NEXT_PUBLIC_APP_ENV || env.APP_ENV)?.trim().toLowerCase();
+  const explicitLaunchAppEnv = appEnv === 'production' || appEnv === 'staging';
+  const localSmokeFallbackEnabled = env[LOCAL_SMOKE_RATE_LIMIT_FALLBACK_ENV_KEY] === '1';
+
+  if (localSmokeFallbackEnabled && !vercelEnv && !explicitLaunchAppEnv) {
+    return false;
+  }
 
   return (
     nodeEnv === 'production' ||
     vercelEnv === 'production' ||
     vercelEnv === 'preview' ||
-    appEnv === 'production' ||
-    appEnv === 'staging'
+    explicitLaunchAppEnv
   );
 }
 
@@ -276,6 +282,16 @@ export const RATE_LIMITS = {
     allowLocalFallback: true,
   },
 
+  /** CSRF token issuance: read-heavy setup endpoint, separated from auth brute-force limits */
+  csrf: {
+    limit: 120,
+    windowSeconds: 60,
+    identifier: 'csrf-token',
+    requiresLimiter: true,
+    failClosedOnProviderError: true,
+    allowLocalFallback: true,
+  },
+
   /** Work-email send/verify: 5 req/min */
   workEmail: {
     limit: 5,
@@ -389,8 +405,11 @@ export function getRateLimitProfileForPathname(
     return RATE_LIMITS.upload;
   }
 
+  if (pathname === '/api/csrf-token') {
+    return RATE_LIMITS.csrf;
+  }
+
   if (
-    pathname === '/api/csrf-token' ||
     pathname.startsWith('/api/auth/') ||
     pathname === '/api/user/email' ||
     pathname === '/api/user/password' ||

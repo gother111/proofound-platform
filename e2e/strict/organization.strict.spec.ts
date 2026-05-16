@@ -253,6 +253,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     expect(publishPayload.assignment?.creationStatus).toBe('review_ready');
     if (assignmentForLifecycle) {
       assignmentForLifecycle.status = 'active';
+      await createRuntimeMatch(fixture, assignmentId, candidateUser.id);
     }
 
     const pipelineStepResponse = await apiPostJson(
@@ -299,13 +300,13 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
   });
 
   test('O-08..O-12 ranked matches, shortlist, messaging, and interview prep are strict', async ({
+    browser,
     page,
   }) => {
     test.setTimeout(300_000);
 
     await loginWithUi(page, orgUser);
-    const assignmentId =
-      assignmentForLifecycle?.status === 'active' ? assignmentForLifecycle.id : seededAssignment.id;
+    const assignmentId = seededAssignment.id;
 
     let rankedMatchesResponse = await apiPostJson(
       page.request,
@@ -351,11 +352,16 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       expect(orgInterestPayload.error).toBeTruthy();
     }
 
-    await page.context().clearCookies();
-    await loginWithUi(page, candidateUser);
-    const candidateInterestResponse = await apiPostJson(page.request, '/api/match/interest', {
-      assignmentId,
-    });
+    const candidateContext = await browser.newContext();
+    const candidatePage = await candidateContext.newPage();
+    await loginWithUi(candidatePage, candidateUser);
+    const candidateInterestResponse = await apiPostJson(
+      candidatePage.request,
+      '/api/match/interest',
+      {
+        assignmentId,
+      }
+    );
     expect([200, 409]).toContain(candidateInterestResponse.status());
     const candidateInterestPayload = (await candidateInterestResponse.json()) as {
       revealed?: boolean;
@@ -368,9 +374,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       expect(candidateInterestPayload.browseStillAvailable).toBe(true);
       expect(candidateInterestPayload.error).toBeTruthy();
     }
-
-    await page.context().clearCookies();
-    await loginWithUi(page, orgUser);
+    await candidateContext.close();
 
     const shortlistResponse = await page.request.get(`/api/org/${organization.slug}/shortlist`);
     expect(shortlistResponse.ok()).toBeTruthy();

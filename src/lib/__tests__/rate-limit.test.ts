@@ -1,6 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
+const originalNodeEnv = process.env.NODE_ENV;
+
+function restoreNodeEnv() {
+  if (originalNodeEnv) {
+    vi.stubEnv('NODE_ENV', originalNodeEnv);
+  } else {
+    vi.unstubAllEnvs();
+  }
+}
+
 describe('Rate Limiting', () => {
   beforeEach(() => {
     // Clear any rate limit state between tests
@@ -12,15 +22,24 @@ describe('Rate Limiting', () => {
     delete process.env.KV_REST_API_URL;
     delete process.env.KV_REST_API_TOKEN;
     delete process.env.VERCEL_ENV;
+    delete process.env.APP_ENV;
+    delete process.env.NEXT_PUBLIC_APP_ENV;
+    delete process.env.PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK;
+    restoreNodeEnv();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
     vi.resetModules();
     vi.doUnmock('@vercel/kv');
     delete process.env.KV_REST_API_URL;
     delete process.env.KV_REST_API_TOKEN;
     delete process.env.VERCEL_ENV;
+    delete process.env.APP_ENV;
+    delete process.env.NEXT_PUBLIC_APP_ENV;
+    delete process.env.PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK;
+    restoreNodeEnv();
   });
 
   describe('Rate limit configuration', () => {
@@ -85,8 +104,19 @@ describe('Rate Limiting', () => {
       expect(getRateLimitProfileForPathname('/api/conversations/abc/reveal', 'POST')).toBe(
         RATE_LIMITS.revealIntro
       );
+      expect(getRateLimitProfileForPathname('/api/csrf-token')).toBe(RATE_LIMITS.csrf);
       expect(getRateLimitProfileForPathname('/api/user/password', 'POST')).toBe(RATE_LIMITS.auth);
       expect(getRateLimitProfileForPathname('/api/health')).toBeNull();
+    });
+
+    it('keeps CSRF token issuance fail-closed but separate from auth brute-force limits', async () => {
+      const { RATE_LIMITS } = await import('@/lib/rate-limit/index');
+
+      expect(RATE_LIMITS.csrf.requiresLimiter).toBe(true);
+      expect(RATE_LIMITS.csrf.failClosedOnProviderError).toBe(true);
+      expect(RATE_LIMITS.csrf.allowLocalFallback).toBe(true);
+      expect(RATE_LIMITS.csrf.identifier).not.toBe(RATE_LIMITS.auth.identifier);
+      expect(RATE_LIMITS.csrf.limit).toBeGreaterThan(RATE_LIMITS.auth.limit);
     });
 
     it('does not include token path values in limiter keys', async () => {
@@ -156,6 +186,58 @@ describe('Rate Limiting', () => {
 
       expect(allowed).toBe(true);
       expect(result.unavailable).toBeUndefined();
+    });
+
+    it('allows local smoke to use fallback limiting when next start sets NODE_ENV=production', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      process.env.PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK = '1';
+
+      const { RATE_LIMITS, checkRateLimit, getRateLimitDependencyStatus } = await import(
+        '@/lib/rate-limit/index'
+      );
+
+      expect(getRateLimitDependencyStatus()).toEqual({
+        ok: true,
+        required: false,
+        configured: false,
+        missing: ['KV_REST_API_URL', 'KV_REST_API_TOKEN'],
+      });
+
+      const { allowed, result } = await checkRateLimit(
+        new NextRequest('http://127.0.0.1:33100/api/csrf-token', {
+          method: 'GET',
+          headers: { 'x-forwarded-for': '127.0.0.1' },
+        }),
+        RATE_LIMITS.csrf
+      );
+
+      expect(allowed).toBe(true);
+      expect(result.unavailable).toBeUndefined();
+    });
+
+    it('does not let the local smoke fallback weaken explicit launch environments', async () => {
+      const { getRateLimitDependencyStatus } = await import('@/lib/rate-limit/index');
+
+      expect(
+        getRateLimitDependencyStatus({
+          NODE_ENV: 'production',
+          VERCEL_ENV: 'preview',
+          PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK: '1',
+        })
+      ).toEqual({
+        ok: false,
+        required: true,
+        configured: false,
+        missing: ['KV_REST_API_URL', 'KV_REST_API_TOKEN'],
+      });
+
+      expect(
+        getRateLimitDependencyStatus({
+          NODE_ENV: 'production',
+          APP_ENV: 'staging',
+          PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK: '1',
+        }).required
+      ).toBe(true);
     });
 
     it('still fails closed for assistive AI routes without KV in launch environments', async () => {

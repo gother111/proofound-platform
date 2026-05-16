@@ -34,6 +34,11 @@ const inviteMemberSchema = z.object({
 const INVITE_EMAIL_TIMEOUT_MS = 5000;
 const PROOFOUND_SYNTHETIC_TEST_EMAIL_DOMAIN = '@test.proofound.com';
 
+export type InviteMemberFormState = {
+  status: 'idle' | 'success' | 'error';
+  message: string | null;
+};
+
 function isProofoundSyntheticTestEmail(email: string) {
   return email.trim().toLowerCase().endsWith(PROOFOUND_SYNTHETIC_TEST_EMAIL_DOMAIN);
 }
@@ -316,6 +321,28 @@ export async function inviteMember(orgId: string, formData: FormData) {
     console.error('Unexpected invite member error:', error);
     return { error: 'Failed to send invitation' };
   }
+}
+
+export async function inviteMemberFormAction(
+  orgId: string,
+  _state: InviteMemberFormState,
+  formData: FormData
+): Promise<InviteMemberFormState> {
+  const result = await inviteMember(orgId, formData);
+
+  if (result.error) {
+    return {
+      status: 'error',
+      message: result.error,
+    };
+  }
+
+  return {
+    status: 'success',
+    message:
+      result.warning ??
+      'Invitation sent. The collaborator must accept their tokenized email invite before access is granted.',
+  };
 }
 
 export async function acceptInvitation(token: string) {

@@ -8,11 +8,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { InviteMemberFormState } from '@/actions/org';
 
-export type OrgInviteFormState = {
-  status: 'idle' | 'success' | 'error';
-  message: string | null;
-};
+export type OrgInviteFormState = InviteMemberFormState;
 
 const INITIAL_STATE: OrgInviteFormState = {
   status: 'idle',

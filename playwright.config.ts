@@ -21,7 +21,7 @@ const reuseExistingServer =
   (Boolean(configuredBaseURL) || process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === '1');
 const webServerCommand =
   playwrightServerMode === 'prod'
-    ? `npm run start -- -p ${webServerPort}`
+    ? `PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY=1 PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK=1 PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE=1 npm run start -- -p ${webServerPort}`
     : `PROOFOUND_NEXT_DEV_CLEAN=1 NEXT_DISABLE_WEBPACK_CACHE=1 PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY=1 npm run dev -- -p ${webServerPort}`;
 
 export default defineConfig({

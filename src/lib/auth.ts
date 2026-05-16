@@ -412,8 +412,8 @@ const getActiveOrgCached = cache(async (slug: string, userId: string) => {
       `
     )
     .eq('slug', slug)
-    .eq('organization_members.user_id', userId)
-    .eq('organization_members.state', 'active')
+    .eq('membership.user_id', userId)
+    .eq('membership.state', 'active')
     .maybeSingle();
 
   if (error) {

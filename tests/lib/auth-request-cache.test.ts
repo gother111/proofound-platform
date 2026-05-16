@@ -175,6 +175,8 @@ describe('auth request-scoped caching', () => {
     expect(second?.org.slug).toBe('acme');
     expect(createClientMock).toHaveBeenCalledTimes(1);
     expect(builders.organizationBuilder.maybeSingle).toHaveBeenCalledTimes(1);
+    expect(builders.organizationBuilder.eq).toHaveBeenCalledWith('membership.user_id', 'user-1');
+    expect(builders.organizationBuilder.eq).toHaveBeenCalledWith('membership.state', 'active');
   });
 
   it('keeps persona redirect behavior unchanged', async () => {
