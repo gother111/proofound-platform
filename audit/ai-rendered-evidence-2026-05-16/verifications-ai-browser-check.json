@@ -1,0 +1,11 @@
+{
+  "browser": "Codex In-app Browser",
+  "url": "http://127.0.0.1:33172/app/i/verifications",
+  "title": "Proofound - Focus on what matters",
+  "h1": "Verifications",
+  "nonblank": true,
+  "nextErrorOverlay": false,
+  "hasProofVerificationRequests": true,
+  "hasNoIncomingProofRequests": true,
+  "screenshot": "verifications-ai-browser-page.png"
+}

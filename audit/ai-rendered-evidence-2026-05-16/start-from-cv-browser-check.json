@@ -1,0 +1,12 @@
+{
+  "url": "http://127.0.0.1:33172/onboarding?next=/candidate-invite/local-ai-browser-check",
+  "title": "Proofound - Focus on what matters",
+  "h1": "Start with one Proof Pack",
+  "browser": "Codex In-app Browser",
+  "startFromCvButtonVisible": true,
+  "createPrivateDraftsInitiallyDisabled": true,
+  "copyMentionsPrivateDrafts": true,
+  "prohibitsScoringRankingMatchingHiring": true,
+  "consentRequired": true,
+  "screenshot": "start-from-cv-browser-surface.png"
+}

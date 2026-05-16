@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "provider": "gemini",
-  "generatedAt": "2026-05-06T10:34:47.807Z",
-  "success": true,
+  "generatedAt": "2026-05-16T10:51:24.166Z",
+  "success": false,
   "defaultModel": {
-    "model": "gemini-3.1-flash-lite-preview",
-    "accepted": true,
-    "usageMetadataState": "returned",
-    "errorCode": null
+    "model": "gemini-3.1-flash-lite",
+    "accepted": false,
+    "usageMetadataState": "missing_safe",
+    "errorCode": "missing_api_key"
   },
   "fallbackModel": {
     "configured": false,
@@ -15,6 +15,6 @@
     "accepted": null,
     "usageMetadataState": "missing_safe"
   },
-  "jsonSchemaResponseWorks": true,
+  "jsonSchemaResponseWorks": false,
   "disabledFailureSafe": true
 }
