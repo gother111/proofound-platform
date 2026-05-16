@@ -101,6 +101,8 @@ TOOL_KEYWORDS = {
     "next.js",
 }
 
+FALLBACK_SCAN_KEYWORDS = TOOL_KEYWORDS | LANGUAGE_KEYWORDS
+
 
 @dataclass(frozen=True)
 class CandidateSeed:
@@ -252,7 +254,8 @@ def extract_skill_candidates(text: str, max_candidates: int = MAX_CANDIDATES) ->
         for line in lines:
             if len(line.split()) > 14:
                 continue
-            if not any(keyword in normalize_token(line) for keyword in TOOL_KEYWORDS | LANGUAGE_KEYWORDS):
+            normalized_line = normalize_token(line)
+            if not any(keyword in normalized_line for keyword in FALLBACK_SCAN_KEYWORDS):
                 continue
             for part in _split_candidate_line(line):
                 add_candidate(part, line, 0.66)

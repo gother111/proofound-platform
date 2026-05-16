@@ -253,15 +253,20 @@ def _load_skill_db_or_response() -> tuple[Any | None, JSONResponse | None]:
 
 def _unique_top_skill_ids(candidate_documents: list[dict[str, Any]], key: str) -> list[str]:
     ordered_ids: list[str] = []
+    seen_ids: set[str] = set()
 
     for document in candidate_documents:
         for candidate in document.get(key, []):
             for suggestion in candidate.get("suggestions") or []:
                 skill_id = suggestion.get("skill_id")
-                if isinstance(skill_id, str) and skill_id not in ordered_ids:
-                    ordered_ids.append(skill_id)
+                if not isinstance(skill_id, str) or skill_id in seen_ids:
+                    continue
+                ordered_ids.append(skill_id)
+                seen_ids.add(skill_id)
+                if len(ordered_ids) >= 10:
+                    return ordered_ids
 
-    return ordered_ids[:10]
+    return ordered_ids
 
 
 def _build_skill_report(result: dict[str, Any]) -> dict[str, Any]:
