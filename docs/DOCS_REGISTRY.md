@@ -1,7 +1,7 @@
 # Documentation Registry
 
 > Doc Class: `active`
-> Last Verified: `2026-05-14`
+> Last Verified: `2026-05-16`
 > Generated for documentation freshness governance.
 > Last Generated: `2026-04-15`
 > Latest Active Docs Sync: [Proofound 0-5 execution backlog pack](../project/changes/entries/2026-03-25T21-04-06Z__master__de2cde6d.md)
@@ -357,6 +357,8 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `audit/executive-summary.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/frontend-ux-audit.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/full-scale-audit-2026-04-16.md` | `historical` | `audit` | `repo` | `2026-04-16` | `-` | `false` |
+| `audit/production-supabase-backend-readiness-2026-05-16.md` | `reference-spec` | `audit` | `repo+live` | `2026-05-16` | `-` | `false` |
+| `audit/production-supabase-remediation-plan-2026-05-16.md` | `reference-spec` | `audit` | `repo+live` | `2026-05-16` | `-` | `false` |
 | `audit/prioritized-roadmap.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/system-overview.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/testing-and-release-readiness.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
