@@ -22,7 +22,7 @@ const reuseExistingServer =
 const webServerCommand =
   playwrightServerMode === 'prod'
     ? `npm run start -- -p ${webServerPort}`
-    : `PROOFOUND_NEXT_DEV_CLEAN=1 NEXT_DISABLE_WEBPACK_CACHE=1 npm run dev -- -p ${webServerPort}`;
+    : `PROOFOUND_NEXT_DEV_CLEAN=1 NEXT_DISABLE_WEBPACK_CACHE=1 PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY=1 npm run dev -- -p ${webServerPort}`;
 
 export default defineConfig({
   testDir: './e2e',

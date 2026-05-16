@@ -75,6 +75,7 @@ const REQUEST_RETRY_DELAY_MS = Number.parseInt(
   process.env.STRICT_REQUEST_RETRY_DELAY_MS || '1000',
   10
 );
+const CSRF_RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
 const csrfTokenCache = new WeakMap<APIRequestContext, string>();
 
 function requireEnv(name: string): string {
@@ -1015,7 +1016,7 @@ export async function getCsrfToken(
 
   let lastStatus = 0;
   let lastText = '';
-  for (let attempt = 0; attempt < 4; attempt += 1) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
     const response = await request.get(`/api/csrf-token?ts=${Date.now()}`, {
       headers: {
         'cache-control': 'no-store',
@@ -1034,11 +1035,11 @@ export async function getCsrfToken(
       return payload.token;
     }
 
-    if (response.status() !== 429 || attempt === 3) {
+    if (!CSRF_RETRYABLE_STATUSES.has(response.status()) || attempt === 7) {
       break;
     }
 
-    await wait(500 * (attempt + 1));
+    await wait(750 * (attempt + 1));
   }
 
   throw new Error(`Failed to fetch CSRF token: HTTP ${lastStatus}: ${lastText.slice(0, 160)}`);

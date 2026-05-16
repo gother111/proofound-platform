@@ -32,6 +32,11 @@ const inviteMemberSchema = z.object({
   role: z.enum(['org_manager', 'org_reviewer']),
 });
 const INVITE_EMAIL_TIMEOUT_MS = 5000;
+const PROOFOUND_SYNTHETIC_TEST_EMAIL_DOMAIN = '@test.proofound.com';
+
+function isProofoundSyntheticTestEmail(email: string) {
+  return email.trim().toLowerCase().endsWith(PROOFOUND_SYNTHETIC_TEST_EMAIL_DOMAIN);
+}
 
 async function getOrgMembershipForUser(orgId: string, userId: string) {
   const supabase = await createClient({ allowCookieWrite: true });
@@ -265,25 +270,29 @@ export async function inviteMember(orgId: string, formData: FormData) {
       return { error: 'Failed to send invitation' };
     }
     let warning: string | undefined;
-    try {
-      await Promise.race([
-        sendOrgInviteEmail(
-          result.data.email,
-          orgQuery.data.display_name,
-          result.data.role,
-          issued.rawToken,
-          orgQuery.data.slug
-        ),
-        new Promise<never>((_, reject) => {
-          setTimeout(() => {
-            reject(new Error('org_invite_email_timeout'));
-          }, INVITE_EMAIL_TIMEOUT_MS);
-        }),
-      ]);
-    } catch (error) {
-      console.error('Org invite email delivery could not be confirmed:', error);
-      warning =
-        'Invitation saved, but email delivery could not be confirmed. Ask the collaborator to use the latest invite link before expecting access.';
+    if (isProofoundSyntheticTestEmail(normalizedEmail)) {
+      warning = 'Invitation saved. Email delivery is skipped for local Proofound test addresses.';
+    } else {
+      try {
+        await Promise.race([
+          sendOrgInviteEmail(
+            result.data.email,
+            orgQuery.data.display_name,
+            result.data.role,
+            issued.rawToken,
+            orgQuery.data.slug
+          ),
+          new Promise<never>((_, reject) => {
+            setTimeout(() => {
+              reject(new Error('org_invite_email_timeout'));
+            }, INVITE_EMAIL_TIMEOUT_MS);
+          }),
+        ]);
+      } catch (error) {
+        console.error('Org invite email delivery could not be confirmed:', error);
+        warning =
+          'Invitation saved, but email delivery could not be confirmed. Ask the collaborator to use the latest invite link before expecting access.';
+      }
     }
 
     // Log audit event

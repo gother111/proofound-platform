@@ -131,10 +131,12 @@ if (!isSupportedNode(process.versions.node) && process.env.PROOFOUND_NODE24_REEX
   const nextBin = path.join(process.cwd(), 'node_modules', 'next', 'dist', 'bin', 'next');
   const distDir = cleanDevDistDir(resolveDevDistDir());
   ensureCommonJsDistPackage(distDir);
-  const markerInterval = setInterval(() => {
-    ensureCommonJsDistPackage(distDir);
-  }, 500);
-  markerInterval.unref();
+  for (const delayMs of [2_000, 5_000, 10_000]) {
+    const markerTimer = setTimeout(() => {
+      ensureCommonJsDistPackage(distDir);
+    }, delayMs);
+    markerTimer.unref();
+  }
   run(process.execPath, [nextBin, 'dev', ...argv], {
     ...process.env,
     NEXT_DIST_DIR: distDir,

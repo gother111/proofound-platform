@@ -84,6 +84,25 @@ describe('middleware CSRF behavior', () => {
     expect(setCookieHeader).not.toContain('csrf_token=');
   });
 
+  it('does not rewrite Server Action page POST request headers or mint csrf cookies', async () => {
+    const request = new NextRequest('http://localhost/app/o/acme/home', {
+      method: 'POST',
+      headers: {
+        'next-action': 'invite-member',
+        'content-type': 'multipart/form-data; boundary=proofound',
+        Cookie: 'sb-localhost-auth-token=session-value',
+      },
+    });
+
+    const response = await middleware(request);
+    const setCookieHeader = response.headers.get('set-cookie') || '';
+
+    expect(response.status).not.toBe(403);
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+    expect(response.headers.get('x-middleware-override-headers')).toBeNull();
+    expect(setCookieHeader).not.toContain('csrf_token=');
+  });
+
   it('does not re-issue an already valid csrf_token cookie on API pass-through', async () => {
     const token = await generateSignedCSRFToken(new NextRequest('http://localhost/api/health'));
     const request = new NextRequest('http://localhost/api/health', {

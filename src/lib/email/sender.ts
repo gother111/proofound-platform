@@ -5,7 +5,7 @@
  */
 
 import { Resend } from 'resend';
-import { EMAIL_CONFIG, isEmailConfigured } from './config';
+import { EMAIL_CONFIG, isEmailConfigured, shouldSkipTransactionalEmailDelivery } from './config';
 import {
   recordEmailDeliveryFailure,
   type TransactionalEmailWorkflow,
@@ -31,6 +31,10 @@ export interface SendEmailParams {
 export async function sendEmail(
   params: SendEmailParams
 ): Promise<{ success: boolean; id?: string; error?: string }> {
+  if (shouldSkipTransactionalEmailDelivery()) {
+    return { success: true, id: 'transactional-email-delivery-skipped' };
+  }
+
   // Check if email is configured
   if (!isEmailConfigured() || !resend) {
     recordEmailDeliveryFailure({

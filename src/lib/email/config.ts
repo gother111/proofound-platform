@@ -43,6 +43,7 @@ export const EMAIL_CONFIG = {
 };
 
 const EMAIL_PROVIDER_REQUIRED_ENV = ['RESEND_API_KEY'] as const;
+const enabledEnvValues = new Set(['1', 'true', 'yes', 'on']);
 
 export const EMAIL_TEMPLATES = {
   ASSIGNMENT_INVITATION: 'assignment-invitation',
@@ -58,6 +59,11 @@ export const EMAIL_TEMPLATES = {
  */
 export function isEmailConfigured(): boolean {
   return !!process.env.RESEND_API_KEY?.trim();
+}
+
+export function shouldSkipTransactionalEmailDelivery(): boolean {
+  const value = process.env.PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY;
+  return value ? enabledEnvValues.has(value.trim().toLowerCase()) : false;
 }
 
 /**

@@ -19,7 +19,7 @@ import VerificationApproved from '../../emails/VerificationApproved';
 import VerificationRejected from '../../emails/VerificationRejected';
 import LinkedInVerificationPendingReview from '../../emails/LinkedInVerificationPendingReview';
 import { sendDebugIngest } from '@/lib/debug-ingest';
-import { EMAIL_CONFIG } from './email/config';
+import { EMAIL_CONFIG, shouldSkipTransactionalEmailDelivery } from './email/config';
 import {
   recordEmailDeliveryFailure,
   type TransactionalEmailWorkflow,
@@ -124,6 +124,10 @@ export async function sendOrgInviteEmail(
   token: string,
   _orgSlug?: string
 ) {
+  if (shouldSkipTransactionalEmailDelivery()) {
+    return;
+  }
+
   try {
     const inviteUrl = buildCanonicalEmailUrl('/accept-invite', { token });
     await resend.emails.send({

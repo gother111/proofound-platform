@@ -195,6 +195,104 @@ describe('organization invitations', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/app/o/proofound/members');
   });
 
+  it('skips external email delivery for synthetic Proofound test invitees', async () => {
+    const invitationInsert = vi.fn().mockResolvedValue({ error: null });
+    const auditInsert = vi.fn().mockResolvedValue({ error: null });
+
+    vi.mocked(requireAuth).mockResolvedValue({ id: 'owner-user' } as any);
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'org_invitations') {
+          return {
+            insert: invitationInsert,
+          };
+        }
+
+        throw new Error(`Unexpected admin table ${table}`);
+      }),
+    } as any);
+    vi.mocked(issueCapabilityToken).mockResolvedValue({
+      rawToken: 'invite-token',
+      tokenHash: 'hashed-token',
+      token: { id: 'capability-1', source_id: 'invite-1' },
+    } as any);
+    vi.mocked(createClient).mockResolvedValue({
+      from: vi.fn((table: string) => {
+        if (table === 'organization_members') {
+          return createMembershipLookup('org_owner');
+        }
+
+        if (table === 'org_invitations') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                ilike: vi.fn().mockReturnValue({
+                  eq: vi.fn().mockReturnValue({
+                    gt: vi.fn().mockReturnValue({
+                      limit: vi.fn().mockReturnValue({
+                        maybeSingle: vi.fn().mockResolvedValue({
+                          data: null,
+                          error: null,
+                        }),
+                      }),
+                    }),
+                  }),
+                }),
+              }),
+            }),
+            insert: invitationInsert,
+          };
+        }
+
+        if (table === 'organizations') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    display_name: 'Proofound Org',
+                    slug: 'proofound',
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'audit_logs') {
+          return {
+            insert: auditInsert,
+          };
+        }
+
+        throw new Error(`Unexpected table ${table}`);
+      }),
+    } as any);
+
+    const formData = new FormData();
+    formData.set('email', 'reviewer@test.proofound.com');
+    formData.set('role', 'org_reviewer');
+
+    const result = await inviteMember('org-1', formData);
+
+    expect(result).toEqual({
+      success: true,
+      warning: 'Invitation saved. Email delivery is skipped for local Proofound test addresses.',
+    });
+    expect(sendOrgInviteEmail).not.toHaveBeenCalled();
+    expect(invitationInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        org_id: 'org-1',
+        email: 'reviewer@test.proofound.com',
+        role: 'org_reviewer',
+        status: 'pending',
+      })
+    );
+    expect(auditInsert).toHaveBeenCalled();
+    expect(revalidatePath).toHaveBeenCalledWith('/app/o/proofound/members');
+  });
+
   it('keeps the invite live when email delivery cannot be confirmed', async () => {
     const invitationInsert = vi.fn().mockResolvedValue({ error: null });
     const auditInsert = vi.fn().mockResolvedValue({ error: null });

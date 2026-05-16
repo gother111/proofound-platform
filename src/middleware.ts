@@ -115,6 +115,10 @@ function shouldIssuePageCsrfCookie(pathname: string): boolean {
   return pathname === '/onboarding' || pathname.startsWith('/app/');
 }
 
+function isServerActionRequest(request: NextRequest): boolean {
+  return request.headers.has('next-action');
+}
+
 const CSRF_COOKIE_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 function shouldIssueApiCsrfCookie(request: NextRequest): boolean {
@@ -332,7 +336,9 @@ export async function middleware(request: NextRequest) {
     pathname.match(
       /\.(ico|png|jpg|jpeg|gif|svg|css|js|webp|mp4|m4v|webm|mov|woff2?|ttf|otf|map|txt|xml|webmanifest)$/
     );
-  const pageNonce = !isApiRoute && !isStaticAsset ? generateCspNonce() : undefined;
+  const isServerAction = isServerActionRequest(request);
+  const pageNonce =
+    !isApiRoute && !isStaticAsset && !isServerAction ? generateCspNonce() : undefined;
 
   try {
     const isDev = process.env.NODE_ENV !== 'production';
@@ -486,7 +492,7 @@ export async function middleware(request: NextRequest) {
 
     const response = pageNonce ? buildNextResponseForPage(request, pageNonce) : NextResponse.next();
     response.headers.set('x-request-id', requestId);
-    if (shouldIssuePageCsrfCookie(pathname)) {
+    if (!isServerAction && shouldIssuePageCsrfCookie(pathname)) {
       const csrfToken = await getOrGenerateCSRFToken(request);
       setCSRFTokenCookieIfChanged(request, response, csrfToken);
     }

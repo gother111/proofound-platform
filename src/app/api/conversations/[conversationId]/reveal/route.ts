@@ -21,7 +21,7 @@ import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 import { Resend } from 'resend';
-import { EMAIL_CONFIG } from '@/lib/email/config';
+import { EMAIL_CONFIG, shouldSkipTransactionalEmailDelivery } from '@/lib/email/config';
 import { recordEmailDeliveryFailure } from '@/lib/email/delivery-observability';
 import {
   buildRevealConversationUrl,
@@ -34,6 +34,8 @@ import { recordRevealEvent, unlockFullIdentityForMatch } from '@/lib/matching/re
 import { syncRevealRequestTimeoutState } from '@/lib/workflow/service';
 
 function getResendClient(): Resend | null {
+  if (shouldSkipTransactionalEmailDelivery()) return null;
+
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return null;
   return new Resend(apiKey);
@@ -522,6 +524,10 @@ async function sendRevealNotificationEmail(input: {
   conversationId: string;
   kind: 'request' | 'approved';
 }) {
+  if (shouldSkipTransactionalEmailDelivery()) {
+    return;
+  }
+
   const resend = getResendClient();
   if (!resend) {
     recordEmailDeliveryFailure({

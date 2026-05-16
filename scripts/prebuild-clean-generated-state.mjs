@@ -45,7 +45,7 @@ async function cleanGeneratedPathIfPresent(path) {
   const sizeBytes = await getPathSizeBytes(source);
 
   if (!ARCHIVE_STALE_BUILD_STATE) {
-    await rm(source, { recursive: true, force: true });
+    await rm(source, { recursive: true, force: true, maxRetries: 5, retryDelay: 250 });
     console.log(`Removed stale generated build state: ${path}`);
     return {
       path,
