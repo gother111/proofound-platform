@@ -110,6 +110,10 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/i/settings/audit-log'
     );
+    expect(screen.getByRole('menuitem', { name: /log out/i })).toHaveAttribute(
+      'href',
+      '/auth/logout'
+    );
   });
 
   it('keeps org account menu inside the organization profile corridor', () => {
