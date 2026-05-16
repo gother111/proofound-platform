@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { GET as getLlmsAlias } from '@/app/llms/route';
 import { GET as getLlms } from '@/app/llms.txt/route';
 import { GET as getLlmsFull } from '@/app/llms-full.txt/route';
 
@@ -17,6 +18,16 @@ describe('llms routes', () => {
     expect(body).toContain('/privacy');
     expect(body).not.toContain('/about');
     expect(body).toContain('hello@proofound.io');
+  });
+
+  it('serves /llms as an alias of llms.txt', async () => {
+    const response = await getLlmsAlias();
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/plain');
+    expect(body).toContain('# Proofound');
+    expect(body).toContain('## Core Pages');
   });
 
   it('serves llms-full.txt with technical surfaces included', async () => {
