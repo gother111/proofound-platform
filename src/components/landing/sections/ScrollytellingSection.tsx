@@ -1873,7 +1873,7 @@ function HeroDesktopCopy({
             <button
               type="button"
               onClick={onOrganizationSignup}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-proofound-forest px-7 py-4 text-base font-medium text-white shadow-[0_14px_30px_-18px_rgba(28,77,58,0.52)] transition-colors hover:bg-proofound-forest/92"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-proofound-forest px-7 py-4 text-base font-medium text-white shadow-[0_14px_30px_-18px_rgba(28,77,58,0.52)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 hover:shadow-[0_20px_38px_-24px_rgba(28,77,58,0.58)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-proofound-parchment active:translate-y-0"
             >
               Request a pilot
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -1881,7 +1881,7 @@ function HeroDesktopCopy({
             <button
               type="button"
               onClick={onIndividualSignup}
-              className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/72 px-7 py-4 text-base font-medium text-foreground transition-colors hover:bg-white"
+              className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/72 px-7 py-4 text-base font-medium text-foreground shadow-[0_12px_28px_-24px_rgba(45,51,48,0.36)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_18px_34px_-26px_rgba(45,51,48,0.42)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-proofound-parchment active:translate-y-0"
             >
               Create your proof portfolio
             </button>
@@ -2659,7 +2659,7 @@ function HeroToBlindDesktopScene({
                 <button
                   type="button"
                   onClick={onOrganizationSignup}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-proofound-forest px-7 py-4 text-base font-medium text-white shadow-[0_14px_30px_-18px_rgba(28,77,58,0.52)] transition-colors hover:bg-proofound-forest/92"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-proofound-forest px-7 py-4 text-base font-medium text-white shadow-[0_14px_30px_-18px_rgba(28,77,58,0.52)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 hover:shadow-[0_20px_38px_-24px_rgba(28,77,58,0.58)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-proofound-parchment active:translate-y-0"
                 >
                   Request a pilot
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -2667,7 +2667,7 @@ function HeroToBlindDesktopScene({
                 <button
                   type="button"
                   onClick={onIndividualSignup}
-                  className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/72 px-7 py-4 text-base font-medium text-foreground transition-colors hover:bg-white"
+                  className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/72 px-7 py-4 text-base font-medium text-foreground shadow-[0_12px_28px_-24px_rgba(45,51,48,0.36)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_18px_34px_-26px_rgba(45,51,48,0.42)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-proofound-parchment active:translate-y-0"
                 >
                   Create your proof portfolio
                 </button>
@@ -3578,7 +3578,7 @@ function MobileStoryCard({
           <button
             type="button"
             onClick={onOrganizationSignup}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-proofound-forest px-5 py-3.5 text-sm font-medium text-white"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-proofound-forest px-5 py-3.5 text-sm font-medium text-white shadow-[0_14px_30px_-22px_rgba(28,77,58,0.56)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0"
           >
             Request a pilot
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -3586,7 +3586,7 @@ function MobileStoryCard({
           <button
             type="button"
             onClick={onIndividualSignup}
-            className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/75 px-5 py-3.5 text-sm font-medium text-foreground"
+            className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/75 px-5 py-3.5 text-sm font-medium text-foreground shadow-[0_12px_26px_-24px_rgba(45,51,48,0.34)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0"
           >
             Create your proof portfolio
           </button>
@@ -3614,6 +3614,8 @@ function PrivacyToCompatBackground({
   const [videoActive, setVideoActive] = useState(false);
   const clampedProgress = clamp01(progress);
   const clampedTarget = clamp01(target);
+  const shouldMountVideo =
+    !reduceMotion && (motionKey > 0 || clampedTarget === 1 || clampedProgress > 0.001);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -3703,7 +3705,7 @@ function PrivacyToCompatBackground({
 
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-      {!reduceMotion && (
+      {shouldMountVideo ? (
         <video
           key={motionKey}
           ref={videoRef}
@@ -3727,7 +3729,46 @@ function PrivacyToCompatBackground({
           <source src="/hero-transition-video/privacy-to-compatibility.m4v" type="video/mp4" />
           <source src="/hero-transition-video/privacy-to-compatibility.mp4" type="video/mp4" />
         </video>
-      )}
+      ) : null}
+    </div>
+  );
+}
+
+function StoryProgressIndicator({ activeIndex }: { activeIndex: number }) {
+  const totalFrames = HOMEPAGE_STORY_FRAMES.length;
+  const clampedIndex = Math.min(totalFrames - 1, Math.max(0, activeIndex));
+  const nextFrame = HOMEPAGE_STORY_FRAMES[Math.min(totalFrames - 1, clampedIndex + 1)];
+  const currentLabel = String(clampedIndex + 1).padStart(2, '0');
+  const totalLabel = String(totalFrames).padStart(2, '0');
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute bottom-8 left-1/2 z-30 hidden -translate-x-1/2 items-center gap-4 rounded-full border border-white/80 bg-[#f6f2ea]/94 px-4 py-2.5 text-foreground/80 shadow-[0_22px_54px_-30px_rgba(45,51,48,0.56)] backdrop-blur-[18px] lg:flex"
+    >
+      <span className="tabular-nums text-[0.68rem] font-medium uppercase tracking-[0.24em] text-foreground/70">
+        {currentLabel} / {totalLabel}
+      </span>
+
+      <div className="flex items-center gap-1.5">
+        {HOMEPAGE_STORY_FRAMES.map((frame, index) => (
+          <span
+            key={frame.id}
+            className={cn(
+              'h-1.5 rounded-full transition-all duration-300',
+              index === clampedIndex
+                ? 'w-8 bg-proofound-forest/90'
+                : index < clampedIndex
+                  ? 'w-3 bg-proofound-forest/45'
+                  : 'w-3 bg-foreground/24'
+            )}
+          />
+        ))}
+      </div>
+
+      <span className="max-w-[13rem] truncate text-[0.72rem] font-medium text-foreground/80">
+        {clampedIndex < totalFrames - 1 ? nextFrame.title : 'Build hiring on stronger proof'}
+      </span>
     </div>
   );
 }
@@ -4299,6 +4340,8 @@ export function ScrollytellingSection({
               reduceMotion={reduceMotion}
             />
           </div>
+
+          <StoryProgressIndicator activeIndex={activeIndex} />
         </div>
       </div>
     </section>

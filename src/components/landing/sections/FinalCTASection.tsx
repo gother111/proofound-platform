@@ -122,7 +122,7 @@ export function FinalCTASection({
               <button
                 type="button"
                 onClick={onIndividualSignup ?? onGetStarted}
-                className="group rounded-[1.55rem] border border-proofound-forest/12 bg-proofound-forest px-5 py-5 text-left text-white transition-transform duration-300 hover:-translate-y-0.5 md:rounded-[2rem] md:px-6 md:py-6"
+                className="group rounded-[1.55rem] border border-proofound-forest/12 bg-proofound-forest px-5 py-5 text-left text-white transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_54px_-34px_rgba(28,77,58,0.68)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 md:rounded-[2rem] md:px-6 md:py-6"
               >
                 <p className="text-sm uppercase tracking-[0.24em] text-white/85">For individuals</p>
                 <p className="mt-4 text-3xl font-display leading-tight">
@@ -144,7 +144,7 @@ export function FinalCTASection({
               <button
                 type="button"
                 onClick={onOrganizationSignup ?? onGetStarted}
-                className="group rounded-[1.55rem] border border-border/80 bg-white/78 px-5 py-5 text-left text-foreground transition-transform duration-300 hover:-translate-y-0.5 md:rounded-[2rem] md:px-6 md:py-6"
+                className="group rounded-[1.55rem] border border-border/80 bg-white/78 px-5 py-5 text-left text-foreground transition-[background-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_22px_54px_-38px_rgba(45,51,48,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 md:rounded-[2rem] md:px-6 md:py-6"
               >
                 <p className="text-sm uppercase tracking-[0.24em] text-foreground/54">
                   For organizations

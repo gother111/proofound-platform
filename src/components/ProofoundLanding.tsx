@@ -82,7 +82,7 @@ export function ProofoundLanding({
       <NetworkBackground />
 
       <header
-        className="fixed left-0 right-0 top-0 z-[80] border-b border-black/8 bg-[#f5f0e7]/94 px-3 py-2.5 backdrop-blur-md md:px-8 md:py-4"
+        className="fixed left-0 right-0 top-0 z-[80] border-b border-black/8 bg-[#f6f2ea] px-3 py-2.5 shadow-[0_18px_48px_-42px_rgba(45,51,48,0.48)] md:px-8 md:py-4"
         data-testid="landing-header"
       >
         <div className="mx-auto flex max-w-[88rem] items-center justify-between gap-3 rounded-full px-1 py-0 md:gap-6 md:px-4">
@@ -103,13 +103,22 @@ export function ProofoundLanding({
           </div>
 
           <nav className="hidden items-center gap-10 text-[1.02rem] text-foreground/66 lg:flex">
-            <a href="#story" className="transition-colors hover:text-foreground">
+            <a
+              href="#story"
+              className="rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
+            >
               How it works
             </a>
-            <a href="#start-individuals" className="transition-colors hover:text-foreground">
+            <a
+              href="#start-individuals"
+              className="rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
+            >
               For individuals
             </a>
-            <a href="#start-organizations" className="transition-colors hover:text-foreground">
+            <a
+              href="#start-organizations"
+              className="rounded-full transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea]"
+            >
               For organizations
             </a>
           </nav>
@@ -118,14 +127,14 @@ export function ProofoundLanding({
             <div className="hidden h-6 w-px bg-border/80 lg:block" aria-hidden="true" />
             <Link
               href="/login"
-              className="hidden text-[1.02rem] text-foreground/72 transition-colors hover:text-foreground lg:inline-flex"
+              className="hidden rounded-full text-[1.02rem] text-foreground/82 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] lg:inline-flex"
             >
               Sign in
             </Link>
             <button
               type="button"
               onClick={handleOrganizationSignup}
-              className="inline-flex items-center gap-2 rounded-full bg-[#65755d] px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-colors hover:bg-[#5c6b54] sm:px-5 sm:py-3 sm:text-sm md:px-6"
+              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-[#65755d] px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5c6b54] hover:shadow-[0_20px_36px_-22px_rgba(101,117,93,0.78)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] active:translate-y-0 sm:px-5 sm:py-3 sm:text-sm md:px-6"
             >
               <span>Request a pilot</span>
               <ArrowRight className="hidden h-4 w-4 sm:block" aria-hidden="true" />
