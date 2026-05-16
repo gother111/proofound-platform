@@ -158,7 +158,7 @@ export async function resolveLastSuccessfulAiProviderSmokeAt(
     return null;
   }
 
-  if (!isSmokePreflightSatisfied(artifact.preflight, env)) {
+  if (!isAiProviderSmokePreflightSatisfied(artifact.preflight, env)) {
     return null;
   }
 
@@ -195,7 +195,7 @@ export async function resolveLastSuccessfulAiProviderSmokeAt(
   return artifact.generatedAt;
 }
 
-function isSmokePreflightSatisfied(
+export function isAiProviderSmokePreflightSatisfied(
   preflight: AiProviderSmokePreflight,
   env: Record<string, string | undefined>
 ): boolean {

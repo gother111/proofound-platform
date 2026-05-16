@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "provider": "gemini",
-  "generatedAt": "2026-05-16T11:00:26.184Z",
+  "generatedAt": "2026-05-16T11:42:34.211Z",
   "success": false,
   "preflight": {
     "databaseUrlConfigured": true,

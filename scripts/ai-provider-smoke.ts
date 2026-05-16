@@ -151,7 +151,7 @@ async function main() {
     { generateJson },
     { AiProviderError },
     { resolveAiModelDefault, resolveAiModelFallback },
-    { writeAiProviderSmokeArtifact },
+    { isAiProviderSmokePreflightSatisfied, writeAiProviderSmokeArtifact },
   ] = await Promise.all([
     import('../src/lib/ai/provider'),
     import('../src/lib/ai/provider/types'),
@@ -185,10 +185,12 @@ async function main() {
   }
 
   const disabledFailureSafe = await verifyDisabledFailureSafe(defaultModel, runtime);
-  const success =
+  const modelSmokeSuccess =
     defaultResult.accepted &&
     (!fallbackResult.configured || fallbackResult.accepted === true) &&
     disabledFailureSafe;
+  const preflightReady = isAiProviderSmokePreflightSatisfied(preflight, process.env);
+  const success = modelSmokeSuccess && preflightReady;
 
   const artifact = {
     schemaVersion: 2 as const,
@@ -220,6 +222,7 @@ async function main() {
       preflight.productionLike ? 'production-like' : 'non-production'
     }`
   );
+  console.log(`Preflight gate: ${preflightReady ? 'satisfied' : 'blocked'}`);
   console.log(`Disabled failure mode: ${disabledFailureSafe ? 'safe' : 'unsafe'}`);
 
   if (!success) {

@@ -5,6 +5,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  isAiProviderSmokePreflightSatisfied,
   readAiProviderSmokeArtifact,
   resolveAiProviderSmokeArtifactPath,
   resolveLastSuccessfulAiProviderSmokeAt,
@@ -231,6 +232,48 @@ describe('AI provider smoke artifact', () => {
         expectedDefaultModel: 'gemini-3.1-flash-lite',
       })
     ).resolves.toBeNull();
+  });
+
+  it('exposes the same preflight gate the smoke command uses for its exit status', () => {
+    expect(isAiProviderSmokePreflightSatisfied(artifact.preflight, {})).toBe(true);
+    expect(
+      isAiProviderSmokePreflightSatisfied(
+        {
+          ...artifact.preflight,
+          databaseUrlConfigured: false,
+        },
+        {}
+      )
+    ).toBe(false);
+    expect(
+      isAiProviderSmokePreflightSatisfied(
+        {
+          ...artifact.preflight,
+          providerKeyConfigured: false,
+        },
+        {}
+      )
+    ).toBe(false);
+    expect(
+      isAiProviderSmokePreflightSatisfied(
+        {
+          ...artifact.preflight,
+          monthlyHardCapConfigured: false,
+          productionLike: false,
+        },
+        { NODE_ENV: 'production' }
+      )
+    ).toBe(false);
+    expect(
+      isAiProviderSmokePreflightSatisfied(
+        {
+          ...artifact.preflight,
+          monthlyHardCapConfigured: true,
+          productionLike: true,
+        },
+        { NODE_ENV: 'production' }
+      )
+    ).toBe(true);
   });
 
   it('requires production-like smoke prerequisite proof before accepting production evidence', async () => {
