@@ -2251,6 +2251,8 @@ function OrganizerBoxVisual({ slideY = 0, className }: { slideY?: number; classN
           width={1448}
           height={796}
           sizes="770px"
+          fetchPriority="high"
+          priority
           className="pointer-events-none h-full w-full select-none object-fill drop-shadow-[0_34px_80px_rgba(55,45,30,0.18)]"
         />
       </motion.div>
