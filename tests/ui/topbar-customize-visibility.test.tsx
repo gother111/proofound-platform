@@ -9,10 +9,6 @@ vi.mock('next/navigation', () => ({
   usePathname: () => mockPathname,
 }));
 
-vi.mock('@/actions/auth', () => ({
-  signOut: vi.fn(),
-}));
-
 vi.mock('@/components/notifications/NotificationBell', () => ({
   NotificationBell: () => <div data-testid="notification-bell" />,
 }));
@@ -23,6 +19,7 @@ vi.mock('@/components/brand/Logo', () => ({
 
 describe('TopBar header actions', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     mockPathname = '/app/i/home';
   });
 

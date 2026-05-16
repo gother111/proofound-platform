@@ -1,6 +1,5 @@
 'use client';
 
-import { signOut } from '@/actions/auth';
 import Link from 'next/link';
 
 interface TopBarProfileMenuProps {
@@ -46,16 +45,14 @@ export function TopBarProfileMenu({ userName, basePath, onClose }: TopBarProfile
         </Link>
       ))}
       <div className="-mx-1 my-1 h-px bg-proofound-stone/60" />
-      <form action={signOut}>
-        <button
-          type="submit"
-          role="menuitem"
-          onClick={onClose}
-          className="w-full rounded-md px-2 py-1.5 text-left text-sm outline-none hover:bg-rose-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
-        >
-          Log out
-        </button>
-      </form>
+      <Link
+        href="/auth/logout"
+        role="menuitem"
+        onClick={onClose}
+        className="block w-full rounded-md px-2 py-1.5 text-left text-sm outline-none hover:bg-rose-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
+      >
+        Log out
+      </Link>
     </div>
   );
 }
