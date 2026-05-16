@@ -91,6 +91,14 @@ function jsonRequest(url: string, body: unknown, headers: Record<string, string>
   });
 }
 
+function malformedJsonRequest(url: string) {
+  return new NextRequest(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: '{',
+  });
+}
+
 function params() {
   return { params: Promise.resolve({ sessionId }) };
 }
@@ -163,6 +171,17 @@ describe('Start from CV API routes', () => {
     );
 
     expect(response.status).toBe(400);
+    expect(mocks.createStartFromCvSession).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for malformed session-create JSON without creating a session', async () => {
+    const response = await createSession(
+      malformedJsonRequest('http://localhost/api/ai/start-from-cv/sessions')
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
     expect(mocks.createStartFromCvSession).not.toHaveBeenCalled();
   });
 
@@ -306,6 +325,18 @@ describe('Start from CV API routes', () => {
     expect(JSON.stringify(payload)).not.toMatch(/score|rank|shortlist|publishedAt|verifiedAt/i);
   });
 
+  it('returns 400 for malformed accept JSON without accepting drafts', async () => {
+    const response = await acceptSession(
+      malformedJsonRequest(`http://localhost/api/ai/start-from-cv/sessions/${sessionId}/accept`),
+      params()
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.acceptStartFromCvDrafts).not.toHaveBeenCalled();
+  });
+
   it('deletes an import session', async () => {
     const response = await discardSession(
       jsonRequest(`http://localhost/api/ai/start-from-cv/sessions/${sessionId}/discard`, {
@@ -317,5 +348,17 @@ describe('Start from CV API routes', () => {
 
     expect(response.status).toBe(200);
     expect(payload).toEqual({ ok: true, deleted: true });
+  });
+
+  it('returns 400 for malformed discard JSON without discarding the session', async () => {
+    const response = await discardSession(
+      malformedJsonRequest(`http://localhost/api/ai/start-from-cv/sessions/${sessionId}/discard`),
+      params()
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.discardStartFromCvSession).not.toHaveBeenCalled();
   });
 });

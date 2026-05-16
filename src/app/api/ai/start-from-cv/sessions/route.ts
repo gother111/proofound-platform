@@ -14,7 +14,13 @@ export async function POST(request: NextRequest) {
       return context;
     }
 
-    const body = StartFromCvConsentSchema.parse(await request.json());
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const body = StartFromCvConsentSchema.parse(rawBody);
     const result = await createStartFromCvSession({
       ...context.betaContext,
       userId: context.auth.user.id,

@@ -36,9 +36,38 @@ function makeRequest(body: Record<string, unknown>) {
   });
 }
 
+function makeMalformedRequest() {
+  return new NextRequest('https://proofound.io/api/conversations', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: '{',
+  });
+}
+
 describe('POST /api/conversations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('returns 400 for malformed JSON request bodies', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'candidate-user' } },
+          error: null,
+        }),
+      },
+    } as any);
+
+    const response = await POST(makeMalformedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'Invalid JSON body' });
+    expect(vi.mocked(resolveConversationParticipantsForMatch)).not.toHaveBeenCalled();
+    expect(vi.mocked(ensureConversationForMatch)).not.toHaveBeenCalled();
   });
 
   it('rejects callers who are not canonical match participants', async () => {

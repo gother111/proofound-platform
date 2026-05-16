@@ -173,6 +173,23 @@ describe('/api/portfolio/public/[handle]/export', () => {
     expect(generateTrustPdf).not.toHaveBeenCalled();
   });
 
+  it('returns a format-neutral error when export generation fails', async () => {
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue(
+      buildAccessibleAccess() as any
+    );
+    vi.mocked(generateTrustPdf).mockRejectedValue(new Error('pdf unavailable'));
+
+    const response = await GET(
+      new Request('http://localhost/api/portfolio/public/jane/export?format=pdf'),
+      {
+        params: Promise.resolve({ handle: 'jane' }),
+      }
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Failed to generate export' });
+  });
+
   it.each(['unavailable', 'private', 'draft', 'unpublished', 'blocked'])(
     'returns 404 for %s public state',
     async (stateLabel) => {

@@ -223,6 +223,26 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(mocks.getOrCreateIntroWorkflow).not.toHaveBeenCalled();
   });
 
+  it('returns 400 for malformed JSON before loading organization and match state', async () => {
+    const response = await POST(
+      new NextRequest('https://example.com/api/org/proofound/matches/match-1/review', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{',
+      }),
+      {
+        params: Promise.resolve({ id: 'proofound', matchId: 'match-1' }),
+      } as any
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.getOrgMembershipRole).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(mocks.insert).not.toHaveBeenCalled();
+  });
+
   it.each(['inactive', 'suspended', 'unknown_state'])(
     'blocks review mutation when membership access resolves as non-active for %s state',
     async () => {

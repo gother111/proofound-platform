@@ -104,6 +104,23 @@ describe('PATCH /api/verification/requests/bundles/[requestId]', () => {
     expect(writeVerificationAuditLog).toHaveBeenCalledTimes(1);
   });
 
+  it('returns 400 for malformed JSON before loading the bundle', async () => {
+    const response = await PATCH(
+      new NextRequest('http://localhost/api/verification/requests/bundles/bundle-1', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: '{',
+      }),
+      { params: Promise.resolve({ requestId: 'bundle-1' }) }
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(getCanonicalBundleById).not.toHaveBeenCalled();
+    expect(cancelCanonicalBundleItems).not.toHaveBeenCalled();
+    expect(writeVerificationAuditLog).not.toHaveBeenCalled();
+  });
+
   it('rejects cancellation when selected artifacts are not pending', async () => {
     vi.mocked(getCanonicalBundleById).mockResolvedValue(
       makeBundleRequest({

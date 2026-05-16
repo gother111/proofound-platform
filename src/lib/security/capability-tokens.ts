@@ -1026,6 +1026,7 @@ export async function beginCapabilityTokenRedeemSession(
     actor?: CapabilityActorContext;
     metadata?: Record<string, unknown>;
     maxAgeSeconds?: number;
+    existingRedeemSessionNonce?: string | null;
   } = {}
 ): Promise<BeginCapabilityTokenRedeemSessionResult> {
   const inspected = await inspectCapabilityToken(rawToken, params);
@@ -1033,8 +1034,24 @@ export async function beginCapabilityTokenRedeemSession(
     return inspected;
   }
 
-  const redeemSessionNonce = generateCapabilityRedeemSessionNonce();
   const maxAgeSeconds = params.maxAgeSeconds ?? CAPABILITY_REDEEM_SESSION_MAX_AGE_SECONDS;
+  const existingRedeemSessionNonce = params.existingRedeemSessionNonce?.trim() ?? '';
+  if (
+    existingRedeemSessionNonce.length > 0 &&
+    inspected.token.redeem_session_nonce_hash ===
+      hashCapabilityRedeemSessionNonce(existingRedeemSessionNonce) &&
+    inspected.token.redeem_session_nonce_expires_at &&
+    new Date(inspected.token.redeem_session_nonce_expires_at).getTime() > Date.now()
+  ) {
+    return {
+      ok: true,
+      token: inspected.token,
+      redeemSessionNonce: existingRedeemSessionNonce,
+      maxAgeSeconds,
+    };
+  }
+
+  const redeemSessionNonce = generateCapabilityRedeemSessionNonce();
   const redeemSessionNonceHash = hashCapabilityRedeemSessionNonce(redeemSessionNonce);
   const redeemSessionNonceExpiresAt = new Date(Date.now() + maxAgeSeconds * 1000).toISOString();
 

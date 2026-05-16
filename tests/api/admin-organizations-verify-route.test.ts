@@ -25,6 +25,7 @@ vi.mock('@/db', () => ({
     },
     update: vi.fn(),
     insert: vi.fn(),
+    transaction: vi.fn(),
   },
 }));
 
@@ -50,6 +51,7 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
     (db.insert as any).mockReturnValue({
       values: vi.fn().mockResolvedValue(undefined),
     });
+    (db.transaction as any).mockImplementation(async (callback: any) => callback(db));
   });
 
   it('records audited trust tier transitions', async () => {
@@ -75,6 +77,7 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
     });
     expect(db.update as any).toHaveBeenCalled();
     expect(db.insert as any).toHaveBeenCalled();
+    expect(db.transaction as any).toHaveBeenCalled();
     expect(requireBreakGlassPlatformAdminJson).toHaveBeenCalledWith(
       request,
       expect.objectContaining({
@@ -95,5 +98,43 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
         }),
       })
     );
+  });
+
+  it('returns 400 for invalid trust-tier request bodies', async () => {
+    const request = new NextRequest(`http://localhost/api/admin/organizations/${orgId}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({
+        trustTier: 'not_a_tier',
+        reasonCode: 'safety_review_failed',
+      }),
+      headers: {
+        'x-break-glass-reason': 'Investigating material trust issue',
+      },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toBe('Invalid request body');
+    expect(db.transaction as any).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for malformed JSON request bodies', async () => {
+    const request = new NextRequest(`http://localhost/api/admin/organizations/${orgId}/verify`, {
+      method: 'POST',
+      body: '{',
+      headers: {
+        'content-type': 'application/json',
+        'x-break-glass-reason': 'Investigating material trust issue',
+      },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toBe('Invalid JSON request body');
+    expect(db.transaction as any).not.toHaveBeenCalled();
   });
 });

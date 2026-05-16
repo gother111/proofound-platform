@@ -37,11 +37,10 @@ type InviteState = {
   maskedEmail: string;
   expiresAt: string;
   claimedAt: string | null;
-  claimedByProfileId: string | null;
+  claimedByCurrentUser: boolean;
   acceptedAt: string | null;
-  acceptedByProfileId: string | null;
-  matchId: string | null;
-  conversationId: string | null;
+  acceptedByCurrentUser: boolean;
+  communicationsUrl: string | null;
   proofSubmittedAt: string | null;
 };
 
@@ -239,7 +238,12 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
       }
 
       const invitePayload = await inviteResponse.json();
-      setInvite(invitePayload.invite);
+      setInvite({
+        ...invitePayload.invite,
+        claimedByCurrentUser: Boolean(invitePayload.invite?.claimedByCurrentUser),
+        acceptedByCurrentUser: Boolean(invitePayload.invite?.acceptedByCurrentUser),
+        communicationsUrl: invitePayload.invite?.communicationsUrl ?? null,
+      });
       setOrganization(invitePayload.organization);
       setAssignment(invitePayload.assignment ?? null);
       const proofPacks = Array.isArray(invitePayload.availableProofPacks)
@@ -398,9 +402,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
   const isTestFlow = invite.flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH;
   const isCompleted = invite.status === CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED;
   const isClaimedByCurrentUser = Boolean(
-    invite.status === CANDIDATE_INVITE_STATUS.CLAIMED &&
-      currentUser &&
-      invite.claimedByProfileId === currentUser.id
+    invite.status === CANDIDATE_INVITE_STATUS.CLAIMED && currentUser && invite.claimedByCurrentUser
   );
 
   const assignmentTitle = assignment?.role?.trim() || 'Untitled assignment';
@@ -892,10 +894,8 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                   Trial match accepted. You can now use messages and matching.
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {invite.conversationId ? (
-                    <Link
-                      href={`/app/i/communications?section=messages&conversation=${invite.conversationId}`}
-                    >
+                  {invite.communicationsUrl ? (
+                    <Link href={invite.communicationsUrl}>
                       <Button>Open Communications</Button>
                     </Link>
                   ) : null}

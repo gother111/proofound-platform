@@ -140,6 +140,26 @@ export async function failLifecycleTarget(
   `);
 }
 
+export async function failUnresolvedLifecycleTargets(
+  operationId: string,
+  failureCode: string,
+  failureDetail: string
+) {
+  await db.execute(sql`
+    UPDATE lifecycle_operation_targets
+    SET
+      actual_state = 'failed',
+      attempt_count = attempt_count + 1,
+      last_attempt_at = NOW(),
+      failure_code = ${failureCode},
+      failure_detail = ${failureDetail},
+      updated_at = NOW()
+    WHERE operation_id = ${operationId}
+      AND resolved_at IS NULL
+      AND failure_code IS NULL
+  `);
+}
+
 export async function finalizeLifecycleOperation(
   operationId: string,
   params: {

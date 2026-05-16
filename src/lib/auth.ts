@@ -601,7 +601,7 @@ export async function resolveUserHomePath(client?: SupabaseClient) {
   if (persona === 'org_member') {
     const slug = await getFirstOrganizationSlug(user.id);
     if (slug) {
-      return `/app/o/${slug}/home`;
+      return `/app/o/${encodeURIComponent(slug)}/home`;
     }
   }
 

@@ -207,6 +207,12 @@ describe('/api/user/account lifecycle routes', () => {
       reason: 'Privacy concerns',
       operationId: 'operation-1',
     });
+    expect(mocks.execute.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.adminDeleteUser.mock.invocationCallOrder[0]
+    );
+    expect(mocks.executeAccountDeletionLifecycle.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.adminDeleteUser.mock.invocationCallOrder[0]
+    );
     expect(mocks.updateProfileDeletionRequestState).toHaveBeenCalledWith(
       expect.objectContaining({
         deletionRequestId: 'deletion-1',
@@ -371,6 +377,32 @@ describe('/api/user/account lifecycle routes', () => {
     expect(mocks.executeAccountDeletionLifecycle).not.toHaveBeenCalled();
   });
 
+  it('returns 400 for malformed JSON without creating a deletion request', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+
+    const response = await deleteAccount(
+      new NextRequest('http://localhost/api/user/account', {
+        method: 'DELETE',
+        body: '{',
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: 'Invalid deletion request',
+      message: 'Request body must be valid JSON.',
+    });
+    expect(mocks.createLifecycleOperation).not.toHaveBeenCalled();
+    expect(mocks.createProfileDeletionRequest).not.toHaveBeenCalled();
+    expect(mocks.adminDeleteUser).not.toHaveBeenCalled();
+  });
+
   it('minimizes free-text deletion reasons before retention', async () => {
     mocks.requireApiAuthContext.mockResolvedValue({
       user: { id: 'user-1' },
@@ -410,5 +442,48 @@ describe('/api/user/account lifecycle routes', () => {
         reason: 'Other',
       })
     );
+  });
+
+  it('does not revoke auth access before anonymization succeeds', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+    mockProfileLookup({
+      id: 'user-1',
+      lifecycleState: 'active',
+      deletionRequestedAt: null,
+      deleted: false,
+    });
+    mocks.execute.mockRejectedValueOnce(new Error('anonymize failed'));
+
+    const response = await deleteAccount(
+      new NextRequest('http://localhost/api/user/account', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          password: 'TestPassword123!',
+          confirmPhrase: 'DELETE MY ACCOUNT',
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toBe('Failed to delete account');
+    expect(mocks.adminDeleteUser).not.toHaveBeenCalled();
+    expect(mocks.updateProfileDeletionRequestState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        deletionRequestId: 'deletion-1',
+        toState: 'failed_requires_manual_review',
+        failureCode: 'anonymize_failed',
+      })
+    );
+    expect(mocks.finalizeLifecycleOperation).toHaveBeenCalledWith('operation-1', {
+      status: 'failed_requires_manual_review',
+      visibleStatus: 'failed',
+      summaryCode: 'anonymize_failed',
+    });
   });
 });

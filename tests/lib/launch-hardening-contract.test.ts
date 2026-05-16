@@ -64,6 +64,18 @@ describe('launch hardening contract', () => {
     );
   });
 
+  it('keeps launch smoke command runners on existing local wrapper scripts', () => {
+    const strictOrgCorridor = LAUNCH_SMOKE_MATRIX.find(
+      (item) => item.id === 'full_org_corridor_review_to_engagement_verification'
+    );
+
+    expect(strictOrgCorridor?.runner.kind).toBe('command');
+    if (strictOrgCorridor?.runner.kind === 'command') {
+      expect(strictOrgCorridor.runner.command).toContain('./scripts/playwright-node24.mjs');
+      expect(strictOrgCorridor.runner.command).not.toContain('./scripts/playwright-node20.mjs');
+    }
+  });
+
   it('keeps the seeded public org trust fixture inside the permanent smoke evidence pack', () => {
     const scenario = LAUNCH_SMOKE_MATRIX.find(
       (item) => item.id === 'public_org_trust_fixture_live'

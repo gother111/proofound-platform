@@ -25,6 +25,10 @@ export async function GET(
 ) {
   try {
     const { token } = await params;
+    const existingRedeemSessionNonce =
+      request.cookies.get(
+        getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM)
+      )?.value ?? null;
     const preview = await beginCapabilityTokenRedeemSession(token, {
       tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
       actor: {
@@ -33,6 +37,7 @@ export async function GET(
       },
       metadata: { surface: 'candidate_invite.preview' },
       maxAgeSeconds: CAPABILITY_REDEEM_SESSION_MAX_AGE_SECONDS,
+      existingRedeemSessionNonce,
     });
 
     if (!preview.ok) {
@@ -65,13 +70,26 @@ export async function GET(
     }
 
     if (isInviteExpired(invite.expiresAt) && invite.status !== CANDIDATE_INVITE_STATUS.EXPIRED) {
-      await db
-        .update(orgCandidateInvites)
-        .set({
-          status: CANDIDATE_INVITE_STATUS.EXPIRED,
-          updatedAt: new Date(),
-        })
-        .where(eq(orgCandidateInvites.id, invite.id));
+      if (
+        invite.status === CANDIDATE_INVITE_STATUS.PENDING &&
+        !invite.claimedByProfileId &&
+        !invite.proofSubmittedAt
+      ) {
+        await db
+          .update(orgCandidateInvites)
+          .set({
+            status: CANDIDATE_INVITE_STATUS.EXPIRED,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(orgCandidateInvites.id, invite.id),
+              eq(orgCandidateInvites.status, CANDIDATE_INVITE_STATUS.PENDING),
+              isNull(orgCandidateInvites.claimedByProfileId),
+              isNull(orgCandidateInvites.proofSubmittedAt)
+            )
+          );
+      }
 
       return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
@@ -127,6 +145,12 @@ export async function GET(
         (invite.status === CANDIDATE_INVITE_STATUS.CLAIMED ||
           invite.status === CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED)
     );
+    const claimedByCurrentUser = Boolean(user && invite.claimedByProfileId === user.id);
+    const acceptedByCurrentUser = Boolean(user && invite.acceptedByProfileId === user.id);
+    const communicationsUrl =
+      claimedByCurrentUser && invite.conversationId
+        ? `/app/i/communications?section=messages&conversation=${encodeURIComponent(invite.conversationId)}`
+        : null;
 
     const availableProofPacks = canShowPrivateProofPacks
       ? await db
@@ -163,11 +187,10 @@ export async function GET(
         maskedEmail: maskInviteEmail(invite.inviteeEmail),
         expiresAt: invite.expiresAt,
         claimedAt: invite.claimedAt,
-        claimedByProfileId: invite.claimedByProfileId,
+        claimedByCurrentUser,
         acceptedAt: invite.acceptedAt,
-        acceptedByProfileId: invite.acceptedByProfileId,
-        matchId: invite.matchId,
-        conversationId: invite.conversationId,
+        acceptedByCurrentUser,
+        communicationsUrl,
         proofSubmittedAt: invite.proofSubmittedAt,
       },
       organization: org,

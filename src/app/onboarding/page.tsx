@@ -84,7 +84,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
         .eq('id', user.id);
 
       const slug = orgs[0].org.slug;
-      redirect(`/app/o/${slug}/home`);
+      redirect(`/app/o/${encodeURIComponent(slug)}/home`);
     }
 
     // Check if they have an individual profile

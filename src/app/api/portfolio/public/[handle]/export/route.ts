@@ -62,6 +62,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ hand
       message: error instanceof Error ? error.message : 'Unknown error',
       error,
     });
-    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to generate export' }, { status: 500 });
   }
 }

@@ -28,6 +28,7 @@ import { db } from '@/db';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
 import {
   createLifecycleOperation,
+  failUnresolvedLifecycleTargets,
   finalizeLifecycleOperation,
   resolveLifecycleTarget,
 } from '@/lib/lifecycle/reconciliation';
@@ -138,6 +139,7 @@ function toDateOnlyString(value: unknown): string | null {
  */
 export async function GET() {
   let exportRecord: { id: string } | null = null;
+  let operation: { id: string } | null = null;
 
   try {
     const authContext = await requireApiAuthContext();
@@ -170,7 +172,7 @@ export async function GET() {
     }
 
     const exportedAt = new Date().toISOString();
-    const operation = await createLifecycleOperation({
+    operation = await createLifecycleOperation({
       operationType: 'export',
       subjectType: 'profile',
       subjectId: user.id,
@@ -574,15 +576,18 @@ export async function GET() {
       },
     });
   } catch (error) {
+    const failureCode = error instanceof Error ? error.name : 'export_failed';
+    const sanitizedError = sanitizeErrorForLog(error);
+
     if (exportRecord) {
       await updateDataPortabilityExportState({
         exportId: exportRecord.id,
         toState: 'failed',
         actorType: 'system',
         trigger: 'export_failed',
-        failureCode: error instanceof Error ? error.name : 'export_failed',
+        failureCode,
         metadata: {
-          error: sanitizeErrorForLog(error),
+          error: sanitizedError,
         },
       }).catch((transitionError) => {
         log.error('privacy.export.state_update_failed', {
@@ -592,8 +597,31 @@ export async function GET() {
       });
     }
 
+    if (operation) {
+      await failUnresolvedLifecycleTargets(
+        operation.id,
+        failureCode,
+        JSON.stringify(sanitizedError)
+      ).catch((targetError) => {
+        log.error('privacy.export.lifecycle_target_update_failed', {
+          operationId: operation?.id,
+          error: sanitizeErrorForLog(targetError),
+        });
+      });
+      await finalizeLifecycleOperation(operation.id, {
+        status: 'failed_requires_manual_review',
+        visibleStatus: 'failed',
+        summaryCode: failureCode,
+      }).catch((operationError) => {
+        log.error('privacy.export.lifecycle_finalize_failed', {
+          operationId: operation?.id,
+          error: sanitizeErrorForLog(operationError),
+        });
+      });
+    }
+
     log.error('privacy.export.failed', {
-      error: sanitizeErrorForLog(error),
+      error: sanitizedError,
     });
 
     return NextResponse.json(

@@ -28,7 +28,13 @@ export async function POST(
 
     const { sessionId } = await params;
     await assertStartFromCvAccess(context.betaContext);
-    const body = DiscardSchema.parse(await request.json());
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const body = DiscardSchema.parse(rawBody);
     const result = await discardStartFromCvSession({
       sessionId,
       userId: context.auth.user.id,

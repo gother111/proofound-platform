@@ -182,7 +182,7 @@ export const LAUNCH_SMOKE_MATRIX: LaunchSmokeScenario[] = [
       label: 'strict_org_corridor_smoke',
       command: [
         'node',
-        './scripts/playwright-node20.mjs',
+        './scripts/playwright-node24.mjs',
         'test',
         'e2e/strict/org-corridor.strict.spec.ts',
         '--project=chromium',
@@ -218,6 +218,7 @@ export const LAUNCH_SMOKE_MATRIX: LaunchSmokeScenario[] = [
       testFiles: [
         'tests/api/org-match-review-route.test.ts',
         'tests/lib/effective-visibility.test.ts',
+        'tests/lib/profile-fetcher.test.ts',
         'tests/api/conversation-reveal-route.test.ts',
       ],
     },

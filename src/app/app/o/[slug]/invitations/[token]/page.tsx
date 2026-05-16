@@ -75,7 +75,7 @@ export default async function AcceptInvitationPage({
 
   if (existingMembership) {
     // Already a member, redirect to org
-    redirect(`/app/o/${slug}/home`);
+    redirect(`/app/o/${encodeURIComponent(slug)}/home`);
   }
 
   return (
@@ -122,7 +122,7 @@ export default async function AcceptInvitationPage({
                 'use server';
                 const result = await acceptInvitation(token);
                 if (result.success && result.orgSlug) {
-                  redirect(`/app/o/${result.orgSlug}/home`);
+                  redirect(`/app/o/${encodeURIComponent(result.orgSlug)}/home`);
                 }
               }}
               className="space-y-4"

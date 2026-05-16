@@ -25,7 +25,13 @@ export async function POST(
     }
 
     const { artifactId } = await params;
-    const body = ApplyProofArtifactOcrDraftSchema.parse(await request.json());
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const body = ApplyProofArtifactOcrDraftSchema.parse(rawBody);
     const betaContext = await loadUserBetaContext(authContext.user.id);
     const {
       data: { user: authUser },

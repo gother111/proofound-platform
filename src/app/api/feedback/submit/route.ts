@@ -21,7 +21,18 @@ export async function POST(request: NextRequest) {
   });
 
   try {
-    const body = SubmitPayloadSchema.parse(await request.json());
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'feedback_submit_validation_failed',
+        failureClass: 'invalid_json_body',
+      });
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const body = SubmitPayloadSchema.parse(rawBody);
     const supabase = await createClient();
     const admin = createAdminClient();
 

@@ -8,6 +8,7 @@ export default async function OrganizationPortfolioShortcutPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const returnTo = encodeURIComponent(`/app/o/${slug}/home`);
-  redirect(`/portfolio/org/${slug}?returnTo=${returnTo}`);
+  const encodedSlug = encodeURIComponent(slug);
+  const returnTo = encodeURIComponent(`/app/o/${encodedSlug}/home`);
+  redirect(`/portfolio/org/${encodedSlug}?returnTo=${returnTo}`);
 }

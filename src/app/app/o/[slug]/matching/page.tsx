@@ -4,5 +4,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function OrgMatchingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  redirect(`/app/o/${slug}/assignments`);
+  const encodedSlug = encodeURIComponent(slug);
+
+  redirect(`/app/o/${encodedSlug}/assignments`);
 }

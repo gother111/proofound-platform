@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { db } from '@/db';
@@ -17,6 +17,7 @@ import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
 export const dynamic = 'force-dynamic';
 
 const PUBLISHABLE_CREATION_STATUSES = ['review_ready'] as const;
+const PUBLISHABLE_WORKFLOW_STATUSES = ['draft', 'active'] as const;
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   let assignmentId: string | undefined;
@@ -77,6 +78,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           details: {
             currentCreationStatus: assignment.creationStatus,
             allowedCreationStatuses: PUBLISHABLE_CREATION_STATUSES,
+          },
+        },
+        { status: 409 }
+      );
+    }
+
+    const currentWorkflowStatus = assignment.status ?? 'draft';
+    if (!PUBLISHABLE_WORKFLOW_STATUSES.includes(currentWorkflowStatus as any)) {
+      return NextResponse.json(
+        {
+          error: 'ASSIGNMENT_NOT_PUBLISHABLE',
+          message:
+            'Assignment must be in draft or already active state before it can be published.',
+          details: {
+            currentStatus: currentWorkflowStatus,
+            allowedStatuses: PUBLISHABLE_WORKFLOW_STATUSES,
           },
         },
         { status: 409 }
@@ -183,8 +200,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         creationStatus: 'review_ready',
         updatedAt: new Date(),
       })
-      .where(eq(assignments.id, assignmentId))
+      .where(
+        and(
+          eq(assignments.id, assignmentId),
+          eq(assignments.creationStatus, 'review_ready'),
+          inArray(assignments.status, [...PUBLISHABLE_WORKFLOW_STATUSES])
+        )
+      )
       .returning();
+
+    if (!publishedAssignment) {
+      return NextResponse.json(
+        {
+          error: 'ASSIGNMENT_PUBLISH_STATE_CHANGED',
+          message: 'Assignment publish state changed. Refresh and try again.',
+        },
+        { status: 409 }
+      );
+    }
 
     void emitAssignmentPublishSucceeded(user.id, assignmentId, publishedAssignment.orgId, {
       builderMode: publishedAssignment.builderMode || 'basic',

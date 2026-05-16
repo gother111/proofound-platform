@@ -95,6 +95,14 @@ function jsonRequest(url: string, body: unknown) {
   });
 }
 
+function malformedJsonRequest(url: string) {
+  return new NextRequest(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: '{',
+  });
+}
+
 function artifactParams() {
   return {
     params: Promise.resolve({
@@ -185,6 +193,19 @@ describe('Proof artifact OCR API routes', () => {
 
     expect(response.status).toBe(400);
     expect(payload.error).toBe('Explicit OCR consent is required.');
+    expect(mocks.dbWhere).not.toHaveBeenCalled();
+    expect(mocks.extractProofArtifactText).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for malformed extraction JSON before loading beta context or provider work', async () => {
+    const response = await extractText(
+      malformedJsonRequest(`http://localhost/api/proof-artifacts/${ARTIFACT_ID}/text-extraction`),
+      artifactParams()
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
     expect(mocks.dbWhere).not.toHaveBeenCalled();
     expect(mocks.extractProofArtifactText).not.toHaveBeenCalled();
   });
@@ -280,6 +301,21 @@ describe('Proof artifact OCR API routes', () => {
     );
 
     expect(response.status).toBe(400);
+    expect(mocks.applyProofArtifactOcrDraft).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for malformed apply JSON before loading beta context or service access', async () => {
+    const response = await applyTextDraft(
+      malformedJsonRequest(
+        `http://localhost/api/proof-artifacts/${ARTIFACT_ID}/text-extraction/apply`
+      ),
+      artifactParams()
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.dbWhere).not.toHaveBeenCalled();
     expect(mocks.applyProofArtifactOcrDraft).not.toHaveBeenCalled();
   });
 

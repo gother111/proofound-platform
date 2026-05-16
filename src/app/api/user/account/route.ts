@@ -132,9 +132,40 @@ export async function DELETE(request: NextRequest) {
     trace.actorType = 'user_account';
     trace.objectRefs.profileId = user.id;
 
-    // Parse and validate request body
-    const body = await request.json();
-    const parsed = AccountDeletionSchema.parse(body);
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'account_delete_validation_failed',
+        failureClass: 'invalid_json_body',
+      });
+      return NextResponse.json(
+        {
+          error: 'Invalid deletion request',
+          message: 'Request body must be valid JSON.',
+        },
+        { status: 400 }
+      );
+    }
+
+    const parsedResult = AccountDeletionSchema.safeParse(body);
+    if (!parsedResult.success) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'account_delete_validation_failed',
+        failureClass: 'invalid_deletion_request',
+      });
+      return NextResponse.json(
+        {
+          error: 'Invalid deletion request',
+          details: parsedResult.error.flatten(),
+        },
+        { status: 400 }
+      );
+    }
+    const parsed = parsedResult.data;
 
     // Get user profile to access email for password verification
     const [profile] = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1);
@@ -265,76 +296,6 @@ export async function DELETE(request: NextRequest) {
       },
     });
 
-    // Remove Supabase auth user to revoke future access
-    try {
-      const adminClient = createAdminClient();
-      const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
-      if (deleteError) {
-        if (deletionRequest) {
-          await updateProfileDeletionRequestState({
-            deletionRequestId: deletionRequest.id,
-            toState: 'failed_requires_manual_review',
-            actorType: 'system',
-            trigger: 'deletion_failed',
-            failureCode: 'auth_delete_failed',
-            metadata: {
-              message: deleteError.message,
-            },
-          });
-        }
-        if (lifecycleOperation) {
-          await finalizeLifecycleOperation(lifecycleOperation.id, {
-            status: 'failed_requires_manual_review',
-            visibleStatus: 'failed',
-            summaryCode: 'auth_delete_failed',
-          });
-        }
-        log.error('privacy.account_deletion.auth_delete_failed', {
-          userId: user.id,
-          error: deleteError.message,
-        });
-        return NextResponse.json(
-          {
-            error: 'Failed to delete account',
-            message: 'Could not revoke account access. Please try again shortly.',
-          },
-          { status: 500 }
-        );
-      }
-    } catch (authDeleteError) {
-      if (deletionRequest) {
-        await updateProfileDeletionRequestState({
-          deletionRequestId: deletionRequest.id,
-          toState: 'failed_requires_manual_review',
-          actorType: 'system',
-          trigger: 'deletion_failed',
-          failureCode: 'auth_delete_failed',
-          metadata: {
-            message:
-              authDeleteError instanceof Error ? authDeleteError.message : 'Unknown auth error',
-          },
-        });
-      }
-      if (lifecycleOperation) {
-        await finalizeLifecycleOperation(lifecycleOperation.id, {
-          status: 'failed_requires_manual_review',
-          visibleStatus: 'failed',
-          summaryCode: 'auth_delete_failed',
-        });
-      }
-      log.error('privacy.account_deletion.auth_delete_failed', {
-        userId: user.id,
-        error: authDeleteError instanceof Error ? authDeleteError.message : 'Unknown error',
-      });
-      return NextResponse.json(
-        {
-          error: 'Failed to delete account',
-          message: 'Could not revoke account access. Please try again shortly.',
-        },
-        { status: 500 }
-      );
-    }
-
     // Immediate deletion: anonymize data now (stored procedure handles cascading cleanup)
     try {
       await db.execute(sql`SELECT anonymize_user_account(${user.id}::uuid)`);
@@ -377,6 +338,73 @@ export async function DELETE(request: NextRequest) {
       reason: normalizedReason,
       operationId: lifecycleOperation.id,
     });
+
+    // Revoke future access only after data deletion/anonymization work has succeeded.
+    try {
+      const adminClient = createAdminClient();
+      const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
+      if (deleteError) {
+        await updateProfileDeletionRequestState({
+          deletionRequestId: deletionRequest.id,
+          toState: 'failed_requires_manual_review',
+          actorType: 'system',
+          trigger: 'deletion_failed',
+          failureCode: 'auth_delete_failed',
+          metadata: {
+            message: deleteError.message,
+            dataDeletionCompletedBeforeAuthFailure: true,
+          },
+        });
+        await finalizeLifecycleOperation(lifecycleOperation.id, {
+          status: 'failed_requires_manual_review',
+          visibleStatus: 'failed',
+          summaryCode: 'auth_delete_failed',
+        });
+        log.error('privacy.account_deletion.auth_delete_failed', {
+          userId: user.id,
+          error: deleteError.message,
+          dataDeletionCompletedBeforeAuthFailure: true,
+        });
+        return NextResponse.json(
+          {
+            error: 'Failed to delete account',
+            message: 'Could not revoke account access. Please try again shortly.',
+          },
+          { status: 500 }
+        );
+      }
+    } catch (authDeleteError) {
+      await updateProfileDeletionRequestState({
+        deletionRequestId: deletionRequest.id,
+        toState: 'failed_requires_manual_review',
+        actorType: 'system',
+        trigger: 'deletion_failed',
+        failureCode: 'auth_delete_failed',
+        metadata: {
+          message:
+            authDeleteError instanceof Error ? authDeleteError.message : 'Unknown auth error',
+          dataDeletionCompletedBeforeAuthFailure: true,
+        },
+      });
+      await finalizeLifecycleOperation(lifecycleOperation.id, {
+        status: 'failed_requires_manual_review',
+        visibleStatus: 'failed',
+        summaryCode: 'auth_delete_failed',
+      });
+      log.error('privacy.account_deletion.auth_delete_failed', {
+        userId: user.id,
+        error: authDeleteError instanceof Error ? authDeleteError.message : 'Unknown error',
+        dataDeletionCompletedBeforeAuthFailure: true,
+      });
+      return NextResponse.json(
+        {
+          error: 'Failed to delete account',
+          message: 'Could not revoke account access. Please try again shortly.',
+        },
+        { status: 500 }
+      );
+    }
+
     await updateProfileDeletionRequestState({
       deletionRequestId: deletionRequest.id,
       toState: 'deleted',
@@ -412,21 +440,6 @@ export async function DELETE(request: NextRequest) {
       message: 'Your account has been permanently deleted. This action cannot be undone.',
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      emitLaunchTrace(trace, {
-        outcome: 'rejected',
-        state: 'account_delete_validation_failed',
-        failureClass: 'invalid_deletion_request',
-      });
-      return NextResponse.json(
-        {
-          error: 'Invalid deletion request',
-          details: error.flatten(),
-        },
-        { status: 400 }
-      );
-    }
-
     log.error('privacy.account_deletion.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,

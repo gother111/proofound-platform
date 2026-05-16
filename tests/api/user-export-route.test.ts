@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   createLifecycleOperation: vi.fn(),
   createDataPortabilityExport: vi.fn(),
   updateDataPortabilityExportState: vi.fn(),
+  failUnresolvedLifecycleTargets: vi.fn(),
   finalizeLifecycleOperation: vi.fn(),
   buildExperienceTimeline: vi.fn(),
   getRows: vi.fn(),
@@ -85,6 +86,7 @@ vi.mock('@/lib/profile/experience-timeline', () => ({
 
 vi.mock('@/lib/lifecycle/reconciliation', () => ({
   createLifecycleOperation: mocks.createLifecycleOperation,
+  failUnresolvedLifecycleTargets: mocks.failUnresolvedLifecycleTargets,
   finalizeLifecycleOperation: mocks.finalizeLifecycleOperation,
   resolveLifecycleTarget: mocks.resolveLifecycleTarget,
 }));
@@ -150,6 +152,7 @@ describe('/api/user/export', () => {
     mocks.createLifecycleOperation.mockResolvedValue({ id: 'operation-1' });
     mocks.createDataPortabilityExport.mockResolvedValue({ id: 'export-1' });
     mocks.updateDataPortabilityExportState.mockResolvedValue(undefined);
+    mocks.failUnresolvedLifecycleTargets.mockResolvedValue(undefined);
     mocks.finalizeLifecycleOperation.mockResolvedValue(undefined);
     mocks.resolveLifecycleTarget.mockResolvedValue(undefined);
     mocks.getLatestProfileDeletionRequest.mockResolvedValue(null);
@@ -361,5 +364,29 @@ describe('/api/user/export', () => {
     expect(mocks.eq).toHaveBeenCalledWith('proofArtifacts.ownerId', 'user-1');
     expect(mocks.eq).toHaveBeenCalledWith('proofPacks.ownerId', 'user-1');
     expect(mocks.eq).not.toHaveBeenCalledWith(expect.anything(), 'other-user');
+  });
+
+  it('fails the lifecycle operation when export packaging fails after operation creation', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+    queueSelectResult([{ deletionRequestedAt: null, deleted: false }]);
+    mocks.createDataPortabilityExport.mockRejectedValueOnce(new Error('export insert failed'));
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toBe('Failed to generate data export');
+    expect(mocks.failUnresolvedLifecycleTargets).toHaveBeenCalledWith(
+      'operation-1',
+      'Error',
+      expect.stringContaining('[REDACTED_DATABASE_ERROR]')
+    );
+    expect(mocks.finalizeLifecycleOperation).toHaveBeenCalledWith('operation-1', {
+      status: 'failed_requires_manual_review',
+      visibleStatus: 'failed',
+      summaryCode: 'Error',
+    });
   });
 });

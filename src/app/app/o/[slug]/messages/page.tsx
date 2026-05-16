@@ -32,7 +32,6 @@ function OrganizationMessagesPageContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  const [hasAutoSelected, setHasAutoSelected] = useState(false);
   const [RealtimeThread, setRealtimeThread] =
     useState<ComponentType<RealtimeMessageThreadProps> | null>(null);
 
@@ -45,15 +44,14 @@ function OrganizationMessagesPageContent() {
 
   // Auto-select conversation from URL param after conversations are loaded
   useEffect(() => {
-    if (conversationParam && conversations.length > 0 && !hasAutoSelected) {
+    if (conversationParam && conversations.length > 0) {
       // Check if the conversation exists in the list
       const exists = conversations.some((c) => c.id === conversationParam);
-      if (exists) {
+      if (exists && selectedConversationId !== conversationParam) {
         setSelectedConversationId(conversationParam);
-        setHasAutoSelected(true);
       }
     }
-  }, [conversationParam, conversations, hasAutoSelected]);
+  }, [conversationParam, conversations, selectedConversationId]);
 
   const loadConversations = async () => {
     setIsLoadingConversations(true);
@@ -180,10 +178,18 @@ function OrganizationMessagesPageContent() {
   };
 
   // Show loading state if auth is not ready
-  if (isAuthLoading || !currentUserId) {
+  if (isAuthLoading) {
     return (
       <div className="h-full flex items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!currentUserId) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <p className="text-muted-foreground">Sign in to view organization conversations.</p>
       </div>
     );
   }

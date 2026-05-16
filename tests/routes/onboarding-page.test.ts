@@ -138,4 +138,19 @@ describe('OnboardingPage', () => {
       },
     });
   });
+
+  it('encodes legacy org slugs before redirecting unknown-persona users to org home', async () => {
+    getPersonaMock.mockResolvedValue('unknown');
+    getUserOrganizationsMock.mockResolvedValue([
+      {
+        org: {
+          slug: 'acme/team',
+        },
+      },
+    ]);
+
+    await expect(OnboardingPage({})).rejects.toThrow('NEXT_REDIRECT');
+
+    expect(redirectMock).toHaveBeenCalledWith('/app/o/acme%2Fteam/home');
+  });
 });

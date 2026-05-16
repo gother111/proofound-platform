@@ -228,6 +228,34 @@ describe('internal ops queue admin routes', () => {
     expect(body.item.status).toBe('resolved');
   });
 
+  it('returns 400 for malformed PATCH JSON before mutating a queue item', async () => {
+    mocks.requirePlatformAdminJsonMock.mockResolvedValue({
+      adminLevel: 'platform_admin',
+      userId: 'admin-1',
+      email: 'ops@proofound.io',
+      platformRole: 'platform_admin',
+    });
+
+    const response = await PATCH(
+      new NextRequest(
+        'https://proofound.io/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
+        {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          body: '{',
+        }
+      ),
+      { params: Promise.resolve({ id: '33333333-3333-4333-8333-333333333333' }) }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Invalid JSON body');
+    expect(mocks.transitionInternalOpsQueueItemMock).not.toHaveBeenCalled();
+    expect(mocks.reviewUploadedFileQueueItemMock).not.toHaveBeenCalled();
+    expect(mocks.logAdminActionMock).not.toHaveBeenCalled();
+  });
+
   it('approves uploaded-file queue items through the explicit upload review action', async () => {
     mocks.requirePlatformAdminJsonMock.mockResolvedValue({
       adminLevel: 'platform_admin',

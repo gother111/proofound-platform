@@ -21,7 +21,9 @@ vi.mock('@/lib/profile/completion-flow.server', () => ({
 import { requireAuth } from '@/lib/auth';
 import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
 import IndividualPortfolioShortcutPage from '@/app/app/i/portfolio/page';
+import OrgMatchingPage from '@/app/app/o/[slug]/matching/page';
 import OrganizationPortfolioShortcutPage from '@/app/app/o/[slug]/portfolio/page';
+import OrgShortlistPage from '@/app/app/o/[slug]/shortlist/page';
 import LegacyAuthLoginPage from '@/app/auth/login/page';
 
 describe('portfolio and compatibility shortcut routes', () => {
@@ -65,6 +67,34 @@ describe('portfolio and compatibility shortcut routes', () => {
     expect(redirectMock).toHaveBeenCalledWith(
       '/portfolio/org/acme?returnTo=%2Fapp%2Fo%2Facme%2Fhome'
     );
+  });
+
+  it('keeps reserved slug characters encoded inside organization shortcut redirects', async () => {
+    await expect(
+      OrganizationPortfolioShortcutPage({
+        params: Promise.resolve({ slug: 'acme?next=../other' }),
+      })
+    ).rejects.toThrow('NEXT_REDIRECT');
+
+    expect(redirectMock).toHaveBeenCalledWith(
+      '/portfolio/org/acme%3Fnext%3D..%2Fother?returnTo=%2Fapp%2Fo%2Facme%253Fnext%253D..%252Fother%2Fhome'
+    );
+  });
+
+  it('keeps reserved slug characters encoded inside org assignment shortcut redirects', async () => {
+    await expect(
+      OrgShortlistPage({
+        params: Promise.resolve({ slug: 'acme?next=../other' }),
+      })
+    ).rejects.toThrow('NEXT_REDIRECT');
+    expect(redirectMock).toHaveBeenLastCalledWith('/app/o/acme%3Fnext%3D..%2Fother/assignments');
+
+    await expect(
+      OrgMatchingPage({
+        params: Promise.resolve({ slug: 'foo/bar' }),
+      })
+    ).rejects.toThrow('NEXT_REDIRECT');
+    expect(redirectMock).toHaveBeenLastCalledWith('/app/o/foo%2Fbar/assignments');
   });
 
   it('redirects /auth/login compatibility route to /login', () => {

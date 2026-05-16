@@ -23,7 +23,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = NoShowSchema.parse(await request.json());
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const body = NoShowSchema.parse(rawBody);
     const { allowed, context } = await canManageInterviewAsOrgAdmin(
       supabase,
       user.id,

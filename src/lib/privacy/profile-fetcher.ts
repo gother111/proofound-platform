@@ -235,15 +235,25 @@ export async function isViewerMatchedWithProfile(
   viewerId: string,
   profileId: string
 ): Promise<boolean> {
-  const supabase = await createClient();
+  const result = await db.execute(sql`
+    SELECT 1
+    FROM public.matches m
+    JOIN public.assignments a ON a.id = m.assignment_id
+    JOIN public.organization_members om ON om.org_id = a.org_id
+    WHERE m.profile_id = ${profileId}::uuid
+      AND om.user_id = ${viewerId}::uuid
+      AND om.state = 'active'
+      AND a.status = 'active'
+      AND m.lifecycle_state IN (
+        'generated',
+        'shortlisted',
+        'passed',
+        'intro_in_progress',
+        'interview_in_progress'
+      )
+      AND (m.snoozed_until IS NULL OR m.snoozed_until < NOW())
+    LIMIT 1
+  `);
 
-  // Check if there's an active match between viewer's org and the profile
-  const { data: matches } = await supabase
-    .from('matching_results')
-    .select('id')
-    .eq('profile_id', profileId)
-    .eq('status', 'active')
-    .limit(1);
-
-  return (matches?.length ?? 0) > 0;
+  return getRows(result as any).length > 0;
 }

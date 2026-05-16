@@ -96,8 +96,28 @@ export async function POST(
     }
 
     const adminUser = breakGlass.adminUser;
-    const rawBody = await request.json();
-    const body = OrgTrustTierSchema.parse(rawBody);
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON request body' }, { status: 400 });
+    }
+
+    const parsedBody = OrgTrustTierSchema.safeParse(rawBody);
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        {
+          error: 'Invalid request body',
+          issues: parsedBody.error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        },
+        { status: 400 }
+      );
+    }
+
+    const body = parsedBody.data;
     const trustTier =
       body.trustTier ??
       (body.verified === true ? 'reviewed' : body.verified === false ? 'unreviewed' : null);
@@ -119,32 +139,34 @@ export async function POST(
     const compatibilityTrustStatus = mapCompatibilityTrustStatus(trustTier);
     const now = new Date();
 
-    await db
-      .update(organizations)
-      .set({
-        verified: trustTier === 'reviewed',
-        trustStatus: compatibilityTrustStatus,
-        trustStatusUpdatedAt: now,
-        orgTrustTier: trustTier,
-        orgTrustTierReasonCode: body.reasonCode ?? null,
-        orgTrustTierUpdatedAt: now,
-        updatedAt: now,
-      })
-      .where(eq(organizations.id, orgId));
+    await db.transaction(async (tx) => {
+      await tx
+        .update(organizations)
+        .set({
+          verified: trustTier === 'reviewed',
+          trustStatus: compatibilityTrustStatus,
+          trustStatusUpdatedAt: now,
+          orgTrustTier: trustTier,
+          orgTrustTierReasonCode: body.reasonCode ?? null,
+          orgTrustTierUpdatedAt: now,
+          updatedAt: now,
+        })
+        .where(eq(organizations.id, orgId));
 
-    await db.insert(organizationTrustTierTransitions).values({
-      orgId,
-      previousTier,
-      newTier: trustTier,
-      reasonCode: body.reasonCode ?? null,
-      actorType: 'platform_admin',
-      actorId: adminUser.userId,
-      metadata: {
-        breakGlassReason: breakGlass.reason,
-        note: body.note ?? null,
-        compatibilityTrustStatus,
-      },
-      createdAt: now,
+      await tx.insert(organizationTrustTierTransitions).values({
+        orgId,
+        previousTier,
+        newTier: trustTier,
+        reasonCode: body.reasonCode ?? null,
+        actorType: 'platform_admin',
+        actorId: adminUser.userId,
+        metadata: {
+          breakGlassReason: breakGlass.reason,
+          note: body.note ?? null,
+          compatibilityTrustStatus,
+        },
+        createdAt: now,
+      });
     });
 
     // Log the action

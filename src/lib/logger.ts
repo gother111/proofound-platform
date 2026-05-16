@@ -180,14 +180,15 @@ export function createLogger(namespace?: string): Logger {
 
       // In production, also send to Sentry if available
       if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
-        try {
-          const Sentry = require('@sentry/nextjs');
-          if (error instanceof Error) {
-            Sentry.captureException(error);
-          }
-        } catch (e) {
-          // Sentry not available, ignore
-        }
+        void import('@sentry/nextjs')
+          .then((Sentry) => {
+            if (error instanceof Error) {
+              Sentry.captureException(error);
+            }
+          })
+          .catch(() => {
+            // Sentry not available, ignore
+          });
       }
     },
   };

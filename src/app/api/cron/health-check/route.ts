@@ -8,6 +8,11 @@ import { getAllMetrics } from '@/lib/analytics/metrics';
 
 export const dynamic = 'force-dynamic';
 
+const TTSC_TARGET_DAYS = 30;
+const TTFQI_TARGET_HOURS = 72;
+const PAC_ACCEPTANCE_LIFT_TARGET = 20;
+const PAC_CONTRACT_LIFT_TARGET = 15;
+
 /**
  * GET /api/cron/health-check
  *
@@ -69,50 +74,50 @@ export async function GET(request: Request) {
       const metrics = await getAllMetrics();
 
       // Check TTSC (Time to Signed Contract)
-      if (metrics.ttsc && metrics.ttsc.value > 35) {
+      if (metrics.ttsc && metrics.ttsc.value > TTSC_TARGET_DAYS) {
         checks.ttsc = {
           status: 'warning',
-          message: `TTSC median ${metrics.ttsc.value} days exceeds target of 30 days`,
+          message: `TTSC median ${metrics.ttsc.value} days exceeds target of ${TTSC_TARGET_DAYS} days`,
         };
 
         log.warn('health.check.ttsc.exceeds.target', {
           median: metrics.ttsc.value,
-          target: 30,
+          target: TTSC_TARGET_DAYS,
         });
       } else {
         checks.ttsc = { status: 'healthy' };
       }
 
       // Check TTFQI (Time to First Qualified Introduction)
-      if (metrics.ttfqi && metrics.ttfqi.value > 96) {
+      if (metrics.ttfqi && metrics.ttfqi.value > TTFQI_TARGET_HOURS) {
         checks.ttfqi = {
           status: 'warning',
-          message: `TTFQI median ${metrics.ttfqi.value} hours exceeds target of 72 hours`,
+          message: `TTFQI median ${metrics.ttfqi.value} hours exceeds target of ${TTFQI_TARGET_HOURS} hours`,
         };
 
         log.warn('health.check.ttfqi.exceeds.target', {
           median: metrics.ttfqi.value,
-          target: 72,
+          target: TTFQI_TARGET_HOURS,
         });
       } else {
         checks.ttfqi = { status: 'healthy' };
       }
 
       // Check proof-fit lift.
-      if (metrics.pacLift) {
-        if (metrics.pacLift.lift < 15) {
+      if (metrics.pac) {
+        if (metrics.pac.lift < PAC_ACCEPTANCE_LIFT_TARGET) {
           checks.pac_acceptance = {
             status: 'warning',
-            message: `Proof-fit acceptance lift ${metrics.pacLift.lift.toFixed(1)}% below target of 20%`,
+            message: `Proof-fit acceptance lift ${metrics.pac.lift.toFixed(1)}% below target of ${PAC_ACCEPTANCE_LIFT_TARGET}%`,
           };
         } else {
           checks.pac_acceptance = { status: 'healthy' };
         }
 
-        if (metrics.pacLift.lift < 12) {
+        if (metrics.pac.lift < PAC_CONTRACT_LIFT_TARGET) {
           checks.pac_contract = {
             status: 'warning',
-            message: `Proof-fit contract lift ${metrics.pacLift.lift.toFixed(1)}% below target of 15%`,
+            message: `Proof-fit contract lift ${metrics.pac.lift.toFixed(1)}% below target of ${PAC_CONTRACT_LIFT_TARGET}%`,
           };
         } else {
           checks.pac_contract = { status: 'healthy' };

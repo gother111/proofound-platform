@@ -179,6 +179,25 @@ describe('PATCH /api/engagement-verifications/[id]', () => {
     expect(mocks.confirmEngagementVerification).not.toHaveBeenCalled();
   });
 
+  it('returns 400 for malformed JSON without treating it as a server error', async () => {
+    const response = await PATCH(
+      new NextRequest('https://example.com/api/engagement-verifications/engagement-1', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: '{',
+      }),
+      {
+        params: Promise.resolve({ id: 'engagement-1' }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.findEngagementVerification).not.toHaveBeenCalled();
+    expect(mocks.confirmEngagementVerification).not.toHaveBeenCalled();
+  });
+
   it('replays duplicate engagement confirmations without recording another transition', async () => {
     mocks.withWorkflowMutationIdempotency.mockResolvedValue(
       Response.json(

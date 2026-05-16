@@ -250,7 +250,13 @@ export async function POST(
 
     const { user } = authContext;
     const { id, matchId } = await params;
-    const parsed = ReviewMutationSchema.safeParse(await request.json());
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const parsed = ReviewMutationSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'Invalid payload', details: parsed.error.flatten() },

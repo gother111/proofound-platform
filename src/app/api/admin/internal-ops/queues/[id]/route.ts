@@ -36,7 +36,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return jsonError('Invalid queue id', 400, parsedParams.error.flatten());
     }
 
-    const payload = patchBodySchema.safeParse(await request.json());
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return jsonError('Invalid JSON body', 400);
+    }
+    const payload = patchBodySchema.safeParse(rawBody);
     if (!payload.success) {
       return jsonError('Invalid queue update payload', 400, payload.error.flatten());
     }

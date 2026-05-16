@@ -71,7 +71,13 @@ export async function PATCH(
 
     const { user } = authContext;
     const { requestId } = await params;
-    const parsedBody = CancelSelectedSchema.safeParse(await request.json());
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const parsedBody = CancelSelectedSchema.safeParse(rawBody);
     if (!parsedBody.success) {
       return NextResponse.json(
         { error: 'Validation failed', details: parsedBody.error.issues },

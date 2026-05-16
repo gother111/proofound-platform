@@ -231,4 +231,28 @@ describe('auth request-scoped caching', () => {
 
     await expect(auth.resolveUserHomePath()).resolves.toBe('/app/o/acme/home');
   });
+
+  it('encodes org slugs as one path segment when resolving org home', async () => {
+    const { supabase } = createSupabaseStub({
+      profilePersona: 'org_member',
+      organizationMemberships: [
+        {
+          org: {
+            id: 'org-1',
+            slug: 'acme/team',
+            displayName: 'ACME',
+          },
+          orgId: 'org-1',
+          userId: 'user-1',
+          role: 'org_owner',
+          state: 'active',
+          joinedAt: new Date('2026-01-01T00:00:00.000Z'),
+        },
+      ],
+    });
+    createClientMock.mockResolvedValue(supabase);
+    const auth = await loadAuthModule();
+
+    await expect(auth.resolveUserHomePath()).resolves.toBe('/app/o/acme%2Fteam/home');
+  });
 });

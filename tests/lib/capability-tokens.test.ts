@@ -11,6 +11,7 @@ import {
   CAPABILITY_BINDINGS,
   CAPABILITY_TOKEN_CLASSES,
   CAPABILITY_TOKEN_STATES,
+  beginCapabilityTokenRedeemSession,
   hashCapabilityRedeemSessionNonce,
   issueCapabilityToken,
   redeemCapabilityToken,
@@ -234,6 +235,27 @@ describe('capability token contract', () => {
     });
 
     expect(redeemed).toEqual({ ok: false, reason: 'invalid' });
+  });
+
+  it('reuses a still-valid redeem session nonce instead of rotating it', async () => {
+    const nonce = 'existing-nonce';
+    const token = tokenRow({
+      redeem_session_nonce_hash: hashCapabilityRedeemSessionNonce(nonce),
+      redeem_session_nonce_expires_at: new Date(Date.now() + 60_000).toISOString(),
+    });
+
+    mockExecuteRows([[token], [], []]);
+
+    const preview = await beginCapabilityTokenRedeemSession('raw-token', {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+      existingRedeemSessionNonce: nonce,
+    });
+
+    expect(preview.ok).toBe(true);
+    if (preview.ok) {
+      expect(preview.redeemSessionNonce).toBe(nonce);
+    }
+    expect(db.execute).toHaveBeenCalledTimes(3);
   });
 
   it('revokes prior active tokens when regenerating the same scope and target', async () => {

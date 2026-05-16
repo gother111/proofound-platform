@@ -129,7 +129,7 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
     .maybeSingle();
 
   if (existingMembership) {
-    redirect(`/app/o/${orgInfo.slug}/home`);
+    redirect(`/app/o/${encodeURIComponent(orgInfo.slug)}/home`);
   }
 
   return (
@@ -176,7 +176,7 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
                 'use server';
                 const result = await acceptInvitation(token);
                 if (result.success && result.orgSlug) {
-                  redirect(`/app/o/${result.orgSlug}/home`);
+                  redirect(`/app/o/${encodeURIComponent(result.orgSlug)}/home`);
                 }
               }}
               className="space-y-4"

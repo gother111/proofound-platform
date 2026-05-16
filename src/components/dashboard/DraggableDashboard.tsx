@@ -10,6 +10,9 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { DndContext } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
 import { WhileAwayCard } from './WhileAwayCard';
 import { GoalsCard } from './GoalsCard';
@@ -53,27 +56,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { WidgetGridSkeleton } from './WidgetGridSkeleton';
-
-// Try to import dnd-kit packages, fallback to null if not installed
-let DndContext: any = null;
-let SortableContext: any = null;
-let useSortable: any = null;
-let verticalListSortingStrategy: any = null;
-let CSS: any = null;
-
-try {
-  const dndCore = require('@dnd-kit/core');
-  const dndSortable = require('@dnd-kit/sortable');
-  const dndUtilities = require('@dnd-kit/utilities');
-
-  DndContext = dndCore.DndContext;
-  SortableContext = dndSortable.SortableContext;
-  useSortable = dndSortable.useSortable;
-  verticalListSortingStrategy = dndSortable.verticalListSortingStrategy;
-  CSS = dndUtilities.CSS;
-} catch (e) {
-  console.warn('@dnd-kit packages not installed. Drag-and-drop will be disabled.');
-}
 
 interface DraggableDashboardProps {
   initialLayout?: DashboardWidget[];
@@ -470,24 +452,6 @@ export function DraggableDashboard({
     );
   }
 
-  // If dnd-kit is not installed, render static layout
-  if (!DndContext || !SortableContext) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Install @dnd-kit packages to enable drag-and-drop customization
-          </p>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {visibleWidgets.map((widget) => (
-            <div key={widget.widgetId}>{getWidgetComponent(widget.widgetId)}</div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   // Framer Motion Variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -726,11 +690,6 @@ function SortableWidget({
   editMode: boolean;
   className?: string;
 }) {
-  // If dnd-kit is not available, render without drag functionality
-  if (!useSortable || !CSS) {
-    return <div className={className}>{children}</div>;
-  }
-
   // Create a separate component to call hooks unconditionally
   return (
     <SortableItem id={id} editMode={editMode} className={className}>

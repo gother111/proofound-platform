@@ -223,6 +223,30 @@ describe('/api/feedback/submit', () => {
     );
   });
 
+  it('returns 400 for malformed JSON before loading feedback persistence paths', async () => {
+    const response = await POST(
+      new NextRequest('http://localhost/api/feedback/submit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{',
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'Invalid JSON body' });
+    expect(createClient).not.toHaveBeenCalled();
+    expect(createAdminClient).not.toHaveBeenCalled();
+    expect(markTokenUsed).not.toHaveBeenCalled();
+    expect(emitLaunchTrace).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        outcome: 'rejected',
+        failureClass: 'invalid_json_body',
+      })
+    );
+  });
+
   it('requires token redemption before writing token feedback', async () => {
     const feedbackInsert = vi.fn(() => ({
       select: vi.fn(() => ({

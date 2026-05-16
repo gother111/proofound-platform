@@ -16,7 +16,13 @@ const CompleteSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const body = CompleteSchema.parse(await request.json());
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const body = CompleteSchema.parse(rawBody);
 
     const {
       data: { user },

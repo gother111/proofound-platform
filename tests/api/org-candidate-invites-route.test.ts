@@ -129,6 +129,26 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
     expect(response.status).toBe(403);
   });
 
+  it('returns 400 for malformed JSON request bodies', async () => {
+    mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
+
+    const request = new NextRequest('http://localhost/api/organizations/org/candidate-invites', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: '{',
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
+    expect(resolveCandidateInvitePolicyContext).not.toHaveBeenCalled();
+    expect(db.insert).not.toHaveBeenCalled();
+  });
+
   it.each(['inactive', 'suspended', 'unknown_state', null, undefined])(
     'returns 403 when manager membership state is %s',
     async (state) => {

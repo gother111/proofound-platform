@@ -34,6 +34,14 @@ function buildRequest(body: Record<string, unknown>) {
   });
 }
 
+function buildMalformedRequest() {
+  return new NextRequest('https://example.com/api/interviews/complete', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: '{',
+  });
+}
+
 function buildSupabase({
   user = { id: 'host-1' },
   interview = {
@@ -127,6 +135,16 @@ describe('POST /api/interviews/complete', () => {
       warning: 'Feedback invites could not be issued immediately.',
       overallState: 'due',
     });
+  });
+
+  it('returns 400 for malformed JSON without recording workflow changes', async () => {
+    const response = await POST(buildMalformedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.recordInterviewTransition).not.toHaveBeenCalled();
+    expect(mocks.issueFeedbackInvites).not.toHaveBeenCalled();
   });
 
   it('returns workflow state when the interview was already completed', async () => {

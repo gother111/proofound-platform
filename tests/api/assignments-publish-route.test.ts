@@ -206,6 +206,87 @@ describe('assignment publish route', () => {
     );
   });
 
+  it('rejects publish for held or closed assignments even when review is ready', async () => {
+    (db.query.assignments.findFirst as any).mockResolvedValue({
+      id: assignmentId,
+      orgId,
+      builderMode: 'basic',
+      status: 'closed',
+      creationStatus: 'review_ready',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      role: 'Product Designer',
+      businessValue:
+        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+      description:
+        'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
+      expectedImpact:
+        'Convincing proof includes real shipped work, evidence of ownership, and a clear explanation of tradeoffs from past assignments.',
+      mustHaveSkills: ['Research', 'UX', 'Figma'],
+      locationMode: 'remote',
+      compMin: 80000,
+      compMax: 100000,
+      verificationGates: [],
+    });
+
+    const req = new NextRequest(`http://localhost/api/assignments/${assignmentId}/publish`, {
+      method: 'POST',
+      body: JSON.stringify({
+        principalContext: { principalType: 'organization', orgId },
+      }),
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: assignmentId }) });
+    const payload = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(payload.error).toBe('ASSIGNMENT_NOT_PUBLISHABLE');
+    expect(payload.details.currentStatus).toBe('closed');
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when assignment publish state changes before the final update', async () => {
+    (db.query.assignments.findFirst as any).mockResolvedValue({
+      id: assignmentId,
+      orgId,
+      builderMode: 'basic',
+      status: 'draft',
+      creationStatus: 'review_ready',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      role: 'Product Designer',
+      businessValue:
+        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+      description:
+        'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
+      expectedImpact:
+        'Convincing proof includes real shipped work, evidence of ownership, and a clear explanation of tradeoffs from past assignments.',
+      mustHaveSkills: ['Research', 'UX', 'Figma'],
+      locationMode: 'remote',
+      compMin: 80000,
+      compMax: 100000,
+      verificationGates: [],
+    });
+    (db.query.assignmentOutcomes.findMany as any).mockResolvedValue([{ id: 'outcome-1' }]);
+
+    const updateReturning = vi.fn().mockResolvedValue([]);
+    const updateWhere = vi.fn().mockReturnValue({ returning: updateReturning });
+    const updateSet = vi.fn().mockReturnValue({ where: updateWhere });
+    (db.update as any).mockReturnValue({ set: updateSet });
+
+    const req = new NextRequest(`http://localhost/api/assignments/${assignmentId}/publish`, {
+      method: 'POST',
+      body: JSON.stringify({
+        principalContext: { principalType: 'organization', orgId },
+      }),
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: assignmentId }) });
+    const payload = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(payload.error).toBe('ASSIGNMENT_PUBLISH_STATE_CHANGED');
+    expect(updateReturning).toHaveBeenCalled();
+  });
+
   it('blocks vague generic copy at publish time', async () => {
     (db.query.assignments.findFirst as any).mockResolvedValue({
       id: assignmentId,
