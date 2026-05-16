@@ -1,0 +1,113 @@
+{
+  "verificationsPage": {
+    "health": {
+      "url": "http://127.0.0.1:33152/app/i/verifications",
+      "title": "Proofound - Focus on what matters",
+      "h1": "Verifications",
+      "nonblank": true,
+      "nextErrorOverlay": false,
+      "frameworkErrorText": false
+    },
+    "textEvidence": "Proof verification requests\n\nFollow which proof, claim, verifier, and bounded outcome each request is tied to.\n\nIncoming\nSent\n2\nAll\nActive\nPending\nNeeds attention\nDeclined\nExpired / stale\nRevoked / corrected\nNewest\nScope\n\nActive means accepted and current. Pending requests are waiting for a response and do not count as active proof.\n\nNo incoming proof requests\n\nNothing is waiting here. New proof confirmations will arrive with the claim and expected outcome attached."
+  },
+  "api": {
+    "startFromCvStatus": {
+      "status": 200,
+      "ok": true,
+      "json": {
+        "visible": true,
+        "available": true,
+        "enabled": true,
+        "guestFirstProofScaffoldingEnabled": true,
+        "inviteOnly": false,
+        "authenticatedUserBeta": true,
+        "blockers": [],
+        "limits": {
+          "maxFileSizeMb": 5,
+          "maxPages": 4,
+          "userDailyLimit": 3,
+          "globalDailyLimit": 20,
+          "retentionHours": 24
+        }
+      }
+    },
+    "privacyPreflight": {
+      "status": 200,
+      "ok": true,
+      "json": {
+        "riskLevel": "high",
+        "flags": [
+          {
+            "code": "email",
+            "riskLevel": "high",
+            "deterministic": true,
+            "requiresReview": true,
+            "field": "text",
+            "message": "Email-like contact information appears in text intended for publication."
+          }
+        ],
+        "safeToPublishSuggestion": "Review required before publishing. Remove or rewrite the flagged private details first.",
+        "notes": [
+          "This is not a privacy guarantee.",
+          "Rules run before any optional model review.",
+          "Proofound does not send full files, original filenames, or signed URLs for this check.",
+          "The check used deterministic rules only."
+        ],
+        "promptVersion": "ai-privacy-preflight-v1",
+        "modelReview": {
+          "attempted": false,
+          "used": false
+        }
+      }
+    },
+    "assignmentClarity": {
+      "status": 200,
+      "ok": true,
+      "json": {
+        "ambiguityFlags": ["Add one concrete outcome and one proof expectation before publishing."],
+        "suggestedRewrite": {
+          "title": "Launch workflow reviewer",
+          "rolePurpose": "Review one privacy-safe proof workflow and identify launch blockers.",
+          "outcomeSummary": "Define the work outcome, how success will be observed, and which evidence would count.",
+          "constraints": {
+            "locationMode": "remote",
+            "country": "Sweden",
+            "compensationSummary": null,
+            "startWindow": null
+          },
+          "capabilityExpectations": ["Evidence handling", "Clear stakeholder communication"],
+          "proofExpectations": "One artifact tied to ownership, context, and measurable outcome.",
+          "verificationRequirements": []
+        },
+        "reviewQuestions": [
+          "Which outcome must be visible in the first 30 days?",
+          "Which proof would make this assignment safe to review?"
+        ],
+        "excludedOrRiskyCriteria": [],
+        "fallback": true,
+        "promptVersion": "ai-assignment-clarity-v1",
+        "suggestionId": "mock-assignment-clarity-a96d6eac-b5fc-4ad1-b9bb-4f8c4d2ba7d1"
+      }
+    },
+    "verificationComposer": {
+      "status": 200,
+      "ok": true,
+      "json": {
+        "subject": "Proofound verification request",
+        "message": "Hi, I am asking you to confirm one specific Proofound claim: I narrowed a launch workflow into one privacy-safe proof path with review checkpoints.\n\nPlease only respond based on what you directly know or observed. It is completely fine to confirm only part of it or say that you cannot verify it.\n\nThank you for taking a careful look.",
+        "claimScope": "I narrowed a launch workflow into one privacy-safe proof path with review checkpoints.",
+        "verificationQuestions": [
+          "Can you confirm the specific proof-first workflow contribution?",
+          "Which parts can you confirm from direct knowledge or observation?",
+          "Is there anything in this request that you cannot verify?"
+        ],
+        "privacyNotes": ["Draft uses selected public-safe Proof Pack fields only."],
+        "tooBroadWarnings": [
+          "This draft is limited to one claim scope and avoids general praise or candidate quality judgment."
+        ],
+        "fallback": true
+      }
+    }
+  },
+  "consoleMessages": []
+}

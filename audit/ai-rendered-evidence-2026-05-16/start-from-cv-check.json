@@ -1,0 +1,25 @@
+{
+  "health": {
+    "url": "http://127.0.0.1:33152/onboarding?next=/candidate-invite/local-ai-rendered-check",
+    "title": "Proofound - Focus on what matters",
+    "h1": "Start with one Proof Pack",
+    "nonblank": true,
+    "nextErrorOverlay": false,
+    "frameworkErrorText": false
+  },
+  "entryHealth": {
+    "url": "http://127.0.0.1:33152/onboarding?next=/candidate-invite/local-ai-rendered-check",
+    "title": "Proofound - Focus on what matters",
+    "h1": "Start with one Proof Pack",
+    "nonblank": true,
+    "nextErrorOverlay": false,
+    "frameworkErrorText": false
+  },
+  "createInitiallyEnabled": false,
+  "createAfterConsentEnabled": true,
+  "hasPrivateDraftCopy": true,
+  "prohibitsScoringRanking": true,
+  "hasFallbackOrDraftResult": true,
+  "dialogTextExcerpt": "Start from your CV\n\nPrivate draft scaffolding only. Continue manually anytime.\n\nStart from your CV\n\nUpload your CV to create private editable drafts. Nothing is published, verified, scored, ranked, or shown to organizations unless you choose what to keep later.\n\nCV processing is optional.\nThe CV may be processed by Google Cloud Document AI and Gemini if enabled.\nExtracted information becomes private draft suggestions only.\nUse it only as optional scaffolding before creating assignment proof.\nNothing is used for scoring, ranking, shortlisting, matching, or hiring decisions.\n\n15 phones redacted from CV text before drafting.\n\nReadable CV text was too noisy to create useful drafts. Continue manually or upload a clearer PDF/image.\n\nAccept selected drafts\nContinue manually\nDelete import session\nClose",
+  "consoleMessages": []
+}

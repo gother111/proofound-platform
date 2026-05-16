@@ -193,6 +193,7 @@ AI_PROVIDER=gemini
 AI_MODEL_DEFAULT=gemini-3.1-flash-lite
 AI_MODEL_FALLBACK=
 AI_MODEL_FALLBACK_VERIFIED=false
+# Non-model-gated timestamp only; launch readiness requires model-matching smoke artifact evidence.
 AI_PROVIDER_SMOKE_LAST_SUCCESS_AT=
 
 AI_GEMINI_PROD_API_KEY=

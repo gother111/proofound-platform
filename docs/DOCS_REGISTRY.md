@@ -349,6 +349,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `docs/mobile/IOS_PARITY_MATRIX.md` | `reference-spec` | `docs` | `repo` | `2026-02-26` | `-` | `false` |
 | `audit/automation-and-flows-audit.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/admin-dashboard-mvp-ops-review-2026-05-03.md` | `reference-spec` | `audit` | `repo` | `2026-05-04` | `-` | `false` |
+| `audit/ai-features-verification-2026-05-16.md` | `reference-spec` | `audit` | `repo` | `2026-05-16` | `-` | `false` |
 | `audit/bugs-and-risks.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/code-quality-audit.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/dependency-vulnerability-triage-2026-05-01.md` | `reference-spec` | `audit` | `repo` | `2026-05-01` | `-` | `false` |

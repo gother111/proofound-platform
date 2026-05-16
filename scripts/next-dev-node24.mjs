@@ -7,6 +7,7 @@
  */
 
 import { spawn } from 'child_process';
+import { mkdirSync, writeFileSync } from 'fs';
 import path from 'path';
 import process from 'process';
 import { fileURLToPath } from 'url';
@@ -53,6 +54,11 @@ function resolveDevDistDir() {
   return `.next-dev-${safePort}`;
 }
 
+function ensureCommonJsDistPackage(distDir) {
+  mkdirSync(distDir, { recursive: true });
+  writeFileSync(path.join(distDir, 'package.json'), '{"type":"commonjs"}');
+}
+
 function run(cmd, args, env) {
   const child = spawn(cmd, args, { stdio: 'inherit', env });
   child.on('exit', (code, signal) => {
@@ -71,8 +77,10 @@ if (!isSupportedNode(process.versions.node) && process.env.PROOFOUND_NODE24_REEX
   run(node24Path, [scriptPath, ...argv], env);
 } else {
   const nextBin = path.join(process.cwd(), 'node_modules', 'next', 'dist', 'bin', 'next');
+  const distDir = resolveDevDistDir();
+  ensureCommonJsDistPackage(distDir);
   run(process.execPath, [nextBin, 'dev', ...argv], {
     ...process.env,
-    NEXT_DIST_DIR: resolveDevDistDir(),
+    NEXT_DIST_DIR: distDir,
   });
 }

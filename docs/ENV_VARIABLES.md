@@ -64,7 +64,7 @@ PYTHON_INTERNAL_WORKER_CONCURRENCY=2 # legacy/non-launch helper only
 PYTHON_INTERNAL_WORKER_LEASE_SECONDS=180 # legacy/non-launch helper only
 PYTHON_INTERNAL_MAX_ATTEMPTS=3 # legacy/non-launch helper only
 AI_ASSISTANTS_ENABLED=false
-AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
+AI_MODEL_DEFAULT=gemini-3.1-flash-lite
 AI_MODEL_FALLBACK=
 AI_MODEL_FALLBACK_VERIFIED=false
 AI_PROVIDER_SMOKE_LAST_SUCCESS_AT=
@@ -860,28 +860,28 @@ GEMINI_API_KEY=AIza...
 **Format**:
 
 ```env
-AI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
+AI_MODEL_DEFAULT=gemini-3.1-flash-lite
 AI_MODEL_FALLBACK=
 AI_MODEL_FALLBACK_VERIFIED=false
 AI_PROVIDER_SMOKE_LAST_SUCCESS_AT=
-CV_IMPORT_GEMINI_MODEL_DEFAULT=gemini-3.1-flash-lite-preview
+CV_IMPORT_GEMINI_MODEL_DEFAULT=gemini-3.1-flash-lite
 CV_IMPORT_GEMINI_MODEL_FALLBACK=
 ```
 
 **Default**:
 
-- Default model: `gemini-3.1-flash-lite-preview`
+- Default model: `gemini-3.1-flash-lite`
 - Fallback model: unset
 
 **Notes**:
 
 - `AI_MODEL_DEFAULT` is the provider-wide default for assistive AI calls.
 - `AI_MODEL_FALLBACK` is optional, provider-wide, and is ignored unless `AI_MODEL_FALLBACK_VERIFIED=true`.
-- Run `npm run ai:provider:smoke` before marking a fallback model verified. The smoke writes `.artifacts/ai-provider-smoke.json` by default and launch status also accepts `AI_PROVIDER_SMOKE_LAST_SUCCESS_AT` from trusted deployment config.
+- Run `npm run ai:provider:smoke` before marking a fallback model verified. The smoke writes `.artifacts/ai-provider-smoke.json` by default, and launch status requires that artifact to match the configured default and verified fallback model before it treats provider smoke as current evidence.
 - `CV_IMPORT_GEMINI_MODEL_DEFAULT` remains accepted for the CV import feature, but `AI_MODEL_DEFAULT` takes precedence.
 - `CV_IMPORT_GEMINI_MODEL_FALLBACK` remains accepted only by legacy/non-launch CV import helpers. It must not act as the active assistive AI provider fallback.
 - Gemini API keys remain server-only and must not use `NEXT_PUBLIC_` prefixes.
-- The current configured default uses Gemini 3.1 Flash-Lite Preview through `gemini-3.1-flash-lite-preview`; keep the exact provider model identifier environment-driven so it can be updated without product behavior changes.
+- The current configured default uses Gemini 3.1 Flash-Lite through `gemini-3.1-flash-lite`; keep the exact provider model identifier environment-driven so it can be updated without product behavior changes.
 
 ---
 
@@ -1723,7 +1723,7 @@ Use this checklist when setting up a new environment:
 - [ ] `AI_MODEL_DEFAULT` - Provider-wide default AI model
 - [ ] `AI_MODEL_FALLBACK` - Optional fallback AI model, unset unless smoke-verified
 - [ ] `AI_MODEL_FALLBACK_VERIFIED=false` - Fallback stays disabled until live smoke proves it
-- [ ] `AI_PROVIDER_SMOKE_LAST_SUCCESS_AT` - Optional trusted timestamp for last successful provider smoke
+- [ ] `AI_PROVIDER_SMOKE_LAST_SUCCESS_AT` - Optional smoke timestamp for non-model-gated contexts; launch readiness uses model-matching smoke artifact evidence
 - [ ] `AI_MONTHLY_HARD_CAP_SEK` - Global monthly assistive AI spend cap
 - [ ] `AI_PROD_MONTHLY_HARD_CAP_SEK` - Production monthly assistive AI spend cap
 - [ ] `AI_GLOBAL_DAILY_LIMIT` - Global daily assistive AI request limit

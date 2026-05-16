@@ -50,7 +50,12 @@ export async function readAiProviderSmokeArtifact(
       parsed.schemaVersion !== 1 ||
       parsed.provider !== 'gemini' ||
       typeof parsed.generatedAt !== 'string' ||
-      typeof parsed.success !== 'boolean'
+      !isValidSmokeTimestamp(parsed.generatedAt) ||
+      typeof parsed.success !== 'boolean' ||
+      !isSmokeModelResult(parsed.defaultModel) ||
+      !isSmokeFallbackModelResult(parsed.fallbackModel) ||
+      typeof parsed.jsonSchemaResponseWorks !== 'boolean' ||
+      typeof parsed.disabledFailureSafe !== 'boolean'
     ) {
       return null;
     }
@@ -58,6 +63,44 @@ export async function readAiProviderSmokeArtifact(
   } catch {
     return null;
   }
+}
+
+function isSmokeModelResult(value: unknown): value is AiProviderSmokeModelResult {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Partial<AiProviderSmokeModelResult>;
+  return (
+    typeof candidate.model === 'string' &&
+    candidate.model.trim().length > 0 &&
+    typeof candidate.accepted === 'boolean' &&
+    (candidate.usageMetadataState === 'returned' ||
+      candidate.usageMetadataState === 'missing_safe') &&
+    (candidate.errorCode === undefined ||
+      candidate.errorCode === null ||
+      typeof candidate.errorCode === 'string')
+  );
+}
+
+function isSmokeFallbackModelResult(
+  value: unknown
+): value is AiProviderSmokeArtifact['fallbackModel'] {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Partial<AiProviderSmokeArtifact['fallbackModel']>;
+  if (candidate.configured === true) {
+    return isSmokeModelResult(candidate);
+  }
+
+  return (
+    candidate.configured === false &&
+    candidate.model === null &&
+    candidate.accepted === null &&
+    candidate.usageMetadataState === 'missing_safe'
+  );
 }
 
 export async function writeAiProviderSmokeArtifact(
@@ -73,14 +116,63 @@ export async function resolveLastSuccessfulAiProviderSmokeAt(
   params: {
     artifactPath?: string;
     env?: Record<string, string | undefined>;
+    expectedDefaultModel?: string | null;
+    expectedFallbackModel?: string | null;
   } = {}
 ): Promise<string | null> {
   const env = params.env ?? process.env;
   const envTimestamp = env.AI_PROVIDER_SMOKE_LAST_SUCCESS_AT?.trim();
-  if (envTimestamp) {
+  const expectedDefaultModel = normalizeModel(params.expectedDefaultModel);
+  const expectedFallbackModel = normalizeModel(params.expectedFallbackModel);
+  const requiresModelMatch = Boolean(expectedDefaultModel || expectedFallbackModel);
+
+  if (envTimestamp && !requiresModelMatch && isValidSmokeTimestamp(envTimestamp)) {
     return envTimestamp;
   }
 
   const artifact = await readAiProviderSmokeArtifact({ artifactPath: params.artifactPath });
-  return artifact?.success ? artifact.generatedAt : null;
+  if (!artifact?.success) {
+    return null;
+  }
+
+  if (
+    artifact.defaultModel.accepted !== true ||
+    artifact.jsonSchemaResponseWorks !== true ||
+    artifact.disabledFailureSafe !== true
+  ) {
+    return null;
+  }
+
+  if (
+    expectedDefaultModel &&
+    normalizeModel(artifact.defaultModel.model) !== expectedDefaultModel
+  ) {
+    return null;
+  }
+
+  if (artifact.fallbackModel.configured && artifact.fallbackModel.accepted !== true) {
+    return null;
+  }
+
+  if (expectedFallbackModel) {
+    const fallback = artifact.fallbackModel;
+    if (
+      !fallback.configured ||
+      fallback.accepted !== true ||
+      normalizeModel(fallback.model) !== expectedFallbackModel
+    ) {
+      return null;
+    }
+  }
+
+  return artifact.generatedAt;
+}
+
+function normalizeModel(value: string | null | undefined): string | null {
+  const normalized = value?.trim().toLowerCase();
+  return normalized ? normalized : null;
+}
+
+function isValidSmokeTimestamp(value: string): boolean {
+  return !Number.isNaN(Date.parse(value));
 }

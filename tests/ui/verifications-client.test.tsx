@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 
 import { VerificationsClient } from '@/app/app/i/verifications/VerificationsClient';
@@ -77,6 +77,13 @@ function makeRequest(overrides: Partial<VerificationRequest> = {}): Verification
   } as VerificationRequest;
 }
 
+async function settleAssistiveAiFlag() {
+  await waitFor(() => expect(global.fetch).toHaveBeenCalledWith('/api/feature-flags'));
+  await act(async () => {
+    await Promise.resolve();
+  });
+}
+
 describe('VerificationsClient', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -95,7 +102,7 @@ describe('VerificationsClient', () => {
     });
   });
 
-  it('renders incoming and sent requests in separate top-level tabs', () => {
+  it('renders incoming and sent requests in separate top-level tabs', async () => {
     const incomingRequests = [
       makeRequest({ id: 'incoming-pending', status: 'pending' }),
       makeRequest({
@@ -125,6 +132,7 @@ describe('VerificationsClient', () => {
         userEmail="me@proofound.io"
       />
     );
+    await settleAssistiveAiFlag();
 
     expect(screen.getByText('Jordan Verifier')).toBeInTheDocument();
     expect(screen.queryByText('mentor@company.com')).not.toBeInTheDocument();
@@ -138,7 +146,7 @@ describe('VerificationsClient', () => {
     expect(screen.getByText('All')).toBeInTheDocument();
   });
 
-  it('filters verification state buckets and sorts the list by scope', () => {
+  it('filters verification state buckets and sorts the list by scope', async () => {
     const incomingRequests = [
       makeRequest({
         id: 'recent-active',
@@ -180,6 +188,7 @@ describe('VerificationsClient', () => {
         userEmail="me@proofound.io"
       />
     );
+    await settleAssistiveAiFlag();
 
     expect(screen.getAllByTestId('verification-request-row')[0]).toHaveTextContent('Z skill proof');
 
@@ -203,7 +212,7 @@ describe('VerificationsClient', () => {
     expect(rows[1]).toHaveTextContent('Beta corrected proof');
   });
 
-  it('renders incoming impact-story requests in read-only mode', () => {
+  it('renders incoming impact-story requests in read-only mode', async () => {
     const incomingRequests = [
       makeRequest({
         id: 'incoming-impact-pending',
@@ -240,6 +249,7 @@ describe('VerificationsClient', () => {
         userEmail="me@proofound.io"
       />
     );
+    await settleAssistiveAiFlag();
 
     expect(screen.getByText('Climate adaptation rollout')).toBeInTheDocument();
     expect(
@@ -251,10 +261,11 @@ describe('VerificationsClient', () => {
     expect(screen.getByRole('tab', { name: /^Sent/i })).toBeInTheDocument();
   });
 
-  it('does not surface a custom verification request trigger in the current client', () => {
+  it('does not surface a custom verification request trigger in the current client', async () => {
     render(
       <VerificationsClient incomingRequests={[]} sentRequests={[]} userEmail="me@proofound.io" />
     );
+    await settleAssistiveAiFlag();
 
     expect(
       screen.queryByRole('button', { name: 'Trigger custom request created' })

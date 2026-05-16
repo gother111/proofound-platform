@@ -471,6 +471,11 @@ export async function getAiLaunchOperationalSummary(
   const aiLastSuccessfulProviderSmokeAt = await resolveLastSuccessfulAiProviderSmokeAt({
     env,
     artifactPath: aiProviderSmokeArtifactPath,
+    expectedDefaultModel: aiConfiguredModel,
+    expectedFallbackModel:
+      aiFallbackModel && parseBoolean(env.AI_MODEL_FALLBACK_VERIFIED, false)
+        ? aiFallbackModel
+        : null,
   });
   const aiFallbackModelVerified = Boolean(
     aiFallbackModel && parseBoolean(env.AI_MODEL_FALLBACK_VERIFIED, false)
