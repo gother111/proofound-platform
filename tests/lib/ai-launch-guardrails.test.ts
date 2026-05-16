@@ -25,6 +25,15 @@ const FORBIDDEN_RESPONSE_FIELD_PATTERN =
   /\b(?:candidateScore|candidateRank|candidate_score|candidate_rank|fitScore|fit_score|rankBand|scoreBand)\b/;
 const FORBIDDEN_LEGACY_PROVIDER_PATTERN =
   /@anthropic-ai\/sdk|new\s+Anthropic|anthropic\.messages|ANTHROPIC_API_KEY|USE_ANTHROPIC_API|claude-3-5-sonnet/i;
+const AI_LAUNCH_COVERAGE_SENTINELS = [
+  'tests/lib/ai-redaction.test.ts',
+  'tests/lib/gemini-reranker.test.ts',
+  'tests/lib/gemini-taxonomy-shortlist.test.ts',
+  'tests/lib/nlp-extractor.test.ts',
+  'tests/api/admin/analytics-cv-import-spend-route.test.ts',
+  'tests/ui/individual-setup-proof-first.test.tsx',
+  'npm run test:ai:archived-admin',
+] as const;
 
 async function collectRouteFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -144,6 +153,22 @@ describe('AI launch no-go guardrails', () => {
     }
 
     expect(offenders).toEqual([]);
+  });
+
+  it('keeps the launch AI command wired to edge AI guardrail suites', async () => {
+    const packageJson = JSON.parse(
+      await readFile(path.join(process.cwd(), 'package.json'), 'utf8')
+    );
+    const launchAiScript = packageJson.scripts?.['test:launch:ai'] || '';
+    const privacyScript = packageJson.scripts?.['test:privacy'] || '';
+    const archivedAdminScript = packageJson.scripts?.['test:ai:archived-admin'] || '';
+
+    expect(
+      AI_LAUNCH_COVERAGE_SENTINELS.filter((sentinel) => !launchAiScript.includes(sentinel))
+    ).toEqual([]);
+    expect(privacyScript).toContain('tests/lib/ai-redaction.test.ts');
+    expect(archivedAdminScript).toContain('vitest.archived.config.ts');
+    expect(archivedAdminScript).toContain('tests/ui/admin-ai-spend-page.test.tsx');
   });
 
   it('keeps JD-to-L4 parsing local even if legacy provider env is present', async () => {
