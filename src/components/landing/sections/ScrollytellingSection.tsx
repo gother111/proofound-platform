@@ -400,7 +400,7 @@ function HeroResumeSheet({ compact = false }: { compact?: boolean }) {
   return (
     <div className="absolute inset-x-[14%] inset-y-[8%] z-10">
       <Image
-        src="/hero-resume-stack/candidate-24-sheet.png"
+        src="/hero-resume-stack/cv-sheet.png"
         alt=""
         fill
         sizes={compact ? '10.5rem' : '22rem'}
