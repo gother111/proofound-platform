@@ -208,6 +208,27 @@ describe('Gemini AI provider', () => {
     ).toBe('staging-key');
   });
 
+  it('normalizes accidentally quoted server-only Gemini keys', () => {
+    expect(
+      resolveGeminiProviderApiKey({
+        env: {
+          AI_GEMINI_PROD_API_KEY: '"prod-key"',
+          CV_IMPORT_GEMINI_PRIMARY_API_KEY: 'legacy-primary',
+        },
+      })
+    ).toBe('prod-key');
+
+    expect(
+      resolveGeminiProviderApiKey({
+        keySlot: 'staging',
+        env: {
+          AI_GEMINI_STAGING_API_KEY: "'staging-key'",
+          CV_IMPORT_GEMINI_SECONDARY_API_KEY: 'legacy-secondary',
+        },
+      })
+    ).toBe('staging-key');
+  });
+
   it('fails closed when structured output validation fails', async () => {
     process.env.AI_ASSISTANTS_ENABLED = 'true';
     process.env.AI_GEMINI_API_KEY = 'server-key';

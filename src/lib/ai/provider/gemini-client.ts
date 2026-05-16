@@ -153,6 +153,22 @@ function trimModelName(value: string | null | undefined): string {
   return value?.trim().toLowerCase() || '';
 }
 
+function normalizeServerOnlySecret(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim() || null;
+  }
+
+  return trimmed;
+}
+
 function shouldRetryWithFallbackModel(error: unknown): boolean {
   return error instanceof AiProviderError && error.code === 'model_error';
 }
@@ -236,7 +252,7 @@ export function resolveGeminiProviderApiKey(params?: {
           ];
 
   for (const candidate of candidates) {
-    const key = candidate?.trim();
+    const key = normalizeServerOnlySecret(candidate);
     if (key) {
       return key;
     }

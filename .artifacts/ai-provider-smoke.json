@@ -1,19 +1,19 @@
 {
   "schemaVersion": 2,
   "provider": "gemini",
-  "generatedAt": "2026-05-16T11:42:34.211Z",
-  "success": false,
+  "generatedAt": "2026-05-16T14:30:12.384Z",
+  "success": true,
   "preflight": {
     "databaseUrlConfigured": true,
-    "providerKeyConfigured": false,
-    "monthlyHardCapConfigured": false,
-    "productionLike": false
+    "providerKeyConfigured": true,
+    "monthlyHardCapConfigured": true,
+    "productionLike": true
   },
   "defaultModel": {
     "model": "gemini-3.1-flash-lite",
-    "accepted": false,
-    "usageMetadataState": "missing_safe",
-    "errorCode": "missing_api_key"
+    "accepted": true,
+    "usageMetadataState": "returned",
+    "errorCode": null
   },
   "fallbackModel": {
     "configured": false,
@@ -21,6 +21,6 @@
     "accepted": null,
     "usageMetadataState": "missing_safe"
   },
-  "jsonSchemaResponseWorks": false,
+  "jsonSchemaResponseWorks": true,
   "disabledFailureSafe": true
 }
