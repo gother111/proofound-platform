@@ -17,6 +17,12 @@ Reason: all repo-local AI, mock-provider, privacy, lint/typecheck, exact product
 - `agent/checklists/verification.md`
 - `package.json`
 
+## External Model Verification
+
+- Official Gemini API docs checked on 2026-05-16: <https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite>
+- The docs list model code `gemini-3.1-flash-lite`, stable version `gemini-3.1-flash-lite`, structured outputs support, and latest update May 2026.
+- This supports replacing the stale `gemini-3.1-flash-lite-preview` identifier in Proofound docs/default smoke expectations.
+
 ## AI Feature Inventory
 
 | Feature / flow                                       | Routes / files                                                                                                                                         | Tests / evidence                                                                                                                                                                              | Expected MVP behavior                                                                                                                                                       |
@@ -60,16 +66,17 @@ Reason: all repo-local AI, mock-provider, privacy, lint/typecheck, exact product
 
 ## Checks Run
 
-| Check                       | Status             | Notes                                                                                                                                                                                                                     |
-| --------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run test:launch:ai`    | PASS               | 17 files / 131 tests after provider-smoke fix. Vitest printed local websocket `EPERM` noise but test suite passed.                                                                                                        |
-| `npm run test:privacy`      | PASS               | 2 files / 22 tests. Needed escalated network because sandbox DNS blocked Supabase host.                                                                                                                                   |
-| `npm run lint`              | PASS               | Reran after report/test/doc changes.                                                                                                                                                                                      |
-| `npm run typecheck`         | PASS               | Reran after removing brittle dev-port-specific generated type includes from `tsconfig.json`.                                                                                                                              |
-| `npm run docs:freshness`    | PASS WITH WARNINGS | Exit code `0`; warning mode reported pre-existing orphan registry warnings under `.artifacts/project-source-refresh-2026-05-14` and `supabase/migrations/README.md`.                                                      |
-| `npm run build`             | PASS               | Exact rerun passed after removing brittle port-specific dev type includes. Build warnings were limited to existing next-intl cache-invalidation, large-string serialization, and edge-runtime static-generation warnings. |
-| Focused AI UI tests         | PASS               | 8 files / 44 tests: proof-pack assistant, assignment clarity, portfolio privacy, Start from CV dialog, verifications client, profile/onboarding CV surfaces.                                                              |
-| `npm run ai:provider:smoke` | UNVERIFIED         | Not run: no `AI_GEMINI_PROD_API_KEY`, `AI_GEMINI_STAGING_API_KEY`, `AI_GEMINI_API_KEY`, `GEMINI_API_KEY`, `AI_MONTHLY_HARD_CAP_SEK`, or `AI_PROD_MONTHLY_HARD_CAP_SEK` available locally without exposing secrets.        |
+| Check                           | Status                   | Notes                                                                                                                                                                                                                                                                                                      |
+| ------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run test:launch:ai`        | PASS                     | 17 files / 131 tests after provider-smoke fix. Vitest printed local websocket `EPERM` noise but test suite passed.                                                                                                                                                                                         |
+| `npm run test:privacy`          | PASS                     | 2 files / 22 tests. Needed escalated network because sandbox DNS blocked Supabase host.                                                                                                                                                                                                                    |
+| `npm run test:privacy:extended` | PASS                     | 2 files / 31 tests. Needed escalated network for the configured Supabase test project.                                                                                                                                                                                                                     |
+| `npm run lint`                  | PASS                     | Reran after report/test/doc changes.                                                                                                                                                                                                                                                                       |
+| `npm run typecheck`             | PASS                     | Reran after removing brittle dev-port-specific generated type includes from `tsconfig.json`.                                                                                                                                                                                                               |
+| `npm run docs:freshness`        | PASS WITH WARNINGS       | Exit code `0`; warning mode reported pre-existing orphan registry warnings under `.artifacts/project-source-refresh-2026-05-14` and `supabase/migrations/README.md`.                                                                                                                                       |
+| `npm run build`                 | PASS                     | Exact rerun passed after removing brittle port-specific dev type includes. Build warnings were limited to existing next-intl cache-invalidation, large-string serialization, and edge-runtime static-generation warnings.                                                                                  |
+| Focused AI UI tests             | PASS                     | 8 files / 44 tests: proof-pack assistant, assignment clarity, portfolio privacy, Start from CV dialog, verifications client, profile/onboarding CV surfaces.                                                                                                                                               |
+| `npm run ai:provider:smoke`     | FAIL-CLOSED / UNVERIFIED | Reran locally. It exited `1` before live provider proof because `DATABASE_URL` and server-only Gemini keys/spend-cap env are missing in this local environment. Default model resolved to `gemini-3.1-flash-lite`, was rejected with `missing_api_key`, fallback was unset, and disabled mode stayed safe. |
 
 ## Rendered Flow Evidence
 
@@ -94,7 +101,7 @@ Evidence folder: `audit/ai-rendered-evidence-2026-05-16/`
 
 ## Remaining UNVERIFIED Items
 
-- **Live Gemini provider behavior**: blocked by missing local provider credentials and hard-cap env. Existing stale smoke artifact is intentionally no longer accepted for launch readiness because it used the preview model.
+- **Live Gemini provider behavior**: blocked by missing local provider credentials, `DATABASE_URL`, and hard-cap env. Existing stale smoke artifact is intentionally no longer accepted for launch readiness because it used the preview model.
 - **Codex in-app Browser backend**: requested Browser surface was unavailable in this session. The fallback rendered validation used Playwright against the local app.
 - **Production-only provider/account state**: not touched. No production, billing, auth-template, permission, provider-account, or destructive database changes were run.
 
