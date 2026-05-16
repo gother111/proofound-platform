@@ -31,6 +31,7 @@ const AI_LAUNCH_COVERAGE_SENTINELS = [
   'tests/lib/gemini-taxonomy-shortlist.test.ts',
   'tests/lib/nlp-extractor.test.ts',
   'tests/api/admin/analytics-cv-import-spend-route.test.ts',
+  'tests/api/archived-api-handlers-route.test.ts',
   'tests/ui/individual-setup-proof-first.test.tsx',
   'npm run test:ai:archived-admin',
 ] as const;
