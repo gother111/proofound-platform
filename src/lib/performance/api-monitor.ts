@@ -22,8 +22,21 @@ const SLA_THRESHOLDS = {
 
 function isProductionLikeRuntime() {
   const vercelEnv = process.env.VERCEL_ENV;
+  if (isLocalSmokeRuntime()) return false;
+
   return (
     vercelEnv === 'production' || vercelEnv === 'preview' || process.env.NODE_ENV === 'production'
+  );
+}
+
+function isLocalSmokeRuntime() {
+  if (process.env.VERCEL || process.env.VERCEL_ENV) return false;
+
+  return (
+    process.env.PLAYWRIGHT === 'true' ||
+    process.env.PLAYWRIGHT_SERVER_MODE === 'prod' ||
+    process.env.PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK === '1' ||
+    process.env.PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE === '1'
   );
 }
 
@@ -71,6 +84,8 @@ async function trackApiMetric(
   durationMs: number,
   statusCode: number
 ): Promise<void> {
+  if (isLocalSmokeRuntime()) return;
+
   try {
     const metric: InsertPerformanceMetric = {
       metricType: 'api_latency',
