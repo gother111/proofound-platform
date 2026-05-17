@@ -181,6 +181,7 @@ describe('launch surface policy', () => {
     expect(classifyLaunchPagePath('/verify/token-1')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/candidate-invite/token-1')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/auth/callback')).toBe('active_launch_path');
+    expect(classifyLaunchPagePath('/auth/logout')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/app/i/home')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/app/i/matching/preferences')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/app/o/acme/shortlist')).toBe('active_launch_path');

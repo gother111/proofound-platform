@@ -597,6 +597,7 @@ const ACTIVE_PAGE_POLICIES = [
       pathname === '/login' ||
       pathname === '/auth/login' ||
       pathname === '/auth/callback' ||
+      pathname === '/auth/logout' ||
       matchExactOrPrefix('/signup')(pathname) ||
       matchExactOrPrefix('/reset-password')(pathname) ||
       matchExactOrPrefix('/verify-email')(pathname) ||
