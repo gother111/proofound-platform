@@ -14,7 +14,7 @@ import {
 import IndividualInterviewsPage from '@/app/app/i/interviews/page';
 import { MessagesClient as IndividualMessagesClient } from '@/app/app/i/messages/MessagesClient';
 import OrganizationInterviewsPage from '@/app/app/o/[slug]/interviews/page';
-import OrganizationMessagesPage from '@/app/app/o/[slug]/messages/page';
+import { OrgMessagesClient } from '@/app/app/o/[slug]/messages/OrgMessagesClient';
 import { cn } from '@/lib/utils';
 
 type CommunicationsPerspective = 'individual' | 'organization';
@@ -22,6 +22,7 @@ type CommunicationsSection = 'messages' | 'intros' | 'interviews' | 'decisions';
 
 interface CommunicationsHubProps {
   perspective: CommunicationsPerspective;
+  currentUserId?: string;
 }
 
 const sections: Array<{
@@ -68,7 +69,7 @@ function normalizeSection(value: string | null): CommunicationsSection {
   return 'messages';
 }
 
-export function CommunicationsHub({ perspective }: CommunicationsHubProps) {
+export function CommunicationsHub({ perspective, currentUserId }: CommunicationsHubProps) {
   const pathname = usePathname() ?? (perspective === 'organization' ? '/app/o' : '/app/i');
   const searchParams = useSearchParams();
   const activeSection = normalizeSection(searchParams?.get('section') ?? null);
@@ -200,7 +201,13 @@ export function CommunicationsHub({ perspective }: CommunicationsHubProps) {
         >
           {activeConfig.workstream === 'messages' ? (
             isOrganization ? (
-              <OrganizationMessagesPage />
+              currentUserId ? (
+                <OrgMessagesClient currentUserId={currentUserId} />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  Loading messages...
+                </div>
+              )
             ) : (
               <IndividualMessagesClient />
             )
