@@ -16,6 +16,7 @@ type DbType = PostgresJsDatabase<typeof schema>;
 
 function createMockDb(): DbType {
   return {
+    execute: async () => [],
     insert: () => ({ values: () => ({ returning: async () => [] }) }),
     update: () => ({ set: () => ({ where: () => ({ returning: async () => [] }) }) }),
     delete: () => ({ where: async () => ({}) }),

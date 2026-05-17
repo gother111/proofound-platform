@@ -49,9 +49,13 @@ function resolvePortfolioGateMessage(lockReason: string | null): string {
 
 export type EditableProfileViewProps = {
   initialProfile?: ProfileData | null;
+  refreshInitialProfile?: boolean;
 };
 
-export function EditableProfileView({ initialProfile = null }: EditableProfileViewProps) {
+export function EditableProfileView({
+  initialProfile = null,
+  refreshInitialProfile = false,
+}: EditableProfileViewProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -77,7 +81,7 @@ export function EditableProfileView({ initialProfile = null }: EditableProfileVi
     deleteVolunteering,
     updateVolunteering,
     toggleRedactMode,
-  } = useProfileData(initialProfile);
+  } = useProfileData(initialProfile, { refreshInitialProfile });
 
   const {
     isEditProfileOpen,

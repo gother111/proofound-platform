@@ -112,6 +112,22 @@ function cache<TArgs extends unknown[], TResult>(
   return dedupeInFlight(fn);
 }
 
+function requestCache<TArgs extends unknown[], TResult>(
+  fn: (...args: TArgs) => Promise<TResult>
+): (...args: TArgs) => Promise<TResult> {
+  const reactCache = (React as { cache?: unknown }).cache;
+
+  if (typeof reactCache === 'function') {
+    return (
+      reactCache as (
+        inner: (...args: TArgs) => Promise<TResult>
+      ) => (...args: TArgs) => Promise<TResult>
+    )(fn);
+  }
+
+  return fn;
+}
+
 const getRequestScopedClient = async () => createClient();
 
 function mapProfile(row: Partial<ProfileRow> & { id: string }): ProfileRow {
@@ -227,10 +243,10 @@ async function getCurrentUserWithClient(supabase: SupabaseClient): Promise<Profi
   return mapProfile(data as ProfileRow);
 }
 
-const getCurrentUserCached = async () => {
+const getCurrentUserCached = requestCache(async () => {
   const supabase = await getRequestScopedClient();
   return getCurrentUserWithClient(supabase);
-};
+});
 
 export async function getCurrentUser() {
   return getCurrentUserCached();

@@ -126,7 +126,7 @@ test.describe('Smartphone UI regression', () => {
         pathname: '/app/o/test-org/profile',
         assertLoaded: async (routePage) => {
           await expect(
-            routePage.getByRole('heading', { name: 'Organization Profile' })
+            routePage.getByRole('heading', { name: 'Organization Profile', exact: true })
           ).toBeVisible();
         },
       },

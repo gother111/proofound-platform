@@ -56,6 +56,10 @@ const initialPending: PendingState = {
 const PROFILE_LOAD_MAX_ATTEMPTS = 2;
 const PROFILE_LOAD_RETRY_DELAY_MS = 300;
 
+type UseProfileDataOptions = {
+  refreshInitialProfile?: boolean;
+};
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -96,7 +100,10 @@ function getErrorMessage(error: unknown): string {
   return 'Something went wrong. Please try again.';
 }
 
-export function useProfileData(initialProfile: ProfileData | null = null) {
+export function useProfileData(
+  initialProfile: ProfileData | null = null,
+  options: UseProfileDataOptions = {}
+) {
   const [profile, setProfile] = useState<ProfileData | null>(initialProfile);
   const [isLoading, setIsLoading] = useState(!initialProfile);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -115,14 +122,20 @@ export function useProfileData(initialProfile: ProfileData | null = null) {
       setProfile(initialProfile);
       setIsLoading(false);
       setLoadError(null);
-      return;
+      if (!options.refreshInitialProfile) {
+        return;
+      }
     }
 
     let active = true;
     let skipLoadingReset = false;
+    const isBackgroundRefresh =
+      Boolean(initialProfile) && loadAttempt === 0 && options.refreshInitialProfile;
 
     const loadProfile = async () => {
-      setIsLoading(true);
+      if (!isBackgroundRefresh) {
+        setIsLoading(true);
+      }
       setLoadError(null);
 
       for (let attempt = 1; attempt <= PROFILE_LOAD_MAX_ATTEMPTS; attempt += 1) {
@@ -165,6 +178,9 @@ export function useProfileData(initialProfile: ProfileData | null = null) {
           }
 
           console.error('Failed to load profile data:', error);
+          if (isBackgroundRefresh) {
+            return;
+          }
           setProfile(null);
           setLoadError('Unable to load profile data. Please try again.');
           toast.error('Unable to load profile data. Please try again.');
@@ -182,7 +198,7 @@ export function useProfileData(initialProfile: ProfileData | null = null) {
     return () => {
       active = false;
     };
-  }, [initialProfile, loadAttempt]);
+  }, [initialProfile, loadAttempt, options.refreshInitialProfile]);
 
   const runWithPending = useCallback(
     async <T>(key: keyof PendingState, fn: () => Promise<T>): Promise<T | undefined> => {

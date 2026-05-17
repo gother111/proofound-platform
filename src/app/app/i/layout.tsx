@@ -1,11 +1,9 @@
 import { requirePersona } from '@/lib/auth';
 import { LeftNav } from '@/components/app/LeftNav';
 import { TopBar } from '@/components/app/TopBar';
-import { TourProvider } from '@/components/tour/TourProvider';
+import { DeferredTourProvider } from '@/components/tour/DeferredTourProvider';
 import { CommandPalette } from '@/components/navigation/CommandPalette';
 import { SpotlightProvider } from '@/components/ui/spotlight-provider';
-import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
-import { evaluateIndividualProfileCompletion } from '@/lib/profile/completion-flow';
 
 /**
  * Individual User Layout
@@ -20,15 +18,6 @@ import { evaluateIndividualProfileCompletion } from '@/lib/profile/completion-fl
 
 export default async function IndividualLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePersona('individual');
-  const completionState = await getIndividualProfileCompletionState(user.id).catch(() =>
-    evaluateIndividualProfileCompletion({
-      displayName: user.displayName,
-      handle: user.handle,
-      skillsCount: 0,
-      proofCount: 0,
-      acceptedVerificationCount: 0,
-    })
-  );
 
   const userName = user.displayName || user.handle || 'User';
   const userInitials = userName
@@ -43,14 +32,7 @@ export default async function IndividualLayout({ children }: { children: React.R
   return (
     <SpotlightProvider>
       <div className={`flex h-screen ${isV2 ? 'bg-japandi-bg' : 'bg-proofound-parchment'}`}>
-        <LeftNav
-          basePath="/app/i"
-          individualPortfolioGate={{
-            locked: !completionState.isPortfolioReady,
-            reason: completionState.portfolioLockReason,
-          }}
-          isBetaTesting={user.isBetaTesting}
-        />
+        <LeftNav basePath="/app/i" isBetaTesting={user.isBetaTesting} />
         <div className="flex-1 flex flex-col min-w-0">
           <TopBar userName={userName} userInitials={userInitials} basePath="/app/i" />
           {/* Main content region with ID for skip-to-content link */}
@@ -67,7 +49,7 @@ export default async function IndividualLayout({ children }: { children: React.R
           </main>
         </div>
         <CommandPalette />
-        <TourProvider />
+        <DeferredTourProvider />
       </div>
     </SpotlightProvider>
   );
