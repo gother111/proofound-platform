@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
@@ -89,7 +89,9 @@ export function VerifySkillContent() {
       <div className="min-h-screen flex items-center justify-center bg-[#F5F3EE] p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle className="text-destructive">Invalid Link</CardTitle>
+            <h1 className="text-xl font-semibold leading-none tracking-tight text-destructive">
+              Invalid Link
+            </h1>
             <CardDescription>This verification link is invalid or has expired.</CardDescription>
           </CardHeader>
         </Card>
@@ -109,9 +111,9 @@ export function VerifySkillContent() {
                 <XCircle className="w-16 h-16 text-gray-600" />
               )}
             </div>
-            <CardTitle className="text-center">
+            <h1 className="text-center text-xl font-semibold leading-none tracking-tight">
               {responseAction === 'approve' ? 'Verification Complete!' : 'Response Submitted'}
-            </CardTitle>
+            </h1>
             <CardDescription className="text-center">
               {responseAction === 'approve'
                 ? 'Thank you for verifying this skill. Your verification helps build trust in the Proofound community.'
@@ -132,9 +134,9 @@ export function VerifySkillContent() {
     <div className="min-h-screen flex items-center justify-center bg-[#F5F3EE] p-4">
       <Card className="max-w-2xl w-full">
         <CardHeader>
-          <CardTitle className="font-['Crimson_Pro'] text-2xl">
+          <h1 className="font-['Crimson_Pro'] text-2xl font-semibold leading-none tracking-tight">
             Skill Verification Request
-          </CardTitle>
+          </h1>
           <CardDescription>
             Someone has requested that you verify their skill. Please review and respond below.
           </CardDescription>

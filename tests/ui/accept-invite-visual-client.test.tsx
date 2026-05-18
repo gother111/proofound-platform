@@ -24,7 +24,7 @@ describe('AcceptInviteVisualClient', () => {
 
     render(<AcceptInviteVisualClient invite={invite!} />);
 
-    expect(screen.getByText("You're invited")).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: "You're invited" })).toBeInTheDocument();
     expect(screen.getByText('Northstar Evidence Studio')).toBeInTheDocument();
     expect(screen.getByText('org reviewer')).toBeInTheDocument();
     expect(screen.getByText('elena.reviewer@northstar-evidence.example')).toBeInTheDocument();
@@ -39,7 +39,9 @@ describe('AcceptInviteVisualClient', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /accept invitation/i }));
 
-    expect(screen.getByText('Invitation accepted')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Invitation accepted' })
+    ).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent(/workspace is ready/i);
     expect(screen.getByRole('link', { name: /open organization workspace/i })).toHaveAttribute(
       'href',

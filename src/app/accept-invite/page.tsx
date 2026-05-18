@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Mail } from 'lucide-react';
 import { CAPABILITY_TOKEN_CLASSES, inspectCapabilityToken } from '@/lib/security/capability-tokens';
@@ -35,7 +35,9 @@ function InviteUnavailableCard({
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
             <Mail className="h-5 w-5 text-proofound-forest" />
           </div>
-          <CardTitle className="font-display text-2xl text-proofound-charcoal">{title}</CardTitle>
+          <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
+            {title}
+          </h1>
           <CardDescription className="leading-6 text-proofound-charcoal/70">
             {message}
           </CardDescription>
@@ -143,9 +145,9 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
               <Mail className="h-5 w-5 text-proofound-forest" />
             </div>
-            <CardTitle className="font-display text-2xl text-proofound-charcoal">
+            <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
               You&apos;re invited
-            </CardTitle>
+            </h1>
             <CardDescription className="leading-6 text-proofound-charcoal/70">
               You&apos;ve been invited to join an organization.
             </CardDescription>

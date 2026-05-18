@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Building2, CheckCircle2, Mail } from 'lucide-react';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 
 type VisualOrgInvite = {
   organization: {
@@ -33,9 +33,9 @@ export function AcceptInviteVisualClient({ invite }: { invite: VisualOrgInvite }
                 <Mail className="h-5 w-5 text-proofound-forest" />
               )}
             </div>
-            <CardTitle className="font-display text-2xl text-proofound-charcoal">
+            <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
               {accepted ? 'Invitation accepted' : "You're invited"}
-            </CardTitle>
+            </h1>
             <CardDescription className="leading-6 text-proofound-charcoal/70">
               {accepted
                 ? `You can now continue to ${invite.organization.displayName}.`

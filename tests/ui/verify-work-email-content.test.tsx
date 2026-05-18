@@ -29,7 +29,9 @@ describe('VerifyWorkEmailContent', () => {
     render(<VerifyWorkEmailContent />);
 
     await waitFor(() => {
-      expect(screen.getByText('Verification failed')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Verification failed' })
+      ).toBeInTheDocument();
     });
 
     expect(
@@ -52,7 +54,9 @@ describe('VerifyWorkEmailContent', () => {
     render(<VerifyWorkEmailContent />);
 
     await waitFor(() => {
-      expect(screen.getByText('Work email verified')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Work email verified' })
+      ).toBeInTheDocument();
     });
 
     expect(screen.getByText('elena.reviewer@northstar-evidence.example')).toBeInTheDocument();

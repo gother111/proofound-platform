@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Loader2, Mail } from 'lucide-react';
@@ -93,11 +93,11 @@ export function VerifyWorkEmailContent() {
               </span>
             )}
           </div>
-          <CardTitle className="font-display text-2xl text-proofound-charcoal">
+          <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
             {status === 'loading' && 'Verifying work email'}
             {status === 'success' && 'Work email verified'}
             {status === 'error' && 'Verification failed'}
-          </CardTitle>
+          </h1>
           <CardDescription className="leading-6 text-proofound-charcoal/70">
             {status === 'loading' && 'Please wait while we verify the workplace signal.'}
             {status === 'success' && 'Your workplace signal is now active while it stays fresh.'}

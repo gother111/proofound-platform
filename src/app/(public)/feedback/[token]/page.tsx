@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import FeedbackForm from '@/components/feedback/FeedbackForm';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   buildVisualFeedbackTokenResponse,
   feedbackVisualFixturesEnabled,
@@ -56,9 +56,9 @@ export default async function FeedbackTokenPage({
     <div className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10">
       <Card className="w-full max-w-3xl rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
         <CardHeader className="space-y-2">
-          <CardTitle className="font-display text-2xl text-proofound-charcoal">
+          <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
             Interview feedback
-          </CardTitle>
+          </h1>
           <p className="text-sm leading-6 text-muted-foreground">
             Share quick feedback. Your name will be hidden from the other side.
           </p>

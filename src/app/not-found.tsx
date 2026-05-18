@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardDescription, CardContent } from '@/components/ui/card';
 import { FileQuestion } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -13,9 +13,9 @@ export default function NotFound() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
             <FileQuestion className="h-6 w-6 text-proofound-forest" />
           </div>
-          <CardTitle className="font-display text-2xl text-proofound-charcoal">
+          <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
             Page not found
-          </CardTitle>
+          </h1>
           <CardDescription className="leading-6 text-proofound-charcoal/70">
             The page you&apos;re looking for doesn&apos;t exist or has been moved.
           </CardDescription>

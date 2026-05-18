@@ -14,7 +14,7 @@ import {
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
 import {
@@ -240,7 +240,9 @@ export default function VerifyCustomRequestPage() {
             <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
               <Loader2 className="h-6 w-6 animate-spin text-proofound-forest" />
             </span>
-            <p className="text-sm leading-6 text-muted-foreground">Loading verification request.</p>
+            <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
+              Loading verification request
+            </h1>
           </CardContent>
         </Card>
       </div>
@@ -255,9 +257,9 @@ export default function VerifyCustomRequestPage() {
             <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
               <AlertCircle className="h-6 w-6 text-destructive" />
             </span>
-            <h2 className="mb-2 font-display text-2xl text-proofound-charcoal">
+            <h1 className="mb-2 font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
               Unable to load request
-            </h2>
+            </h1>
             <p className="mb-6 text-sm leading-6 text-muted-foreground">{error}</p>
             <Button variant="outline" onClick={() => router.push('/')}>
               Return home
@@ -306,7 +308,9 @@ export default function VerifyCustomRequestPage() {
             >
               <Icon className={`h-6 w-6 ${config.color}`} />
             </span>
-            <h2 className="mb-2 font-display text-2xl text-proofound-charcoal">{config.title}</h2>
+            <h1 className="mb-2 font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
+              {config.title}
+            </h1>
             <p className="text-sm leading-6 text-muted-foreground">{config.message}</p>
           </CardContent>
         </Card>
@@ -322,7 +326,7 @@ export default function VerifyCustomRequestPage() {
             {submittedAction === 'accepted' ? (
               <>
                 <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-foreground mb-2">Thank You!</h2>
+                <h1 className="text-2xl font-semibold text-foreground mb-2">Thank You!</h1>
                 <p className="text-muted-foreground mb-4">
                   {data?.request_kind === 'human_observed_attestation'
                     ? `You've recorded a bounded observed-in-practice attestation for ${data?.requester_name}.`
@@ -335,9 +339,9 @@ export default function VerifyCustomRequestPage() {
             ) : submittedAction === 'partly' ? (
               <>
                 <MinusCircle className="h-16 w-16 text-amber-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-foreground mb-2">
+                <h1 className="text-2xl font-semibold text-foreground mb-2">
                   Partial Response Recorded
-                </h2>
+                </h1>
                 <p className="text-muted-foreground">
                   You recorded a structured partial attestation. It has been stored for review and
                   audit.
@@ -346,7 +350,7 @@ export default function VerifyCustomRequestPage() {
             ) : (
               <>
                 <XCircle className="h-16 w-16 text-proofound-terracotta mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-foreground mb-2">Response Recorded</h2>
+                <h1 className="text-2xl font-semibold text-foreground mb-2">Response Recorded</h1>
                 <p className="text-muted-foreground">
                   You've declined this verification request. The requester has been notified.
                 </p>
@@ -364,7 +368,9 @@ export default function VerifyCustomRequestPage() {
         <CardHeader className="bg-proofound-forest text-white">
           <div className="mb-2 flex min-w-0 items-center gap-3">
             <Shield className="h-8 w-8 shrink-0" />
-            <CardTitle className="min-w-0 text-xl leading-7">Custom Verification Request</CardTitle>
+            <h1 className="min-w-0 font-display text-xl font-semibold leading-7 tracking-tight">
+              Custom Verification Request
+            </h1>
           </div>
           <p className="text-sm leading-6 text-white/80">
             {data?.request_kind === 'human_observed_attestation'
