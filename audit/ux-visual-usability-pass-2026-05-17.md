@@ -954,6 +954,81 @@ save`.
 - `npm run docs:freshness` - pass in warning mode with the existing 32 orphan
   document warnings.
 
+## 2026-05-18 - Individual Interviews Empty and Filled States
+
+### Scope
+
+- `/app/i/interviews`
+- Local visual fixture mode with and without
+  `PROOFOUND_INTERVIEWS_VISUAL_STATE=filled`
+
+### Findings and Fixes
+
+#### P2 - Individual interviews could not be Browser-tested with filled data
+
+Evidence:
+
+- The interviews visual fixture gate only returned filled data for the
+  organization perspective, leaving `/app/i/interviews` in the empty state even
+  when visual fixtures were enabled.
+
+Fix:
+
+- Added individual interview visual fixtures covering a scheduled interview with
+  calendar/join actions and a completed hire decision awaiting engagement
+  confirmation.
+- Wired the individual perspective through the existing local-only visual
+  fixture gate. This does not affect production behavior.
+
+#### P2 - Empty state had no obvious next action
+
+Evidence:
+
+- Browser at 390px showed a clear empty explanation but no action for a user who
+  wanted to continue their workflow.
+
+Fix:
+
+- Added a single `Review matching` action linking to `/app/i/matching`.
+- Browser click verification confirmed the action navigates to the Matching
+  surface.
+
+#### P3 - Interview platform exposed an internal value
+
+Evidence:
+
+- Filled-state Browser verification rendered `Google_meet` instead of a human
+  label.
+
+Fix:
+
+- Reused the existing internal value label helper so the page renders
+  `Google Meet`.
+
+### Browser Verification
+
+- Mobile filled `/app/i/interviews` at 390px - no horizontal overflow; long
+  assignment title wraps, meeting actions are reachable, `Google Meet` renders
+  without internal underscores, and engagement confirmation controls are
+  reachable.
+- Desktop filled `/app/i/interviews` at 1280px - no horizontal overflow; cards,
+  calendar actions, and engagement controls stay composed.
+- Mobile empty `/app/i/interviews` at 390px - no horizontal overflow; empty
+  state includes the `Review matching` action.
+- Desktop empty `/app/i/interviews` at 1280px - no horizontal overflow; empty
+  state remains centered and the `Review matching` action is visible.
+- Browser click verification: `Review matching` navigated from
+  `/app/i/interviews` to `/app/i/matching`.
+
+Evidence artifacts:
+
+- `.artifacts/ux-browser-goal-2026-05-18/interviews/browser-state.json`
+- `.artifacts/ux-browser-goal-2026-05-18/interviews/browser-empty-state.json`
+
+Note: Browser screenshot capture timed out on this route during the artifact
+write step, so this pass records DOM, layout, overflow, and click evidence in
+JSON rather than PNG screenshots.
+
 ## Individual Settings And Privacy Continuation - Account History Clarity
 
 Date: 2026-05-18
