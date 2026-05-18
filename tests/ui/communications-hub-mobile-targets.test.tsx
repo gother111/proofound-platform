@@ -44,4 +44,15 @@ describe('CommunicationsHub mobile targets', () => {
     expect(switchLink).toHaveClass('w-full');
     expect(switchLink).toHaveClass('sm:w-auto');
   });
+
+  it('keeps organization messages loading contextual while user context resolves', () => {
+    usePathnameMock.mockReturnValue('/app/o/acme/communications');
+
+    render(<CommunicationsHub perspective="organization" />);
+
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('Preparing organization messages');
+    expect(status).toHaveTextContent(/threads, intros, and reveal requests/i);
+    expect(screen.queryByText('Loading messages...')).not.toBeInTheDocument();
+  });
 });

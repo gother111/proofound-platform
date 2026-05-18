@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { ArrowRight, CalendarCheck, Handshake, MessageCircle } from 'lucide-react';
+import { ArrowRight, CalendarCheck, Handshake, Loader2, MessageCircle } from 'lucide-react';
 
 import IndividualInterviewsPage from '@/app/app/i/interviews/page';
 import { MessagesClient as IndividualMessagesClient } from '@/app/app/i/messages/MessagesClient';
@@ -46,6 +46,29 @@ function normalizeSection(value: string | null): CommunicationsSection {
     return 'interviews';
   }
   return 'messages';
+}
+
+function OrganizationMessagesLoading() {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex h-full min-h-[320px] items-center justify-center rounded-xl border border-proofound-stone/70 bg-white/70 px-5 text-center shadow-sm"
+    >
+      <div className="max-w-sm space-y-3">
+        <Loader2 className="mx-auto h-5 w-5 animate-spin text-proofound-forest" />
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-proofound-charcoal">
+            Preparing organization messages
+          </p>
+          <p className="text-xs leading-5 text-muted-foreground">
+            Loading the team conversation context before showing threads, intros, and reveal
+            requests.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function CommunicationsHub({ perspective, currentUserId }: CommunicationsHubProps) {
@@ -180,9 +203,7 @@ export function CommunicationsHub({ perspective, currentUserId }: Communications
               currentUserId ? (
                 <OrgMessagesClient currentUserId={currentUserId} />
               ) : (
-                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                  Loading messages...
-                </div>
+                <OrganizationMessagesLoading />
               )
             ) : (
               <IndividualMessagesClient />
