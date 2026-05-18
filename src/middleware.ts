@@ -283,6 +283,8 @@ function buildArchivedPageResponse(
       :root { color-scheme: light; }
       body {
         margin: 0;
+        box-sizing: border-box;
+        overflow-x: hidden;
         min-height: 100vh;
         display: grid;
         place-items: center;
@@ -290,6 +292,7 @@ function buildArchivedPageResponse(
         color: #3f3f3f;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
+      *, *::before, *::after { box-sizing: inherit; }
       main {
         width: min(92vw, 34rem);
         padding: 2rem;
@@ -304,7 +307,17 @@ function buildArchivedPageResponse(
         line-height: 1.1;
       }
       p { margin: 0; line-height: 1.6; }
-      .surface { margin-top: 1rem; font-weight: 600; }
+      .surface {
+        margin-top: 1rem;
+        overflow-wrap: anywhere;
+        font-weight: 600;
+      }
+      @media (max-width: 480px) {
+        main {
+          padding: 1.5rem;
+          border-radius: 1.5rem;
+        }
+      }
     </style>
   </head>
   <body>

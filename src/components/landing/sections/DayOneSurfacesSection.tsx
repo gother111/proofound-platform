@@ -117,7 +117,7 @@ export function DayOneSurfacesSection() {
             One clear starting point for each side.
           </h2>
           <p className="mt-5 max-w-[46rem] text-[1.1rem] leading-8 text-[var(--landing-text)]">
-            The MVP starts with a Public Page proof snapshot for individuals and a trust page plus
+            Proofound starts with a Public Page proof snapshot for individuals and a trust page plus
             assignment corridor for organizations.
           </p>
         </div>

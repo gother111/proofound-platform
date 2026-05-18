@@ -38,9 +38,7 @@ export default function LinkedInVerificationPendingReview({
         <Container style={container}>
           <Section style={content}>
             <Text style={heading}>LinkedIn Verification Pending Review</Text>
-            <Text style={paragraph}>
-              A LinkedIn verification request needs manual admin review.
-            </Text>
+            <Text style={paragraph}>A LinkedIn verification request needs manual review.</Text>
 
             <Section style={detailsBox}>
               <Text style={detailLine}>
@@ -50,7 +48,7 @@ export default function LinkedInVerificationPendingReview({
                 <strong>Email:</strong> {candidateEmail || 'Not available'}
               </Text>
               <Text style={detailLine}>
-                <strong>Candidate ID:</strong> {candidateProfileId}
+                <strong>Profile reference:</strong> {candidateProfileId}
               </Text>
               <Text style={detailLine}>
                 <strong>Confidence:</strong> {confidence}%
@@ -82,7 +80,9 @@ export default function LinkedInVerificationPendingReview({
             </Section>
 
             <Hr style={hr} />
-            <Text style={footer}>Review from the admin queue and approve/reject the request.</Text>
+            <Text style={footer}>
+              Review from the verification queue and approve or decline the request.
+            </Text>
           </Section>
         </Container>
       </Body>

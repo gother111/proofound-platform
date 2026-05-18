@@ -13,9 +13,9 @@ export default async function AdminPage() {
   const cvOcrStatus = await resolveGcpCvOcrSafeStatus({ probeProvider: true });
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 py-6">
+    <div className="mx-auto w-full max-w-[1600px]">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Launch Operations</h1>
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Launch Operations</h1>
         <p className="text-muted-foreground mt-1">
           Restricted launch tools for verification review and dispute-support audit trails.
         </p>

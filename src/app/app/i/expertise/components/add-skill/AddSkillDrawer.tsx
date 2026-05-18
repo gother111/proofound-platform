@@ -790,7 +790,7 @@ export function AddSkillDrawer({
               proofAttachError =
                 proofErrorBody?.message ||
                 proofErrorBody?.error ||
-                `Proof API returned ${proofResponse.status}`;
+                'Proof could not be attached. Please try again.';
             }
           } catch (proofError) {
             console.error('Error attaching proof:', proofError);
@@ -831,7 +831,7 @@ export function AddSkillDrawer({
               verificationError =
                 verificationErrorBody?.error ||
                 verificationErrorBody?.details ||
-                `Verification API returned ${verificationResponse.status}`;
+                'Verification could not be requested. Please try again.';
             }
           } catch (verificationRequestError) {
             console.error(

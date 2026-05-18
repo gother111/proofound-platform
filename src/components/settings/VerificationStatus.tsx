@@ -347,11 +347,11 @@ function AccountSignalActions({
         className="border-2 transition-colors hover:border-proofound-terracotta/30"
       >
         <CardContent className="p-6">
-          <div className="flex items-start gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-proofound-terracotta/10">
               <Mail className="h-6 w-6 text-proofound-terracotta" />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <h4 className="font-semibold">Work email</h4>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">
                 Keep a workplace-linked account signal current for compatibility and organization
@@ -360,7 +360,7 @@ function AccountSignalActions({
               <Button
                 onClick={onWorkEmail}
                 variant="outline"
-                className="border-proofound-terracotta text-proofound-terracotta hover:bg-proofound-terracotta/10"
+                className="w-full border-proofound-terracotta text-proofound-terracotta hover:bg-proofound-terracotta/10 sm:w-auto"
               >
                 {workEmailConfirmed ? 'Recheck work email' : 'Add work email'}
               </Button>
@@ -392,11 +392,11 @@ function VerificationOverview({
         body="Proof-backed trust belongs on specific Proof Packs and claim snapshots. Use the verification requests area to see which proof, claim, verifier, and outcome each request is tied to."
       >
         <div className="space-y-4">
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
             <Button
               variant="outline"
               onClick={() => window.location.assign('/app/i/verifications')}
-              className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
+              className="w-full border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5 sm:w-auto"
             >
               Open proof verification requests
             </Button>

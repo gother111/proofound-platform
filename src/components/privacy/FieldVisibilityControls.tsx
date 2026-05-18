@@ -268,9 +268,9 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
       {/* Redact Mode Toggle */}
       <Card className="border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex items-center gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex flex-wrap items-center gap-2">
                 <EyeOff className="w-5 h-5" />
                 Redact Mode
                 <Badge variant="secondary" className="ml-2 bg-[#D97706] text-white">
@@ -285,7 +285,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
             <Switch
               checked={redactMode}
               onCheckedChange={handleRedactModeToggle}
-              className="data-[state=checked]:bg-[#D97706]"
+              className="shrink-0 data-[state=checked]:bg-[#D97706]"
             />
           </div>
         </CardHeader>
@@ -334,14 +334,14 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                       return (
                         <div
                           key={field.name}
-                          className={`flex items-center justify-between p-3 rounded-lg border ${
+                          className={`flex flex-col gap-3 p-3 rounded-lg border sm:flex-row sm:items-center sm:justify-between ${
                             isRedacted
                               ? 'bg-[#FEF3C7] dark:bg-yellow-950/20 border-[#FCD34D]'
                               : 'bg-white dark:bg-background border-proofound-stone dark:border-border'
                           }`}
                         >
-                          <div className="flex-1">
-                            <Label className="text-sm font-medium flex items-center gap-2">
+                          <div className="min-w-0 flex-1">
+                            <Label className="text-sm font-medium flex flex-wrap items-center gap-2">
                               {field.label}
                               {field.sensitive && (
                                 <Badge
@@ -363,7 +363,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                             }
                             disabled={isRedacted}
                           >
-                            <SelectTrigger className="w-[160px]">
+                            <SelectTrigger className="w-full sm:w-[160px]">
                               <SelectValue>
                                 <div className="flex items-center gap-2">
                                   {getVisibilityIcon(visibility)}
@@ -397,14 +397,18 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
 
             {/* Audience Preview Tab */}
             <TabsContent value="preview" className="space-y-4 mt-6">
-              <div className="flex gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:flex">
                 {(['public', 'network', 'matched'] as const).map((audience) => (
                   <Button
                     key={audience}
                     variant={activePreview === audience ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setActivePreview(audience)}
-                    className={activePreview === audience ? 'bg-proofound-forest text-white' : ''}
+                    className={
+                      activePreview === audience
+                        ? 'w-full bg-proofound-forest text-white sm:w-auto'
+                        : 'w-full sm:w-auto'
+                    }
                   >
                     {audience === 'public' && <Globe className="w-4 h-4 mr-2" />}
                     {audience === 'network' && <Users className="w-4 h-4 mr-2" />}

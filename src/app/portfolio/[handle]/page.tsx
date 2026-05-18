@@ -182,7 +182,7 @@ export default async function PortfolioPage({
               </Badge>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
               {viewerIsOwner ? (
                 <Button variant="outline" size="sm" asChild>
                   <Link href="/app/i/profile?profileView=full&tab=visibility">
@@ -190,9 +190,13 @@ export default async function PortfolioPage({
                   </Link>
                 </Button>
               ) : null}
-              <ShareLinkButton url={data.shareUrl} />
-              <DownloadPdfButton endpoint={viewerIsOwner ? undefined : publicExportEndpoint} />
-              <CopyTextButton endpoint={viewerIsOwner ? undefined : publicSummaryEndpoint} />
+              <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                <ShareLinkButton url={data.shareUrl} />
+                <div className="hidden sm:contents">
+                  <DownloadPdfButton endpoint={viewerIsOwner ? undefined : publicExportEndpoint} />
+                  <CopyTextButton endpoint={viewerIsOwner ? undefined : publicSummaryEndpoint} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -219,7 +223,7 @@ export default async function PortfolioPage({
                   </h1>
                   <p className="text-sm text-foreground">{headline}</p>
                   <p className="text-sm text-muted-foreground">
-                    Direct link is live. Search engines are off for the MVP.
+                    Direct link is live. Search engines are off until the owner opts in.
                   </p>
                 </div>
               </div>
@@ -256,15 +260,13 @@ export default async function PortfolioPage({
             </div>
 
             {!viewerIsOwner ? (
-              <div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-[220px]">
+              <div className="flex w-full flex-col gap-2 border-t border-[#EFECE5] pt-4 lg:w-auto lg:min-w-[220px] lg:border-t-0 lg:pt-0">
                 <Button asChild className="bg-proofound-forest text-white hover:bg-[#163d2f]">
                   <Link href={collaborationHref}>Request introduction</Link>
                 </Button>
-                <Button variant="outline" asChild>
-                  <Link href={requestContactHref}>Request contact</Link>
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Private details stay hidden unless the owner explicitly reveals them.
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Private details stay hidden unless the owner explicitly reveals them. More export
+                  and copy options appear on wider screens.
                 </p>
               </div>
             ) : null}

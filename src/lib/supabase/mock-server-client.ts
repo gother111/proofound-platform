@@ -7,6 +7,10 @@ const ORG_ID = '99999999-9999-4999-9999-999999999999';
 const getMockPersona = () => (process.env.MOCK_ORG_MODE === 'true' ? 'org_member' : 'individual');
 const isMockAdminTestContext = () =>
   process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true';
+const visualFixturesEnabled = () =>
+  process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true' &&
+  process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+  process.env.VERCEL_ENV !== 'production';
 const getMockPlatformRole = (): 'platform_admin' | 'super_admin' | null => {
   if (!isMockAdminTestContext()) return null;
 
@@ -544,14 +548,33 @@ const mockSupabaseClient = {
           }
           if (table === 'organizations') {
             // For getActiveOrg
+            const now = new Date().toISOString();
+            const visualOrg = visualFixturesEnabled();
+
             return {
               data: {
                 id: ORG_ID,
                 slug: 'test-org',
-                displayName: 'Test Organization',
+                displayName: visualOrg ? 'Nordic Field Systems' : 'Test Organization',
                 type: 'company',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
+                verified: visualOrg,
+                tagline: visualOrg
+                  ? 'Field crews can finish safer infrastructure work when planning tools match the real site conditions.'
+                  : null,
+                mission: visualOrg
+                  ? 'Equip distributed infrastructure teams with proof-led planning, field handoff, and safety review workflows that reduce rework before the first site visit.'
+                  : null,
+                workingContext: visualOrg
+                  ? 'Teams coordinate across municipal partners, subcontractors, and night-shift field crews. Candidates should understand calm stakeholder updates, practical risk logs, and decisions made from incomplete site data.'
+                  : null,
+                hiringProcessSummary: visualOrg
+                  ? 'One written proof assignment, privacy-safe summary review, then a focused reveal conversation for shortlisted candidates.'
+                  : null,
+                trustStatus: visualOrg ? 'domain_verified' : null,
+                websiteVerifiedAt: visualOrg ? now : null,
+                website: visualOrg ? 'https://nordic-field.example/team/proofound' : null,
+                createdAt: now,
+                updatedAt: now,
                 membership: [
                   {
                     orgId: ORG_ID,

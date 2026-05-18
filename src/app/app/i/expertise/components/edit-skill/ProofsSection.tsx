@@ -379,7 +379,7 @@ export function ProofsSection({
     if (!current?.consentAccepted) {
       updateOcrState(artifactId, {
         consentOpen: true,
-        error: 'Review and confirm the OCR consent before extraction.',
+        error: 'Review and confirm consent before reading this proof.',
       });
       return;
     }

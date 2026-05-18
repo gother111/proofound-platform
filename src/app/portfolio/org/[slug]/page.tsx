@@ -188,7 +188,7 @@ export default async function OrganizationPortfolioPage({
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
               <Button variant="outline" size="sm" asChild>
                 <Link href={returnPath} className="inline-flex items-center gap-1.5">
                   <ArrowLeft className="h-4 w-4" />
@@ -196,7 +196,9 @@ export default async function OrganizationPortfolioPage({
                 </Link>
               </Button>
               <ShareLinkButton url={data.shareUrl} />
-              {viewerIsMember ? <DownloadOrganizationPdfButton slug={slug} /> : null}
+              <div className="hidden sm:contents">
+                {viewerIsMember ? <DownloadOrganizationPdfButton slug={slug} /> : null}
+              </div>
               {data.organization.website ? (
                 <a
                   href={data.organization.website}
@@ -213,7 +215,7 @@ export default async function OrganizationPortfolioPage({
         </div>
       }
       footer={
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span>proofound.io/portfolio/org/{slug}</span>
           <span>Minimal public profile</span>
         </div>

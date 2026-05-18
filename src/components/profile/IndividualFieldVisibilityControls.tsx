@@ -219,7 +219,7 @@ export function IndividualFieldVisibilityControls({
             return (
               <div
                 key={field.key}
-                className="flex items-center justify-between gap-4 p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
+                className="flex flex-col gap-3 rounded-lg border border-proofound-stone p-3 transition-colors hover:bg-japandi-bg sm:flex-row sm:items-center sm:justify-between sm:gap-4"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -242,7 +242,7 @@ export function IndividualFieldVisibilityControls({
                   <p className="text-xs text-muted-foreground">{field.description}</p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex w-full items-center gap-2 sm:w-auto">
                   <Select
                     value={currentVisibility}
                     onValueChange={(value) =>
@@ -252,7 +252,7 @@ export function IndividualFieldVisibilityControls({
                       )
                     }
                   >
-                    <SelectTrigger id={field.key} className="w-[140px]">
+                    <SelectTrigger id={field.key} className="w-full sm:w-[140px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -296,14 +296,14 @@ export function IndividualFieldVisibilityControls({
         </div>
 
         {/* Save Button */}
-        <div className="flex items-center justify-between pt-4 border-t border-proofound-stone">
+        <div className="flex flex-col gap-3 border-t border-proofound-stone pt-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
             {hasChanges ? 'You have unsaved changes' : 'All changes saved'}
           </p>
           <Button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+            className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
           >
             {saving ? 'Saving...' : 'Save privacy settings'}
           </Button>

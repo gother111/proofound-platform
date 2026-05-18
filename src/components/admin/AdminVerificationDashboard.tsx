@@ -107,6 +107,10 @@ function formatMetadataValue(value: unknown) {
   return JSON.stringify(value);
 }
 
+function formatMetadataKey(key: string) {
+  return internalValueLabel(key.replace(/([a-z0-9])([A-Z])/g, '$1_$2'));
+}
+
 function requiresOperatorNote(currentStatus: QueueStatus, nextStatus: QueueStatus) {
   return (
     nextStatus === 'resolved' ||
@@ -383,13 +387,13 @@ export function AdminVerificationDashboard() {
                       return (
                         <div
                           key={item.id}
-                          className="rounded-xl border border-proofound-stone/80 bg-white p-4 shadow-sm"
+                          className="overflow-hidden rounded-xl border border-proofound-stone/80 bg-white p-4 shadow-sm"
                         >
                           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                            <div className="space-y-2">
+                            <div className="min-w-0 space-y-2">
                               <div className="flex flex-wrap items-center gap-2">
                                 <Badge className={PRIORITY_BADGE_CLASS[item.priority]}>
-                                  {item.priority}
+                                  {internalValueLabel(item.priority)}
                                 </Badge>
                                 <Badge className={STATUS_BADGE_CLASS[item.status]}>
                                   {formatQueueStatus(item.status)}
@@ -398,8 +402,10 @@ export function AdminVerificationDashboard() {
                                   {internalValueLabel(item.linkedEntityType)}
                                 </Badge>
                               </div>
-                              <p className="text-sm font-medium text-foreground">{item.summary}</p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="break-words text-sm font-medium text-foreground">
+                                {item.summary}
+                              </p>
+                              <p className="break-all text-xs text-muted-foreground">
                                 Related record: {item.linkedEntityId}
                               </p>
                               {item.resolvedAt && (
@@ -408,7 +414,7 @@ export function AdminVerificationDashboard() {
                                 </p>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
                               <Clock3 className="h-4 w-4" />
                               Updated {new Date(item.updatedAt).toLocaleString()}
                             </div>
@@ -426,11 +432,16 @@ export function AdminVerificationDashboard() {
                               {detail.fields.length > 0 && (
                                 <div className="mt-3 grid gap-2 md:grid-cols-2">
                                   {detail.fields.map((field) => (
-                                    <div key={`${item.id}:${field.label}`} className="text-sm">
+                                    <div
+                                      key={`${item.id}:${field.label}`}
+                                      className="min-w-0 text-sm"
+                                    >
                                       <span className="font-medium text-foreground">
                                         {field.label}:
                                       </span>{' '}
-                                      <span className="text-muted-foreground">{field.value}</span>
+                                      <span className="break-words text-muted-foreground">
+                                        {field.value}
+                                      </span>
                                     </div>
                                   ))}
                                 </div>
@@ -482,7 +493,7 @@ export function AdminVerificationDashboard() {
                               />
                             </div>
 
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                               {actions.map((action) => (
                                 <Button
                                   key={action.id}
@@ -498,6 +509,7 @@ export function AdminVerificationDashboard() {
                                   }
                                   loading={pendingAction === `${item.id}:${action.id}`}
                                   onClick={() => handleQueueAction(item, action)}
+                                  className="w-full sm:w-auto"
                                 >
                                   {action.label}
                                 </Button>
@@ -512,11 +524,11 @@ export function AdminVerificationDashboard() {
                               </p>
                               <div className="grid gap-2 md:grid-cols-2">
                                 {Object.entries(item.metadata).map(([key, value]) => (
-                                  <div key={key} className="text-sm">
+                                  <div key={key} className="min-w-0 text-sm">
                                     <span className="font-medium text-foreground">
-                                      {internalValueLabel(key)}:
+                                      {formatMetadataKey(key)}:
                                     </span>{' '}
-                                    <span className="text-muted-foreground">
+                                    <span className="break-words text-muted-foreground">
                                       {formatMetadataValue(value)}
                                     </span>
                                   </div>

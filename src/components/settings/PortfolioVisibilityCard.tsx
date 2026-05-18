@@ -53,12 +53,12 @@ function formatPrivacyPreflightMessage(payload: PrivacyPreflightPayload) {
     return `${
       payload.safeToPublishSuggestion ||
       'Privacy review is required before publishing. Remove or rewrite flagged private details first.'
-    } ${flags.length} deterministic flag${flags.length === 1 ? '' : 's'} found.${flagDetail}`;
+    } ${flags.length} privacy concern${flags.length === 1 ? '' : 's'} found.${flagDetail}`;
   }
 
   return (
     payload.safeToPublishSuggestion ||
-    'No high-risk deterministic flags were found. This is not a privacy guarantee.'
+    'No high-risk privacy concerns were found. This is not a privacy guarantee.'
   );
 }
 
@@ -131,7 +131,7 @@ export function PortfolioVisibilityCard() {
       if (!res.ok) {
         if (payload?.fallbackAvailable) {
           setPreflightMessage(
-            'Privacy preflight is temporarily unavailable. Manual checklist: remove private contact details, hidden identity terms, original filenames, private URLs, and unsupported sensitive details before publishing.'
+            'Privacy check is temporarily unavailable. Manual checklist: remove private contact details, hidden identity terms, original filenames, private URLs, and unsupported sensitive details before publishing.'
           );
           return;
         }
@@ -153,7 +153,7 @@ export function PortfolioVisibilityCard() {
       <CardHeader>
         <CardTitle>Public Page visibility</CardTitle>
         <CardDescription>
-          A direct-link proof snapshot comes first. Search engines stay off for the MVP.
+          A direct-link proof snapshot comes first. Search engines stay off until you opt in.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-slate-700">
@@ -238,9 +238,15 @@ export function PortfolioVisibilityCard() {
               </p>
             ) : null}
 
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
               {assistiveAiEnabled ? (
-                <Button size="sm" variant="outline" onClick={checkPrivacy} disabled={checking}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={checkPrivacy}
+                  disabled={checking}
+                  className="w-full justify-center sm:w-auto"
+                >
                   {checking ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Checking...
@@ -252,7 +258,7 @@ export function PortfolioVisibilityCard() {
                   )}
                 </Button>
               ) : null}
-              <Button size="sm" onClick={save} disabled={saving}>
+              <Button size="sm" onClick={save} disabled={saving} className="w-full sm:w-auto">
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
@@ -284,11 +290,17 @@ function VisibilityRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 px-3 py-2">
-      <div className="space-y-0.5">
+      <div className="min-w-0 flex-1 space-y-0.5">
         <Label className="text-sm text-slate-800">{label}</Label>
         {description ? <p className="text-xs text-slate-500">{description}</p> : null}
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
+      <Switch
+        aria-label={label}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        disabled={disabled}
+        className="shrink-0"
+      />
     </div>
   );
 }

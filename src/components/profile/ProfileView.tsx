@@ -226,7 +226,7 @@ export function ProfileView({ data }: ProfileViewProps) {
                   <h2 className="font-display font-medium">Proof profile</h2>
                 </div>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  This MVP profile emphasizes proof, context, skills, freshness, and scoped
+                  This profile emphasizes proof, context, skills, freshness, and scoped
                   verification.
                 </p>
               </GlassCard>

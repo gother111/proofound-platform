@@ -26,8 +26,8 @@ export const ANALYZE_PROGRESS_AUTO_COLLAPSE_MS = 4000;
 const PHASE_LABELS: Record<AnalyzeProgressPhase, string> = {
   preparing: 'Preparing',
   uploading: 'Uploading CV',
-  queued: 'Queued for extraction',
-  extracting: 'Extracting text',
+  queued: 'Waiting to read CV',
+  extracting: 'Reading CV',
   analyzing: 'Analyzing skills',
   finalizing: 'Finalizing',
 };

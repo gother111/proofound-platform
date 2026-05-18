@@ -33,7 +33,7 @@ import type {
 function resolvePortfolioGateMessage(lockReason: string | null): string {
   switch (lockReason) {
     case 'safe_shell':
-      return 'Public Page is locked until your safe shell is complete.';
+      return 'Public Page is locked until the safe-shell basics are finished.';
     case 'context':
       return 'Public Page is locked until you add one real context.';
     case 'proof':
@@ -157,7 +157,7 @@ export function EditableProfileView({
   }, [shouldOpenFirstProof]);
 
   const portfolioGateNotice = showPortfolioGateNotice ? (
-    <Card className="mb-6 p-4 border-amber-300 bg-amber-50/70 text-amber-900">
+    <Card className="mb-5 border-proofound-terracotta/30 bg-proofound-terracotta/10 p-4 text-proofound-charcoal">
       <p className="text-sm">{resolvePortfolioGateMessage(lockReasonFromRoute)}</p>
     </Card>
   ) : null;
@@ -410,6 +410,9 @@ export function EditableProfileView({
       data-testid="individual-profile-root"
     >
       {showReadinessBanner && <ProfileReadinessBanner completionState={completionState} />}
+      {portfolioGateNotice && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">{portfolioGateNotice}</div>
+      )}
 
       <MobileProfileHeader
         name={profile.basicInfo.name}
@@ -431,7 +434,6 @@ export function EditableProfileView({
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {portfolioGateNotice}
         {!completionState.isPortfolioReady && (
           <div className="mb-6">
             <PortfolioReadinessChecklist completionState={completionState} />

@@ -16,7 +16,7 @@ interface DeletionCompleteProps {
   userId: string;
 }
 
-export const DeletionComplete = ({ userId }: DeletionCompleteProps) => {
+export const DeletionComplete = (_props: DeletionCompleteProps) => {
   return (
     <Html>
       <Head />
@@ -90,8 +90,7 @@ export const DeletionComplete = ({ userId }: DeletionCompleteProps) => {
           </Text>
 
           <Text style={footer}>
-            This is a confirmation email only. No further action is required. Your account ID for
-            reference: <code style={code}>{userId}</code>
+            This is a confirmation email only. No further action is required.
           </Text>
         </Container>
       </Body>
@@ -183,18 +182,9 @@ const supportText = {
   borderRadius: '6px',
 };
 
-const code = {
-  fontFamily: 'monospace',
-  fontSize: '13px',
-  backgroundColor: '#E5E5E0',
-  padding: '2px 6px',
-  borderRadius: '3px',
-};
-
 const footer = {
   color: '#6B706B',
   fontSize: '14px',
   lineHeight: '1.5',
   marginTop: '32px',
 };
-

@@ -80,11 +80,11 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
         className={`group/avatar ${isUploading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}
         onClick={handleClick}
       >
-        <Avatar className="w-32 h-32 border-4 border-card shadow-lg ring-2 ring-[#7A9278]/20 ring-offset-2 bg-[#F5F3EE]">
+        <Avatar className="w-24 h-24 sm:w-32 sm:h-32 border-4 border-card shadow-lg ring-2 ring-[#7A9278]/20 ring-offset-2 bg-[#F5F3EE]">
           {avatar ? <AvatarImage src={avatar} className="object-cover" /> : null}
           <AvatarFallback className="bg-[#F5F3EE]">
             <div className="w-full h-full flex items-center justify-center relative">
-              <svg viewBox="0 0 100 100" className="w-20 h-20">
+              <svg viewBox="0 0 100 100" className="w-16 h-16 sm:w-20 sm:h-20">
                 <circle cx="50" cy="40" r="20" fill="none" stroke="#7A9278" strokeWidth="1.5" />
                 <path d="M 30 70 Q 50 60 70 70" fill="none" stroke="#7A9278" strokeWidth="1.5" />
               </svg>
@@ -105,7 +105,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-background/50 backdrop-blur-sm rounded-full flex items-center justify-center w-32 h-32"
+            className="absolute inset-0 bg-background/50 backdrop-blur-sm rounded-full flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32"
           >
             <Loader2 className="w-8 h-8 text-[#7A9278] animate-spin" />
           </motion.div>
@@ -115,7 +115,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-background/80 rounded-full flex items-center justify-center w-32 h-32"
+            className="absolute inset-0 bg-background/80 rounded-full flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32"
           >
             <div className="text-center">
               <Upload className="w-6 h-6 text-[#7A9278] mx-auto mb-1" />

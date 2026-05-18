@@ -16,13 +16,15 @@ export function AdminLayoutClient({ children, adminUser }: AdminLayoutClientProp
 
   return (
     <div className="min-h-screen bg-japandi-bg">
-      {/* Admin Sidebar */}
-      <AdminSidebar
-        adminEmail={adminUser.email}
-        adminRole={adminUser.platformRole || undefined}
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-      />
+      {/* Desktop admin navigation */}
+      <div className="hidden md:block">
+        <AdminSidebar
+          adminEmail={adminUser.email}
+          adminRole={adminUser.platformRole || undefined}
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
+        />
+      </div>
 
       {/* Main Content Wrapper */}
       <div
@@ -31,14 +33,9 @@ export function AdminLayoutClient({ children, adminUser }: AdminLayoutClientProp
           collapsed ? 'pl-16' : 'pl-0 md:pl-64'
         )}
       >
-        <AdminHeader
-          adminEmail={adminUser.email}
-          adminRole={adminUser.platformRole || undefined}
-          collapsed={collapsed}
-          setCollapsed={setCollapsed}
-        />
+        <AdminHeader adminEmail={adminUser.email} adminRole={adminUser.platformRole || undefined} />
 
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 px-4 py-5 sm:px-5 md:px-6">{children}</main>
       </div>
     </div>
   );

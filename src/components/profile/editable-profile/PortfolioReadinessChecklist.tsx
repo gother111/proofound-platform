@@ -13,7 +13,7 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
   const checklist = [
     {
       id: 'safe_shell',
-      label: 'Safe shell is complete',
+      label: 'Safe shell basics',
       nextAction: 'Complete your safe shell',
       passed: completionState.checks.hasSafeShell,
     },
@@ -39,7 +39,7 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
     },
     {
       id: 'publish',
-      label: 'Portfolio is published and accessible',
+      label: 'Public Page publication',
       nextAction: 'Publish one proof-backed signal',
       passed: completionState.checks.hasPublishedPortfolio,
     },

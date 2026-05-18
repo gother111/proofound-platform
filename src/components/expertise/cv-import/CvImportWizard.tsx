@@ -28,7 +28,6 @@ import {
 import { EventType } from '@/lib/analytics/constants';
 import { buildCvImportReviewTelemetry } from '@/lib/expertise/cv-review-telemetry';
 import { getAmbiguousTokenHints } from '@/lib/expertise/skill-confidence';
-import { internalValueLabel } from '@/lib/copy/labels';
 import { LANGUAGE_OPTIONS, CEFR_LEVELS } from '@/lib/taxonomy/data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -286,6 +285,8 @@ const GENERIC_BACKEND_ERRORS = new Set([
   'Failed to process CV wizard suggestions',
   'Failed to process CV documents',
 ]);
+const TECHNICAL_ERROR_TERMS =
+  /\b(api|backend|database|schema|endpoint|supabase|worker|python|typescript|gemini|uuid|tenant|cron|migration|rls|queue|job|extract|extraction)\b|[a-z]+_[a-z_]+/i;
 const PROXY_RETRYABLE_CODES = new Set([
   'CV_IMPORT_PROXY_UNAVAILABLE',
   'CV_IMPORT_PROXY_TIMEOUT',
@@ -379,6 +380,19 @@ function clearStoredExtractJobState(): void {
 
 async function readErrorMessage(response: Response, fallback: string): Promise<string> {
   const payload = await readJsonSafely(response);
+  const safeMessage = (value: unknown): string | null => {
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed || TECHNICAL_ERROR_TERMS.test(trimmed)) {
+      return null;
+    }
+
+    return trimmed;
+  };
+
   if (isRecord(payload)) {
     const error = payload.error;
     const message = payload.message;
@@ -389,20 +403,22 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
       message.trim().length > 0 &&
       GENERIC_BACKEND_ERRORS.has(error.trim())
     ) {
-      return message;
+      return safeMessage(message) ?? fallback;
     }
 
-    if (typeof error === 'string' && error.trim().length > 0) {
-      return error;
+    const safeError = safeMessage(error);
+    if (safeError) {
+      return safeError;
     }
 
-    if (typeof message === 'string' && message.trim().length > 0) {
-      return message;
+    const safePayloadMessage = safeMessage(message);
+    if (safePayloadMessage) {
+      return safePayloadMessage;
     }
   }
 
   const textPayload = await readTextSafely(response);
-  if (textPayload.length > 0) {
+  if (textPayload.length > 0 && !TECHNICAL_ERROR_TERMS.test(textPayload)) {
     return textPayload;
   }
 
@@ -1034,11 +1050,11 @@ function buildAnalyzeWarningMessage(params: {
   }
 
   if (params.metadata.wizard_stage_failed === 'atlas_verification') {
-    return 'Analysis completed with partial recovery. Atlas verification was unavailable, so review skill matches carefully below.';
+    return 'Analysis completed with partial recovery. Skill verification was temporarily unavailable, so review skill matches carefully below.';
   }
 
   if (params.metadata.wizard_stage_failed === 'gemini_skills') {
-    return 'Analysis completed with partial recovery. Skill mapping fell back to deterministic extraction, so review skill matches carefully below.';
+    return 'Analysis completed with partial recovery. Skill mapping used a backup reading path, so review skill matches carefully below.';
   }
 
   return 'Analysis completed with partial recovery. Review the extracted results below before applying them.';
@@ -1507,7 +1523,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       !params.metadataFallbackTriggered &&
       !params.timeoutFallbackTriggered
     ) {
-      toast.info('CV analysis recovered via fallback path.');
+      toast.info('CV analysis recovered after a temporary issue.');
     }
     if (payload.metadata.semantic_fallback_triggered && totalSkillCandidates === 0) {
       toast.info(
@@ -1520,7 +1536,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     if (warningMessage) {
       setWarningProgress(warningMessage);
     } else {
-      setCompletedProgress('Extraction completed. Review and approve the results below.');
+      setCompletedProgress('CV analysis completed. Review and approve the results below.');
     }
     toast.success(
       `Analyzed ${payload.documents.length} document${payload.documents.length > 1 ? 's' : ''}.`
@@ -1554,11 +1570,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     if (!response.ok) {
       const pythonFailurePayload = await readJsonSafely(response);
       if (isProxyRetryableError(pythonFailurePayload)) {
-        setRunningProgress(
-          'extracting',
-          48,
-          'Retrying analysis with deterministic fallback service...'
-        );
+        setRunningProgress('extracting', 48, 'Retrying analysis with a backup reading path...');
         response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=typescript', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1599,12 +1611,17 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       );
 
       if (!response.ok) {
-        throw new Error(await readErrorMessage(response, 'Failed to check CV extraction status'));
+        throw new Error(
+          await readErrorMessage(
+            response,
+            'We could not check your CV analysis progress. Please try again.'
+          )
+        );
       }
 
       const payload = normalizeExtractStatusResponse(await readJsonSafely(response));
       if (!payload) {
-        throw new Error('CV extraction status returned an invalid response.');
+        throw new Error('We could not check your CV analysis progress. Please try again.');
       }
 
       if (payload.status === 'completed' || payload.status === 'failed') {
@@ -1624,26 +1641,24 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         payload.status === 'queued' ? 34 : 50,
         payload.status === 'queued'
           ? shouldOfferBackgroundContinuation
-            ? 'Python extraction is still running. You can leave this page and come back later.'
+            ? 'We are still reading your CV. You can leave this page and come back later.'
             : payload.recovery_state === 'retrying'
-              ? 'Retrying Python extraction after a temporary worker issue...'
-              : 'Queued for extraction. Waiting for Python worker...'
+              ? 'Retrying CV reading after a temporary issue...'
+              : 'Waiting to read your CV...'
           : shouldOfferBackgroundContinuation
-            ? 'Python extraction is still running in the background. Results will resume here automatically.'
-            : 'Extracting text from uploaded PDFs with Python...'
+            ? 'We are still reading your CV. Results will resume here automatically.'
+            : 'Reading text from uploaded PDFs...'
       );
 
       if (!backgroundNoticeShown && elapsedMs >= BACKGROUND_CONTINUE_NOTICE_MS) {
-        toast.info(
-          'Python extraction is still running in the background. You can leave this page and return later.'
-        );
+        toast.info('We are still reading your CV. You can leave this page and return later.');
         backgroundNoticeShown = true;
       }
 
       await sleep(pollAfterMs);
     }
 
-    throw new Error('CV extraction polling was interrupted.');
+    throw new Error('CV analysis was interrupted. Please try again.');
   };
 
   const canRequeuePythonExtraction = (sourceByRequestId: Map<string, ParsedDocumentState>) =>
@@ -1672,7 +1687,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     sourceByRequestId: Map<string, ParsedDocumentState>,
     sequence: number
   ) => {
-    setRunningProgress('queued', 34, 'Resuming background extraction...');
+    setRunningProgress('queued', 34, 'Resuming CV analysis...');
 
     const settled = await pollExtractJobUntilSettled(storedJob.jobId, sequence);
     clearStoredExtractJobState();
@@ -1680,7 +1695,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     if (settled.status === 'failed') {
       if (isProxyRetryableCode(settled.code)) {
         throw new Error(
-          'Python extraction is still unavailable. Please retry the analysis from this page once the worker recovers.'
+          'CV analysis is temporarily unavailable. Please retry the analysis from this page shortly.'
         );
       }
       throw new Error(settled.message || settled.error);
@@ -1701,7 +1716,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     });
 
     if (settled.cleanup_pending) {
-      toast.info('CV extraction completed, but temp file cleanup is still pending.');
+      toast.info('CV analysis is complete. You can review the results now.');
     }
   };
   resumeAsyncExtractJobRef.current = resumeAsyncExtractJob;
@@ -1726,7 +1741,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       formData.append('contexts', 'cv');
     }
 
-    setRunningProgress('uploading', 25, 'Uploading CV for background extraction...');
+    setRunningProgress('uploading', 25, 'Uploading CV for analysis...');
 
     const response = await apiFetch('/api/expertise/cv-import/wizard-extract', {
       method: 'POST',
@@ -1734,12 +1749,17 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     });
 
     if (!response.ok) {
-      throw new Error(await readErrorMessage(response, 'Failed to queue CV extraction'));
+      throw new Error(
+        await readErrorMessage(
+          response,
+          'We could not prepare your CV for review. Please try again.'
+        )
+      );
     }
 
     const queued = normalizeExtractStatusResponse(await readJsonSafely(response));
     if (!queued || queued.status !== 'queued') {
-      throw new Error('CV extraction queue returned an invalid response.');
+      throw new Error('We could not start CV review. Please try again.');
     }
 
     saveStoredExtractJobState({
@@ -1752,7 +1772,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       })),
     });
 
-    setRunningProgress('queued', 34, 'Queued for extraction. Waiting for worker...');
+    setRunningProgress('queued', 34, 'Waiting to read your CV...');
 
     const sequence = ++activeExtractSequenceRef.current;
     const settled = await pollExtractJobUntilSettled(queued.job_id, sequence);
@@ -1764,7 +1784,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         requeueAttempt < MAX_PYTHON_REQUEUE_ATTEMPTS &&
         canRequeuePythonExtraction(sourceByRequestId)
       ) {
-        toast.info('Python extraction hit a temporary issue. Retrying automatically.');
+        toast.info('CV analysis hit a temporary issue. Retrying automatically.');
         await startAsyncExtractAnalyze(analyzeDocuments, sourceByRequestId, requeueAttempt + 1);
         return;
       }
@@ -1787,7 +1807,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     });
 
     if (settled.cleanup_pending) {
-      toast.info('CV extraction completed, but temp file cleanup is still pending.');
+      toast.info('CV analysis is complete. You can review the results now.');
     }
   };
 
@@ -1834,7 +1854,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       status: 'running',
       phase: 'queued',
       percent: 34,
-      message: 'Resuming background extraction...',
+      message: 'Resuming CV analysis...',
       startedAt: Date.now(),
       completedAt: undefined,
     });
@@ -2496,7 +2516,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           {apiMetadata && !reviewV3Enabled && (
             <div className="rounded-lg border p-3 text-sm">
               <p>Smart matching used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
-              <p>Used backup matcher: {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}</p>
+              <p>Used backup matching: {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}</p>
               <p>Skills needing review: {apiMetadata.unmapped_candidates_count}</p>
             </div>
           )}
@@ -2514,19 +2534,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                 <div className="mt-2 space-y-1 text-muted-foreground">
                   <p>Smart matching used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
                   <p>
-                    Used backup matcher: {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
+                    Used backup matching: {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
                   </p>
                   <p>Skills needing review: {apiMetadata.unmapped_candidates_count}</p>
-                  {apiMetadata.fallback_stage && (
-                    <p>Recovery step: {internalValueLabel(apiMetadata.fallback_stage)}</p>
-                  )}
-                  {apiMetadata.engine_used && (
-                    <p>Matcher: {internalValueLabel(apiMetadata.engine_used)}</p>
-                  )}
-                  {apiMetadata.ai_model && <p>AI model: {apiMetadata.ai_model}</p>}
-                  {typeof apiMetadata.cost_ore === 'number' && (
-                    <p>Cost: {(apiMetadata.cost_ore / 100).toFixed(2)} SEK</p>
-                  )}
                 </div>
               )}
             </div>
@@ -3228,7 +3238,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       {documents.length === 0 && (
         <Card>
           <CardContent className="pt-6 text-sm text-muted-foreground">
-            Upload one or more CV PDFs to begin extraction and mapping.
+            Upload one or more CV PDFs to begin analysis and skill review.
           </CardContent>
         </Card>
       )}

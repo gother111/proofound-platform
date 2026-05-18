@@ -352,7 +352,7 @@ describe('Public individual portfolio page', () => {
       'href',
       expect.stringContaining('summaryRefresh=traceable-profile-summary')
     );
-    expect(screen.getByText(/search engines are off for the MVP/i)).toBeInTheDocument();
+    expect(screen.getByText(/search engines are off until the owner opts in/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /manage visibility/i })).toHaveAttribute(
       'href',
       '/app/i/profile?profileView=full&tab=visibility'

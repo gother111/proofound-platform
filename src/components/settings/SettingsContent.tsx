@@ -87,7 +87,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
 
   return (
     <AppSurface>
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto w-full max-w-full min-w-0 md:max-w-4xl">
         <div className="mb-8">
           <h1 className="text-4xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary mb-2">
             Settings
@@ -98,11 +98,19 @@ export function SettingsContent({ userId }: SettingsContentProps) {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-white dark:bg-card border border-proofound-stone dark:border-border">
-            <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="interviews">Interview Scheduling</TabsTrigger>
-            <TabsTrigger value="privacy">Privacy & Data</TabsTrigger>
-          </TabsList>
+          <div className="-mx-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:overflow-visible sm:px-0">
+            <TabsList className="min-w-max bg-white dark:bg-card border border-proofound-stone dark:border-border">
+              <TabsTrigger value="account">Account</TabsTrigger>
+              <TabsTrigger value="interviews" aria-label="Interview Scheduling">
+                <span className="sm:hidden">Interviews</span>
+                <span className="hidden sm:inline">Interview Scheduling</span>
+              </TabsTrigger>
+              <TabsTrigger value="privacy" aria-label="Privacy & Data">
+                <span className="sm:hidden">Privacy</span>
+                <span className="hidden sm:inline">Privacy & Data</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Account Tab */}
           <TabsContent value="account" className="space-y-6">
@@ -229,7 +237,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
               <CardContent className="space-y-6">
                 <div className="rounded-2xl border border-proofound-stone dark:border-border bg-muted/20 p-5">
                   <div className="flex items-start gap-3">
-                    <Calendar className="mt-0.5 h-5 w-5 text-proofound-forest" />
+                    <Calendar className="mt-0.5 h-5 w-5 shrink-0 text-proofound-forest" />
                     <div className="space-y-2">
                       <p className="font-medium text-foreground">
                         Manual meeting links are the launch default
@@ -244,7 +252,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                 </div>
                 <div className="rounded-2xl border border-proofound-stone dark:border-border bg-proofound-success-tint/30 p-5">
                   <div className="flex items-start gap-3">
-                    <Shield className="mt-0.5 h-5 w-5 text-proofound-forest" />
+                    <Shield className="mt-0.5 h-5 w-5 shrink-0 text-proofound-forest" />
                     <div className="space-y-2">
                       <p className="font-medium text-foreground">Why this changed</p>
                       <p className="text-sm text-muted-foreground">

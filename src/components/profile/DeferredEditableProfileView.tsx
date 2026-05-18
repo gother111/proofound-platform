@@ -30,7 +30,7 @@ function ProfileReadinessPreview({ profile }: { profile: ProfileData }) {
   const checklist = [
     {
       id: 'safe_shell',
-      label: 'Safe shell is complete',
+      label: 'Safe shell basics',
       passed: completionState.checks.hasSafeShell,
     },
     {
@@ -198,6 +198,12 @@ export function DeferredEditableProfileView(props: EditableProfileViewProps) {
     return (
       <div className="min-h-[calc(100vh-3.5rem)] bg-proofound-parchment p-4 md:p-6">
         <div className="mx-auto max-w-7xl space-y-4">
+          <div className="rounded-2xl border border-proofound-stone/60 bg-white/70 p-4 shadow-sm">
+            <p className="text-sm font-medium text-proofound-charcoal">Loading profile</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Preparing your proof, visibility, and readiness details.
+            </p>
+          </div>
           <div className="h-40 animate-pulse rounded-2xl bg-white/70" />
           <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
             <div className="h-72 animate-pulse rounded-2xl bg-white/70" />
@@ -216,6 +222,12 @@ export function DeferredEditableProfileView(props: EditableProfileViewProps) {
     return (
       <div className="min-h-[calc(100vh-3.5rem)] bg-proofound-parchment p-4 md:p-6">
         <div className="mx-auto max-w-7xl space-y-4">
+          <div className="rounded-2xl border border-proofound-stone/60 bg-white/70 p-4 shadow-sm">
+            <p className="text-sm font-medium text-proofound-charcoal">Opening profile tools</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Loading the editor around your current proof state.
+            </p>
+          </div>
           <div className="h-40 animate-pulse rounded-2xl bg-white/70" />
           <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
             <div className="h-72 animate-pulse rounded-2xl bg-white/70" />

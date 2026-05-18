@@ -305,7 +305,7 @@ describe('CvImportWizard', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('Extraction completed. Review and approve the results below.')
+        screen.getByText('CV analysis completed. Review and approve the results below.')
       ).toBeInTheDocument();
     });
 
@@ -314,7 +314,7 @@ describe('CvImportWizard', () => {
     });
 
     expect(
-      screen.queryByText('Extraction completed. Review and approve the results below.')
+      screen.queryByText('CV analysis completed. Review and approve the results below.')
     ).not.toBeInTheDocument();
   }, 10000);
 
@@ -458,7 +458,9 @@ describe('CvImportWizard', () => {
     await clickAnalyze();
 
     await waitFor(() => {
-      expect(toastErrorMock).toHaveBeenCalledWith('CV extraction queue unavailable');
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        'We could not prepare your CV for review. Please try again.'
+      );
     });
   });
 
@@ -529,12 +531,12 @@ describe('CvImportWizard', () => {
     });
 
     expect(toastInfoMock).toHaveBeenCalledWith(
-      'Python extraction hit a temporary issue. Retrying automatically.'
+      'CV analysis hit a temporary issue. Retrying automatically.'
     );
 
     await waitFor(() => {
       expect(
-        screen.getByText('Extraction completed. Review and approve the results below.')
+        screen.getByText('CV analysis completed. Review and approve the results below.')
       ).toBeInTheDocument();
     });
   });
@@ -587,7 +589,7 @@ describe('CvImportWizard', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('Extraction completed. Review and approve the results below.')
+        screen.getByText('CV analysis completed. Review and approve the results below.')
       ).toBeInTheDocument();
     });
   });
@@ -695,7 +697,7 @@ describe('CvImportWizard', () => {
 
       await waitFor(() => {
         expect(toastInfoMock).toHaveBeenCalledWith(
-          'Python extraction is still running in the background. You can leave this page and return later.'
+          'We are still reading your CV. You can leave this page and return later.'
         );
       });
 

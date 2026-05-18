@@ -52,6 +52,18 @@ const DRAFT_BODY_FIELDS: Record<DraftBucket, { key: string; list?: true }> = {
   unsupportedSkillDrafts: { key: 'sourceContext' },
 };
 
+const TECHNICAL_ERROR_TERMS =
+  /\b(api|backend|database|schema|endpoint|supabase|worker|python|typescript|gemini|uuid|tenant|cron|migration|rls|queue|job|extract|extraction)\b|[a-z]+_[a-z_]+/i;
+
+function userSafeCvError(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+  return trimmed && !TECHNICAL_ERROR_TERMS.test(trimmed) ? trimmed : fallback;
+}
+
 function getDraftTitle(item: Record<string, unknown>) {
   return (
     item.roleTitle ||
@@ -105,7 +117,7 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
 
   async function startExtraction() {
     if (!file || !consented) {
-      setError('Choose a CV and confirm consent before extraction.');
+      setError('Choose a CV and confirm consent before reading it.');
       return;
     }
 
@@ -122,7 +134,7 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
       });
       const created = await sessionResponse.json();
       if (!sessionResponse.ok) {
-        throw new Error(created.error || 'Start from CV is not available.');
+        throw new Error(userSafeCvError(created.error, 'Start from CV is not available.'));
       }
 
       const formData = new FormData();
@@ -136,7 +148,9 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
       );
       const extracted = await extractResponse.json();
       if (!extractResponse.ok) {
-        throw new Error(extracted.error || 'CV extraction failed.');
+        throw new Error(
+          userSafeCvError(extracted.error, 'We could not read this CV. Please try again.')
+        );
       }
       setSession(extracted);
       setAcceptedIds(new Set());

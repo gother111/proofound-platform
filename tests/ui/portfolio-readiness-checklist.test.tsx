@@ -39,7 +39,7 @@ describe('PortfolioReadinessChecklist', () => {
     );
 
     expect(screen.getByText('Complete your safe shell')).toBeInTheDocument();
-    expect(screen.getByText('Safe shell is complete')).toBeInTheDocument();
+    expect(screen.getByText('Safe shell basics')).toBeInTheDocument();
   });
 
   it('points users to publish once all proof gates are complete', () => {

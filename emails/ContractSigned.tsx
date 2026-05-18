@@ -115,7 +115,7 @@ export default function ContractSigned({
 
             <Text style={paragraph}>
               Both you and the {role === 'organization' ? 'candidate' : 'organization'} have
-              attested to this agreement. This creates a verified work experience record on
+              attested to this agreement. This creates a verified work experience entry on
               Proofound.
             </Text>
 

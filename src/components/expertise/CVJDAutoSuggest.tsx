@@ -21,7 +21,7 @@ import {
   type SkillReviewSelectionMeta,
 } from '@/components/expertise/cv-import/SkillReviewPanel';
 import { getAmbiguousTokenHints } from '@/lib/expertise/skill-confidence';
-import { internalValueLabel, skillDisplayLabel } from '@/lib/copy/labels';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -153,6 +153,8 @@ const GENERIC_BACKEND_ERRORS = new Set([
   'Failed to process CV wizard suggestions',
   'Failed to process CV documents',
 ]);
+const TECHNICAL_ERROR_TERMS =
+  /\b(api|backend|database|schema|endpoint|supabase|worker|python|typescript|gemini|uuid|tenant|cron|migration|rls|queue|job|extract|extraction)\b|[a-z]+_[a-z_]+/i;
 
 function formatRelativeTimeLabel(dateIso: string | undefined): string | undefined {
   if (!dateIso) {
@@ -398,6 +400,19 @@ async function readTextSafely(response: Response): Promise<string> {
 
 async function readErrorMessage(response: Response, fallback: string): Promise<string> {
   const payload = await readJsonSafely(response);
+  const safeMessage = (value: unknown): string | null => {
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed || TECHNICAL_ERROR_TERMS.test(trimmed)) {
+      return null;
+    }
+
+    return trimmed;
+  };
+
   if (isRecord(payload)) {
     const error = payload.error;
     const message = payload.message;
@@ -408,20 +423,22 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
       message.trim().length > 0 &&
       GENERIC_BACKEND_ERRORS.has(error.trim())
     ) {
-      return message;
+      return safeMessage(message) ?? fallback;
     }
 
-    if (typeof error === 'string' && error.trim().length > 0) {
-      return error;
+    const safeError = safeMessage(error);
+    if (safeError) {
+      return safeError;
     }
 
-    if (typeof message === 'string' && message.trim().length > 0) {
-      return message;
+    const safePayloadMessage = safeMessage(message);
+    if (safePayloadMessage) {
+      return safePayloadMessage;
     }
   }
 
   const textPayload = await readTextSafely(response);
-  if (textPayload.length > 0) {
+  if (textPayload.length > 0 && !TECHNICAL_ERROR_TERMS.test(textPayload)) {
     return textPayload;
   }
 
@@ -1013,7 +1030,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
     });
 
     try {
-      setRunningProgress('uploading', 35, 'Submitting text to extraction service...');
+      setRunningProgress('uploading', 35, 'Preparing text for analysis...');
       const response = await apiFetch('/api/expertise/cv-import/suggest?engine=gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1403,16 +1420,9 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                 <div className="mt-2 space-y-1 text-muted-foreground">
                   <p>Smart matching used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
                   <p>
-                    Used backup matcher: {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
+                    Used backup matching: {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
                   </p>
                   <p>Needs mapping: {apiMetadata.unmapped_candidates_count}</p>
-                  {apiMetadata.engine_used && (
-                    <p>Matcher: {internalValueLabel(apiMetadata.engine_used)}</p>
-                  )}
-                  {apiMetadata.ai_model && <p>AI model: {apiMetadata.ai_model}</p>}
-                  {typeof apiMetadata.cost_ore === 'number' && (
-                    <p>Cost: {(apiMetadata.cost_ore / 100).toFixed(2)} SEK</p>
-                  )}
                 </div>
               )}
             </div>
@@ -1561,7 +1571,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
       {documents.length === 0 && (
         <Card>
           <CardContent className="pt-6 text-sm text-muted-foreground">
-            Paste text and run analysis to begin extraction and mapping.
+            Paste text and run analysis to begin skill review.
           </CardContent>
         </Card>
       )}

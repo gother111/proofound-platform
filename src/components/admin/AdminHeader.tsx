@@ -14,20 +14,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Bell, Search, ChevronRight, LogOut, User } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Menu, ChevronRight, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AdminSidebar } from './AdminSidebar';
 
 interface AdminHeaderProps {
   adminEmail?: string;
   adminRole?: string;
-  collapsed: boolean;
-  setCollapsed: (collapsed: boolean) => void;
 }
 
-export function AdminHeader({ adminEmail, adminRole, collapsed, setCollapsed }: AdminHeaderProps) {
+export function AdminHeader({ adminEmail, adminRole }: AdminHeaderProps) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
 
@@ -54,8 +50,7 @@ export function AdminHeader({ adminEmail, adminRole, collapsed, setCollapsed }: 
     <header
       className={cn(
         'sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background px-3 md:px-6 transition-all duration-200',
-        scrolled && 'shadow-sm',
-        collapsed ? 'md:pl-20' : 'md:pl-64'
+        scrolled && 'shadow-sm'
       )}
     >
       {/* Mobile Sidebar Trigger */}
@@ -93,22 +88,6 @@ export function AdminHeader({ adminEmail, adminRole, collapsed, setCollapsed }: 
       </div>
 
       <div className="flex-1" />
-
-      {/* Search (Optional placeholder) */}
-      <div className="hidden md:flex relative w-64">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search..."
-          className="pl-9 h-9 bg-muted/50 border-none focus-visible:bg-background focus-visible:ring-1"
-        />
-      </div>
-
-      {/* Notifications */}
-      <Button variant="ghost" size="icon" className="relative" aria-label="Open notifications">
-        <Bell className="h-5 w-5 text-muted-foreground" />
-        <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-600 border-2 border-background" />
-      </Button>
 
       {/* User Profile */}
       <DropdownMenu>

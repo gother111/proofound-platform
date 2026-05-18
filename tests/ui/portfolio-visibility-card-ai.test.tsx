@@ -55,7 +55,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     });
   });
 
-  it('shows Check privacy before publishing and reports deterministic safe-mode result', async () => {
+  it('shows Check privacy before publishing and reports a clear safe-mode result', async () => {
     render(<PortfolioVisibilityCard />);
 
     const button = await screen.findByRole('button', {
@@ -64,7 +64,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(screen.getByText(/No high-risk deterministic flags were found/i)).toBeInTheDocument();
+      expect(screen.getByText(/No high-risk privacy concerns were found/i)).toBeInTheDocument();
     });
     expect(apiFetchMock).toHaveBeenCalledWith(
       '/api/ai/privacy-preflight/check',
@@ -115,7 +115,15 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('reports precise high-risk deterministic flags without claiming safety', async () => {
+  it('names each visibility switch so mobile controls remain clear', async () => {
+    render(<PortfolioVisibilityCard />);
+
+    expect(await screen.findByRole('switch', { name: /public page enabled/i })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: /proof bar block/i })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: /contact section/i })).toBeInTheDocument();
+  });
+
+  it('reports precise high-risk privacy concerns without claiming safety', async () => {
     apiFetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -138,7 +146,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/1 deterministic flag found/i)).toBeInTheDocument();
+      expect(screen.getByText(/1 privacy concern found/i)).toBeInTheDocument();
     });
     expect(screen.getByText(/public bio: Email-like contact information/i)).toBeInTheDocument();
     expect(screen.queryByText(/\bsafe\b/i)).not.toBeInTheDocument();
@@ -161,7 +169,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/Privacy preflight is temporarily unavailable/i)).toBeInTheDocument();
+      expect(screen.getByText(/Privacy check is temporarily unavailable/i)).toBeInTheDocument();
     });
     expect(screen.getByText(/Manual checklist:/i)).toBeInTheDocument();
   });

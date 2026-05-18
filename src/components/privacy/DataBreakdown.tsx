@@ -185,14 +185,14 @@ export function DataBreakdown() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <CardTitle>Your data</CardTitle>
             <CardDescription>
               A detailed view of what Proofound stores for your account
             </CardDescription>
           </div>
-          <Button onClick={handleExportData} disabled={exporting}>
+          <Button onClick={handleExportData} disabled={exporting} className="w-full sm:w-auto">
             <Download className="mr-2 h-4 w-4" />
             {exporting ? 'Preparing...' : 'Download my data'}
           </Button>

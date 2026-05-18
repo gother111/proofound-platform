@@ -301,7 +301,7 @@ export function MetricsDashboard() {
         <div>
           <h2 className="text-2xl font-bold text-foreground">Operational Metrics</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Outcome, proof, trust, workflow, and publication health for the MVP corridor.
+            Outcome, proof, trust, workflow, and publication health for the hiring corridor.
           </p>
         </div>
         {lastUpdated ? (
