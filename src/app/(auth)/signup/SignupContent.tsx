@@ -155,7 +155,7 @@ export function SignupContent() {
               <button
                 type="button"
                 onClick={() => router.push('/login')}
-                className="font-medium text-proofound-forest hover:text-[#2D5D4A] hover:underline inline-flex min-h-[44px] items-center px-2 -mx-2"
+                className="-mx-2 inline-flex min-h-[44px] items-center rounded-sm px-2 font-medium text-proofound-forest hover:text-[#2D5D4A] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
               >
                 Sign in
               </button>
@@ -168,14 +168,14 @@ export function SignupContent() {
           By creating an account, you agree to our{' '}
           <a
             href="/terms"
-            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+            className="rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             Terms of Service
           </a>{' '}
           and{' '}
           <a
             href="/privacy"
-            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+            className="rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             Privacy Policy
           </a>

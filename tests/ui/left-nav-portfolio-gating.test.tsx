@@ -91,6 +91,16 @@ describe('LeftNav portfolio gating', () => {
     expect(screen.queryByRole('link', { name: /expertise/i })).not.toBeInTheDocument();
   });
 
+  it('keeps mobile navigation links visibly focusable', () => {
+    render(<LeftNav basePath="/app/i" />);
+
+    const overviewLinks = screen.getAllByRole('link', { name: /overview/i });
+    const mobileOverviewLink = overviewLinks[overviewLinks.length - 1];
+
+    expect(mobileOverviewLink).toHaveClass('focus-visible:ring-proofound-forest');
+    expect(mobileOverviewLink).toHaveClass('focus-visible:ring-offset-neutral-light-50');
+  });
+
   it('keeps individual settings discoverable from the account menu', () => {
     render(<TopBarProfileMenu userName="Yurii" basePath="/app/i" onClose={vi.fn()} />);
 
@@ -106,7 +116,7 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/i/settings?tab=privacy'
     );
-    expect(screen.getByRole('menuitem', { name: /audit log/i })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: /account history/i })).toHaveAttribute(
       'href',
       '/app/i/settings/audit-log'
     );

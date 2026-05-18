@@ -2863,3 +2863,43 @@ yet` recovery actions are clear and reachable. Re-tested after making visual
 - `npm run typecheck` - pass
 - `npm run docs:freshness` - pass in warning mode with the existing 32 orphan
   document warnings.
+
+## Keyboard Accessibility Continuation - Auth And Mobile Shell Controls
+
+### Updated Verdict
+
+Improved for representative auth and app-shell controls.
+
+This continuation found and fixed controls that were visually understandable but
+not explicit enough for keyboard and assistive-technology paths: login and
+signup consent checkboxes now carry direct names, the compact cookie close
+control has a specific action label and focus ring, and mobile bottom navigation
+links have visible focus treatment.
+
+### Browser Verification
+
+Verified with the Codex in-app Browser using DOM-backed rendered checks:
+
+- Mobile `/login` at 390px - no horizontal overflow; `Remember me`, password
+  visibility, forgot-password, and submit controls are visible and named.
+- Mobile `/signup/organization` at 390px - no horizontal overflow; required
+  consent, marketing opt-in, password visibility, and submit controls are
+  visible and named.
+- Mobile `/app/i/settings/privacy` at 390px - no horizontal overflow; bottom
+  navigation links expose names and focus-visible styling.
+- Desktop `/login` at 1280px - no horizontal overflow; login control names and
+  focus-visible classes remain present.
+
+Evidence:
+
+- `.artifacts/ux-browser-goal-2026-05-18/keyboard/keyboard-accessibility-browser-state.json`
+
+Note: native Tab dispatch in the current in-app Browser session kept focus on
+`body`, and the Browser DOM proxy did not expose `HTMLElement.focus()`. The
+saved evidence therefore records rendered tabbables, names, focus-visible
+classes, and overflow rather than claiming a full native Tab traversal.
+
+### Automated Checks
+
+- `npm run test -- tests/ui/signin-form-mobile-clarity.test.tsx tests/ui/signup-form-mobile-clarity.test.tsx tests/ui/cookie-banner.test.tsx tests/ui/left-nav-portfolio-gating.test.tsx`
+  - pass

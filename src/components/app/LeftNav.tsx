@@ -303,7 +303,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto ${
+                className={`relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 ${
                   isActive
                     ? 'text-proofound-forest'
                     : 'text-muted-foreground hover:text-proofound-charcoal'

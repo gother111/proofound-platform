@@ -291,15 +291,16 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
               >
                 <Checkbox
                   id="remember"
+                  aria-label="Remember me"
                   checked={rememberMe}
                   onCheckedChange={(checked) => setRememberMe(checked === true)}
-                  className="h-6 w-6 rounded-md border-proofound-stone bg-white data-[state=checked]:bg-proofound-forest data-[state=checked]:text-white"
+                  className="h-6 w-6 rounded-md border-proofound-stone bg-white data-[state=checked]:bg-proofound-forest data-[state=checked]:text-white focus-visible:ring-proofound-forest/30"
                 />
                 Remember me
               </label>
               <Link
                 href="/reset-password"
-                className="text-[14px] font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] inline-flex min-h-[44px] items-center px-2 -mx-2"
+                className="-mx-2 inline-flex min-h-[44px] items-center rounded-sm px-2 text-[14px] font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
               >
                 Forgot password?
               </Link>
@@ -331,7 +332,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   onCreateAccount();
                 }
               }}
-              className="font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] inline-flex min-h-[44px] items-center px-2 -mx-2"
+              className="-mx-2 inline-flex min-h-[44px] items-center rounded-sm px-2 font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
             >
               Create account
             </Link>
@@ -343,14 +344,14 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           By signing in, you agree to our{' '}
           <a
             href="/terms"
-            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+            className="rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             Terms of Service
           </a>{' '}
           and{' '}
           <a
             href="/privacy"
-            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+            className="rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             Privacy Policy
           </a>

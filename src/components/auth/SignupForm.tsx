@@ -367,6 +367,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 <Checkbox
                   id="signup-gdpr-consent"
                   data-testid="gdpr-consent"
+                  aria-label="I agree to the Privacy Policy and Terms of Service"
                   checked={gdprConsent}
                   onCheckedChange={(checked) => setGdprConsent(checked === true)}
                   required
@@ -385,7 +386,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                     href="/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`font-medium underline underline-offset-2 transition-colors inline-flex min-h-[44px] items-center ${
+                    className={`inline-flex min-h-[44px] items-center rounded-sm font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
                       accountType === 'organization'
                         ? 'text-proofound-terracotta hover:text-[#B5673F]'
                         : 'text-proofound-forest hover:text-[#2D5D4A]'
@@ -398,7 +399,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                     href="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`font-medium underline underline-offset-2 transition-colors inline-flex min-h-[44px] items-center ${
+                    className={`inline-flex min-h-[44px] items-center rounded-sm font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
                       accountType === 'organization'
                         ? 'text-proofound-terracotta hover:text-[#B5673F]'
                         : 'text-proofound-forest hover:text-[#2D5D4A]'
@@ -415,6 +416,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 <Checkbox
                   id="signup-marketing-opt-in"
                   data-testid="marketing-opt-in"
+                  aria-label="Send me updates about new features and matching opportunities"
                   checked={marketingOptIn}
                   onCheckedChange={(checked) => setMarketingOptIn(checked === true)}
                   className={`mt-0.5 h-6 w-6 cursor-pointer rounded-md border-proofound-stone bg-white ${
@@ -456,7 +458,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               <button
                 type="button"
                 onClick={() => router.push('/login')}
-                className={`font-medium hover:underline ${
+                className={`inline-flex min-h-[44px] items-center rounded-sm px-2 font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
                   accountType === 'organization'
                     ? 'text-proofound-terracotta hover:text-[#B5673F]'
                     : 'text-proofound-forest hover:text-[#2D5D4A]'
@@ -473,7 +475,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           By creating an account, you agree to our{' '}
           <a
             href="/terms"
-            className={`font-medium underline underline-offset-2 ${
+            className={`rounded-sm font-medium underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
               accountType === 'organization'
                 ? 'text-proofound-terracotta hover:text-[#B5673F]'
                 : 'text-proofound-forest hover:text-[#2D5D4A]'
@@ -484,7 +486,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           and{' '}
           <a
             href="/privacy"
-            className={`font-medium underline underline-offset-2 ${
+            className={`rounded-sm font-medium underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
               accountType === 'organization'
                 ? 'text-proofound-terracotta hover:text-[#B5673F]'
                 : 'text-proofound-forest hover:text-[#2D5D4A]'

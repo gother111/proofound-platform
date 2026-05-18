@@ -112,13 +112,13 @@ export function CookieBanner() {
                 >
                   <Link
                     href="/privacy"
-                    className="text-proofound-forest underline-offset-4 hover:underline"
+                    className="rounded-sm text-proofound-forest underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                   >
                     Privacy Policy
                   </Link>
                   <Link
                     href="/cookies"
-                    className="text-proofound-forest underline-offset-4 hover:underline"
+                    className="rounded-sm text-proofound-forest underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                   >
                     Cookie Policy
                   </Link>
@@ -126,7 +126,7 @@ export function CookieBanner() {
                     href={`/cookies/settings?returnTo=${encodeURIComponent(
                       typeof window !== 'undefined' ? window.location.pathname : '/'
                     )}`}
-                    className="text-proofound-forest underline-offset-4 hover:underline"
+                    className="rounded-sm text-proofound-forest underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                   >
                     Cookie Settings
                   </Link>
@@ -154,8 +154,8 @@ export function CookieBanner() {
               </Button>
               <button
                 onClick={handleDecline}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-proofound-stone/30 hover:text-foreground md:hidden"
-                aria-label="Close"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-proofound-stone/30 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 md:hidden"
+                aria-label="Close cookie preferences"
               >
                 <X className="h-4 w-4" />
               </button>
