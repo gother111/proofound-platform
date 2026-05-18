@@ -8,6 +8,7 @@ import { AuditLogTable } from '@/components/privacy/AuditLogTable';
 import { DeleteAccountSection } from '@/components/privacy/DeleteAccountSection';
 import { toast } from 'sonner';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { PrivacySettingsLoadingShell } from './PrivacySettingsLoadingShell';
 
 export function PrivacySettingsClient() {
   const [initialVisibility, setInitialVisibility] = useState<any>(null);
@@ -53,13 +54,7 @@ export function PrivacySettingsClient() {
   };
 
   if (loading) {
-    return (
-      <AppSurface>
-        <div className="flex items-center justify-center">
-          <div className="text-muted-foreground">Loading privacy settings...</div>
-        </div>
-      </AppSurface>
-    );
+    return <PrivacySettingsLoadingShell status="Preparing privacy settings..." />;
   }
 
   return (

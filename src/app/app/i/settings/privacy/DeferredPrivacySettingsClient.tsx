@@ -3,6 +3,7 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { Button } from '@/components/ui/button';
+import { PrivacySettingsLoadingShell } from './PrivacySettingsLoadingShell';
 
 type PrivacySettingsLoader = () => Promise<{ PrivacySettingsClient: ComponentType }>;
 
@@ -62,24 +63,7 @@ export function DeferredPrivacySettingsClient({
   }
 
   if (!PrivacySettingsView) {
-    return (
-      <AppSurface>
-        <div className="mx-auto max-w-4xl space-y-6">
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading privacy controls...
-            </p>
-          </div>
-          <div className="space-y-2">
-            <div className="h-9 w-64 rounded bg-muted/60" />
-            <div className="h-5 w-96 max-w-full rounded bg-muted/60" />
-          </div>
-          <div className="h-36 rounded-2xl bg-muted/60" />
-          <div className="h-48 rounded-2xl bg-muted/60" />
-          <div className="h-48 rounded-2xl bg-muted/60" />
-        </div>
-      </AppSurface>
-    );
+    return <PrivacySettingsLoadingShell status="Loading privacy controls..." />;
   }
 
   return <PrivacySettingsView />;

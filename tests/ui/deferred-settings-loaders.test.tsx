@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DeferredPrivacySettingsClient } from '@/app/app/i/settings/privacy/DeferredPrivacySettingsClient';
+import { PrivacySettingsClient } from '@/app/app/i/settings/privacy/PrivacySettingsClient';
 import { DeferredVerificationsClient } from '@/app/app/i/verifications/DeferredVerificationsClient';
 import { DeferredSettingsContent } from '@/components/settings/DeferredSettingsContent';
 
@@ -12,7 +13,20 @@ describe('deferred settings loaders', () => {
 
     render(<DeferredPrivacySettingsClient loadPrivacySettingsView={loadPrivacySettingsView} />);
 
+    expect(screen.getByRole('heading', { level: 1, name: 'Privacy settings' })).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Loading privacy controls...');
+  });
+
+  it('keeps the privacy page framed while visibility settings load', () => {
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn(() => new Promise<never>(() => {})) as typeof fetch;
+
+    render(<PrivacySettingsClient />);
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Privacy settings' })).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Preparing privacy settings...');
+
+    global.fetch = originalFetch;
   });
 
   it('lets users retry privacy controls after the chunk fails', async () => {
