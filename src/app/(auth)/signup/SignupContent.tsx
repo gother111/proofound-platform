@@ -52,7 +52,7 @@ export function SignupContent() {
       <button
         type="button"
         onClick={() => router.push('/')}
-        className="absolute left-6 top-6 flex min-h-[44px] items-center gap-2 px-2 -mx-2 text-[#44504B] transition-colors hover:text-foreground"
+        className="absolute left-4 top-6 flex min-h-[44px] items-center gap-2 rounded-sm px-3 text-[#44504B] transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:left-6"
       >
         <ArrowLeft className="w-4 h-4" />
         <span className="text-sm">Back</span>
@@ -168,14 +168,14 @@ export function SignupContent() {
           By creating an account, you agree to our{' '}
           <a
             href="/terms"
-            className="rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center rounded-sm px-1 font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             Terms of Service
           </a>{' '}
           and{' '}
           <a
             href="/privacy"
-            className="rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center rounded-sm px-1 font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             Privacy Policy
           </a>

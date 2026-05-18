@@ -67,11 +67,18 @@ describe('signup mobile clarity', () => {
 
     const individual = screen.getByTestId('signup-choice-individual');
     const organization = screen.getByTestId('signup-choice-organization');
+    const backButton = screen.getByRole('button', { name: 'Back' });
+    const termsLink = screen.getByRole('link', { name: 'Terms of Service' });
+    const privacyLink = screen.getByRole('link', { name: 'Privacy Policy' });
 
     expect(individual).toHaveClass('w-full');
     expect(organization).toHaveClass('w-full');
     expect(individual.parentElement).toHaveClass('min-w-0');
     expect(organization.parentElement).toHaveClass('min-w-0');
+    expect(backButton).toHaveClass('left-4');
+    expect(backButton).not.toHaveClass('-mx-2');
+    expect(termsLink).toHaveClass('min-h-11');
+    expect(privacyLink).toHaveClass('min-h-11');
   });
 
   it('uses clear, named consent checkboxes and client validation', async () => {
