@@ -106,6 +106,18 @@ function clientVisualVerificationEnabled() {
   return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
 }
 
+function verificationLoadError(status: number, error?: string | null) {
+  if (status === 410 || /expired/i.test(error ?? '')) {
+    return 'This verification request has expired. Ask the requester to send a new link if needed.';
+  }
+
+  if (status === 404 || status === 400 || /not found|invalid|unavailable/i.test(error ?? '')) {
+    return 'This verification link is invalid, expired, or no longer available.';
+  }
+
+  return 'We could not open this verification request right now.';
+}
+
 export default function VerifyCustomRequestPage() {
   const params = useParams();
   const router = useRouter();
@@ -147,7 +159,7 @@ export default function VerifyCustomRequestPage() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          setError(errorData.error || 'Failed to load verification request');
+          setError(verificationLoadError(response.status, errorData.error));
           return;
         }
 
@@ -162,7 +174,7 @@ export default function VerifyCustomRequestPage() {
           );
         }
       } catch (_loadError) {
-        setError('Failed to load verification request');
+        setError('This verification link is invalid, expired, or no longer available.');
       } finally {
         setLoading(false);
       }

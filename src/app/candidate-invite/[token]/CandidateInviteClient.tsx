@@ -199,6 +199,18 @@ const DEFAULT_ACCOUNT_SAVE_CONTROLS: AccountSaveControls = {
   assignmentReviewUrl: '/app/i/matching',
 };
 
+function candidateInviteLoadError(status: number, error?: string | null) {
+  if (status === 410 || /expired/i.test(error ?? '')) {
+    return 'This invitation has expired. Ask the company to send a new invite if needed.';
+  }
+
+  if (status === 404 || status === 400 || /not found|invalid|unavailable/i.test(error ?? '')) {
+    return 'This invitation link is invalid, expired, or no longer available.';
+  }
+
+  return 'We could not open this invitation right now.';
+}
+
 export function CandidateInviteClient({
   token,
   initialState,
@@ -250,17 +262,8 @@ export function CandidateInviteClient({
       ]);
 
       if (!inviteResponse.ok) {
-        if (inviteResponse.status === 404) {
-          setError('This invitation could not be found.');
-          return;
-        }
-        if (inviteResponse.status === 410) {
-          setError('This invitation has expired.');
-          return;
-        }
-
         const payload = await inviteResponse.json().catch(() => null);
-        setError(payload?.error ?? 'Unable to load invitation.');
+        setError(candidateInviteLoadError(inviteResponse.status, payload?.error));
         return;
       }
 
@@ -294,7 +297,7 @@ export function CandidateInviteClient({
       }
     } catch (loadError) {
       console.error('Failed to load candidate invite state:', loadError);
-      setError('Unable to load invitation.');
+      setError('This invitation link is invalid, expired, or no longer available.');
     } finally {
       setLoading(false);
     }

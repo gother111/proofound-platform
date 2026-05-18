@@ -91,4 +91,52 @@ describe('verification link visual fixtures', () => {
     });
     expect(apiFetchMock).not.toHaveBeenCalled();
   });
+
+  it('shows neutral invalid-link copy for failed skill verification links', async () => {
+    routeParams = { token: 'not-a-real-token' };
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'false');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 503,
+        json: async () => ({ error: 'Service temporarily unavailable' }),
+      }))
+    );
+
+    render(<VerifySkillPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /unable to load request/i })).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/This verification link is invalid, expired, or no longer available/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Service temporarily unavailable/i)).not.toBeInTheDocument();
+  });
+
+  it('shows neutral invalid-link copy for failed custom verification links', async () => {
+    routeParams = { token: 'not-a-real-token' };
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'false');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 503,
+        json: async () => ({ error: 'Service temporarily unavailable' }),
+      }))
+    );
+
+    render(<VerifyCustomRequestPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /unable to load request/i })).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/This verification link is invalid, expired, or no longer available/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Service temporarily unavailable/i)).not.toBeInTheDocument();
+  });
 });

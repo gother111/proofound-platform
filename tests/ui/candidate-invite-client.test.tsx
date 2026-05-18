@@ -278,6 +278,40 @@ describe('CandidateInviteClient test_match flow', () => {
     );
   });
 
+  it('shows a neutral unavailable invitation state for invalid public tokens', async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/not-a-real-token') {
+        return {
+          ok: false,
+          status: 503,
+          json: async () => ({ error: 'Service temporarily unavailable' }),
+        };
+      }
+
+      if (url === '/api/user/me') {
+        return {
+          ok: false,
+          json: async () => ({ error: 'Unauthorized' }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(<CandidateInviteClient token="not-a-real-token" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /invitation unavailable/i })).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/This invitation link is invalid, expired, or no longer available/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Service temporarily unavailable/i)).not.toBeInTheDocument();
+  });
+
   it('keeps assignment proof applications proof-first and submits owner-only Proof Packs', async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url === '/api/candidate-invites/token-value') {
