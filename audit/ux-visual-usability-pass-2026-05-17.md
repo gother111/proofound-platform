@@ -1008,6 +1008,49 @@ Evidence file:
 - `npm run test -- tests/ui/accept-invite-visual-client.test.tsx tests/ui/confirm-reset-password-form.test.tsx`
   - pass
 
+## Organization Signup Continuation - Current Route Proof
+
+### Updated Verdict
+
+The organization signup route is no longer a Browser evidence risk in the
+local mock UX pass.
+
+The full coverage matrix still carried an older risk note saying
+`/signup/organization` redirected to login during local validation. A fresh
+Codex in-app Browser pass against the current implementation proved the direct
+route, query-param entry route, mobile validation state, and mock success
+handoff.
+
+### Browser Verification
+
+Verified with the Codex in-app Browser:
+
+- Mobile `/signup/organization` at 390px - organization form renders directly
+  with 316px-wide fields, named password reveal, consent controls, social
+  actions, and no horizontal overflow.
+- Mobile empty submit at 390px - the validation summary says
+  `Please enter your email address.`, receives focus, and the route stays on
+  `/signup/organization`.
+- Mobile valid mock submit at 390px - keyboard-entered fixture credentials and
+  required consent produce the `Check your email` success handoff with
+  `Return to login`, no redirect to the login form, and no horizontal overflow.
+- Narrow mobile initial render at 375px - the organization form renders with
+  no horizontal overflow.
+- Desktop `/signup/organization` at 1280px - the form remains centered and
+  composed with no horizontal overflow.
+- Desktop `/signup?type=organization` at 1280px - resolves into the
+  organization form rather than the choice screen, with no horizontal overflow.
+
+Evidence file:
+
+- `.artifacts/ux-browser-goal-2026-05-18/organization-signup/browser-state.json`
+
+### Automated Checks
+
+- No product code changed in this continuation. The relevant verification is
+  Browser-rendered evidence plus `npm run docs:freshness` for the audit/matrix
+  update.
+
 ## Public Feedback Token Continuation - Filled State Fixture And Embedded Form
 
 ### Updated Verdict
