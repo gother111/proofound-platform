@@ -62,6 +62,9 @@ export function DeferredOrgMatchingClient({
   if (!MatchingView) {
     return (
       <div className="mx-auto w-full max-w-6xl space-y-6">
+        <p className="text-sm text-muted-foreground" role="status">
+          Loading assignments and matches...
+        </p>
         <PageIntroSkeleton />
         <CardGridSkeleton
           count={4}
