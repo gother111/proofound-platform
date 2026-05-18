@@ -568,7 +568,7 @@ export default function OrganizationInterviewsPage() {
                                   href={interview.interview.meetingUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-sm hover:underline"
+                                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                                   style={{ color: '#1C4D3A' }}
                                 >
                                   Join Meeting
@@ -578,16 +578,16 @@ export default function OrganizationInterviewsPage() {
                                   href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-sm hover:underline"
+                                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                                   style={{ color: '#1C4D3A' }}
                                 >
-                                  Add to Google Calendar
+                                  Add to calendar
                                   <CalendarPlus className="h-3 w-3" />
                                 </a>
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="h-7 px-2 text-xs"
+                                  className="min-h-10 px-3 text-xs"
                                   onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
                                 >
                                   <Download className="mr-1 h-3 w-3" />
@@ -659,7 +659,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => openEditDialog(interview)}
                             disabled={!canEditInterview(interview)}
-                            className="flex w-full items-center justify-center gap-2"
+                            className="flex min-h-10 w-full items-center justify-center gap-2"
                           >
                             <Pencil className="h-4 w-4" />
                             {(interview.interview?.rescheduleCount ?? 0) > 0
@@ -671,7 +671,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleCancelInterview(interview)}
                             disabled={isCancellingInterviewId === interview.interview?.id}
-                            className="flex w-full items-center justify-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
+                            className="flex min-h-10 w-full items-center justify-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
                           >
                             <XCircle className="h-4 w-4" />
                             {isCancellingInterviewId === interview.interview?.id
@@ -688,7 +688,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleCompleteInterview(interview)}
                             disabled={isCompletingInterviewId === interview.interview?.id}
-                            className="flex w-full items-center justify-center gap-2"
+                            className="flex min-h-10 w-full items-center justify-center gap-2"
                             style={{ backgroundColor: '#1C4D3A' }}
                           >
                             <FileCheck className="h-4 w-4" />
@@ -701,7 +701,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleMarkNoShow(interview)}
                             disabled={isMarkingNoShowInterviewId === interview.interview?.id}
-                            className="flex w-full items-center justify-center gap-2"
+                            className="flex min-h-10 w-full items-center justify-center gap-2"
                           >
                             <XCircle className="h-4 w-4" />
                             {isMarkingNoShowInterviewId === interview.interview?.id
@@ -716,7 +716,7 @@ export default function OrganizationInterviewsPage() {
                           variant="default"
                           size="sm"
                           onClick={() => handleOpenDecisionDialog(interview)}
-                          className="flex w-full items-center justify-center gap-2"
+                          className="flex min-h-10 w-full items-center justify-center gap-2"
                           style={{ backgroundColor: '#1C4D3A' }}
                         >
                           <FileCheck className="h-4 w-4" />
@@ -735,7 +735,7 @@ export default function OrganizationInterviewsPage() {
                                 [verification.id]: event.target.value,
                               }))
                             }
-                            className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
+                            className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
                           >
                             <option value="">Select engagement type</option>
                             <option value="full_time">Full-time</option>
@@ -748,7 +748,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleConfirmEngagement(interview)}
                             disabled={isConfirmingEngagementId === verification.id}
-                            className="flex w-full items-center justify-center gap-2"
+                            className="flex min-h-10 w-full items-center justify-center gap-2"
                           >
                             <FileCheck className="h-4 w-4" />
                             {isConfirmingEngagementId === verification.id

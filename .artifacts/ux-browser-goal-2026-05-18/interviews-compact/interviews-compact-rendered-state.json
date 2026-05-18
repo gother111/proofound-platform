@@ -1,0 +1,171 @@
+{
+  "createdAt": "2026-05-18T14:57:36.374Z",
+  "rows": [
+    {
+      "label": "org-mobile390",
+      "url": "http://localhost:3000/app/o/test-org/interviews",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "hasFilledFixtures": true,
+      "hasCompactMobileStep": true,
+      "visibleTimelineChipCount": 0,
+      "touchSizedInterviewControls": true,
+      "interviewControls": [
+        {
+          "text": "Join Meeting",
+          "tag": "a",
+          "width": 133,
+          "height": 40,
+          "top": 730,
+          "left": 158
+        },
+        {
+          "text": "Add to calendar",
+          "tag": "a",
+          "width": 152,
+          "height": 40,
+          "top": 786,
+          "left": 33
+        },
+        {
+          "text": ".ics",
+          "tag": "button",
+          "width": 72,
+          "height": 40,
+          "top": 786,
+          "left": 201
+        },
+        {
+          "text": "Edit Interview",
+          "tag": "button",
+          "width": 324,
+          "height": 40,
+          "top": 888,
+          "left": 33
+        },
+        {
+          "text": "Cancel Interview",
+          "tag": "button",
+          "width": 324,
+          "height": 40,
+          "top": 936,
+          "left": 33
+        },
+        {
+          "text": "Mark Complete",
+          "tag": "button",
+          "width": 324,
+          "height": 40,
+          "top": 984,
+          "left": 33
+        },
+        {
+          "text": "Mark No-show",
+          "tag": "button",
+          "width": 324,
+          "height": 40,
+          "top": 1032,
+          "left": 33
+        },
+        {
+          "text": "Confirm Engagement",
+          "tag": "button",
+          "width": 324,
+          "height": 40,
+          "top": 1818,
+          "left": 33
+        }
+      ],
+      "offenderCount": 0,
+      "offenders": []
+    },
+    {
+      "label": "org-desktop1280",
+      "url": "http://localhost:3000/app/o/test-org/interviews",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "overflow": false,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "hasFilledFixtures": true,
+      "hasCompactMobileStep": false,
+      "visibleTimelineChipCount": 18,
+      "touchSizedInterviewControls": true,
+      "interviewControls": [
+        {
+          "text": "Join Meeting",
+          "tag": "a",
+          "width": 133,
+          "height": 40,
+          "top": 635,
+          "left": 462
+        },
+        {
+          "text": "Add to calendar",
+          "tag": "a",
+          "width": 152,
+          "height": 40,
+          "top": 635,
+          "left": 611
+        },
+        {
+          "text": ".ics",
+          "tag": "button",
+          "width": 72,
+          "height": 40,
+          "top": 635,
+          "left": 779
+        },
+        {
+          "text": "Edit Interview",
+          "tag": "button",
+          "width": 220,
+          "height": 40,
+          "top": 210,
+          "left": 963
+        },
+        {
+          "text": "Cancel Interview",
+          "tag": "button",
+          "width": 220,
+          "height": 40,
+          "top": 258,
+          "left": 963
+        },
+        {
+          "text": "Mark Complete",
+          "tag": "button",
+          "width": 220,
+          "height": 40,
+          "top": 306,
+          "left": 963
+        },
+        {
+          "text": "Mark No-show",
+          "tag": "button",
+          "width": 220,
+          "height": 40,
+          "top": 354,
+          "left": 963
+        },
+        {
+          "text": "Confirm Engagement",
+          "tag": "button",
+          "width": 220,
+          "height": 40,
+          "top": 831,
+          "left": 963
+        }
+      ],
+      "offenderCount": 0,
+      "offenders": []
+    }
+  ]
+}

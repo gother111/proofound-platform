@@ -2961,3 +2961,58 @@ Evidence:
 
 - `npm run test -- tests/lib/public-portfolio-projection.test.ts tests/ui/public-portfolio-page.test.tsx`
   - pass
+
+## Interview Corridor Mobile Density Continuation
+
+### Updated Verdict
+
+Improved for mobile interview coordination clarity.
+
+The organization interview fixture showed the right data, but each mobile card
+repeated the full nine-step hiring corridor as chips before showing the
+immediate action. That made the page feel heavier than the task required.
+
+### Findings And Fixes
+
+#### P2 - Mobile interview cards repeated too much process detail
+
+Affected surfaces:
+
+- `/app/o/test-org/interviews`
+- `/app/i/interviews`
+
+Fix:
+
+- Replaced the mobile timeline chip wall with a compact `Corridor step` summary
+  showing the current stage and step count.
+- Preserved the full step-by-step timeline on desktop.
+- Changed meeting/calendar links and interview action controls to touch-sized
+  controls so scheduling actions are easier to scan and tap.
+
+### Rendered Verification
+
+The Codex in-app Browser runtime became unavailable during the post-fix pass
+with `No active Codex browser pane available`, so this continuation uses a
+local rendered Chromium fallback rather than claiming Browser-plugin proof.
+
+Fallback rendered evidence:
+
+- Mobile `/app/o/test-org/interviews` at 390px - no horizontal overflow, filled
+  interview fixtures visible, compact corridor step visible, full timeline chips
+  hidden, and interview controls are 40px tall.
+- Desktop `/app/o/test-org/interviews` at 1280px - no horizontal overflow,
+  filled interview fixtures visible, full timeline chips remain visible, and
+  interview controls are 40px tall.
+
+Evidence:
+
+- `.artifacts/ux-browser-goal-2026-05-18/interviews-compact/interviews-compact-rendered-state.json`
+- `.artifacts/ux-browser-goal-2026-05-18/interviews-compact/org-mobile390.png`
+- `.artifacts/ux-browser-goal-2026-05-18/interviews-compact/org-desktop1280.png`
+
+### Automated Checks
+
+- `npm run test -- tests/ui/hiring-corridor-timeline.test.tsx tests/ui/organization-interviews-page-actions.test.tsx tests/ui/individual-interviews-page-clarity.test.tsx`
+  - pass
+- `npm run lint` - pass
+- `npm run typecheck` - pass

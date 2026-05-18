@@ -146,7 +146,7 @@ describe('individual interviews page clarity', () => {
     );
     expect(screen.getByText('Google Meet')).toBeInTheDocument();
     expect(screen.queryByText('Google_meet')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /add to google calendar/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /add to calendar/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/engagement type/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /confirm engagement/i })).toBeInTheDocument();
   });

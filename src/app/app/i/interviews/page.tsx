@@ -310,7 +310,7 @@ export default function InterviewsPage() {
                               href={interview.interview.meetingUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-sm flex items-center gap-1 hover:underline"
+                              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                               style={{ color: '#1C4D3A' }}
                             >
                               Join Meeting
@@ -320,16 +320,16 @@ export default function InterviewsPage() {
                               href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-sm flex items-center gap-1 hover:underline"
+                              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-proofound-stone/80 bg-white px-3 text-sm font-medium hover:bg-proofound-parchment/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
                               style={{ color: '#1C4D3A' }}
                             >
-                              Add to Google Calendar
+                              Add to calendar
                               <CalendarPlus className="w-3 h-3" />
                             </a>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-7 px-2 text-xs"
+                              className="min-h-10 px-3 text-xs"
                               onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
                             >
                               <Download className="w-3 h-3 mr-1" />
@@ -394,7 +394,7 @@ export default function InterviewsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleConfirmEngagement(interview)}
-                            className="w-full lg:w-auto"
+                            className="min-h-10 w-full lg:w-auto"
                             disabled={
                               isConfirmingEngagementId === interview.engagementVerification.id
                             }
