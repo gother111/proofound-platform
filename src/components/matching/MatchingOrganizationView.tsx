@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { MatchResultCard } from './MatchResultCard';
 import { toast } from 'sonner';
 import { ArrowRight, ListChecks, Plus, Users } from 'lucide-react';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
 import { getOrganizationRecoveryActions } from '@/lib/ui/recovery-actions';
 import { CardGridSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
@@ -284,258 +283,250 @@ export function MatchingOrganizationView({
   }
 
   return (
-    <AppSurface>
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold mb-1">Assignment matching</h1>
-              <p className="text-sm" style={{ color: '#6B6760' }}>
-                Choose one assignment, then review only the candidate signals for that corridor.
+    <div className="mx-auto w-full max-w-6xl">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold mb-1">Assignment matching</h1>
+            <p className="text-sm" style={{ color: '#6B6760' }}>
+              Choose one assignment, then review only the candidate signals for that corridor.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 lg:justify-end">
+            <Button
+              onClick={onCreateNew}
+              className="w-full lg:w-auto"
+              style={{ backgroundColor: '#1C4D3A' }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New assignment
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <Card className="mb-4 border-proofound-stone/80 bg-white/80 p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 space-y-2">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-muted-foreground">
+              <ListChecks className="h-4 w-4 text-proofound-forest" />
+              Review focus
+            </div>
+            <h2 className="text-lg font-semibold text-proofound-charcoal">
+              {currentAssignment
+                ? `Reviewing ${currentAssignment.role}`
+                : 'Choose an assignment to review matches.'}
+            </h2>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              {currentAssignment
+                ? 'The cards below stay scoped to this assignment, so shortlist and intro decisions do not drift across roles.'
+                : 'Start with the assignment that is ready for review. Matching opens below the cards and keeps identity reveal staged.'}
+            </p>
+          </div>
+          <div className="grid gap-2 text-sm sm:grid-cols-3 lg:min-w-[28rem]">
+            <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/45 p-3">
+              <p className="text-xs text-muted-foreground">Assignments</p>
+              <p className="font-semibold text-proofound-charcoal">
+                {formatCount(assignments.length, 'assignment')}
               </p>
             </div>
-            <div className="flex items-center gap-2 lg:justify-end">
-              <Button
-                onClick={onCreateNew}
-                className="w-full lg:w-auto"
-                style={{ backgroundColor: '#1C4D3A' }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New assignment
-              </Button>
+            <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/45 p-3">
+              <p className="text-xs text-muted-foreground">Ready to review</p>
+              <p className="font-semibold text-proofound-charcoal">
+                {formatCount(activeAssignmentCount, 'assignment')}
+              </p>
+            </div>
+            <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/45 p-3">
+              <p className="text-xs text-muted-foreground">Candidate signals</p>
+              <p className="font-semibold text-proofound-charcoal">
+                {formatCount(totalCandidateCount, 'candidate')}
+              </p>
             </div>
           </div>
         </div>
+      </Card>
 
-        <Card className="mb-4 border-proofound-stone/80 bg-white/80 p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase text-muted-foreground">
-                <ListChecks className="h-4 w-4 text-proofound-forest" />
-                Review focus
-              </div>
-              <h2 className="text-lg font-semibold text-proofound-charcoal">
-                {currentAssignment
-                  ? `Reviewing ${currentAssignment.role}`
-                  : 'Choose an assignment to review matches.'}
-              </h2>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                {currentAssignment
-                  ? 'The cards below stay scoped to this assignment, so shortlist and intro decisions do not drift across roles.'
-                  : 'Start with the assignment that is ready for review. Matching opens below the cards and keeps identity reveal staged.'}
-              </p>
-            </div>
-            <div className="grid gap-2 text-sm sm:grid-cols-3 lg:min-w-[28rem]">
-              <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/45 p-3">
-                <p className="text-xs text-muted-foreground">Assignments</p>
-                <p className="font-semibold text-proofound-charcoal">
-                  {formatCount(assignments.length, 'assignment')}
-                </p>
-              </div>
-              <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/45 p-3">
-                <p className="text-xs text-muted-foreground">Ready to review</p>
-                <p className="font-semibold text-proofound-charcoal">
-                  {formatCount(activeAssignmentCount, 'assignment')}
-                </p>
-              </div>
-              <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/45 p-3">
-                <p className="text-xs text-muted-foreground">Candidate signals</p>
-                <p className="font-semibold text-proofound-charcoal">
-                  {formatCount(totalCandidateCount, 'candidate')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
+      {/* Assignment list with quick actions */}
+      <div className="grid gap-3 lg:grid-cols-2">
+        {assignments.map((assignment) => {
+          const updateBadgeLabel = getAssignmentBadgeLabel(assignment);
+          const candidateCount = assignment.matchingSummary?.candidateCount ?? 0;
 
-        {/* Assignment list with quick actions */}
-        <div className="grid gap-3 lg:grid-cols-2">
-          {assignments.map((assignment) => {
-            const updateBadgeLabel = getAssignmentBadgeLabel(assignment);
-            const candidateCount = assignment.matchingSummary?.candidateCount ?? 0;
-
-            return (
-              <Card
-                key={assignment.id}
-                className={`p-4 transition ${
-                  selectedAssignment === assignment.id
-                    ? 'border-proofound-forest bg-proofound-parchment/50'
-                    : 'hover:border-primary/60'
-                }`}
-              >
-                <div className="flex h-full flex-col gap-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="min-w-0 break-words text-base font-semibold">
-                          {assignment.role}
-                        </h3>
-                        {updateBadgeLabel ? (
-                          <Badge className="border-proofound-forest/20 bg-[#eef4eb] text-proofound-forest">
-                            {updateBadgeLabel}
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Created: {new Date(assignment.createdAt).toLocaleDateString()}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary">
-                          {assignmentStatusLabel(assignment.status)}
+          return (
+            <Card
+              key={assignment.id}
+              className={`p-4 transition ${
+                selectedAssignment === assignment.id
+                  ? 'border-proofound-forest bg-proofound-parchment/50'
+                  : 'hover:border-primary/60'
+              }`}
+            >
+              <div className="flex h-full flex-col gap-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="min-w-0 break-words text-base font-semibold">
+                        {assignment.role}
+                      </h3>
+                      {updateBadgeLabel ? (
+                        <Badge className="border-proofound-forest/20 bg-[#eef4eb] text-proofound-forest">
+                          {updateBadgeLabel}
                         </Badge>
-                        {candidateCount > 0 ? (
-                          <span className="text-xs text-muted-foreground">
-                            {candidateCount} candidate{candidateCount !== 1 ? 's' : ''}
-                          </span>
-                        ) : null}
-                      </div>
+                      ) : null}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Created: {new Date(assignment.createdAt).toLocaleDateString()}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary">{assignmentStatusLabel(assignment.status)}</Badge>
+                      {candidateCount > 0 ? (
+                        <span className="text-xs text-muted-foreground">
+                          {candidateCount} candidate{candidateCount !== 1 ? 's' : ''}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
-                  <div className="mt-auto grid gap-2 xl:flex xl:items-center">
-                    <Button
-                      type="button"
-                      size="sm"
-                      data-testid={`assignment-matching-${assignment.id}`}
-                      className="bg-proofound-forest hover:bg-proofound-forest/90"
-                      aria-pressed={selectedAssignment === assignment.id}
-                      aria-label={`Matching for ${assignment.role}`}
-                      onClick={() => handleOpenMatching(assignment.id)}
-                    >
-                      <Users className="mr-2 h-4 w-4" />
-                      Matching
-                    </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <Link
-                        href={slug ? `/app/o/${slug}/assignments/${assignment.id}/review` : '#'}
-                      >
-                        View / Edit
-                      </Link>
-                    </Button>
-                  </div>
                 </div>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Matches for the currently selected assignment */}
-        {!selectedAssignment ? (
-          <Card className="mt-6 border-dashed border-proofound-stone/90 bg-proofound-parchment/35 p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <h2 className="text-base font-semibold text-proofound-charcoal">
-                  Select an assignment to open its matching queue.
-                </h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  Use the Matching button on the assignment you want to review first.
-                </p>
+                <div className="mt-auto grid gap-2 xl:flex xl:items-center">
+                  <Button
+                    type="button"
+                    size="sm"
+                    data-testid={`assignment-matching-${assignment.id}`}
+                    className="bg-proofound-forest hover:bg-proofound-forest/90"
+                    aria-pressed={selectedAssignment === assignment.id}
+                    aria-label={`Matching for ${assignment.role}`}
+                    onClick={() => handleOpenMatching(assignment.id)}
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    Matching
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={slug ? `/app/o/${slug}/assignments/${assignment.id}/review` : '#'}>
+                      View / Edit
+                    </Link>
+                  </Button>
+                </div>
               </div>
-              <ArrowRight className="hidden h-5 w-5 text-proofound-forest sm:block" />
-            </div>
-          </Card>
-        ) : (
-          <div className="mt-8 space-y-4" data-testid="assignment-matching-grid">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold">Matching</h2>
-                {currentAssignment && (
-                  <p className="text-sm text-muted-foreground">
-                    {currentAssignment.role} — {assignmentStatusLabel(currentAssignment.status)}
-                  </p>
-                )}
-              </div>
-            </div>
+            </Card>
+          );
+        })}
+      </div>
 
-            {isLoading ? (
-              <div className="space-y-3">
+      {/* Matches for the currently selected assignment */}
+      {!selectedAssignment ? (
+        <Card className="mt-6 border-dashed border-proofound-stone/90 bg-proofound-parchment/35 p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="text-base font-semibold text-proofound-charcoal">
+                Select an assignment to open its matching queue.
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                Use the Matching button on the assignment you want to review first.
+              </p>
+            </div>
+            <ArrowRight className="hidden h-5 w-5 text-proofound-forest sm:block" />
+          </div>
+        </Card>
+      ) : (
+        <div className="mt-8 space-y-4" data-testid="assignment-matching-grid">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Matching</h2>
+              {currentAssignment && (
                 <p className="text-sm text-muted-foreground">
-                  Preparing proof-backed matches for this assignment...
+                  {currentAssignment.role} — {assignmentStatusLabel(currentAssignment.status)}
                 </p>
-                <CardGridSkeleton
-                  count={4}
-                  columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
-                  tileClassName="min-h-[220px]"
-                />
-              </div>
-            ) : matches.length === 0 ? (
-              <div className="rounded-2xl border border-proofound-stone bg-white/80 p-5 text-left shadow-sm sm:p-6">
-                <div className="mx-auto max-w-2xl space-y-4 text-center">
-                  <div>
-                    <p className="text-lg font-semibold text-proofound-charcoal">
-                      No matches for {currentAssignment?.role ?? 'this assignment'} yet
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Keep this assignment ready for review. The best next step is to refresh the
-                      assignment before widening discovery.
-                    </p>
-                  </div>
-                  {recoveryActions[0] ? (
-                    <Button
-                      type="button"
-                      onClick={() => router.push(recoveryActions[0].actionUrl)}
-                      className="w-full bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
-                    >
-                      {recoveryActions[0].title}
-                    </Button>
-                  ) : null}
+              )}
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Preparing proof-backed matches for this assignment...
+              </p>
+              <CardGridSkeleton
+                count={4}
+                columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
+                tileClassName="min-h-[220px]"
+              />
+            </div>
+          ) : matches.length === 0 ? (
+            <div className="rounded-2xl border border-proofound-stone bg-white/80 p-5 text-left shadow-sm sm:p-6">
+              <div className="mx-auto max-w-2xl space-y-4 text-center">
+                <div>
+                  <p className="text-lg font-semibold text-proofound-charcoal">
+                    No matches for {currentAssignment?.role ?? 'this assignment'} yet
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Keep this assignment ready for review. The best next step is to refresh the
+                    assignment before widening discovery.
+                  </p>
                 </div>
-                {recoveryActions.length > 1 ? (
-                  <div className="mt-5 grid gap-2 border-t border-proofound-stone/70 pt-4 sm:grid-cols-2">
-                    {recoveryActions.slice(1).map((action) => (
-                      <button
-                        key={action.id}
-                        type="button"
-                        onClick={() => router.push(action.actionUrl)}
-                        className="rounded-lg border border-proofound-stone bg-proofound-parchment/45 px-3 py-2 text-left transition-colors hover:border-proofound-forest hover:bg-japandi-bg"
-                      >
-                        <p className="text-sm font-medium text-foreground">{action.title}</p>
-                        <p className="text-xs leading-5 text-muted-foreground">
-                          {action.description}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
+                {recoveryActions[0] ? (
+                  <Button
+                    type="button"
+                    onClick={() => router.push(recoveryActions[0].actionUrl)}
+                    className="w-full bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
+                  >
+                    {recoveryActions[0].title}
+                  </Button>
                 ) : null}
               </div>
-            ) : (
-              <div>
-                <p className="text-sm mb-4" style={{ color: '#6B6760' }}>
-                  {matches.length} candidate{matches.length !== 1 ? 's' : ''} match this assignment
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {matches.map((match: any, index: number) => (
-                    <MatchResultCard
-                      key={match.profileId || index}
-                      result={match}
-                      variant="blind"
-                      skills={
-                        match.profile?.skills
-                          ? Object.entries(match.profile.skills).map(
-                              ([id, data]: [string, any]) => ({
-                                id,
-                                label: id,
-                                level: data.level,
-                              })
-                            )
-                          : []
-                      }
-                      onInterested={() =>
-                        handleReviewAction(
-                          match.id,
-                          match.reviewStage === 'shortlisted' ? 'request_intro' : 'shortlist'
-                        )
-                      }
-                      onHide={() => handleReviewAction(match.id, 'pass')}
-                    />
+              {recoveryActions.length > 1 ? (
+                <div className="mt-5 grid gap-2 border-t border-proofound-stone/70 pt-4 sm:grid-cols-2">
+                  {recoveryActions.slice(1).map((action) => (
+                    <button
+                      key={action.id}
+                      type="button"
+                      onClick={() => router.push(action.actionUrl)}
+                      className="rounded-lg border border-proofound-stone bg-proofound-parchment/45 px-3 py-2 text-left transition-colors hover:border-proofound-forest hover:bg-japandi-bg"
+                    >
+                      <p className="text-sm font-medium text-foreground">{action.title}</p>
+                      <p className="text-xs leading-5 text-muted-foreground">
+                        {action.description}
+                      </p>
+                    </button>
                   ))}
                 </div>
+              ) : null}
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm mb-4" style={{ color: '#6B6760' }}>
+                {matches.length} candidate{matches.length !== 1 ? 's' : ''} match this assignment
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {matches.map((match: any, index: number) => (
+                  <MatchResultCard
+                    key={match.profileId || index}
+                    result={match}
+                    variant="blind"
+                    skills={
+                      match.profile?.skills
+                        ? Object.entries(match.profile.skills).map(([id, data]: [string, any]) => ({
+                            id,
+                            label: id,
+                            level: data.level,
+                          }))
+                        : []
+                    }
+                    onInterested={() =>
+                      handleReviewAction(
+                        match.id,
+                        match.reviewStage === 'shortlisted' ? 'request_intro' : 'shortlist'
+                      )
+                    }
+                    onHide={() => handleReviewAction(match.id, 'pass')}
+                  />
+                ))}
               </div>
-            )}
-          </div>
-        )}
-      </div>
-    </AppSurface>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

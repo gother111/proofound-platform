@@ -6,7 +6,6 @@ import { OrganizationMatchingEmpty } from '@/components/matching/OrganizationMat
 import { MatchingOrganizationView } from '@/components/matching/MatchingOrganizationView';
 import { toast } from 'sonner';
 import { CardGridSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export function OrgMatchingClient() {
   const router = useRouter();
@@ -47,22 +46,20 @@ export function OrgMatchingClient() {
 
   if (isLoading) {
     return (
-      <AppSurface>
-        <div className="max-w-6xl mx-auto space-y-6">
-          <p className="text-sm text-muted-foreground">Loading assignments and matches...</p>
-          <PageIntroSkeleton />
-          <CardGridSkeleton
-            count={4}
-            columnsClassName="grid gap-3 sm:grid-cols-2"
-            tileClassName="min-h-[160px]"
-          />
-          <CardGridSkeleton
-            count={4}
-            columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
-            tileClassName="min-h-[220px]"
-          />
-        </div>
-      </AppSurface>
+      <div className="mx-auto w-full max-w-6xl space-y-6">
+        <p className="text-sm text-muted-foreground">Loading assignments and matches...</p>
+        <PageIntroSkeleton />
+        <CardGridSkeleton
+          count={4}
+          columnsClassName="grid gap-3 sm:grid-cols-2"
+          tileClassName="min-h-[160px]"
+        />
+        <CardGridSkeleton
+          count={4}
+          columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
+          tileClassName="min-h-[220px]"
+        />
+      </div>
     );
   }
 
