@@ -264,11 +264,11 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
 
       {/* Mobile Bottom Tab Bar Navigation */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-neutral-light-50 border-proofound-stone/60 pointer-events-none"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-neutral-light-50 border-proofound-stone/60 pointer-events-auto"
         role="navigation"
         aria-label="Mobile primary navigation"
       >
-        <div className="flex items-center gap-1 px-1 py-2 safe-area-inset-bottom pointer-events-none">
+        <div className="flex items-center gap-1 px-1 py-2 safe-area-inset-bottom">
           {/* Show the retained mobile navigation corridor. */}
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
