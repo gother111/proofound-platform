@@ -8,9 +8,16 @@ describe('DeferredOrgMatchingClient', () => {
   it('announces that assignments are loading while the workspace chunk is deferred', () => {
     const loadMatchingView = vi.fn(() => new Promise<never>(() => {}));
 
-    render(<DeferredOrgMatchingClient loadMatchingView={loadMatchingView} />);
+    render(<DeferredOrgMatchingClient orgSlug="acme" loadMatchingView={loadMatchingView} />);
 
+    expect(
+      screen.getByRole('heading', { name: 'Assignment workspace is loading' })
+    ).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Loading assignments and matches...');
+    expect(screen.getByRole('link', { name: 'Create assignment' })).toHaveAttribute(
+      'href',
+      '/app/o/acme/assignments/new'
+    );
   });
 
   it('shows a retryable recovery state when the matching workspace fails to load', async () => {
@@ -21,10 +28,14 @@ describe('DeferredOrgMatchingClient', () => {
         OrgMatchingClient: () => <div>Assignment matching ready</div>,
       });
 
-    render(<DeferredOrgMatchingClient loadMatchingView={loadMatchingView} />);
+    render(<DeferredOrgMatchingClient orgSlug="acme" loadMatchingView={loadMatchingView} />);
 
     expect(await screen.findByText('Assignments could not load')).toBeInTheDocument();
     expect(screen.getByText(/Your assignments are still safe/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Create assignment' })).toHaveAttribute(
+      'href',
+      '/app/o/acme/assignments/new'
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry loading assignments' }));
 

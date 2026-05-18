@@ -31,7 +31,7 @@ export default async function OrgAssignmentsAliasPage({
             <Link href={`/app/o/${slug}/assignments/new`}>Create assignment</Link>
           </Button>
         </header>
-        <DeferredOrgMatchingClient />
+        <DeferredOrgMatchingClient orgSlug={slug} />
       </div>
     </AppSurface>
   );
