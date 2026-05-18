@@ -3,6 +3,7 @@ export const VISUAL_VERIFY_TOKENS = {
   customBundle: 'visual-custom-verification-token-0000001',
   workEmailSuccess: 'visual-work-email-token-000000000001',
   emailSuccess: 'visual-email-verification-token-00000001',
+  resetPasswordSuccess: 'visual-reset-password-token-000000001',
 } as const;
 
 export function verificationLinkVisualFixturesEnabled() {
@@ -143,4 +144,8 @@ export function buildVisualWorkEmailVerificationResponse(token: string) {
 
 export function isVisualEmailVerificationToken(token: string) {
   return token === VISUAL_VERIFY_TOKENS.emailSuccess;
+}
+
+export function isVisualResetPasswordToken(token: string) {
+  return token === VISUAL_VERIFY_TOKENS.resetPasswordSuccess;
 }

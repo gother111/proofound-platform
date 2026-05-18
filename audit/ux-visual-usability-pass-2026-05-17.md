@@ -1086,6 +1086,65 @@ Evidence file:
 - `npm run test -- tests/ui/verify-email-content.test.tsx tests/ui/verify-link-visual-fixtures.test.tsx`
   - pass
 
+## Reset Password Confirm Continuation - Stable Valid-Link Form And Success
+
+### Updated Verdict
+
+Improved for the password recovery workflow.
+
+The valid `/reset-password/confirm` state now has deterministic local Browser
+coverage for the actual set-new-password form, inline mismatch validation, and
+the success state. The real recovery path keeps its redirect behavior, while
+the local visual fixture remains stable so the success state can be inspected.
+
+### Additional Findings And Fixes
+
+#### P2 - Valid reset-confirm state required a real recovery session
+
+Affected surface:
+
+- `/reset-password/confirm`
+
+Evidence:
+
+- The full coverage matrix marked reset confirm as `PASS/RISK` because only the
+  invalid/default reset-link state was Browser-verified.
+
+Fix:
+
+- Added a local-only visual token:
+  `/reset-password/confirm?token=visual-reset-password-token-000000001`.
+- The visual token skips guarded Supabase recovery-session validation and shows
+  the real set-new-password form.
+- The visual submit path records local success without calling the guarded
+  password reset action.
+- Success copy now distinguishes real auto-redirect from the stable visual
+  fixture path:
+  - real token: `Your password has been reset. Redirecting to login.`
+  - visual fixture: `Your password has been reset. You can continue to login when ready.`
+
+### Browser Verification
+
+Verified with the Codex in-app Browser:
+
+- Mobile valid fixture at 390px - no horizontal overflow; password and confirm
+  fields are visible; reset action and back-to-login action are reachable.
+- Mobile mismatch submit at 390px - inline alert says `Passwords do not match`
+  with no horizontal overflow.
+- Mobile successful submit at 390px - success heading, stable success copy, and
+  `Go to login now` action are visible; no misleading redirect copy is present.
+- Desktop valid fixture at 1280px - no horizontal overflow; form labels and
+  actions remain composed.
+
+Evidence file:
+
+- `.artifacts/ux-browser-goal-2026-05-18/reset-password-confirm/success-reset-browser-state.json`
+
+### Automated Checks
+
+- `npm run test -- tests/ui/confirm-reset-password-form.test.tsx tests/ui/verify-email-content.test.tsx`
+  - pass
+
 ## 2026-05-18 - Individual Interviews Empty and Filled States
 
 ### Scope

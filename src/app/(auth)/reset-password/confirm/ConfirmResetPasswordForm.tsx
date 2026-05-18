@@ -10,6 +10,11 @@ import { Label } from '@/components/ui/label';
 import { confirmPasswordReset } from '@/actions/auth';
 import { Eye, EyeOff, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { isVisualResetPasswordToken } from '@/lib/verification/visual-link-fixtures';
+
+function clientVisualVerificationEnabled() {
+  return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+}
 
 export function ConfirmResetPasswordForm() {
   const router = useRouter();
@@ -22,6 +27,8 @@ export function ConfirmResetPasswordForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const [visualResetMode, setVisualResetMode] = useState(false);
+  const [autoRedirectEnabled, setAutoRedirectEnabled] = useState(true);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -63,6 +70,17 @@ export function ConfirmResetPasswordForm() {
   useEffect(() => {
     const codeParam = searchParams?.get('code');
     const tokenHashParam = searchParams?.get('token_hash') ?? searchParams?.get('token');
+
+    if (
+      tokenHashParam &&
+      clientVisualVerificationEnabled() &&
+      isVisualResetPasswordToken(tokenHashParam)
+    ) {
+      setVisualResetMode(true);
+      setAutoRedirectEnabled(false);
+      setIsAuthenticating(false);
+      return;
+    }
 
     if (!codeParam && !tokenHashParam) {
       if (typeof window !== 'undefined') {
@@ -147,17 +165,19 @@ export function ConfirmResetPasswordForm() {
     const formData = new FormData();
     formData.append('password', password);
 
-    const result = await confirmPasswordReset(formData);
+    const result = visualResetMode ? { success: true } : await confirmPasswordReset(formData);
 
     if (result.error) {
       setFormError(result.error);
       setIsLoading(false);
     } else {
       setIsSuccess(true);
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      setIsLoading(false);
+      if (autoRedirectEnabled) {
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+      }
     }
   }
 
@@ -173,9 +193,21 @@ export function ConfirmResetPasswordForm() {
               Password reset successful
             </CardTitle>
             <CardDescription className="leading-6 text-proofound-charcoal/70">
-              Your password has been reset. Redirecting to login.
+              {autoRedirectEnabled
+                ? 'Your password has been reset. Redirecting to login.'
+                : 'Your password has been reset. You can continue to login when ready.'}
             </CardDescription>
           </CardHeader>
+          {!autoRedirectEnabled ? (
+            <CardContent>
+              <Button
+                asChild
+                className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90"
+              >
+                <Link href="/login">Go to login now</Link>
+              </Button>
+            </CardContent>
+          ) : null}
         </Card>
       </div>
     );
@@ -281,7 +313,10 @@ export function ConfirmResetPasswordForm() {
             </div>
 
             {formError && (
-              <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+              <div
+                role="alert"
+                className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
+              >
                 {formError}
               </div>
             )}
