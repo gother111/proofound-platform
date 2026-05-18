@@ -288,7 +288,7 @@ export function MatchingOrganizationView({
       <div className="mb-6">
         <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold mb-1">Assignment matching</h1>
+            <h2 className="text-2xl font-semibold mb-1">Assignment matching</h2>
             <p className="text-sm" style={{ color: '#6B6760' }}>
               Choose one assignment, then review only the candidate signals for that corridor.
             </p>

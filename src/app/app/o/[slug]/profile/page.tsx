@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 
 import { OrgTrustProfileEditor } from '@/components/organization/OrgTrustProfileEditor';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
@@ -64,7 +64,9 @@ export default async function OrganizationProfilePage({
             <CardHeader>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <CardTitle className="text-2xl">Organization Profile</CardTitle>
+                  <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
+                    Organization Profile
+                  </h1>
                   <CardDescription className="max-w-2xl leading-6">
                     This is the launch-facing organization profile used to support one assignment
                     path and a clean review queue.
@@ -106,7 +108,9 @@ export default async function OrganizationProfilePage({
 
           <Card className="border-black/[0.04] dark:border-white/5">
             <CardHeader>
-              <CardTitle className="text-lg">Launch corridor</CardTitle>
+              <h2 className="font-display text-lg font-semibold leading-none tracking-tight text-proofound-charcoal">
+                Launch corridor
+              </h2>
               <CardDescription>Trust basics ready: {readyTrustCount}/4</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
