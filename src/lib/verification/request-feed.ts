@@ -153,6 +153,149 @@ function buildMockComposerProofPackOptions(): VerificationComposerProofPackOptio
   ];
 }
 
+function visualFixturesEnabled() {
+  return (
+    isMockSupabaseEnabled() &&
+    process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+    process.env.VERCEL_ENV !== 'production'
+  );
+}
+
+function buildMockVisualVerificationRequests(): {
+  incomingRequests: VerificationRequestView[];
+  sentRequests: VerificationRequestView[];
+} {
+  const baseSkill: SkillDetailsRecord = {
+    id: 'visual-skill-proof-systems',
+    competency_level: 4,
+    name_i18n: { en: 'Proof systems design with long stakeholder context' },
+    skills_taxonomy: {
+      name_i18n: { en: 'Product evidence systems' },
+      skills_l3: {
+        name_i18n: { en: 'Privacy-safe proof review' },
+        skills_subcategories: {
+          name_i18n: { en: 'Hiring corridor operations' },
+          skills_categories: { name_i18n: { en: 'Product leadership' } },
+        },
+      },
+    },
+  };
+
+  const requester: ProfileDetailsRecord = {
+    id: 'visual-requester-1',
+    display_name: 'Mira Andersson',
+    handle: 'mira-andersson',
+  };
+
+  return {
+    incomingRequests: [
+      {
+        id: 'visual-incoming-pending-long',
+        subjectType: 'skill',
+        subjectId: baseSkill.id,
+        verificationKind: 'skill_attestation_manager',
+        requestKind: 'human_observed_attestation',
+        requesterProfileId: requester.id,
+        verifierEmail: 'manager-reviewer-with-a-long-address@example-company.com',
+        verifierSource: 'manager',
+        status: 'pending',
+        createdAt: '2026-05-16T09:15:00.000Z',
+        expiresAt: '2026-05-24T09:15:00.000Z',
+        proofLabel: 'Proof-first hiring corridor readiness review',
+        claimSummary:
+          'Confirm that the proof pack clearly connects private source material, review decisions, and a launch-safe candidate story without exposing sensitive details.',
+        confirmationOutcome:
+          'This confirmation strengthens the candidate review signal while keeping identity and private evidence bounded.',
+        message:
+          'Please confirm only the parts you directly saw in the launch-readiness work. Do not include private client names.',
+        canonicalPackTitle: 'Launch-readiness proof pack',
+        canonicalPackSummary:
+          'A compact evidence pack tying product decisions, privacy checks, and review outcomes together.',
+        canonicalOutcomesSummary:
+          'Reduced reviewer confusion, clearer safe-shell readiness, and fewer overloaded next steps.',
+        canonicalVerificationStatus: 'partially_verified',
+        canonicalEvidenceTitles: [
+          'Readiness checklist',
+          'Privacy preflight notes',
+          'Reviewer handoff summary with intentionally long title',
+        ],
+        skills: baseSkill,
+        profiles: requester,
+      },
+      {
+        id: 'visual-incoming-attention',
+        subjectType: 'impact_story',
+        subjectId: 'visual-impact-1',
+        verificationKind: 'impact_attestation',
+        requestKind: 'impact_attestation',
+        requesterProfileId: 'visual-requester-2',
+        verifierEmail: 'external.verifier@example.org',
+        verifierSource: 'external',
+        verifierRelationship: 'External project sponsor',
+        status: 'failed',
+        createdAt: '2026-05-14T11:00:00.000Z',
+        impactStoryTitle: 'Reduced review uncertainty in a sensitive hiring workflow',
+        proofLabel: 'Review uncertainty reduction',
+        claimSummary:
+          'The reviewer needs a clearer confirmation path before this outcome can be treated as proof-backed.',
+        confirmationOutcome:
+          'A resolved confirmation would make this outcome usable in the public proof review.',
+        profiles: {
+          id: 'visual-requester-2',
+          display_name: 'Sofia Lind',
+          handle: 'sofia-proof',
+        },
+      },
+    ],
+    sentRequests: [
+      {
+        id: 'visual-sent-pending',
+        subjectType: 'custom_bundle',
+        subjectId: 'visual-bundle-1',
+        verificationKind: 'verification_bundle',
+        requestKind: 'custom_bundle',
+        requesterProfileId: requester.id,
+        verifierEmail: 'alexander.very-long-reviewer-name@example-consulting-partners.com',
+        verifierSource: 'peer',
+        verifierName: 'Alexander Review Partner',
+        verifierRelationship: 'Peer reviewer',
+        status: 'pending',
+        createdAt: '2026-05-15T13:30:00.000Z',
+        expiresAt: '2026-05-29T13:30:00.000Z',
+        bundleItemCount: 4,
+        bundlePreviewLabels: ['Proof Pack summary', 'Assignment brief', 'Privacy decision log'],
+        proofLabel: 'Privacy-safe launch bundle',
+        claimSummary:
+          'A grouped request asking one reviewer to confirm the work, outcome, and privacy boundary together.',
+        confirmationOutcome:
+          'The bundle will show one bounded external signal across the related proof items.',
+        message: 'A short note with one long email should still wrap cleanly on mobile.',
+        profiles: requester,
+      },
+      {
+        id: 'visual-sent-accepted',
+        subjectType: 'skill',
+        subjectId: baseSkill.id,
+        verificationKind: 'skill_attestation_peer',
+        requestKind: 'human_observed_attestation',
+        requesterProfileId: requester.id,
+        verifierEmail: 'lead@example.com',
+        verifierSource: 'peer',
+        status: 'accepted',
+        createdAt: '2026-05-10T08:00:00.000Z',
+        respondedAt: '2026-05-11T08:00:00.000Z',
+        responseMessage:
+          'Confirmed. The evidence was specific, scoped, and easy to review without extra context.',
+        proofLabel: 'Proof review facilitation',
+        claimSummary: 'Confirm the candidate can make proof evidence easier to inspect.',
+        confirmationOutcome: 'Adds one accepted signal to the proof pack.',
+        skills: baseSkill,
+        profiles: requester,
+      },
+    ],
+  };
+}
+
 function verificationStatusRank(status: string | null | undefined) {
   switch (status) {
     case 'verified':
@@ -514,6 +657,13 @@ export async function loadVerificationRequestFeed(params: {
   hasVerifiedEmail: boolean;
   supabase: any;
 }) {
+  if (visualFixturesEnabled()) {
+    return {
+      ...buildMockVisualVerificationRequests(),
+      composerProofPacks: buildMockComposerProofPackOptions(),
+    };
+  }
+
   const [
     canonicalAggregates,
     canonicalBundles,

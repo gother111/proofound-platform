@@ -15,7 +15,9 @@ export default function ForbiddenPage() {
         </div>
 
         <h1 className="text-4xl font-bold text-foreground mb-4">403</h1>
-        <h2 className="text-2xl font-semibold text-foreground mb-4">Access Forbidden</h2>
+        <h2 className="text-2xl font-semibold text-foreground mb-4">
+          You do not have access to this page
+        </h2>
 
         <p className="text-muted-foreground mb-8">
           You don&apos;t have permission to access this page. This area is restricted to authorized

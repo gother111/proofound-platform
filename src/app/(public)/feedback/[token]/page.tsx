@@ -42,19 +42,25 @@ export default async function FeedbackTokenPage({
   const alreadyUsed = Boolean(tokenData?.usedAt);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Interview feedback</CardTitle>
-          <p className="text-sm text-muted-foreground">
+    <div className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10">
+      <Card className="w-full max-w-3xl rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+        <CardHeader className="space-y-2">
+          <CardTitle className="font-display text-2xl text-proofound-charcoal">
+            Interview feedback
+          </CardTitle>
+          <p className="text-sm leading-6 text-muted-foreground">
             Share quick feedback. Your name will be hidden from the other side.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           {expired ? (
-            <p className="text-sm text-destructive">This feedback link has expired.</p>
+            <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm leading-6 text-destructive">
+              This feedback link has expired.
+            </p>
           ) : alreadyUsed ? (
-            <p className="text-sm text-emerald-700">Feedback already submitted. Thank you!</p>
+            <p className="rounded-xl border border-[#D7E8DE] bg-[#F3FAF6] p-4 text-sm leading-6 text-proofound-forest">
+              Feedback already submitted. Thank you.
+            </p>
           ) : template ? (
             <FeedbackForm
               template={template}

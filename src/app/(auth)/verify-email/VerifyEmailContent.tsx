@@ -49,19 +49,19 @@ export function VerifyEmailContent() {
   if (status === 'loading') {
     return (
       <div
-        className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4"
+        className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10 dark:bg-background"
         data-testid="verify-email-loading"
       >
-        <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
+        <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)] dark:border-border">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-proofound-forest/10 flex items-center justify-center mb-4">
-              <Loader2 className="w-6 h-6 text-proofound-forest dark:text-primary animate-spin" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+              <Loader2 className="h-6 w-6 animate-spin text-proofound-forest dark:text-primary" />
             </div>
-            <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+            <CardTitle className="font-display text-2xl text-proofound-charcoal dark:text-foreground">
               Verifying your email
             </CardTitle>
-            <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-              Please wait while we verify your email address...
+            <CardDescription className="leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
+              Please wait while we verify your email address.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -72,27 +72,27 @@ export function VerifyEmailContent() {
   if (status === 'error') {
     return (
       <div
-        className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4"
+        className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10 dark:bg-background"
         data-testid="verify-email-error"
       >
-        <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
+        <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)] dark:border-border">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-              <XCircle className="w-6 h-6 text-destructive" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+              <XCircle className="h-6 w-6 text-destructive" />
             </div>
-            <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+            <CardTitle className="font-display text-2xl text-proofound-charcoal dark:text-foreground">
               Verification failed
             </CardTitle>
-            <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+            <CardDescription className="leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
               {error || 'We couldn&apos;t verify your email address'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground text-center">
+            <p className="text-center text-sm leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
               The verification link may have expired or is invalid. Please try signing up again or
               contact support.
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Button
                 asChild
                 variant="outline"
@@ -115,24 +115,24 @@ export function VerifyEmailContent() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4"
+      className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10 dark:bg-background"
       data-testid="verify-email-success"
     >
-      <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)] dark:border-border">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-proofound-forest/10 flex items-center justify-center mb-4">
-            <CheckCircle className="w-6 h-6 text-proofound-forest dark:text-primary" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+            <CheckCircle className="h-6 w-6 text-proofound-forest dark:text-primary" />
           </div>
-          <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+          <CardTitle className="font-display text-2xl text-proofound-charcoal dark:text-foreground">
             Email verified!
           </CardTitle>
-          <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+          <CardDescription className="leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
             Your email has been successfully verified
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center">
-          <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-4">
-            Redirecting to login in 3 seconds...
+          <p className="mb-4 text-sm leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
+            Redirecting to login in 3 seconds.
           </p>
           <Button
             asChild

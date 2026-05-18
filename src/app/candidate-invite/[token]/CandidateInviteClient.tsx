@@ -112,7 +112,17 @@ type AccountSaveControls = {
 
 interface CandidateInviteClientProps {
   token: string;
+  initialState?: CandidateInviteInitialState;
+  visualMode?: boolean;
 }
+
+export type CandidateInviteInitialState = {
+  invite: InviteState;
+  organization: OrganizationState;
+  assignment: AssignmentState | null;
+  availableProofPacks?: AvailableProofPackState[];
+  currentUser?: CurrentUserState | null;
+};
 
 function hasText(value: string | null | undefined) {
   return Boolean(value?.trim());
@@ -189,16 +199,28 @@ const DEFAULT_ACCOUNT_SAVE_CONTROLS: AccountSaveControls = {
   assignmentReviewUrl: '/app/i/matching',
 };
 
-export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
-  const [loading, setLoading] = useState(true);
+export function CandidateInviteClient({
+  token,
+  initialState,
+  visualMode = false,
+}: CandidateInviteClientProps) {
+  const [loading, setLoading] = useState(!initialState);
   const [submitting, setSubmitting] = useState(false);
-  const [invite, setInvite] = useState<InviteState | null>(null);
-  const [organization, setOrganization] = useState<OrganizationState | null>(null);
-  const [assignment, setAssignment] = useState<AssignmentState | null>(null);
-  const [currentUser, setCurrentUser] = useState<CurrentUserState | null>(null);
+  const [invite, setInvite] = useState<InviteState | null>(initialState?.invite ?? null);
+  const [organization, setOrganization] = useState<OrganizationState | null>(
+    initialState?.organization ?? null
+  );
+  const [assignment, setAssignment] = useState<AssignmentState | null>(
+    initialState?.assignment ?? null
+  );
+  const [currentUser, setCurrentUser] = useState<CurrentUserState | null>(
+    initialState?.currentUser ?? null
+  );
   const [error, setError] = useState<string | null>(null);
-  const [availableProofPacks, setAvailableProofPacks] = useState<AvailableProofPackState[]>([]);
-  const [proofPackId, setProofPackId] = useState('');
+  const [availableProofPacks, setAvailableProofPacks] = useState<AvailableProofPackState[]>(
+    initialState?.availableProofPacks ?? []
+  );
+  const [proofPackId, setProofPackId] = useState(initialState?.availableProofPacks?.[0]?.id ?? '');
   const [reviewProofPackId, setReviewProofPackId] = useState('');
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [accountSaveControls, setAccountSaveControls] = useState<AccountSaveControls>(
@@ -209,6 +231,11 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
   const nextParam = useMemo(() => encodeURIComponent(`/candidate-invite/${token}`), [token]);
 
   const loadState = useCallback(async () => {
+    if (initialState) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -271,7 +298,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [initialState, token]);
 
   useEffect(() => {
     void loadState();
@@ -338,6 +365,25 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
     setSuccessMessage(null);
 
     try {
+      if (visualMode) {
+        setAccountSaveControls(DEFAULT_ACCOUNT_SAVE_CONTROLS);
+        setSuccessMessage(
+          'Assignment proof submitted for blind-first review. No verification emails were sent.'
+        );
+        setInvite((current) =>
+          current
+            ? {
+                ...current,
+                status: CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED,
+                proofSubmittedAt: new Date().toISOString(),
+              }
+            : current
+        );
+        setReviewProofPackId('');
+        setReviewConfirmed(false);
+        return;
+      }
+
       const response = await apiFetch(`/api/candidate-invites/${token}/proof-card`, {
         method: 'POST',
         headers: {
@@ -371,24 +417,46 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
-        <p className="text-sm text-slate-600">Loading invitation...</p>
+      <div className="flex min-h-screen items-center justify-center bg-japandi-bg p-6">
+        <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/90 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+              <Clock3 className="h-5 w-5 text-proofound-forest" />
+            </div>
+            <CardTitle className="font-display text-2xl text-proofound-charcoal">
+              Loading invitation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-sm leading-6 text-muted-foreground">
+              We&apos;re checking the invite and your current account state.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (error && !invite) {
     return (
-      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
-        <Card className="max-w-xl w-full">
-          <CardHeader>
-            <CardTitle>Invitation unavailable</CardTitle>
+      <div className="flex min-h-screen items-center justify-center bg-japandi-bg p-6">
+        <Card className="w-full max-w-xl rounded-[24px] border-proofound-stone bg-white/90 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+              <ShieldCheck className="h-5 w-5 text-proofound-forest" />
+            </div>
+            <CardTitle className="font-display text-2xl text-proofound-charcoal">
+              Invitation unavailable
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-slate-600">{error}</p>
-            <p className="text-sm text-slate-600">
+            <p className="text-center text-sm leading-6 text-muted-foreground">{error}</p>
+            <p className="text-center text-sm leading-6 text-muted-foreground">
               Ask the company to send a new invite if needed.
             </p>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/">Return home</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -676,17 +744,17 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                   After account creation, privacy, export, and deletion controls are available from
                   individual privacy settings.
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                   <Button
                     asChild
-                    className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                    className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
                   >
                     <Link href={`/signup/individual?next=${nextParam}`}>
                       Apply to this assignment
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline">
+                  <Button asChild variant="outline" className="w-full sm:w-auto">
                     <Link href={`/login?next=${nextParam}`}>Sign in</Link>
                   </Button>
                 </div>
@@ -702,7 +770,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                   Starting the application does not submit proof, send verification email, or reveal
                   additional account fields.
                 </p>
-                <Button onClick={claimInvite} disabled={submitting}>
+                <Button onClick={claimInvite} disabled={submitting} className="w-full sm:w-auto">
                   {isTestFlow ? 'Accept trial invite' : 'Apply to this assignment'}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -716,7 +784,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                   does not publish a public page or broaden the application beyond this assignment.
                 </p>
 
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" className="w-full sm:w-auto">
                   <Link href={proofOnboardingHref}>
                     Create first Proof Pack
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -771,7 +839,12 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                     </div>
                   )}
 
-                  <Button variant="outline" onClick={openProofPackReview} disabled={submitting}>
+                  <Button
+                    variant="outline"
+                    onClick={openProofPackReview}
+                    disabled={submitting}
+                    className="w-full sm:w-auto"
+                  >
                     Review assignment proof
                   </Button>
                 </div>
@@ -852,7 +925,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                       </span>
                     </label>
 
-                    <div className="flex flex-wrap justify-end gap-2">
+                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                       <Button
                         type="button"
                         variant="outline"
@@ -868,6 +941,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                         type="button"
                         onClick={submitReviewedProofPack}
                         disabled={submitting || !reviewConfirmed}
+                        className="w-full sm:w-auto"
                       >
                         Submit reviewed application
                       </Button>
@@ -934,19 +1008,30 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Button asChild className="w-full sm:w-auto">
                     <Link href={accountSaveControls.proofWorkspaceUrl}>Open Proof Packs</Link>
                   </Button>
-                  <Button asChild variant="outline">
-                    <Link href={accountSaveControls.profileVisibilityUrl}>Visibility</Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href={accountSaveControls.privacyDataControlsUrl}>Export or delete</Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href={accountSaveControls.assignmentReviewUrl}>Assignment review</Link>
-                  </Button>
+                  <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                    <Link
+                      href={accountSaveControls.profileVisibilityUrl}
+                      className="font-medium text-proofound-forest hover:text-proofound-charcoal"
+                    >
+                      Visibility
+                    </Link>
+                    <Link
+                      href={accountSaveControls.privacyDataControlsUrl}
+                      className="font-medium text-proofound-forest hover:text-proofound-charcoal"
+                    >
+                      Export or delete
+                    </Link>
+                    <Link
+                      href={accountSaveControls.assignmentReviewUrl}
+                      className="font-medium text-proofound-forest hover:text-proofound-charcoal"
+                    >
+                      Assignment review
+                    </Link>
+                  </div>
                 </div>
               </div>
             ) : null}

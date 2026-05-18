@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Loader2, Mail } from 'lucide-react';
@@ -55,34 +55,49 @@ export function VerifyWorkEmailContent() {
   }, [searchParams, verifyToken]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background p-4">
-      <Card className="w-full max-w-md border-2">
-        <CardHeader>
-          <div className="flex justify-center mb-4">
+    <div className="flex min-h-screen items-center justify-center bg-proofound-parchment p-4 py-10 dark:bg-background">
+      <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)] dark:border-border">
+        <CardHeader className="text-center">
+          <div className="mb-4 flex justify-center">
             {status === 'loading' && (
-              <Loader2 className="w-16 h-16 text-proofound-forest animate-spin" />
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+                <Loader2 className="h-6 w-6 animate-spin text-proofound-forest" />
+              </span>
             )}
-            {status === 'success' && <CheckCircle2 className="w-16 h-16 text-green-600" />}
-            {status === 'error' && <XCircle className="w-16 h-16 text-red-600" />}
+            {status === 'success' && (
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+                <CheckCircle2 className="h-6 w-6 text-proofound-forest" />
+              </span>
+            )}
+            {status === 'error' && (
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                <XCircle className="h-6 w-6 text-destructive" />
+              </span>
+            )}
           </div>
-          <CardTitle className="text-center font-['Crimson_Pro'] text-2xl">
-            {status === 'loading' && 'Verifying Your Email...'}
-            {status === 'success' && 'Email Verified!'}
-            {status === 'error' && 'Verification Failed'}
+          <CardTitle className="font-display text-2xl text-proofound-charcoal">
+            {status === 'loading' && 'Verifying work email'}
+            {status === 'success' && 'Work email verified'}
+            {status === 'error' && 'Verification failed'}
           </CardTitle>
+          <CardDescription className="leading-6 text-proofound-charcoal/70">
+            {status === 'loading' && 'Please wait while we verify the workplace signal.'}
+            {status === 'success' && 'Your workplace signal is now active while it stays fresh.'}
+            {status === 'error' && 'The link could not be verified. You can retry from settings.'}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {status === 'loading' && (
-            <p className="text-center text-muted-foreground">
-              Please wait while we verify your work email...
+            <p className="text-center text-sm leading-6 text-muted-foreground">
+              This usually takes only a moment.
             </p>
           )}
 
           {status === 'success' && (
             <div className="space-y-4">
-              <Alert className="border-green-200 bg-green-50 dark:bg-green-950/20">
-                <Mail className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-900 dark:text-green-100">
+              <Alert className="border-[#D7E8DE] bg-[#F3FAF6]">
+                <Mail className="h-4 w-4 text-proofound-forest" />
+                <AlertDescription className="text-proofound-charcoal">
                   {message}
                   {workEmail && (
                     <>
@@ -95,30 +110,30 @@ export function VerifyWorkEmailContent() {
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <CheckCircle2 className="h-4 w-4 text-proofound-forest" />
                   <span>Your profile now shows an active workplace signal</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <CheckCircle2 className="h-4 w-4 text-proofound-forest" />
                   <span>
                     Organizations can see your workplace-verified status while it stays fresh
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <CheckCircle2 className="h-4 w-4 text-proofound-forest" />
                   <span>Your match quality is improved</span>
                 </div>
               </div>
 
-              <p className="text-sm text-center text-muted-foreground pt-4">
-                Redirecting to your profile in a few seconds...
+              <p className="pt-4 text-center text-sm text-muted-foreground">
+                Redirecting to your profile in a few seconds.
               </p>
 
               <Button
                 onClick={() => router.push('/app/i/profile')}
                 className="w-full bg-proofound-forest hover:bg-proofound-forest/90"
               >
-                Go to Profile Now
+                Go to profile now
               </Button>
             </div>
           )}
@@ -130,9 +145,9 @@ export function VerifyWorkEmailContent() {
                 <AlertDescription>{message}</AlertDescription>
               </Alert>
 
-              <div className="space-y-2">
+              <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/45 p-3">
                 <p className="text-sm text-muted-foreground">Common issues:</p>
-                <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                <ul className="mt-2 list-inside list-disc space-y-1 text-sm leading-6 text-muted-foreground">
                   <li>The verification link has expired (links expire after 24 hours)</li>
                   <li>The link has already been used</li>
                   <li>The link is invalid or incomplete</li>
@@ -144,7 +159,7 @@ export function VerifyWorkEmailContent() {
                   onClick={() => router.push('/app/i/settings')}
                   className="w-full bg-proofound-forest hover:bg-proofound-forest/90"
                 >
-                  Go to Settings to Try Again
+                  Try again from settings
                 </Button>
                 <Button
                   onClick={() => router.push('/app/i/profile')}

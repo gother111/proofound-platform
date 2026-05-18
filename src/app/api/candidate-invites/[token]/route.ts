@@ -16,6 +16,10 @@ import {
   resolveCandidateInvitePolicyContext,
 } from '@/lib/candidate-invite-policy';
 import { createClient } from '@/lib/supabase/server';
+import {
+  buildVisualCandidateInviteResponse,
+  candidateInviteVisualFixturesEnabled,
+} from '@/lib/candidate-invites/visual-fixtures';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +29,14 @@ export async function GET(
 ) {
   try {
     const { token } = await params;
+
+    if (candidateInviteVisualFixturesEnabled()) {
+      const visualInvite = buildVisualCandidateInviteResponse(token);
+      if (visualInvite) {
+        return NextResponse.json(visualInvite);
+      }
+    }
+
     const existingRedeemSessionNonce =
       request.cookies.get(
         getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM)

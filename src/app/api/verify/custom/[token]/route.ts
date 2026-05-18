@@ -23,6 +23,11 @@ import {
   type HumanObservedVerdict,
 } from '@/lib/verification/human-attestations';
 import { ensureInternalOpsQueueItem } from '@/lib/internal-ops/queue';
+import {
+  buildVisualCustomVerificationResponse,
+  verificationLinkVisualFixturesEnabled,
+  VISUAL_VERIFY_TOKENS,
+} from '@/lib/verification/visual-link-fixtures';
 
 const TOKEN_FAILURE_RESPONSE = { error: 'Verification request not found' };
 
@@ -216,6 +221,13 @@ export async function GET(
   try {
     const { token } = await params;
 
+    if (verificationLinkVisualFixturesEnabled()) {
+      const visualResponse = buildVisualCustomVerificationResponse(token);
+      if (visualResponse) {
+        return NextResponse.json(visualResponse);
+      }
+    }
+
     if (!token || token.length < 32) {
       return NextResponse.json(TOKEN_FAILURE_RESPONSE, { status: 404 });
     }
@@ -309,6 +321,13 @@ export async function POST(
         { error: 'Validation failed', details: parsed.error.issues },
         { status: 400 }
       );
+    }
+
+    if (verificationLinkVisualFixturesEnabled() && token === VISUAL_VERIFY_TOKENS.customBundle) {
+      return NextResponse.json({
+        success: true,
+        status: parsed.data.action === 'decline' ? 'declined' : 'accepted',
+      });
     }
 
     if (!token || token.length < 32) {

@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState, useActionState } from 'react';
+import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useFormStatus } from 'react-dom';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +23,7 @@ interface SignInProps {
 }
 
 const INITIAL_STATE: SignInState = { error: null };
+type ClientErrorField = 'email' | 'password' | 'form';
 
 function SignInSubmitButton() {
   const { pending } = useFormStatus();
@@ -48,6 +48,8 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
+  const [clientErrorField, setClientErrorField] = useState<ClientErrorField | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
   const [formState, formAction, _isPending] = useActionState(signIn, INITIAL_STATE);
 
   // Surface OAuth errors passed back via the callback route
@@ -55,11 +57,39 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
     const oauthError = searchParams?.get('error');
     if (oauthError) {
       setClientError(oauthError);
+      setClientErrorField('form');
     }
   }, [searchParams]);
 
   // Safely extract error message (protects against Event objects)
   const error = clientError ?? (formState?.error ? getUserErrorMessage(formState.error) : null);
+  const hasServerError = !clientError && Boolean(formState?.error);
+  const emailInvalid = Boolean(
+    error && (hasServerError || clientErrorField === 'email' || clientErrorField === 'form')
+  );
+  const passwordInvalid = Boolean(
+    error && (hasServerError || clientErrorField === 'password' || clientErrorField === 'form')
+  );
+
+  const focusErrorMessage = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    errorRef.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
+    errorRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  useEffect(() => {
+    if (!error) return;
+
+    requestAnimationFrame(() => {
+      focusErrorMessage();
+    });
+  }, [error, focusErrorMessage]);
+
+  const setValidationError = (message: string, field: ClientErrorField) => {
+    setClientError(message);
+    setClientErrorField(field);
+    setTimeout(focusErrorMessage, 0);
+  };
 
   // Email validation helper
   const validateEmail = (email: string): boolean => {
@@ -69,6 +99,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     setClientError(null);
+    setClientErrorField(null);
 
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get('email') ?? '').trim();
@@ -76,19 +107,19 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
 
     if (!email) {
       event.preventDefault();
-      setClientError('Please enter your email address.');
+      setValidationError('Please enter your email address.', 'email');
       return;
     }
 
     if (!validateEmail(email)) {
       event.preventDefault();
-      setClientError('Please enter a valid email address.');
+      setValidationError('Please enter a valid email address.', 'email');
       return;
     }
 
     if (!password) {
       event.preventDefault();
-      setClientError('Please enter your password.');
+      setValidationError('Please enter your password.', 'password');
       return;
     }
   };
@@ -107,35 +138,25 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
 
       {/* Optional back button for nested flows - responsive positioning */}
       {onBack && (
-        <motion.button
-          initial={{ opacity: 0, x: -24 }}
-          animate={{ opacity: 1, x: 0 }}
+        <button
           onClick={onBack}
           className="absolute left-4 sm:left-6 top-4 sm:top-6 min-h-[44px] px-2 -mx-2 flex items-center gap-2 text-neutral-dark-500 transition-colors hover:text-proofound-charcoal z-20"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           <span className="text-sm font-medium">Back</span>
-        </motion.button>
+        </button>
       )}
 
       {/* Elevating the card to mirror the Figma panel */}
       {/* Responsive: Full width on mobile with margin, constrained on larger screens */}
-      <motion.div
-        initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: 'easeOut' }}
-        className="relative z-10 w-full max-w-[480px] px-2 sm:px-4"
+      <div
+        className="relative z-10 w-full max-w-[480px] px-0 sm:px-4"
         data-testid="login-form-shell"
       >
-        <Card className="mx-auto overflow-hidden rounded-[24px] border border-proofound-stone bg-white/95 p-6 sm:p-10 md:p-12 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
+        <Card className="mx-auto overflow-hidden rounded-[24px] border border-proofound-stone bg-white/95 p-5 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur sm:p-10 md:p-12">
           {/* Brand mark and welcoming copy */}
-          <div className="mb-10 text-center">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.15, duration: 0.45, ease: 'easeOut' }}
-              className="mb-4"
-            >
+          <div className="mb-8 text-center sm:mb-10">
+            <div className="mb-4">
               <Image
                 src="/logo.png"
                 alt="Proofound"
@@ -144,7 +165,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                 className="mx-auto h-12 w-12"
                 priority
               />
-            </motion.div>
+            </div>
             <h1 className="font-display text-[28px] font-semibold leading-9 tracking-[-0.01em] text-foreground">
               Welcome back
             </h1>
@@ -155,18 +176,18 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
 
           {/* Friendly error surface aligned with brand colors with proper ARIA */}
           {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
+            <div
+              ref={errorRef}
               className="mb-6 rounded-2xl border border-[#B5542D]/25 bg-[#B5542D]/10 px-4 py-3"
               role="alert"
               aria-live="assertive"
               data-testid="login-error"
+              tabIndex={-1}
             >
               <p id="signin-error" className="text-sm font-medium text-[#8A3F21]">
                 {error}
               </p>
-            </motion.div>
+            </div>
           )}
 
           {/* Email + password form with proper ARIA attributes */}
@@ -208,8 +229,8 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   disabled={false}
                   required
                   aria-required="true"
-                  aria-invalid={error ? 'true' : 'false'}
-                  aria-describedby={error ? 'signin-error' : undefined}
+                  aria-invalid={emailInvalid ? 'true' : 'false'}
+                  aria-describedby={emailInvalid ? 'signin-error' : undefined}
                   className="h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-4 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
                 />
               </div>
@@ -244,8 +265,8 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   disabled={false}
                   required
                   aria-required="true"
-                  aria-invalid={error ? 'true' : 'false'}
-                  aria-describedby={error ? 'signin-error' : undefined}
+                  aria-invalid={passwordInvalid ? 'true' : 'false'}
+                  aria-describedby={passwordInvalid ? 'signin-error' : undefined}
                   className="h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-12 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
                 />
                 <button
@@ -271,7 +292,8 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                 <Checkbox
                   id="remember"
                   checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  className="h-6 w-6 rounded-md border-proofound-stone bg-white data-[state=checked]:bg-proofound-forest data-[state=checked]:text-white"
                 />
                 Remember me
               </label>
@@ -287,11 +309,12 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           </form>
 
           {/* Divider with soft typography */}
-          <div className="relative my-7">
-            <Separator className="bg-proofound-stone" />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center overline">
+          <div className="my-7 flex items-center gap-3">
+            <Separator className="flex-1 bg-proofound-stone" />
+            <span className="shrink-0 whitespace-nowrap bg-white text-center overline">
               Or continue with
             </span>
+            <Separator className="flex-1 bg-proofound-stone" />
           </div>
 
           {/* Social sign-in mirrors the rounded Figma buttons */}
@@ -332,7 +355,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             Privacy Policy
           </a>
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }

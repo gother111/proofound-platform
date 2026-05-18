@@ -390,4 +390,68 @@ describe('CandidateInviteClient test_match flow', () => {
 
     expect(apiFetchMock).not.toHaveBeenCalledWith('/api/profile/snippet', expect.anything());
   });
+
+  it('supports local visual initial state without calling the public token API', async () => {
+    vi.stubGlobal('fetch', vi.fn());
+
+    render(
+      <CandidateInviteClient
+        token="visual-proof-card-claimed"
+        visualMode
+        initialState={{
+          invite: {
+            id: 'visual-candidate-invite-1',
+            status: 'claimed',
+            flowType: 'proof_card',
+            assignmentId: 'assignment-1',
+            maskedEmail: 'ca***@example.com',
+            expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+            claimedAt: new Date().toISOString(),
+            claimedByCurrentUser: true,
+            acceptedAt: null,
+            acceptedByCurrentUser: false,
+            communicationsUrl: null,
+            proofSubmittedAt: null,
+          },
+          organization: {
+            id: 'org-1',
+            slug: 'acme',
+            displayName: 'Acme Org',
+            logoUrl: null,
+          },
+          assignment: structuredAssignment,
+          currentUser: {
+            id: 'user-1',
+            email: 'candidate@example.com',
+          },
+          availableProofPacks: [
+            {
+              id: '11111111-1111-4111-8111-111111111111',
+              title: 'Owner-only pilot proof pack',
+              summary: 'A private proof pack for this assignment.',
+              evidenceSummary: 'Evidence summary.',
+              outcomesSummary: 'Outcome summary.',
+              verificationSummary: 'No new verification email is sent.',
+              updatedAt: new Date().toISOString(),
+            },
+          ],
+        }}
+      />
+    );
+
+    await screen.findByRole('heading', { name: /designer/i });
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(apiFetchMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
+    expect(screen.getByRole('button', { name: /submit reviewed application/i })).toBeDisabled();
+    fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed application/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/saved privately to your candidate workspace/i)).toBeInTheDocument();
+    });
+    expect(apiFetchMock).not.toHaveBeenCalled();
+  });
 });

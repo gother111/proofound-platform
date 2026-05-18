@@ -33,6 +33,11 @@ import {
 } from '@/lib/verification/canonical-impact-requests';
 import { getClaimTemplateLabel } from '@/lib/verification/scoped-contract';
 import { ensureInternalOpsQueueItem } from '@/lib/internal-ops/queue';
+import {
+  buildVisualSkillVerificationResponse,
+  verificationLinkVisualFixturesEnabled,
+  VISUAL_VERIFY_TOKENS,
+} from '@/lib/verification/visual-link-fixtures';
 
 const VerifyResponseSchema = z.object({
   action: z.enum(['accept', 'decline']).optional(),
@@ -847,6 +852,14 @@ export async function GET(
   try {
     const supabase = await createClient();
     const { token } = await params;
+
+    if (verificationLinkVisualFixturesEnabled()) {
+      const visualResponse = buildVisualSkillVerificationResponse(token);
+      if (visualResponse) {
+        return NextResponse.json(visualResponse);
+      }
+    }
+
     const authIdentity = await getOptionalAuthIdentity(supabase);
     let skillDataClient:
       | ReturnType<typeof createAdminClient>
@@ -1168,6 +1181,14 @@ export async function POST(
       | Awaited<ReturnType<typeof createClient>> = supabase;
 
     const validated = VerifyResponseSchema.parse(body);
+
+    if (verificationLinkVisualFixturesEnabled() && token === VISUAL_VERIFY_TOKENS.skillObserved) {
+      return NextResponse.json({
+        success: true,
+        status: validated.action === 'decline' ? 'declined' : 'accepted',
+      });
+    }
+
     const explicitAction = validated.action ?? null;
     const impactRedeemSessionNonce =
       request.cookies.get(
