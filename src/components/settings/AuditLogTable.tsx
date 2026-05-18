@@ -121,6 +121,25 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
     });
   };
 
+  const renderEventDetails = (event: AuditLogEvent) => (
+    <dl className="grid gap-2 text-xs text-proofound-charcoal/65 dark:text-muted-foreground sm:grid-cols-2">
+      <div>
+        <dt className="font-medium text-proofound-charcoal/80 dark:text-foreground">When</dt>
+        <dd>{formatTimestamp(event.timestamp)}</dd>
+      </div>
+      <div>
+        <dt className="font-medium text-proofound-charcoal/80 dark:text-foreground">
+          Access detail
+        </dt>
+        <dd>{event.ipHash ? 'Protected' : 'Not recorded'}</dd>
+      </div>
+      <div className="sm:col-span-2">
+        <dt className="font-medium text-proofound-charcoal/80 dark:text-foreground">Device</dt>
+        <dd className="break-words">{event.device || 'Unknown device'}</dd>
+      </div>
+    </dl>
+  );
+
   if (loading) {
     return (
       <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
@@ -152,8 +171,8 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
     <div className="space-y-4">
       <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
               <CardTitle className="text-2xl font-['Crimson_Pro']">Account history</CardTitle>
               <CardDescription>
                 Last {data.events.length} of {data.total} recent activities
@@ -164,6 +183,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
               size="sm"
               onClick={handleExportCSV}
               disabled={data.events.length === 0}
+              className="w-full justify-center sm:w-auto"
             >
               <Download className="h-4 w-4 mr-2" />
               Download activity
@@ -178,36 +198,59 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-proofound-parchment dark:bg-muted rounded-lg text-sm font-medium text-proofound-charcoal/70 dark:text-muted-foreground">
-                <div className="col-span-3">Date and time</div>
-                <div className="col-span-4">Action</div>
-                <div className="col-span-3">Access detail</div>
-                <div className="col-span-2">Device</div>
+            <>
+              <div className="space-y-3 md:hidden">
+                {data.events.map((event) => (
+                  <article
+                    key={event.id}
+                    className="rounded-xl border border-proofound-stone bg-white p-4 dark:border-border dark:bg-card"
+                  >
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-semibold text-proofound-charcoal dark:text-foreground">
+                          {event.action}
+                        </p>
+                        <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
+                          Account activity
+                        </p>
+                      </div>
+                      {renderEventDetails(event)}
+                    </div>
+                  </article>
+                ))}
               </div>
 
-              {/* Table Rows */}
-              {data.events.map((event) => (
-                <div
-                  key={event.id}
-                  className="grid grid-cols-12 gap-4 px-4 py-3 border border-proofound-stone dark:border-border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="col-span-3 text-sm text-proofound-charcoal dark:text-foreground">
-                    {formatTimestamp(event.timestamp)}
-                  </div>
-                  <div className="col-span-4 text-sm font-medium text-proofound-charcoal dark:text-foreground">
-                    {event.action}
-                  </div>
-                  <div className="col-span-3 text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
-                    {event.ipHash ? 'Protected' : 'Not recorded'}
-                  </div>
-                  <div className="col-span-2 text-xs text-proofound-charcoal/60 dark:text-muted-foreground truncate">
-                    {event.device}
-                  </div>
+              <div className="hidden space-y-2 md:block">
+                {/* Table Header */}
+                <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-proofound-parchment dark:bg-muted rounded-lg text-sm font-medium text-proofound-charcoal/70 dark:text-muted-foreground">
+                  <div className="col-span-3">Date and time</div>
+                  <div className="col-span-4">Action</div>
+                  <div className="col-span-3">Access detail</div>
+                  <div className="col-span-2">Device</div>
                 </div>
-              ))}
-            </div>
+
+                {/* Table Rows */}
+                {data.events.map((event) => (
+                  <div
+                    key={event.id}
+                    className="grid grid-cols-12 gap-4 px-4 py-3 border border-proofound-stone dark:border-border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="col-span-3 text-sm text-proofound-charcoal dark:text-foreground">
+                      {formatTimestamp(event.timestamp)}
+                    </div>
+                    <div className="col-span-4 text-sm font-medium text-proofound-charcoal dark:text-foreground">
+                      {event.action}
+                    </div>
+                    <div className="col-span-3 text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
+                      {event.ipHash ? 'Protected' : 'Not recorded'}
+                    </div>
+                    <div className="col-span-2 text-xs text-proofound-charcoal/60 dark:text-muted-foreground truncate">
+                      {event.device}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {/* Load More Button */}

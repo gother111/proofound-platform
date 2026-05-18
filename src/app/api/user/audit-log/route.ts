@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, notInArray, sql } from 'drizzle-orm';
 import { analyticsEvents, revealEvents } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
@@ -13,6 +13,8 @@ const AuditLogQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
 });
+
+const USER_VISIBLE_AUDIT_EVENT_EXCLUSIONS = ['performance_metric', 'web_vital'];
 
 /**
  * GET /api/user/audit-log
@@ -51,7 +53,12 @@ export async function GET(request: NextRequest) {
     const [analyticsCountResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(analyticsEvents)
-      .where(eq(analyticsEvents.userId, user.id));
+      .where(
+        and(
+          eq(analyticsEvents.userId, user.id),
+          notInArray(analyticsEvents.eventType, USER_VISIBLE_AUDIT_EVENT_EXCLUSIONS)
+        )
+      );
     const [revealCountResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(revealEvents)
@@ -73,7 +80,12 @@ export async function GET(request: NextRequest) {
         properties: analyticsEvents.properties,
       })
       .from(analyticsEvents)
-      .where(eq(analyticsEvents.userId, user.id))
+      .where(
+        and(
+          eq(analyticsEvents.userId, user.id),
+          notInArray(analyticsEvents.eventType, USER_VISIBLE_AUDIT_EVENT_EXCLUSIONS)
+        )
+      )
       .orderBy(desc(analyticsEvents.createdAt))
       .limit(queryParams.limit)
       .offset(queryParams.offset);
