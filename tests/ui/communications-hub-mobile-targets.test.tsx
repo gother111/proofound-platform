@@ -5,11 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CommunicationsHub } from '@/components/communications/CommunicationsHub';
 
 const usePathnameMock = vi.fn();
-const useSearchParamsMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   usePathname: () => usePathnameMock(),
-  useSearchParams: () => useSearchParamsMock(),
 }));
 
 vi.mock('@/app/app/i/interviews/page', () => ({
@@ -24,14 +22,13 @@ vi.mock('@/app/app/o/[slug]/interviews/page', () => ({
   default: () => <div>Organization interviews workspace</div>,
 }));
 
-vi.mock('@/app/app/o/[slug]/messages/OrgMessagesClient', () => ({
-  OrgMessagesClient: () => <div>Organization messages workspace</div>,
+vi.mock('@/app/app/o/[slug]/messages/DeferredOrgMessagesClient', () => ({
+  DeferredOrgMessagesClient: () => <div>Organization messages workspace</div>,
 }));
 
 describe('CommunicationsHub mobile targets', () => {
   beforeEach(() => {
     usePathnameMock.mockReturnValue('/app/i/communications');
-    useSearchParamsMock.mockReturnValue(new URLSearchParams());
   });
 
   it('renders the section switch as a full-height touch target', () => {
@@ -54,5 +51,29 @@ describe('CommunicationsHub mobile targets', () => {
     expect(status).toHaveTextContent('Preparing organization messages');
     expect(status).toHaveTextContent(/threads, intros, and reveal requests/i);
     expect(screen.queryByText('Loading messages...')).not.toBeInTheDocument();
+  });
+
+  it('uses the server-provided initial section without client search params', () => {
+    render(<CommunicationsHub perspective="individual" initialSection="interviews" />);
+
+    expect(screen.getByText('Individual interviews workspace')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Switch to messages/i })).toHaveAttribute(
+      'href',
+      '/app/i/communications?section=messages'
+    );
+  });
+
+  it('renders organization messages through the deferred client when user context is ready', () => {
+    usePathnameMock.mockReturnValue('/app/o/acme/communications');
+
+    render(
+      <CommunicationsHub
+        perspective="organization"
+        currentUserId="user-1"
+        initialSection="messages"
+      />
+    );
+
+    expect(screen.getByText('Organization messages workspace')).toBeInTheDocument();
   });
 });

@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { ArrowRight, CalendarCheck, Handshake, Loader2, MessageCircle } from 'lucide-react';
 
 import IndividualInterviewsPage from '@/app/app/i/interviews/page';
 import { MessagesClient as IndividualMessagesClient } from '@/app/app/i/messages/MessagesClient';
 import OrganizationInterviewsPage from '@/app/app/o/[slug]/interviews/page';
-import { OrgMessagesClient } from '@/app/app/o/[slug]/messages/OrgMessagesClient';
+import { DeferredOrgMessagesClient } from '@/app/app/o/[slug]/messages/DeferredOrgMessagesClient';
 import { cn } from '@/lib/utils';
 
 type CommunicationsPerspective = 'individual' | 'organization';
@@ -16,6 +16,7 @@ type CommunicationsSection = 'messages' | 'intros' | 'interviews' | 'decisions';
 interface CommunicationsHubProps {
   perspective: CommunicationsPerspective;
   currentUserId?: string;
+  initialSection?: string | null;
 }
 
 const sections: Array<{
@@ -71,15 +72,18 @@ function OrganizationMessagesLoading() {
   );
 }
 
-export function CommunicationsHub({ perspective, currentUserId }: CommunicationsHubProps) {
+export function CommunicationsHub({
+  perspective,
+  currentUserId,
+  initialSection,
+}: CommunicationsHubProps) {
   const pathname = usePathname() ?? (perspective === 'organization' ? '/app/o' : '/app/i');
-  const searchParams = useSearchParams();
-  const activeSection = normalizeSection(searchParams?.get('section') ?? null);
+  const activeSection = normalizeSection(initialSection ?? null);
   const activeConfig = sections.find((section) => section.id === activeSection) ?? sections[0];
   const ActiveIcon = activeConfig.icon;
 
   const sectionHref = (section: CommunicationsSection) => {
-    const params = new URLSearchParams(searchParams?.toString());
+    const params = new URLSearchParams();
     params.set('section', section);
 
     return `${pathname}?${params.toString()}`;
@@ -201,7 +205,7 @@ export function CommunicationsHub({ perspective, currentUserId }: Communications
           {activeConfig.workstream === 'messages' ? (
             isOrganization ? (
               currentUserId ? (
-                <OrgMessagesClient currentUserId={currentUserId} />
+                <DeferredOrgMessagesClient currentUserId={currentUserId} />
               ) : (
                 <OrganizationMessagesLoading />
               )
