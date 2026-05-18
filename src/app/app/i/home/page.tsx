@@ -196,7 +196,7 @@ export default async function IndividualHomePage() {
     },
     {
       icon: History,
-      title: 'Audit log',
+      title: 'Account history',
       href: '/app/i/settings/audit-log',
     },
   ];

@@ -15,7 +15,7 @@ export function TopBarProfileMenu({ userName, basePath, onClose }: TopBarProfile
         { href: '/app/i/settings', label: 'Account settings' },
         { href: '/app/i/settings/privacy', label: 'Privacy controls' },
         { href: '/app/i/settings?tab=privacy', label: 'Export or delete data' },
-        { href: '/app/i/settings/audit-log', label: 'Audit log' },
+        { href: '/app/i/settings/audit-log', label: 'Account history' },
       ]
     : [
         { href: `${basePath}/profile`, label: 'Organization profile' },

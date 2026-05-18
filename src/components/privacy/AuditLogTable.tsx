@@ -38,7 +38,11 @@ interface AuditLogEntry {
   metadata?: Record<string, any>;
 }
 
-export function AuditLogTable() {
+interface AuditLogTableProps {
+  title?: string;
+}
+
+export function AuditLogTable({ title = 'Account history' }: AuditLogTableProps) {
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -168,7 +172,7 @@ export function AuditLogTable() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5" />
-          Account history
+          {title}
         </CardTitle>
         <CardDescription>
           Your recent account activity. Access details are protected for privacy.

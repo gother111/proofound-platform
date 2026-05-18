@@ -1106,6 +1106,66 @@ Screenshots:
   document warnings.
 - `npm run build` - pass
 
+## Individual Settings Continuation - Dedicated Account History Route
+
+Date: 2026-05-18
+
+### Surfaces Checked
+
+- `/app/i/settings/audit-log` at 390px mobile and 1280px desktop.
+- Individual home trust-control link copy for `/app/i/settings/audit-log`.
+- Individual top-bar profile menu link copy for `/app/i/settings/audit-log`.
+
+### Findings
+
+#### P2 - Dedicated account-history route was a placeholder
+
+Affected surface:
+
+- `/app/i/settings/audit-log`
+
+Evidence:
+
+- Codex in-app Browser showed the route title `Account history`, but the only
+  card content was `Purpose edit history is archived`. There were no actual
+  account-history rows, even though the privacy page and API had filled account
+  activity available.
+
+Fix:
+
+- Replaced the placeholder with the real privacy account-history component.
+- Gave the embedded history card the contextual title `Recent activity` so the
+  page has one clear `Account history` heading instead of repeating the same
+  title twice.
+- Aligned individual navigation copy from `Audit log` to `Account history` in
+  the top-bar profile menu and individual home trust controls.
+
+### Browser Verification
+
+Verified with the Codex in-app Browser:
+
+- `/app/i/settings/audit-log` no longer showed `Purpose edit history is
+archived`.
+- Filled account-history rows such as `Profile Created` / `Created profile`
+  rendered from the real activity source.
+- The route had one `Account history` page heading and a `Recent activity`
+  section heading.
+- No horizontal overflow was reported at the tested mobile/desktop viewport
+  widths.
+
+Note: Browser screenshot capture timed out on this route after verification, so
+this pass records DOM/rendered-state evidence rather than new screenshot files.
+
+### Automated Checks
+
+- `npm run test -- tests/ui/settings-audit-log-page.test.tsx tests/ui/privacy-audit-log-mobile-clarity.test.tsx tests/ui/settings-account-history-mobile-clarity.test.tsx`
+  - pass
+- `npm run lint` - pass
+- `npm run typecheck` - pass
+- `npm run docs:freshness` - pass in warning mode with the existing 32 orphan
+  document warnings.
+- `npm run build` - pass
+
 ## Auth Continuation - Login And Signup Clarity
 
 Date: 2026-05-18
