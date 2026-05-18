@@ -184,7 +184,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-4 py-10 text-foreground sm:px-6 sm:py-16">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-4 py-6 text-foreground sm:px-6 sm:py-16">
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <NetworkBackground />
       </div>
@@ -203,29 +203,29 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
 
       {/* Signup Form Card */}
       <div className="relative z-10 w-full max-w-md px-0 sm:px-4" data-testid="signup-form-shell">
-        <Card className="mx-auto rounded-[24px] border border-proofound-stone bg-white/95 p-5 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur sm:p-10">
+        <Card className="mx-auto rounded-[24px] border border-proofound-stone bg-white/95 p-4 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur sm:p-10">
           {/* Logo/Title */}
-          <div className="mb-6 text-center sm:mb-8">
-            <div className="mb-4">
+          <div className="mb-5 text-center sm:mb-8">
+            <div className="mb-3 sm:mb-4">
               <div
-                className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl ${
+                className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl sm:h-16 sm:w-16 ${
                   accountType === 'organization'
                     ? 'bg-proofound-terracotta shadow-[0_8px_18px_rgba(199,107,74,0.32)]'
                     : 'bg-proofound-forest shadow-[0_8px_18px_rgba(28,77,58,0.28)]'
                 }`}
               >
                 {accountType === 'individual' ? (
-                  <User className="h-8 w-8 text-white" />
+                  <User className="h-7 w-7 text-white sm:h-8 sm:w-8" />
                 ) : (
-                  <Building2 className="h-8 w-8 text-white" />
+                  <Building2 className="h-7 w-7 text-white sm:h-8 sm:w-8" />
                 )}
               </div>
             </div>
-            <h1 className="font-display text-[28px] font-semibold leading-9 tracking-[-0.01em] text-foreground">
+            <h1 className="font-display text-[25px] font-semibold leading-8 tracking-[-0.01em] text-foreground sm:text-[28px] sm:leading-9">
               Create your {accountType} account
             </h1>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Start with a calm proof-first account. You can add details after sign-up.
+            <p className="mt-2 text-sm leading-6 text-muted-foreground sm:mt-3">
+              Start with email and password. Add details after sign-up.
             </p>
           </div>
 
@@ -247,7 +247,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           <form
             action={formAction}
             onSubmit={handleSubmit}
-            className="space-y-6"
+            className="space-y-4 sm:space-y-6"
             noValidate
             data-testid="signup-form"
           >
@@ -361,7 +361,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             </div>
 
             {/* GDPR Consent Checkboxes */}
-            <div className="space-y-4 pt-2">
+            <div className="space-y-3 pt-1 sm:space-y-4 sm:pt-2">
               {/* Required: Privacy Policy & Terms of Service */}
               <div className="flex min-h-[44px] items-start gap-3 py-1">
                 <Checkbox
@@ -379,14 +379,14 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 />
                 <label
                   htmlFor="signup-gdpr-consent"
-                  className="cursor-pointer text-sm leading-5 text-foreground"
+                  className="cursor-pointer text-sm leading-6 text-foreground"
                 >
                   I agree to the{' '}
                   <a
                     href="/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`inline-flex min-h-[44px] items-center rounded-sm font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
+                    className={`rounded-sm font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
                       accountType === 'organization'
                         ? 'text-proofound-terracotta hover:text-[#B5673F]'
                         : 'text-proofound-forest hover:text-[#2D5D4A]'
@@ -399,7 +399,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                     href="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`inline-flex min-h-[44px] items-center rounded-sm font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
+                    className={`rounded-sm font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
                       accountType === 'organization'
                         ? 'text-proofound-terracotta hover:text-[#B5673F]'
                         : 'text-proofound-forest hover:text-[#2D5D4A]'
