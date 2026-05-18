@@ -1029,6 +1029,44 @@ Note: Browser screenshot capture timed out on this route during the artifact
 write step, so this pass records DOM, layout, overflow, and click evidence in
 JSON rather than PNG screenshots.
 
+## 2026-05-18 - Work Email Verification Recovery Copy
+
+### Scope
+
+- `/verify-work-email`
+- `/signup/organization` risk recheck from the full coverage matrix
+
+### Findings and Fixes
+
+#### P3 - Work-email verification failure actions sounded like internal navigation
+
+Evidence:
+
+- Mobile Browser at 390px showed the missing-token state with `Try again from
+settings` and `Go to Profile`. The route was layout-safe, but the next step
+  was less plain than it should be for a public verification failure.
+
+Fix:
+
+- Updated the failure helper to say the user should request a fresh work-email
+  link from settings.
+- Renamed the actions to `Open work-email settings` and `Return to profile`.
+
+### Browser Verification
+
+- Mobile `/verify-work-email` at 390px - no horizontal overflow; clearer
+  recovery copy and actions are visible, old labels are absent.
+- Desktop `/verify-work-email` at 1280px - no horizontal overflow; same recovery
+  copy and actions remain composed.
+- Mobile `/signup/organization` at 390px - no redirect; organization signup form
+  renders, empty submit focuses the error, and consent toggles correctly.
+- Desktop `/signup/organization` at 1280px - no redirect or horizontal overflow;
+  organization signup form renders.
+
+Evidence artifact:
+
+- `.artifacts/ux-browser-goal-2026-05-18/work-email-verify/invalid-work-email-browser-state.json`
+
 ## Individual Settings And Privacy Continuation - Account History Clarity
 
 Date: 2026-05-18

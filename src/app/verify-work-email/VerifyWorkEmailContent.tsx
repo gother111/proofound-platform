@@ -83,7 +83,8 @@ export function VerifyWorkEmailContent() {
           <CardDescription className="leading-6 text-proofound-charcoal/70">
             {status === 'loading' && 'Please wait while we verify the workplace signal.'}
             {status === 'success' && 'Your workplace signal is now active while it stays fresh.'}
-            {status === 'error' && 'The link could not be verified. You can retry from settings.'}
+            {status === 'error' &&
+              'The link could not be verified. Request a fresh work-email link from settings.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -159,14 +160,14 @@ export function VerifyWorkEmailContent() {
                   onClick={() => router.push('/app/i/settings')}
                   className="w-full bg-proofound-forest hover:bg-proofound-forest/90"
                 >
-                  Try again from settings
+                  Open work-email settings
                 </Button>
                 <Button
                   onClick={() => router.push('/app/i/profile')}
                   variant="outline"
                   className="w-full"
                 >
-                  Go to Profile
+                  Return to profile
                 </Button>
               </div>
             </div>
