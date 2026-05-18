@@ -1051,6 +1051,51 @@ Evidence file:
   Browser-rendered evidence plus `npm run docs:freshness` for the audit/matrix
   update.
 
+## Coverage Matrix Continuation - Token Fixture Risk Reconciliation
+
+### Updated Verdict
+
+The full coverage matrix no longer treats all valid token workflows as one
+undifferentiated open risk.
+
+Several deterministic local fixtures now prove the valid-state UX for the
+public token workflows that previously depended on production-like signed
+links. The remaining risk is narrower: real signed staging or production links
+can still vary by data shape, expiry, and credentials, but the main visual
+states are no longer missing from Browser evidence.
+
+### Evidence Reconciled
+
+- Email verification success:
+  `.artifacts/ux-browser-goal-2026-05-18/verify-email/success-email-browser-state.json`
+- Reset password confirm form, mismatch validation, and success:
+  `.artifacts/ux-browser-goal-2026-05-18/reset-password-confirm/success-reset-browser-state.json`
+- Work-email verification success:
+  `.artifacts/ux-browser-goal-2026-05-18/work-email-verify/success-work-email-browser-state.json`
+- Organization invite initial and accepted states:
+  `.artifacts/ux-browser-goal-2026-05-18/accept-invite/visual-accept-invite-browser-state.json`
+- Feedback token initial, validation, and submitted states:
+  `.artifacts/ux-browser-goal-2026-05-18/feedback-token/visual-feedback-browser-state.json`
+- Public verifier skill/custom filled and response states:
+  recorded in this audit under
+  `Verifier Link Continuation - Filled Skill And Custom Request States`.
+
+### Matrix Update
+
+- Marked `/verify-email`, `/verify-work-email`, `/reset-password/confirm`,
+  `/accept-invite`, and `/feedback/[token]` as Browser-proven for their stable
+  local valid-state fixtures.
+- Kept real signed public-token variance as a remaining staging-data risk
+  instead of claiming production links are fully covered by local fixtures.
+- Raised the matrix Browser row count to include the reconciled token fixture
+  evidence files.
+
+### Automated Checks
+
+- No product code changed in this continuation. The relevant verification is
+  Browser artifact inspection plus `npm run docs:freshness` for the audit/matrix
+  update.
+
 ## Public Feedback Token Continuation - Filled State Fixture And Embedded Form
 
 ### Updated Verdict
