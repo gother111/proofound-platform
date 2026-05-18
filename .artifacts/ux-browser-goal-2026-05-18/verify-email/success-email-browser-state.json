@@ -1,0 +1,58 @@
+{
+  "surface": "/verify-email?token=visual-email-verification-token-00000001&type=signup",
+  "environment": {
+    "NEXT_PUBLIC_USE_MOCK_SUPABASE": "true",
+    "PROOFOUND_VISUAL_FIXTURES": "true",
+    "browser": "Codex in-app Browser"
+  },
+  "mobile390": {
+    "url": "http://localhost:3000/verify-email?token=visual-email-verification-token-00000001&type=signup",
+    "innerWidth": 390,
+    "innerHeight": 844,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "hasOverflow": false,
+    "heading": "Email verified!",
+    "text": "Skip to main content\nEmail verified!\n\nYour email has been successfully verified.\n\nYou can continue to login when ready.\n\nGo to login now",
+    "hasRedirectCopy": false,
+    "buttons": [
+      {
+        "tag": "A",
+        "text": "Skip to main content",
+        "href": "#main-content"
+      },
+      {
+        "tag": "A",
+        "text": "Go to login now",
+        "href": "/login"
+      }
+    ]
+  },
+  "desktop1280": {
+    "url": "http://localhost:3000/verify-email?token=visual-email-verification-token-00000001&type=signup",
+    "innerWidth": 1280,
+    "innerHeight": 900,
+    "scrollWidth": 1280,
+    "clientWidth": 1280,
+    "hasOverflow": false,
+    "heading": "Email verified!",
+    "text": "Skip to main content\nEmail verified!\n\nYour email has been successfully verified.\n\nYou can continue to login when ready.\n\nGo to login now",
+    "hasRedirectCopy": false,
+    "buttons": [
+      {
+        "tag": "A",
+        "text": "Skip to main content",
+        "href": "#main-content"
+      },
+      {
+        "tag": "A",
+        "text": "Go to login now",
+        "href": "/login"
+      }
+    ]
+  },
+  "notes": [
+    "The first Browser viewport set reported the previous 1280px width; reset plus set was used before recording the 390px evidence.",
+    "Visual fixture success state intentionally does not auto-redirect so the rendered success state remains inspectable."
+  ]
+}

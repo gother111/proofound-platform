@@ -1031,6 +1031,61 @@ Evidence file:
 - `npm run test -- tests/ui/feedback-form.test.tsx tests/api/feedback-token-visual-route.test.ts`
   - pass
 
+## Email Verification Continuation - Stable Valid-Link Success State
+
+### Updated Verdict
+
+Improved for the public email-verification workflow.
+
+The valid `/verify-email` success state now has a deterministic local fixture
+so the page can be inspected in Browser without a real Supabase email token.
+The real token path keeps its timed redirect, while the visual fixture uses
+stable copy so users and reviewers can clearly see the successful next action.
+
+### Additional Findings And Fixes
+
+#### P2 - Valid email verification state required a real auth token
+
+Affected surface:
+
+- `/verify-email`
+
+Evidence:
+
+- The full coverage matrix marked valid email verification as `PASS/RISK`
+  because Browser could only prove the default/loading/invalid route without a
+  production-like token.
+
+Fix:
+
+- Added a local-only visual token:
+  `/verify-email?token=visual-email-verification-token-00000001&type=signup`.
+- The visual token renders the success state without calling the guarded auth
+  action.
+- Success copy now distinguishes the real auto-redirect path from the stable
+  visual fixture path:
+  - real token: `Redirecting to login in a few seconds.`
+  - visual fixture: `You can continue to login when ready.`
+
+### Browser Verification
+
+Verified with the Codex in-app Browser:
+
+- Mobile valid fixture at 390px - no horizontal overflow; success heading,
+  confirmation copy, and `Go to login now` action are visible; no misleading
+  redirect copy is present.
+- Desktop valid fixture at 1280px - no horizontal overflow; same success state
+  remains composed and stable.
+
+Evidence file:
+
+- `.artifacts/ux-browser-goal-2026-05-18/verify-email/success-email-browser-state.json`
+
+### Automated Checks
+
+- `npm run test -- tests/ui/verify-email-content.test.tsx tests/ui/verify-link-visual-fixtures.test.tsx`
+  - pass
+
 ## 2026-05-18 - Individual Interviews Empty and Filled States
 
 ### Scope

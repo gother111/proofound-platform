@@ -6,13 +6,19 @@ import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { verifyEmail } from '@/actions/auth';
+import { isVisualEmailVerificationToken } from '@/lib/verification/visual-link-fixtures';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+
+function clientVisualVerificationEnabled() {
+  return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+}
 
 export function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
+  const [autoRedirectEnabled, setAutoRedirectEnabled] = useState(true);
 
   useEffect(() => {
     const token = searchParams?.get('token');
@@ -21,6 +27,12 @@ export function VerifyEmailContent() {
     if (!token) {
       setStatus('error');
       setError('No verification token provided');
+      return;
+    }
+
+    if (clientVisualVerificationEnabled() && isVisualEmailVerificationToken(token)) {
+      setAutoRedirectEnabled(false);
+      setStatus('success');
       return;
     }
 
@@ -36,7 +48,6 @@ export function VerifyEmailContent() {
         setError(result.error);
       } else {
         setStatus('success');
-        // Redirect to login after 3 seconds
         setTimeout(() => {
           router.push('/login');
         }, 3000);
@@ -127,12 +138,14 @@ export function VerifyEmailContent() {
             Email verified!
           </CardTitle>
           <CardDescription className="leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
-            Your email has been successfully verified
+            Your email has been successfully verified.
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center">
           <p className="mb-4 text-sm leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
-            Redirecting to login in 3 seconds.
+            {autoRedirectEnabled
+              ? 'Redirecting to login in a few seconds.'
+              : 'You can continue to login when ready.'}
           </p>
           <Button
             asChild
