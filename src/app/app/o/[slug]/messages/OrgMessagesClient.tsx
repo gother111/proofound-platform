@@ -213,9 +213,7 @@ function OrganizationMessagesPageContent({ currentUserId }: OrgMessagesClientPro
             onBack={handleBackToConversationList}
           />
         ) : selectedConversation ? (
-          <div className="h-full flex items-center justify-center">
-            <p className="text-muted-foreground">Loading messages...</p>
-          </div>
+          <LoadingOrganizationMessages />
         ) : (
           <div className="mx-6 max-w-md rounded-2xl border border-proofound-stone/70 bg-white/60 p-8 text-center shadow-sm">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-proofound-parchment text-proofound-forest">
