@@ -195,11 +195,11 @@ describe('Organization public portfolio page', () => {
           display_name: 'Acme',
           public_portfolio_state: 'public_link_only',
           search_indexing_enabled_at: null,
-          trust_status: 'pending',
-          trust_status_updated_at: null,
-          website_verified_at: null,
+          trust_status: 'domain_verified',
+          trust_status_updated_at: '2026-05-18T00:00:00.000Z',
+          website_verified_at: '2026-05-18T00:00:00.000Z',
           operating_region: null,
-          verified: false,
+          verified: true,
           website: 'https://acme.org/',
           tagline: 'Build trust',
           mission: null,
@@ -236,6 +236,56 @@ describe('Organization public portfolio page', () => {
     expect(screen.getAllByText('Build trust').length).toBeGreaterThan(0);
     expect(
       screen.getByText(/assignment detail will appear here once the organization publishes it/i)
+    ).toBeInTheDocument();
+  });
+
+  it('keeps sparse long organization data readable on narrow public portfolio layouts', async () => {
+    const longName =
+      'Nordic Distributed Proof Operations Research Collective For Very Long Public Names';
+    const longWebsite =
+      'https://proof-operations-research-collective.example.com/teams/very-long-public-profile-path';
+
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
+      buildProjection({
+        publicDisplayName: longName,
+        publicSummary: '',
+        verifiedDomainPath:
+          'proof-operations-research-collective.example.com/verified/organization/domain/path',
+        organization: {
+          id: 'org-1',
+          slug: 'acme',
+          display_name: longName,
+          public_portfolio_state: 'public_link_only',
+          search_indexing_enabled_at: null,
+          trust_status: 'pending',
+          trust_status_updated_at: null,
+          website_verified_at: null,
+          operating_region: null,
+          verified: false,
+          website: longWebsite,
+          tagline: null,
+          mission: null,
+          working_context: null,
+          type: 'company',
+        },
+        assignmentSnapshot: null,
+      }) as any
+    );
+
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'acme' }),
+      searchParams: Promise.resolve({ returnTo: '/app/o/acme/home' }),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('heading', { name: longName })).toHaveClass('break-words');
+    expect(screen.getByRole('link', { name: /return to menu/i })).toHaveClass('w-full');
+    expect(screen.getByRole('button', { name: /copy share link/i })).toHaveClass('w-full');
+    expect(screen.getByRole('link', { name: /website/i })).toHaveClass('w-full');
+    expect(screen.getByText(longWebsite)).toHaveClass('break-words');
+    expect(
+      screen.getByText(/a short purpose statement has not been published yet/i)
     ).toBeInTheDocument();
   });
 

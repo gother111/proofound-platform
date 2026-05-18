@@ -163,17 +163,20 @@ export default async function OrganizationPortfolioPage({
       header={
         <div className="space-y-3">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest text-white">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-proofound-forest text-white">
                   <Building2 className="h-5 w-5" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-semibold text-foreground">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="min-w-0 break-words text-2xl font-semibold text-foreground">
                       {data.publicDisplayName}
                     </h1>
-                    <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
+                    <Badge
+                      variant="outline"
+                      className="shrink-0 border-[#D9D5CC] text-muted-foreground"
+                    >
                       {data.effectiveState === 'public_indexable'
                         ? 'Searchable'
                         : 'Shareable by direct link'}
@@ -188,23 +191,28 @@ export default async function OrganizationPortfolioPage({
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <div className="grid w-full gap-2 sm:w-auto sm:grid-flow-col sm:auto-cols-max sm:items-center lg:justify-end">
               <Button variant="outline" size="sm" asChild>
-                <Link href={returnPath} className="inline-flex items-center gap-1.5">
+                <Link
+                  href={returnPath}
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 sm:w-auto"
+                >
                   <ArrowLeft className="h-4 w-4" />
                   {returnLabel}
                 </Link>
               </Button>
-              <ShareLinkButton url={data.shareUrl} />
+              <ShareLinkButton url={data.shareUrl} className="min-h-11 w-full sm:w-auto" />
               <div className="hidden sm:contents">
-                {viewerIsMember ? <DownloadOrganizationPdfButton slug={slug} /> : null}
+                {viewerIsMember ? (
+                  <DownloadOrganizationPdfButton slug={slug} className="min-h-11 sm:w-auto" />
+                ) : null}
               </div>
               {data.organization.website ? (
                 <a
                   href={data.organization.website}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-md border border-[#D9D5CC] bg-[#FCFBF8] px-3 py-2 text-sm text-foreground hover:border-proofound-forest/40 hover:text-proofound-forest"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 break-words rounded-md border border-[#D9D5CC] bg-[#FCFBF8] px-3 py-2 text-sm text-foreground hover:border-proofound-forest/40 hover:text-proofound-forest sm:w-auto"
                 >
                   <Globe2 className="h-4 w-4" />
                   Website
@@ -216,16 +224,16 @@ export default async function OrganizationPortfolioPage({
       }
       footer={
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span>proofound.io/portfolio/org/{slug}</span>
+          <span className="min-w-0 break-words">proofound.io/portfolio/org/{slug}</span>
           <span>Minimal public profile</span>
         </div>
       }
     >
       <JsonLdScripts items={jsonLdItems} idPrefix="public-org-portfolio-jsonld" />
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <div className="space-y-4">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <div className="min-w-0 space-y-4">
           <PublicProfileSection title="Mission / purpose">
-            <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+            <p className="break-words whitespace-pre-line text-sm leading-6 text-foreground">
               {(data.visibility?.mission === 'public'
                 ? data.organization.mission
                 : data.organization.tagline) ||
@@ -234,7 +242,7 @@ export default async function OrganizationPortfolioPage({
           </PublicProfileSection>
 
           <PublicProfileSection title="What work is offered">
-            <div className="space-y-3">
+            <div className="min-w-0 space-y-3">
               <SummaryRow
                 label="Work offered"
                 value={
@@ -251,7 +259,7 @@ export default async function OrganizationPortfolioPage({
                     : 'Not published'
                 }
               />
-              <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+              <p className="break-words whitespace-pre-line text-sm leading-6 text-foreground">
                 {assignmentSnapshot?.businessValue ||
                   data.organization.tagline?.trim() ||
                   'Why this work exists has not been published yet.'}
@@ -260,8 +268,8 @@ export default async function OrganizationPortfolioPage({
           </PublicProfileSection>
 
           <PublicProfileSection title="Assignment clarity">
-            <div className="space-y-3">
-              <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+            <div className="min-w-0 space-y-3">
+              <p className="break-words whitespace-pre-line text-sm leading-6 text-foreground">
                 {assignmentSnapshot?.description?.trim() ||
                   data.organization.working_context?.trim() ||
                   'Assignment detail will appear here once the organization publishes it.'}
@@ -277,11 +285,11 @@ export default async function OrganizationPortfolioPage({
                   Expected outcomes
                 </p>
                 {assignmentSnapshot?.outcomes.length ? (
-                  <ul className="space-y-2 text-sm text-foreground">
+                  <ul className="min-w-0 space-y-2 text-sm text-foreground">
                     {assignmentSnapshot.outcomes.map((outcome) => (
-                      <li key={outcome} className="flex gap-2">
+                      <li key={outcome} className="flex min-w-0 gap-2">
                         <span className="mt-1 text-proofound-forest">•</span>
-                        <span>{outcome}</span>
+                        <span className="min-w-0 break-words">{outcome}</span>
                       </li>
                     ))}
                   </ul>
@@ -295,13 +303,13 @@ export default async function OrganizationPortfolioPage({
           </PublicProfileSection>
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <PublicProfileSection title="Seriousness of review">
-            <div className="space-y-3">
+            <div className="min-w-0 space-y-3">
               {reviewSignals.map((signal) => (
                 <p
                   key={signal}
-                  className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-sm text-foreground shadow-sm"
+                  className="min-w-0 break-words rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-sm text-foreground shadow-sm"
                 >
                   {signal}
                 </p>
@@ -331,13 +339,13 @@ export default async function OrganizationPortfolioPage({
 
 function SummaryRow({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 shadow-sm">
+    <div className="min-w-0 rounded-xl border border-white/40 bg-white/40 px-3 py-2 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1 flex items-center gap-2 text-sm text-foreground">
+      <p className="mt-1 flex min-w-0 items-center gap-2 text-sm text-foreground">
         {icon}
-        <span>{value}</span>
+        <span className="min-w-0 break-words">{value}</span>
       </p>
     </div>
   );

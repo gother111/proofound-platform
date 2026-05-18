@@ -3197,3 +3197,62 @@ Evidence:
 
 - `npm run test -- tests/ui/matching-organization-view-beta.test.tsx`
   - pass
+
+## Public Organization Portfolio Long Data Continuation
+
+### Updated Verdict
+
+Improved for public organization portfolio data variance.
+
+The public organization page worked for ordinary demo data, but the remaining
+matrix risk was real organization data variance. A long organization name,
+long website URL, long domain path, and sparse public content could make the
+mobile page feel clipped or cramped even when the route had no page-level
+horizontal overflow.
+
+### Findings And Fixes
+
+#### P2 - Long public organization data could clip inside cards on mobile
+
+Affected surface:
+
+- `/portfolio/org/[slug]`
+
+Fix:
+
+- Made public profile sections shrink-safe with `min-w-0` and breakable section
+  headings/content.
+- Made the organization portfolio header name, footer path, summary rows,
+  review signals, outcomes, and sparse fallback copy wrap safely.
+- Made public organization header actions full-width on mobile and at least
+  44px tall for comfortable tap targets.
+- Added a mock-only long/sparse organization fixture at `/portfolio/org/long-org`
+  so future agents can verify this data-variance state without production data.
+
+### Rendered Verification
+
+The Codex in-app Browser plugin remained unavailable for this continuation
+(`Browser is not available: iab`), so this evidence is labeled as fallback
+rendered evidence rather than Browser-plugin proof. The local dev server was
+started in mock mode only for the visual fixture.
+
+Fallback rendered evidence:
+
+- Mobile `/portfolio/org/long-org` at 390px - no horizontal overflow; long name,
+  sparse purpose fallback, assignment fallback, and action labels render.
+- Narrow mobile `/portfolio/org/long-org` at 375px - no horizontal overflow;
+  product actions remain at comfortable tap size.
+- Desktop `/portfolio/org/long-org` at 1280px - no horizontal overflow; the
+  long organization data stays composed in the two-column layout.
+
+Evidence:
+
+- `.artifacts/ux-browser-goal-2026-05-18/org-portfolio-long-sparse/fallback-rendered-state.json`
+- `.artifacts/ux-browser-goal-2026-05-18/org-portfolio-long-sparse/mobile390-long-sparse-org.png`
+- `.artifacts/ux-browser-goal-2026-05-18/org-portfolio-long-sparse/narrow375-long-sparse-org.png`
+- `.artifacts/ux-browser-goal-2026-05-18/org-portfolio-long-sparse/desktop1280-long-sparse-org.png`
+
+### Automated Checks
+
+- `npm run test -- tests/ui/public-org-portfolio-page.test.tsx tests/lib/public-portfolio-projection.test.ts`
+  - pass

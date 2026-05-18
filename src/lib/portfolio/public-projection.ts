@@ -153,6 +153,8 @@ export type TraceableProfileSummary = {
 
 const MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
 const MOCK_ORG_SLUG = 'test-org';
+const MOCK_LONG_ORG_ID = '99999999-9999-4999-9999-999999999998';
+const MOCK_LONG_ORG_SLUG = 'long-org';
 const MOCK_PROFILE_ID = '77777777-7777-4777-8777-777777777777';
 const MOCK_PROFILE_HANDLE = 'demo-proofound';
 
@@ -1841,6 +1843,89 @@ function buildMockPublicOrganizationPortfolioProjection(): PublicOrganizationPor
   };
 }
 
+function buildMockLongPublicOrganizationPortfolioProjection(): PublicOrganizationPortfolioProjection {
+  const organization: OrganizationRow = {
+    id: MOCK_LONG_ORG_ID,
+    slug: MOCK_LONG_ORG_SLUG,
+    display_name:
+      'Nordic Distributed Proof Operations Research Collective For Very Long Public Names',
+    public_portfolio_state: 'public_link_only',
+    search_indexing_enabled_at: null,
+    trust_status: 'domain_verified',
+    trust_status_updated_at: '2026-05-18T00:00:00.000Z',
+    website_verified_at: '2026-05-18T00:00:00.000Z',
+    operating_region: null,
+    verified: true,
+    website:
+      'https://proof-operations-research-collective.example.com/teams/very-long-public-profile-path',
+    tagline: null,
+    mission: null,
+    working_context: null,
+    type: 'company',
+  };
+  const visibility: OrganizationVisibilityRow = {
+    display_name: 'public',
+    mission: 'public',
+  };
+  const verifiedDomainPath =
+    'proof-operations-research-collective.example.com/verified/organization/domain/path';
+  const publicSummary = '';
+  const effectiveState = deriveEffectivePublicPortfolioState({
+    requestedState: resolveRequestedPublicPortfolioState(organization.public_portfolio_state),
+    searchIndexingEnabled: false,
+    minimumContentMet: true,
+  });
+  const shareUrl = `${SITE_URL}/portfolio/org/${encodeURIComponent(organization.slug)}`;
+  const verificationSummary = summarizeVerificationPolicy({
+    records: [],
+    legacyOrganization: {
+      trustStatus: 'domain_verified',
+      verified: true,
+    },
+  });
+
+  return {
+    organizationId: organization.id,
+    slug: organization.slug,
+    requestedState: resolveRequestedPublicPortfolioState(organization.public_portfolio_state),
+    effectiveState,
+    shareUrl,
+    publicDisplayName: organization.display_name,
+    publicSummary,
+    verifiedDomainPath,
+    visibility,
+    organization,
+    verificationSummary,
+    metadata: {
+      path: `/portfolio/org/${encodeURIComponent(organization.slug)}`,
+      title: 'Proofound organization portfolio',
+      description: 'Shareable organization profile on Proofound.',
+      ogTitle: 'Proofound organization portfolio',
+      ogDescription: 'Shareable organization profile on Proofound.',
+      useGenericPreview: true,
+    },
+    jsonLd: {
+      description: 'Shareable organization profile on Proofound.',
+    },
+    exportData: {
+      schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+      surface: 'organization_public',
+      exportedAt: new Date().toISOString(),
+      shareUrl,
+      organization: {
+        id: organization.id,
+        slug: organization.slug,
+        displayName: organization.display_name,
+        verifiedDomainPath,
+        website: normalizeOrganizationWebsite(organization.website).value || undefined,
+        verified: true,
+      },
+    },
+    assignmentSnapshot: null,
+    minimumContentMet: true,
+  };
+}
+
 function resolvePublicOrganizationName(
   organization: OrganizationRow,
   visibility: OrganizationVisibilityRow | null
@@ -1920,6 +2005,9 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
 ): Promise<PublicOrganizationPortfolioProjection | null> {
   if (isMockSupabaseEnabled() && slug === MOCK_ORG_SLUG) {
     return buildMockPublicOrganizationPortfolioProjection();
+  }
+  if (isMockSupabaseEnabled() && slug === MOCK_LONG_ORG_SLUG) {
+    return buildMockLongPublicOrganizationPortfolioProjection();
   }
 
   const organization = await loadOrganizationBySlug(slug);

@@ -1,0 +1,47 @@
+[
+  {
+    "name": "mobile390-long-sparse-org",
+    "path": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-goal-2026-05-18/org-portfolio-long-sparse/mobile390-long-sparse-org.png",
+    "url": "http://localhost:3000/portfolio/org/long-org?returnTo=/app/o/long-org/home",
+    "title": "Proofound organization portfolio",
+    "viewportWidth": 390,
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "hasHorizontalOverflow": false,
+    "hasLongName": true,
+    "hasSparsePurposeFallback": true,
+    "hasAssignmentFallback": true,
+    "actionLabels": ["Return to menu", "Copy share link", "Website"],
+    "tinyActionTargets": 0
+  },
+  {
+    "name": "narrow375-long-sparse-org",
+    "path": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-goal-2026-05-18/org-portfolio-long-sparse/narrow375-long-sparse-org.png",
+    "url": "http://localhost:3000/portfolio/org/long-org?returnTo=/app/o/long-org/home",
+    "title": "Proofound organization portfolio",
+    "viewportWidth": 375,
+    "scrollWidth": 375,
+    "bodyScrollWidth": 375,
+    "hasHorizontalOverflow": false,
+    "hasLongName": true,
+    "hasSparsePurposeFallback": true,
+    "hasAssignmentFallback": true,
+    "actionLabels": ["Return to menu", "Copy share link", "Website"],
+    "tinyActionTargets": 0
+  },
+  {
+    "name": "desktop1280-long-sparse-org",
+    "path": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-goal-2026-05-18/org-portfolio-long-sparse/desktop1280-long-sparse-org.png",
+    "url": "http://localhost:3000/portfolio/org/long-org?returnTo=/app/o/long-org/home",
+    "title": "Proofound organization portfolio",
+    "viewportWidth": 1280,
+    "scrollWidth": 1280,
+    "bodyScrollWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "hasLongName": true,
+    "hasSparsePurposeFallback": true,
+    "hasAssignmentFallback": true,
+    "actionLabels": ["Return to menu", "Copy share link", "Website"],
+    "tinyActionTargets": 0
+  }
+]

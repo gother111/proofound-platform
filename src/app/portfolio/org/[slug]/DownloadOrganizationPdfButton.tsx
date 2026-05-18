@@ -3,8 +3,15 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function DownloadOrganizationPdfButton({ slug }: { slug: string }) {
+export function DownloadOrganizationPdfButton({
+  slug,
+  className,
+}: {
+  slug: string;
+  className?: string;
+}) {
   const [loading, setLoading] = useState(false);
 
   const getErrorMessage = async (res: Response): Promise<string> => {
@@ -83,7 +90,7 @@ export function DownloadOrganizationPdfButton({ slug }: { slug: string }) {
       size="sm"
       onClick={handleDownload}
       disabled={loading}
-      className="inline-flex items-center gap-1.5"
+      className={cn('inline-flex items-center gap-1.5', className)}
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
       {loading ? 'Preparing...' : 'Download profile PDF'}
