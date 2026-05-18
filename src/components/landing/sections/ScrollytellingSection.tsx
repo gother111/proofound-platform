@@ -90,6 +90,14 @@ const getFrameScrollProgress = (frameIndex: number) => {
   return Math.min(0.995, frameIndex / frameCount + 0.025);
 };
 
+export function LandingHeroHeadline() {
+  return (
+    <h1 className="max-w-none font-display text-[7.4rem] font-semibold leading-[0.82] text-foreground xl:text-[9.35rem]">
+      <span className="block">Proof behind</span> <span className="block">the claim</span>
+    </h1>
+  );
+}
+
 const DESKTOP_CARD_FRAME = 'w-[31rem] max-w-[31rem] aspect-[31/42]';
 const MOBILE_CARD_FRAME = 'w-full max-w-[14rem] aspect-[31/42]';
 const GLASS_SHELL =
@@ -1862,10 +1870,7 @@ function HeroDesktopCopy({
           transition={reduceMotion ? { duration: 0 } : STORY_TRANSITION}
           className="space-y-8"
         >
-          <h1 className="max-w-none font-display text-[7.4rem] font-semibold leading-[0.82] text-foreground xl:text-[9.35rem]">
-            <span className="block">Proof behind</span>
-            <span className="block">the claim</span>
-          </h1>
+          <LandingHeroHeadline />
 
           <div className="max-w-[34rem] space-y-5">
             <p className="text-[1.06rem] leading-8 text-foreground/74 xl:text-[1.18rem]">
@@ -2643,10 +2648,7 @@ function HeroToBlindDesktopScene({
               className="space-y-8 will-change-transform"
               style={{ y: heroOffsetY, opacity: heroExitOpacity }}
             >
-              <h1 className="max-w-none font-display text-[7.4rem] font-semibold leading-[0.82] text-foreground xl:text-[9.35rem]">
-                <span className="block">Proof behind</span>
-                <span className="block">the claim</span>
-              </h1>
+              <LandingHeroHeadline />
 
               <div className="max-w-[34rem] space-y-5">
                 <p className="text-[1.06rem] leading-8 text-foreground/74 xl:text-[1.18rem]">
