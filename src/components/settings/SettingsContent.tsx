@@ -99,13 +99,23 @@ export function SettingsContent({ userId }: SettingsContentProps) {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="-mx-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:overflow-visible sm:px-0">
-            <TabsList className="min-w-max bg-white dark:bg-card border border-proofound-stone dark:border-border">
-              <TabsTrigger value="account">Account</TabsTrigger>
-              <TabsTrigger value="interviews" aria-label="Interview Scheduling">
+            <TabsList className="h-auto min-h-[3.25rem] min-w-max gap-1 bg-white p-1 dark:bg-card border border-proofound-stone dark:border-border">
+              <TabsTrigger value="account" className="min-h-11 px-4 py-2.5">
+                Account
+              </TabsTrigger>
+              <TabsTrigger
+                value="interviews"
+                aria-label="Interview Scheduling"
+                className="min-h-11 px-4 py-2.5"
+              >
                 <span className="sm:hidden">Interviews</span>
                 <span className="hidden sm:inline">Interview Scheduling</span>
               </TabsTrigger>
-              <TabsTrigger value="privacy" aria-label="Privacy & Data">
+              <TabsTrigger
+                value="privacy"
+                aria-label="Privacy & Data"
+                className="min-h-11 px-4 py-2.5"
+              >
                 <span className="sm:hidden">Privacy</span>
                 <span className="hidden sm:inline">Privacy & Data</span>
               </TabsTrigger>
