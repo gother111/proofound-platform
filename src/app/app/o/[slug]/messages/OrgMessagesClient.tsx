@@ -16,6 +16,7 @@ import type { RealtimeMessageThreadProps } from '@/components/messaging/Realtime
 import { type Message } from '@/components/messaging/MessageThread';
 import { Lock, MessageSquare } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { LoadingOrganizationMessages } from './DeferredOrgMessagesClient';
 
 type OrgMessagesClientProps = {
   currentUserId: string;
@@ -243,13 +244,7 @@ function OrganizationMessagesPageContent({ currentUserId }: OrgMessagesClientPro
 // Wrap in Suspense for useSearchParams
 export function OrgMessagesClient({ currentUserId }: OrgMessagesClientProps) {
   return (
-    <Suspense
-      fallback={
-        <div className="h-full flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingOrganizationMessages />}>
       <OrganizationMessagesPageContent currentUserId={currentUserId} />
     </Suspense>
   );

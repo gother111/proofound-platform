@@ -37,6 +37,7 @@ vi.mock('@/components/messaging/RealtimeMessageThread', () => ({
 }));
 
 import { OrgMessagesClient } from '@/app/app/o/[slug]/messages/OrgMessagesClient';
+import { LoadingOrganizationMessages } from '@/app/app/o/[slug]/messages/DeferredOrgMessagesClient';
 
 describe('organization messages page', () => {
   beforeEach(() => {
@@ -88,6 +89,13 @@ describe('organization messages page', () => {
       expect(screen.getByText('Candidate A')).toBeInTheDocument();
     });
 
+    expect(screen.queryByText(/^loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  it('uses a contextual loading state for organization messages', () => {
+    render(<LoadingOrganizationMessages />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('Preparing organization messages');
     expect(screen.queryByText(/^loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 

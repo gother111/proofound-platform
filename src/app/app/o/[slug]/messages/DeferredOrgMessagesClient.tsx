@@ -6,10 +6,21 @@ type OrgMessagesClientProps = {
   currentUserId: string;
 };
 
-function LoadingOrganizationMessages() {
+export function LoadingOrganizationMessages() {
   return (
-    <div className="h-full flex items-center justify-center">
-      <p className="text-muted-foreground">Loading...</p>
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex h-full min-h-[320px] items-center justify-center rounded-xl border border-proofound-stone/70 bg-white/70 px-5 text-center shadow-sm"
+    >
+      <div className="max-w-sm space-y-2">
+        <p className="text-sm font-semibold text-proofound-charcoal">
+          Preparing organization messages
+        </p>
+        <p className="text-xs leading-5 text-muted-foreground">
+          Loading the team conversation context before showing threads, intros, and reveal requests.
+        </p>
+      </div>
     </div>
   );
 }
