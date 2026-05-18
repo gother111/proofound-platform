@@ -319,13 +319,16 @@ export default async function OrganizationHomePage({
                   </div>
                 ))}
               </div>
-              <Link
-                href={primaryActionHref}
-                className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-proofound-forest"
+              <Button
+                asChild
+                variant={needsTrustWork ? 'outline' : 'default'}
+                className="mt-5 w-full justify-between"
               >
-                {readinessActionLabel}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+                <Link href={primaryActionHref}>
+                  {readinessActionLabel}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
 
             <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
