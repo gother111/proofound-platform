@@ -459,6 +459,21 @@ export default function OrganizationInterviewsPage() {
     return (
       <AppSurface>
         <div className="mx-auto max-w-4xl space-y-6">
+          <section className="rounded-2xl border border-proofound-stone bg-white/85 p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Interviews
+            </p>
+            <h1 className="mt-2 font-display text-xl font-semibold text-foreground">
+              Interview corridor is loading
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              We are preparing scheduling, decision, feedback, and engagement verification steps for
+              this organization workspace.
+            </p>
+            <p className="mt-3 text-sm text-muted-foreground" role="status">
+              Loading interview corridor...
+            </p>
+          </section>
           <PageIntroSkeleton showAction={false} />
           <CardListSkeleton count={3} />
         </div>
@@ -485,11 +500,11 @@ export default function OrganizationInterviewsPage() {
               <Calendar className="h-8 w-8" style={{ color: '#1C4D3A' }} />
             </div>
             <h2 className="mb-2 text-xl font-medium" style={{ color: '#2D3330' }}>
-              No Active Hiring Corridor Yet
+              No active hiring corridor yet
             </h2>
             <p className="mb-6 max-w-md text-sm text-muted-foreground">
               Once you shortlist a candidate, this page will show each corridor stage, the privacy
-              status, and the next legal action.
+              status, and the next action.
             </p>
           </div>
         ) : (

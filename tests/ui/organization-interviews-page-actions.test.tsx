@@ -86,6 +86,17 @@ describe('organization interviews page actions', () => {
     getInterviewCorridorItemsMock.mockReset();
   });
 
+  it('explains the loading corridor before interview actions arrive', () => {
+    getInterviewCorridorItemsMock.mockReturnValue(new Promise<never>(() => {}));
+
+    render(<OrganizationInterviewsPage />);
+
+    expect(
+      screen.getByRole('heading', { name: 'Interview corridor is loading' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Loading interview corridor...');
+  });
+
   it('shows edit/cancel actions and calls edit + cancel APIs with refresh', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
