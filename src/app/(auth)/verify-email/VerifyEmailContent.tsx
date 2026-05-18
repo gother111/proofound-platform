@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { verifyEmail } from '@/actions/auth';
 import { isVisualEmailVerificationToken } from '@/lib/verification/visual-link-fixtures';
@@ -68,9 +68,9 @@ export function VerifyEmailContent() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
               <Loader2 className="h-6 w-6 animate-spin text-proofound-forest dark:text-primary" />
             </div>
-            <CardTitle className="font-display text-2xl text-proofound-charcoal dark:text-foreground">
+            <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal dark:text-foreground">
               Verifying your email
-            </CardTitle>
+            </h1>
             <CardDescription className="leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
               Please wait while we verify your email address.
             </CardDescription>
@@ -91,9 +91,9 @@ export function VerifyEmailContent() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
               <XCircle className="h-6 w-6 text-destructive" />
             </div>
-            <CardTitle className="font-display text-2xl text-proofound-charcoal dark:text-foreground">
+            <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal dark:text-foreground">
               Verification failed
-            </CardTitle>
+            </h1>
             <CardDescription className="leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
               {error || 'We couldn&apos;t verify your email address'}
             </CardDescription>
@@ -134,9 +134,9 @@ export function VerifyEmailContent() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
             <CheckCircle className="h-6 w-6 text-proofound-forest dark:text-primary" />
           </div>
-          <CardTitle className="font-display text-2xl text-proofound-charcoal dark:text-foreground">
+          <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal dark:text-foreground">
             Email verified!
-          </CardTitle>
+          </h1>
           <CardDescription className="leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
             Your email has been successfully verified.
           </CardDescription>

@@ -46,7 +46,7 @@ describe('VerifyEmailContent', () => {
       expect(screen.getByTestId('verify-email-success')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Email verified!')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Email verified!' })).toBeInTheDocument();
     expect(screen.getByText('You can continue to login when ready.')).toBeInTheDocument();
     expect(screen.queryByText(/Redirecting to login/i)).not.toBeInTheDocument();
     expect(verifyEmailMock).not.toHaveBeenCalled();
@@ -70,5 +70,19 @@ describe('VerifyEmailContent', () => {
     expect(verifyEmailMock).toHaveBeenCalled();
     expect(verifyEmailMock.mock.calls[0][0].get('token')).toBe('real-token');
     expect(verifyEmailMock.mock.calls[0][0].get('type')).toBe('email');
+  });
+
+  it('uses a page-level heading for verification failures', async () => {
+    searchParamsGet.mockReturnValue(null);
+
+    render(<VerifyEmailContent />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('verify-email-error')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Verification failed' })
+    ).toBeInTheDocument();
   });
 });

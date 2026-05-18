@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -63,9 +63,9 @@ export function ResetPasswordForm() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
               <Mail className="h-6 w-6 text-proofound-forest dark:text-primary" />
             </div>
-            <CardTitle className="font-display text-2xl text-proofound-charcoal dark:text-foreground">
+            <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal dark:text-foreground">
               Check your email
-            </CardTitle>
+            </h1>
             <CardDescription className="leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
               We&apos;ve sent a password reset link to <strong>{email}</strong>
             </CardDescription>
@@ -97,9 +97,9 @@ export function ResetPasswordForm() {
     >
       <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)] dark:border-border">
         <CardHeader className="space-y-2">
-          <CardTitle className="font-display text-2xl text-proofound-charcoal dark:text-foreground">
+          <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal dark:text-foreground">
             Reset your password
-          </CardTitle>
+          </h1>
           <CardDescription className="leading-6 text-proofound-charcoal/70 dark:text-muted-foreground">
             Enter your email and we&apos;ll send one secure reset link. Nothing else changes until
             you use it.
