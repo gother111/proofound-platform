@@ -369,6 +369,7 @@ export default async function PortfolioPage({
                                       href={item.href}
                                       target="_blank"
                                       rel="noreferrer"
+                                      aria-label={`Open ${item.title}`}
                                       className="inline-flex items-center gap-1 text-xs font-semibold text-proofound-forest hover:text-[#143829]"
                                     >
                                       Open

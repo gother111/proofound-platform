@@ -2903,3 +2903,61 @@ classes, and overflow rather than claiming a full native Tab traversal.
 
 - `npm run test -- tests/ui/signin-form-mobile-clarity.test.tsx tests/ui/signup-form-mobile-clarity.test.tsx tests/ui/cookie-banner.test.tsx tests/ui/left-nav-portfolio-gating.test.tsx`
   - pass
+
+## Public Individual Profile Fixture Continuation
+
+### Updated Verdict
+
+Improved for public profile data variance.
+
+The previous full-coverage evidence included `/portfolio/demo-proofound`, but
+the saved Browser row showed a generic page-not-found state. This continuation
+adds a real local mock individual Public Page fixture for that route so the
+public surface can be tested with representative filled proof packs, public-safe
+evidence, hidden contact details, and anonymous-viewer actions.
+
+### Findings And Fixes
+
+#### P2 - Demo individual Public Page route was not a real filled fixture
+
+Affected surface:
+
+- `/portfolio/demo-proofound`
+
+Fix:
+
+- Added a mock Supabase projection for `demo-proofound` with two public-safe
+  Proof Packs, multiple skills, traceable summary segments, hidden contact
+  details, and no owner relationship to the default mock user.
+
+#### P3 - Evidence links had ambiguous repeated names
+
+Affected surface:
+
+- Public individual Proof Pack evidence links
+
+Fix:
+
+- Kept the compact visible `Open` text, but added specific accessible names such
+  as `Open Public-safe decision memo` and `Open Rubric extract`.
+
+### Browser Verification
+
+Verified with the Codex in-app Browser:
+
+- Mobile `/portfolio/demo-proofound` at 390px - no horizontal overflow; renders
+  Mika Andersson, both proof packs, hidden contact state, request-introduction
+  action, and no owner-only controls.
+- Narrow mobile `/portfolio/demo-proofound` at 375px - no horizontal overflow;
+  same filled proof content and public actions remain reachable.
+- Desktop `/portfolio/demo-proofound` at 1280px - no horizontal overflow; share,
+  PDF, recruiter summary, proof evidence, and contact-request actions are clear.
+
+Evidence:
+
+- `.artifacts/ux-browser-goal-2026-05-18/public-profile-fixture/demo-proofound-browser-state.json`
+
+### Automated Checks
+
+- `npm run test -- tests/lib/public-portfolio-projection.test.ts tests/ui/public-portfolio-page.test.tsx`
+  - pass

@@ -153,6 +153,8 @@ export type TraceableProfileSummary = {
 
 const MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
 const MOCK_ORG_SLUG = 'test-org';
+const MOCK_PROFILE_ID = '77777777-7777-4777-8777-777777777777';
+const MOCK_PROFILE_HANDLE = 'demo-proofound';
 
 export type PublicIndividualPortfolioProjection = {
   profileId: string;
@@ -1242,9 +1244,273 @@ function buildProofFirstDescription(input: {
   );
 }
 
+function buildMockPublicIndividualPortfolioProjection(): PublicIndividualPortfolioProjection {
+  const handle = MOCK_PROFILE_HANDLE;
+  const shareUrl = `${SITE_URL}/portfolio/${encodeURIComponent(handle)}`;
+  const requestedState = resolveRequestedPublicPortfolioState('public_link_only');
+  const effectiveState = deriveEffectivePublicPortfolioState({
+    requestedState,
+    searchIndexingEnabled: false,
+    minimumContentMet: true,
+  });
+  const publicDisplayName = 'Mika Andersson';
+  const publicHeadline = 'Evidence-led operations and service design lead';
+  const publicBio =
+    'I help teams turn messy operational signals into calmer workflows, clearer proof, and decisions that can be explained without exposing private context.';
+  const publicSkills = [
+    'Service design',
+    'Operations research',
+    'Evidence synthesis',
+    'Stakeholder facilitation',
+    'Privacy-safe reporting',
+    'Product discovery',
+  ];
+  const verificationSummary = summarizeVerificationPolicy({
+    records: [],
+    legacyProfile: {
+      verified: true,
+      verificationMethod: 'veriff',
+      verificationStatus: 'verified',
+      verificationTier: null,
+      verificationTierSource: null,
+      workEmailCurrentlyVerified: true,
+      linkedinVerificationStatus: 'verified',
+      linkedinHasIdentityVerification: true,
+    },
+  });
+  const signals = buildTrustSignals(
+    {
+      id: MOCK_PROFILE_ID,
+      handle,
+      display_name: publicDisplayName,
+      individual_profiles: {
+        headline: publicHeadline,
+        bio: publicBio,
+        verification_status: 'verified',
+        verification_method: 'veriff',
+        verified_at: '2026-03-11T00:00:00.000Z',
+        work_email: 'mika@demo-proofound.example',
+        work_email_verified: true,
+        linkedin_verification_status: 'verified',
+        linkedin_verified_at: '2026-03-11T00:00:00.000Z',
+        linkedin_verification_data: { identity_verified: true },
+        verified: true,
+      },
+    },
+    { proofsCount: 2, acceptedVerificationsCount: 2 },
+    verificationSummary
+  );
+  const proofPacks: PublicTrustExportData['proofPacks'] = [
+    {
+      id: 'visual-public-pack-operations',
+      scope: 'public_safe',
+      status: 'published',
+      title: 'Reduced handoff ambiguity across a partner operations workflow',
+      summary:
+        'Mapped repeated service handoff failures into a concise proof trail that reviewers could inspect without seeing private customer data.',
+      ownershipStatement:
+        'Led discovery, synthesized evidence, and facilitated the operating rhythm with design, support, and delivery partners.',
+      evidenceSummary:
+        'Public-safe artifacts include a decision memo, anonymized journey map, and rollout checklist.',
+      outcomesSummary:
+        'Cut review back-and-forth by 38% and made the next operational decision clear in every weekly review.',
+      verificationStatus: 'verified',
+      verificationSummary: 'Evidence attested by a former manager and a cross-functional peer.',
+      freshnessState: 'current',
+      proofQualityScore: 92,
+      schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+      artifactCount: 3,
+      contextLabel: 'Operations workflow redesign',
+      selectedEvidence: [
+        {
+          title: 'Public-safe decision memo',
+          artifactDisplayName: 'Decision memo',
+          href: 'https://example.com/proofound/demo/decision-memo',
+          artifactKind: 'link',
+          issuedAt: '2026-02-04T00:00:00.000Z',
+          description:
+            'Summarizes the choices, constraints, and measurable result without exposing internal records.',
+          semanticsNote: 'Supporting evidence only, not a full background check.',
+        },
+        {
+          title: 'Anonymized workflow map',
+          artifactDisplayName: 'Workflow map',
+          href: null,
+          artifactKind: 'document',
+          issuedAt: '2026-02-12T00:00:00.000Z',
+          description:
+            'Shows the before/after handoff structure and the proof points used during review.',
+          semanticsNote: 'Public-safe extract; source workspace remains private.',
+        },
+      ],
+    },
+    {
+      id: 'visual-public-pack-research',
+      scope: 'public_safe',
+      status: 'published',
+      title: 'Built a lightweight research evidence system for hiring reviews',
+      summary:
+        'Created a repeatable way to compare claims, artifacts, and reviewer notes without asking candidates to overshare.',
+      ownershipStatement:
+        'Designed the evidence taxonomy, drafted reviewer language, and tested the flow with a small hiring panel.',
+      evidenceSummary:
+        'Public-safe artifacts include a rubric extract and candidate-facing explanation copy.',
+      outcomesSummary:
+        'Reviewers reported clearer tradeoffs and fewer generic strong-candidate notes.',
+      verificationStatus: 'partially_verified',
+      verificationSummary: 'Peer-attested with public artifacts available.',
+      freshnessState: 'recent',
+      proofQualityScore: 84,
+      schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+      artifactCount: 2,
+      contextLabel: 'Proof-first hiring research',
+      selectedEvidence: [
+        {
+          title: 'Rubric extract',
+          artifactDisplayName: 'Review rubric',
+          href: 'https://example.com/proofound/demo/rubric',
+          artifactKind: 'link',
+          issuedAt: '2026-01-18T00:00:00.000Z',
+          description: 'A short public extract of the rubric used to separate claims from proof.',
+          semanticsNote: 'Supports the claim; does not reveal private candidate notes.',
+        },
+      ],
+    },
+  ];
+  const traceableSummary: TraceableProfileSummary = {
+    provenanceLabel: 'Generated from public-safe Proof Packs and context tokens',
+    hasEnoughData: true,
+    segments: [
+      {
+        key: 'scale',
+        label: 'Scale',
+        value: 'Cross-functional workflows with 8-30 reviewers and operators',
+        state: 'ready',
+        sources: [
+          {
+            id: 'visual-public-pack-operations',
+            label: 'Proof Pack: Operations workflow redesign',
+            detail: 'Review rhythm and handoff clarity',
+          },
+        ],
+      },
+      {
+        key: 'focus',
+        label: 'Focus',
+        value: 'Turning ambiguous work evidence into calmer decisions',
+        state: 'ready',
+        sources: [
+          {
+            id: 'visual-public-pack-research',
+            label: 'Proof Pack: Proof-first hiring research',
+            detail: 'Evidence taxonomy and reviewer language',
+          },
+        ],
+      },
+      {
+        key: 'context',
+        label: 'Context',
+        value: 'Privacy-aware teams that need trust without oversharing',
+        state: 'ready',
+        sources: [
+          {
+            id: 'visual-public-pack-operations',
+            label: 'Proof Pack: Operations workflow redesign',
+            detail: 'Public-safe decision memo',
+          },
+        ],
+      },
+    ],
+  };
+  const visibility = mergeVisibilityFlags({
+    bio: true,
+    contact: false,
+    workEmail: false,
+    skills: true,
+    counts: true,
+    proofBar: true,
+    header: true,
+    identity: true,
+    linkedin: true,
+  });
+  const exportData: PublicTrustExportData = {
+    schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+    surface: 'individual_public',
+    exportedAt: '2026-03-11T00:00:00.000Z',
+    shareUrl,
+    profile: {
+      id: MOCK_PROFILE_ID,
+      handle,
+      displayName: publicDisplayName,
+      headline: publicHeadline,
+      bio: publicBio,
+    },
+    publication: {
+      requestedState,
+      effectiveState,
+      searchIndexingEnabled: false,
+    },
+    signals,
+    skills: publicSkills.map((skill, index) => ({
+      id: `visual-public-skill-${index + 1}`,
+      name: skill,
+      level: 5,
+    })),
+    proofPacks,
+    visibility,
+  };
+  const proofFirstDescription = buildProofFirstDescription({
+    publicDisplayName,
+    publicHeadline,
+    publicBio,
+    proofPacks,
+  });
+
+  return {
+    profileId: MOCK_PROFILE_ID,
+    handle,
+    requestedState,
+    effectiveState,
+    shareUrl,
+    publicDisplayName,
+    publicHeadline,
+    publicBio,
+    publicSkills,
+    publicProofCount: 2,
+    verifiedPublicProofPackCount: 1,
+    featuredProofs: [],
+    traceableSummary,
+    visibility,
+    individual: {
+      work_email: null,
+    },
+    signals,
+    verificationSummary,
+    exportData,
+    metadata: {
+      path: `/portfolio/${encodeURIComponent(handle)}`,
+      title: `${publicDisplayName} | Proofound`,
+      description: proofFirstDescription,
+      ogTitle: `${publicDisplayName} on Proofound`,
+      ogDescription: proofFirstDescription,
+      useGenericPreview: shouldUseGenericSharePreview(effectiveState),
+    },
+    jsonLd: {
+      description: proofFirstDescription,
+    },
+    minimumContentMet: true,
+    hasLinkOnlyContent: true,
+    hasRevealGatedContent: false,
+  };
+}
+
 export async function getPublicIndividualPortfolioProjectionByHandle(
   handle: string
 ): Promise<PublicIndividualPortfolioProjection | null> {
+  if (isMockSupabaseEnabled() && handle === MOCK_PROFILE_HANDLE) {
+    return buildMockPublicIndividualPortfolioProjection();
+  }
+
   const profile = await loadIndividualProfileByHandle(handle);
   if (!profile) {
     return null;

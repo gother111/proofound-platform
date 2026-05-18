@@ -321,6 +321,25 @@ describe('Public individual portfolio page', () => {
     expect(screen.queryByRole('link', { name: /return home/i })).not.toBeInTheDocument();
   });
 
+  it('uses specific names for public evidence links', async () => {
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection() as any,
+    });
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('link', { name: /open launch memo/i })).toHaveAttribute(
+      'href',
+      'https://example.com/launch-memo'
+    );
+  });
+
   it('renders owner-safe public preview and allows return link when provided', async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {

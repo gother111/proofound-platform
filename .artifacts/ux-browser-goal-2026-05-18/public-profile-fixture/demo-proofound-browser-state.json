@@ -1,0 +1,486 @@
+{
+  "generatedAt": "2026-05-18T14:36:26.430Z",
+  "route": "/portfolio/demo-proofound",
+  "rows": [
+    {
+      "bodyTextStart": "Skip to main content\nProofound Public Page\nDirect-link proof snapshot\nCopy share link\nM\nMika Andersson\n\nEvidence-led operations and service design lead\n\nDirect link is live. Search engines are off until the owner opts in.\n\nI help teams turn messy operational signals into calmer workflows, clearer proof, and decisions that can be explained without exposing private context.\n\nScale / Focus / Context\n\nGenerated from public-safe Proof Packs and context tokens\n\nTraceable summary\n\nSCALE\n\nCross-functional workflows with 8-30 reviewers and operators\n\nProof Pack: Operations workflow redesign\n\nFOCUS\n\nTurning ambiguous work evidence into calmer decisions\n\nProof Pack: Proof-first hiring research\n\nCONTEXT\n\nPrivacy-aware teams that need trust without oversharing\n\nProof Pack: Operations workflow redesign\nRequest introduction\n\nPrivate details stay hidden unless the owner explicitly reveals them. More export and copy options appear on wider screens.\n\nSELECTED PROOF PACKS\nPublic-safe proof only\nReduced handoff ambiguity across a partner operations workflow\n\nOperations workflow redesign\n\nVerified evidence\n\nVERIFICATION\n\nVerified evidence\n\nFRESHNESS\n\nUnknown\n\nSELECTED OUTCOME\n\nCut review back-and-forth by 38% and made the next operational decision clear in every weekly review.\n\nTRUST SUMMARY\n\nEvidence attested by a former manager and a cross-functional peer.\n\nMapped repeated service handoff failures into a concise proof trail that reviewers could inspect without seeing private customer data.\n\nOwnership: Led discovery, synthesized evidence, and facilitated the operating rhythm with design, support, and delivery partners.\n\nSUPPORTING EVIDENCE\n\nPublic-safe decision memo\n\nSummarizes the choices, constraints, and measurable result without exposing internal records.\n\nSupporting evidence only, not",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "containsContactHidden": true,
+      "containsMika": true,
+      "containsNotFound": false,
+      "containsOwnerControls": false,
+      "containsProofPack": true,
+      "containsRequestIntro": true,
+      "controls": [
+        {
+          "className": "sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-proofound-forest focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-proofound-forest focus:ring-offset-2",
+          "href": "#main-content",
+          "name": "Skip to main content",
+          "rect": {
+            "height": 1,
+            "width": 1,
+            "x": -1,
+            "y": -1
+          },
+          "tag": "a"
+        },
+        {
+          "className": "inline-flex items-center justify-center whitespace-nowrap rounded-xl font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed border-2 border-proofound-forest bg-transparent text-proofound-forest hover:bg-proofound-forest/5 hover:-translate-y-1 active:translate-y-0 dark:border-primary dark:text-primary dark:hover:bg-primary/10 h-10 sm:h-9 px-4 text-sm gap-2",
+          "href": "",
+          "name": "Copy share link",
+          "rect": {
+            "height": 40,
+            "width": 163,
+            "x": 33,
+            "y": 95
+          },
+          "tag": "button"
+        },
+        {
+          "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-base font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 h-11 px-6 py-2 min-w-[44px] bg-proofound-forest text-white hover:bg-[#163d2f]",
+          "href": "mailto:hello@proofound.io?subject=Request%20introduction%20to%20Mika%20Andersson&body=Hi%20Proofound%20team%2C%20I%20would%20like%20to%20request%20an%20introduction%20to%20Mika%20Andersson.%20Public%20Page%3A%20https%3A%2F%2Fproofound.io%2Fportfolio%2Fdemo-proofound",
+          "name": "Request introduction",
+          "rect": {
+            "height": 44,
+            "width": 290,
+            "x": 50,
+            "y": 935
+          },
+          "tag": "a"
+        },
+        {
+          "className": "inline-flex items-center gap-1 text-xs font-semibold text-proofound-forest hover:text-[#143829]",
+          "href": "https://example.com/proofound/demo/decision-memo",
+          "name": "Open Public-safe decision memo",
+          "rect": {
+            "height": 18,
+            "width": 49,
+            "x": 269,
+            "y": 1798
+          },
+          "tag": "a"
+        },
+        {
+          "className": "inline-flex items-center gap-1 text-xs font-semibold text-proofound-forest hover:text-[#143829]",
+          "href": "https://example.com/proofound/demo/rubric",
+          "name": "Open Rubric extract",
+          "rect": {
+            "height": 18,
+            "width": 49,
+            "x": 269,
+            "y": 2699
+          },
+          "tag": "a"
+        },
+        {
+          "className": "flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-foreground shadow-sm transition-colors hover:border-proofound-forest/30 hover:text-proofound-forest",
+          "href": "https://proofound.io/portfolio/demo-proofound",
+          "name": "Share link",
+          "rect": {
+            "height": 39,
+            "width": 298,
+            "x": 46,
+            "y": 3896
+          },
+          "tag": "a"
+        },
+        {
+          "className": "flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-foreground shadow-sm transition-colors hover:border-proofound-forest/30 hover:text-proofound-forest",
+          "href": "mailto:hello@proofound.io?subject=Request%20contact%20for%20Mika%20Andersson&body=Hi%20Proofound%20team%2C%20please%20help%20me%20connect%20with%20Mika%20Andersson.%20Public%20Page%3A%20https%3A%2F%2Fproofound.io%2Fportfolio%2Fdemo-proofound",
+          "name": "Request contact",
+          "rect": {
+            "height": 39,
+            "width": 298,
+            "x": 46,
+            "y": 3943
+          },
+          "tag": "a"
+        }
+      ],
+      "hasSpecificEvidenceLinks": true,
+      "headings": [
+        {
+          "size": "24px",
+          "tag": "h1",
+          "text": "Mika Andersson"
+        },
+        {
+          "size": "14px",
+          "tag": "h2",
+          "text": "Scale / Focus / Context"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Selected Proof Packs"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Reduced handoff ambiguity across a partner operations workflow"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Built a lightweight research evidence system for hiring reviews"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Proof snapshot"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Selected outcomes"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Skills snapshot"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Contact & share"
+        }
+      ],
+      "horizontalOverflow": false,
+      "offenders": [],
+      "scrollHeight": 4092,
+      "scrollWidth": 390,
+      "title": "Proofound Public Page",
+      "url": "http://localhost:3000/portfolio/demo-proofound",
+      "viewportName": "mobile390"
+    },
+    {
+      "bodyTextStart": "Skip to main content\nProofound Public Page\nDirect-link proof snapshot\nCopy share link\nM\nMika Andersson\n\nEvidence-led operations and service design lead\n\nDirect link is live. Search engines are off until the owner opts in.\n\nI help teams turn messy operational signals into calmer workflows, clearer proof, and decisions that can be explained without exposing private context.\n\nScale / Focus / Context\n\nGenerated from public-safe Proof Packs and context tokens\n\nTraceable summary\n\nSCALE\n\nCross-functional workflows with 8-30 reviewers and operators\n\nProof Pack: Operations workflow redesign\n\nFOCUS\n\nTurning ambiguous work evidence into calmer decisions\n\nProof Pack: Proof-first hiring research\n\nCONTEXT\n\nPrivacy-aware teams that need trust without oversharing\n\nProof Pack: Operations workflow redesign\nRequest introduction\n\nPrivate details stay hidden unless the owner explicitly reveals them. More export and copy options appear on wider screens.\n\nSELECTED PROOF PACKS\nPublic-safe proof only\nReduced handoff ambiguity across a partner operations workflow\n\nOperations workflow redesign\n\nVerified evidence\n\nVERIFICATION\n\nVerified evidence\n\nFRESHNESS\n\nUnknown\n\nSELECTED OUTCOME\n\nCut review back-and-forth by 38% and made the next operational decision clear in every weekly review.\n\nTRUST SUMMARY\n\nEvidence attested by a former manager and a cross-functional peer.\n\nMapped repeated service handoff failures into a concise proof trail that reviewers could inspect without seeing private customer data.\n\nOwnership: Led discovery, synthesized evidence, and facilitated the operating rhythm with design, support, and delivery partners.\n\nSUPPORTING EVIDENCE\n\nPublic-safe decision memo\n\nSummarizes the choices, constraints, and measurable result without exposing internal records.\n\nSupporting evidence only, not",
+      "clientHeight": 667,
+      "clientWidth": 375,
+      "containsContactHidden": true,
+      "containsMika": true,
+      "containsNotFound": false,
+      "containsOwnerControls": false,
+      "containsProofPack": true,
+      "containsRequestIntro": true,
+      "controls": [
+        {
+          "className": "sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-proofound-forest focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-proofound-forest focus:ring-offset-2",
+          "href": "#main-content",
+          "name": "Skip to main content",
+          "rect": {
+            "height": 1,
+            "width": 1,
+            "x": -1,
+            "y": -1
+          },
+          "tag": "a"
+        },
+        {
+          "className": "inline-flex items-center justify-center whitespace-nowrap rounded-xl font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed border-2 border-proofound-forest bg-transparent text-proofound-forest hover:bg-proofound-forest/5 hover:-translate-y-1 active:translate-y-0 dark:border-primary dark:text-primary dark:hover:bg-primary/10 h-10 sm:h-9 px-4 text-sm gap-2",
+          "href": "",
+          "name": "Copy share link",
+          "rect": {
+            "height": 40,
+            "width": 163,
+            "x": 33,
+            "y": 95
+          },
+          "tag": "button"
+        },
+        {
+          "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-base font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 h-11 px-6 py-2 min-w-[44px] bg-proofound-forest text-white hover:bg-[#163d2f]",
+          "href": "mailto:hello@proofound.io?subject=Request%20introduction%20to%20Mika%20Andersson&body=Hi%20Proofound%20team%2C%20I%20would%20like%20to%20request%20an%20introduction%20to%20Mika%20Andersson.%20Public%20Page%3A%20https%3A%2F%2Fproofound.io%2Fportfolio%2Fdemo-proofound",
+          "name": "Request introduction",
+          "rect": {
+            "height": 44,
+            "width": 275,
+            "x": 50,
+            "y": 956
+          },
+          "tag": "a"
+        },
+        {
+          "className": "inline-flex items-center gap-1 text-xs font-semibold text-proofound-forest hover:text-[#143829]",
+          "href": "https://example.com/proofound/demo/decision-memo",
+          "name": "Open Public-safe decision memo",
+          "rect": {
+            "height": 18,
+            "width": 49,
+            "x": 254,
+            "y": 1819
+          },
+          "tag": "a"
+        },
+        {
+          "className": "inline-flex items-center gap-1 text-xs font-semibold text-proofound-forest hover:text-[#143829]",
+          "href": "https://example.com/proofound/demo/rubric",
+          "name": "Open Rubric extract",
+          "rect": {
+            "height": 18,
+            "width": 49,
+            "x": 254,
+            "y": 2801
+          },
+          "tag": "a"
+        },
+        {
+          "className": "flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-foreground shadow-sm transition-colors hover:border-proofound-forest/30 hover:text-proofound-forest",
+          "href": "https://proofound.io/portfolio/demo-proofound",
+          "name": "Share link",
+          "rect": {
+            "height": 39,
+            "width": 283,
+            "x": 46,
+            "y": 4076
+          },
+          "tag": "a"
+        },
+        {
+          "className": "flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-foreground shadow-sm transition-colors hover:border-proofound-forest/30 hover:text-proofound-forest",
+          "href": "mailto:hello@proofound.io?subject=Request%20contact%20for%20Mika%20Andersson&body=Hi%20Proofound%20team%2C%20please%20help%20me%20connect%20with%20Mika%20Andersson.%20Public%20Page%3A%20https%3A%2F%2Fproofound.io%2Fportfolio%2Fdemo-proofound",
+          "name": "Request contact",
+          "rect": {
+            "height": 39,
+            "width": 283,
+            "x": 46,
+            "y": 4123
+          },
+          "tag": "a"
+        }
+      ],
+      "hasSpecificEvidenceLinks": true,
+      "headings": [
+        {
+          "size": "24px",
+          "tag": "h1",
+          "text": "Mika Andersson"
+        },
+        {
+          "size": "14px",
+          "tag": "h2",
+          "text": "Scale / Focus / Context"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Selected Proof Packs"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Reduced handoff ambiguity across a partner operations workflow"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Built a lightweight research evidence system for hiring reviews"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Proof snapshot"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Selected outcomes"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Skills snapshot"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Contact & share"
+        }
+      ],
+      "horizontalOverflow": false,
+      "offenders": [],
+      "scrollHeight": 4272,
+      "scrollWidth": 375,
+      "title": "Proofound Public Page",
+      "url": "http://localhost:3000/portfolio/demo-proofound",
+      "viewportName": "mobile375"
+    },
+    {
+      "bodyTextStart": "Skip to main content\nProofound Public Page\nDirect-link proof snapshot\nCopy share link\nDownload trust PDF\nCopy recruiter summary\nM\nMika Andersson\n\nEvidence-led operations and service design lead\n\nDirect link is live. Search engines are off until the owner opts in.\n\nI help teams turn messy operational signals into calmer workflows, clearer proof, and decisions that can be explained without exposing private context.\n\nScale / Focus / Context\n\nGenerated from public-safe Proof Packs and context tokens\n\nTraceable summary\n\nSCALE\n\nCross-functional workflows with 8-30 reviewers and operators\n\nProof Pack: Operations workflow redesign\n\nFOCUS\n\nTurning ambiguous work evidence into calmer decisions\n\nProof Pack: Proof-first hiring research\n\nCONTEXT\n\nPrivacy-aware teams that need trust without oversharing\n\nProof Pack: Operations workflow redesign\nRequest introduction\n\nPrivate details stay hidden unless the owner explicitly reveals them. More export and copy options appear on wider screens.\n\nSELECTED PROOF PACKS\nPublic-safe proof only\nReduced handoff ambiguity across a partner operations workflow\n\nOperations workflow redesign\n\nVerified evidence\n\nVERIFICATION\n\nVerified evidence\n\nFRESHNESS\n\nUnknown\n\nSELECTED OUTCOME\n\nCut review back-and-forth by 38% and made the next operational decision clear in every weekly review.\n\nTRUST SUMMARY\n\nEvidence attested by a former manager and a cross-functional peer.\n\nMapped repeated service handoff failures into a concise proof trail that reviewers could inspect without seeing private customer data.\n\nOwnership: Led discovery, synthesized evidence, and facilitated the operating rhythm with design, support, and delivery partners.\n\nSUPPORTING EVIDENCE\n\nPublic-safe decision memo\n\nSummarizes the choices, constraints, and measurable result without exposing intern",
+      "clientHeight": 900,
+      "clientWidth": 1280,
+      "containsContactHidden": true,
+      "containsMika": true,
+      "containsNotFound": false,
+      "containsOwnerControls": false,
+      "containsProofPack": true,
+      "containsRequestIntro": true,
+      "controls": [
+        {
+          "className": "sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-proofound-forest focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-proofound-forest focus:ring-offset-2",
+          "href": "#main-content",
+          "name": "Skip to main content",
+          "rect": {
+            "height": 1,
+            "width": 1,
+            "x": -1,
+            "y": -1
+          },
+          "tag": "a"
+        },
+        {
+          "className": "inline-flex items-center justify-center whitespace-nowrap rounded-xl font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed border-2 border-proofound-forest bg-transparent text-proofound-forest hover:bg-proofound-forest/5 hover:-translate-y-1 active:translate-y-0 dark:border-primary dark:text-primary dark:hover:bg-primary/10 h-10 sm:h-9 px-4 text-sm gap-2",
+          "href": "",
+          "name": "Copy share link",
+          "rect": {
+            "height": 36,
+            "width": 163,
+            "x": 605,
+            "y": 57
+          },
+          "tag": "button"
+        },
+        {
+          "className": "inline-flex items-center justify-center whitespace-nowrap rounded-xl font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed bg-proofound-terracotta text-white hover:bg-proofound-terracotta/90 hover:-translate-y-1 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-secondary dark:hover:bg-secondary/90 dark:text-secondary-foreground h-10 sm:h-9 px-4 text-sm gap-2",
+          "href": "",
+          "name": "Download trust PDF",
+          "rect": {
+            "height": 36,
+            "width": 189,
+            "x": 776,
+            "y": 57
+          },
+          "tag": "button"
+        },
+        {
+          "className": "inline-flex items-center justify-center whitespace-nowrap rounded-xl font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed border-2 border-proofound-forest bg-transparent text-proofound-forest hover:bg-proofound-forest/5 hover:-translate-y-1 active:translate-y-0 dark:border-primary dark:text-primary dark:hover:bg-primary/10 h-10 sm:h-9 px-4 text-sm gap-2",
+          "href": "",
+          "name": "Copy recruiter summary",
+          "rect": {
+            "height": 36,
+            "width": 222,
+            "x": 973,
+            "y": 57
+          },
+          "tag": "button"
+        },
+        {
+          "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-base font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 h-11 px-6 py-2 min-w-[44px] bg-proofound-forest text-white hover:bg-[#163d2f]",
+          "href": "mailto:hello@proofound.io?subject=Request%20introduction%20to%20Mika%20Andersson&body=Hi%20Proofound%20team%2C%20I%20would%20like%20to%20request%20an%20introduction%20to%20Mika%20Andersson.%20Public%20Page%3A%20https%3A%2F%2Fproofound.io%2Fportfolio%2Fdemo-proofound",
+          "name": "Request introduction",
+          "rect": {
+            "height": 44,
+            "width": 358,
+            "x": 816,
+            "y": 151
+          },
+          "tag": "a"
+        },
+        {
+          "className": "inline-flex items-center gap-1 text-xs font-semibold text-proofound-forest hover:text-[#143829]",
+          "href": "https://example.com/proofound/demo/decision-memo",
+          "name": "Open Public-safe decision memo",
+          "rect": {
+            "height": 18,
+            "width": 49,
+            "x": 649,
+            "y": 1008
+          },
+          "tag": "a"
+        },
+        {
+          "className": "inline-flex items-center gap-1 text-xs font-semibold text-proofound-forest hover:text-[#143829]",
+          "href": "https://example.com/proofound/demo/rubric",
+          "name": "Open Rubric extract",
+          "rect": {
+            "height": 18,
+            "width": 49,
+            "x": 649,
+            "y": 1597
+          },
+          "tag": "a"
+        },
+        {
+          "className": "flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-foreground shadow-sm transition-colors hover:border-proofound-forest/30 hover:text-proofound-forest",
+          "href": "https://proofound.io/portfolio/demo-proofound",
+          "name": "Share link",
+          "rect": {
+            "height": 39,
+            "width": 404,
+            "x": 774,
+            "y": 1482
+          },
+          "tag": "a"
+        },
+        {
+          "className": "flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-foreground shadow-sm transition-colors hover:border-proofound-forest/30 hover:text-proofound-forest",
+          "href": "mailto:hello@proofound.io?subject=Request%20contact%20for%20Mika%20Andersson&body=Hi%20Proofound%20team%2C%20please%20help%20me%20connect%20with%20Mika%20Andersson.%20Public%20Page%3A%20https%3A%2F%2Fproofound.io%2Fportfolio%2Fdemo-proofound",
+          "name": "Request contact",
+          "rect": {
+            "height": 39,
+            "width": 404,
+            "x": 774,
+            "y": 1529
+          },
+          "tag": "a"
+        }
+      ],
+      "hasSpecificEvidenceLinks": true,
+      "headings": [
+        {
+          "size": "24px",
+          "tag": "h1",
+          "text": "Mika Andersson"
+        },
+        {
+          "size": "14px",
+          "tag": "h2",
+          "text": "Scale / Focus / Context"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Selected Proof Packs"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Reduced handoff ambiguity across a partner operations workflow"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Built a lightweight research evidence system for hiring reviews"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Proof snapshot"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Selected outcomes"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Skills snapshot"
+        },
+        {
+          "size": "11px",
+          "tag": "h2",
+          "text": "Contact & share"
+        }
+      ],
+      "horizontalOverflow": false,
+      "offenders": [],
+      "scrollHeight": 1788,
+      "scrollWidth": 1280,
+      "title": "Proofound Public Page",
+      "url": "http://localhost:3000/portfolio/demo-proofound",
+      "viewportName": "desktop1280"
+    }
+  ]
+}

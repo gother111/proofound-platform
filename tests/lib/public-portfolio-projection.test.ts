@@ -438,6 +438,24 @@ describe('public portfolio projection', () => {
     }
   });
 
+  it('serves the local mock individual public page in mock Supabase mode', async () => {
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+
+    try {
+      const projection = await getPublicIndividualPortfolioProjectionByHandle('demo-proofound');
+
+      expect(projection).not.toBeNull();
+      expect(projection?.effectiveState).toBe('public_link_only');
+      expect(projection?.publicDisplayName).toBe('Mika Andersson');
+      expect(projection?.minimumContentMet).toBe(true);
+      expect(projection?.exportData.proofPacks).toHaveLength(2);
+      expect(projection?.publicSkills.length).toBeGreaterThan(3);
+      expect(db.execute).not.toHaveBeenCalled();
+    } finally {
+      delete process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE;
+    }
+  });
+
   it('does not let orphan packs or floating skills raise public trust projections', async () => {
     vi.mocked(db.execute as any).mockResolvedValueOnce(profileRow());
     vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([
