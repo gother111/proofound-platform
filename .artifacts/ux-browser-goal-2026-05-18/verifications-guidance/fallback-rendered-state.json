@@ -1,0 +1,54 @@
+[
+  {
+    "state": "filled",
+    "viewport": {
+      "name": "mobile390",
+      "width": 390,
+      "height": 900
+    },
+    "url": "http://localhost:3000/verify/verifications-harness",
+    "status": 200,
+    "horizontalOverflow": false,
+    "hasGuidance": true,
+    "bodyText": "Skip to main content\nProof verification requests\n\nFollow which proof, claim, verifier, and bounded outcome each request is tied to.\n\nIncoming\n3\nSent\n1\n\nYOUR NEXT RESPONSE\n\n1 request needs attention.\n\nStart here for failed, disputed, contradicted, or soon-expiring confirmations.\n\nShow attention\n1\nAttention\n1\nPending\n1\nActive\nShow requests\nAll (3)\nActive (1)\nPending (1)\nNeeds attention (1)\nDeclined\nExpired / stale\nRevoked / corrected\nNewest\nScope\n\nShowing all requests. Active means accepted and current; pending requests are still waiting for a response.\n\nMR\nMina Reviewer\n\nAsked you to confirm a proof-backed claim\n\nFailed\nPeer\n\nSCOPE\n\nSkill claim\n\nTIED TO\n\nNordic rollout proof\n\nCLAIM\n\nConfirmed stakeholder rollout across three regulated teams.\n\nOUTCOME IF CONFIRMED\n\nThe claim needs review before it can support matching.\n\nCompetency: Advanced\n\nRequested Yesterday\n\nMR\nMina Reviewer\n\nAsked you to confirm a proof-backed claim\n\nPending\nPeer\n\nSCOPE\n\nSkill claim\n\nTIED TO\n\nEvidence operations skill\n\nCLAIM\n\nObserved handling sensitive proof intake without oversharing.\n\nOUTCOME IF CONFIRMED\n\nAdds bounded outside confirmation to this skill claim.\n\nCompetency: Advanced\n\nRequested Yesterday\n\nDecline\nConfirm attestation\nMR\nMina Reviewer\n\nAsked you to confirm a proof-backed claim\n\nAccepted\nPeer\n\nSCOPE\n\nSkill claim\n\nTIED TO\n\nStructured proof review\n\nCLAIM\n\nReviewed proof packs for hiring readiness.\n\nOUTCOME IF CONFIRMED\n\nKeeps this proof current for intro-readiness review.\n\nCompetency: Advanced\n\nRequested Yesterday"
+  },
+  {
+    "state": "filled",
+    "viewport": {
+      "name": "desktop1280",
+      "width": 1280,
+      "height": 900
+    },
+    "url": "http://localhost:3000/verify/verifications-harness",
+    "status": 200,
+    "horizontalOverflow": false,
+    "hasGuidance": true,
+    "bodyText": "Skip to main content\nProof verification requests\n\nFollow which proof, claim, verifier, and bounded outcome each request is tied to.\n\nIncoming\n3\nSent\n1\n\nYOUR NEXT RESPONSE\n\n1 request needs attention.\n\nStart here for failed, disputed, contradicted, or soon-expiring confirmations.\n\nShow attention\n1\nAttention\n1\nPending\n1\nActive\nAll\n3\nActive\n1\nPending\n1\nNeeds attention\n1\nDeclined\nExpired / stale\nRevoked / corrected\nNewest\nScope\n\nShowing all requests. Active means accepted and current; pending requests are still waiting for a response.\n\nMR\nMina Reviewer\n\nAsked you to confirm a proof-backed claim\n\nFailed\nPeer\n\nSCOPE\n\nSkill claim\n\nTIED TO\n\nNordic rollout proof\n\nCLAIM\n\nConfirmed stakeholder rollout across three regulated teams.\n\nOUTCOME IF CONFIRMED\n\nThe claim needs review before it can support matching.\n\nCompetency: Advanced\n\nRequested Yesterday\n\nMR\nMina Reviewer\n\nAsked you to confirm a proof-backed claim\n\nPending\nPeer\n\nSCOPE\n\nSkill claim\n\nTIED TO\n\nEvidence operations skill\n\nCLAIM\n\nObserved handling sensitive proof intake without oversharing.\n\nOUTCOME IF CONFIRMED\n\nAdds bounded outside confirmation to this skill claim.\n\nCompetency: Advanced\n\nRequested Yesterday\n\nDecline\nConfirm attestation\nMR\nMina Reviewer\n\nAsked you to confirm a proof-backed claim\n\nAccepted\nPeer\n\nSCOPE\n\nSkill claim\n\nTIED TO\n\nStructured proof review\n\nCLAIM\n\nReviewed proof packs for hiring readiness.\n\nOUTCOME IF CONFIRMED\n\nKeeps this proof current for intro-readiness review.\n\nCompetency: Advanced\n\nRequested Yesterday"
+  },
+  {
+    "state": "empty",
+    "viewport": {
+      "name": "mobile390",
+      "width": 390,
+      "height": 900
+    },
+    "url": "http://localhost:3000/verify/verifications-harness?state=empty",
+    "status": 200,
+    "horizontalOverflow": false,
+    "hasGuidance": true,
+    "bodyText": "Skip to main content\nProof verification requests\n\nFollow which proof, claim, verifier, and bounded outcome each request is tied to.\n\nIncoming\nSent\n\nYOUR NEXT RESPONSE\n\nNo one is waiting on you.\n\nNew confirmation requests will appear here with the claim and outcome attached.\n\nShow all\n0\nAttention\n0\nPending\n0\nActive\nShow requests\nAll\nActive\nPending\nNeeds attention\nDeclined\nExpired / stale\nRevoked / corrected\nNewest\nScope\n\nShowing all requests. Active means accepted and current; pending requests are still waiting for a response.\n\nNo incoming proof requests\n\nNothing is waiting here. New proof confirmations will arrive with the claim and expected outcome attached."
+  },
+  {
+    "state": "empty",
+    "viewport": {
+      "name": "desktop1280",
+      "width": 1280,
+      "height": 900
+    },
+    "url": "http://localhost:3000/verify/verifications-harness?state=empty",
+    "status": 200,
+    "horizontalOverflow": false,
+    "hasGuidance": true,
+    "bodyText": "Skip to main content\nProof verification requests\n\nFollow which proof, claim, verifier, and bounded outcome each request is tied to.\n\nIncoming\nSent\n\nYOUR NEXT RESPONSE\n\nNo one is waiting on you.\n\nNew confirmation requests will appear here with the claim and outcome attached.\n\nShow all\n0\nAttention\n0\nPending\n0\nActive\nAll\nActive\nPending\nNeeds attention\nDeclined\nExpired / stale\nRevoked / corrected\nNewest\nScope\n\nShowing all requests. Active means accepted and current; pending requests are still waiting for a response.\n\nNo incoming proof requests\n\nNothing is waiting here. New proof confirmations will arrive with the claim and expected outcome attached."
+  }
+]

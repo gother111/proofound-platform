@@ -71,6 +71,12 @@ type RequestStatusFilter =
   | 'expired_stale'
   | 'revoked_corrected';
 type RequestSortMode = 'recency' | 'scope';
+type RequestSummary = {
+  total: number;
+  active: number;
+  pending: number;
+  needsAttention: number;
+};
 
 const STATUS_FILTERS: Array<{ value: RequestStatusFilter; label: string }> = [
   { value: 'all', label: 'All' },
@@ -155,6 +161,10 @@ function filterByStatus(
   });
 }
 
+function pluralizeRequest(count: number) {
+  return count === 1 ? 'request' : 'requests';
+}
+
 export function VerificationsClient({
   incomingRequests: initialIncomingRequests,
   sentRequests: initialSentRequests,
@@ -176,6 +186,79 @@ export function VerificationsClient({
   const [sentFilter, setSentFilter] = useState<RequestStatusFilter>('all');
   const [sortMode, setSortMode] = useState<RequestSortMode>('recency');
   const nowMs = Date.now();
+
+  const summarizeRequests = (requests: VerificationRequest[]): RequestSummary => ({
+    total: requests.length,
+    active: filterByStatus(requests, 'active', nowMs).length,
+    pending: filterByStatus(requests, 'pending', nowMs).length,
+    needsAttention: filterByStatus(requests, 'needs_attention', nowMs).length,
+  });
+
+  const getGuidanceForRequests = (summary: RequestSummary, mode: 'incoming' | 'sent') => {
+    if (summary.total === 0) {
+      return mode === 'incoming'
+        ? {
+            title: 'No one is waiting on you.',
+            description:
+              'New confirmation requests will appear here with the claim and outcome attached.',
+            actionLabel: 'Show all',
+            filter: 'all' as RequestStatusFilter,
+          }
+        : {
+            title: 'No requests have been sent.',
+            description: 'Draft a scoped request when a proof needs an outside confirmation.',
+            actionLabel: 'Show all',
+            filter: 'all' as RequestStatusFilter,
+          };
+    }
+
+    if (summary.needsAttention > 0) {
+      return {
+        title: `${summary.needsAttention} ${pluralizeRequest(summary.needsAttention)} ${
+          summary.needsAttention === 1 ? 'needs' : 'need'
+        } attention.`,
+        description:
+          'Start here for failed, disputed, contradicted, or soon-expiring confirmations.',
+        actionLabel: 'Show attention',
+        filter: 'needs_attention' as RequestStatusFilter,
+      };
+    }
+
+    if (summary.pending > 0) {
+      return mode === 'incoming'
+        ? {
+            title: `${summary.pending} ${pluralizeRequest(summary.pending)} waiting for your response.`,
+            description: 'Confirm or decline the pending items that you can verify directly.',
+            actionLabel: 'Show pending',
+            filter: 'pending' as RequestStatusFilter,
+          }
+        : {
+            title: `${summary.pending} ${pluralizeRequest(summary.pending)} still waiting for a verifier.`,
+            description: 'Follow up or resend only when the verifier needs a fresh link.',
+            actionLabel: 'Show pending',
+            filter: 'pending' as RequestStatusFilter,
+          };
+    }
+
+    if (summary.active > 0) {
+      return {
+        title: `${summary.active} current ${pluralizeRequest(summary.active)} ${
+          summary.active === 1 ? 'is' : 'are'
+        } active.`,
+        description:
+          'These confirmations are accepted and can support proof while they stay current.',
+        actionLabel: 'Show active',
+        filter: 'active' as RequestStatusFilter,
+      };
+    }
+
+    return {
+      title: 'Nothing needs action right now.',
+      description: 'Older outcomes stay here for context without competing with current work.',
+      actionLabel: 'Show all',
+      filter: 'all' as RequestStatusFilter,
+    };
+  };
 
   const handleRespond = (request: VerificationRequest, action: 'accept' | 'decline') => {
     setSelectedRequest(request);
@@ -941,6 +1024,74 @@ export function VerificationsClient({
     );
   };
 
+  const renderRequestGuidance = (
+    requests: VerificationRequest[],
+    mode: 'incoming' | 'sent',
+    activeFilter: RequestStatusFilter,
+    onFilterChange: (filter: RequestStatusFilter) => void
+  ) => {
+    const summary = summarizeRequests(requests);
+    const guidance = getGuidanceForRequests(summary, mode);
+    const summaryItems = [
+      { label: 'Attention', value: summary.needsAttention, filter: 'needs_attention' },
+      { label: 'Pending', value: summary.pending, filter: 'pending' },
+      { label: 'Active', value: summary.active, filter: 'active' },
+    ] as const;
+
+    return (
+      <section
+        aria-label={`${mode} verification guidance`}
+        className="mb-4 rounded-xl border border-proofound-stone/80 bg-proofound-parchment/70 p-4 dark:border-border dark:bg-background/70"
+      >
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              {mode === 'incoming' ? 'Your next response' : 'Outgoing request status'}
+            </p>
+            <h2 className="mt-2 text-lg font-semibold leading-7 text-proofound-charcoal dark:text-foreground">
+              {guidance.title}
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+              {guidance.description}
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant={activeFilter === guidance.filter ? 'default' : 'outline'}
+            onClick={() => onFilterChange(guidance.filter)}
+            className={cn(
+              'min-h-11 w-full justify-center rounded-md md:w-auto',
+              activeFilter === guidance.filter
+                ? 'bg-proofound-forest text-white hover:bg-proofound-forest/90'
+                : 'bg-white text-proofound-charcoal hover:bg-white/90 dark:bg-background dark:text-foreground'
+            )}
+          >
+            {guidance.actionLabel}
+          </Button>
+        </div>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {summaryItems.map((item) => (
+            <button
+              key={item.filter}
+              type="button"
+              onClick={() => onFilterChange(item.filter)}
+              aria-pressed={activeFilter === item.filter}
+              className={cn(
+                'min-h-16 rounded-lg border px-3 py-2 text-left transition-colors',
+                activeFilter === item.filter
+                  ? 'border-proofound-forest bg-white text-proofound-charcoal shadow-sm dark:border-primary dark:bg-background dark:text-foreground'
+                  : 'border-proofound-stone/70 bg-white/60 text-muted-foreground hover:bg-white dark:border-border dark:bg-background/40'
+              )}
+            >
+              <span className="block text-xl font-semibold leading-none">{item.value}</span>
+              <span className="mt-1 block text-[11px] font-medium leading-4">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
   const sortRequests = (requests: VerificationRequest[]) =>
     [...requests].sort((left, right) => {
       const recencyDelta = parseTime(right.createdAt) - parseTime(left.createdAt);
@@ -1093,6 +1244,7 @@ export function VerificationsClient({
 
     return (
       <div>
+        {renderRequestGuidance(requests, mode, activeFilter, onFilterChange)}
         {renderListControls(requests, mode, activeFilter, onFilterChange)}
         {filteredRequests.length === 0 ? (
           renderEmptyState(activeFilter, mode)

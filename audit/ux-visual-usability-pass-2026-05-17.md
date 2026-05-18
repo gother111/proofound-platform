@@ -3016,3 +3016,60 @@ Evidence:
   - pass
 - `npm run lint` - pass
 - `npm run typecheck` - pass
+
+## Verification Request Guidance Continuation
+
+### Updated Verdict
+
+Improved for individual verification request clarity.
+
+The individual verification page already separated incoming and sent requests,
+but filled states still asked users to infer the next action from dense cards
+and filter counts. The page now states what needs attention before the filters.
+
+### Findings And Fixes
+
+#### P2 - Filled verification states did not tell the user where to start
+
+Affected surface:
+
+- `/app/i/verifications`
+
+Fix:
+
+- Added a compact guidance panel above each request list.
+- The panel summarizes attention, pending, and active counts.
+- The primary action jumps to the most relevant filter: attention first,
+  pending next, active when nothing is waiting, and all when no action is
+  needed.
+- Empty states now get the same calm "nothing is waiting" framing before the
+  existing empty-state card.
+
+### Rendered Verification
+
+The Codex in-app Browser runtime still returned
+`No active Codex browser pane available`, so this continuation uses a temporary
+local rendered Chromium harness and keeps the evidence labeled as fallback
+rather than Browser-plugin proof.
+
+Fallback rendered evidence:
+
+- Filled mobile verification state at 390px - no horizontal overflow; guidance,
+  counts, filters, and request actions remain visible and reachable.
+- Filled desktop verification state at 1280px - no horizontal overflow;
+  guidance and desktop filter buttons remain composed.
+- Empty mobile and desktop verification states - no horizontal overflow; "No
+  one is waiting on you" guidance appears before the existing empty-state copy.
+
+Evidence:
+
+- `.artifacts/ux-browser-goal-2026-05-18/verifications-guidance/fallback-rendered-state.json`
+- `.artifacts/ux-browser-goal-2026-05-18/verifications-guidance/filled-mobile390.png`
+- `.artifacts/ux-browser-goal-2026-05-18/verifications-guidance/filled-desktop1280.png`
+- `.artifacts/ux-browser-goal-2026-05-18/verifications-guidance/empty-mobile390.png`
+- `.artifacts/ux-browser-goal-2026-05-18/verifications-guidance/empty-desktop1280.png`
+
+### Automated Checks
+
+- `npm run test -- tests/ui/verifications-client.test.tsx`
+  - pass

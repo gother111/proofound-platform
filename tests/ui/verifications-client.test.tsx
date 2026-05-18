@@ -212,6 +212,58 @@ describe('VerificationsClient', () => {
     expect(rows[1]).toHaveTextContent('Beta corrected proof');
   });
 
+  it('summarizes the next verification action before the filters', async () => {
+    const incomingRequests = [
+      makeRequest({
+        id: 'attention-failed',
+        subjectType: 'impact_story',
+        subjectId: 'impact-1',
+        verificationKind: 'impact_attestation',
+        requestKind: 'impact_attestation',
+        status: 'failed',
+        proofLabel: 'Outcome proof that needs attention',
+        createdAt: '2026-03-01T10:00:00.000Z',
+      }),
+      makeRequest({
+        id: 'pending-skill',
+        status: 'pending',
+        proofLabel: 'Pending TypeScript skill',
+        createdAt: '2026-03-02T10:00:00.000Z',
+      }),
+      makeRequest({
+        id: 'accepted-skill',
+        status: 'accepted',
+        proofLabel: 'Accepted platform skill',
+        createdAt: '2026-03-03T10:00:00.000Z',
+      }),
+    ];
+
+    render(
+      <VerificationsClient
+        incomingRequests={incomingRequests}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+      />
+    );
+    await settleAssistiveAiFlag();
+
+    const guidance = screen.getByRole('region', { name: /incoming verification guidance/i });
+    expect(within(guidance).getByText('1 request needs attention.')).toBeInTheDocument();
+    expect(
+      within(guidance).getByText(
+        'Start here for failed, disputed, contradicted, or soon-expiring confirmations.'
+      )
+    ).toBeInTheDocument();
+    expect(within(guidance).getByRole('button', { name: /^1 Attention$/i })).toHaveTextContent('1');
+    expect(within(guidance).getByRole('button', { name: /^1 Pending$/i })).toHaveTextContent('1');
+    expect(within(guidance).getByRole('button', { name: /^1 Active$/i })).toHaveTextContent('1');
+
+    fireEvent.click(within(guidance).getByRole('button', { name: /Show attention/i }));
+
+    expect(screen.getByText('Outcome proof that needs attention')).toBeInTheDocument();
+    expect(screen.queryByText('Pending TypeScript skill')).not.toBeInTheDocument();
+  });
+
   it('renders incoming impact-story requests in read-only mode', async () => {
     const incomingRequests = [
       makeRequest({
