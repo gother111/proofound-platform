@@ -170,3 +170,98 @@ export function buildVisualOrgInterviewCorridorItems(): InterviewCorridorItem[] 
     },
   ];
 }
+
+export function buildVisualIndividualInterviewCorridorItems(): InterviewCorridorItem[] {
+  const now = Date.now();
+  const scheduledAt = new Date(now + 2 * 24 * 60 * 60 * 1000).toISOString();
+  const completedAt = new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString();
+  const engagementVerification: EngagementVerificationSummary = {
+    id: 'visual-individual-engagement-verification-1',
+    decisionId: 'visual-individual-decision-1',
+    status: 'pending_both_confirmations',
+    statusLabel: 'Awaiting both confirmations',
+    engagementType: null,
+    candidateConfirmedAt: null,
+    organizationConfirmedAt: null,
+    uploadedEvidencePresent: false,
+    proofHookStatus: 'not_ready',
+    verifiedAt: null,
+    createdAt: new Date(now - 24 * 60 * 60 * 1000).toISOString(),
+    workflow: {
+      state: 'pending_both_confirmations',
+      displayState: 'Awaiting both confirmations',
+      allowedActions: ['confirm'],
+    },
+  };
+
+  return [
+    {
+      id: 'visual-individual-interview-scheduled',
+      matchId: '33333333-3333-4333-8333-333333333333',
+      assignmentTitle:
+        'Privacy-safe proof operations lead with a deliberately long assignment title',
+      organizationName: 'Nordic Future Labs',
+      candidateDisplayName: 'Elena Proof Reviewer',
+      introAcceptedAt: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      interview: {
+        id: 'visual-individual-interview-scheduled-1',
+        scheduledAt,
+        duration: 30,
+        platform: 'google_meet',
+        meetingUrl: 'https://meet.google.com/visual-proofound',
+        manualMeetingProvider: null,
+        rescheduleCount: 0,
+        status: 'scheduled',
+        completedAt: null,
+        cancelledAt: null,
+        noShowAt: null,
+      },
+      decisionState: null,
+      engagementVerification: null,
+      corridor: buildCorridor({
+        currentStep: 'interviews',
+        nextActionId: 'prepare_for_interview',
+        nextActionLabel: 'Prepare for interview',
+        nextActionDescription:
+          'The interview is scheduled. Keep the meeting details handy and prepare from the shared proof context.',
+        summary: 'Interview coordination is active with Nordic Future Labs.',
+        subjectLabel: 'Nordic Future Labs',
+      }),
+    },
+    {
+      id: 'visual-individual-interview-decision',
+      matchId: '44444444-4444-4444-8444-444444444444',
+      assignmentTitle: 'Evidence systems consultant',
+      organizationName: 'Northstar Evidence Studio',
+      candidateDisplayName: 'Mira Andersson',
+      introAcceptedAt: new Date(now - 8 * 24 * 60 * 60 * 1000).toISOString(),
+      interview: {
+        id: 'visual-individual-interview-completed-1',
+        scheduledAt: completedAt,
+        duration: 45,
+        platform: 'manual',
+        meetingUrl: 'pending',
+        manualMeetingProvider: 'teams',
+        rescheduleCount: 1,
+        status: 'completed',
+        completedAt,
+        cancelledAt: null,
+        noShowAt: null,
+      },
+      decisionState: 'hire',
+      engagementVerification,
+      corridor: buildCorridor({
+        currentStep: 'decision',
+        nextActionId: 'confirm_engagement',
+        nextActionLabel: 'Confirm engagement',
+        nextActionDescription:
+          'The hire decision is recorded. Confirm the engagement type so verification can finish.',
+        summary:
+          'The decision is hire and engagement verification is waiting on your confirmation.',
+        subjectLabel: 'Northstar Evidence Studio',
+        decisionState: 'hire',
+        engagementVerification,
+      }),
+    },
+  ];
+}

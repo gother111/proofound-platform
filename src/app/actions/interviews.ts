@@ -23,6 +23,7 @@ import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging
 import { mergeInterviewProcessState } from '@/lib/interviews/process-state';
 import { classifyGoogleScheduleError } from '@/lib/interviews/schedule-errors';
 import {
+  buildVisualIndividualInterviewCorridorItems,
   buildVisualOrgInterviewCorridorItems,
   interviewVisualFixturesEnabled,
 } from '@/lib/interviews/visual-fixtures';
@@ -232,6 +233,14 @@ export async function getInterviewCorridorItems(params: {
 
   if (params.perspective === 'organization' && interviewVisualFixturesEnabled()) {
     const items = buildVisualOrgInterviewCorridorItems();
+    return {
+      items,
+      count: items.length,
+    };
+  }
+
+  if (params.perspective === 'individual' && interviewVisualFixturesEnabled()) {
+    const items = buildVisualIndividualInterviewCorridorItems();
     return {
       items,
       count: items.length,

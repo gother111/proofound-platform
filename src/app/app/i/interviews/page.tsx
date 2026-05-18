@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Calendar, Clock, Video, ExternalLink, CalendarPlus, Download } from 'lucide-react';
 import { HiringCorridorTimeline } from '@/components/interviews/HiringCorridorTimeline';
 import { Button } from '@/components/ui/button';
@@ -245,6 +246,9 @@ export default function InterviewsPage() {
               Nothing needs scheduling right now. When an organization shortlists you, this page
               will show the next step and the full proof-safe timeline.
             </p>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/app/i/matching">Review matching</Link>
+            </Button>
           </div>
         ) : (
           <div className="space-y-4">
