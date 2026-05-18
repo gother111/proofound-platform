@@ -1,6 +1,10 @@
 import { notFound } from 'next/navigation';
 import FeedbackForm from '@/components/feedback/FeedbackForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  buildVisualFeedbackTokenResponse,
+  feedbackVisualFixturesEnabled,
+} from '@/lib/feedback/visual-fixtures';
 
 type TokenData = {
   token: string;
@@ -13,6 +17,13 @@ type TokenData = {
 };
 
 async function loadTokenData(token: string): Promise<TokenData | null> {
+  if (feedbackVisualFixturesEnabled()) {
+    const visualResponse = buildVisualFeedbackTokenResponse(token);
+    if (visualResponse) {
+      return visualResponse;
+    }
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
   const response = await fetch(`${baseUrl}/api/feedback/token/${token}`, { cache: 'no-store' });
   if (!response.ok) return null;
@@ -67,6 +78,7 @@ export default async function FeedbackTokenPage({
               interviewId={tokenData?.interview?.id}
               token={tokenData?.token}
               alreadySubmitted={alreadyUsed}
+              surface="embedded"
             />
           ) : (
             <p className="text-sm text-destructive">Could not load the feedback form.</p>

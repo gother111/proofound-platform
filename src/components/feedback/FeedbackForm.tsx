@@ -2,11 +2,15 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  clientFeedbackVisualFixturesEnabled,
+  VISUAL_FEEDBACK_TOKENS,
+} from '@/lib/feedback/visual-fixtures';
 import { cn } from '@/lib/utils';
 
 type Direction = 'candidate_to_org' | 'org_to_candidate';
@@ -36,6 +40,7 @@ type FeedbackFormProps = {
   token?: string;
   onSubmitted?: () => void;
   alreadySubmitted?: boolean;
+  surface?: 'card' | 'embedded';
 };
 
 type AnswerState = Record<
@@ -52,6 +57,7 @@ export function FeedbackForm({
   token,
   onSubmitted,
   alreadySubmitted = false,
+  surface = 'card',
 }: FeedbackFormProps) {
   const router = useRouter();
   const [answers, setAnswers] = useState<AnswerState>({});
@@ -95,6 +101,16 @@ export function FeedbackForm({
       })),
     };
 
+    if (
+      clientFeedbackVisualFixturesEnabled() &&
+      token === VISUAL_FEEDBACK_TOKENS.pendingCandidateToOrg
+    ) {
+      setMessage('Feedback submitted. Thank you!');
+      setSubmitting(false);
+      onSubmitted?.();
+      return;
+    }
+
     const response = await fetch('/api/feedback/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -119,15 +135,22 @@ export function FeedbackForm({
       ? 'Share feedback with the organization'
       : 'Share feedback with the candidate';
 
+  const frameClassName =
+    surface === 'card'
+      ? 'space-y-4 rounded-xl border bg-card text-card-foreground shadow-sm'
+      : 'space-y-4';
+  const headerClassName = surface === 'card' ? undefined : 'px-0 pt-0';
+  const contentClassName = surface === 'card' ? undefined : 'px-0 pb-0';
+
   return (
-    <Card className="space-y-4">
-      <CardHeader>
+    <section className={frameClassName}>
+      <CardHeader className={headerClassName}>
         <CardTitle className="text-lg">{directionCopy}</CardTitle>
         <p className="text-sm text-muted-foreground">
           Your name will not be shown to the other side. Required items are marked with *.
         </p>
       </CardHeader>
-      <CardContent>
+      <CardContent className={contentClassName}>
         {alreadySubmitted ? (
           <p className="text-sm text-emerald-700">You already submitted feedback for this side.</p>
         ) : (
@@ -184,14 +207,15 @@ export function FeedbackForm({
               );
             })}
 
-            <div className="flex items-center gap-3">
-              <Button type="submit" disabled={submitting}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
                 {submitting ? 'Submitting...' : 'Submit feedback'}
               </Button>
               {message ? (
                 <span
+                  role={message.includes('Thank') ? 'status' : 'alert'}
                   className={cn(
-                    'text-sm',
+                    'rounded-xl px-3 py-2 text-sm leading-6',
                     message.includes('Thank') ? 'text-emerald-700' : 'text-destructive'
                   )}
                 >
@@ -202,7 +226,7 @@ export function FeedbackForm({
           </form>
         )}
       </CardContent>
-    </Card>
+    </section>
   );
 }
 

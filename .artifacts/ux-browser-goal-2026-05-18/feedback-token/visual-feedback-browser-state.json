@@ -1,0 +1,77 @@
+{
+  "surface": "/feedback/visual-feedback-token-candidate-0000001",
+  "environment": {
+    "NEXT_PUBLIC_USE_MOCK_SUPABASE": "true",
+    "PROOFOUND_VISUAL_FIXTURES": "true",
+    "browser": "Codex in-app Browser"
+  },
+  "mobile390": {
+    "initial": {
+      "url": "http://localhost:3000/feedback/visual-feedback-token-candidate-0000001",
+      "innerWidth": 390,
+      "innerHeight": 844,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "hasOverflow": false,
+      "nestedCards": 0,
+      "headings": ["Interview feedback", "Share feedback with the organization"],
+      "labels": [
+        "How clear was the assignment and interview process? *",
+        "What would have made the next step easier?"
+      ],
+      "buttons": [
+        {
+          "text": "Submit feedback",
+          "disabled": false
+        }
+      ]
+    },
+    "validation": {
+      "innerWidth": 390,
+      "hasOverflow": false,
+      "alertText": "Please complete the required questions."
+    },
+    "submitted": {
+      "innerWidth": 390,
+      "hasOverflow": false,
+      "alertText": null,
+      "statusText": "Feedback submitted. Thank you!",
+      "values": [
+        {
+          "tag": "INPUT",
+          "value": "4"
+        },
+        {
+          "tag": "TEXTAREA",
+          "value": "The structure was clear once the proof examples were visible."
+        }
+      ]
+    }
+  },
+  "desktop1280": {
+    "initial": {
+      "url": "http://localhost:3000/feedback/visual-feedback-token-candidate-0000001",
+      "innerWidth": 1280,
+      "innerHeight": 900,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "hasOverflow": false,
+      "nestedCards": 0,
+      "headings": ["Interview feedback", "Share feedback with the organization"],
+      "labels": [
+        "How clear was the assignment and interview process? *",
+        "What would have made the next step easier?"
+      ],
+      "buttons": [
+        {
+          "text": "Submit feedback",
+          "disabled": false
+        }
+      ]
+    }
+  },
+  "notes": [
+    "Browser viewport override needed reset before the 390px check took effect.",
+    "Browser DOM interaction used keypress for text entry because the Browser virtual clipboard was unavailable for fill/type in this session."
+  ]
+}

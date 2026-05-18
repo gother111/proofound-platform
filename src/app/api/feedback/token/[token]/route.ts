@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import {
+  buildVisualFeedbackTokenResponse,
+  feedbackVisualFixturesEnabled,
+} from '@/lib/feedback/visual-fixtures';
 import { resolveFeedbackFollowUpState } from '@/lib/feedback/service';
 import {
   beginCapabilityTokenRedeemSession,
@@ -11,10 +15,16 @@ import {
 } from '@/lib/security/capability-tokens';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  const admin = createAdminClient();
-
   try {
     const { token: tokenValue } = await params;
+    if (feedbackVisualFixturesEnabled()) {
+      const visualResponse = buildVisualFeedbackTokenResponse(tokenValue);
+      if (visualResponse) {
+        return NextResponse.json(visualResponse);
+      }
+    }
+
+    const admin = createAdminClient();
     const preview = await beginCapabilityTokenRedeemSession(tokenValue, {
       tokenClass: CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE,
       actor: {

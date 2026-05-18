@@ -954,6 +954,83 @@ save`.
 - `npm run docs:freshness` - pass in warning mode with the existing 32 orphan
   document warnings.
 
+## Public Feedback Token Continuation - Filled State Fixture And Embedded Form
+
+### Updated Verdict
+
+Improved for the public feedback-token workflow.
+
+The valid feedback-link state now has a deterministic local fixture, so the
+filled form can be checked without relying on protected production-like token
+data. The public page also avoids a nested card inside the primary feedback
+card, reducing visual weight and making the task clearer on mobile.
+
+### Additional Findings And Fixes
+
+#### P2 - Valid feedback links had no stable filled-state Browser coverage
+
+Affected surface:
+
+- `/feedback/[token]`
+
+Evidence:
+
+- Previous Browser coverage only proved the invalid token edge. The valid token
+  form depended on protected API/token data, which made repeatable mobile and
+  desktop inspection unreliable in local mock mode.
+
+Fix:
+
+- Added a local-only visual feedback token fixture gated by
+  `NEXT_PUBLIC_USE_MOCK_SUPABASE=true`, `PROOFOUND_VISUAL_FIXTURES=true`, and
+  non-production `VERCEL_ENV`.
+- The fixture renders one required scale question and one optional text
+  question for the candidate-to-organization feedback path.
+- The visual fixture submit path records a local success message without
+  calling the guarded feedback submit API.
+
+#### P3 - Public feedback form rendered as a card inside a card
+
+Affected surface:
+
+- `/feedback/[token]`
+
+Evidence:
+
+- The public feedback page already frames the task in one card, while
+  `FeedbackForm` rendered a second card inside it. This made the page feel
+  heavier than the single-task feedback workflow needs.
+
+Fix:
+
+- Added an embedded feedback-form surface for the public token page while
+  keeping the card surface for dashboard contexts.
+- Stacked the submit action and validation/success message on narrow screens.
+
+### Browser Verification
+
+Verified with the Codex in-app Browser:
+
+- Mobile valid fixture `/feedback/visual-feedback-token-candidate-0000001` at
+  390px - no horizontal overflow; one clear feedback task; no nested card; the
+  required scale question and optional detail field are visible.
+- Mobile submit attempt with the required score empty - inline alert says
+  `Please complete the required questions.`
+- Mobile filled submit at 390px - entered score `4` and text detail; inline
+  status says `Feedback submitted. Thank you!`; no horizontal overflow after
+  success.
+- Desktop valid fixture at 1280px - no horizontal overflow; no nested card; the
+  same labels and submit action remain composed.
+
+Evidence file:
+
+- `.artifacts/ux-browser-goal-2026-05-18/feedback-token/visual-feedback-browser-state.json`
+
+### Automated Checks
+
+- `npm run test -- tests/ui/feedback-form.test.tsx tests/api/feedback-token-visual-route.test.ts`
+  - pass
+
 ## 2026-05-18 - Individual Interviews Empty and Filled States
 
 ### Scope

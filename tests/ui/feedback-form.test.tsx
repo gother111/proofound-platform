@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import FeedbackForm from '../../src/components/feedback/FeedbackForm';
+import { VISUAL_FEEDBACK_TOKENS } from '../../src/lib/feedback/visual-fixtures';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -71,6 +72,7 @@ describe('FeedbackForm', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('shows validation when required fields are missing', async () => {
@@ -97,5 +99,24 @@ describe('FeedbackForm', () => {
     expect(payload.token).toBe('token-1');
     expect(payload.answers[0].score).toBe(5);
     expect(await screen.findByText(/Feedback submitted/)).toBeInTheDocument();
+  });
+
+  it('records visual fixture feedback locally without calling the guarded submit API', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+
+    render(
+      <FeedbackForm
+        template={template}
+        interviewId="visual-feedback-interview-1"
+        token={VISUAL_FEEDBACK_TOKENS.pendingCandidateToOrg}
+        surface="embedded"
+      />
+    );
+
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '4' } });
+    fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent(/Feedback submitted/i);
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });
