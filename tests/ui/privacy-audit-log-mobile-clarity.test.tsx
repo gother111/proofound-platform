@@ -44,6 +44,6 @@ describe('privacy audit log mobile clarity', () => {
     expect(mobileCard).toHaveTextContent('Access detail: Protected');
     expect(mobileCard.parentElement).toHaveClass('md:hidden');
     expect(screen.getAllByText('Persona').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('individual').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Individual').length).toBeGreaterThan(0);
   });
 });

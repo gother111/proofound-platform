@@ -118,7 +118,7 @@ export function AuditLogTable({ title = 'Account history' }: AuditLogTableProps)
     if (typeof value === 'number') return String(value);
     if (typeof value === 'string') {
       if (isMachineIdentifier(value)) return 'Protected reference';
-      return /[_-]/.test(value) ? internalValueLabel(value) : value;
+      return internalValueLabel(value);
     }
     if (Array.isArray(value)) return `${value.length} item${value.length === 1 ? '' : 's'}`;
     return 'Additional details';
