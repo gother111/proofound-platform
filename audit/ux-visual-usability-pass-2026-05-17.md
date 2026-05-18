@@ -1067,6 +1067,41 @@ Evidence artifact:
 
 - `.artifacts/ux-browser-goal-2026-05-18/work-email-verify/invalid-work-email-browser-state.json`
 
+## 2026-05-18 - Work Email Verification Success Fixture
+
+### Scope
+
+- `/verify-work-email?token=visual-work-email-token-000000000001`
+
+### Findings and Fixes
+
+#### P2 - Valid work-email verification state had no repeatable Browser fixture
+
+Evidence:
+
+- The full coverage matrix marked valid token states as a remaining risk because
+  local Browser coverage could only prove invalid/default verification states.
+
+Fix:
+
+- Added a local mock-mode visual token for a successful work-email verification.
+- Kept the visual success state stable for Browser inspection instead of
+  auto-redirecting.
+- Made the success helper text truthful in the stable visual state:
+  `You can return to your profile when ready.`
+
+### Browser Verification
+
+- Mobile success token at 390px - no horizontal overflow; verified heading,
+  workplace email, success bullets, stable helper copy, and profile action are
+  visible.
+- Desktop success token at 1280px - no horizontal overflow; same success state
+  remains composed.
+
+Evidence artifact:
+
+- `.artifacts/ux-browser-goal-2026-05-18/work-email-verify/success-work-email-browser-state.json`
+
 ## Individual Settings And Privacy Continuation - Account History Clarity
 
 Date: 2026-05-18

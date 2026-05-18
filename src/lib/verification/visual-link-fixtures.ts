@@ -1,6 +1,7 @@
 export const VISUAL_VERIFY_TOKENS = {
   skillObserved: 'visual-skill-verification-token-00000001',
   customBundle: 'visual-custom-verification-token-0000001',
+  workEmailSuccess: 'visual-work-email-token-000000000001',
 } as const;
 
 export function verificationLinkVisualFixturesEnabled() {
@@ -125,5 +126,16 @@ export function buildVisualCustomVerificationResponse(token: string) {
         },
       ],
     },
+  };
+}
+
+export function buildVisualWorkEmailVerificationResponse(token: string) {
+  if (token !== VISUAL_VERIFY_TOKENS.workEmailSuccess) {
+    return null;
+  }
+
+  return {
+    message: 'Work email verified successfully.',
+    workEmail: 'elena.reviewer@northstar-evidence.example',
   };
 }

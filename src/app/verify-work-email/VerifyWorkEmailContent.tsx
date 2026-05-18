@@ -6,6 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Loader2, Mail } from 'lucide-react';
+import { buildVisualWorkEmailVerificationResponse } from '@/lib/verification/visual-link-fixtures';
+
+function clientVisualVerificationEnabled() {
+  return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+}
 
 export function VerifyWorkEmailContent() {
   const searchParams = useSearchParams();
@@ -13,10 +18,22 @@ export function VerifyWorkEmailContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const [workEmail, setWorkEmail] = useState('');
+  const [autoRedirectEnabled, setAutoRedirectEnabled] = useState(false);
 
   const verifyToken = useCallback(
     async (token: string) => {
       try {
+        if (clientVisualVerificationEnabled()) {
+          const visualResponse = buildVisualWorkEmailVerificationResponse(token);
+          if (visualResponse) {
+            setStatus('success');
+            setMessage(visualResponse.message);
+            setWorkEmail(visualResponse.workEmail);
+            setAutoRedirectEnabled(false);
+            return;
+          }
+        }
+
         const response = await fetch(`/api/verification/work-email/verify?token=${token}`);
         const data = await response.json();
 
@@ -24,6 +41,7 @@ export function VerifyWorkEmailContent() {
           setStatus('success');
           setMessage(data.message || 'Work email verified successfully!');
           setWorkEmail(data.workEmail || '');
+          setAutoRedirectEnabled(true);
 
           // Redirect to profile after 3 seconds
           setTimeout(() => {
@@ -127,7 +145,9 @@ export function VerifyWorkEmailContent() {
               </div>
 
               <p className="pt-4 text-center text-sm text-muted-foreground">
-                Redirecting to your profile in a few seconds.
+                {autoRedirectEnabled
+                  ? 'Redirecting to your profile in a few seconds.'
+                  : 'You can return to your profile when ready.'}
               </p>
 
               <Button
