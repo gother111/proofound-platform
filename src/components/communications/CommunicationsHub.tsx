@@ -159,7 +159,7 @@ export function CommunicationsHub({ perspective, currentUserId }: Communications
             </div>
             <Link
               href={sectionHref(activeConfig.workstream === 'messages' ? 'interviews' : 'messages')}
-              className="inline-flex items-center gap-2 text-xs font-semibold text-proofound-forest hover:underline"
+              className="inline-flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border border-proofound-stone/70 bg-white/70 px-3 py-2 text-xs font-semibold text-proofound-forest shadow-sm transition-colors hover:border-proofound-forest/50 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:w-auto sm:justify-center"
             >
               Switch to {activeConfig.workstream === 'messages' ? 'interviews' : 'messages'}
               <ArrowRight className="h-3.5 w-3.5" />
