@@ -16,8 +16,11 @@ export default async function OrgAssignmentsAliasPage({
       <div className="space-y-4">
         <header className="flex flex-col gap-4 px-1 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <nav className="mb-2 text-xs text-neutral-dark-500">
-              <Link href={`/app/o/${slug}/home`} className="hover:underline">
+            <nav className="mb-2 flex min-h-11 items-center gap-1 text-xs text-neutral-dark-500">
+              <Link
+                href={`/app/o/${slug}/home`}
+                className="-ml-2 inline-flex min-h-11 items-center rounded-md px-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+              >
                 Organization
               </Link>{' '}
               / Assignments
