@@ -55,6 +55,58 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     });
   });
 
+  it('names the visibility loading state while controls are loading', async () => {
+    let resolveVisibility: (response: Response) => void = () => {};
+    const visibilityPromise = new Promise<Response>((resolve) => {
+      resolveVisibility = resolve;
+    });
+
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url === '/api/feature-flags') {
+        return {
+          ok: true,
+          json: async () => ({ flags: { assistiveAiUi: true } }),
+        } as Response;
+      }
+
+      if (url === '/api/portfolio/visibility') {
+        return visibilityPromise;
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    }) as any;
+
+    render(<PortfolioVisibilityCard />);
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      /Loading Public Page visibility controls/i
+    );
+
+    resolveVisibility({
+      ok: true,
+      json: async () => ({
+        visibility: {
+          header: true,
+          proofBar: true,
+          workEmail: false,
+          linkedin: true,
+          identity: true,
+          skills: false,
+          bio: false,
+          contact: false,
+        },
+        publicPageEnabled: true,
+        searchIndexingEnabled: false,
+      }),
+    } as Response);
+
+    expect(
+      await screen.findByRole('button', { name: /check privacy before publishing/i })
+    ).toBeInTheDocument();
+  });
+
   it('shows Check privacy before publishing and reports a clear safe-mode result', async () => {
     render(<PortfolioVisibilityCard />);
 

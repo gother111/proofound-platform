@@ -158,9 +158,9 @@ export function PortfolioVisibilityCard() {
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-slate-700">
         {loading ? (
-          <div className="flex items-center gap-2 text-slate-500">
+          <div className="flex items-center gap-2 text-slate-500" role="status" aria-live="polite">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Loading...
+            Loading Public Page visibility controls...
           </div>
         ) : (
           <>
