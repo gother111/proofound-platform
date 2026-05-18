@@ -6,7 +6,7 @@ export default function LoadingIndividualMessages() {
       <div className="w-full min-h-0 md:w-80 flex-shrink-0 border-r border-proofound-stone/70 bg-white/70">
         <div className="space-y-3 p-4">
           <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
-            Loading conversations...
+            Loading proof-safe conversations...
           </p>
           <Skeleton className="h-8 w-32 rounded-md" />
           <Skeleton className="h-10 w-full rounded-lg" />

@@ -10,7 +10,7 @@ describe('DeferredMessagesClient', () => {
 
     render(<DeferredMessagesClient loadMessagesView={loadMessagesView} />);
 
-    expect(screen.getByRole('status')).toHaveTextContent('Loading conversations...');
+    expect(screen.getByRole('status')).toHaveTextContent('Loading proof-safe conversations...');
   });
 
   it('lets users retry when the messages workspace chunk fails', async () => {
