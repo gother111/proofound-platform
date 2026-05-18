@@ -137,8 +137,16 @@ describe('VerificationsClient', () => {
     expect(screen.getByText('Jordan Verifier')).toBeInTheDocument();
     expect(screen.queryByText('mentor@company.com')).not.toBeInTheDocument();
 
-    expect(screen.getByRole('tab', { name: /^Incoming/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /^Sent/i })).toBeInTheDocument();
+    const incomingTab = screen.getByRole('tab', { name: /^Incoming/i });
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    expect(incomingTab).toBeInTheDocument();
+    expect(sentTab).toBeInTheDocument();
+    expect(incomingTab).toHaveClass('min-h-11');
+    expect(sentTab).toHaveClass('min-h-11');
+
+    expect(screen.getByRole('button', { name: /^All/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /^Newest$/i })).toHaveClass('min-h-11');
+    expect(screen.getByRole('button', { name: /^Scope$/i })).toHaveClass('min-h-11');
 
     expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
     expect(screen.getByText('Accepted')).toBeInTheDocument();

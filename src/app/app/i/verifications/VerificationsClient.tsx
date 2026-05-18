@@ -1163,12 +1163,12 @@ export function VerificationsClient({
                 <Button
                   key={filter.value}
                   type="button"
-                  size="sm"
+                  size="touch"
                   variant={isSelected ? 'default' : 'outline'}
                   aria-pressed={isSelected}
                   onClick={() => onFilterChange(filter.value)}
                   className={cn(
-                    'h-auto min-h-9 justify-start gap-2 rounded-md px-3 py-2 text-xs',
+                    'h-auto min-h-11 justify-start gap-2 rounded-md px-3 py-2 text-xs',
                     isSelected
                       ? 'bg-proofound-forest text-white hover:bg-proofound-forest/90'
                       : 'bg-white text-muted-foreground hover:text-foreground dark:bg-background'
@@ -1195,12 +1195,12 @@ export function VerificationsClient({
           <div role="group" aria-label="Sort verifications" className="flex flex-wrap gap-2">
             <Button
               type="button"
-              size="sm"
+              size="touch"
               variant={sortMode === 'recency' ? 'default' : 'outline'}
               aria-pressed={sortMode === 'recency'}
               onClick={() => setSortMode('recency')}
               className={cn(
-                'h-auto min-h-9 rounded-md px-3 py-2 text-xs',
+                'h-auto min-h-11 rounded-md px-3 py-2 text-xs',
                 sortMode === 'recency'
                   ? 'bg-proofound-charcoal text-white hover:bg-proofound-charcoal/90'
                   : 'bg-white dark:bg-background'
@@ -1211,12 +1211,12 @@ export function VerificationsClient({
             </Button>
             <Button
               type="button"
-              size="sm"
+              size="touch"
               variant={sortMode === 'scope' ? 'default' : 'outline'}
               aria-pressed={sortMode === 'scope'}
               onClick={() => setSortMode('scope')}
               className={cn(
-                'h-auto min-h-9 rounded-md px-3 py-2 text-xs',
+                'h-auto min-h-11 rounded-md px-3 py-2 text-xs',
                 sortMode === 'scope'
                   ? 'bg-proofound-charcoal text-white hover:bg-proofound-charcoal/90'
                   : 'bg-white dark:bg-background'
@@ -1284,8 +1284,8 @@ export function VerificationsClient({
         </div>
 
         <Tabs defaultValue="incoming" className="w-full">
-          <TabsList className="mb-6 max-w-full">
-            <TabsTrigger value="incoming" className="relative">
+          <TabsList className="mb-6 h-auto min-h-[3.25rem] max-w-full gap-1 p-1">
+            <TabsTrigger value="incoming" className="relative min-h-11 px-4 py-2.5">
               Incoming
               {incomingRequests.length > 0 && (
                 <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500 text-white dark:bg-amber-500/10 dark:text-amber-500">
@@ -1293,7 +1293,7 @@ export function VerificationsClient({
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="sent" className="relative">
+            <TabsTrigger value="sent" className="relative min-h-11 px-4 py-2.5">
               Sent
               {sentRequests.length > 0 && (
                 <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-proofound-stone text-proofound-charcoal dark:bg-muted dark:text-foreground">
