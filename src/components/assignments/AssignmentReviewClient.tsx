@@ -56,6 +56,50 @@ type PublishBlock = {
   details?: Record<string, unknown>;
 };
 
+type ReviewItem = {
+  label: string;
+  ready: boolean;
+  detail: string;
+};
+
+function hasText(value: unknown) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function getReviewItems(assignment: Assignment): ReviewItem[] {
+  const outcomes = assignment.expectedOutcomes || assignment.outcomes || [];
+
+  return [
+    {
+      label: 'Role purpose',
+      ready:
+        hasText(assignment.title || assignment.role) &&
+        hasText(assignment.rolePurpose || assignment.businessValue),
+      detail: 'Name the role and why the work matters.',
+    },
+    {
+      label: 'Work summary',
+      ready: hasText(assignment.description),
+      detail: 'Describe the real work before publishing.',
+    },
+    {
+      label: 'Outcomes',
+      ready: outcomes.length > 0,
+      detail: 'Add at least one outcome the reviewer can recognize.',
+    },
+    {
+      label: 'Proof expectations',
+      ready: hasText(assignment.proofExpectations || assignment.expectedImpact),
+      detail: 'Say what proof would count for this assignment.',
+    },
+    {
+      label: 'Must-have skills',
+      ready: (assignment.requiredSkills || []).length > 0,
+      detail: 'Attach the skills reviewers should use as anchors.',
+    },
+  ];
+}
+
 export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }: Props) {
   const router = useRouter();
   const [assignment, setAssignment] = useState<Assignment | null>(initialAssignment);
@@ -166,14 +210,31 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
 
   const isPublished = assignment.status === 'active';
   const isClosed = assignment.status === 'closed';
-  const publishDisabled = isPublishing || isPublished || isClosed;
+  const reviewItems = getReviewItems(assignment);
+  const missingReviewItems = reviewItems.filter((item) => !item.ready);
+  const isReviewReady = missingReviewItems.length === 0;
+  const publishDisabled = isPublishing || isPublished || isClosed || !isReviewReady;
+  const statusTitle = isPublished
+    ? 'This assignment is published.'
+    : isClosed
+      ? 'This assignment is closed.'
+      : isReviewReady
+        ? 'Ready to publish.'
+        : `${missingReviewItems.length} ${missingReviewItems.length === 1 ? 'item needs' : 'items need'} review.`;
+  const statusDescription = isPublished
+    ? 'Review and matching can continue from the assignment list.'
+    : isClosed
+      ? 'Closed assignments stay visible for context, but publishing actions are disabled.'
+      : isReviewReady
+        ? 'Everything needed for the narrow publish path is present. Publish when your team is ready to start matching.'
+        : 'Finish the missing items before publishing so candidates see a specific, proof-led assignment.';
 
   return (
     <div className="min-h-screen bg-japandi-bg p-4 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+          <div className="min-w-0">
             <h1 className="text-3xl font-bold text-foreground">Internal review before publish</h1>
             <p className="text-muted-foreground">
               Confirm the assignment is specific, credible, and ready for a narrow publish path.
@@ -183,6 +244,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             <Button
               variant="outline"
               onClick={() => router.push(`/app/o/${slug}/assignments/new?draftId=${assignmentId}`)}
+              className="w-full justify-center sm:w-auto"
             >
               <Edit className="h-4 w-4 mr-2" />
               Edit
@@ -193,7 +255,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
               <Button
                 onClick={handlePublish}
                 disabled={publishDisabled}
-                className="bg-proofound-forest hover:bg-proofound-forest/90"
+                className="w-full justify-center bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
               >
                 {isPublishing
                   ? 'Publishing...'
@@ -205,6 +267,51 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             )}
           </div>
         </div>
+
+        <Card className="border-proofound-stone/80 bg-white/80 p-4 sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-muted-foreground">
+                Review readiness
+              </p>
+              <h2 className="mt-2 text-xl font-semibold text-foreground">{statusTitle}</h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                {statusDescription}
+              </p>
+            </div>
+            {!isPublished && !isClosed && !isReviewReady ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  router.push(`/app/o/${slug}/assignments/new?draftId=${assignmentId}`)
+                }
+                className="w-full justify-center lg:w-auto"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit missing items
+              </Button>
+            ) : null}
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            {reviewItems.map((item) => (
+              <div
+                key={item.label}
+                className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/60 p-3"
+              >
+                <div className="flex items-center gap-2">
+                  {item.ready ? (
+                    <Check className="h-4 w-4 text-proofound-forest" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-amber-700" />
+                  )}
+                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
 
         {publishBlocks.length > 0 ? (
           <Card className="border-amber-300 bg-amber-50 p-5">
@@ -258,7 +365,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
               What work will actually be done
             </h2>
           </div>
-          <div className="ml-10 space-y-4">
+          <div className="space-y-4 sm:ml-10">
             <div>
               <p className="text-sm text-muted-foreground">Work summary</p>
               <p className="text-foreground">
@@ -298,7 +405,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             </div>
             <h2 className="text-xl font-semibold text-foreground">What proof would count</h2>
           </div>
-          <div className="ml-10 space-y-4">
+          <div className="space-y-4 sm:ml-10">
             <div>
               <p className="text-sm text-muted-foreground">Proof expectations</p>
               <p className="text-foreground">
@@ -365,7 +472,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             </div>
             <h2 className="text-xl font-semibold text-foreground">Internal review checklist</h2>
           </div>
-          <div className="ml-10">
+          <div className="sm:ml-10">
             {assignment.requiredSkills && assignment.requiredSkills.length > 0 ? (
               <>
                 <p className="mb-3 text-sm text-muted-foreground">

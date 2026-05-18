@@ -3073,3 +3073,64 @@ Evidence:
 
 - `npm run test -- tests/ui/verifications-client.test.tsx`
   - pass
+
+## Assignment Review Readiness Continuation
+
+### Updated Verdict
+
+Improved for organization assignment review clarity.
+
+The assignment review page showed the right sections, but the first screen did
+not clearly state whether the assignment was ready to publish or what remained
+missing. Users could discover obvious missing content only by attempting the
+publish action.
+
+### Findings And Fixes
+
+#### P2 - Assignment review did not explain the next action before publish
+
+Affected surface:
+
+- `/app/o/[slug]/assignments/[id]/review`
+
+Fix:
+
+- Added a `Review readiness` panel above the detailed section cards.
+- Summarized role purpose, work summary, outcomes, proof expectations, and
+  must-have skills as ready or missing.
+- Disabled the publish action when those obvious required review items are
+  missing.
+- Added a direct `Edit missing items` action so users know where to fix the
+  draft.
+- Reduced narrow-mobile indentation inside detailed sections and made header
+  actions full-width until there is enough room.
+
+### Rendered Verification
+
+The Codex in-app Browser runtime still returned
+`No active Codex browser pane available`, so this continuation uses a temporary
+local rendered Chromium harness and keeps the evidence labeled as fallback
+rather than Browser-plugin proof.
+
+Fallback rendered evidence:
+
+- Ready mobile assignment review at 390px - no horizontal overflow; readiness
+  panel appears and publish remains enabled.
+- Missing mobile assignment review at 390px - no horizontal overflow; readiness
+  panel explains the four missing items, publish is disabled, and `Edit missing
+items` is reachable.
+- Ready and missing desktop assignment review at 1280px - no horizontal
+  overflow; readiness panel and section cards remain composed.
+
+Evidence:
+
+- `.artifacts/ux-browser-goal-2026-05-18/assignment-review-guidance/fallback-rendered-state.json`
+- `.artifacts/ux-browser-goal-2026-05-18/assignment-review-guidance/ready-mobile390.png`
+- `.artifacts/ux-browser-goal-2026-05-18/assignment-review-guidance/ready-desktop1280.png`
+- `.artifacts/ux-browser-goal-2026-05-18/assignment-review-guidance/missing-mobile390.png`
+- `.artifacts/ux-browser-goal-2026-05-18/assignment-review-guidance/missing-desktop1280.png`
+
+### Automated Checks
+
+- `npm run test -- tests/ui/assignment-review-client.test.tsx`
+  - pass

@@ -1,0 +1,58 @@
+[
+  {
+    "state": "ready",
+    "viewport": {
+      "name": "mobile390",
+      "width": 390,
+      "height": 900
+    },
+    "url": "http://localhost:3000/verify/assignment-review-harness",
+    "status": 200,
+    "horizontalOverflow": false,
+    "hasReadinessGuidance": true,
+    "publishDisabled": false,
+    "bodyText": "Skip to main content\nInternal review before publish\n\nConfirm the assignment is specific, credible, and ready for a narrow publish path.\n\nEdit\nPublish Assignment\n\nREVIEW READINESS\n\nReady to publish.\n\nEverything needed for the narrow publish path is present. Publish when your team is ready to start matching.\n\nRole purpose\n\nName the role and why the work matters.\n\nWork summary\n\nDescribe the real work before publishing.\n\nOutcomes\n\nAdd at least one outcome the reviewer can recognize.\n\nProof expectations\n\nSay what proof would count for this assignment.\n\nMust-have skills\n\nAttach the skills reviewers should use as anchors.\n\n1\nWhy this role exists\n\nRole\n\nProof operations lead with a deliberately long review title\n\nEngagement type\n\nContract / consulting\n\nRole purpose\n\nLead the review loop for regulated proof intake.\n\n2\nWhat work will actually be done\n\nWork summary\n\nOwn the assignment review workflow, clarify what work is expected, and keep the team aligned on what delivery actually matters.\n\nReview quality\n\nTarget: Raise review completeness • Timeframe: First month\n\n3\nWhat proof would count\n\nProof expectations\n\nShow delivered proof operations work with clear ownership, bounded evidence, and outcomes a reviewer can inspect.\n\nVerification requirements\n\nWork Email Verification\n4\nWhat practical constraints are real\n\nCompensation range\n\nSEK 80,000 - 100,000\n\nLocation\n\nRemote\n\n5\nInternal review checklist\n\nMust-have skills and proof expectations are ready for internal review.\n\nEvidence review (Level 4/5)\nPrivacy operations (Level 4/5)"
+  },
+  {
+    "state": "ready",
+    "viewport": {
+      "name": "desktop1280",
+      "width": 1280,
+      "height": 900
+    },
+    "url": "http://localhost:3000/verify/assignment-review-harness",
+    "status": 200,
+    "horizontalOverflow": false,
+    "hasReadinessGuidance": true,
+    "publishDisabled": false,
+    "bodyText": "Skip to main content\nInternal review before publish\n\nConfirm the assignment is specific, credible, and ready for a narrow publish path.\n\nEdit\nPublish Assignment\n\nREVIEW READINESS\n\nReady to publish.\n\nEverything needed for the narrow publish path is present. Publish when your team is ready to start matching.\n\nRole purpose\n\nName the role and why the work matters.\n\nWork summary\n\nDescribe the real work before publishing.\n\nOutcomes\n\nAdd at least one outcome the reviewer can recognize.\n\nProof expectations\n\nSay what proof would count for this assignment.\n\nMust-have skills\n\nAttach the skills reviewers should use as anchors.\n\n1\nWhy this role exists\n\nRole\n\nProof operations lead with a deliberately long review title\n\nEngagement type\n\nContract / consulting\n\nRole purpose\n\nLead the review loop for regulated proof intake.\n\n2\nWhat work will actually be done\n\nWork summary\n\nOwn the assignment review workflow, clarify what work is expected, and keep the team aligned on what delivery actually matters.\n\nReview quality\n\nTarget: Raise review completeness • Timeframe: First month\n\n3\nWhat proof would count\n\nProof expectations\n\nShow delivered proof operations work with clear ownership, bounded evidence, and outcomes a reviewer can inspect.\n\nVerification requirements\n\nWork Email Verification\n4\nWhat practical constraints are real\n\nCompensation range\n\nSEK 80,000 - 100,000\n\nLocation\n\nRemote\n\n5\nInternal review checklist\n\nMust-have skills and proof expectations are ready for internal review.\n\nEvidence review (Level 4/5)\nPrivacy operations (Level 4/5)"
+  },
+  {
+    "state": "missing",
+    "viewport": {
+      "name": "mobile390",
+      "width": 390,
+      "height": 900
+    },
+    "url": "http://localhost:3000/verify/assignment-review-harness?state=missing",
+    "status": 200,
+    "horizontalOverflow": false,
+    "hasReadinessGuidance": true,
+    "publishDisabled": true,
+    "bodyText": "Skip to main content\nInternal review before publish\n\nConfirm the assignment is specific, credible, and ready for a narrow publish path.\n\nEdit\nPublish Assignment\n\nREVIEW READINESS\n\n4 items need review.\n\nFinish the missing items before publishing so candidates see a specific, proof-led assignment.\n\nEdit missing items\n\nRole purpose\n\nName the role and why the work matters.\n\nWork summary\n\nDescribe the real work before publishing.\n\nOutcomes\n\nAdd at least one outcome the reviewer can recognize.\n\nProof expectations\n\nSay what proof would count for this assignment.\n\nMust-have skills\n\nAttach the skills reviewers should use as anchors.\n\n1\nWhy this role exists\n\nRole\n\nProof operations lead with a deliberately long review title\n\nEngagement type\n\nContract / consulting\n\nRole purpose\n\nLead the review loop for regulated proof intake.\n\n2\nWhat work will actually be done\n\nWork summary\n\nNo work summary has been saved yet.\n\nNo outcomes defined\n\n3\nWhat proof would count\n\nProof expectations\n\nNo proof expectations have been saved yet.\n\nVerification requirements\n\nWork Email Verification\n4\nWhat practical constraints are real\n\nCompensation range\n\nSEK 80,000 - 100,000\n\nLocation\n\nRemote\n\n5\nInternal review checklist\n\nNo required skills defined"
+  },
+  {
+    "state": "missing",
+    "viewport": {
+      "name": "desktop1280",
+      "width": 1280,
+      "height": 900
+    },
+    "url": "http://localhost:3000/verify/assignment-review-harness?state=missing",
+    "status": 200,
+    "horizontalOverflow": false,
+    "hasReadinessGuidance": true,
+    "publishDisabled": true,
+    "bodyText": "Skip to main content\nInternal review before publish\n\nConfirm the assignment is specific, credible, and ready for a narrow publish path.\n\nEdit\nPublish Assignment\n\nREVIEW READINESS\n\n4 items need review.\n\nFinish the missing items before publishing so candidates see a specific, proof-led assignment.\n\nEdit missing items\n\nRole purpose\n\nName the role and why the work matters.\n\nWork summary\n\nDescribe the real work before publishing.\n\nOutcomes\n\nAdd at least one outcome the reviewer can recognize.\n\nProof expectations\n\nSay what proof would count for this assignment.\n\nMust-have skills\n\nAttach the skills reviewers should use as anchors.\n\n1\nWhy this role exists\n\nRole\n\nProof operations lead with a deliberately long review title\n\nEngagement type\n\nContract / consulting\n\nRole purpose\n\nLead the review loop for regulated proof intake.\n\n2\nWhat work will actually be done\n\nWork summary\n\nNo work summary has been saved yet.\n\nNo outcomes defined\n\n3\nWhat proof would count\n\nProof expectations\n\nNo proof expectations have been saved yet.\n\nVerification requirements\n\nWork Email Verification\n4\nWhat practical constraints are real\n\nCompensation range\n\nSEK 80,000 - 100,000\n\nLocation\n\nRemote\n\n5\nInternal review checklist\n\nNo required skills defined"
+  }
+]
