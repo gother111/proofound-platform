@@ -954,6 +954,60 @@ save`.
 - `npm run docs:freshness` - pass in warning mode with the existing 32 orphan
   document warnings.
 
+## Accept Invite Continuation - Stable Valid Organization Invite Fixture
+
+### Findings Fixed
+
+#### P2 - Valid organization invite acceptance lacked stable visual coverage
+
+Affected surface:
+
+- `/accept-invite?token=visual-org-member-invite-000000001`
+
+Evidence:
+
+- The real valid organization invite path needs an authenticated user,
+  capability token inspection, and admin invite records, so the UX pass could
+  only cover missing/invalid invite states without a local fixture.
+- That left the highest-intent invite workflow unverified for mobile wrapping,
+  long organization mission text, invited email overflow, success feedback, and
+  the post-acceptance next action.
+
+Fix:
+
+- Added a local-only organization invite visual fixture gated by
+  `NEXT_PUBLIC_USE_MOCK_SUPABASE=true`, `PROOFOUND_VISUAL_FIXTURES=true`, and
+  non-production `VERCEL_ENV`.
+- Added a focused visual accept client that keeps the simulated acceptance
+  local, then replaces the primary action with a clear success state and
+  workspace next step.
+- Wrapped long organization names, mission copy, roles, and invited emails so
+  mobile users do not get clipped text or horizontal scrolling.
+
+### Browser Verification
+
+Verified with the Codex in-app Browser:
+
+- Mobile valid organization invite at 390px - initial state shows one clear
+  action, organization details, role, and invited email with no horizontal
+  overflow.
+- Mobile accepted state at 390px - success feedback appears through a focused
+  status message and the next action changes to `Open organization workspace`,
+  with no horizontal overflow.
+- Desktop valid organization invite at 1280px - initial state remains composed
+  and centered with no horizontal overflow.
+- Desktop accepted state at 1280px - success feedback and workspace next action
+  remain composed with no horizontal overflow.
+
+Evidence file:
+
+- `.artifacts/ux-browser-goal-2026-05-18/accept-invite/visual-accept-invite-browser-state.json`
+
+### Automated Checks
+
+- `npm run test -- tests/ui/accept-invite-visual-client.test.tsx tests/ui/confirm-reset-password-form.test.tsx`
+  - pass
+
 ## Public Feedback Token Continuation - Filled State Fixture And Embedded Form
 
 ### Updated Verdict

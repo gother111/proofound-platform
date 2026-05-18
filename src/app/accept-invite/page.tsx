@@ -9,6 +9,11 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { acceptInvitation } from '@/actions/org';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { AcceptInviteVisualClient } from './AcceptInviteVisualClient';
+import {
+  buildVisualOrgInvite,
+  orgInviteVisualFixturesEnabled,
+} from '@/lib/org-invites/visual-fixtures';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,6 +62,13 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
         message="This invite link is missing a token. Ask the organization to resend it."
       />
     );
+  }
+
+  if (orgInviteVisualFixturesEnabled()) {
+    const visualInvite = buildVisualOrgInvite(token);
+    if (visualInvite) {
+      return <AcceptInviteVisualClient invite={visualInvite} />;
+    }
   }
 
   const user = await requireAuth();
