@@ -64,8 +64,13 @@ describe('signin mobile clarity', () => {
   it('keeps the login shell stable and the remember control touch-friendly', () => {
     render(<SignIn />);
 
+    const termsLink = screen.getByRole('link', { name: 'Terms of Service' });
+    const privacyLink = screen.getByRole('link', { name: 'Privacy Policy' });
+
     expect(screen.getByTestId('login-form-shell')).toHaveClass('px-0');
     expect(screen.getByRole('checkbox', { name: /Remember me/i })).toHaveClass('h-6');
+    expect(termsLink).toHaveClass('min-h-11');
+    expect(privacyLink).toHaveClass('min-h-11');
   });
 
   it('focuses the visible error and marks only the field that needs action', async () => {

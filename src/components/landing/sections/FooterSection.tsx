@@ -41,20 +41,35 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
               </p>
             </div>
 
-            <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-foreground/62">
-              <Link href="/cookies" className="transition-colors hover:text-foreground">
+            <nav className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground/62 sm:gap-x-6">
+              <Link
+                href="/cookies"
+                className="inline-flex min-h-11 items-center rounded-sm px-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+              >
                 Cookies
               </Link>
-              <Link href="/cookies/settings" className="transition-colors hover:text-foreground">
+              <Link
+                href="/cookies/settings"
+                className="inline-flex min-h-11 items-center rounded-sm px-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+              >
                 Cookie settings
               </Link>
-              <Link href="/privacy" className="transition-colors hover:text-foreground">
+              <Link
+                href="/privacy"
+                className="inline-flex min-h-11 items-center rounded-sm px-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+              >
                 Privacy
               </Link>
-              <Link href="/terms" className="transition-colors hover:text-foreground">
+              <Link
+                href="/terms"
+                className="inline-flex min-h-11 items-center rounded-sm px-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+              >
                 Terms
               </Link>
-              <Link href="/login" className="transition-colors hover:text-foreground">
+              <Link
+                href="/login"
+                className="inline-flex min-h-11 items-center rounded-sm px-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+              >
                 Sign in
               </Link>
             </nav>

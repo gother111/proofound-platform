@@ -82,7 +82,7 @@ describe('signup mobile clarity', () => {
   });
 
   it('uses clear, named consent checkboxes and client validation', async () => {
-    render(<SignupForm accountType="individual" />);
+    render(<SignupForm accountType="individual" onBack={vi.fn()} />);
 
     const requiredConsent = screen.getByRole('checkbox', {
       name: /I agree to the Privacy Policy and Terms of Service/i,
@@ -90,9 +90,16 @@ describe('signup mobile clarity', () => {
     const marketing = screen.getByRole('checkbox', {
       name: /Send me updates about new features/i,
     });
+    const backButton = screen.getByRole('button', { name: 'Back' });
+    const privacyLink = screen.getByRole('link', { name: 'Privacy Policy' });
+    const termsLink = screen.getByRole('link', { name: 'Terms of Service' });
 
     expect(requiredConsent).toHaveClass('h-6');
     expect(marketing).toHaveClass('h-6');
+    expect(backButton).toHaveClass('left-4');
+    expect(backButton).not.toHaveClass('-mx-2');
+    expect(privacyLink).toHaveClass('min-h-11');
+    expect(termsLink).toHaveClass('min-h-11');
 
     fireEvent.click(screen.getByTestId('signup-submit'));
 

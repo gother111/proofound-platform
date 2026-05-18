@@ -344,14 +344,14 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           By signing in, you agree to our{' '}
           <a
             href="/terms"
-            className="rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center rounded-sm px-1 font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             Terms of Service
           </a>{' '}
           and{' '}
           <a
             href="/privacy"
-            className="rounded-sm font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center rounded-sm px-1 font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
           >
             Privacy Policy
           </a>

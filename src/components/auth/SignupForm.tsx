@@ -194,7 +194,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
       {onBack && (
         <button
           onClick={onBack}
-          className="absolute left-6 top-6 flex min-h-[44px] items-center gap-2 px-2 -mx-2 text-muted-foreground transition-colors hover:text-proofound-charcoal"
+          className="absolute left-4 top-6 flex min-h-[44px] items-center gap-2 rounded-sm px-3 text-muted-foreground transition-colors hover:text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 sm:left-6"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Back</span>
@@ -386,7 +386,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                     href="/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`rounded-sm font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
+                    className={`inline-flex min-h-11 items-center rounded-sm px-1 font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
                       accountType === 'organization'
                         ? 'text-proofound-terracotta hover:text-[#B5673F]'
                         : 'text-proofound-forest hover:text-[#2D5D4A]'
@@ -399,7 +399,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                     href="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`rounded-sm font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
+                    className={`inline-flex min-h-11 items-center rounded-sm px-1 font-medium underline underline-offset-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
                       accountType === 'organization'
                         ? 'text-proofound-terracotta hover:text-[#B5673F]'
                         : 'text-proofound-forest hover:text-[#2D5D4A]'
