@@ -42,6 +42,7 @@ export function ConversationList({
   mode = 'individual',
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const hasConversations = conversations.length > 0;
   const emptyCopy =
     mode === 'organization'
       ? {
@@ -127,7 +128,9 @@ export function ConversationList({
           Messages
         </h2>
         <p className="mb-3 text-xs leading-5 text-muted-foreground">
-          Conversations appear after a proof-safe introduction.
+          {hasConversations
+            ? 'Review open introductions and keep each thread tied to its proof corridor.'
+            : 'Conversations appear after a proof-safe introduction.'}
         </p>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

@@ -13,6 +13,10 @@ import { db, conversations, messages, profiles } from '@/db';
 import { eq, and, desc, or, inArray } from 'drizzle-orm';
 import { detectPII, shouldBlockMessage } from '@/lib/privacy/pii-detection';
 import { log } from '@/lib/log';
+import {
+  buildVisualMessages,
+  visualMessagingFixturesEnabled,
+} from '@/lib/messaging/visual-fixtures';
 
 interface RouteParams {
   params: Promise<{
@@ -45,6 +49,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (visualMessagingFixturesEnabled()) {
+      const visualMessages = buildVisualMessages(conversationId, user.id);
+      if (visualMessages.length > 0) {
+        return NextResponse.json({
+          messages: visualMessages,
+          hasMore: false,
+          conversationStage: conversationId.includes('revealed') ? 'revealed' : 'masked',
+        });
+      }
     }
 
     // Verify user is a participant

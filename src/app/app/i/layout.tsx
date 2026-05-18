@@ -36,10 +36,10 @@ export default async function IndividualLayout({ children }: { children: React.R
         <div className="flex-1 flex flex-col min-w-0">
           <TopBar userName={userName} userInitials={userInitials} basePath="/app/i" />
           {/* Main content region with ID for skip-to-content link */}
-          {/* Add bottom padding on mobile to account for bottom navigation (80px) */}
+          {/* Reserve mobile space for the fixed bottom navigation. */}
           <main
             id="main-content"
-            className="flex-1 overflow-y-auto overflow-x-hidden pb-20 md:pb-0 relative"
+            className="relative mb-[4.75rem] flex-1 overflow-y-auto overflow-x-hidden pb-4 md:mb-0 md:pb-0"
             role="main"
             aria-label="Main content"
             // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- scrollable landmark must be keyboard focusable for WCAG 2.1.1

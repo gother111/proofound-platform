@@ -653,7 +653,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
   return (
     <AppSurface>
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
-        <Card className="p-4">
+        <Card className="min-w-0 p-4">
           <div className="flex flex-col gap-4">
             <div className="space-y-2">
               <p className="text-sm font-semibold text-foreground">Lean assignment corridor</p>
@@ -663,7 +663,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 lg:grid-cols-2">
               <Button
                 type="button"
                 variant={entryMode === 'scratch' ? 'default' : 'outline'}
@@ -772,7 +772,19 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
           </Card>
         ) : null}
 
-        <div className="flex items-center justify-between">
+        <div className="rounded-2xl border border-proofound-stone/70 bg-white/75 p-4 lg:hidden">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Step {currentStep} of {STEPS.length}
+          </p>
+          <p className="mt-1 font-display text-xl font-semibold text-proofound-charcoal">
+            {STEPS.find((step) => step.id === currentStep)?.name}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {STEPS.find((step) => step.id === currentStep)?.description}
+          </p>
+        </div>
+
+        <div className="hidden items-center justify-between lg:flex">
           {STEPS.map((step, index) => {
             const isCurrent = currentStep === step.id;
             const isCompleted = currentStep > step.id;
@@ -809,7 +821,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
           })}
         </div>
 
-        <Card className="p-8">{renderedStep}</Card>
+        <Card className="min-w-0 p-5 sm:p-8">{renderedStep}</Card>
 
         <AssignmentClarityAssistant
           form={form}

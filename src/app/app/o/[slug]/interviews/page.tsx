@@ -505,10 +505,10 @@ export default function OrganizationInterviewsPage() {
               return (
                 <div
                   key={interview.id}
-                  className="rounded-lg border border-gray-200 bg-white p-6 transition-colors hover:border-gray-300"
+                  className="rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 sm:p-6"
                 >
-                  <div className="flex items-start justify-between gap-6">
-                    <div className="flex-1 space-y-4">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0 flex-1 space-y-4">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           {interview.candidateDisplayName ? (
@@ -556,7 +556,7 @@ export default function OrganizationInterviewsPage() {
                               <div className="flex items-center gap-2">
                                 <Video className="h-4 w-4" style={{ color: '#6B6760' }} />
                                 <span className="text-sm capitalize" style={{ color: '#6B6760' }}>
-                                  {interview.interview.platform}
+                                  {internalValueLabel(interview.interview.platform)}
                                 </span>
                               </div>
                             ) : null}
@@ -638,7 +638,7 @@ export default function OrganizationInterviewsPage() {
                       </div>
                     </div>
 
-                    <div className="flex min-w-[210px] flex-col gap-2">
+                    <div className="flex w-full flex-col gap-2 lg:w-[220px] lg:shrink-0">
                       {canScheduleInterview(interview) && interview.introAcceptedAt ? (
                         <ScheduleInterviewButton
                           matchId={interview.matchId}
@@ -659,7 +659,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => openEditDialog(interview)}
                             disabled={!canEditInterview(interview)}
-                            className="flex items-center gap-2"
+                            className="flex w-full items-center justify-center gap-2"
                           >
                             <Pencil className="h-4 w-4" />
                             {(interview.interview?.rescheduleCount ?? 0) > 0
@@ -671,7 +671,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleCancelInterview(interview)}
                             disabled={isCancellingInterviewId === interview.interview?.id}
-                            className="flex items-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
+                            className="flex w-full items-center justify-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
                           >
                             <XCircle className="h-4 w-4" />
                             {isCancellingInterviewId === interview.interview?.id
@@ -688,7 +688,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleCompleteInterview(interview)}
                             disabled={isCompletingInterviewId === interview.interview?.id}
-                            className="flex items-center gap-2"
+                            className="flex w-full items-center justify-center gap-2"
                             style={{ backgroundColor: '#1C4D3A' }}
                           >
                             <FileCheck className="h-4 w-4" />
@@ -701,7 +701,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleMarkNoShow(interview)}
                             disabled={isMarkingNoShowInterviewId === interview.interview?.id}
-                            className="flex items-center gap-2"
+                            className="flex w-full items-center justify-center gap-2"
                           >
                             <XCircle className="h-4 w-4" />
                             {isMarkingNoShowInterviewId === interview.interview?.id
@@ -716,7 +716,7 @@ export default function OrganizationInterviewsPage() {
                           variant="default"
                           size="sm"
                           onClick={() => handleOpenDecisionDialog(interview)}
-                          className="flex items-center gap-2"
+                          className="flex w-full items-center justify-center gap-2"
                           style={{ backgroundColor: '#1C4D3A' }}
                         >
                           <FileCheck className="h-4 w-4" />
@@ -735,7 +735,7 @@ export default function OrganizationInterviewsPage() {
                                 [verification.id]: event.target.value,
                               }))
                             }
-                            className="h-9 rounded-md border border-gray-300 px-3 text-sm"
+                            className="h-9 w-full rounded-md border border-gray-300 px-3 text-sm"
                           >
                             <option value="">Select engagement type</option>
                             <option value="full_time">Full-time</option>
@@ -748,7 +748,7 @@ export default function OrganizationInterviewsPage() {
                             size="sm"
                             onClick={() => handleConfirmEngagement(interview)}
                             disabled={isConfirmingEngagementId === verification.id}
-                            className="flex items-center gap-2"
+                            className="flex w-full items-center justify-center gap-2"
                           >
                             <FileCheck className="h-4 w-4" />
                             {isConfirmingEngagementId === verification.id

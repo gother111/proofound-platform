@@ -13,6 +13,10 @@ import { eq, or, and, sql, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { log } from '@/lib/log';
 import {
+  buildVisualConversations,
+  visualMessagingFixturesEnabled,
+} from '@/lib/messaging/visual-fixtures';
+import {
   ConversationAccessError,
   ensureConversationForMatch,
   resolveConversationParticipantsForMatch,
@@ -33,6 +37,14 @@ export async function GET(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (visualMessagingFixturesEnabled()) {
+      return NextResponse.json({
+        conversations: buildVisualConversations(user.id),
+        hasMore: false,
+        nextOffset: null,
+      });
     }
 
     // Get pagination parameters

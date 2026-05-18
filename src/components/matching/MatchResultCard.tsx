@@ -15,6 +15,19 @@ import {
 } from '@/lib/matching/explainer-contract';
 import { skillDisplayLabel } from '@/lib/copy/labels';
 
+const CONTRIBUTION_LABELS: Record<string, string> = {
+  skills_fit: 'Skills',
+  proof_fit: 'Proof',
+  constraints_fit: 'Practical',
+  verification_fit: 'Trust',
+  skills: 'Skills',
+  proof: 'Proof',
+  constraints: 'Practical',
+  verifications: 'Trust',
+  recency: 'Recent',
+  evidence: 'Evidence',
+};
+
 type DeferredComponent = ComponentType<any>;
 
 interface MatchResultCardProps {
@@ -123,6 +136,9 @@ export function MatchResultCard({
   const contributions = Object.entries(result.contributions ?? {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
+  const contributionLabel = (key: string) =>
+    CONTRIBUTION_LABELS[key] ||
+    key.replace(/[_-]+/g, ' ').replace(/^\w/, (char) => char.toUpperCase());
   useEffect(() => {
     if (!matchExplanation || MatchExplainerModalView) {
       return;
@@ -438,30 +454,33 @@ export function MatchResultCard({
   }
 
   return (
-    <div className="block h-full">
-      <Card variant="bento" className="p-4 h-full">
+    <div className="block h-full" data-testid="match-card">
+      <Card variant="bento" className="flex h-full flex-col p-4 sm:p-5">
         {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
+        <div className="mb-4 flex min-w-0 flex-col gap-3">
+          <div className="min-w-0">
             {isOrgView ? (
-              <h4 className="text-base font-medium mb-1">
+              <h4 className="mb-1 break-words text-base font-medium text-proofound-charcoal">
                 {variant === 'revealed' ? 'John Doe' : 'Candidate Match'}
               </h4>
             ) : (
-              <h4 className="text-base font-medium mb-1">
+              <h4 className="mb-2 break-words text-base font-semibold leading-6 text-proofound-charcoal">
                 {result.assignment?.role || 'Opportunity Match'}
               </h4>
             )}
 
             {/* Match score */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium" style={{ color: '#1C4D3A' }}>
-                {scorePercent}% Match
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-proofound-forest/20 bg-proofound-forest/10 px-2.5 py-1 text-xs font-medium text-proofound-forest">
+                {scorePercent}% proof fit
+              </span>
+              <span className="rounded-full border border-proofound-stone bg-white px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                {variant === 'blind' ? 'Blind by default' : 'Identity revealed'}
               </span>
               {variant === 'blind' ? (
-                <EyeOff className="w-3 h-3" style={{ color: '#6B6760' }} />
+                <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
               ) : (
-                <Eye className="w-3 h-3" style={{ color: '#1C4D3A' }} />
+                <Eye className="h-3.5 w-3.5 text-proofound-forest" />
               )}
             </div>
 
@@ -509,7 +528,7 @@ export function MatchResultCard({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
+                    className="h-8 gap-1.5 rounded-full px-2 text-xs text-proofound-forest hover:bg-proofound-forest/5"
                     disabled
                     data-testid={MATCH_EXPLAINER_TEST_IDS.trigger}
                     aria-haspopup="dialog"
@@ -521,7 +540,7 @@ export function MatchResultCard({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
+                    className="h-8 gap-1.5 rounded-full px-2 text-xs text-proofound-forest hover:bg-proofound-forest/5"
                     onClick={fetchMatchExplanation}
                     disabled={isLoadingExplanation}
                     data-testid={MATCH_EXPLAINER_TEST_IDS.trigger}
@@ -550,8 +569,7 @@ export function MatchResultCard({
                 <Badge
                   key={skill.id}
                   variant="secondary"
-                  className="text-xs px-2 py-0.5"
-                  style={{ backgroundColor: '#E8E6DD' }}
+                  className="border border-proofound-stone/70 bg-proofound-parchment px-2 py-0.5 text-xs font-medium text-proofound-charcoal"
                 >
                   {skillDisplayLabel({ label: skill.label, id: skill.id })} L{skill.level}
                 </Badge>
@@ -561,12 +579,12 @@ export function MatchResultCard({
         )}
 
         {/* Key details */}
-        <div className="space-y-2 mb-3 text-xs" style={{ color: '#6B6760' }}>
+        <div className="mb-3 space-y-1.5 rounded-xl border border-proofound-stone/70 bg-proofound-parchment/35 p-3 text-xs text-muted-foreground">
           {/* Location */}
           {(data?.workMode || data?.locationMode) && (
-            <div className="flex items-center gap-2">
-              <MapPin className="w-3 h-3" />
-              <span>
+            <div className="flex min-w-0 items-start gap-2">
+              <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
+              <span className="min-w-0 break-words">
                 {data.workMode || data.locationMode}
                 {data.country && variant === 'revealed' && ` • ${data.country}`}
                 {data.country && variant === 'blind' && ' • Region hidden'}
@@ -576,8 +594,8 @@ export function MatchResultCard({
 
           {/* Hours */}
           {(data?.hoursMin || data?.hoursMax) && (
-            <div className="flex items-center gap-2">
-              <Clock className="w-3 h-3" />
+            <div className="flex min-w-0 items-start gap-2">
+              <Clock className="mt-0.5 h-3 w-3 shrink-0" />
               <span>
                 {data.hoursMin}-{data.hoursMax} hrs/week
               </span>
@@ -586,9 +604,9 @@ export function MatchResultCard({
 
           {/* Compensation */}
           {(data?.compMin || data?.compMax || result.subscores?.compensation !== undefined) && (
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-3 h-3" />
-              <span>
+            <div className="flex min-w-0 items-start gap-2">
+              <DollarSign className="mt-0.5 h-3 w-3 shrink-0" />
+              <span className="min-w-0 break-words">
                 {showExactCompensation && (data?.compMin || data?.compMax)
                   ? `${data.currency} ${data.compMin?.toLocaleString()}-${data.compMax?.toLocaleString()}`
                   : 'Compensation overlap only'}
@@ -598,30 +616,32 @@ export function MatchResultCard({
 
           {/* Verifications (generic in blind mode) */}
           {variant === 'blind' && (
-            <div className="flex items-center gap-2">
-              <Shield className="w-3 h-3" />
+            <div className="flex min-w-0 items-start gap-2">
+              <Shield className="mt-0.5 h-3 w-3 shrink-0" />
               <span>Verified profile</span>
             </div>
           )}
         </div>
 
         {/* Contribution breakdown */}
-        <div className="mb-4">
-          <p className="text-xs mb-2" style={{ color: '#6B6760' }}>
-            Match breakdown:
+        <div className="mb-3 flex-1">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Why it fits
           </p>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {contributions.map(([key, value]) => (
               <div key={key} className="flex items-center gap-2">
-                <span className="text-xs w-20 capitalize" style={{ color: '#6B6760' }}>
-                  {key}:
+                <span className="w-20 shrink-0 text-xs capitalize text-muted-foreground">
+                  {contributionLabel(key)}:
                 </span>
                 <Progress
                   value={value * 100}
                   className="h-1.5 flex-1"
                   style={{ backgroundColor: '#E8E6DD' }}
                 />
-                <span className="text-xs w-10 text-right">{Math.round(value * 100)}%</span>
+                <span className="w-10 text-right text-xs text-muted-foreground">
+                  {Math.round(value * 100)}%
+                </span>
               </div>
             ))}
           </div>
@@ -629,20 +649,18 @@ export function MatchResultCard({
 
         {/* Actions */}
         {variant === 'blind' && (
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={handleInterested}
-                style={{ backgroundColor: '#1C4D3A' }}
-                className="flex-1"
-              >
-                {isOrgView ? 'Shortlist' : 'Interested'}
-              </Button>
-              <Button size="sm" variant="outline" onClick={onHide}>
-                Hide
-              </Button>
-            </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              onClick={handleInterested}
+              style={{ backgroundColor: '#1C4D3A' }}
+              className="min-w-[8rem] flex-1"
+            >
+              {isOrgView ? 'Shortlist' : "I'm interested"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={onHide}>
+              Hide
+            </Button>
             <Button
               size="sm"
               variant="ghost"
@@ -653,7 +671,7 @@ export function MatchResultCard({
               }}
               disabled={!result.id}
               title={!result.id ? 'Snooze becomes available once this match is saved' : undefined}
-              className="w-full text-xs text-muted-foreground hover:bg-japandi-bg"
+              className="text-xs text-muted-foreground hover:bg-japandi-bg"
             >
               <BellOff className="w-3.5 h-3.5 mr-1.5" />
               Snooze

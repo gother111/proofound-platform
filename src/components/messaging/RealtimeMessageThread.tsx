@@ -39,6 +39,7 @@ export function RealtimeMessageThread({
   onSendMessage,
   onBack,
 }: RealtimeMessageThreadProps) {
+  const isVisualFixture = conversationId.startsWith('visual-');
   const [messages, setMessages] = useState<ThreadMessage[]>(initialMessages);
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
   const [typingUserId, setTypingUserId] = useState<string | null>(null);
@@ -95,6 +96,7 @@ export function RealtimeMessageThread({
   const { isConnected, startTyping, stopTyping, markAsRead, markAllAsRead } = useRealtimeMessages({
     conversationId,
     userId: currentUserId,
+    disabled: isVisualFixture,
     onNewMessage: useCallback((message: RealtimeMessage) => {
       // Convert to ThreadMessage format
       const threadMessage: ThreadMessage = {
@@ -211,24 +213,26 @@ export function RealtimeMessageThread({
   return (
     <div className="relative h-full min-h-0 w-full min-w-0 flex flex-col">
       {/* Connection status indicator */}
-      <div className="absolute top-2 right-2 z-10">
-        <Badge
-          variant={isConnected ? 'default' : 'destructive'}
-          className="flex items-center gap-1 text-xs"
-        >
-          {isConnected ? (
-            <>
-              <Wifi className="w-3 h-3" />
-              <span>Live</span>
-            </>
-          ) : (
-            <>
-              <WifiOff className="w-3 h-3" />
-              <span>Connecting...</span>
-            </>
-          )}
-        </Badge>
-      </div>
+      {!isVisualFixture && (
+        <div className="absolute top-2 right-2 z-10">
+          <Badge
+            variant={isConnected ? 'default' : 'destructive'}
+            className="flex items-center gap-1 text-xs"
+          >
+            {isConnected ? (
+              <>
+                <Wifi className="w-3 h-3" />
+                <span>Live</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-3 h-3" />
+                <span>Connecting...</span>
+              </>
+            )}
+          </Badge>
+        </div>
+      )}
 
       {conversationState.canReveal && (
         <div className="border-b bg-background p-4">

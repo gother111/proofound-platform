@@ -85,8 +85,7 @@ export function EvidencePackExport({ organizationId, organizationName }: Evidenc
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success('Evidence Pack generated! Open the HTML file and print to PDF.');
-
+      toast.success('Evidence Pack generated. Your download is ready.');
     } catch (error) {
       console.error('Evidence Pack export error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to generate Evidence Pack');
@@ -108,8 +107,8 @@ export function EvidencePackExport({ organizationId, organizationName }: Evidenc
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Generate a professional PDF report of your organization&apos;s impact metrics, outcomes, and
-          supporting documentation.
+          Generate a professional PDF report of your organization&apos;s impact metrics, outcomes,
+          and supporting documentation.
         </p>
 
         <div>
@@ -169,22 +168,17 @@ export function EvidencePackExport({ organizationId, organizationName }: Evidenc
             <li> Impact metrics and outcomes</li>
             <li> Beneficiary counts and timeframes</li>
             <li> Supporting artifacts and documentation</li>
-            <li> Organization profile and metadata</li>
+            <li> Organization profile details</li>
           </ul>
         </div>
 
-        <Button
-          onClick={handleExport}
-          disabled={loading}
-          className="w-full"
-          size="lg"
-        >
+        <Button onClick={handleExport} disabled={loading} className="w-full" size="lg">
           <Download className="h-4 w-4 mr-2" />
           {loading ? 'Generating...' : 'Generate Evidence Pack'}
         </Button>
 
         <p className="text-xs text-muted-foreground text-center">
-          Opens as HTML. Use browser&apos;s &quot;Print to PDF&quot; to save as PDF.
+          Opens in a printable format for saving or sharing.
         </p>
       </CardContent>
     </Card>

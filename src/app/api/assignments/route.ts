@@ -148,6 +148,77 @@ const AssignmentCreateSchema = AssignmentBaseSchema.extend({
   }
 });
 
+const visualAssignmentFixturesEnabled = () =>
+  isMockSupabaseEnabled() &&
+  process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+  process.env.VERCEL_ENV !== 'production';
+
+function buildVisualAssignmentFixtures(orgId: string) {
+  const now = Date.now();
+  const isoHoursAgo = (hours: number) => new Date(now - hours * 60 * 60 * 1000).toISOString();
+
+  return [
+    {
+      id: '11111111-1111-4111-8111-111111111111',
+      orgId,
+      role: 'Field operations launch lead for municipal infrastructure handoffs',
+      title: 'Field operations launch lead for municipal infrastructure handoffs',
+      engagementType: 'full_time',
+      status: 'active',
+      creationStatus: 'review_ready',
+      builderMode: 'basic',
+      businessValue:
+        'Reduce field handoff delays by turning site constraints into clear weekly launch decisions.',
+      expectedImpact:
+        'Proof should show owned rollout plans, stakeholder updates, and measured field-readiness decisions.',
+      mustHaveSkills: [
+        { id: 'program-operations', label: 'Program operations', level: 4 },
+        { id: 'stakeholder-updates', label: 'Stakeholder updates', level: 4 },
+        { id: 'risk-logs', label: 'Risk logs', level: 3 },
+      ],
+      niceToHaveSkills: [{ id: 'municipal-procurement', label: 'Municipal procurement', level: 2 }],
+      createdAt: isoHoursAgo(96),
+      updatedAt: isoHoursAgo(5),
+      matchingSummary: {
+        candidateCount: 7,
+        reviewChangeCount: 2,
+        lastCandidateAt: isoHoursAgo(5),
+        lastReviewChangeAt: isoHoursAgo(3),
+        lastActivityAt: isoHoursAgo(3),
+      },
+      ttfqiWarning: null,
+    },
+    {
+      id: '22222222-2222-4222-8222-222222222222',
+      orgId,
+      role: 'Partner readiness analyst',
+      title: 'Partner readiness analyst',
+      engagementType: 'contract_consulting',
+      status: 'draft',
+      creationStatus: 'assignment_ready',
+      builderMode: 'basic',
+      businessValue:
+        'Clarify readiness evidence before partner expansion work reaches candidate review.',
+      expectedImpact: null,
+      mustHaveSkills: [
+        { id: 'process-mapping', label: 'Process mapping', level: 3 },
+        { id: 'partner-ops', label: 'Partner operations', level: 3 },
+      ],
+      niceToHaveSkills: [],
+      createdAt: isoHoursAgo(28),
+      updatedAt: isoHoursAgo(2),
+      matchingSummary: {
+        candidateCount: 0,
+        reviewChangeCount: 0,
+        lastCandidateAt: null,
+        lastReviewChangeAt: null,
+        lastActivityAt: null,
+      },
+      ttfqiWarning: null,
+    },
+  ];
+}
+
 async function runAssignmentCreationSideEffects({
   requestId,
   userId,
@@ -244,6 +315,14 @@ export async function GET(request: NextRequest) {
           { error: 'Organization not found or access denied' },
           { status: 403 }
         );
+      }
+
+      if (visualAssignmentFixturesEnabled()) {
+        return NextResponse.json({
+          items: buildVisualAssignmentFixtures(orgId),
+          hasMore: false,
+          nextOffset: null,
+        });
       }
 
       // Get pagination parameters

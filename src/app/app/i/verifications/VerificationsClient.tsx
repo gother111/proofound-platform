@@ -779,8 +779,8 @@ export function VerificationsClient({
     >
       <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-base mb-1 flex items-center gap-2 text-proofound-charcoal dark:text-foreground">
-            <Mail className="w-4 h-4" />
+          <h3 className="mb-1 flex min-w-0 items-start gap-2 break-words text-base font-semibold text-proofound-charcoal dark:text-foreground">
+            <Mail className="mt-0.5 h-4 w-4 shrink-0" />
             {request.verifierEmail}
           </h3>
           <p className="text-sm text-muted-foreground">
@@ -823,7 +823,9 @@ export function VerificationsClient({
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
             Requested from
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">{getRequestedPersonLabel(request)}</p>
+          <p className="mt-1 break-words text-sm text-muted-foreground">
+            {getRequestedPersonLabel(request)}
+          </p>
         </div>
         <div>
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
@@ -957,92 +959,129 @@ export function VerificationsClient({
     mode: 'incoming' | 'sent',
     activeFilter: RequestStatusFilter,
     onFilterChange: (filter: RequestStatusFilter) => void
-  ) => (
-    <div className="mb-6 space-y-4 rounded-xl border border-proofound-stone/70 bg-white/80 p-3 dark:border-border dark:bg-background/70">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div
-          role="group"
-          aria-label={`${mode} verification filters`}
-          className="flex max-w-full flex-wrap gap-2"
-        >
-          {STATUS_FILTERS.map((filter) => {
-            const filteredCount = filterByStatus(requests, filter.value, nowMs).length;
-            const isSelected = activeFilter === filter.value;
+  ) => {
+    const activeStatusLabel =
+      STATUS_FILTERS.find((filter) => filter.value === activeFilter)?.label ?? 'All';
+    const filterHelperText: Record<RequestStatusFilter, string> = {
+      all: 'Active means accepted and current; pending requests are still waiting for a response.',
+      active: 'Active requests have accepted confirmation that is still current.',
+      pending: 'Pending requests are waiting for a verifier response.',
+      needs_attention:
+        'Needs attention includes failed, disputed, contradicted, or soon-expiring pending requests.',
+      declined: 'Declined requests were not confirmed by the verifier.',
+      expired_stale: 'Expired or stale requests should be refreshed before they support proof.',
+      revoked_corrected:
+        'Revoked or corrected requests are retained for context but no longer act as current proof.',
+    };
 
-            return (
-              <Button
-                key={filter.value}
-                type="button"
-                size="sm"
-                variant={isSelected ? 'default' : 'outline'}
-                aria-pressed={isSelected}
-                onClick={() => onFilterChange(filter.value)}
-                className={cn(
-                  'h-auto min-h-9 justify-start gap-2 rounded-md px-3 py-2 text-xs',
-                  isSelected
-                    ? 'bg-proofound-forest text-white hover:bg-proofound-forest/90'
-                    : 'bg-white text-muted-foreground hover:text-foreground dark:bg-background'
-                )}
-              >
-                {filter.label}
-                {filteredCount > 0 && (
-                  <span
-                    className={cn(
-                      'rounded-full px-2 py-0.5 text-[11px] font-medium',
-                      isSelected
-                        ? 'bg-white/20 text-white'
-                        : 'bg-proofound-stone text-proofound-charcoal dark:bg-muted dark:text-foreground'
-                    )}
-                  >
-                    {filteredCount}
-                  </span>
-                )}
-              </Button>
-            );
-          })}
+    return (
+      <div className="mb-6 space-y-3 rounded-xl border border-proofound-stone/70 bg-white/80 p-3 dark:border-border dark:bg-background/70">
+        <div className="grid gap-3 sm:hidden">
+          <label className="space-y-1 text-xs font-medium text-muted-foreground">
+            <span>Show requests</span>
+            <select
+              aria-label={`${mode} verification status filter`}
+              value={activeFilter}
+              onChange={(event) => onFilterChange(event.target.value as RequestStatusFilter)}
+              className="h-11 w-full rounded-lg border border-proofound-stone bg-white px-3 text-sm font-medium text-proofound-charcoal"
+            >
+              {STATUS_FILTERS.map((filter) => {
+                const filteredCount = filterByStatus(requests, filter.value, nowMs).length;
+                return (
+                  <option key={filter.value} value={filter.value}>
+                    {filter.label}
+                    {filteredCount > 0 ? ` (${filteredCount})` : ''}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
         </div>
 
-        <div role="group" aria-label="Sort verifications" className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant={sortMode === 'recency' ? 'default' : 'outline'}
-            aria-pressed={sortMode === 'recency'}
-            onClick={() => setSortMode('recency')}
-            className={cn(
-              'h-auto min-h-9 rounded-md px-3 py-2 text-xs',
-              sortMode === 'recency'
-                ? 'bg-proofound-charcoal text-white hover:bg-proofound-charcoal/90'
-                : 'bg-white dark:bg-background'
-            )}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            role="group"
+            aria-label={`${mode} verification filters`}
+            className="hidden max-w-full flex-wrap gap-2 sm:flex"
           >
-            <ArrowDownWideNarrow className="mr-2 h-3.5 w-3.5" />
-            Newest
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={sortMode === 'scope' ? 'default' : 'outline'}
-            aria-pressed={sortMode === 'scope'}
-            onClick={() => setSortMode('scope')}
-            className={cn(
-              'h-auto min-h-9 rounded-md px-3 py-2 text-xs',
-              sortMode === 'scope'
-                ? 'bg-proofound-charcoal text-white hover:bg-proofound-charcoal/90'
-                : 'bg-white dark:bg-background'
-            )}
-          >
-            <ListFilter className="mr-2 h-3.5 w-3.5" />
-            Scope
-          </Button>
+            {STATUS_FILTERS.map((filter) => {
+              const filteredCount = filterByStatus(requests, filter.value, nowMs).length;
+              const isSelected = activeFilter === filter.value;
+
+              return (
+                <Button
+                  key={filter.value}
+                  type="button"
+                  size="sm"
+                  variant={isSelected ? 'default' : 'outline'}
+                  aria-pressed={isSelected}
+                  onClick={() => onFilterChange(filter.value)}
+                  className={cn(
+                    'h-auto min-h-9 justify-start gap-2 rounded-md px-3 py-2 text-xs',
+                    isSelected
+                      ? 'bg-proofound-forest text-white hover:bg-proofound-forest/90'
+                      : 'bg-white text-muted-foreground hover:text-foreground dark:bg-background'
+                  )}
+                >
+                  {filter.label}
+                  {filteredCount > 0 && (
+                    <span
+                      className={cn(
+                        'rounded-full px-2 py-0.5 text-[11px] font-medium',
+                        isSelected
+                          ? 'bg-white/20 text-white'
+                          : 'bg-proofound-stone text-proofound-charcoal dark:bg-muted dark:text-foreground'
+                      )}
+                    >
+                      {filteredCount}
+                    </span>
+                  )}
+                </Button>
+              );
+            })}
+          </div>
+
+          <div role="group" aria-label="Sort verifications" className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={sortMode === 'recency' ? 'default' : 'outline'}
+              aria-pressed={sortMode === 'recency'}
+              onClick={() => setSortMode('recency')}
+              className={cn(
+                'h-auto min-h-9 rounded-md px-3 py-2 text-xs',
+                sortMode === 'recency'
+                  ? 'bg-proofound-charcoal text-white hover:bg-proofound-charcoal/90'
+                  : 'bg-white dark:bg-background'
+              )}
+            >
+              <ArrowDownWideNarrow className="mr-2 h-3.5 w-3.5" />
+              Newest
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={sortMode === 'scope' ? 'default' : 'outline'}
+              aria-pressed={sortMode === 'scope'}
+              onClick={() => setSortMode('scope')}
+              className={cn(
+                'h-auto min-h-9 rounded-md px-3 py-2 text-xs',
+                sortMode === 'scope'
+                  ? 'bg-proofound-charcoal text-white hover:bg-proofound-charcoal/90'
+                  : 'bg-white dark:bg-background'
+              )}
+            >
+              <ListFilter className="mr-2 h-3.5 w-3.5" />
+              Scope
+            </Button>
+          </div>
         </div>
+        <p className="text-xs leading-5 text-muted-foreground">
+          Showing {activeStatusLabel.toLowerCase()} requests. {filterHelperText[activeFilter]}
+        </p>
       </div>
-      <p className="text-xs leading-5 text-muted-foreground">
-        Active means accepted and current. Pending requests are waiting for a response and do not
-        count as active proof.
-      </p>
-    </div>
-  );
+    );
+  };
 
   const renderRequestList = (
     requests: VerificationRequest[],
@@ -1093,7 +1132,7 @@ export function VerificationsClient({
         </div>
 
         <Tabs defaultValue="incoming" className="w-full">
-          <TabsList className="mb-6 max-w-full overflow-x-auto">
+          <TabsList className="mb-6 max-w-full">
             <TabsTrigger value="incoming" className="relative">
               Incoming
               {incomingRequests.length > 0 && (

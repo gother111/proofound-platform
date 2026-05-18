@@ -38,6 +38,37 @@ vi.mock('@/components/matching/ConsentToShareDialog', () => ({
 }));
 
 describe('MatchResultCard', () => {
+  it('uses human match breakdown labels for individual opportunity cards', () => {
+    render(
+      <MatchResultCard
+        result={{
+          id: 'match-individual-1',
+          score: 0.86,
+          assignmentId: 'assignment-1',
+          assignment: {
+            role: 'Proof operations lead',
+            locationMode: 'remote',
+            hoursMin: 24,
+            hoursMax: 32,
+          },
+          contributions: {
+            proof_fit: 0.91,
+            skills_fit: 0.88,
+            verification_fit: 0.84,
+          },
+        }}
+        variant="blind"
+      />
+    );
+
+    expect(screen.getByText('Proof:')).toBeInTheDocument();
+    expect(screen.getByText('Skills:')).toBeInTheDocument();
+    expect(screen.getByText('Trust:')).toBeInTheDocument();
+    expect(screen.queryByText('Proof_fit:')).not.toBeInTheDocument();
+    expect(screen.queryByText('Skills_fit:')).not.toBeInTheDocument();
+    expect(screen.queryByText('Verification_fit:')).not.toBeInTheDocument();
+  });
+
   it('renders proof-first org review cards without score-first clutter', () => {
     render(
       <MatchResultCard

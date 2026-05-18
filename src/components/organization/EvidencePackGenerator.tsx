@@ -21,7 +21,7 @@ export function EvidencePackGenerator({
 
   const handleGeneratePDF = async () => {
     setIsGenerating(true);
-    toast.info('Generating Evidence Pack PDF...');
+    toast.info('Preparing Evidence Pack...');
 
     try {
       // Call the evidence pack API endpoint
@@ -35,7 +35,7 @@ export function EvidencePackGenerator({
 
       // Get the PDF blob
       const blob = await response.blob();
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -119,7 +119,7 @@ export function EvidencePackGenerator({
               ) : (
                 <>
                   <Download className="h-4 w-4 mr-2" />
-                  Generate Evidence Pack PDF
+                  Generate Evidence Pack
                 </>
               )}
             </Button>

@@ -109,6 +109,11 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
       return false;
     }
 
+    if (min > max) {
+      setHoursValidationHint('Minimum desired hours must be lower than maximum desired hours.');
+      return false;
+    }
+
     setHoursValidationHint(null);
     return true;
   };
@@ -318,9 +323,9 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         </section>
       </div>
 
-      <div className="mt-6 flex gap-2">
+      <div className="mt-6 flex flex-col gap-2 pb-20 sm:flex-row sm:pb-0">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Save & Continue Later
+          Continue later
         </Button>
         <Button
           type="button"

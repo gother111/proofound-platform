@@ -12,7 +12,7 @@ import { HiddenMatchesList } from '@/components/matching/HiddenMatchesList';
 import { CardGridSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { apiFetch } from '@/lib/api/fetch';
 
-const MATCHING_DATA_TIMEOUT_MS = 30000;
+const MATCHING_DATA_TIMEOUT_MS = 10000;
 
 type MatchabilityCriterion = {
   id: string;
@@ -62,6 +62,7 @@ export function MatchingClient() {
   });
   const [showManageHiddenSnoozed, setShowManageHiddenSnoozed] = useState(false);
   const [blockedState, setBlockedState] = useState<MatchabilityBlockedPayload | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [readinessActions, setReadinessActions] = useState<
     Array<{ id: string; title: string; description: string; actionUrl: string }>
   >([]);
@@ -102,6 +103,17 @@ export function MatchingClient() {
   };
 
   const fetchMatches = async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    const visualState =
+      typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('visualState')
+        : null;
+    const visualQuery =
+      visualState === 'filled' || visualState === 'empty'
+        ? `?visualState=${encodeURIComponent(visualState)}`
+        : '';
+
     // Create abort controller for timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), MATCHING_DATA_TIMEOUT_MS);
@@ -109,10 +121,10 @@ export function MatchingClient() {
     try {
       // Fetch matching profile
       const [profileRes, readinessRes] = await Promise.all([
-        fetch('/api/matching-profile', {
+        fetch(`/api/matching-profile${visualQuery}`, {
           signal: controller.signal,
         }),
-        fetch('/api/individual/readiness', {
+        fetch(`/api/individual/readiness${visualQuery}`, {
           signal: controller.signal,
         }),
       ]);
@@ -133,7 +145,7 @@ export function MatchingClient() {
 
       // If profile exists, fetch matches
       if (profileData.profile) {
-        const matchesRes = await apiFetch('/api/match/profile', {
+        const matchesRes = await apiFetch(`/api/match/profile${visualQuery}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({}),
@@ -190,18 +202,14 @@ export function MatchingClient() {
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.error('Matching data request timed out');
-        toast.error('Request timed out', {
-          description: 'Please check your connection and try again.',
-        });
-        // Set empty state on timeout
-        setMatchingProfile(null);
-        setBlockedState(null);
-        setMatches([]);
-        setFilteredMatches([]);
+        setLoadError(
+          'Matching is taking longer than usual. You can retry or review your proof readiness.'
+        );
       } else {
         console.error('Error loading matching data:', error);
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to load matching data';
+        setLoadError(errorMessage);
         toast.error(errorMessage);
       }
     } finally {
@@ -263,7 +271,7 @@ export function MatchingClient() {
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="mx-auto max-w-5xl px-4 pb-28 pt-6 md:pb-6">
         <p className="mb-3 text-sm text-muted-foreground" role="status" aria-live="polite">
           Preparing matches...
         </p>
@@ -275,6 +283,38 @@ export function MatchingClient() {
           columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
           tileClassName="min-h-[220px]"
         />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <div className="rounded-2xl border border-proofound-stone/80 bg-white/75 p-5 shadow-sm sm:p-6">
+          <p className="text-sm font-medium text-muted-foreground">Matching</p>
+          <h1 className="mt-2 font-display text-2xl font-semibold text-proofound-charcoal">
+            Matching needs another moment
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">{loadError}</p>
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => {
+                void fetchMatches();
+              }}
+              className="rounded-full bg-proofound-forest px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-proofound-forest/90"
+            >
+              Retry matching
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/app/i/profile?profileView=full&tab=proof_packs')}
+              className="rounded-full border border-proofound-stone px-4 py-2.5 text-sm font-medium text-proofound-charcoal transition-colors hover:border-proofound-forest hover:bg-white"
+            >
+              Review proof readiness
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -298,7 +338,7 @@ export function MatchingClient() {
   // Show empty state if no profile
   if (!matchingProfile) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="mx-auto max-w-5xl px-4 pb-28 pt-6 md:pb-6">
         <IndividualMatchingEmpty onSetup={() => setShowSetup(true)} />
       </div>
     );
@@ -306,7 +346,7 @@ export function MatchingClient() {
 
   // Show filled view with matches
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className="mx-auto max-w-5xl px-4 pb-28 pt-6 md:pb-6">
       <div className="mb-6">
         <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -332,7 +372,7 @@ export function MatchingClient() {
               onClick={() => {
                 setShowSetup(true);
               }}
-              className="text-sm underline text-proofound-forest"
+              className="rounded-full border border-proofound-stone bg-white/70 px-3 py-2 text-sm font-medium text-proofound-forest transition-colors hover:border-proofound-forest hover:bg-white"
             >
               Edit profile
             </button>

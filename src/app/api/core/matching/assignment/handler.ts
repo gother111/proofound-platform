@@ -17,6 +17,7 @@ import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher'
 import { getPreset, normalizeWeights } from '@/lib/core/matching/presets';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { resolveFeatureFlags } from '@/lib/feature-flags/server';
+import { isMockSupabaseEnabled } from '@/lib/env';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 import { log } from '@/lib/log';
 import {
@@ -37,6 +38,16 @@ import {
 
 // Shared handler imported by the kept launch corridor routes.
 export const dynamic = 'force-dynamic';
+
+const VISUAL_ASSIGNMENT_FIXTURE_IDS = new Set([
+  '11111111-1111-4111-8111-111111111111',
+  '22222222-2222-4222-8222-222222222222',
+]);
+
+const visualAssignmentFixturesEnabled = () =>
+  isMockSupabaseEnabled() &&
+  process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+  process.env.VERCEL_ENV !== 'production';
 
 // Validation schema
 const MatchRequestSchema = z.object({
@@ -83,6 +94,41 @@ export async function POST(request: NextRequest) {
     const useTwoStage = false;
     const refresh = validatedData.refresh === true;
     trace.objectRefs.assignmentId = assignmentId;
+
+    if (visualAssignmentFixturesEnabled() && VISUAL_ASSIGNMENT_FIXTURE_IDS.has(assignmentId)) {
+      emitLaunchTrace(trace, {
+        outcome: 'fallback',
+        state: 'browse_only_low_candidate_supply',
+        details: {
+          resultCount: 0,
+          cached: true,
+          fixture: true,
+        },
+      });
+
+      return NextResponse.json({
+        items: [],
+        meta: {
+          total: 0,
+          returned: 0,
+          durationMs: Date.now() - startTime,
+          weights: {},
+          twoStage: false,
+          hasMissionVisionScores: false,
+          cached: true,
+          fairness: {
+            status: 'not_evaluated',
+            evaluationId: null,
+          },
+          launchFallback: {
+            mode: 'browse_only_low_candidate_supply',
+            activeModes: ['browse_only_low_candidate_supply'],
+            introCorridorLive: null,
+            exactRankLive: null,
+          },
+        },
+      });
+    }
 
     const assignment = await db.query.assignments.findFirst({
       where: eq(assignments.id, assignmentId),

@@ -169,17 +169,17 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
   const publishDisabled = isPublishing || isPublished || isClosed;
 
   return (
-    <div className="min-h-screen bg-japandi-bg p-6">
+    <div className="min-h-screen bg-japandi-bg p-4 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Internal review before publish</h1>
             <p className="text-muted-foreground">
               Confirm the assignment is specific, credible, and ready for a narrow publish path.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Button
               variant="outline"
               onClick={() => router.push(`/app/o/${slug}/assignments/new?draftId=${assignmentId}`)}
@@ -230,7 +230,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             </div>
             <h2 className="text-xl font-semibold text-foreground">Why this role exists</h2>
           </div>
-          <div className="space-y-3 ml-10">
+          <div className="space-y-3 sm:ml-10">
             <div>
               <p className="text-sm text-muted-foreground">Role</p>
               <p className="font-medium text-foreground">{assignment.title || assignment.role}</p>
@@ -336,8 +336,8 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
               What practical constraints are real
             </h2>
           </div>
-          <div className="ml-10 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4 sm:ml-10">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {assignment.compensationMin != null && assignment.compensationMax != null ? (
                 <div>
                   <p className="text-sm text-muted-foreground">Compensation range</p>

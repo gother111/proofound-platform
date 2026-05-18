@@ -22,6 +22,10 @@ import {
 import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging';
 import { mergeInterviewProcessState } from '@/lib/interviews/process-state';
 import { classifyGoogleScheduleError } from '@/lib/interviews/schedule-errors';
+import {
+  buildVisualOrgInterviewCorridorItems,
+  interviewVisualFixturesEnabled,
+} from '@/lib/interviews/visual-fixtures';
 import { log } from '@/lib/log';
 
 function isMissingColumnError(error: { code?: string; message?: string } | null, column: string) {
@@ -224,6 +228,14 @@ export async function getInterviewCorridorItems(params: {
 
   if (authError || !user) {
     throw new Error('Unauthorized');
+  }
+
+  if (params.perspective === 'organization' && interviewVisualFixturesEnabled()) {
+    const items = buildVisualOrgInterviewCorridorItems();
+    return {
+      items,
+      count: items.length,
+    };
   }
 
   const rows = await listAccessibleHiringCorridorRecords(user.id);

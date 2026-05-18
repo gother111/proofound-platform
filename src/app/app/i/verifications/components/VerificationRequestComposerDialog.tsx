@@ -416,8 +416,8 @@ export function VerificationRequestComposerDialog({
                 <div className="rounded-md border border-proofound-stone bg-japandi-bg px-3 py-2 text-sm text-muted-foreground">
                   <p className="font-medium text-foreground">Manual checklist draft</p>
                   <p>
-                    Provider assistance was unavailable, so this deterministic draft uses selected
-                    public-safe fields only. Manual editing still works.
+                    Guided suggestions are unavailable right now, so this draft uses only the
+                    selected public-safe fields. Manual editing still works.
                   </p>
                 </div>
               ) : (

@@ -142,8 +142,8 @@ describe('VerificationsClient', () => {
 
     expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
     expect(screen.getByText('Accepted')).toBeInTheDocument();
-    expect(screen.getByText('Declined')).toBeInTheDocument();
-    expect(screen.getByText('All')).toBeInTheDocument();
+    expect(screen.getAllByText('Declined').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('All').length).toBeGreaterThan(0);
   });
 
   it('filters verification state buckets and sorts the list by scope', async () => {

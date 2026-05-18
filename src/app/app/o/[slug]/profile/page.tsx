@@ -79,7 +79,7 @@ export default async function OrganizationProfilePage({
               <p className="max-w-3xl leading-6">
                 Keep this page limited to the calm organization story that supports one clear
                 assignment corridor. Culture hubs, governance showcases, and other org-suite
-                surfaces stay outside the MVP.
+                surfaces stay outside this launch path.
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {trustItems.map((item) => (

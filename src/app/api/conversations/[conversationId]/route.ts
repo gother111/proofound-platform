@@ -11,6 +11,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db, conversations, profiles } from '@/db';
 import { eq } from 'drizzle-orm';
+import {
+  buildVisualConversationDetails,
+  visualMessagingFixturesEnabled,
+} from '@/lib/messaging/visual-fixtures';
 
 interface RouteParams {
   params: Promise<{
@@ -41,6 +45,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (visualMessagingFixturesEnabled()) {
+      const visualConversation = buildVisualConversationDetails(conversationId, user.id);
+      if (visualConversation) {
+        return NextResponse.json(visualConversation);
+      }
     }
 
     // Fetch conversation with RLS protection

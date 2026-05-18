@@ -277,24 +277,28 @@ export function MatchingOrganizationView({
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h1 className="text-2xl font-semibold mb-1">Assignments</h1>
               <p className="text-sm" style={{ color: '#6B6760' }}>
                 Keep candidate review attached to the assignment corridor it belongs to
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={onCreateNew} style={{ backgroundColor: '#1C4D3A' }}>
+            <div className="flex items-center gap-2 lg:justify-end">
+              <Button
+                onClick={onCreateNew}
+                className="w-full lg:w-auto"
+                style={{ backgroundColor: '#1C4D3A' }}
+              >
                 <Plus className="w-4 h-4 mr-2" />
-                New Assignment
+                New assignment
               </Button>
             </div>
           </div>
         </div>
 
         {/* Assignment list with quick actions */}
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           {assignments.map((assignment) => {
             const updateBadgeLabel = getAssignmentBadgeLabel(assignment);
             const candidateCount = assignment.matchingSummary?.candidateCount ?? 0;
@@ -312,7 +316,9 @@ export function MatchingOrganizationView({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base font-semibold">{assignment.role}</h3>
+                        <h3 className="min-w-0 break-words text-base font-semibold">
+                          {assignment.role}
+                        </h3>
                         {updateBadgeLabel ? (
                           <Badge className="border-proofound-forest/20 bg-[#eef4eb] text-proofound-forest">
                             {updateBadgeLabel}
@@ -334,7 +340,7 @@ export function MatchingOrganizationView({
                       </div>
                     </div>
                   </div>
-                  <div className="mt-auto flex items-center gap-2">
+                  <div className="mt-auto grid gap-2 xl:flex xl:items-center">
                     <Button
                       type="button"
                       size="sm"
@@ -387,26 +393,42 @@ export function MatchingOrganizationView({
                 />
               </div>
             ) : matches.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-lg mb-2" style={{ color: '#2D3330' }}>
-                  No matches yet
-                </p>
-                <p className="text-sm" style={{ color: '#6B6760' }}>
-                  Check back soon or adjust your filters
-                </p>
-                <div className="mt-4 grid grid-cols-1 gap-2 text-left md:grid-cols-3">
-                  {recoveryActions.map((action) => (
-                    <button
-                      key={action.id}
+              <div className="rounded-2xl border border-proofound-stone bg-white/80 p-5 text-left shadow-sm sm:p-6">
+                <div className="mx-auto max-w-2xl space-y-4 text-center">
+                  <div>
+                    <p className="text-lg font-semibold text-proofound-charcoal">No matches yet</p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      Keep this assignment ready for review. The best next step is to refresh the
+                      assignment before widening discovery.
+                    </p>
+                  </div>
+                  {recoveryActions[0] ? (
+                    <Button
                       type="button"
-                      onClick={() => router.push(action.actionUrl)}
-                      className="rounded-lg border border-proofound-stone bg-white px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
+                      onClick={() => router.push(recoveryActions[0].actionUrl)}
+                      className="w-full bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
                     >
-                      <p className="text-sm font-medium text-foreground">{action.title}</p>
-                      <p className="text-xs text-muted-foreground">{action.description}</p>
-                    </button>
-                  ))}
+                      {recoveryActions[0].title}
+                    </Button>
+                  ) : null}
                 </div>
+                {recoveryActions.length > 1 ? (
+                  <div className="mt-5 grid gap-2 border-t border-proofound-stone/70 pt-4 sm:grid-cols-2">
+                    {recoveryActions.slice(1).map((action) => (
+                      <button
+                        key={action.id}
+                        type="button"
+                        onClick={() => router.push(action.actionUrl)}
+                        className="rounded-lg border border-proofound-stone bg-proofound-parchment/45 px-3 py-2 text-left transition-colors hover:border-proofound-forest hover:bg-japandi-bg"
+                      >
+                        <p className="text-sm font-medium text-foreground">{action.title}</p>
+                        <p className="text-xs leading-5 text-muted-foreground">
+                          {action.description}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ) : (
               <div>

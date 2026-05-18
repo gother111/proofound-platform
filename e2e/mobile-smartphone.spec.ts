@@ -229,13 +229,31 @@ test.describe('Smartphone UI regression', () => {
   test('organization shell main area reserves space for bottom nav', async ({ page }) => {
     await gotoStable(page, '/app/o/test-org/home');
 
-    const paddingBottom = await page.evaluate(() => {
-      const main = document.querySelector('main');
-      if (!main) return 0;
-      return Number.parseFloat(window.getComputedStyle(main).paddingBottom || '0');
+    const shellSpacing = await page.evaluate(() => {
+      const main = document.querySelector('main') as HTMLElement | null;
+      const mobileNav = document.querySelector(
+        'nav[aria-label="Mobile primary navigation"]'
+      ) as HTMLElement | null;
+
+      if (!main || !mobileNav) {
+        return null;
+      }
+
+      const mainRect = main.getBoundingClientRect();
+      const navRect = mobileNav.getBoundingClientRect();
+      const styles = window.getComputedStyle(main);
+
+      return {
+        mainBottom: mainRect.bottom,
+        navTop: navRect.top,
+        marginBottom: Number.parseFloat(styles.marginBottom || '0'),
+        paddingBottom: Number.parseFloat(styles.paddingBottom || '0'),
+      };
     });
 
-    expect(paddingBottom).toBeGreaterThanOrEqual(80);
+    expect(shellSpacing).not.toBeNull();
+    expect(shellSpacing!.mainBottom).toBeLessThanOrEqual(shellSpacing!.navTop);
+    expect(shellSpacing!.marginBottom + shellSpacing!.paddingBottom).toBeGreaterThanOrEqual(80);
   });
 
   test('mobile profile shells expose their retained bottom navigation destinations', async ({

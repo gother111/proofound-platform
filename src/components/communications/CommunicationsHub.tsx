@@ -2,14 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import {
-  ArrowRight,
-  CalendarCheck,
-  FileCheck,
-  Handshake,
-  MessageCircle,
-  ShieldCheck,
-} from 'lucide-react';
+import { ArrowRight, CalendarCheck, Handshake, MessageCircle } from 'lucide-react';
 
 import IndividualInterviewsPage from '@/app/app/i/interviews/page';
 import { MessagesClient as IndividualMessagesClient } from '@/app/app/i/messages/MessagesClient';
@@ -35,36 +28,22 @@ const sections: Array<{
   {
     id: 'messages',
     label: 'Messages',
-    description: 'Conversation threads opened by proof-safe introductions.',
+    description: 'Conversation threads, introductions, and reveal requests.',
     icon: MessageCircle,
-    workstream: 'messages',
-  },
-  {
-    id: 'intros',
-    label: 'Intros & reveal',
-    description: 'Introduction state, masked identity context, and reveal approvals.',
-    icon: ShieldCheck,
     workstream: 'messages',
   },
   {
     id: 'interviews',
     label: 'Interviews',
-    description: 'Scheduling, reschedules, meeting links, completion, and no-show handling.',
+    description: 'Scheduling, decision windows, feedback, and handoff.',
     icon: CalendarCheck,
-    workstream: 'interviews',
-  },
-  {
-    id: 'decisions',
-    label: 'Decisions & feedback',
-    description: 'Decision windows, private handoff notes, and engagement confirmation.',
-    icon: FileCheck,
     workstream: 'interviews',
   },
 ];
 
 function normalizeSection(value: string | null): CommunicationsSection {
-  if (value === 'intros' || value === 'interviews' || value === 'decisions') {
-    return value;
+  if (value === 'interviews' || value === 'decisions') {
+    return 'interviews';
   }
   return 'messages';
 }
@@ -99,8 +78,8 @@ export function CommunicationsHub({ perspective, currentUserId }: Communications
                 Communications
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                One place for the conversation layer: messages, introductions, reveal approvals,
-                interviews, decisions, and feedback handoff.
+                Messages and interviews stay together, with reveal and decision steps inside the
+                live corridor where they belong.
               </p>
             </div>
 
@@ -115,10 +94,7 @@ export function CommunicationsHub({ perspective, currentUserId }: Communications
             </div>
           </div>
 
-          <nav
-            className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4"
-            aria-label="Communication sections"
-          >
+          <nav className="grid gap-2 sm:grid-cols-2" aria-label="Communication sections">
             {sections.map((section) => {
               const Icon = section.icon;
               const isActive = section.id === activeSection;

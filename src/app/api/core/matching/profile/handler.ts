@@ -32,6 +32,11 @@ import {
 } from '@/lib/matching/match-score-contract';
 import { buildCanonicalMatchPersistenceFields } from '@/lib/matching/review-contract';
 import { CONSENT_TYPES } from '@/lib/privacy/consent-contract';
+import {
+  buildVisualIndividualMatches,
+  getMatchingVisualState,
+  matchingVisualFixturesEnabled,
+} from '@/lib/matching/visual-fixtures';
 
 // Shared handler imported by the kept launch corridor routes.
 export const dynamic = 'force-dynamic';
@@ -120,6 +125,27 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
+    const visualState = getMatchingVisualState(request.nextUrl);
+    if (matchingVisualFixturesEnabled() && visualState === 'filled') {
+      const items = buildVisualIndividualMatches();
+      return NextResponse.json({
+        items,
+        meta: {
+          total: items.length,
+          returned: items.length,
+          durationMs: Date.now() - startTime,
+          weights: {},
+          candidatePoolSource: 'visual_fixture',
+          candidatePoolSize: items.length,
+          twoStageEnabled: false,
+          eligibility: {
+            tier: 'introductions_ready',
+            nextTierTarget: null,
+          },
+        },
+      });
+    }
+
     const isInternalCall = isTrustedInternalRequest(request);
     const rawBody = await request.text();
     let body: unknown = {};

@@ -202,7 +202,7 @@ export function BasicInfoForm({ org, canEdit }: BasicInfoFormProps) {
             </p>
             <p className="text-proofound-charcoal/70 dark:text-muted-foreground">{org.slug}</p>
             <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              Your organization link: /app/o/{org.slug}
+              Shareable organization link: /portfolio/org/{org.slug}
             </p>
           </div>
           <div>

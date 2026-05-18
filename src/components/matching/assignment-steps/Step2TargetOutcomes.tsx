@@ -77,8 +77,10 @@ export function Step2TargetOutcomes({ form, onNext, onBack, isSubmitting = false
   return (
     <div className="space-y-6">
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Step 2: What work will actually be done</h2>
+        <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-2xl font-bold leading-tight">
+            Step 2: What work will actually be done
+          </h2>
           <span className="text-sm text-muted-foreground">Step 2 of 5</span>
         </div>
         <p className="text-muted-foreground">
@@ -100,11 +102,11 @@ export function Step2TargetOutcomes({ form, onNext, onBack, isSubmitting = false
             required: 'Work summary is required',
           })}
         />
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             Be concrete enough that a reviewer could tell what the role is expected to produce.
           </p>
-          <span className="text-xs text-muted-foreground">{description.length}/1200</span>
+          <span className="shrink-0 text-xs text-muted-foreground">{description.length}/1200</span>
         </div>
         {errors.description && (
           <p className="text-sm text-destructive">{errors.description.message as string}</p>

@@ -303,7 +303,7 @@ export function MessageThread({
         </motion.div>
 
         {/* Compose */}
-        <div className="p-4 border-t bg-background">
+        <div className="border-t bg-background p-4 pb-5 md:pb-4">
           <div className="space-y-2">
             <div className="flex gap-2">
               <Textarea
@@ -333,12 +333,12 @@ export function MessageThread({
               </Button>
             </div>
 
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">
-                🔒 Text-only messaging for privacy and security • Paste/drop disabled • Press Enter
-                to send
+            <div className="flex items-start justify-between gap-3 text-xs">
+              <span className="min-w-0 leading-5 text-muted-foreground">
+                <span aria-hidden="true">🔒 </span>Text-only; paste/drop disabled.
+                <span className="hidden sm:inline"> Press Enter to send.</span>
               </span>
-              <span className={characterCountColor()}>
+              <span className={cn('flex-shrink-0 leading-5', characterCountColor())}>
                 {messageText.length}/{MAX_MESSAGE_LENGTH}
               </span>
             </div>

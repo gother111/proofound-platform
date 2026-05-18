@@ -100,6 +100,16 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
     href: `${basePath}${item.hrefSuffix}`,
     icon: orgIconMap[item.icon],
     label: item.label,
+    mobileLabel:
+      item.hrefSuffix === '/assignments'
+        ? 'Work'
+        : item.hrefSuffix === '/communications'
+          ? 'Inbox'
+          : item.hrefSuffix === '/profile'
+            ? 'Profile'
+            : item.hrefSuffix === '/portfolio'
+              ? 'Preview'
+              : item.label,
     dataTour:
       item.hrefSuffix === '/home'
         ? 'home-link'

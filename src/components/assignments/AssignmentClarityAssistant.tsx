@@ -307,10 +307,10 @@ export function AssignmentClarityAssistant({
 
   if (!assistiveAiEnabled) {
     return (
-      <Card className="space-y-3 p-4" data-testid="assignment-clarity-assistant">
+      <Card className="min-w-0 space-y-3 p-4" data-testid="assignment-clarity-assistant">
         <div className="space-y-1">
           <h2 className="text-base font-semibold text-foreground">Assignment clarity</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="break-words text-sm text-muted-foreground">
             Manual guidance: name the outcome, proof expectations, constraints, and must-have
             capabilities before publishing.
           </p>
@@ -340,8 +340,8 @@ export function AssignmentClarityAssistant({
             <div className="rounded-md border border-proofound-stone bg-white p-3">
               <p className="text-sm font-medium text-foreground">Manual clarity checklist</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Provider assistance was unavailable, so these are deterministic manual prompts.
-                Manual editing still works.
+                Guided suggestions are unavailable right now, so use this checklist to keep editing
+                manually.
               </p>
             </div>
           ) : (

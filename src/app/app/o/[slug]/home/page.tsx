@@ -190,23 +190,21 @@ export default async function OrganizationHomePage({
                   Organization review cockpit
                 </Badge>
               </div>
-              <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
-                <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
-                  <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-[#dfead5] text-proofound-forest">
-                    <Users className="h-8 w-8" />
-                  </span>
-                  <div className="min-w-0">
-                    <h1 className="font-display text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
-                      {org.displayName}
-                    </h1>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                      A focused launch desk for one clean hiring corridor: compose the trust
-                      profile, define one proof-led assignment, and review candidates through
-                      privacy-safe summaries.
-                    </p>
-                  </div>
+              <div className="grid gap-5 p-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start md:p-6">
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-[#dfead5] text-proofound-forest">
+                  <Users className="h-8 w-8" />
+                </span>
+                <div className="min-w-0">
+                  <h1 className="font-display text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
+                    {org.displayName}
+                  </h1>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                    A focused launch desk for one clean hiring corridor: compose the trust profile,
+                    define one proof-led assignment, and review candidates through privacy-safe
+                    summaries.
+                  </p>
                 </div>
-                <div className="flex shrink-0 flex-col gap-2 md:items-end">
+                <div className="sm:col-start-2">
                   <Button
                     className="w-full justify-between bg-proofound-forest px-6 text-white sm:w-auto"
                     asChild
@@ -290,7 +288,7 @@ export default async function OrganizationHomePage({
                   Launch Summary
                 </h2>
                 <span className="rounded-md bg-[#eef3e8] px-2 py-1 text-xs font-medium text-proofound-forest">
-                  /3
+                  {trustReadyCount}/3 ready
                 </span>
               </div>
               <div className="mt-6 flex items-end gap-2">
@@ -309,11 +307,15 @@ export default async function OrganizationHomePage({
                 {trustChecks.map((item) => (
                   <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
                     <span className="text-muted-foreground">{item.label}</span>
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${
-                        item.pass ? 'bg-proofound-forest' : 'bg-[#e59f35]'
-                      }`}
-                    />
+                    <span className="inline-flex items-center gap-2 text-xs font-medium text-proofound-charcoal">
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${
+                          item.pass ? 'bg-proofound-forest' : 'bg-[#e59f35]'
+                        }`}
+                        aria-hidden="true"
+                      />
+                      {item.pass ? 'Ready' : 'Needed'}
+                    </span>
                   </div>
                 ))}
               </div>

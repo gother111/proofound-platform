@@ -62,6 +62,11 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
     { label: 'Domain path', ready: Boolean(website.trim()) },
   ];
   const readyFieldCount = fieldReadiness.filter((item) => item.ready).length;
+  const saveButtonLabel = isPending
+    ? 'Saving...'
+    : hasUnsavedChanges
+      ? 'Save organization profile'
+      : 'No changes to save';
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -153,7 +158,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
                 value={whyWorkMatters}
                 onChange={(event) => setWhyWorkMatters(event.target.value)}
                 disabled={!canEdit || isPending}
-                rows={3}
+                rows={4}
                 placeholder="Explain why the work matters in practical terms."
               />
             </div>
@@ -165,7 +170,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
                 value={mission}
                 onChange={(event) => setMission(event.target.value)}
                 disabled={!canEdit || isPending}
-                rows={4}
+                rows={6}
                 placeholder="Explain the mission this assignment path supports."
               />
             </div>
@@ -177,7 +182,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
                 value={operatingContext}
                 onChange={(event) => setOperatingContext(event.target.value)}
                 disabled={!canEdit || isPending}
-                rows={4}
+                rows={8}
                 placeholder="Describe the real operating environment candidates should understand."
               />
             </div>
@@ -218,9 +223,16 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
               </p>
             </div>
             {canEdit ? (
-              <Button type="submit" className="w-full" disabled={isPending || !hasUnsavedChanges}>
-                {isPending ? 'Saving...' : 'Save organization profile'}
-              </Button>
+              <div className="space-y-2">
+                <Button type="submit" className="w-full" disabled={isPending || !hasUnsavedChanges}>
+                  {saveButtonLabel}
+                </Button>
+                {!hasUnsavedChanges ? (
+                  <p className="text-center text-xs text-muted-foreground">
+                    Edit a field to enable saving.
+                  </p>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </form>

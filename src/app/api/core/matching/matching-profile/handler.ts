@@ -11,6 +11,11 @@ import { getWeightBiasBucket } from '@/lib/core/matching/presets';
 import { mapIndustryListToCanonical } from '@/lib/industry/options';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import { normalizeEngagementType } from '@/lib/engagement-verifications/service';
+import {
+  buildVisualMatchingProfile,
+  getMatchingVisualState,
+  matchingVisualFixturesEnabled,
+} from '@/lib/matching/visual-fixtures';
 
 // Shared handler imported by the kept launch corridor routes.
 export const dynamic = 'force-dynamic';
@@ -159,13 +164,24 @@ function normalizeProfileResponse(
  *
  * Returns the current user's matching profile, or null if not set up.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user } = authContext;
+    const visualState = getMatchingVisualState(request?.nextUrl);
+    if (matchingVisualFixturesEnabled() && visualState) {
+      return NextResponse.json({
+        profile: visualState === 'filled' ? buildVisualMatchingProfile(user.id) : null,
+        eligibility: {
+          eligible: visualState === 'filled',
+          tier: visualState === 'filled' ? 'introductions_ready' : 'browse_ready',
+          nextTierTarget: visualState === 'filled' ? null : 'Add matching preferences',
+        },
+      });
+    }
 
     // Fetch matching profile and auto-bootstrap baseline row if missing.
     let profile = await db.query.matchingProfiles.findFirst({
