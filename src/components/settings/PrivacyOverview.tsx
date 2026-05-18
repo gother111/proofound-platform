@@ -47,17 +47,21 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
     private: 0,
   });
 
-  const focusPageSection = (sectionId: string) => {
+  const focusPageSection = (sectionId: string, block: ScrollLogicalPosition = 'start') => {
     const section = document.getElementById(sectionId);
     if (!section) return;
 
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    section.scrollIntoView({ behavior: 'smooth', block });
     section.focus({ preventScroll: true });
   };
 
-  const showInlineOrFocus = (sectionId: string, showInlineSection: () => void) => {
+  const showInlineOrFocus = (
+    sectionId: string,
+    showInlineSection: () => void,
+    block?: ScrollLogicalPosition
+  ) => {
     if (fullPageNavigation) {
-      focusPageSection(sectionId);
+      focusPageSection(sectionId, block);
       return;
     }
 
@@ -526,7 +530,9 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
         <Button
           variant="outline"
           className="h-auto py-4 flex-col items-start border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
-          onClick={() => showInlineOrFocus('privacy-delete', () => setShowDeleteAccount(true))}
+          onClick={() =>
+            showInlineOrFocus('privacy-delete', () => setShowDeleteAccount(true), 'end')
+          }
         >
           <Trash2 className="h-5 w-5 mb-2 text-red-600 dark:text-red-400" />
           <span className="font-medium text-red-600 dark:text-red-400">Delete Account</span>
