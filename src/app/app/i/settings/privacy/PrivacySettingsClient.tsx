@@ -64,7 +64,7 @@ export function PrivacySettingsClient() {
 
   return (
     <AppSurface>
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto w-full min-w-0 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold text-foreground mb-2">Privacy Settings</h1>
           <p className="text-muted-foreground">Control who can see your profile information</p>
@@ -72,23 +72,31 @@ export function PrivacySettingsClient() {
 
         <div className="space-y-6">
           {/* Privacy Overview */}
-          <PrivacyOverview userId="current" />
+          <PrivacyOverview userId="current" fullPageNavigation />
 
           {/* Data Breakdown */}
-          <DataBreakdown />
+          <section id="privacy-data" className="scroll-mt-24" tabIndex={-1}>
+            <DataBreakdown />
+          </section>
 
           {/* Field Visibility Controls */}
-          <IndividualFieldVisibilityControls
-            userId="current"
-            initialVisibility={initialVisibility || {}}
-            onSave={handleSave}
-          />
+          <section id="privacy-field-visibility" className="scroll-mt-24" tabIndex={-1}>
+            <IndividualFieldVisibilityControls
+              userId="current"
+              initialVisibility={initialVisibility || {}}
+              onSave={handleSave}
+            />
+          </section>
 
           {/* Audit Log */}
-          <AuditLogTable />
+          <section id="privacy-activity" className="scroll-mt-24" tabIndex={-1}>
+            <AuditLogTable />
+          </section>
 
           {/* Delete Account */}
-          <DeleteAccountSection />
+          <section id="privacy-delete" className="scroll-mt-24" tabIndex={-1}>
+            <DeleteAccountSection />
+          </section>
         </div>
       </div>
     </AppSurface>

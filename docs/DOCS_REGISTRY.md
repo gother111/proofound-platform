@@ -362,3 +362,4 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `audit/prioritized-roadmap.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/system-overview.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/testing-and-release-readiness.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
+| `audit/ux-visual-usability-pass-2026-05-17.md` | `reference-spec` | `audit` | `repo+browser` | `2026-05-18` | `-` | `false` |

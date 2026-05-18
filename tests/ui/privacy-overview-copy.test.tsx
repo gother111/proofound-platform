@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PrivacyOverview } from '@/components/settings/PrivacyOverview';
@@ -19,8 +19,14 @@ vi.mock('@/components/settings/EnhancedDataImportDialog', () => ({
 }));
 
 describe('PrivacyOverview copy', () => {
+  const scrollIntoViewMock = vi.fn();
+  const focusMock = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
+
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+    HTMLElement.prototype.focus = focusMock;
 
     (global as any).fetch = vi.fn(async (url: string) => {
       if (url === '/api/feature-flags') {
@@ -58,5 +64,21 @@ describe('PrivacyOverview copy', () => {
     expect(screen.queryByText(/Tier 1/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tier 2/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tier 3/i)).not.toBeInTheDocument();
+  });
+
+  it('uses existing full-page privacy sections instead of opening duplicate drill-downs', () => {
+    const target = document.createElement('section');
+    target.id = 'privacy-activity';
+    document.body.appendChild(target);
+
+    render(<PrivacyOverview userId="user-1" fullPageNavigation />);
+
+    fireEvent.click(screen.getAllByRole('button', { name: /view account history/i })[0]);
+
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(focusMock).toHaveBeenCalledWith({ preventScroll: true });
+    expect(screen.queryByText('← Back to Privacy Overview')).not.toBeInTheDocument();
+
+    target.remove();
   });
 });

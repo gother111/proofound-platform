@@ -168,7 +168,7 @@ export function AuditLogTable() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5" />
-          Activity log
+          Account history
         </CardTitle>
         <CardDescription>
           Your recent account activity. Access details are protected for privacy.

@@ -27,9 +27,10 @@ import { buildUserExportDownloadFilename } from '@/lib/privacy/export-download';
 
 interface PrivacyOverviewProps {
   userId: string;
+  fullPageNavigation?: boolean;
 }
 
-export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
+export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyOverviewProps) {
   const [showDataBreakdown, setShowDataBreakdown] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
@@ -45,6 +46,23 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
     match_only: 0,
     private: 0,
   });
+
+  const focusPageSection = (sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    section.focus({ preventScroll: true });
+  };
+
+  const showInlineOrFocus = (sectionId: string, showInlineSection: () => void) => {
+    if (fullPageNavigation) {
+      focusPageSection(sectionId);
+      return;
+    }
+
+    showInlineSection();
+  };
 
   useEffect(() => {
     void (async () => {
@@ -145,35 +163,48 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         className="border-proofound-stone dark:border-border rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900"
       >
         <CardContent className="pt-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div className="w-fit shrink-0 p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
               <Shield className="h-6 w-6 text-blue-600 dark:text-blue-300" />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-proofound-charcoal dark:text-foreground mb-2">
                 Your Privacy Controls
               </h2>
-              <p className="text-proofound-charcoal/70 dark:text-muted-foreground mb-4">
+              <p className="break-words text-proofound-charcoal/70 dark:text-muted-foreground mb-4">
                 Proofound is built with privacy at its core. Here&apos;s what data we collect and
                 how you control it.
               </p>
-              <div className="flex flex-wrap gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                 <Button
                   onClick={() => setShowVisibilitySettings(true)}
-                  className="bg-proofound-forest hover:bg-proofound-forest/90"
+                  className="w-full justify-center bg-proofound-forest hover:bg-proofound-forest/90 sm:w-auto"
                 >
                   <Settings className="h-4 w-4 mr-2" />
                   Privacy settings
                 </Button>
-                <Button variant="outline" onClick={handleExportData} disabled={isExporting}>
+                <Button
+                  variant="outline"
+                  onClick={handleExportData}
+                  disabled={isExporting}
+                  className="w-full justify-center sm:w-auto"
+                >
                   <Download className="h-4 w-4 mr-2" />
                   {isExporting ? 'Preparing...' : 'Download my data'}
                 </Button>
-                <Button variant="outline" onClick={() => setShowImportDialog(true)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowImportDialog(true)}
+                  className="w-full justify-center sm:w-auto"
+                >
                   <Upload className="h-4 w-4 mr-2" />
                   Import data
                 </Button>
-                <Button variant="outline" onClick={() => setShowAuditLog(true)}>
+                <Button
+                  variant="outline"
+                  onClick={() => showInlineOrFocus('privacy-activity', () => setShowAuditLog(true))}
+                  className="w-full justify-center sm:w-auto"
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   View account history
                 </Button>
@@ -193,7 +224,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 md:grid-cols-4">
               <div className="rounded-lg border p-3">
                 <p className="font-medium">Public</p>
                 <p className="text-muted-foreground">{visibilityCounts.public} sections</p>
@@ -231,14 +262,16 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           <Button
             variant="outline"
             className="h-auto py-3 text-left"
-            onClick={() => setShowVisibilitySettings(true)}
+            onClick={() =>
+              showInlineOrFocus('privacy-field-visibility', () => setShowVisibilitySettings(true))
+            }
           >
             <span className="font-medium">Review field visibility</span>
           </Button>
           <Button
             variant="outline"
             className="h-auto py-3 text-left"
-            onClick={() => setShowAuditLog(true)}
+            onClick={() => showInlineOrFocus('privacy-activity', () => setShowAuditLog(true))}
           >
             <span className="font-medium">Check privacy audit log</span>
           </Button>
@@ -469,7 +502,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         <Button
           variant="outline"
           className="h-auto py-4 flex-col items-start"
-          onClick={() => setShowDataBreakdown(true)}
+          onClick={() => showInlineOrFocus('privacy-data', () => setShowDataBreakdown(true))}
         >
           <Database className="h-5 w-5 mb-2" />
           <span className="font-medium">View your data</span>
@@ -481,7 +514,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         <Button
           variant="outline"
           className="h-auto py-4 flex-col items-start"
-          onClick={() => setShowAuditLog(true)}
+          onClick={() => showInlineOrFocus('privacy-activity', () => setShowAuditLog(true))}
         >
           <Eye className="h-5 w-5 mb-2" />
           <span className="font-medium">View account history</span>
@@ -493,7 +526,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         <Button
           variant="outline"
           className="h-auto py-4 flex-col items-start border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
-          onClick={() => setShowDeleteAccount(true)}
+          onClick={() => showInlineOrFocus('privacy-delete', () => setShowDeleteAccount(true))}
         >
           <Trash2 className="h-5 w-5 mb-2 text-red-600 dark:text-red-400" />
           <span className="font-medium text-red-600 dark:text-red-400">Delete Account</span>

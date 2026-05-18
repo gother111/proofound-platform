@@ -1037,6 +1037,75 @@ Screenshots:
   document warnings.
 - `npm run build` - pass
 
+## Individual Settings And Privacy Continuation - Single-Path Privacy Actions
+
+Date: 2026-05-18
+
+### Surfaces Checked
+
+- `/app/i/settings/privacy` at 390px mobile, focused on overview actions and the
+  account-history destination.
+- `/app/i/settings/privacy#privacy-activity` at 1280px desktop, focused on the
+  destination section reached by account-history navigation.
+- `/app/i/settings` privacy tab behavior was preserved by keeping the overview's
+  inline drill-down mode as the default outside the dedicated full-page route.
+
+### Findings
+
+#### P2 - Dedicated privacy page offered duplicate drill-down paths
+
+Affected surface:
+
+- `/app/i/settings/privacy`
+
+Evidence:
+
+- The dedicated privacy route rendered the overview quick actions, then rendered
+  the full data, visibility, account-history, and delete sections underneath.
+  Clicking `View account history` opened a second inline account-history view
+  above the already-rendered `Activity log`, `Your data`, `Profile visibility`,
+  and delete sections. The result gave the user two competing account-history
+  paths on one page.
+
+Fix:
+
+- Added full-page navigation mode to `PrivacyOverview`.
+- On the dedicated privacy route, overview actions now move to the existing page
+  sections instead of rendering duplicate inline drill-downs.
+- Added stable section targets for data, field visibility, account history, and
+  delete account.
+- Renamed the shared privacy audit heading from `Activity log` to `Account
+history` so the destination matches the action label.
+- Registered this UX audit in `docs/DOCS_REGISTRY.md`, returning
+  `docs:freshness` to the previous warning count.
+
+### Browser Verification
+
+Verified with the Codex in-app Browser:
+
+- Mobile `/app/i/settings/privacy` at 390px: `View account history` moved to the
+  existing account-history section; there was no `Back to Privacy Overview`
+  duplicate drill-down state, no `Activity log` label mismatch, and no horizontal
+  overflow.
+- Desktop `/app/i/settings/privacy#privacy-activity` at 1280px: the account
+  history table stayed composed, the heading matched the action label, and no
+  horizontal overflow was present.
+
+Screenshots:
+
+- `.artifacts/ux-browser-goal-2026-05-18/settings-privacy/privacy-account-history-navigation-mobile.png`
+- `.artifacts/ux-browser-goal-2026-05-18/settings-privacy/privacy-account-history-navigation-desktop.png`
+
+### Automated Checks
+
+- `npm run test -- tests/ui/privacy-overview-copy.test.tsx tests/ui/privacy-audit-log-mobile-clarity.test.tsx tests/ui/settings-account-history-mobile-clarity.test.tsx tests/ui/settings-privacy-visibility-placement.test.tsx`
+  - pass
+- `npm run lint` - pass
+- `npm run typecheck` - pass
+- `npm run docs:freshness` - pass in warning mode with the existing 32 orphan
+  document warnings.
+- `npm run build` - pass
+
 ## Auth Continuation - Login And Signup Clarity
 
 Date: 2026-05-18
