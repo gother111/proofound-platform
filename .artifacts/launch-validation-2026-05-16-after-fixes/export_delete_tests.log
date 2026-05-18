@@ -1,0 +1,125 @@
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/user-export-route.test.ts tests/api/portfolio-export-route.test.ts tests/api/portfolio-org-export-route.test.ts tests/api/public-portfolio-export-route.test.ts tests/api/user-account-lifecycle-routes.test.ts tests/api/expertise-user-skill-proof-delete-route.test.ts tests/api/expertise-verifications-sent-delete-route.test.ts tests/lib/export-download-filename.test.ts tests/lib/portfolio-export-data.test.ts tests/lib/uploads-export.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+(node:84456) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:84456) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stderr | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns 401 when user is unauthenticated
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T22:24:21.794Z","flow":"export","requestId":"1dzlxkVqJljX","actorId":null,"actorType":"anonymous","objectRefs":{},"outcome":"rejected","state":"portfolio_export_unauthorized","latencyMs":0,"failureClass":"unauthorized"}
+
+stderr | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns 404 when profile export data is unavailable
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T22:24:21.798Z","flow":"export","requestId":"q31MWlCbscqV","actorId":"user-1","actorType":"user_account","objectRefs":{},"outcome":"rejected","state":"portfolio_export_profile_missing","latencyMs":0,"failureClass":"profile_not_found"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns a non-empty PDF response with expected headers
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T22:24:21.799Z","flow":"export","requestId":"eQKpvhpeQUGr","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane"}
+
+(node:84456) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > still returns PDF when analytics emission fails
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T22:24:21.803Z","flow":"export","requestId":"8Uu1bsL6nb9_","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns canonical JSON when format=json is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T22:24:21.808Z","flow":"export","requestId":"CfjFEDUbR8FS","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane","format":"json"}
+
+stdout | tests/api/portfolio-export-route.test.ts > /api/portfolio/export > returns text export when format=text is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T22:24:21.809Z","flow":"export","requestId":"Q_HPUAtfcDOe","actorId":"user-1","actorType":"user_account","objectRefs":{"profileId":"user-1"},"outcome":"success","state":"portfolio_export_ready","latencyMs":0,"failureClass":null,"handle":"jane","format":"text"}
+
+ ✓ tests/api/portfolio-export-route.test.ts  (6 tests) 18ms
+(node:84456) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:84456) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+(node:84456) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/lib/uploads-export.test.ts  (1 test) 2ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+ ✓ tests/lib/export-download-filename.test.ts  (2 tests) 1ms
+ ✓ tests/api/user-account-lifecycle-routes.test.ts  (10 tests) 14ms
+ ✓ tests/api/user-export-route.test.ts  (4 tests) 12ms
+stderr | tests/api/public-portfolio-export-route.test.ts > /api/portfolio/public/[handle]/export > returns a format-neutral error when export generation fails
+public portfolio export failed {
+  name: 'Error',
+  message: 'pdf unavailable',
+  error: Error: pdf unavailable
+      at /Users/yuriibakurov/proofound/tests/api/public-portfolio-export-route.test.ts:201:51
+      at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+      at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+      at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+      at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+      at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+      at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+      at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+      at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+      at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
+}
+
+ ✓ tests/api/public-portfolio-export-route.test.ts  (10 tests) 11ms
+ ✓ tests/api/expertise-verifications-sent-delete-route.test.ts  (9 tests) 20ms
+ ✓ tests/lib/portfolio-export-data.test.ts  (1 test) 3ms
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 401 when unauthenticated
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T22:24:22.262Z","flow":"export","requestId":"QKV8PqOan-E0","actorId":null,"actorType":"anonymous","objectRefs":{},"outcome":"rejected","state":"org_export_unauthorized","latencyMs":0,"failureClass":"unauthorized"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 404 when organization is missing
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T22:24:22.266Z","flow":"export","requestId":"jg0wg31sN4Gb","actorId":"user-1","actorType":"organization_member","objectRefs":{},"outcome":"rejected","state":"org_export_org_missing","latencyMs":0,"failureClass":"organization_not_found"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 when user is not an active org member
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T22:24:22.267Z","flow":"export","requestId":"bZS7FvMpFc1n","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":1,"failureClass":"forbidden"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 404 when organization export data is unavailable
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T22:24:22.267Z","flow":"export","requestId":"DQEFeBKNoWgM","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_profile_unavailable","latencyMs":0,"failureClass":"organization_profile_unavailable"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 for canonical reviewer membership
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T22:24:22.270Z","flow":"export","requestId":"1P1o58Qu11Cp","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":0,"failureClass":"forbidden"}
+
+stderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 for inactive canonical owner membership
+{"level":"warn","event":"launch.trace","timestamp":"2026-05-16T22:24:22.271Z","flow":"export","requestId":"_w5QGPe0_Fte","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"rejected","state":"org_export_forbidden","latencyMs":0,"failureClass":"forbidden"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns a downloadable PDF on success
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T22:24:22.268Z","flow":"export","requestId":"MJATpcoqOH8S","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":1,"failureClass":null,"orgSlug":"acme"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns canonical JSON when format=json is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T22:24:22.269Z","flow":"export","requestId":"Joo2n1JEwNMD","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":1,"failureClass":null,"orgSlug":"acme","format":"json"}
+
+stdout | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns text export when format=text is requested
+{"level":"info","event":"launch.trace","timestamp":"2026-05-16T22:24:22.269Z","flow":"export","requestId":"pdPiH4suVMhv","actorId":"user-1","actorType":"organization_member","objectRefs":{"orgId":"org-1"},"outcome":"success","state":"organization_export_ready","latencyMs":0,"failureClass":null,"orgSlug":"acme","format":"text"}
+
+ ✓ tests/api/portfolio-org-export-route.test.ts  (9 tests) 11ms
+ ✓ tests/api/expertise-user-skill-proof-delete-route.test.ts  (4 tests) 9ms
+
+ Test Files  10 passed (10)
+      Tests  56 passed (56)
+   Start at  00:24:21
+   Duration  1.34s (transform 889ms, setup 1.14s, collect 2.74s, tests 101ms, environment 1.94s, prepare 773ms)

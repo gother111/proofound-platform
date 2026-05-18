@@ -1,0 +1,1630 @@
+[
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "portfolio-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Public Page Unavailable | Proofound",
+    "url": "http://localhost:33100/portfolio/demo-proofound",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return home Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve review quality through clearer proof expectations. ASSIGNMENT CLARITY Review candidate work through structured evidence and launch-safe summaries. PROOF EXPECTATIONS Shortlists become more explainable, privacy-safe, and grounded in real",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Test Organization"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "MISSION / PURPOSE"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "WHAT WORK IS OFFERED"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ASSIGNMENT CLARITY"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "SERIOUSNESS OF REVIEW"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ORGANIZATION BASICS"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "portfolio-org-test",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 971,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:33100/portfolio/org/test-org",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Public Pages: This public page is archived outside the locked launch MVP corridor.",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "legacy-p-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/p/demo-proofound",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /org is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "legacy-org-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/org/demo-proofound",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content NORDIC FIELD SYSTEMS / ASSIGNMENT INVITE Assignment: Evidence Operations Lead for a proof-first pilot corridor Evidence Operations Lead for a proof-first pilot corridor Nordic Field Systems invited ca***@example.com to submit assignment-specific proof grounded in this role. Review the work, proof expectations, practical constraints, and privacy posture before you continue. Pending Open Contract / consulting Private review first Early review focuses on assignment-relevant proof and approved context. Identity and contact details wait for a consented reveal step. Invited address ca***@example.com Invite expires 6/21/2026, 2:",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "headings": [
+      {
+        "size": "48px",
+        "tag": "h1",
+        "text": "Evidence Operations Lead for a proof-first pilot corridor"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Private review first"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Role and focus"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Proof expectations"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Practical constraints"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Review process"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Apply from this assignment"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-visual-pending",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 1201,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/candidate-invite/visual-proof-card-pending",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content NORDIC FIELD SYSTEMS / ASSIGNMENT INVITE Assignment: Evidence Operations Lead for a proof-first pilot corridor Evidence Operations Lead for a proof-first pilot corridor Nordic Field Systems invited ca***@example.com to submit assignment-specific proof grounded in this role. Review the work, proof expectations, practical constraints, and privacy posture before you continue. Claimed Open Contract / consulting Private review first Early review focuses on assignment-relevant proof and approved context. Identity and contact details wait for a consented reveal step. Invited address ca***@example.com Invite expires 6/21/2026, 2:",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "headings": [
+      {
+        "size": "48px",
+        "tag": "h1",
+        "text": "Evidence Operations Lead for a proof-first pilot corridor"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Private review first"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Role and focus"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Proof expectations"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Practical constraints"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Review process"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Apply from this assignment"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-visual-claimed",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 1478,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/candidate-invite/visual-proof-card-claimed",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /candidate is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-invite-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/candidate/invite/invalid-token",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Invite link is invalid This invite link is missing a token. Ask the organization to resend it. Return home",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Invite link is invalid"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "accept-invite",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/accept-invite",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Overview U Proof-first home Add your first proof record Welcome back, there. Start with one work sample, credential, or case study that can be trusted. Start proof record Your Proof Wallet 3 checks Evidence, trust, and sharing state Proof Packs No proof yet. Start with one private record. Pending Trust anchors No trust anchor yet. You can add this after the first proof. Needed Public Page visibility Private by default until you choose to share Locked Add new record Readiness Checklist 3 to resolve First proof artifact Needed Start with one useful artifact. It sta",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Add your first proof record"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Your Proof Wallet"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Readiness Checklist"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Proof Readiness"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Trust Controls"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-invitation-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/home",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Unable to load request Service temporarily unavailable Return home",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "Unable to load request"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-token-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify/invalid-token",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "feedback-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/feedback/invalid-token",
+    "viewportName": "desktop1440",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "portfolio-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Public Page Unavailable | Proofound",
+    "url": "http://localhost:33100/portfolio/demo-proofound",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return home Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve review quality through clearer proof expectations. ASSIGNMENT CLARITY Review candidate work through structured evidence and launch-safe summaries. PROOF EXPECTATIONS Shortlists become more explainable, privacy-safe, and grounded in real",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Test Organization"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "MISSION / PURPOSE"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "WHAT WORK IS OFFERED"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ASSIGNMENT CLARITY"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "SERIOUSNESS OF REVIEW"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ORGANIZATION BASICS"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "portfolio-org-test",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 971,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:33100/portfolio/org/test-org",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Public Pages: This public page is archived outside the locked launch MVP corridor.",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "legacy-p-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/p/demo-proofound",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /org is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "legacy-org-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/org/demo-proofound",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content NORDIC FIELD SYSTEMS / ASSIGNMENT INVITE Assignment: Evidence Operations Lead for a proof-first pilot corridor Evidence Operations Lead for a proof-first pilot corridor Nordic Field Systems invited ca***@example.com to submit assignment-specific proof grounded in this role. Review the work, proof expectations, practical constraints, and privacy posture before you continue. Pending Open Contract / consulting Private review first Early review focuses on assignment-relevant proof and approved context. Identity and contact details wait for a consented reveal step. Invited address ca***@example.com Invite expires 6/21/2026, 2:",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "headings": [
+      {
+        "size": "48px",
+        "tag": "h1",
+        "text": "Evidence Operations Lead for a proof-first pilot corridor"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Private review first"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Role and focus"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Proof expectations"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Practical constraints"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Review process"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Apply from this assignment"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-visual-pending",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 1201,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/candidate-invite/visual-proof-card-pending",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content NORDIC FIELD SYSTEMS / ASSIGNMENT INVITE Assignment: Evidence Operations Lead for a proof-first pilot corridor Evidence Operations Lead for a proof-first pilot corridor Nordic Field Systems invited ca***@example.com to submit assignment-specific proof grounded in this role. Review the work, proof expectations, practical constraints, and privacy posture before you continue. Claimed Open Contract / consulting Private review first Early review focuses on assignment-relevant proof and approved context. Identity and contact details wait for a consented reveal step. Invited address ca***@example.com Invite expires 6/21/2026, 2:",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "headings": [
+      {
+        "size": "48px",
+        "tag": "h1",
+        "text": "Evidence Operations Lead for a proof-first pilot corridor"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Private review first"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Role and focus"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Proof expectations"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Practical constraints"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Review process"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Apply from this assignment"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-visual-claimed",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 1478,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/candidate-invite/visual-proof-card-claimed",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /candidate is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-invite-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/candidate/invite/invalid-token",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Invite link is invalid This invite link is missing a token. Ask the organization to resend it. Return home",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Invite link is invalid"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "accept-invite",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/accept-invite",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Overview U Proof-first home Add your first proof record Welcome back, there. Start with one work sample, credential, or case study that can be trusted. Start proof record Your Proof Wallet 3 checks Evidence, trust, and sharing state Proof Packs No proof yet. Start with one private record. Pending Trust anchors No trust anchor yet. You can add this after the first proof. Needed Public Page visibility Private by default until you choose to share Locked Add new record Readiness Checklist 3 to resolve First proof artifact Needed Start with one useful artifact. It sta",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Add your first proof record"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Your Proof Wallet"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Readiness Checklist"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Proof Readiness"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Trust Controls"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-invitation-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/home",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Unable to load request Service temporarily unavailable Return home",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "Unable to load request"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-token-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify/invalid-token",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "feedback-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/feedback/invalid-token",
+    "viewportName": "desktop1280",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "portfolio-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Public Page Unavailable | Proofound",
+    "url": "http://localhost:33100/portfolio/demo-proofound",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return home Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve review quality through clearer proof expectations. ASSIGNMENT CLARITY Review candidate work through structured evidence and launch-safe summaries. PROOF EXPECTATIONS Shortlists become more explainable, privacy-safe, and grounded in real",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Test Organization"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "MISSION / PURPOSE"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "WHAT WORK IS OFFERED"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ASSIGNMENT CLARITY"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "SERIOUSNESS OF REVIEW"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ORGANIZATION BASICS"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "portfolio-org-test",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 1902,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:33100/portfolio/org/test-org",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Public Pages: This public page is archived outside the locked launch MVP corridor.",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "legacy-p-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/p/demo-proofound",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /org is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "legacy-org-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/org/demo-proofound",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content NORDIC FIELD SYSTEMS / ASSIGNMENT INVITE Assignment: Evidence Operations Lead for a proof-first pilot corridor Evidence Operations Lead for a proof-first pilot corridor Nordic Field Systems invited ca***@example.com to submit assignment-specific proof grounded in this role. Review the work, proof expectations, practical constraints, and privacy posture before you continue. Pending Open Contract / consulting Private review first Early review focuses on assignment-relevant proof and approved context. Identity and contact details wait for a consented reveal step. Invited address ca***@example.com Invite expires 6/21/2026, 2:",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Evidence Operations Lead for a proof-first pilot corridor"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Private review first"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Role and focus"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Proof expectations"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Practical constraints"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Review process"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Apply from this assignment"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-visual-pending",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 2777,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/candidate-invite/visual-proof-card-pending",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content NORDIC FIELD SYSTEMS / ASSIGNMENT INVITE Assignment: Evidence Operations Lead for a proof-first pilot corridor Evidence Operations Lead for a proof-first pilot corridor Nordic Field Systems invited ca***@example.com to submit assignment-specific proof grounded in this role. Review the work, proof expectations, practical constraints, and privacy posture before you continue. Claimed Open Contract / consulting Private review first Early review focuses on assignment-relevant proof and approved context. Identity and contact details wait for a consented reveal step. Invited address ca***@example.com Invite expires 6/21/2026, 2:",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Evidence Operations Lead for a proof-first pilot corridor"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Private review first"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Role and focus"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Proof expectations"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Practical constraints"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Review process"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Apply from this assignment"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-visual-claimed",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 3063,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/candidate-invite/visual-proof-card-claimed",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /candidate is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-invite-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/candidate/invite/invalid-token",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Invite link is invalid This invite link is missing a token. Ask the organization to resend it. Return home",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Invite link is invalid"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "accept-invite",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/accept-invite",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Proof-first home Add your first proof record Welcome back, there. Start with one work sample, credential, or case study that can be trusted. Start proof record Your Proof Wallet 3 checks Evidence, trust, and sharing state Proof Packs No proof yet. Start with one private record. Pending Trust anchors No trust anchor yet. You can add this after the first proof. Needed Public Page visibility Private by default until you choose to share Locked Add new record Readiness Checklist 3 to resolve First proof artifact Needed Start with one useful artifact. It stays private while you shape i",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Add your first proof record"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Your Proof Wallet"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Readiness Checklist"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Proof Readiness"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Trust Controls"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-invitation-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/home",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Unable to load request Service temporarily unavailable Return home",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "Unable to load request"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-token-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify/invalid-token",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "feedback-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/feedback/invalid-token",
+    "viewportName": "mobile390",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "portfolio-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Public Page Unavailable | Proofound",
+    "url": "http://localhost:33100/portfolio/demo-proofound",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Test Organization Shareable by direct link Public organization profile Help teams review candidates through concrete work evidence instead of polished claims. Return home Copy share link Website MISSION / PURPOSE Help teams review candidates through concrete work evidence instead of polished claims. WHAT WORK IS OFFERED WORK OFFERED Proof-first product reviewer ENGAGEMENT Full time Improve review quality through clearer proof expectations. ASSIGNMENT CLARITY Review candidate work through structured evidence and launch-safe summaries. PROOF EXPECTATIONS Shortlists become more explainable, privacy-safe, and grounded in real",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Test Organization"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "MISSION / PURPOSE"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "WHAT WORK IS OFFERED"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ASSIGNMENT CLARITY"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "SERIOUSNESS OF REVIEW"
+      },
+      {
+        "size": "11px",
+        "tag": "h2",
+        "text": "ORGANIZATION BASICS"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "portfolio-org-test",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 1947,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Proofound organization portfolio",
+    "url": "http://localhost:33100/portfolio/org/test-org",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Public Pages: This public page is archived outside the locked launch MVP corridor.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "legacy-p-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/p/demo-proofound",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /org is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "legacy-org-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/org/demo-proofound",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content NORDIC FIELD SYSTEMS / ASSIGNMENT INVITE Assignment: Evidence Operations Lead for a proof-first pilot corridor Evidence Operations Lead for a proof-first pilot corridor Nordic Field Systems invited ca***@example.com to submit assignment-specific proof grounded in this role. Review the work, proof expectations, practical constraints, and privacy posture before you continue. Pending Open Contract / consulting Private review first Early review focuses on assignment-relevant proof and approved context. Identity and contact details wait for a consented reveal step. Invited address ca***@example.com Invite expires 6/21/2026, 2:",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Evidence Operations Lead for a proof-first pilot corridor"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Private review first"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Role and focus"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Proof expectations"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Practical constraints"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Review process"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Apply from this assignment"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-visual-pending",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 2821,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/candidate-invite/visual-proof-card-pending",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content NORDIC FIELD SYSTEMS / ASSIGNMENT INVITE Assignment: Evidence Operations Lead for a proof-first pilot corridor Evidence Operations Lead for a proof-first pilot corridor Nordic Field Systems invited ca***@example.com to submit assignment-specific proof grounded in this role. Review the work, proof expectations, practical constraints, and privacy posture before you continue. Claimed Open Contract / consulting Private review first Early review focuses on assignment-relevant proof and approved context. Identity and contact details wait for a consented reveal step. Invited address ca***@example.com Invite expires 6/21/2026, 2:",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "Evidence Operations Lead for a proof-first pilot corridor"
+      },
+      {
+        "size": "14px",
+        "tag": "h2",
+        "text": "Private review first"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Role and focus"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Proof expectations"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Practical constraints"
+      },
+      {
+        "size": "16px",
+        "tag": "h2",
+        "text": "Review process"
+      },
+      {
+        "size": "18px",
+        "tag": "h2",
+        "text": "Apply from this assignment"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-visual-claimed",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 3107,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/candidate-invite/visual-proof-card-claimed",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /candidate is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-invite-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/candidate/invite/invalid-token",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Invite link is invalid This invite link is missing a token. Ask the organization to resend it. Return home",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Invite link is invalid"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "accept-invite",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/accept-invite",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Proof-first home Add your first proof record Welcome back, there. Start with one work sample, credential, or case study that can be trusted. Start proof record Your Proof Wallet 3 checks Evidence, trust, and sharing state Proof Packs No proof yet. Start with one private record. Pending Trust anchors No trust anchor yet. You can add this after the first proof. Needed Public Page visibility Private by default until you choose to share Locked Add new record Readiness Checklist 3 to resolve First proof artifact Needed Start with one useful artifact. It stays private while you shape i",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "18px",
+        "tag": "h1",
+        "text": "Overview"
+      },
+      {
+        "size": "24px",
+        "tag": "h1",
+        "text": "Add your first proof record"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Your Proof Wallet"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Readiness Checklist"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Proof Readiness"
+      },
+      {
+        "size": "20px",
+        "tag": "h2",
+        "text": "Trust Controls"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "org-invitation-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/app/i/home",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Unable to load request Service temporarily unavailable Return home",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "Unable to load request"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-token-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify/invalid-token",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "feedback-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/feedback/invalid-token",
+    "viewportName": "mobile375",
+    "visibleControls": []
+  }
+]

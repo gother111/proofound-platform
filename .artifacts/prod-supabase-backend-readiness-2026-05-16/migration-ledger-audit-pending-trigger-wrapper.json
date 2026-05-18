@@ -1,0 +1,21 @@
+{
+  "mode": "canonical",
+  "generatedAt": "2026-05-16T17:12:23.227Z",
+  "localMigrationFileCount": 125,
+  "databaseMigrationRowCount": 125,
+  "appliedWithFileCount": 124,
+  "fileNotAppliedCount": 1,
+  "appliedMissingFileCount": 1,
+  "fileNotApplied": [
+    {
+      "file": "20260516180500_secure_match_score_trigger_wrappers.sql",
+      "version": "20260516180500_secure_match_score_trigger_wrappers"
+    }
+  ],
+  "appliedMissingFile": [
+    {
+      "version": "20260317224741_canonicalize_org_role_constraints",
+      "name": "20260317224741_canonicalize_org_role_constraints"
+    }
+  ]
+}

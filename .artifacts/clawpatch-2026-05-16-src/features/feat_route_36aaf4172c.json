@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_36aaf4172c",
+  "title": "Route /(auth)/verify-email",
+  "summary": "Web route implemented by app/(auth)/verify-email/page.tsx.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/(auth)/verify-email/page.tsx",
+      "symbol": null,
+      "route": "/(auth)/verify-email",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/(auth)/verify-email/page.tsx",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "pending",
+  "lock": null,
+  "findingIds": [],
+  "patchAttemptIds": [],
+  "analysisHistory": [],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:02:40.128Z"
+}

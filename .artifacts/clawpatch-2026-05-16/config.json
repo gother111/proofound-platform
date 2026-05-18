@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "stateDir": ".artifacts/clawpatch-2026-05-16",
+  "include": ["**/*"],
+  "exclude": [
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    "target/**",
+    ".build/**",
+    ".git/**",
+    ".clawpatch/**",
+    ".artifacts/**",
+    ".next/**",
+    ".next-dev*/**",
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
+    ".vercel/**",
+    "supabase/.temp/**"
+  ],
+  "provider": {
+    "name": "codex",
+    "model": null
+  },
+  "commands": {
+    "typecheck": "npm run typecheck",
+    "lint": "npm run lint",
+    "format": null,
+    "test": "npm run test"
+  },
+  "review": {
+    "maxContextFiles": 24,
+    "maxOwnedFiles": 12,
+    "maxFindingsPerFeature": 10,
+    "minConfidenceToFix": "medium"
+  },
+  "git": {
+    "requireCleanWorktreeForFix": true,
+    "commit": false,
+    "openPr": false
+  }
+}

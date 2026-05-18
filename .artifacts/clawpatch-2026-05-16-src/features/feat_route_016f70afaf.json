@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_016f70afaf",
+  "title": "Route /api/user/account",
+  "summary": "Web route implemented by app/api/user/account/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/user/account/route.ts",
+      "symbol": null,
+      "route": "/api/user/account",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/user/account/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "fixed",
+  "lock": null,
+  "findingIds": [
+    "fnd_sig-feat-route-016f70afaf-5c9115_78f713e171",
+    "fnd_sig-feat-route-016f70afaf-4f9a65_5d27755703"
+  ],
+  "patchAttemptIds": [],
+  "analysisHistory": [
+    {
+      "runId": "20260516T161141-38a836",
+      "kind": "review",
+      "summary": "2 finding(s)",
+      "provider": "codex",
+      "model": null,
+      "createdAt": "2026-05-16T16:13:04.551Z"
+    }
+  ],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:29:26.988Z"
+}

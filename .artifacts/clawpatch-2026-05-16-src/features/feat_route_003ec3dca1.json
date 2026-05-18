@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_003ec3dca1",
+  "title": "Route /api/engagement-verifications/:id",
+  "summary": "Web route implemented by app/api/engagement-verifications/[id]/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/engagement-verifications/[id]/route.ts",
+      "symbol": null,
+      "route": "/api/engagement-verifications/:id",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/engagement-verifications/[id]/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "fixed",
+  "lock": null,
+  "findingIds": ["fnd_sig-feat-route-003ec3dca1-f91bff_825acea5da"],
+  "patchAttemptIds": [],
+  "analysisHistory": [
+    {
+      "runId": "20260516T161141-38a836",
+      "kind": "review",
+      "summary": "1 finding(s)",
+      "provider": "codex",
+      "model": null,
+      "createdAt": "2026-05-16T16:12:11.193Z"
+    }
+  ],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:23:27.978Z"
+}

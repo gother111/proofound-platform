@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-1769d7f40c-73e9ac_5d18fa828d",
+  "featureId": "feat_route_1769d7f40c",
+  "title": "Route file implements /llms.txt, not the claimed /llms path",
+  "category": "api-contract",
+  "severity": "medium",
+  "confidence": "high",
+  "triage": "contract-mismatch",
+  "evidence": [
+    {
+      "path": "app/llms.txt/route.ts",
+      "startLine": 3,
+      "endLine": 12,
+      "symbol": "GET",
+      "quote": "export async function GET() {"
+    }
+  ],
+  "reasoning": "In the Next.js App Router, a route handler's URL path is derived from its folder path. A handler at app/llms.txt/route.ts serves /llms.txt, while /llms would require app/llms/route.ts or a redirect/rewrite. The feature metadata claims route /llms, so callers requesting /llms will not hit this handler and may receive a 404 or another route's response.",
+  "reproduction": "Request GET /llms in a Next.js app containing only this route handler; the handler at app/llms.txt/route.ts is not matched because its route is /llms.txt.",
+  "recommendation": "Either correct the feature route contract to /llms.txt, or add/move a route handler at app/llms/route.ts if /llms is the intended public endpoint.",
+  "whyTestsDoNotAlreadyCoverThis": "No tests were included for this feature, and no route-level assertion verifies that the claimed /llms URL returns the llms text response.",
+  "suggestedRegressionTest": "Add a route smoke test that requests /llms and /llms.txt according to the intended contract, asserting the expected status, content type, and body.",
+  "minimumFixScope": "Align the route path and metadata contract by changing the file location or adding the missing route/redirect.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: /llms route now aliases the /llms.txt handler; covered by tests/app/llms-routes.test.ts.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:18:25.484Z"
+    }
+  ],
+  "signature": "sig_feat-route-1769d7f40c_73e9ac9c33",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:55:45.808Z",
+  "updatedAt": "2026-05-16T17:18:25.484Z"
+}

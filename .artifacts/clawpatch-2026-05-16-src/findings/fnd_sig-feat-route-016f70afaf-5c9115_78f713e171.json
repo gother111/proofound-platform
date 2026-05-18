@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-016f70afaf-5c9115_78f713e171",
+  "featureId": "feat_route_016f70afaf",
+  "title": "Auth deletion runs before account data deletion, causing non-retryable partial failures",
+  "category": "data-loss",
+  "severity": "high",
+  "confidence": "high",
+  "triage": "confirmed-bug",
+  "evidence": [
+    {
+      "path": "app/api/user/account/route.ts",
+      "startLine": 268,
+      "endLine": 271,
+      "symbol": "DELETE",
+      "quote": "const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);"
+    },
+    {
+      "path": "app/api/user/account/route.ts",
+      "startLine": 338,
+      "endLine": 340,
+      "symbol": "DELETE",
+      "quote": "await db.execute(sql`SELECT anonymize_user_account(${user.id}::uuid)`);"
+    },
+    {
+      "path": "app/api/user/account/route.ts",
+      "startLine": 366,
+      "endLine": 371,
+      "symbol": "DELETE",
+      "quote": "return NextResponse.json(\n        {\n          error: 'Failed to delete account',\n          message: 'An error occurred while deleting your account.',\n        },\n        { status: 500 }"
+    }
+  ],
+  "reasoning": "The route revokes the Supabase auth user before running the database anonymization and remaining deletion lifecycle. If anonymization or the subsequent lifecycle work fails after auth deletion succeeds, the user receives a retryable-looking 500 but can no longer authenticate to retry or inspect status, while account data may remain unanonymized and the deletion request is only marked for manual review. This creates a partially completed destructive operation with poor recovery semantics for a privacy-critical route.",
+  "reproduction": "Authenticate as an email/password user, send a valid DELETE request, and make anonymize_user_account fail after admin.deleteUser succeeds. The route returns 500 after the auth user has already been removed.",
+  "recommendation": "Make the operation resumable and order destructive steps so user data deletion/anonymization and lifecycle persistence complete before revoking auth, or move auth revocation into a final retryable worker step with an admin-resumable operation record. The client-facing response should reflect that access may already be revoked only after durable deletion state is safely recorded.",
+  "whyTestsDoNotAlreadyCoverThis": "No tests were included for this feature, and there is no evidence of a failure-injection test covering post-auth-delete anonymization or lifecycle failures.",
+  "suggestedRegressionTest": "Add a DELETE route test that mocks admin.deleteUser as successful and anonymize_user_account as failing, then asserts the route leaves a durable resumable/manual-review state and does not present the user with a normal retry path after auth revocation.",
+  "minimumFixScope": "Change DELETE ordering/recovery around auth deletion, anonymization, lifecycle execution, and failure responses in app/api/user/account/route.ts; add a focused regression test for the partial-failure path.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": "20260516T162219-d97e7c",
+      "kind": "revalidate",
+      "status": "fixed",
+      "note": null,
+      "reasoning": "The original path still exists, but the quoted ordering has changed in the current worktree. In app/api/user/account/route.ts, anonymize_user_account now runs at line 301, executeAccountDeletionLifecycle runs at lines 336-340, and admin.deleteUser is delayed until lines 342-345 with the comment that access is revoked only after deletion/anonymization succeeds. The anonymization failure path at lines 302-333 marks the deletion request/lifecycle as failed_requires_manual_review and returns before any auth deletion call. A focused regression test now exists in tests/api/user-account-lifecycle-routes.test.ts: the success case asserts both anonymization and lifecycle calls occur before adminDeleteUser, and the failure-injection case named 'does not revoke auth access before anonymization succeeds' asserts adminDeleteUser is not called when anonymization fails. I attempted to run the targeted test, but execution was blocked by the read-only/toolchain environment: default Node failed loading Vite, Node 24 hit a Rollup native code-signature load error, and Node 20 hit EPERM writing Vite temp config under node_modules. Based on current code and the added regression test source, the specific finding that auth deletion runs before data deletion is fixed.",
+      "commands": [
+        "pwd && rg --files -g 'AGENTS.md' -g 'app/api/user/account/route.ts' -g '*account*test*' -g '*account*spec*' -g '*user*account*'",
+        "git status --short",
+        "rg -n \"deleteUser|anonymize_user_account|Failed to delete account|account deletion|manual review|delete account\" app/api/user/account/route.ts app tests __tests__ -S",
+        "find .. -name AGENTS.md -print",
+        "nl -ba app/api/user/account/route.ts | sed -n '240,430p'",
+        "rg -n \"deleteUser|anonymize_user_account|manual-review|manual review|manualReview|account deletion|Failed to delete account|DELETE\" ../tests app lib db -S",
+        "rg -n \"user-account|account.*route|account/route|delete account|deletion lifecycle\" ../package.json ../vitest.config.* ../jest.config.* ../tests -S",
+        "nl -ba ../AGENTS.md | sed -n '1,220p'",
+        "nl -ba app/api/user/account/route.ts | sed -n '1,140p'",
+        "nl -ba app/api/user/account/route.ts | sed -n '430,520p'",
+        "nl -ba ../tests/api/user-account-lifecycle-routes.test.ts | sed -n '1,260p'",
+        "rg --files .. | rg '(^|/)(package.json|vitest\\.config|jest\\.config|user-account-lifecycle-routes\\.test\\.ts)$'",
+        "nl -ba ../tests/api/user-account-lifecycle-routes.test.ts | sed -n '260,560p'",
+        "node -e \"const p=require('../package.json'); console.log(JSON.stringify(p.scripts,null,2))\"",
+        "ls -la .. | sed -n '1,120p'",
+        "rg -n \"does not revoke auth access before anonymization succeeds|invocationCallOrder|adminDeleteUser.*not.toHaveBeenCalled|anonymize_failed\" ../tests app/api/user/account/route.ts -S",
+        "npm run test -- tests/api/user-account-lifecycle-routes.test.ts",
+        "node -v",
+        "cat ../.nvmrc",
+        "which -a node | sed -n '1,20p'",
+        "ls -la ~/.nvm/versions/node 2>/dev/null | tail -20",
+        "/opt/homebrew/bin/node -v",
+        "/opt/homebrew/opt/node@20/bin/node -v",
+        "/usr/local/bin/node -v",
+        "/Applications/Codex.app/Contents/Resources/node -v",
+        "which npm && head -1 $(which npm)",
+        "PATH=/Applications/Codex.app/Contents/Resources:$PATH node -v && PATH=/Applications/Codex.app/Contents/Resources:$PATH npm -v",
+        "PATH=/Applications/Codex.app/Contents/Resources:$PATH npm run test -- tests/api/user-account-lifecycle-routes.test.ts",
+        "PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/api/user-account-lifecycle-routes.test.ts",
+        "rg -n \"vite-temp|cacheDir|VITE_.*TEMP|loadConfigFromBundledFile\" ../node_modules/vite/dist/node/chunks/config.js ../node_modules/vitest/dist -S",
+        "sed -n '35880,35940p' ../node_modules/vite/dist/node/chunks/config.js",
+        "git diff -- src/app/api/user/account/route.ts tests/api/user-account-lifecycle-routes.test.ts | sed -n '1,260p'",
+        "git diff --stat -- src/app/api/user/account/route.ts tests/api/user-account-lifecycle-routes.test.ts",
+        "rg -n \"deleteUser\\(|anonymize_user_account\\(|executeAccountDeletionLifecycle\\(|does not revoke auth access before anonymization succeeds\" src/app/api/user/account/route.ts tests/api/user-account-lifecycle-routes.test.ts -S"
+      ],
+      "createdAt": "2026-05-16T16:29:26.947Z"
+    }
+  ],
+  "signature": "sig_feat-route-016f70afaf_5c91156f8c",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T161141-38a836",
+  "createdAt": "2026-05-16T16:13:04.550Z",
+  "updatedAt": "2026-05-16T16:29:26.947Z"
+}

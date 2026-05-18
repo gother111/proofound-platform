@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_5a985681b2",
+  "title": "Route /portfolio/:handle",
+  "summary": "Web route implemented by app/portfolio/[handle]/page.tsx.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/portfolio/[handle]/page.tsx",
+      "symbol": null,
+      "route": "/portfolio/:handle",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/portfolio/[handle]/page.tsx",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "pending",
+  "lock": null,
+  "findingIds": [],
+  "patchAttemptIds": [],
+  "analysisHistory": [],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:02:40.128Z"
+}

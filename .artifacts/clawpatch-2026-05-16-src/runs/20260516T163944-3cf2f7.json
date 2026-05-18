@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260516T163944-3cf2f7",
+  "command": "revalidate",
+  "args": [
+    "--root",
+    "/Users/yuriibakurov/proofound/src",
+    "--state-dir",
+    "/Users/yuriibakurov/proofound/.artifacts/clawpatch-2026-05-16-src",
+    "revalidate",
+    "--finding",
+    "fnd_sig-feat-route-09eea7fcfb-d87057_baa4fad72a",
+    "--no-input"
+  ],
+  "rootPath": "/Users/yuriibakurov/proofound/src",
+  "headSha": "679b5aac441286a0d66cbcf82fc1299769a3a594",
+  "startedAt": "2026-05-16T16:39:44.240Z",
+  "finishedAt": "2026-05-16T16:41:45.721Z",
+  "status": "completed",
+  "claimedFeatureIds": [],
+  "findingIds": ["fnd_sig-feat-route-09eea7fcfb-d87057_baa4fad72a"],
+  "patchAttemptIds": [],
+  "errors": []
+}

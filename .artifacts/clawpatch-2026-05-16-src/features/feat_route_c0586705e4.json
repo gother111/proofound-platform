@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_c0586705e4",
+  "title": "Route /app/i/home",
+  "summary": "Web route implemented by app/app/i/home/page.tsx.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/app/i/home/page.tsx",
+      "symbol": null,
+      "route": "/app/i/home",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/app/i/home/page.tsx",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "pending",
+  "lock": null,
+  "findingIds": [],
+  "patchAttemptIds": [],
+  "analysisHistory": [],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:02:40.128Z"
+}

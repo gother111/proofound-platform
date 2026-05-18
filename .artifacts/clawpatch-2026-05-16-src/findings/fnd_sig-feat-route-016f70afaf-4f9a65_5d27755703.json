@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-016f70afaf-4f9a65_5d27755703",
+  "featureId": "feat_route_016f70afaf",
+  "title": "Malformed JSON request bodies are reported as server errors",
+  "category": "api-contract",
+  "severity": "low",
+  "confidence": "high",
+  "triage": "contract-mismatch",
+  "evidence": [
+    {
+      "path": "app/api/user/account/route.ts",
+      "startLine": 135,
+      "endLine": 137,
+      "symbol": "DELETE",
+      "quote": "const body = await request.json();\n    const parsed = AccountDeletionSchema.parse(body);"
+    },
+    {
+      "path": "app/api/user/account/route.ts",
+      "startLine": 415,
+      "endLine": 427,
+      "symbol": "DELETE",
+      "quote": "if (error instanceof z.ZodError) {\n      emitLaunchTrace(trace, {\n        outcome: 'rejected',\n        state: 'account_delete_validation_failed',\n        failureClass: 'invalid_deletion_request',\n      });\n      return NextResponse.json(\n        {\n          error: 'Invalid deletion request',\n          details: error.flatten(),\n        },\n        { status: 400 }\n      );"
+    },
+    {
+      "path": "app/api/user/account/route.ts",
+      "startLine": 459,
+      "endLine": 466,
+      "symbol": "DELETE",
+      "quote": "return NextResponse.json(\n      {\n        error: 'Failed to delete account',\n        message:\n          'An error occurred while processing your deletion request. Please try again later.',\n      },\n      { status: 500 }"
+    }
+  ],
+  "reasoning": "request.json() throws a SyntaxError for malformed JSON before Zod validation runs. The catch block only treats ZodError as a client validation error, so malformed user input falls through to the generic 500 path. That misclassifies a client-side serialization error as a server failure and can pollute error monitoring for a trust-boundary route.",
+  "reproduction": "Send DELETE /api/user/account with an authenticated session, Content-Type: application/json, and an invalid JSON body such as `{`. The route returns the generic 500 response instead of a 400 invalid request response.",
+  "recommendation": "Wrap JSON parsing separately or treat SyntaxError from request.json() as a 400 invalid deletion request, ideally using the same launch trace rejection path as schema validation failures.",
+  "whyTestsDoNotAlreadyCoverThis": "No linked tests were included for malformed JSON or serialization-boundary behavior.",
+  "suggestedRegressionTest": "Add a route test that sends malformed JSON to DELETE /api/user/account and expects a 400 response with the invalid deletion request error shape.",
+  "minimumFixScope": "Handle request.json() parse errors in DELETE before the generic catch path and add one focused request-body parsing test.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": "20260516T162219-d97e7c",
+      "kind": "revalidate",
+      "status": "fixed",
+      "note": null,
+      "reasoning": "Current worktree evidence shows the original path still exists, but the original vulnerable lines have changed. In app/api/user/account/route.ts, DELETE now wraps request.json() in its own try/catch at lines 135-150 and returns 400 with error 'Invalid deletion request' and message 'Request body must be valid JSON.' on JSON parse failure. Schema validation now uses AccountDeletionSchema.safeParse at lines 153-166, and the old catch-side z.ZodError branch is gone. The generic 500 response still exists at lines 472-478, but malformed JSON no longer reaches it. A focused regression test exists at ../tests/api/user-account-lifecycle-routes.test.ts lines 380-404 asserting body '{' returns 400 and does not create deletion/lifecycle/auth side effects. I attempted to run the focused test: npm run test failed under the default node v16.14.0 while package.json requires node 24.x; rerunning with /opt/homebrew/opt/node@24/bin/node reached Vitest config loading but failed because the read-only sandbox blocked Vite from writing node_modules/.vite-temp. Based on current code and the present regression test, the finding is fixed in the current repository state, though the test could not be executed in this sandbox.",
+      "commands": [
+        "pwd && rg --files -g 'AGENTS.md' -g 'app/api/user/account/route.ts' -g '*account*test*' -g '*user*account*'",
+        "sed -n '1,240p' ../AGENTS.md",
+        "nl -ba app/api/user/account/route.ts | sed -n '110,180p'",
+        "nl -ba app/api/user/account/route.ts | sed -n '390,480p'",
+        "rg -n \"malformed|Invalid deletion request|request\\\\.json\\\\(|Failed to delete account|account.*DELETE|DELETE.*account|user/account\" ../tests app -g '*test*' -g '*.ts' -g '*.tsx'",
+        "nl -ba ../tests/api/user-account-lifecycle-routes.test.ts | sed -n '360,410p'",
+        "npm run test -- tests/api/user-account-lifecycle-routes.test.ts",
+        "node -v && which node",
+        "sed -n '1,18p' package.json",
+        "test -x /opt/homebrew/opt/node@24/bin/node && /opt/homebrew/opt/node@24/bin/node -v || true",
+        "/opt/homebrew/opt/node@24/bin/node ./scripts/run-vitest-with-timeout.mjs tests/api/user-account-lifecycle-routes.test.ts",
+        "rg -n \"ZodError|\\\\.parse\\\\(|safeParse|request\\\\.json\\\\(|invalid_json_body|Request body must be valid JSON|Invalid deletion request|Failed to delete account\" app/api/user/account/route.ts",
+        "git diff -- app/api/user/account/route.ts ../tests/api/user-account-lifecycle-routes.test.ts"
+      ],
+      "createdAt": "2026-05-16T16:26:17.262Z"
+    }
+  ],
+  "signature": "sig_feat-route-016f70afaf_4f9a65ad43",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T161141-38a836",
+  "createdAt": "2026-05-16T16:13:04.550Z",
+  "updatedAt": "2026-05-16T16:26:17.262Z"
+}

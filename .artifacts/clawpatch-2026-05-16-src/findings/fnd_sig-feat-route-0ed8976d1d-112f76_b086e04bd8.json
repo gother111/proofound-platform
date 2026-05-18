@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-0ed8976d1d-112f76_b086e04bd8",
+  "featureId": "feat_route_0ed8976d1d",
+  "title": "Preview requests can invalidate the redeem-session cookie for the real claimant",
+  "category": "concurrency",
+  "severity": "medium",
+  "confidence": "high",
+  "triage": "confirmed-bug",
+  "evidence": [
+    {
+      "path": "app/api/candidate-invites/[token]/route.ts",
+      "startLine": 28,
+      "endLine": 36,
+      "symbol": "GET",
+      "quote": "const preview = await beginCapabilityTokenRedeemSession(token, {"
+    },
+    {
+      "path": "app/api/candidate-invites/[token]/route.ts",
+      "startLine": 203,
+      "endLine": 212,
+      "symbol": "GET",
+      "quote": "response.cookies.set("
+    }
+  ],
+  "reasoning": "The GET preview path starts a new capability redeem session every time the invite is viewed and then returns the new nonce in a cookie. The inspected helper stores only one redeem-session nonce per token, so two overlapping GETs can race: request A writes nonce A, request B writes nonce B, then the browser can receive A last and keep a cookie that no longer matches the database. A later token scanner or another tab can also rotate the stored nonce after the user loads the invite, causing the subsequent claim POST to fail as an invalid invite even though the token and user are valid.",
+  "reproduction": "Open the same invite URL twice concurrently, or issue two GETs where the first response is delayed until after the second has updated the token nonce. Use the cookie from the stale response for the claim POST; the claim route will reject the redeem session nonce.",
+  "recommendation": "Make preview session creation idempotent for an unexpired nonce, or support multiple active nonce hashes per token/session. At minimum, avoid rotating an existing valid nonce unless the response is guaranteed to carry the nonce that remains current.",
+  "whyTestsDoNotAlreadyCoverThis": "The feature declares no linked tests, and the route has no apparent regression test for duplicate preview GETs or out-of-order responses before claim.",
+  "suggestedRegressionTest": "Mock begin/redeem session storage, perform two overlapping GET previews for the same token with reversed response order, then assert the cookie returned to the client can still be used by the claim route.",
+  "minimumFixScope": "Change the preview redeem-session logic used by this route so repeated GETs do not invalidate an already-issued valid redeem-session cookie.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: preview passes existing redeem-session cookie and helper reuses a valid nonce instead of rotating; covered by tests/lib/capability-tokens.test.ts.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:17:56.470Z"
+    }
+  ],
+  "signature": "sig_feat-route-0ed8976d1d_112f769b75",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:51:37.045Z",
+  "updatedAt": "2026-05-16T17:17:56.469Z"
+}

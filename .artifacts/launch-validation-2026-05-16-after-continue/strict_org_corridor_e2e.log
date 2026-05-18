@@ -1,0 +1,601 @@
+> proofound@0.1.0 test:e2e:org:strict
+> NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node24.mjs test e2e/strict/organization.strict.spec.ts e2e/strict/org-corridor.strict.spec.ts --project=chromium --reporter=line --workers=1
+
+[1A[2K[2m[WebServer] [22m(node:30956) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:30974) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+Running 7 tests using 1 worker
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (193kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K(node:31062) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+
+[1A[2K(node:31062) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+[1A[2K[1/7] [chromium] › e2e/strict/org-corridor.strict.spec.ts:196:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end
+[1A[2K[2m[WebServer] [22m(node:31149) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:31190) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:31203) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:31204) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:31238) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:31250) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:32054) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: aborted] { code: [32m'ECONNRESET'[39m, digest: [32m'3306081583'[39m }
+
+[1A[2K[2m[WebServer] [22m(node:32188) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:32504) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:32505) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:32697) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:32723) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:36087) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:36438) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:36625) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:36810) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:37284) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:37301) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:37362) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:37401) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:38030) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:38120) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:38527) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:38531) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:38601) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:38788) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m(node:38933) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/server/app-paths-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/server/app-paths-manifest.json'[39m,
+[2m[WebServer] [22m  page: [32m'/app/o/strict-corridor-org-1778950571764-b87b75/home'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'[39m,
+[2m[WebServer] [22m  page: [32m'/api/csrf-token'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m,
+[2m[WebServer] [22m  page: [32m'/app/o/strict-corridor-org-1778950571764-b87b75/home'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m(node:39224) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m ⨯ Failed to generate static paths for /app/o/[slug]/home:
+
+[1A[2K[2m[WebServer] [22mReferenceError: require is not defined in ES module scope, you can use import instead
+[2m[WebServer] [22mThis file is being treated as an ES module because it has a '.js' file extension and '/Users/yuriibakurov/proofound/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+[2m[WebServer] [22m    at <unknown> (.next-dev-3000/server/app/app/o/[slug]/home/page.js:1887:27)
+[2m[WebServer] [22m    at <unknown> (.next-dev-3000/server/app/app/o/[slug]/home/page.js:1893:3) {
+[2m[WebServer] [22m  type: [32m'ReferenceError'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'[39m,
+[2m[WebServer] [22m  page: [32m'/api/csrf-token'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/server/app-paths-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/server/app-paths-manifest.json'[39m,
+[2m[WebServer] [22m  page: [32m'/app/o/strict-corridor-org-1778950571764-b87b75/home'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'[39m,
+[2m[WebServer] [22m  page: [32m'/api/csrf-token'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m,
+[2m[WebServer] [22m  page: [32m'/app/o/strict-corridor-org-1778950571764-b87b75/home'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'[39m,
+[2m[WebServer] [22m  page: [32m'/api/csrf-token'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m(node:39771) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'[39m,
+[2m[WebServer] [22m  page: [32m'/api/csrf-token'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ ReferenceError: require is not defined in ES module scope, you can use import instead
+[2m[WebServer] [22mThis file is being treated as an ES module because it has a '.js' file extension and '/Users/yuriibakurov/proofound/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+[2m[WebServer] [22m    at <unknown> (.next-dev-3000/server/app/app/o/[slug]/home/page.js:1887:27)
+[2m[WebServer] [22m    at <unknown> (.next-dev-3000/server/app/app/o/[slug]/home/page.js:1893:3) {
+[2m[WebServer] [22m  type: [32m'ReferenceError'[39m,
+[2m[WebServer] [22m  page: [32m'/app/o/strict-corridor-org-1778950571764-b87b75/home'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22mReferenceError: require is not defined in ES module scope, you can use import instead
+[2m[WebServer] [22mThis file is being treated as an ES module because it has a '.js' file extension and '/Users/yuriibakurov/proofound/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+[2m[WebServer] [22m    at <unknown> (.next-dev-3000/server/app/app/o/[slug]/home/page.js:1887:27)
+[2m[WebServer] [22m    at <unknown> (.next-dev-3000/server/app/app/o/[slug]/home/page.js:1893:3) {
+[2m[WebServer] [22m  type: [32m'ReferenceError'[39m,
+[2m[WebServer] [22m  page: [32m'/app/o/strict-corridor-org-1778950571764-b87b75/home'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K  1) [chromium] › e2e/strict/org-corridor.strict.spec.ts:196:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end 
+
+    SyntaxError: Unexpected token 'I', "Internal S"... is not valid JSON
+
+      119 |       }
+      120 |     );
+    > 121 |     const csrfPayload = (await csrfResponse.json()) as { token?: string };
+          |                          ^
+      122 |     if (!csrfResponse.ok() || !csrfPayload.token) {
+      123 |       throw new Error(`Failed to fetch browser CSRF token: HTTP ${csrfResponse.status()}`);
+      124 |     }
+        at fetchCsrfToken (/Users/yuriibakurov/proofound/e2e/strict/org-corridor.strict.spec.ts:121:26)
+        at browserRequestJson (/Users/yuriibakurov/proofound/e2e/strict/org-corridor.strict.spec.ts:149:36)
+        at /Users/yuriibakurov/proofound/e2e/strict/org-corridor.strict.spec.ts:770:38
+
+    Error Context: test-results/strict-org-corridor.strict-d91f7-ted-org-corridor-end-to-end-chromium/error-context.md
+
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/server/app/api/csrf-token/route.js'[39m,
+[2m[WebServer] [22m  page: [32m'/api/csrf-token'[39m
+[2m[WebServer] [22m}
+
+[1A[2K(node:39976) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K(node:39976) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+[1A[2K[2/7] [chromium] › e2e/strict/organization.strict.spec.ts:73:3 › Strict MVP Organization Flows (O-01..O-20) › O-02..O-04 org setup, team roles, and profile contracts are verifiable
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
+[2m[WebServer] [22m<w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m,
+[2m[WebServer] [22m  page: [32m'/login'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m,
+[2m[WebServer] [22m  page: [32m'/login'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/1.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/1.pack.gz'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ unhandledRejection: [Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/1.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/1.pack.gz'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m ⨯ unhandledRejection:  [Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/1.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/1.pack.gz'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/2.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/2.pack.gz'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ unhandledRejection: [Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/2.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/2.pack.gz'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m ⨯ unhandledRejection:  [Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/2.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/2.pack.gz'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/3.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/3.pack.gz'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m ⨯ unhandledRejection: [Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/3.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/3.pack.gz'[39m
+[2m[WebServer] [22m}
+[1A[2K[2m[WebServer] [22m ⨯ unhandledRejection:  [Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/3.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/3.pack.gz'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/4.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/4.pack.gz'[39m
+[2m[WebServer] [22m}
+[1A[2K[2m[WebServer] [22m ⨯ unhandledRejection: [Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/4.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/4.pack.gz'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m ⨯ unhandledRejection:  [Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/4.pack.gz'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'stat'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/4.pack.gz'[39m
+[2m[WebServer] [22m}
+
+
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, stat '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/server-development/1.pack.gz'
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/client-development-fallback/0.pack.gz_' -> '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/client-development-fallback/0.pack.gz'
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/client-development-fallback/0.pack.gz_' -> '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/client-development-fallback/0.pack.gz'
+
+[1A[2K[2m[WebServer] [22m<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/client-development-fallback/0.pack.gz_' -> '/Users/yuriibakurov/proofound/.next-dev-3000/cache/webpack/client-development-fallback/0.pack.gz'
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m,
+[2m[WebServer] [22m  page: [32m'/login'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m,
+[2m[WebServer] [22m  page: [32m'/login'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m ⨯ [Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[2m[WebServer] [22m[Error: ENOENT: no such file or directory, open '/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'] {
+[2m[WebServer] [22m  errno: [33m-2[39m,
+[2m[WebServer] [22m  code: [32m'ENOENT'[39m,
+[2m[WebServer] [22m  syscall: [32m'open'[39m,
+[2m[WebServer] [22m  path: [32m'/Users/yuriibakurov/proofound/.next-dev-3000/routes-manifest.json'[39m
+[2m[WebServer] [22m}
+
+[1A[2K  2) [chromium] › e2e/strict/organization.strict.spec.ts:73:3 › Strict MVP Organization Flows (O-01..O-20) › O-02..O-04 org setup, team roles, and profile contracts are verifiable 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByTestId('login-email')
+    Expected: visible
+    Timeout: 30000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 30000ms[22m
+    [2m  - waiting for getByTestId('login-email')[22m
+
+
+       at helpers/strict-fixtures.ts:918
+
+      916 |   const attemptLogin = async () => {
+      917 |     await page.goto('/login');
+    > 918 |     await expect(emailField).toBeVisible({ timeout: 30000 });
+          |                              ^
+      919 |     await expect(emailField).toBeEditable({ timeout: 30000 });
+      920 |     await expect(passwordField).toBeVisible({ timeout: 30000 });
+      921 |     await expect(passwordField).toBeEditable({ timeout: 30000 });
+        at attemptLogin (/Users/yuriibakurov/proofound/e2e/helpers/strict-fixtures.ts:918:30)
+        at loginWithUi (/Users/yuriibakurov/proofound/e2e/helpers/strict-fixtures.ts:932:5)
+        at /Users/yuriibakurov/proofound/e2e/strict/organization.strict.spec.ts:119:5
+
+    Error Context: test-results/strict-organization.strict-d8c62-le-contracts-are-verifiable-chromium/error-context.md
+
+
+[1A[2K[3/7] [chromium] › e2e/strict/organization.strict.spec.ts:106:3 › Strict MVP Organization Flows (O-01..O-20) › O-05..O-07 and O-17 assignment create/publish/manage lifecycle is strict
+[1A[2K[4/7] [chromium] › e2e/strict/organization.strict.spec.ts:199:3 › Strict MVP Organization Flows (O-01..O-20) › O-08..O-12 ranked matches, shortlist, messaging, and interview prep are strict
+[1A[2K[5/7] [chromium] › e2e/strict/organization.strict.spec.ts:270:3 › Strict MVP Organization Flows (O-01..O-20) › O-07b draft autosave/update and resume-to-publish contract is strict
+[1A[2K[6/7] [chromium] › e2e/strict/organization.strict.spec.ts:371:3 › Strict MVP Organization Flows (O-01..O-20) › O-13..O-16 interview, archived contract gating, and verification surfaces stay aligned
+[1A[2K[7/7] [chromium] › e2e/strict/organization.strict.spec.ts:387:3 › Strict MVP Organization Flows (O-01..O-20) › O-18..O-20 team permissions and compliance settings are strict
+[1A[2K  2 failed
+    [chromium] › e2e/strict/org-corridor.strict.spec.ts:196:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end 
+    [chromium] › e2e/strict/organization.strict.spec.ts:73:3 › Strict MVP Organization Flows (O-01..O-20) › O-02..O-04 org setup, team roles, and profile contracts are verifiable 
+  5 did not run

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-14511db2ac-0fbcee_b8f9b5a18f",
+  "featureId": "feat_route_14511db2ac",
+  "title": "Proof-fit checks read a metric key that getAllMetrics does not return",
+  "category": "bug",
+  "severity": "medium",
+  "confidence": "high",
+  "triage": "confirmed-bug",
+  "evidence": [
+    {
+      "path": "app/api/cron/health-check/route.ts",
+      "startLine": 69,
+      "endLine": 69,
+      "symbol": "GET",
+      "quote": "const metrics = await getAllMetrics();"
+    },
+    {
+      "path": "app/api/cron/health-check/route.ts",
+      "startLine": 102,
+      "endLine": 120,
+      "symbol": "GET",
+      "quote": "if (metrics.pacLift) {"
+    },
+    {
+      "path": "lib/analytics/metrics.ts",
+      "startLine": 867,
+      "endLine": 877,
+      "symbol": "getAllMetrics",
+      "quote": "return { ttsc, ttfqi, ttv, pac, firstTenMinuteActivation };"
+    }
+  ],
+  "reasoning": "The health route expects getAllMetrics() to expose metrics.pacLift, but the current implementation returns the PAC lift result under metrics.pac. As a result, the proof-fit acceptance and contract health checks are skipped entirely and the response can report healthy without any proof-fit check entries, even when PAC lift is below target.",
+  "reproduction": "Call GET with valid internal authorization while calculatePACLift() returns a low lift. getAllMetrics() returns that value as metrics.pac, so metrics.pacLift is undefined and checks.pac_acceptance/checks.pac_contract are never populated.",
+  "recommendation": "Use the returned metrics.pac key in this route, or change getAllMetrics() to return pacLift consistently and update callers. Prefer a typed return contract so this mismatch fails typecheck.",
+  "whyTestsDoNotAlreadyCoverThis": "No linked tests were provided for this route, and getAllMetrics() is typed as Record<string, any>, so typecheck would not catch the misspelled/mismatched key.",
+  "suggestedRegressionTest": "Mock getAllMetrics() to return { pac: { lift: 10 }, ttsc: null, ttfqi: null } and assert the health response includes warning checks for proof-fit acceptance and contract.",
+  "minimumFixScope": "Align the route with getAllMetrics()'s PAC key or align getAllMetrics() with the route's expected pacLift key, then add a focused route test.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: health-check now reads metrics.pac returned by getAllMetrics; covered by tests/api/cron-health-check-route.test.ts.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:18:25.338Z"
+    }
+  ],
+  "signature": "sig_feat-route-14511db2ac_0fbceedc1c",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:54:43.199Z",
+  "updatedAt": "2026-05-16T17:18:25.337Z"
+}

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "findingId": "fnd_sig-feat-route-0b8c982556-1a568b_9994d181e8",
+  "featureId": "feat_route_0b8c982556",
+  "title": "JSON and text export failures are reported as PDF generation failures",
+  "category": "api-contract",
+  "severity": "low",
+  "confidence": "high",
+  "triage": "contract-mismatch",
+  "evidence": [
+    {
+      "path": "app/api/portfolio/public/[handle]/export/route.ts",
+      "startLine": 24,
+      "endLine": 31,
+      "symbol": null,
+      "quote": "const format = resolvePortfolioExportFormat(request);"
+    },
+    {
+      "path": "app/api/portfolio/public/[handle]/export/route.ts",
+      "startLine": 59,
+      "endLine": 65,
+      "symbol": null,
+      "quote": "return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });"
+    }
+  ],
+  "reasoning": "The route explicitly supports json, text, and pdf formats, but its shared catch block always returns a PDF-specific error message. Any exception while serving format=json or format=text, including projection/export-data serialization or text-pack construction failures, will produce an inaccurate API response. That makes client-side error handling and support diagnostics misleading for two of the three documented formats.",
+  "reproduction": null,
+  "recommendation": "Resolve the requested format before the try/catch or use a format-neutral 500 response such as 'Failed to generate export'.",
+  "whyTestsDoNotAlreadyCoverThis": "The discovered public export route tests cover successful pdf/json/text responses and 404 inaccessible states, but do not mock an exception for json or text export paths and assert the 500 body.",
+  "suggestedRegressionTest": "Add a test that requests ?format=text, makes buildTextPack or the projection resolver throw after access succeeds, and asserts a format-neutral 500 error body.",
+  "minimumFixScope": "Change the public export route's catch response message, or compute format early and return format-specific failure messages for all supported formats.",
+  "status": "fixed",
+  "history": [
+    {
+      "runId": null,
+      "kind": "triage",
+      "status": "fixed",
+      "note": "Fixed manually: public portfolio export catch path now returns format-neutral failure; covered by tests/api/public-portfolio-export-route.test.ts.",
+      "reasoning": null,
+      "commands": [],
+      "createdAt": "2026-05-16T17:17:56.300Z"
+    }
+  ],
+  "signature": "sig_feat-route-0b8c982556_1a568bf3a7",
+  "linkedPatchAttemptIds": [],
+  "createdByRunId": "20260516T164325-52e1d0",
+  "createdAt": "2026-05-16T16:48:48.186Z",
+  "updatedAt": "2026-05-16T17:17:56.294Z"
+}

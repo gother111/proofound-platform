@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_de0c876fc8",
+  "title": "Route /dev/resolve-home",
+  "summary": "Web route implemented by app/dev/resolve-home/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/dev/resolve-home/route.ts",
+      "symbol": null,
+      "route": "/dev/resolve-home",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/dev/resolve-home/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "pending",
+  "lock": null,
+  "findingIds": [],
+  "patchAttemptIds": [],
+  "analysisHistory": [],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T16:02:40.128Z"
+}

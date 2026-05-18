@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "featureId": "feat_route_0b8c982556",
+  "title": "Route /api/portfolio/public/:handle/export",
+  "summary": "Web route implemented by app/api/portfolio/public/[handle]/export/route.ts.",
+  "kind": "route",
+  "source": "next-app-route",
+  "confidence": "high",
+  "entrypoints": [
+    {
+      "path": "app/api/portfolio/public/[handle]/export/route.ts",
+      "symbol": null,
+      "route": "/api/portfolio/public/:handle/export",
+      "command": null
+    }
+  ],
+  "ownedFiles": [
+    {
+      "path": "app/api/portfolio/public/[handle]/export/route.ts",
+      "reason": "entrypoint"
+    }
+  ],
+  "contextFiles": [],
+  "tests": [],
+  "tags": ["next", "web"],
+  "trustBoundaries": ["user-input", "network", "serialization"],
+  "status": "fixed",
+  "lock": null,
+  "findingIds": ["fnd_sig-feat-route-0b8c982556-1a568b_9994d181e8"],
+  "patchAttemptIds": [],
+  "analysisHistory": [
+    {
+      "runId": "20260516T164325-52e1d0",
+      "kind": "review",
+      "summary": "1 finding(s)",
+      "provider": "codex",
+      "model": null,
+      "createdAt": "2026-05-16T16:48:48.189Z"
+    }
+  ],
+  "createdAt": "2026-05-16T16:02:40.128Z",
+  "updatedAt": "2026-05-16T17:17:56.495Z"
+}

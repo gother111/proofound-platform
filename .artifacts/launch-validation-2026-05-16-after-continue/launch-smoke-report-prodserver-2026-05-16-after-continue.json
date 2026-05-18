@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 2,
+  "scope": "full",
+  "generatedAt": "2026-05-16T19:24:57.694Z",
+  "targetBaseUrl": "http://127.0.0.1:33213",
+  "executionMode": "local",
+  "freshnessThresholdMinutes": 60,
+  "expiresAt": "2026-05-16T20:24:57.694Z",
+  "overallStatus": "fail",
+  "ai": {
+    "assistantsEnabled": false,
+    "rawPromptLoggingEnabled": false,
+    "modelCallRequired": false,
+    "state": "disabled_local_fallback_verified"
+  },
+  "corridors": [
+    {
+      "id": "individual",
+      "label": "Individual corridor",
+      "status": "pass",
+      "checkIds": ["public_individual_portfolio_visible", "proof_creation_case"],
+      "generatedAt": "2026-05-16T19:24:57.694Z"
+    },
+    {
+      "id": "organization",
+      "label": "Organization corridor",
+      "status": "fail",
+      "checkIds": [
+        "public_org_trust_fixture_live",
+        "full_org_corridor_review_to_engagement_verification"
+      ],
+      "generatedAt": "2026-05-16T19:24:57.694Z"
+    },
+    {
+      "id": "trust_privacy",
+      "label": "Trust / privacy corridor",
+      "status": "pass",
+      "checkIds": ["hidden_portfolio_protected", "privacy_no_leak_case"],
+      "generatedAt": "2026-05-16T19:24:57.694Z"
+    }
+  ],
+  "checks": [
+    {
+      "id": "public_individual_portfolio_visible",
+      "corridor": "individual",
+      "label": "Public individual portfolio visible case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": ["tests/ui/public-portfolio-access-consistency.test.tsx"]
+      },
+      "status": "pass",
+      "expectedState": "public_individual_portfolio_visible",
+      "durationMs": 1649,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 73ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  21:24:44\n   Duration  966ms (transform 104ms, setup 109ms, collect 160ms, tests 73ms, environment 211ms, prepare 47ms)\n\n\n(node:28937) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-16T19:24:45.566Z"
+    },
+    {
+      "id": "proof_creation_case",
+      "corridor": "individual",
+      "label": "Proof creation case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": ["tests/api/expertise-user-skill-proofs-route.test.ts"]
+      },
+      "status": "pass",
+      "expectedState": "proof_creation_case_live",
+      "durationMs": 1582,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (6 tests) 16ms\n\n Test Files  1 passed (1)\n      Tests  6 passed (6)\n   Start at  21:24:46\n   Duration  853ms (transform 67ms, setup 99ms, collect 62ms, tests 16ms, environment 193ms, prepare 43ms)\n\n\n(node:28986) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-16T19:24:47.149Z"
+    },
+    {
+      "id": "public_org_trust_fixture_live",
+      "corridor": "organization",
+      "label": "Seeded public org trust fixture live",
+      "runner": {
+        "kind": "command",
+        "label": "seeded_public_org_trust_smoke",
+        "preCommands": [
+          {
+            "label": "seed_public_org_trust_fixture",
+            "command": ["npm", "run", "seed:public-org-trust-fixture"]
+          }
+        ],
+        "command": ["npm", "run", "test:e2e:org-trust:smoke"]
+      },
+      "status": "fail",
+      "expectedState": "public_org_trust_fixture_live",
+      "durationMs": 5138,
+      "message": "Seeded public org trust fixture live failed",
+      "outputSnippet": "[seed_public_org_trust_fixture]\n> proofound@0.1.0 seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-05-16T19:24:47.763Z\",\n  \"verificationUrl\": null,\n  \"verifiedAt\": null,\n  \"httpStatus\": null\n}\n\n(node:29052) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n\n[seeded_public_org_trust_smoke]\n> proofound@0.1.0 test:e2e:org-trust:smoke\n> node ./scripts/playwright-node24.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\n\nError: Process from config.webServer was not able to start. Exit code: 1\n\n\u001b[1A\u001b[2K\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:29197) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]",
+      "generatedAt": "2026-05-16T19:24:52.287Z",
+      "evidence": {
+        "fixtureSlug": "proofound-labs",
+        "fixturePath": "/portfolio/org/proofound-labs"
+      }
+    },
+    {
+      "id": "full_org_corridor_review_to_engagement_verification",
+      "corridor": "organization",
+      "label": "Full org corridor review to engagement verification case",
+      "runner": {
+        "kind": "command",
+        "label": "strict_org_corridor_smoke",
+        "command": [
+          "node",
+          "./scripts/playwright-node24.mjs",
+          "test",
+          "e2e/strict/org-corridor.strict.spec.ts",
+          "--project=chromium",
+          "--reporter=line",
+          "--workers=1"
+        ],
+        "env": {
+          "NEXT_PUBLIC_USE_MOCK_SUPABASE": "false"
+        }
+      },
+      "status": "fail",
+      "expectedState": "full_org_corridor_review_to_engagement_verification_live",
+      "durationMs": 1384,
+      "message": "Full org corridor review to engagement verification case failed",
+      "outputSnippet": "[strict_org_corridor_smoke]\nError: Process from config.webServer was not able to start. Exit code: 1\n\n\u001b[1A\u001b[2K\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:29238) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]",
+      "generatedAt": "2026-05-16T19:24:53.671Z"
+    },
+    {
+      "id": "hidden_portfolio_protected",
+      "corridor": "trust_privacy",
+      "label": "Hidden portfolio protected case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": ["tests/ui/public-portfolio-access-consistency.test.tsx"]
+      },
+      "status": "pass",
+      "expectedState": "hidden_portfolio_protected",
+      "durationMs": 1733,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 77ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  21:24:54\n   Duration  1.00s (transform 115ms, setup 100ms, collect 180ms, tests 77ms, environment 210ms, prepare 53ms)\n\n\n(node:29273) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-16T19:24:55.404Z"
+    },
+    {
+      "id": "privacy_no_leak_case",
+      "corridor": "trust_privacy",
+      "label": "Privacy no-leak case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": [
+          "tests/api/org-match-review-route.test.ts",
+          "tests/lib/effective-visibility.test.ts",
+          "tests/lib/profile-fetcher.test.ts",
+          "tests/api/conversation-reveal-route.test.ts"
+        ]
+      },
+      "status": "pass",
+      "expectedState": "privacy_no_leak_enforced",
+      "durationMs": 2290,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (52) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 3ms\n ✓ tests/api/org-match-review-route.test.ts  (18 tests) 69ms\n ✓ tests/lib/profile-fetcher.test.ts  (2 tests) 4ms\n ✓ tests/api/conversation-reveal-route.test.ts  (7 tests) 17ms\n\n Test Files  4 passed (4)\n      Tests  32 passed (32)\n   Start at  21:24:56\n   Duration  1.55s (transform 385ms, setup 484ms, collect 2.06s, tests 93ms, environment 874ms, prepare 208ms)\n\n\n(node:29325) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:29325) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:29325) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:29325) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-05-16T19:24:57.694Z"
+    }
+  ]
+}

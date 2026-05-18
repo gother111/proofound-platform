@@ -1,0 +1,1930 @@
+[
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content PROOFOUND How it works For individuals For organizations Sign in Request a pilot Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over. Proof portfolios for individuals. Evidence-based review for teams. Request a pilot Create your proof portfolio Blind by default Photo, name, contact details, prestige markers, and other identity signals are removed first. The goal is not anonymity for its own sa",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "48px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Real outcomes, not bullet points"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Verification trust layer"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Universal compatibility"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "To modern challenges"
+      },
+      {
+        "size": "149.6px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "67.2px",
+        "tag": "h2",
+        "text": "Blind by default"
+      },
+      {
+        "size": "60px",
+        "tag": "h2",
+        "text": "Build hiring on stronger proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "landing",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 8187,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Proofound | Proof Behind the Claim",
+    "url": "http://localhost:33100/",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Welcome back Sign in to continue to Proofound EMAIL ADDRESS * PASSWORD * Remember me Forgot password? Sign in OR CONTINUE WITH Google LinkedIn Don't have an account? Create account By signing in, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Welcome back"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "login",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 1032,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Sign In | Proofound",
+    "url": "http://localhost:33100/login",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back Join Proofound Choose the account type that fits how you'll use Proofound. Individual For professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow. Continue as Individual → Organization For organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist. Continue as Organization → Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privac",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Join Proofound"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Individual"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Organization"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Sign Up | Proofound",
+    "url": "http://localhost:33100/signup",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Create your individual account Start with a calm proof-first account. You can add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Create your individual account"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup-individual",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 1269,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Individual Sign Up | Proofound",
+    "url": "http://localhost:33100/signup/individual",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Create your organization account Start with a calm proof-first account. You can add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create organization account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 900,
+    "clientWidth": 1429,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Create your organization account"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup-organization",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 1269,
+    "scrollWidth": 1429,
+    "tinyTargets": [],
+    "title": "Organization Sign Up | Proofound",
+    "url": "http://localhost:33100/signup/organization",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Reset your password Enter your email and we'll send one secure reset link. Nothing else changes until you use it. Email Send reset link ← Back to login",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Reset your password"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "reset-password",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Reset Password | Proofound",
+    "url": "http://localhost:33100/reset-password",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Verification failed No verification token provided The verification link may have expired or is invalid. Please try signing up again or contact support. Sign up again Go to login",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Verification failed"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-email",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Verify Email | Proofound",
+    "url": "http://localhost:33100/verify-email",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Verification failed The link could not be verified. You can retry from settings. Verification token is missing. Please check your email for the correct link. Common issues: The verification link has expired (links expire after 24 hours) The link has already been used The link is invalid or incomplete Try again from settings Go to Profile",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Verification failed"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-work-email",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify-work-email",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Public Pages: This public page is archived outside the locked launch MVP corridor.",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "public-individual-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/p/demo-proofound",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /org is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "public-org-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/org/demo-proofound",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /candidate is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-invite-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/candidate/invite/invalid-token",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Invite link is invalid This invite link is missing a token. Ask the organization to resend it. Return home",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Invite link is invalid"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "accept-invite",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/accept-invite",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Unable to load request Service temporarily unavailable Return home",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "Unable to load request"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-token-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify/invalid-token",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "feedback-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/feedback/invalid-token",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content 403 You do not have access to this page You don't have permission to access this page. This area is restricted to authorized personnel only. Go to OverviewGo to Home If you believe you should have access to this page, please contact your administrator.",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "403"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "You do not have access to this page"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "forbidden",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/403",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /definitely-not-a-real-proofound-route is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 900,
+    "clientWidth": 1440,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "not-found",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 900,
+      "width": 1440
+    },
+    "scrollHeight": 900,
+    "scrollWidth": 1440,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/definitely-not-a-real-proofound-route",
+    "viewportName": "desktop1440"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content PROOFOUND How it works For individuals For organizations Sign in Request a pilot Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over. Proof portfolios for individuals. Evidence-based review for teams. Request a pilot Create your proof portfolio Blind by default Photo, name, contact details, prestige markers, and other identity signals are removed first. The goal is not anonymity for its own sa",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "48px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Real outcomes, not bullet points"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Verification trust layer"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "Universal compatibility"
+      },
+      {
+        "size": "32px",
+        "tag": "h2",
+        "text": "To modern challenges"
+      },
+      {
+        "size": "149.6px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "67.2px",
+        "tag": "h2",
+        "text": "Blind by default"
+      },
+      {
+        "size": "60px",
+        "tag": "h2",
+        "text": "Build hiring on stronger proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "landing",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 7395,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Proofound | Proof Behind the Claim",
+    "url": "http://localhost:33100/",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Welcome back Sign in to continue to Proofound EMAIL ADDRESS * PASSWORD * Remember me Forgot password? Sign in OR CONTINUE WITH Google LinkedIn Don't have an account? Create account By signing in, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Welcome back"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "login",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 1032,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Sign In | Proofound",
+    "url": "http://localhost:33100/login",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back Join Proofound Choose the account type that fits how you'll use Proofound. Individual For professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow. Continue as Individual → Organization For organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist. Continue as Organization → Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privac",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Join Proofound"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Individual"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Organization"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 834,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Sign Up | Proofound",
+    "url": "http://localhost:33100/signup",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Create your individual account Start with a calm proof-first account. You can add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Create your individual account"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup-individual",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 1269,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Individual Sign Up | Proofound",
+    "url": "http://localhost:33100/signup/individual",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Create your organization account Start with a calm proof-first account. You can add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create organization account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 800,
+    "clientWidth": 1269,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Create your organization account"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup-organization",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 1269,
+    "scrollWidth": 1269,
+    "tinyTargets": [],
+    "title": "Organization Sign Up | Proofound",
+    "url": "http://localhost:33100/signup/organization",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Reset your password Enter your email and we'll send one secure reset link. Nothing else changes until you use it. Email Send reset link ← Back to login",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Reset your password"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "reset-password",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Reset Password | Proofound",
+    "url": "http://localhost:33100/reset-password",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Verification failed No verification token provided The verification link may have expired or is invalid. Please try signing up again or contact support. Sign up again Go to login",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Verification failed"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-email",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Verify Email | Proofound",
+    "url": "http://localhost:33100/verify-email",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Verification failed The link could not be verified. You can retry from settings. Verification token is missing. Please check your email for the correct link. Common issues: The verification link has expired (links expire after 24 hours) The link has already been used The link is invalid or incomplete Try again from settings Go to Profile",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Verification failed"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-work-email",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify-work-email",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Public Pages: This public page is archived outside the locked launch MVP corridor.",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "public-individual-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/p/demo-proofound",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /org is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "public-org-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/org/demo-proofound",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /candidate is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-invite-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/candidate/invite/invalid-token",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Invite link is invalid This invite link is missing a token. Ask the organization to resend it. Return home",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Invite link is invalid"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "accept-invite",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/accept-invite",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Unable to load request Service temporarily unavailable Return home",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "Unable to load request"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-token-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify/invalid-token",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "feedback-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/feedback/invalid-token",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content 403 You do not have access to this page You don't have permission to access this page. This area is restricted to authorized personnel only. Go to OverviewGo to Home If you believe you should have access to this page, please contact your administrator.",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "403"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "You do not have access to this page"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "forbidden",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/403",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /definitely-not-a-real-proofound-route is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 800,
+    "clientWidth": 1280,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "36px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "not-found",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 800,
+      "width": 1280
+    },
+    "scrollHeight": 800,
+    "scrollWidth": 1280,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/definitely-not-a-real-proofound-route",
+    "viewportName": "desktop1280"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Sign in Start Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over. Request a pilot Create your proof portfolio 02 Real outcomes, not bullet points Vague summaries and floating skill lists resolve into structured outcomes, work scope, ownership, and context. Skills stop existing as decoration and start living next to real work. Senior Operations Professional OUTCOME SIGNAL PROOF SNAPSHOT Review",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "44px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Real outcomes, not bullet points"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Verification trust layer"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Universal compatibility"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "To modern challenges"
+      },
+      {
+        "size": "118.4px",
+        "tag": "h1",
+        "text": "Proof behindthe claim"
+      },
+      {
+        "size": "48px",
+        "tag": "h2",
+        "text": "Blind by default"
+      },
+      {
+        "size": "37.6px",
+        "tag": "h2",
+        "text": "Build hiring on stronger proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "landing",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 4760,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Proofound | Proof Behind the Claim",
+    "url": "http://localhost:33100/",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Welcome back Sign in to continue to Proofound EMAIL ADDRESS * PASSWORD * Remember me Forgot password? Sign in OR CONTINUE WITH Google LinkedIn Don't have an account? Create account By signing in, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Welcome back"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "login",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 922,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Sign In | Proofound",
+    "url": "http://localhost:33100/login",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back Join Proofound Choose the account type that fits how you'll use Proofound. Individual For professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow. Continue as Individual → Organization For organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist. Continue as Organization → Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privac",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Join Proofound"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Individual"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Organization"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 1066,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Sign Up | Proofound",
+    "url": "http://localhost:33100/signup",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Create your individual account Start with a calm proof-first account. You can add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Create your individual account"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup-individual",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 1173,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Individual Sign Up | Proofound",
+    "url": "http://localhost:33100/signup/individual",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Create your organization account Start with a calm proof-first account. You can add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create organization account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 844,
+    "clientWidth": 379,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Create your organization account"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup-organization",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 1173,
+    "scrollWidth": 379,
+    "tinyTargets": [],
+    "title": "Organization Sign Up | Proofound",
+    "url": "http://localhost:33100/signup/organization",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Reset your password Enter your email and we'll send one secure reset link. Nothing else changes until you use it. Email Send reset link ← Back to login",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Reset your password"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "reset-password",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Reset Password | Proofound",
+    "url": "http://localhost:33100/reset-password",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Verification failed No verification token provided The verification link may have expired or is invalid. Please try signing up again or contact support. Sign up again Go to login",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Verification failed"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-email",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Verify Email | Proofound",
+    "url": "http://localhost:33100/verify-email",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Verification failed The link could not be verified. You can retry from settings. Verification token is missing. Please check your email for the correct link. Common issues: The verification link has expired (links expire after 24 hours) The link has already been used The link is invalid or incomplete Try again from settings Go to Profile",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Verification failed"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-work-email",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify-work-email",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Public Pages: This public page is archived outside the locked launch MVP corridor.",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "public-individual-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/p/demo-proofound",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /org is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "public-org-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/org/demo-proofound",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /candidate is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-invite-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/candidate/invite/invalid-token",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Invite link is invalid This invite link is missing a token. Ask the organization to resend it. Return home",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Invite link is invalid"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "accept-invite",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/accept-invite",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Unable to load request Service temporarily unavailable Return home",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "Unable to load request"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-token-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify/invalid-token",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "feedback-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/feedback/invalid-token",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content 403 You do not have access to this page You don't have permission to access this page. This area is restricted to authorized personnel only. Go to OverviewGo to Home If you believe you should have access to this page, please contact your administrator.",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "403"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "You do not have access to this page"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "forbidden",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/403",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /definitely-not-a-real-proofound-route is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 844,
+    "clientWidth": 390,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "not-found",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 844,
+      "width": 390
+    },
+    "scrollHeight": 844,
+    "scrollWidth": 390,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/definitely-not-a-real-proofound-route",
+    "viewportName": "mobile390"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Sign in Start Proof behind the claim Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over. Request a pilot Create your proof portfolio 02 Real outcomes, not bullet points Vague summaries and floating skill lists resolve into structured outcomes, work scope, ownership, and context. Skills stop existing as decoration and start living next to real work. Senior Operations Professional OUTCOME SIGNAL PROOF SNAPSHOT Review",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "38.72px",
+        "tag": "h1",
+        "text": "Proof behind the claim"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Real outcomes, not bullet points"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Verification trust layer"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "Universal compatibility"
+      },
+      {
+        "size": "28.8px",
+        "tag": "h2",
+        "text": "To modern challenges"
+      },
+      {
+        "size": "118.4px",
+        "tag": "h1",
+        "text": "Proof behindthe claim"
+      },
+      {
+        "size": "48px",
+        "tag": "h2",
+        "text": "Blind by default"
+      },
+      {
+        "size": "37.6px",
+        "tag": "h2",
+        "text": "Build hiring on stronger proof"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "landing",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 4807,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Proofound | Proof Behind the Claim",
+    "url": "http://localhost:33100/",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Welcome back Sign in to continue to Proofound EMAIL ADDRESS * PASSWORD * Remember me Forgot password? Sign in OR CONTINUE WITH Google LinkedIn Don't have an account? Create account By signing in, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Welcome back"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "login",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 922,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Sign In | Proofound",
+    "url": "http://localhost:33100/login",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Back Join Proofound Choose the account type that fits how you'll use Proofound. Individual For professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow. Continue as Individual → Organization For organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist. Continue as Organization → Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privac",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "32px",
+        "tag": "h1",
+        "text": "Join Proofound"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Individual"
+      },
+      {
+        "size": "20px",
+        "tag": "h3",
+        "text": "Organization"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 1066,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Sign Up | Proofound",
+    "url": "http://localhost:33100/signup",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Create your individual account Start with a calm proof-first account. You can add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Create your individual account"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup-individual",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 1173,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Individual Sign Up | Proofound",
+    "url": "http://localhost:33100/signup/individual",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Create your organization account Start with a calm proof-first account. You can add details after sign-up. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create organization account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Create your organization account"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "signup-organization",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 1173,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Organization Sign Up | Proofound",
+    "url": "http://localhost:33100/signup/organization",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Reset your password Enter your email and we'll send one secure reset link. Nothing else changes until you use it. Email Send reset link ← Back to login",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Reset your password"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "reset-password",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Reset Password | Proofound",
+    "url": "http://localhost:33100/reset-password",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Verification failed No verification token provided The verification link may have expired or is invalid. Please try signing up again or contact support. Sign up again Go to login",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Verification failed"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-email",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Verify Email | Proofound",
+    "url": "http://localhost:33100/verify-email",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Verification failed The link could not be verified. You can retry from settings. Verification token is missing. Please check your email for the correct link. Common issues: The verification link has expired (links expire after 24 hours) The link has already been used The link is invalid or incomplete Try again from settings Go to Profile",
+    "clientHeight": 667,
+    "clientWidth": 364,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Verification failed"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-work-email",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 702,
+    "scrollWidth": 364,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify-work-email",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Public Pages: This public page is archived outside the locked launch MVP corridor.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "public-individual-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/p/demo-proofound",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /org is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "public-org-demo",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/org/demo-proofound",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /candidate is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "candidate-invite-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/candidate/invite/invalid-token",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Invite link is invalid This invite link is missing a token. Ask the organization to resend it. Return home",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Invite link is invalid"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "accept-invite",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/accept-invite",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Unable to load request Service temporarily unavailable Return home",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "Unable to load request"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "verify-token-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/verify/invalid-token",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "24px",
+        "tag": "h3",
+        "text": "Page not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "feedback-invalid",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/feedback/invalid-token",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Skip to main content 403 You do not have access to this page You don't have permission to access this page. This area is restricted to authorized personnel only. Go to OverviewGo to Home If you believe you should have access to this page, please contact your administrator.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "40px",
+        "tag": "h1",
+        "text": "403"
+      },
+      {
+        "size": "24px",
+        "tag": "h2",
+        "text": "You do not have access to this page"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "forbidden",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Proofound - Focus on what matters",
+    "url": "http://localhost:33100/403",
+    "viewportName": "mobile375"
+  },
+  {
+    "actualViewport": {},
+    "bodyTextStart": "Not found This page is outside the locked launch MVP corridor. Archived Page: /definitely-not-a-real-proofound-route is outside the locked launch MVP corridor and is not reachable in the launch surface.",
+    "clientHeight": 667,
+    "clientWidth": 375,
+    "formControls": [],
+    "headings": [
+      {
+        "size": "28px",
+        "tag": "h1",
+        "text": "Not found"
+      }
+    ],
+    "horizontalOverflow": false,
+    "label": "not-found",
+    "offenders": [],
+    "requestedViewport": {
+      "height": 667,
+      "width": 375
+    },
+    "scrollHeight": 667,
+    "scrollWidth": 375,
+    "tinyTargets": [],
+    "title": "Not found | Proofound",
+    "url": "http://localhost:33100/definitely-not-a-real-proofound-route",
+    "viewportName": "mobile375"
+  }
+]

@@ -1,0 +1,39 @@
+> proofound@0.1.0 test:launch:routes
+> npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+(node:83270) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:83270) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:83270) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:83270) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 42ms
+ ✓ tests/api/launch-page-inventory.test.ts  (5 tests) 77ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 34ms
+ ✓ tests/api/archived-api-handlers-route.test.ts  (10 tests) 5ms
+
+ Test Files  4 passed (4)
+      Tests  25 passed (25)
+   Start at  00:23:04
+   Duration  1.04s (transform 210ms, setup 438ms, collect 535ms, tests 158ms, environment 822ms, prepare 167ms)

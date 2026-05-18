@@ -1,0 +1,603 @@
+{
+  "targeted": [
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Settings"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "privacy-mobile-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/settings/privacy",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Privacy Settings Control who can see your profile information ← Back to Privacy Overview Your data A detailed view of what Proofound stores for your account Download my data Profile information Personal Your personal profile data and settings Professional information Shared in some places Skills, experience, projects, and education Conversations Private Message history and conversation data Product usage Shared in some places Your activity logs and usage patterns Verification and trust Public Verification requests and badges How long we keep data • Profile data: Retained while ac",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Settings"
+        },
+        {
+          "size": "32px",
+          "tag": "h1",
+          "text": "Privacy Settings"
+        },
+        {
+          "size": "20px",
+          "tag": "h3",
+          "text": "Your data"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Profile information Personal Your personal profile data and settings"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Professional information Shared in some places Skills, experience, projects, and education"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Conversations Private Message history and conversation data"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Product usage Shared in some places Your activity logs and usage patterns"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Verification and trust Public Verification requests and badges"
+        },
+        {
+          "size": "20px",
+          "tag": "h3",
+          "text": "Profile visibility"
+        },
+        {
+          "size": "20px",
+          "tag": "h3",
+          "text": "Delete Account"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "privacy-action--Delete-Account-i",
+      "offenders": [
+        {
+          "bottom": -2786,
+          "h": 44,
+          "left": 16,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 282,
+          "tag": "button",
+          "text": "← Back to Privacy Overview",
+          "top": -2830,
+          "w": 266
+        },
+        {
+          "bottom": -2425,
+          "h": 44,
+          "left": 41,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 338,
+          "tag": "button",
+          "text": "Download my data",
+          "top": -2469,
+          "w": 297
+        },
+        {
+          "bottom": -2303,
+          "h": 98,
+          "left": 41,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 338,
+          "tag": "button",
+          "text": "Profile information Personal Your personal profile data and settings",
+          "top": -2401,
+          "w": 297
+        },
+        {
+          "bottom": -2180,
+          "h": 122,
+          "left": 41,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 338,
+          "tag": "button",
+          "text": "Professional information Shared in some places Skills, experience, projects, and education",
+          "top": -2302,
+          "w": 297
+        },
+        {
+          "bottom": -2081,
+          "h": 98,
+          "left": 41,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 338,
+          "tag": "button",
+          "text": "Conversations Private Message history and conversation data",
+          "top": -2179,
+          "w": 297
+        },
+        {
+          "bottom": -1958,
+          "h": 122,
+          "left": 41,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 338,
+          "tag": "button",
+          "text": "Product usage Shared in some places Your activity logs and usage patterns",
+          "top": -2080,
+          "w": 297
+        },
+        {
+          "bottom": -1880,
+          "h": 77,
+          "left": 41,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 338,
+          "tag": "button",
+          "text": "Verification and trust Public Verification requests and badges",
+          "top": -1957,
+          "w": 297
+        },
+        {
+          "bottom": -1143,
+          "h": 44,
+          "left": 54,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 273,
+          "tag": "button",
+          "text": "Public",
+          "top": -1187,
+          "w": 219
+        },
+        {
+          "bottom": -1143,
+          "h": 44,
+          "left": 281,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 325,
+          "tag": "button",
+          "text": "",
+          "top": -1187,
+          "w": 44
+        },
+        {
+          "bottom": -999,
+          "h": 44,
+          "left": 54,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 273,
+          "tag": "button",
+          "text": "Public",
+          "top": -1043,
+          "w": 219
+        },
+        {
+          "bottom": -999,
+          "h": 44,
+          "left": 281,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 325,
+          "tag": "button",
+          "text": "",
+          "top": -1043,
+          "w": 44
+        },
+        {
+          "bottom": -855,
+          "h": 44,
+          "left": 54,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 273,
+          "tag": "button",
+          "text": "Public",
+          "top": -899,
+          "w": 219
+        },
+        {
+          "bottom": -855,
+          "h": 44,
+          "left": 281,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 325,
+          "tag": "button",
+          "text": "",
+          "top": -899,
+          "w": 44
+        },
+        {
+          "bottom": -711,
+          "h": 44,
+          "left": 54,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 273,
+          "tag": "button",
+          "text": "Connections",
+          "top": -755,
+          "w": 219
+        },
+        {
+          "bottom": -711,
+          "h": 44,
+          "left": 281,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 325,
+          "tag": "button",
+          "text": "",
+          "top": -755,
+          "w": 44
+        },
+        {
+          "bottom": -567,
+          "h": 44,
+          "left": 54,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 273,
+          "tag": "button",
+          "text": "Public",
+          "top": -611,
+          "w": 219
+        },
+        {
+          "bottom": -567,
+          "h": 44,
+          "left": 281,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 325,
+          "tag": "button",
+          "text": "",
+          "top": -611,
+          "w": 44
+        },
+        {
+          "bottom": -423,
+          "h": 44,
+          "left": 54,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 273,
+          "tag": "button",
+          "text": "Private",
+          "top": -467,
+          "w": 219
+        },
+        {
+          "bottom": -423,
+          "h": 44,
+          "left": 281,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 325,
+          "tag": "button",
+          "text": "",
+          "top": -467,
+          "w": 44
+        },
+        {
+          "bottom": -279,
+          "h": 44,
+          "left": 54,
+          "offBottom": false,
+          "offLeft": false,
+          "offRight": false,
+          "offTop": true,
+          "right": 273,
+          "tag": "button",
+          "text": "Private",
+          "top": -323,
+          "w": 219
+        }
+      ],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/settings/privacy",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Preparing matches...",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Matching"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "matching-filled-mobile-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/matching?visualState=filled",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Matching 2 opportunities aligned with your skills, proof, and constraints Filters Edit profile Proof operations lead for a privacy-safe hiring corridor 86% proof fit Blind by default Why This Proof Match? proof-systems L4 privacy-review L4 launch-ops L3 contract • Region hidden 24-32 hrs/week Compensation overlap only Verified profile WHY IT FITS Proof: 91% Skills: 88% Trust: 84% I'm interested Hide Snooze Evidence systems consultant 72% proof fit Blind by default Why This Proof Match? proof-systems L4 stakeholder-enablement L3 privacy-review L3 part-time • Region hidden 16-24 hr",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Matching"
+        },
+        {
+          "size": "32px",
+          "tag": "h1",
+          "text": "Matching"
+        },
+        {
+          "size": "20px",
+          "tag": "h2",
+          "text": "Filter Matches"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "matching-filter-mobile",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/matching?visualState=filled",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Set up your matching profile Save your focus, proof emphasis, and work preferences to unlock better matches. Public proof comes from your portfolio. Refresh work examples and proof there. Review Proof Packs Focus Roles You're Interested In Add Preferred industries 0 / 19 selected Selected: None Avoid industries 0 / 19 selected Selected: None Organization Types Company NGO Government Network Startup Review emphasis Skills emphasis Proof emphasis Current emphasis: even (50%) Work Preferences Work Mode Select work mode Engagement preference Select one Full-time Part-time Contract / ",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Matching"
+        },
+        {
+          "size": "24px",
+          "tag": "h2",
+          "text": "Set up your matching profile"
+        },
+        {
+          "size": "18px",
+          "tag": "h3",
+          "text": "Focus"
+        },
+        {
+          "size": "18px",
+          "tag": "h3",
+          "text": "Review emphasis"
+        },
+        {
+          "size": "18px",
+          "tag": "h3",
+          "text": "Work Preferences"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "matching-empty-mobile-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/matching?visualState=empty",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Messages",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Messages"
+        },
+        {
+          "size": "16px",
+          "tag": "h2",
+          "text": "Messages"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "messages-masked-mobile-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/messages?conversationId=visual-masked-conversation",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Profile Inbox Matching Settings U Messages Review open introductions and keep each thread tied to its proof corridor. O Organization Re: Privacy-safe proof review for a launch corridor with intentionally long assignment title 2 Thanks. I can review the proof pack and keep identity detail... 15 minutes ago Identity protected until reveal approval EP Elena Proof Reviewer Re: Evidence operations lead The public proof summary is clear. I would keep the next ste... about 18 hours ago",
+      "clientHeight": 844,
+      "clientWidth": 390,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Messages"
+        },
+        {
+          "size": "18px",
+          "tag": "h2",
+          "text": "Messages"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Organization"
+        },
+        {
+          "size": "16px",
+          "tag": "h3",
+          "text": "Elena Proof Reviewer"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "messages-revealed-mobile-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 844,
+        "width": 390
+      },
+      "scrollHeight": 844,
+      "scrollWidth": 390,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/messages?conversationId=visual-revealed-conversation",
+      "viewportName": "mobile390"
+    },
+    {
+      "actualViewport": {},
+      "bodyTextStart": "Skip to main content Overview Profile Communications Matching Settings Proofound Profile U Loading profile Preparing your proof, visibility, and readiness details.",
+      "clientHeight": 800,
+      "clientWidth": 1280,
+      "headings": [
+        {
+          "size": "18px",
+          "tag": "h1",
+          "text": "Profile"
+        }
+      ],
+      "horizontalOverflow": false,
+      "label": "profile-full-desktop-initial",
+      "offenders": [],
+      "requestedViewport": {
+        "height": 800,
+        "width": 1280
+      },
+      "scrollHeight": 800,
+      "scrollWidth": 1280,
+      "tinyTargets": [],
+      "title": "Proofound - Focus on what matters",
+      "url": "http://localhost:33100/app/i/profile?profileView=full",
+      "viewportName": "desktop1280"
+    }
+  ],
+  "clearance": {
+    "hiddenByNav": [],
+    "main": {
+      "bottom": 768,
+      "h": 707,
+      "marginBottom": "76px",
+      "paddingBottom": "16px",
+      "y": 61
+    },
+    "nav": {
+      "bottom": 844,
+      "h": 73,
+      "top": 771
+    }
+  }
+}

@@ -1,0 +1,19 @@
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/lib/workflow-email-privacy.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/lib/workflow-email-privacy.test.ts  (11 tests) 26ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  15:51:45
+   Duration  1.15s (transform 174ms, setup 104ms, collect 459ms, tests 26ms, environment 199ms, prepare 42ms)
+
+
+(node:90066) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)

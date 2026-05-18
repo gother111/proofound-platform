@@ -1,0 +1,95 @@
+> proofound@0.1.0 test:privacy:extended
+> PROOFOUND_VITEST_TIMEOUT_MS=180000 node ./scripts/run-vitest-with-timeout.mjs --config vitest.supabase.config.ts tests/privacy/rls-policies-extended.test.ts tests/privacy/rls-mvp-isolation.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (5) from .env.test -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (5) from .env.test -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+🔧 Setting up extended test users...
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+✅ Extended test users created
+
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+🧹 Cleaning up extended test data...
+
+ ✓ tests/privacy/rls-mvp-isolation.test.ts  (4 tests) 31210ms
+ ❯ tests/privacy/rls-policies-extended.test.ts  (27 tests | 3 failed) 33817ms
+   ❯ tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies > 6. Skills & Experience Privacy > ✅ Users can add skills to their own profile
+     → Alice should be able to add skills to her profile - but got error: permission denied for function proofound_mark_matches_stale_for_profiles: expected { code: '42501', details: null, …(2) } to be null
+   ❯ tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies > 6. Skills & Experience Privacy > ✅ Users can update their own skills
+     → Cannot read properties of null (reading 'id')
+   ❯ tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies > 7. Assignment Privacy > ✅ Users can update assignments in their own organization
+     → Alice should be able to update her assignment - but got error: permission denied for function proofound_mark_matches_stale_for_assignment: expected { code: '42501', details: null, …(2) } to be null
+stdout | tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies
+✅ Extended cleanup complete
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies > 6. Skills & Experience Privacy > ✅ Users can add skills to their own profile
+AssertionError: Alice should be able to add skills to her profile - but got error: permission denied for function proofound_mark_matches_stale_for_profiles: expected { code: '42501', details: null, …(2) } to be null
+ ❯ expectAuthorized tests/privacy/helpers/rls-test-utils.ts:56:67
+     54|  * Example:
+     55|  * ```typescript
+     56|  * const { data, error } = await userAClient.from('profiles').select('…
+       |                                                                   ^
+     57|  * expectUnauthorized(data, error, 'User A should not see User B's pro…
+     58|  * ```
+ ❯ tests/privacy/rls-policies-extended.test.ts:122:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies > 6. Skills & Experience Privacy > ✅ Users can update their own skills
+TypeError: Cannot read properties of null (reading 'id')
+ ❯ tests/privacy/rls-policies-extended.test.ts:162:26
+    160| 
+    161|       if (aliceSkill) {
+    162|         // Bob tries to delete Alice's skill
+       |                          ^
+    163|         const { data, error } = await bobClient
+    164|           .from('skills')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/privacy/rls-policies-extended.test.ts > Extended RLS Privacy Policies > 7. Assignment Privacy > ✅ Users can update assignments in their own organization
+AssertionError: Alice should be able to update her assignment - but got error: permission denied for function proofound_mark_matches_stale_for_assignment: expected { code: '42501', details: null, …(2) } to be null
+ ❯ expectAuthorized tests/privacy/helpers/rls-test-utils.ts:56:67
+     54|  * Example:
+     55|  * ```typescript
+     56|  * const { data, error } = await userAClient.from('profiles').select('…
+       |                                                                   ^
+     57|  * expectUnauthorized(data, error, 'User A should not see User B's pro…
+     58|  * ```
+ ❯ tests/privacy/rls-policies-extended.test.ts:343:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  3 failed | 28 passed (31)
+   Start at  18:55:09
+   Duration  34.61s (transform 224ms, setup 40ms, collect 559ms, tests 65.03s, environment 0ms, prepare 94ms)
