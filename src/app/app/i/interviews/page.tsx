@@ -298,8 +298,8 @@ export default function InterviewsPage() {
                       {interview.interview?.platform && (
                         <div className="flex items-center gap-2">
                           <Video className="w-4 h-4" style={{ color: '#6B6760' }} />
-                          <span className="text-sm capitalize" style={{ color: '#6B6760' }}>
-                            {interview.interview.platform}
+                          <span className="text-sm" style={{ color: '#6B6760' }}>
+                            {internalValueLabel(interview.interview.platform)}
                           </span>
                         </div>
                       )}
