@@ -55,10 +55,16 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
 
+    expect(screen.getByText('Review focus')).toBeInTheDocument();
+    expect(screen.getByText('Choose an assignment to review matches.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Select an assignment to open its matching queue.')
+    ).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('button', { name: /matching for designer/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/no matches yet/i)).toBeInTheDocument();
+      expect(screen.getByText(/no matches for designer yet/i)).toBeInTheDocument();
     });
 
     expect(screen.queryByRole('button', { name: /initiate test/i })).not.toBeInTheDocument();
@@ -171,6 +177,7 @@ describe('MatchingOrganizationView launch corridor', () => {
     );
 
     expect(screen.getByText('New candidates')).toBeInTheDocument();
+    expect(screen.getAllByText('2 candidates').length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole('button', { name: /matching for designer/i }));
 

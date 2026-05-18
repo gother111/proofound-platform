@@ -1,0 +1,56 @@
+[
+  {
+    "name": "no-selection-mobile390",
+    "path": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-goal-2026-05-18/org-matching-guidance/no-selection-mobile390.png",
+    "url": "http://localhost:3000/verify/org-matching-harness",
+    "title": "Proofound - Focus on what matters",
+    "viewportWidth": 390,
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "hasHorizontalOverflow": false,
+    "reviewFocusVisible": true,
+    "noSelectionVisible": true,
+    "noMatchesTextInBody": false,
+    "noMatchesVisible": false
+  },
+  {
+    "name": "no-selection-desktop1280",
+    "path": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-goal-2026-05-18/org-matching-guidance/no-selection-desktop1280.png",
+    "url": "http://localhost:3000/verify/org-matching-harness",
+    "title": "Proofound - Focus on what matters",
+    "viewportWidth": 1280,
+    "scrollWidth": 1280,
+    "bodyScrollWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "reviewFocusVisible": true,
+    "noSelectionVisible": true,
+    "noMatchesTextInBody": false,
+    "noMatchesVisible": false
+  },
+  {
+    "name": "no-matches-mobile390",
+    "path": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-goal-2026-05-18/org-matching-guidance/no-matches-mobile390.png",
+    "url": "http://localhost:3000/verify/org-matching-harness",
+    "title": "Proofound - Focus on what matters",
+    "viewportWidth": 390,
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "hasHorizontalOverflow": false,
+    "reviewFocusVisible": true,
+    "noSelectionVisible": false,
+    "noMatchesVerifiedByWait": true
+  },
+  {
+    "name": "no-matches-desktop1280",
+    "path": "/Users/yuriibakurov/proofound/.artifacts/ux-browser-goal-2026-05-18/org-matching-guidance/no-matches-desktop1280.png",
+    "url": "http://localhost:3000/verify/org-matching-harness",
+    "title": "Proofound - Focus on what matters",
+    "viewportWidth": 1280,
+    "scrollWidth": 1280,
+    "bodyScrollWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "reviewFocusVisible": true,
+    "noSelectionVisible": false,
+    "noMatchesVerifiedByWait": true
+  }
+]

@@ -3134,3 +3134,66 @@ Evidence:
 
 - `npm run test -- tests/ui/assignment-review-client.test.tsx`
   - pass
+
+## Organization Matching Focus Continuation
+
+### Updated Verdict
+
+Improved for organization matching clarity.
+
+The organization matching surface had assignment cards and matching actions, but
+the first screen did not give users a clear review focus before they selected an
+assignment. A reviewer could see several cards and CTAs without an explicit
+instruction that matching is intentionally opened one assignment at a time.
+
+### Findings And Fixes
+
+#### P2 - Organization matching did not make the first review action obvious
+
+Affected surface:
+
+- `/app/o/[slug]/assignments`
+- `/app/o/[slug]/matching` redirect path into assignments
+
+Fix:
+
+- Renamed the internal matching header to `Assignment matching`.
+- Added a compact `Review focus` panel that explains whether the user should
+  choose an assignment or is already reviewing a selected assignment.
+- Added simple counts for assignments, ready-to-review assignments, and
+  candidate signals so the page feels oriented without becoming a dashboard.
+- Added a calm no-selection prompt below the assignment cards.
+- Made the selected assignment no-match state assignment-specific:
+  `No matches for [assignment] yet`.
+
+### Rendered Verification
+
+The Codex in-app Browser plugin was attempted again for this continuation. It
+first returned `Browser turn does not belong to this IAB pipe`; after a fresh
+connection reset, it returned `Browser is not available: iab`. This evidence is
+therefore labeled as fallback rendered evidence rather than Browser-plugin
+proof.
+
+Fallback rendered evidence:
+
+- No-selection mobile organization matching at 390px - no horizontal overflow;
+  `Review focus` and the select-an-assignment prompt are visible.
+- No-selection desktop organization matching at 1280px - no horizontal
+  overflow; the summary counts stay composed.
+- No-match mobile organization matching at 390px - no horizontal overflow; the
+  selected assignment and next actions remain reachable.
+- No-match desktop organization matching at 1280px - no horizontal overflow;
+  the assignment-specific no-match state remains centered and legible.
+
+Evidence:
+
+- `.artifacts/ux-browser-goal-2026-05-18/org-matching-guidance/fallback-rendered-state.json`
+- `.artifacts/ux-browser-goal-2026-05-18/org-matching-guidance/no-selection-mobile390.png`
+- `.artifacts/ux-browser-goal-2026-05-18/org-matching-guidance/no-selection-desktop1280.png`
+- `.artifacts/ux-browser-goal-2026-05-18/org-matching-guidance/no-matches-mobile390.png`
+- `.artifacts/ux-browser-goal-2026-05-18/org-matching-guidance/no-matches-desktop1280.png`
+
+### Automated Checks
+
+- `npm run test -- tests/ui/matching-organization-view-beta.test.tsx`
+  - pass

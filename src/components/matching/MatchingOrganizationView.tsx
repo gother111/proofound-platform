@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MatchResultCard } from './MatchResultCard';
 import { toast } from 'sonner';
-import { Plus, Users } from 'lucide-react';
+import { ArrowRight, ListChecks, Plus, Users } from 'lucide-react';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
 import { getOrganizationRecoveryActions } from '@/lib/ui/recovery-actions';
@@ -49,6 +49,10 @@ function assignmentStatusLabel(status: string) {
   return ASSIGNMENT_STATUS_LABELS[status] ?? status;
 }
 
+function formatCount(count: number, singular: string, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 /**
  * Filled matching view for organizations showing matches per assignment.
  */
@@ -69,6 +73,13 @@ export function MatchingOrganizationView({
   const [isLoading, setIsLoading] = useState(false);
 
   const currentAssignment = assignments.find((a) => a.id === selectedAssignment);
+  const totalCandidateCount = assignments.reduce(
+    (total, assignment) => total + (assignment.matchingSummary?.candidateCount ?? 0),
+    0
+  );
+  const activeAssignmentCount = assignments.filter((assignment) =>
+    ['active', 'assignment_ready', 'pending_review', 'review_ready'].includes(assignment.status)
+  ).length;
   const recoveryActions = getOrganizationRecoveryActions(
     'assignment-no-matches',
     slug || null,
@@ -279,9 +290,9 @@ export function MatchingOrganizationView({
         <div className="mb-6">
           <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="text-2xl font-semibold mb-1">Assignments</h1>
+              <h1 className="text-2xl font-semibold mb-1">Assignment matching</h1>
               <p className="text-sm" style={{ color: '#6B6760' }}>
-                Keep candidate review attached to the assignment corridor it belongs to
+                Choose one assignment, then review only the candidate signals for that corridor.
               </p>
             </div>
             <div className="flex items-center gap-2 lg:justify-end">
@@ -296,6 +307,47 @@ export function MatchingOrganizationView({
             </div>
           </div>
         </div>
+
+        <Card className="mb-4 border-proofound-stone/80 bg-white/80 p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase text-muted-foreground">
+                <ListChecks className="h-4 w-4 text-proofound-forest" />
+                Review focus
+              </div>
+              <h2 className="text-lg font-semibold text-proofound-charcoal">
+                {currentAssignment
+                  ? `Reviewing ${currentAssignment.role}`
+                  : 'Choose an assignment to review matches.'}
+              </h2>
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                {currentAssignment
+                  ? 'The cards below stay scoped to this assignment, so shortlist and intro decisions do not drift across roles.'
+                  : 'Start with the assignment that is ready for review. Matching opens below the cards and keeps identity reveal staged.'}
+              </p>
+            </div>
+            <div className="grid gap-2 text-sm sm:grid-cols-3 lg:min-w-[28rem]">
+              <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/45 p-3">
+                <p className="text-xs text-muted-foreground">Assignments</p>
+                <p className="font-semibold text-proofound-charcoal">
+                  {formatCount(assignments.length, 'assignment')}
+                </p>
+              </div>
+              <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/45 p-3">
+                <p className="text-xs text-muted-foreground">Ready to review</p>
+                <p className="font-semibold text-proofound-charcoal">
+                  {formatCount(activeAssignmentCount, 'assignment')}
+                </p>
+              </div>
+              <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/45 p-3">
+                <p className="text-xs text-muted-foreground">Candidate signals</p>
+                <p className="font-semibold text-proofound-charcoal">
+                  {formatCount(totalCandidateCount, 'candidate')}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
 
         {/* Assignment list with quick actions */}
         <div className="grid gap-3 lg:grid-cols-2">
@@ -368,7 +420,21 @@ export function MatchingOrganizationView({
         </div>
 
         {/* Matches for the currently selected assignment */}
-        {selectedAssignment && (
+        {!selectedAssignment ? (
+          <Card className="mt-6 border-dashed border-proofound-stone/90 bg-proofound-parchment/35 p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="text-base font-semibold text-proofound-charcoal">
+                  Select an assignment to open its matching queue.
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Use the Matching button on the assignment you want to review first.
+                </p>
+              </div>
+              <ArrowRight className="hidden h-5 w-5 text-proofound-forest sm:block" />
+            </div>
+          </Card>
+        ) : (
           <div className="mt-8 space-y-4" data-testid="assignment-matching-grid">
             <div className="flex items-center justify-between">
               <div>
@@ -396,7 +462,9 @@ export function MatchingOrganizationView({
               <div className="rounded-2xl border border-proofound-stone bg-white/80 p-5 text-left shadow-sm sm:p-6">
                 <div className="mx-auto max-w-2xl space-y-4 text-center">
                   <div>
-                    <p className="text-lg font-semibold text-proofound-charcoal">No matches yet</p>
+                    <p className="text-lg font-semibold text-proofound-charcoal">
+                      No matches for {currentAssignment?.role ?? 'this assignment'} yet
+                    </p>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
                       Keep this assignment ready for review. The best next step is to refresh the
                       assignment before widening discovery.
