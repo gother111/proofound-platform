@@ -469,32 +469,6 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             </p>
           </div>
         </Card>
-
-        {/* Footer Text */}
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          By creating an account, you agree to our{' '}
-          <a
-            href="/terms"
-            className={`rounded-sm font-medium underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
-              accountType === 'organization'
-                ? 'text-proofound-terracotta hover:text-[#B5673F]'
-                : 'text-proofound-forest hover:text-[#2D5D4A]'
-            }`}
-          >
-            Terms of Service
-          </a>{' '}
-          and{' '}
-          <a
-            href="/privacy"
-            className={`rounded-sm font-medium underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2 ${
-              accountType === 'organization'
-                ? 'text-proofound-terracotta hover:text-[#B5673F]'
-                : 'text-proofound-forest hover:text-[#2D5D4A]'
-            }`}
-          >
-            Privacy Policy
-          </a>
-        </p>
       </div>
     </div>
   );
