@@ -55,6 +55,7 @@ describe('deferred settings loaders', () => {
     render(<DeferredSettingsContent userId="user-1" loadSettingsView={loadSettingsView} />);
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading settings...');
+    expect(screen.getByRole('status').parentElement).toHaveClass('w-full', 'min-w-0');
   });
 
   it('lets users retry account settings after the chunk fails', async () => {

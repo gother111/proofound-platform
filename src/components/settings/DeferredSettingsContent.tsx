@@ -73,7 +73,7 @@ export function DeferredSettingsContent({
   if (!SettingsView) {
     return (
       <AppSurface>
-        <div className="mx-auto max-w-4xl space-y-6">
+        <div className="mx-auto w-full max-w-4xl min-w-0 space-y-6">
           <p className="text-sm text-muted-foreground" role="status">
             Loading settings...
           </p>
