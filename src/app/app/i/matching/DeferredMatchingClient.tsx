@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, type ComponentType } from 'react';
-import { CardGridSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { Button } from '@/components/ui/button';
+import LoadingIndividualMatching from './loading';
 
 type MatchingLoader = () => Promise<{ MatchingClient: ComponentType }>;
 
@@ -60,15 +60,7 @@ export function DeferredMatchingClient({
   }
 
   if (!MatchingView) {
-    return (
-      <div className="p-4 md:p-6">
-        <p className="mb-3 text-sm text-muted-foreground" role="status">
-          Loading matching workspace...
-        </p>
-        <PageIntroSkeleton />
-        <CardGridSkeleton count={3} />
-      </div>
-    );
+    return <LoadingIndividualMatching />;
   }
 
   return <MatchingView />;

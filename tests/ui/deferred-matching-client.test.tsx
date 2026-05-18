@@ -10,7 +10,10 @@ describe('DeferredMatchingClient', () => {
 
     render(<DeferredMatchingClient loadMatchingView={loadMatchingView} />);
 
-    expect(screen.getByRole('status')).toHaveTextContent('Loading matching workspace...');
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Matching workspace' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Preparing matching workspace...');
   });
 
   it('lets users retry when the matching workspace chunk fails', async () => {
