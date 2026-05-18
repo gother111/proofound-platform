@@ -24,15 +24,13 @@ export default function ForbiddenPage() {
           personnel only.
         </p>
 
-        <div className="space-y-3">
-          <Link href="/app/i/home">
-            <Button className="w-full">Go to Overview</Button>
-          </Link>
-          <Link href="/">
-            <Button variant="outline" className="w-full">
-              Go to Home
-            </Button>
-          </Link>
+        <div className="grid gap-3">
+          <Button asChild className="w-full">
+            <Link href="/app/i/home">Go to Overview</Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/">Go to Home</Link>
+          </Button>
         </div>
 
         <p className="mt-8 text-sm text-muted-foreground">
