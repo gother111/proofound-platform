@@ -89,7 +89,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     return {
       label: 'Check in progress',
       helper:
-        'Proofound is checking LinkedIn for official account-side signals. This does not create public trust, org review lift, or intro eligibility by itself.',
+        'Proofound is checking LinkedIn for account history only. This does not create public trust, org review lift, or intro eligibility by itself.',
       tone: 'warning' as SignalTone,
     };
   }
@@ -97,8 +97,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
   if (status.channels.linkedin.signalLevel === 'identity') {
     return {
       label: 'Identity signal detected',
-      helper:
-        'LinkedIn returned an identity signal. It remains an account-side compatibility signal only.',
+      helper: 'LinkedIn returned an identity signal. It stays account-side only.',
       tone: 'positive' as SignalTone,
     };
   }
@@ -106,8 +105,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
   if (status.channels.linkedin.signalLevel === 'workplace') {
     return {
       label: 'Workplace signal detected',
-      helper:
-        'LinkedIn workplace verification was detected. It supports account-side compatibility only.',
+      helper: 'LinkedIn workplace verification was detected. It stays account-side only.',
       tone: 'positive' as SignalTone,
     };
   }
@@ -116,8 +114,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     if (status.channels.linkedin.hasIdentitySignal) {
       return {
         label: 'Identity signal detected',
-        helper:
-          'LinkedIn returned an identity signal. It remains an account-side compatibility signal only.',
+        helper: 'LinkedIn returned an identity signal. It stays account-side only.',
         tone: 'positive' as SignalTone,
       };
     }
@@ -134,7 +131,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     return {
       label: 'Check failed',
       helper:
-        'A legacy LinkedIn check did not complete before this surface was archived from the launch corridor.',
+        'An older LinkedIn check did not complete before LinkedIn checks were removed from the launch corridor.',
       tone: 'negative' as SignalTone,
     };
   }
@@ -142,7 +139,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
   return {
     label: 'Archived for launch',
     helper:
-      'LinkedIn compatibility checks are outside the launch corridor. Any earlier LinkedIn signal remains read-only and never creates proof trust.',
+      'LinkedIn checks are outside the launch corridor. Any earlier LinkedIn signal remains read-only and never creates proof trust.',
     tone: 'neutral' as SignalTone,
   };
 }
@@ -154,7 +151,7 @@ function getWorkEmailStatusText(status: VerificationStatusData) {
     return {
       label: 'Check your inbox',
       helper:
-        'A work email link is waiting for confirmation. This keeps an account-side compatibility signal current and can help with organization linking.',
+        'A work email link is waiting for confirmation. This keeps an account-side organization link current.',
       tone: 'warning' as SignalTone,
     };
   }
@@ -163,7 +160,7 @@ function getWorkEmailStatusText(status: VerificationStatusData) {
     return {
       label: 'Needs recheck',
       helper:
-        'Reconfirm this work email to keep the account-side compatibility signal current. It still does not create public trust on its own.',
+        'Reconfirm this work email to keep the account-side organization link current. It still does not create public trust on its own.',
       tone: 'warning' as SignalTone,
     };
   }
@@ -172,7 +169,7 @@ function getWorkEmailStatusText(status: VerificationStatusData) {
     return {
       label: 'Confirmed',
       helper:
-        'This account has a workplace-linked compatibility signal. It can help with organization linking, but not with public trust or intro eligibility by itself.',
+        'This account has a confirmed workplace email. It can help with organization linking, but not with public trust or intro eligibility by itself.',
       tone: 'positive' as SignalTone,
     };
   }
@@ -186,7 +183,7 @@ function getWorkEmailStatusText(status: VerificationStatusData) {
     return {
       label: 'Needs attention',
       helper:
-        'This work email signal is not current. Retry only if you still need account-side compatibility or organization-linking support.',
+        'This work email is not current. Retry only if you still need organization-linking support.',
       tone: 'negative' as SignalTone,
     };
   }
@@ -194,7 +191,7 @@ function getWorkEmailStatusText(status: VerificationStatusData) {
   return {
     label: 'Not added',
     helper:
-      'Add a work email only if you want account-side compatibility and organization-linking support. It does not create public trust on its own.',
+      'Add a work email only if you want organization-linking support. It does not create public trust on its own.',
     tone: 'neutral' as SignalTone,
   };
 }
@@ -215,7 +212,7 @@ function LinkedInStatusPanel({ status }: { status: VerificationStatusData }) {
       <div className="flex items-start gap-3">
         <Linkedin className="mt-0.5 h-5 w-5 text-[#0A66C2]" />
         <div className="space-y-1">
-          <p className="text-sm font-medium">LinkedIn compatibility signal</p>
+          <p className="text-sm font-medium">LinkedIn account check</p>
           <p className="text-sm">{linkedInStatus.label}</p>
           <p className="text-xs text-muted-foreground">{linkedInStatus.helper}</p>
           {status.channels.linkedin.verifiedAt && (
@@ -245,7 +242,7 @@ function WorkEmailStatusPanel({ status }: { status: VerificationStatusData }) {
       <div className="flex items-start gap-3">
         <Mail className="mt-0.5 h-5 w-5 text-proofound-terracotta" />
         <div className="space-y-1">
-          <p className="text-sm font-medium">Work email compatibility signal</p>
+          <p className="text-sm font-medium">Work email account check</p>
           <p className="text-sm">{workEmailStatus.label}</p>
           <p className="text-xs text-muted-foreground">{workEmailStatus.helper}</p>
           {status.channels.workEmail.email && (
@@ -460,9 +457,9 @@ function VerificationOverview({
       </VerificationGroupCard>
 
       <VerificationGroupCard
-        eyebrow="Account compatibility signals"
+        eyebrow="Account-side checks"
         title="Keep account-side checks narrow and honest"
-        body="Work email remains the only launch-active account-side compatibility signal here. Any LinkedIn state is read-only legacy history and never counts as proof trust or public reputation."
+        body="Work email is the only launch-active account-side check here. Any LinkedIn state is read-only history and never counts as proof trust or public reputation."
       >
         <div className="space-y-4">
           <AccountSignalAlerts status={status} />

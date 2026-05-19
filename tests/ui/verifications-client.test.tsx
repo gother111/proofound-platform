@@ -559,7 +559,10 @@ describe('VerificationsClient', () => {
     fireEvent.click(sentTab);
     fireEvent.keyDown(sentTab, { key: 'Enter' });
     await waitFor(() => expect(screen.getByText('bundle@company.com')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: 'Manage legacy bundle' }));
+    expect(screen.getByText('Proof Pack bundle request sent')).toBeInTheDocument();
+    expect(screen.queryByText(/legacy/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Manage bundle' }));
 
     expect(screen.getByTestId('bundle-dialog-open')).toHaveTextContent('bundle-request-1');
     expect(apiFetchMock).not.toHaveBeenCalled();

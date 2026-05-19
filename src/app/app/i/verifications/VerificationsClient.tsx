@@ -510,7 +510,7 @@ export function VerificationsClient({
     }
 
     if (request.subjectType === 'custom_bundle') {
-      return 'Confirm the grouped proof items attached to this legacy request.';
+      return 'Confirm the grouped proof items attached to this Proof Pack bundle.';
     }
 
     return 'Confirm this skill claim from direct observation.';
@@ -526,7 +526,7 @@ export function VerificationsClient({
     }
 
     if (request.subjectType === 'custom_bundle') {
-      return 'These legacy bundle items retain a bounded confirmation record.';
+      return 'Each bundled proof keeps its own bounded confirmation record.';
     }
 
     return 'This skill keeps a bounded attestation linked to the attached proof.';
@@ -868,7 +868,7 @@ export function VerificationsClient({
           </h3>
           <p className="text-sm text-muted-foreground">
             {request.subjectType === 'custom_bundle'
-              ? 'Legacy bundle request sent'
+              ? 'Proof Pack bundle request sent'
               : 'Proof confirmation request sent'}
           </p>
         </div>
@@ -992,7 +992,7 @@ export function VerificationsClient({
                 ? 'Deleting...'
                 : request.subjectType === 'custom_bundle' ||
                     (request.subjectType === 'skill' && request.bundleId)
-                  ? 'Manage legacy bundle'
+                  ? 'Manage bundle'
                   : 'Delete'}
             </Button>
           )}

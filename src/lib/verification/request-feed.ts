@@ -533,7 +533,7 @@ function buildConfirmationOutcome(
   }
 
   if (request.subjectType === 'custom_bundle') {
-    return 'If confirmed, each included proof keeps its own scoped verification record. Legacy grouped requests do not create broad trust lift.';
+    return 'If confirmed, each included proof keeps its own scoped verification record. Grouped requests do not create broad trust lift.';
   }
 
   if (request.requestKind === 'human_observed_attestation') {

@@ -178,6 +178,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Updated `docs/backlog/dependency-map.md` so Phase 0 and Phase 1 are no longer shown as blocking later phases after the current sweep evidence.
 - Updated `docs/DOCS_REGISTRY.md` dates for the refreshed backlog dependency docs.
 
+22. Active verification/account settings copy still leaked implementation history.
+
+- Found active verification UI copy such as `Legacy bundle request sent`, `Manage legacy bundle`, `legacy request`, and settings copy such as `account compatibility signal`.
+- Replaced the visible labels with plain MVP language: Proof Pack bundle request, Manage bundle, grouped proof items, account-side checks, work email account check, and organization-linking support.
+- Kept the underlying account-side behavior unchanged: work email can help organization linking, but it does not create public trust or intro eligibility by itself; LinkedIn remains read-only history outside the launch corridor.
+- Added/updated focused UI expectations so active tests fail if the old legacy-bundle language returns.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.

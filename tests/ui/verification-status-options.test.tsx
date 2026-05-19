@@ -63,20 +63,18 @@ describe('VerificationStatus', () => {
       expect(screen.getByText(/Proof verifications \/ attestations/i)).toBeInTheDocument();
     });
     expect(screen.getByText(/Intro-readiness trust anchors/i)).toBeInTheDocument();
-    expect(screen.getByText(/Account compatibility signals/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Account-side checks/i).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Add work email/i })).toBeInTheDocument();
     expect(
-      screen.getByText(
-        /Work email remains the only launch-active account-side compatibility signal/i
-      )
+      screen.getByText(/Work email is the only launch-active account-side check/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/LinkedIn compatibility checks are outside the launch corridor/i)
+      screen.getByText(/LinkedIn checks are outside the launch corridor/i)
     ).toBeInTheDocument();
     expect(screen.queryByText(/Government ID Verification/i)).not.toBeInTheDocument();
   });
 
-  it('shows confirmed work email as a compatibility signal after verification is already complete', async () => {
+  it('shows confirmed work email as an account-side check after verification is already complete', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -127,7 +125,7 @@ describe('VerificationStatus', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /This account has a workplace-linked compatibility signal\. It can help with organization linking, but not with public trust or intro eligibility by itself\./i
+          /This account has a confirmed workplace email\. It can help with organization linking, but not with public trust or intro eligibility by itself\./i
         )
       ).toBeInTheDocument();
     });
