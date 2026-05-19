@@ -1466,3 +1466,11 @@ Non-fatal test noise:
 - Fixed `src/lib/launch/final-launch-checklist-definitions.ts` so the assignment SOP is only used as fallback `UNVERIFIED` evidence when no enforcement test is selected, rather than becoming a false stale claim after tests pass.
 - Refreshed `.artifacts/proofound-route-inventory.md` with the May 19 route counts and a current-route-policy boundary so old route-breadth language no longer contradicts the passing route-surface gate.
 - Regenerated `.artifacts/launch-validation-2026-05-19/final-launch-checklist-status.md/json`; repo scope remains `READY` with `36` pass, `0` fail, `0` blocked, and the same `4` external prerequisites unverified.
+
+## Continuation - Codex Browser Recheck And Local Scratch Hygiene
+
+- Reconnected the Codex `@Browser` plugin through the Browser runtime and opened the local app at `http://localhost:33180/login`.
+- Browser route sweep covered `/login`, `/signup`, `/portfolio/demo`, and `/`; screenshots plus route text/object/action evidence were saved under `.artifacts/mvp-surface-sweep-2026-05-19/browser-evidence/codex-browser-2026-05-19/`.
+- Browser confirmed `/portfolio/demo` still renders the launch-safe `Public Page unavailable` state with no public profile data exposed.
+- The Browser runtime in this session did not expose direct viewport resizing; the attempted mobile Browser resize failed cleanly, so mobile coverage remains represented by the earlier saved Browser evidence and automated E2E route checks.
+- Found local DB/debug scratch scripts and `playwright-run.log` visible to Git after the continued Browser/dev-server pass. Added `.gitignore` coverage plus a launch-gate test so `/scratch/` and `playwright-run.log` stay out of launch commits without deleting local developer files.

@@ -173,6 +173,13 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps local scratch scripts and browser run logs out of launch commits', () => {
+    const gitignore = fs.readFileSync(path.join(repoRoot, '.gitignore'), 'utf8');
+
+    expect(gitignore).toContain('/scratch/');
+    expect(gitignore).toContain('playwright-run.log');
+  });
+
   it('keeps the strict MVP gate wired to timeout-aware release commands', () => {
     const gateScript = fs.readFileSync(
       path.join(repoRoot, 'scripts/run-mvp-strict-gates.mjs'),
