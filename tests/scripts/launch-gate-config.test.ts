@@ -722,7 +722,17 @@ describe('launch gate package configuration', () => {
       'Manual-link interview scheduling is the locked MVP default'
     );
     expect(productionChecklist).toContain('npm run db:backup:checkpoint');
-    expect(productionChecklist).toContain('npm run db:restore:verify');
+    expect(productionChecklist).toContain(
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+    );
+    expect(productionChecklist).toContain(
+      '.artifacts/launch-restore-report.json` exists, is fresh, and points to readable checkpoint evidence'
+    );
+    expectTextBefore(
+      productionChecklist,
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json',
+      'BASE_URL=<production-candidate-url> CRON_SECRET=<target-secret> npm run go:no-go'
+    );
     expect(productionChecklist).toContain('Authenticated `/api/monitoring/perf-status`');
     expect(productionChecklist).toContain('BASE_URL=<production-candidate-url>');
     expect(productionChecklist).not.toContain('`ZOOM_CLIENT_ID`');

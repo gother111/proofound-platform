@@ -93,7 +93,8 @@ Manual-link interview scheduling is the locked MVP default. Connected providers 
 - [ ] Do not run `npm run db:push` against production.
 
 - [ ] Rehearse restore in an isolated target:
-  - `npm run db:restore:verify`
+  - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
+  - Keep the checkpoint directory readable until final `go:no-go` has consumed the restore report.
 
 - [ ] Confirm RLS policies and triggers are present.
 
@@ -148,6 +149,7 @@ Run the best relevant checks available for the target. Record pass/fail and exac
 - [ ] `BASE_URL=<production-candidate-url> npm run monitor:launch`
 - [ ] Authenticated `/api/monitoring/launch-status`
 - [ ] Authenticated `/api/monitoring/perf-status`, including `/api/assignments` latency samples.
+- [ ] `.artifacts/launch-restore-report.json` exists, is fresh, and points to readable checkpoint evidence.
 - [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<target-secret> npm run go:no-go`
 
 ## Browser Checks

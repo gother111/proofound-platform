@@ -1353,3 +1353,10 @@ Non-fatal test noise:
 
 - Found `/api/user/account/cancel-deletion` returning authenticated `410 Gone` because account deletion is immediate and irreversible, while the route inventory still treated it as active MVP.
 - Reclassified the retired scheduled-deletion cancel endpoint as archived compatibility while preserving the explicit 401/410 behavior covered by `tests/api/user-account-lifecycle-routes.test.ts`.
+
+## Continuation - Mixed Taxonomy Route And Root Production Checklist
+
+- Checked the only remaining active API route whose source contains archived-response text: `/api/expertise/taxonomy`.
+- Confirmed it is intentionally mixed-mode: normal taxonomy lookup remains active for assignment/proof skill mapping, while the legacy `context=cv_import` mode returns `410` without calling Atlas search or leaking submitted CV/evidence text. Existing coverage lives in `tests/api/expertise-taxonomy-route.test.ts`.
+- Found `PRODUCTION_CHECKLIST.md` still using a bare `npm run db:restore:verify` restore rehearsal command even though production-candidate `go:no-go` requires `.artifacts/launch-restore-report.json`.
+- Updated the root production checklist and launch-gate coverage so the isolated restore rehearsal writes `--out .artifacts/launch-restore-report.json`, keeps checkpoint evidence readable, and explicitly checks the report before final `go:no-go`.
