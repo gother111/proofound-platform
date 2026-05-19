@@ -454,6 +454,7 @@ E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pa
 - `npm run test:launch:smoke` — launch smoke matrix for the locked MVP corridor.
 - `npm run monitor:launch` — synthetic launch monitor runner; pass `BASE_URL` and `CRON_SECRET` when checking a protected runtime.
 - `npm run test:archived:non-launch` — archived/removed non-MVP regression tests that are preserved but do not block the default launch gate.
+- `npm run test:python` — Python document-intelligence package regression tests; not default MVP launch evidence. See `tests/python/README.md`.
 - `npm run test:a11y` — Playwright accessibility-only suite.
 - `npm run perf:budgets` — Lighthouse-based performance budget check.
 - `npm run go:no-go` — Composite gate for fresh smoke, protected perf/launch status, safe-mode flags, required evidence files, and production-candidate restore evidence.

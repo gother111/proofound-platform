@@ -1438,3 +1438,9 @@ Non-fatal test noise:
 - Found the final launch checklist still marking `founder_public_story_signal_over_cvs` as `UNVERIFIED` because it depended on stale launch-summary wording that had been correctly removed.
 - Rewired that checklist row to use the canonical public-story evidence instead: locked MVP stronger-signal/proof-over-profile-theater language plus README's narrow corridor and no-public-directory launch exclusion.
 - Regenerated the final launch checklist: repo scope remains `READY`, with `36` pass, `0` fail, `0` blocked, and only `4` external prerequisites still unverified: incident/support owners, critical alerts, backup/restore verification, and final founder go/no-go signoff.
+
+## Continuation - Python Test Launch-Evidence Boundary
+
+- Found `npm run test:python` and `tests/python/*` lacked a local classification note, even though those tests include retained compatibility assertions for archived `wizard-suggest` and `internal-job` dispatch behavior.
+- Added `tests/python/README.md` to classify Python document-intelligence tests as package-level regression coverage, not default MVP launch evidence.
+- Updated README specialized-test guidance and launch-gate coverage so future sweep agents do not treat Python CV compatibility tests as proof that the retired CV import wizard or Python internal worker is launch-active.

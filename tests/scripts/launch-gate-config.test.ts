@@ -454,6 +454,26 @@ describe('launch gate package configuration', () => {
     }
   });
 
+  it('keeps Python document-intelligence tests classified outside default launch evidence', () => {
+    const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8');
+    const pythonReadme = fs.readFileSync(path.join(repoRoot, 'tests/python/README.md'), 'utf8');
+
+    expect(readme).toContain('npm run test:python');
+    expect(readme).toContain('not default MVP launch evidence');
+    expect(readme).toContain('tests/python/README.md');
+
+    expect(pythonReadme).toContain('Doc Class: `active`');
+    expect(pythonReadme).toContain('Last Verified: `2026-05-19`');
+    expect(pythonReadme).toContain('not the default MVP launch gate');
+    expect(pythonReadme).toContain('wizard-suggest');
+    expect(pythonReadme).toContain('internal-job');
+    expect(pythonReadme).toContain('archived `410` responses');
+    expect(pythonReadme).toContain('Use `npm run test:launch:ai`');
+    expect(pythonReadme).toContain(
+      'Use `npm run test:python` as package-level regression coverage only'
+    );
+  });
+
   it('keeps retired CV import wizard implementation modules archived', () => {
     const retiredActiveSourcePaths = [
       'src/lib/expertise/cv-import-wizard-apply.ts',
