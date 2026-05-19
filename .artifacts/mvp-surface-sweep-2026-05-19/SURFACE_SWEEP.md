@@ -1527,3 +1527,13 @@ Non-fatal test noise:
 - Reran the full repo launch checklist at current HEAD `e36eef9e`; the May 20 bundle now records the current commit with repo verdict `READY`, `36` pass, `0` fail, `0` blocked, and the same `4` external prerequisites still unverified.
 - Interview scheduling cleanup: removed unused standalone interview card/confirmation/dialog components that still carried old Zoom-default copy, and changed legacy `platform=zoom` records on active individual/org interview surfaces to display `Manual link` so historical meeting URLs do not make native Zoom look like the launch default.
 - Interview platform schema cleanup: aligned the active interview schema/types, seed data, fixed-migration scaffold, email template, and tests around launch-active `manual` / `google_meet` scheduling. Added a migration to keep legacy `zoom` / `google` rows readable while preventing new manual-link scheduling from falling back to persisted `zoom` platform values.
+
+## Continuation - Codex Browser Route Smoke And Migration Ledger Check
+
+- Reconnected the Codex `@Browser` plugin through the Browser runtime as requested. The previously open `localhost:33180` target had stopped serving pages, so the local app was restarted on `http://localhost:3000`.
+- Browser verified `/login`: title `Sign In | Proofound`, H1 `Welcome back`, email/password fields with browser autocomplete, remember-me, reset-password, primary sign-in action, Google/LinkedIn actions, signup CTA, and legal links.
+- Browser route-smoked `/`, `/signup`, `/signup/individual`, `/signup/organization`, `/portfolio/demo`, `/portfolio/org/demo`, `/privacy`, `/terms`, `/cookies`, and `/cookies/settings`. All sampled routes rendered expected titles/headings and had no horizontal overflow in the active Browser viewport.
+- Browser confirmed `/portfolio/demo` and `/portfolio/org/demo` remain launch-safe unavailable public surfaces with `noindex` and no exposed profile, organization, or proof data.
+- Browser screenshot capture still timed out in this Browser backend session, so this pass records Browser navigation, DOM, title, heading, action, `noindex`, and overflow evidence rather than image evidence.
+- Ran `npm run db:drift-check`: passed.
+- Ran `npm run db:audit:migrations`: sandbox DNS failed, then the network-enabled audit reached Supabase and reported `126` local migration files and `126` DB migration rows. Current ledger mismatch is expected until the new local interview-platform migration is applied: `20260520103000_align_interview_platform_launch_values.sql` is present locally but not applied, and the DB still has historical `20260317224741_canonicalize_org_role_constraints` without a matching local file.
