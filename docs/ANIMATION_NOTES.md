@@ -1,315 +1,97 @@
-# Animation System Documentation
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
 
-This document describes the animation principles and utilities implemented as part of the theme refresh.
+# Motion And Animation Notes
 
-## Animation Principles (from Wireframe Spec)
+This document records the active motion guidance for Proofound. It supports `DESIGN.md` and
+`src/design/motion-tokens.json`; it does not create new product scope.
 
-The animation system follows five core principles:
+## Motion Thesis
 
-### 1. Breathing
+Proofound motion should feel calm, purposeful, and evidence-oriented. Use it to clarify sequence,
+focus, state changes, and scrollytelling on the public landing surface. Do not use motion to make
+serious review flows feel playful or to fill empty UI.
 
-Elements scale subtly between 1 → 1.05 → 1 in a continuous loop.
+Active motion should:
 
-- **Purpose**: Create living, organic feel
-- **Duration**: 4 seconds
-- **Easing**: ease-in-out
+- guide attention toward the primary object or next action
+- soften transitions without delaying work
+- preserve reading flow and review confidence
+- respect `prefers-reduced-motion`
 
-### 2. Morphing
+Avoid:
 
-SVG blobs and shapes transform smoothly between states.
+- decorative pulsing on proof, trust, or readiness states
+- floating nodes, living-network backgrounds, blob morphing, particle fields, or novelty motion as
+  launch evidence
+- bounce-heavy or gamified interactions
+- hiding required state behind animation timing
 
-- **Purpose**: Dynamic, fluid visual interest
-- **Use case**: Background elements, decorative shapes
+## Active Sources
 
-### 3. Flowing
+- Motion tokens: `src/design/motion-tokens.json`
+- Reduced-motion baseline: `src/app/globals.css`
+- Landing motion examples: `src/components/landing/sections/HeroSection.tsx` and
+  `src/components/landing/sections/ScrollytellingSection.tsx`
+- Legacy CSS utilities: `src/styles/animations.css`
 
-Scroll-triggered smooth transitions as elements enter viewport.
+`src/styles/animations.css` exists as a legacy utility file. It is not imported by the current app
+shell and should not be used to justify new ambient, pulsing, or decorative behavior. Prefer local
+component transitions and the motion tokens.
 
-- **Purpose**: Progressive disclosure, attention guidance
-- **Implementation**: Combine with Intersection Observer
+## Current Token Defaults
 
-### 4. Organic Easing
+| Purpose           | Token example                                   | Guidance                         |
+| ----------------- | ----------------------------------------------- | -------------------------------- |
+| Fast UI feedback  | `durations.fast` = `200`                        | Hover, small control feedback    |
+| Standard reveal   | `durations.medium` = `300`                      | Panels, dropdowns, small states  |
+| Comfortable entry | `durations.comfortable` = `400`                 | Modals and larger surface reveal |
+| Page/scroll work  | `durations.slow` to `verySlow` = `500` to `600` | Landing scrollytelling only      |
+| Ease out          | `easing.easeOut`                                | Most entrances and feedback      |
+| Ease in/out       | `easing.easeInOut`                              | Coordinated sequences            |
 
-Natural motion curves (easeInOut, easeOut) instead of linear.
+Use transform and opacity where possible. Avoid animating layout properties such as width, height,
+top, and left.
 
-- **Purpose**: Mimics real-world physics
-- **Default**: `ease-out` for entrances, `ease-in-out` for loops
+## Surface Rules
 
-### 5. Staggered
+- Public landing: measured scrollytelling and artifact reveal are acceptable when they remain
+  readable and reduced-motion safe.
+- Public portfolios and organization trust pages: use minimal reveal or transition only; proof and
+  trust states must be immediately understandable.
+- Individual and organization app surfaces: prioritize stable controls, clear state, and low-motion
+  transitions.
+- Admin/internal launch-ops: keep motion almost invisible. State, queue, and audit content should
+  not depend on animation.
+- Archived or gated surfaces: show the archived/gated state immediately.
 
-Sequential appearance with 0.1-0.2s delays between child elements.
+## Reduced Motion
 
-- **Purpose**: Rhythmic, choreographed feel
-- **Implementation**: CSS custom properties + nth-child selectors
+`src/app/globals.css` globally reduces animation and transition durations under
+`prefers-reduced-motion: reduce`. Components with Framer Motion or custom timing must also branch to
+static or near-static behavior where the animation would otherwise affect scroll, position, or
+comprehension.
 
-## Available Keyframes
+## Testing
 
-Defined in `src/styles/animations.css`:
-
-### `@keyframes breathe`
-
-```css
-0%,
-100% {
-  transform: scale(1);
-}
-50% {
-  transform: scale(1.05);
-}
-```
-
-**Usage**: Subtle pulse effect for focal elements
-
-### `@keyframes float`
-
-```css
-0%,
-100% {
-  transform: translateY(0px);
-}
-50% {
-  transform: translateY(-10px);
-}
-```
-
-**Usage**: Gentle vertical motion for floating elements
-
-### `@keyframes fadeIn`
-
-```css
-from {
-  opacity: 0;
-  transform: translateY(20px);
-}
-to {
-  opacity: 1;
-  transform: translateY(0);
-}
-```
-
-**Usage**: Entrance animation for new elements
-
-## Utility Classes
-
-### `.animate-breathe`
-
-Applies breathing animation (4s loop)
-
-```tsx
-<div className="animate-breathe">Content pulses gently</div>
-```
-
-### `.animate-float`
-
-Applies floating animation (6s loop)
-
-```tsx
-<div className="animate-float">Content floats vertically</div>
-```
-
-### `.animate-fade-in`
-
-Applies fade-in entrance (0.6s once)
-
-```tsx
-<div className="animate-fade-in">Content fades in from below</div>
-```
-
-### `.section-pad`
-
-Responsive section spacing (min-h-screen + vertical padding)
-
-```tsx
-<section className="section-pad">Full-height section with breathing room</section>
-```
-
-## Stagger System
-
-Apply sequential delays to child elements:
-
-### Basic Usage
-
-```tsx
-<div data-stagger>
-  <div>Item 1 (delay: 0s)</div>
-  <div>Item 2 (delay: 0.1s)</div>
-  <div>Item 3 (delay: 0.2s)</div>
-</div>
-```
-
-### Custom Delay
-
-```tsx
-<div data-stagger style={{ '--stagger-delay': '0.15s' }}>
-  <div>Slower stagger rhythm</div>
-  <div>...</div>
-</div>
-```
-
-### With Animation
-
-```tsx
-<div data-stagger className="[&>*]:animate-fade-in">
-  <div>Staggered fade-in</div>
-  <div>...</div>
-</div>
-```
-
-## NetworkBackground Component
-
-The `NetworkBackground` component implements the "Living Network" concept:
-
-### Concept
-
-A dynamic visualization of interconnected nodes representing:
-
-- **Person nodes** (sage green): Individual users
-- **Organization nodes** (terracotta): Companies
-- **Government nodes** (teal): Governmental structures
-
-### Behavior
-
-- **Self-regulating**: Nodes appear and disappear organically
-- **Multidimensional**: 3 depth layers with cross-layer connections
-- **Flowing**: Continuous gentle motion
-- **Responsive**: Adapts to viewport size
-
-### Technical Details
-
-- Canvas-based rendering for performance
-- Reads colors from CSS variables (`--brand-sage`, `--brand-terracotta`, `--brand-teal`)
-- 25-30 active nodes at any time
-- Nodes drift slowly with edge bouncing
-- Connections form/break based on proximity (max 250px)
-
-### Usage
-
-Already integrated in landing page:
-
-```tsx
-<NetworkBackground />
-```
-
-## Optional: LivingNetwork Component
-
-An enhanced ambient animation component is available but **not imported by default**.
-
-### When to Enable
-
-Only enable if you want additional background animations:
+For motion-affecting UI changes:
 
 ```bash
-NEXT_PUBLIC_ENABLE_AMBIENT=1
+npm run test:a11y
+npm run test:e2e:landing
 ```
 
-### File Location
+Use Browser for representative desktop and mobile route checks when rendered motion or responsive
+composition matters. Confirm that:
 
-`src/components/ambient/LivingNetwork.tsx`
+- text remains readable and does not overlap
+- reduced-motion users get a stable state
+- the primary object and next action are visible without waiting for animation
+- no private proof, identity, queue, or diagnostic data is exposed during loading or transitions
 
-### Integration Example
+## Retired Guidance
 
-```tsx
-// In your page component
-const enableAmbient = process.env.NEXT_PUBLIC_ENABLE_AMBIENT === '1';
-
-export default function Page() {
-  return (
-    <div>
-      {enableAmbient && <LivingNetwork />}
-      {/* Rest of content */}
-    </div>
-  );
-}
-```
-
-## Performance Considerations
-
-### Canvas Animations
-
-- Use `requestAnimationFrame` for smooth 60fps
-- Limit active particles/nodes (25-30 recommended)
-- Consider pausing when page not visible (Page Visibility API)
-
-### CSS Animations
-
-- Prefer `transform` and `opacity` for GPU acceleration
-- Avoid animating `width`, `height`, `top`, `left`
-- Use `will-change` sparingly (only during animation)
-
-### Reducing Motion
-
-Respect user preferences:
-
-```css
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
-```
-
-## Future Enhancements
-
-### Morphing Blobs
-
-Implement SVG path morphing for background shapes:
-
-```tsx
-<motion.path
-  animate={{ d: [pathA, pathB, pathA] }}
-  transition={{ duration: 8, repeat: Infinity }}
-/>
-```
-
-### Scroll-Triggered Animations
-
-Use Intersection Observer or Framer Motion's `useInView`:
-
-```tsx
-const { ref, inView } = useInView({ threshold: 0.2 });
-
-<div ref={ref} className={inView ? 'animate-fade-in' : 'opacity-0'}>
-  Content appears on scroll
-</div>;
-```
-
-### Advanced Stagger Patterns
-
-Radial or grid-based stagger:
-
-```tsx
-// Calculate delay based on position
-const delay = Math.sqrt(x * x + y * y) * 0.05;
-```
-
-## Testing Animations
-
-### Visual Regression
-
-Use Playwright to capture screenshots:
-
-```bash
-npx playwright test --update-snapshots
-```
-
-### Performance Profiling
-
-Chrome DevTools > Performance tab:
-
-- Record during scroll/interaction
-- Look for dropped frames (below 60fps)
-- Check for layout thrashing
-
-### Accessibility
-
-- Test with `prefers-reduced-motion: reduce`
-- Ensure animations don't interfere with screen readers
-- Provide alternative static states
-
-## Resources
-
-- **Spec Reference**: `tokens/wireframe-spec.json` (animations section)
-- **Animation CSS**: `src/styles/animations.css`
-- **NetworkBackground**: `src/components/landing/NetworkBackground.tsx`
-- **Framer Motion Docs**: https://www.framer.com/motion/
+The old living-network and morphing-blob notes are not active MVP guidance. Do not reintroduce
+`NetworkBackground`, `LivingNetwork`, broad ambient canvas motion, or blob/path morphing unless the
+locked MVP/design authority is intentionally updated and Browser evidence proves the result is calm,
+readable, responsive, and reduced-motion safe.

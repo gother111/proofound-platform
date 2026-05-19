@@ -186,6 +186,43 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps visual style and motion docs aligned with the active design contract', () => {
+    const styleMap = fs.readFileSync(path.join(repoRoot, 'docs/STYLEMAP.md'), 'utf8');
+    const animationNotes = fs.readFileSync(path.join(repoRoot, 'docs/ANIMATION_NOTES.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const designDocs = `${styleMap}\n${animationNotes}`;
+
+    expect(styleMap).toContain('Last Verified: `2026-05-19`');
+    expect(styleMap).toContain('DESIGN.md');
+    expect(styleMap).toContain('`--proofound-forest`');
+    expect(styleMap).toContain('`#56624F`');
+    expect(styleMap).toContain('public directory');
+    expect(styleMap).toContain('Dark mode is not an active supported theme');
+    expect(styleMap).not.toContain('`#606C5A` | Primary buttons');
+    expect(styleMap).not.toContain('Japandi palette above');
+
+    expect(animationNotes).toContain('Last Verified: `2026-05-19`');
+    expect(animationNotes).toContain('src/design/motion-tokens.json');
+    expect(animationNotes).toContain('prefers-reduced-motion');
+    expect(animationNotes).toContain('Use Browser');
+    expect(animationNotes).toContain('Retired Guidance');
+    expect(animationNotes).toContain('NetworkBackground');
+    expect(animationNotes).toContain('LivingNetwork');
+    expect(compactWhitespace(animationNotes)).toContain('Do not reintroduce `NetworkBackground`');
+    expect(designDocs).toContain('primary object and next action');
+    expect(designDocs.toLowerCase()).toContain('privacy');
+    expect(designDocs).not.toContain('Purpose: Create living, organic feel');
+    expect(designDocs).not.toContain('Canvas-based rendering for performance');
+    expect(designDocs).not.toContain('Morphing Blobs');
+    expect(designDocs).not.toContain('tokens/wireframe-spec.json');
+    expect(docsRegistry).toContain(
+      '| `docs/ANIMATION_NOTES.md`                                                                               | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/STYLEMAP.md`                                                                                      | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps monitoring launch-ops routes documented as internal, not public', () => {
     const apiReference = fs.readFileSync(path.join(repoRoot, 'docs/API_REFERENCE.md'), 'utf8');
     const apiReferenceGenerator = fs.readFileSync(

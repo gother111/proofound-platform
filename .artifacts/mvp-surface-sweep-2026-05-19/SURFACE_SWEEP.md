@@ -1107,3 +1107,10 @@ Non-fatal test noise:
 - Found `LINEAR_SETUP_INSTRUCTIONS.md` still classified active even though it described a January 2025 bulk import from an archived plan and encouraged creating broad labels/issues that predate the locked MVP corridor.
 - Reclassified the setup note as historical, pointed current ticket administration to `agent/runbooks/proofound-ticket-finisher.md`, and kept Linear state subordinate to the locked MVP docs, current repo behavior, and fresh evidence.
 - Added a fail-closed guard to `scripts/import-linear-issues.mjs` requiring `PROOFOUND_ALLOW_LEGACY_LINEAR_IMPORT=true` before the legacy import can create or duplicate external Linear issues.
+
+## Continuation - Style And Motion Guidance Refresh
+
+- Found `docs/STYLEMAP.md` and `docs/ANIMATION_NOTES.md` still verified on 2026-02-12, with token drift in the primary forest value and animation guidance that presented living networks, blob morphing, and ambient motion as active UI direction.
+- Refreshed the style map against `DESIGN.md`, `src/app/globals.css`, `tailwind.config.ts`, and brand tokens so the current light-only Japandi palette, primary object/action clarity, state visibility, and no public-directory/profile-theater rules stay visible.
+- Rewrote animation guidance around current motion tokens, reduced-motion behavior, restrained landing scrollytelling, and explicit retired guidance for `NetworkBackground`, `LivingNetwork`, broad ambient canvas motion, and morphing blobs.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so stale visual/motion docs cannot revive decorative UI patterns outside the locked MVP corridor.
