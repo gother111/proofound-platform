@@ -1083,3 +1083,9 @@ Non-fatal test noise:
 - Rewrote the incident response runbook around launch-safe containment: first 15 minutes, no-leak evidence preservation, public projection leaks, reveal/identity leaks, upload/proof leaks, auth/token incidents, admin/internal exposure, legal/privacy notification decision boundaries, remediation, and post-incident review.
 - Removed unsafe SQL/dashboard examples, blanket SOC/GDPR/CCPA claims, status-page/emergency placeholders, and instructions to paste secrets/private data into shared docs or support flows.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so security guidance stays no-leak, target-scoped, and evidence-based.
+
+## Continuation - Preflight Sync Pair Launch Gate Refresh
+
+- Found the root `preflight.md` sync-pair stale against `agent/checklists/preflight.md`: the root copy still pointed at `vercel build --prod` and deploy-hook secret guidance, while the current deployment path expects production env pull, prebuilt Vercel build output, and token/org/project deployment automation.
+- Refreshed both preflight copies to `2026-05-19`, aligned the root copy with the current prebuilt deployment gate, and added guardrails for active-doc registry updates, route-surface classification, Browser-backed UI checks, privacy/no-leak route tests, and production-candidate database checkpoint/restore discipline.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so both preflight files stay current, keep `DESIGN.md` plus Browser requirements visible for UI work, and cannot drift back to `VERCEL_DEPLOY_HOOK_URL` or `vercel build --prod` launch guidance.

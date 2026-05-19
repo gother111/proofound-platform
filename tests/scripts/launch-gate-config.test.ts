@@ -484,6 +484,42 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps synced preflight guidance aligned with current launch gates', () => {
+    const rootPreflight = fs.readFileSync(path.join(repoRoot, 'preflight.md'), 'utf8');
+    const agentPreflight = fs.readFileSync(
+      path.join(repoRoot, 'agent/checklists/preflight.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    for (const content of [rootPreflight, agentPreflight]) {
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).toContain('npm run vercel:pull:production');
+      expect(content).toContain('npm run vercel:build:production');
+      expect(content).toContain('.vercel/output/config.json');
+      expect(content).toContain('.vercel/output/builds.json');
+      expect(content).toContain('VERCEL_TOKEN');
+      expect(content).toContain('VERCEL_ORG_ID');
+      expect(content).toContain('VERCEL_PROJECT_ID');
+      expect(content).toContain('docs/DOCS_REGISTRY.md');
+      expect(content).toContain('.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md');
+      expect(content).toContain('DESIGN.md');
+      expect(content).toContain('Use Browser');
+      expect(content).toContain('privacy/no-leak');
+      expect(content).toContain('isolated restore verification');
+      expect(content).toContain('Never use `npm run db:push` against production');
+      expect(content).not.toContain('VERCEL_DEPLOY_HOOK_URL');
+      expect(content).not.toContain('vercel build --prod');
+    }
+
+    expect(docsRegistry).toContain(
+      '| `agent/checklists/preflight.md`                                                                         | `active`         | `agent`       | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `preflight.md`                                                                                          | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps Resend setup guidance transactional, target-scoped, and privacy-safe', () => {
     const resendSetup = fs.readFileSync(path.join(repoRoot, 'docs/RESEND_SETUP.md'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
