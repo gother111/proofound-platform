@@ -1379,3 +1379,9 @@ Non-fatal test noise:
 - Found `Proofound_PRD_MVP.md` still listing the preserved Project Specification and old technical/runbook files first in its reading order, despite the current AGENTS authority stack putting the locked MVP source of truth and aligned PRD/technical/runbook/GTM stack first.
 - Refreshed `Proofound_PRD_MVP.md` and `PRD_for_a_web_platform_MVP.md` as reference-spec mirrors verified on 2026-05-19, with explicit language that old master/latest and Project Specification files are reference-only and cannot broaden the locked MVP corridor.
 - Added launch-gate coverage so these legacy PRD mirrors cannot silently re-rank the authority stack above the locked MVP source of truth.
+
+## Continuation - GEO Audit Public-Surface Boundary
+
+- Found `agent/runbooks/geo-audit.md` still listing archived public marketing pages (`/about`, `/manifesto`, `/careers`, `/contact`, `/support`) as GEO audit targets, while `src/lib/launch/surface-policy.ts` classifies those paths as archived.
+- Updated the runbook so GEO work stays on active public launch pages, legal pages, technical crawl surfaces, public portfolios, organization trust pages, and enabled assignment/public-share surfaces.
+- Added guard coverage that archived marketing pages are treated as route-policy outcomes, not missing SEO work or a reason to revive broad marketing pages during MVP launch hardening.

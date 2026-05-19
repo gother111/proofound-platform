@@ -1384,6 +1384,25 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps GEO audit scope aligned with active public launch surfaces', () => {
+    const geoAudit = fs.readFileSync(path.join(repoRoot, 'agent/runbooks/geo-audit.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(geoAudit).toContain('Last Verified: `2026-05-19`');
+    expect(geoAudit).toContain('must not widen the locked MVP public surface');
+    expect(geoAudit).toContain('Active public launch pages');
+    expect(geoAudit).toContain('public organization trust pages');
+    expect(geoAudit).toContain('Archived public marketing pages such as');
+    expect(geoAudit).toContain('return the route-policy outcome');
+    expect(geoAudit).toContain('Do not add or revive broad marketing pages');
+    expect(geoAudit).not.toContain(
+      'Marketing pages: `/`, `/about`, `/manifesto`, `/careers`, `/contact`, `/support`'
+    );
+    expect(docsRegistry).toContain(
+      '| `agent/runbooks/geo-audit.md` | `governance` | `agent` | `repo+live` | `2026-05-19`'
+    );
+  });
+
   it('keeps scoped verification docs under the locked MVP authority stack', () => {
     const identityContext = fs.readFileSync(
       path.join(repoRoot, 'IDENTITY_VERIFICATION_IMPLEMENTATION.md'),
