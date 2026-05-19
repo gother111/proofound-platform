@@ -646,6 +646,34 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps vendor processing guidance evidence-scoped and privacy-safe', () => {
+    const vendorRegister = fs.readFileSync(
+      path.join(repoRoot, 'docs/DATA_PROCESSING_AGREEMENTS.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(vendorRegister).toContain('Last Verified: `2026-05-19`');
+    expect(vendorRegister).toContain('not legal advice');
+    expect(vendorRegister).toContain('not a signed DPA repository');
+    expect(vendorRegister).toContain('Do not infer a signed agreement from this file');
+    expect(vendorRegister).toContain('manual-link interviews remain default');
+    expect(vendorRegister).toContain('Veriff');
+    expect(vendorRegister).toContain('Archived/post-MVP identity-document path');
+    expect(vendorRegister).toContain('private proof content');
+    expect(vendorRegister).toContain('hidden identity details');
+    expect(vendorRegister).toContain('npm run test:privacy');
+    expect(vendorRegister).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(vendorRegister).not.toContain('All vendors are carefully vetted');
+    expect(vendorRegister).not.toContain('DPA Signed');
+    expect(vendorRegister).not.toContain('SOC 2 Type II certified');
+    expect(vendorRegister).not.toContain('GDPR-compliant');
+    expect(vendorRegister).not.toContain('CCPA compliance');
+    expect(docsRegistry).toContain(
+      '| `docs/DATA_PROCESSING_AGREEMENTS.md`                                                                    | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps LinkedIn verification guidance outside the launch corridor', () => {
     const linkedInSetup = fs.readFileSync(
       path.join(repoRoot, 'docs/LINKEDIN_VERIFICATION_SETUP.md'),

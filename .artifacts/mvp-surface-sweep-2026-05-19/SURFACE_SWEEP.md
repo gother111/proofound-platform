@@ -1114,3 +1114,9 @@ Non-fatal test noise:
 - Refreshed the style map against `DESIGN.md`, `src/app/globals.css`, `tailwind.config.ts`, and brand tokens so the current light-only Japandi palette, primary object/action clarity, state visibility, and no public-directory/profile-theater rules stay visible.
 - Rewrote animation guidance around current motion tokens, reduced-motion behavior, restrained landing scrollytelling, and explicit retired guidance for `NetworkBackground`, `LivingNetwork`, broad ambient canvas motion, and morphing blobs.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so stale visual/motion docs cannot revive decorative UI patterns outside the locked MVP corridor.
+
+## Continuation - Vendor Processing Register Refresh
+
+- Found `docs/DATA_PROCESSING_AGREEMENTS.md` still verified on 2026-03-11 with unproven legal/compliance claims: signed DPAs, SCCs, SOC/ISO status, GDPR/CCPA compliance, retention windows, and active-looking Veriff/LinkedIn processing language.
+- Rewrote it as a launch-safety processing register rather than legal proof: active/conditional vendor posture, no-leak data minimization rules, target-specific legal/privacy verification requirements, and explicit manual-link/default and archived Veriff boundaries.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so vendor guidance stays evidence-scoped and cannot be mistaken for a signed DPA repository or compliance attestation.
