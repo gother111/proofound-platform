@@ -861,3 +861,10 @@ Non-fatal test noise:
 - Updated the setup runbook header and its root sync pair `setup.md`, and narrowed the section to current interview-provider/manual-link posture, removing native Zoom OAuth setup from active launch instructions.
 - Found `docs/testing-strategy.md` still verified on 2026-04-29 and using local-only launch gate examples without naming production-candidate target, backup/restore evidence, or manual-link provider posture.
 - Updated the testing strategy and launch-gate guard so release validation points at production-candidate monitor/perf/go-no-go evidence and keeps provider-connected tests scoped to intentionally configured flows.
+
+## Continuation - Internal Ops SOP Refresh
+
+- Found internal ops SOPs still verified on March/April dates even though the admin queue, audit, and internal-ops API posture has current May 19 launch evidence.
+- Refreshed the internal-ops SOP dates, linked the index to the current production-readiness, phase-exit, and sweep evidence, and made the queue access expectation explicit: admin/internal-only, with no public or logged-out queue content.
+- Added user-communication guardrails so manual workflow comms do not include private proof content, hidden identity details, secrets, queue IDs, or diagnostic output.
+- Added launch-gate coverage that keeps the internal ops SOP set current and tied to protected admin/internal queue surfaces.

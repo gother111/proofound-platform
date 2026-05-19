@@ -347,6 +347,42 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps internal ops SOPs current and protected-route scoped', () => {
+    const internalOpsDocs = [
+      'docs/internal-ops/index.md',
+      'docs/internal-ops/verification-review-sop.md',
+      'docs/internal-ops/redaction-risky-upload-sop.md',
+      'docs/internal-ops/reveal-privacy-dispute-sop.md',
+      'docs/internal-ops/assignment-quality-checklist.md',
+      'docs/internal-ops/engagement-verification-evidence-checklist.md',
+      'docs/internal-ops/workflow-comms-templates.md',
+    ];
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    for (const docPath of internalOpsDocs) {
+      const content = fs.readFileSync(path.join(repoRoot, docPath), 'utf8');
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(docsRegistry).toContain(`| \`${docPath}\``);
+      const registryLine = docsRegistry
+        .split('\n')
+        .find((line) => line.includes(`| \`${docPath}\``));
+      expect(registryLine).toContain('| `2026-05-19`');
+    }
+
+    const index = fs.readFileSync(path.join(repoRoot, 'docs/internal-ops/index.md'), 'utf8');
+    expect(index).toContain('/admin/verification');
+    expect(index).toContain('/api/admin/internal-ops/queues');
+    expect(index).toContain('admin/internal-only');
+    expect(index).toContain('public and logged-out users must not see queue content');
+
+    const templates = fs.readFileSync(
+      path.join(repoRoot, 'docs/internal-ops/workflow-comms-templates.md'),
+      'utf8'
+    );
+    expect(templates).toContain('Do not include private proof content');
+    expect(templates).toContain('locked MVP corridor');
+  });
+
   it('keeps retired wellbeing API tests archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'tests/api-endpoints-test.ts'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'tests/lib/wellbeing-client.test.ts'))).toBe(false);

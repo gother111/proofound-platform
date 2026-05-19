@@ -1,9 +1,13 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-25`
+> Last Verified: `2026-05-19`
 
 # Workflow Comms Templates
 
 These are plain-language pilot templates for manual ops handling.
+
+Do not include private proof content, hidden identity details, secrets, internal queue IDs, or
+diagnostic output in user-facing comms. Keep messages claim-scoped, privacy-conservative, and tied
+to the locked MVP corridor.
 
 Owner:
 

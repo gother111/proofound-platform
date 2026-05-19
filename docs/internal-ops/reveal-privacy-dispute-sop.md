@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-25`
+> Last Verified: `2026-05-19`
 
 # Reveal / Privacy Dispute SOP
 
