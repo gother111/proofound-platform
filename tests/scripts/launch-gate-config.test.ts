@@ -77,6 +77,10 @@ describe('launch gate package configuration', () => {
       'tests/lib/cv-import-suggest-1000-benchmark.test.ts'
     );
     expect(scripts['test:launch:smoke']).toBe('node --import tsx ./scripts/launch-smoke-runner.ts');
+    expect(scripts['test:a11y']).toBe(
+      'node ./scripts/playwright-node24.mjs test --config playwright.a11y.config.ts --project=chromium'
+    );
+    expect(scripts['test:a11y:strict']).toContain('playwright.a11y.strict.config.ts');
     expect(scripts['ai:provider:smoke']).toBe('node --import tsx ./scripts/ai-provider-smoke.ts');
     expect(scripts['monitor:launch']).toBe(
       'node --import tsx ./scripts/run-launch-synthetic-monitors.ts'
@@ -105,6 +109,30 @@ describe('launch gate package configuration', () => {
     expect(gateScript).toContain("'launch-status'");
     expect(gateScript).toContain("'timed_out'");
     expect(gateScript).toContain('commands.json');
+  });
+
+  it('keeps the accessibility go/no-go evidence current and honestly scoped', () => {
+    const accessibilityReport = fs.readFileSync(
+      path.join(repoRoot, 'ACCESSIBILITY_AUDIT_REPORT.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(accessibilityReport).toContain('Last Verified: `2026-05-19`');
+    expect(accessibilityReport).toContain('npm run test:a11y');
+    expect(accessibilityReport).toContain('Runtime: Node `v25.4.0`');
+    expect(accessibilityReport).toContain('Total tests: `15`');
+    expect(accessibilityReport).toContain('Passed: `15`');
+    expect(accessibilityReport).toContain('tests/a11y/critical-flows.spec.ts');
+    expect(accessibilityReport).toContain('tests/a11y/keyboard-navigation.spec.ts');
+    expect(accessibilityReport).toContain(
+      'Strict authenticated accessibility remains a production-candidate gate'
+    );
+    expect(accessibilityReport).toContain('Manual screen-reader validation');
+    expect(accessibilityReport).not.toContain('2026-02-12');
+    expect(docsRegistry).toContain(
+      '| `ACCESSIBILITY_AUDIT_REPORT.md`                                                                         | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
   });
 
   it('keeps monitoring launch-ops routes documented as internal, not public', () => {

@@ -882,3 +882,10 @@ Non-fatal test noise:
 - Found active root/project orientation docs still pointing at the retired `scripts/go-no-go-check.mjs` gate even though `npm run go:no-go` now runs `scripts/go-no-go-check.ts` and the `.mjs` implementation is archived.
 - Refreshed `Architecture.md`, `project/Architecture.md`, `Documentation.md`, `project/Documentation.md`, `metrics.md`, `Prompt.md`, and `project/Prompt.md` to `Last Verified: 2026-05-19`, updated their launch-gate references to the active TypeScript go/no-go command, and named current evidence dependencies without reintroducing the retired script.
 - Updated `docs/DOCS_REGISTRY.md` freshness for the sync-pair docs and expanded launch-gate coverage so those active orientation docs must point at `scripts/go-no-go-check.ts` and must not point future agents back to `scripts/go-no-go-check.mjs`.
+
+## Continuation - Accessibility Go/No-Go Evidence Refresh
+
+- Found active `ACCESSIBILITY_AUDIT_REPORT.md` still verified on 2026-02-12 even though it is a required `npm run go:no-go` evidence file.
+- Reran the baseline accessibility suite. The sandbox run failed before tests because Playwright could not bind `0.0.0.0:33101`; the approved outside-sandbox rerun passed `15/15` against `playwright.a11y.config.ts`.
+- Refreshed the accessibility report to `Last Verified: 2026-05-19`, recorded the exact command and scope, and kept the evidence honest: baseline public/mock-mode accessibility is green, while strict authenticated accessibility and manual screen-reader validation remain separate production-candidate/manual gates.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the report freshness, command, test count, and strict/manual caveats stay current.
