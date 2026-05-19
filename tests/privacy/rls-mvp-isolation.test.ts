@@ -277,7 +277,7 @@ async function createOrgFixture(params: {
     .insert({
       match_id: match!.id,
       scheduled_at: new Date(Date.now() + 86400000).toISOString(),
-      platform: 'zoom',
+      platform: 'manual',
       meeting_id: `rls-${params.label}-${params.ts}`,
       status: 'scheduled',
       host_user_id: params.reviewer.id,

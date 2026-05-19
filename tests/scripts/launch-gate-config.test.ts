@@ -2446,6 +2446,22 @@ describe('launch gate package configuration', () => {
     ).toBe(true);
   });
 
+  it('keeps active interview fixtures on launch-safe meeting links', () => {
+    const retiredZoomMeetingUrlPrefix = 'https://zoom.us' + '/j';
+    const activeFiles = [
+      ...listFiles(path.join(repoRoot, 'src'), ['.ts', '.tsx']),
+      ...listFiles(path.join(repoRoot, 'tests'), ['.ts', '.tsx']),
+      ...listFiles(path.join(repoRoot, 'scripts'), ['.ts']),
+      ...listFiles(path.join(repoRoot, 'emails'), ['.tsx']),
+    ].filter((file) => !file.includes(`${path.sep}archive${path.sep}`));
+
+    const offenders = activeFiles
+      .filter((file) => fs.readFileSync(file, 'utf8').includes(retiredZoomMeetingUrlPrefix))
+      .map((file) => path.relative(repoRoot, file));
+
+    expect(offenders).toEqual([]);
+  });
+
   it('keeps generic customizable dashboard shell archived', () => {
     const retiredPaths = [
       'src/components/dashboard/CustomizableDashboard.tsx',

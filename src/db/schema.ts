@@ -5234,7 +5234,8 @@ export const interviews = pgTable(
       .notNull(),
     scheduledAt: timestamp('scheduled_at').notNull(),
     duration: integer('duration').default(30).notNull(), // minutes
-    platform: text('platform', { enum: ['zoom', 'google'] }).notNull(),
+    // Active launch writes `manual` or `google_meet`; `zoom`/`google` are retained for legacy rows only.
+    platform: text('platform', { enum: ['manual', 'google_meet', 'zoom', 'google'] }).notNull(),
     manualMeetingProvider: text('manual_meeting_provider', {
       enum: ['teams', 'zoom', 'google_meet', 'other'],
     }),

@@ -281,7 +281,7 @@ export interface InterviewScheduledProperties {
   assignment_id: string;
   match_id?: string;
   duration_minutes: number;
-  platform: 'zoom' | 'google_meet' | 'other';
+  platform: 'manual' | 'google_meet' | 'other';
   days_since_match: number;
 }
 

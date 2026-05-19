@@ -245,8 +245,8 @@ describe('workflow email privacy helper', () => {
           organizationName: 'Acme Org',
           scheduledAt: '2026-03-18T10:00:00.000Z',
           duration: 45,
-          platform: 'zoom',
-          meetingUrl: 'https://zoom.us/j/123',
+          platform: 'manual',
+          meetingUrl: 'https://example.com/manual-room',
           interviewId: 'interview-1',
         },
         {
@@ -305,8 +305,8 @@ describe('workflow email privacy helper', () => {
           organizationName: 'Acme Org',
           scheduledAt: '2026-03-18T10:00:00.000Z',
           duration: 45,
-          platform: 'zoom',
-          meetingUrl: 'https://zoom.us/j/123',
+          platform: 'manual',
+          meetingUrl: 'https://example.com/manual-room',
           interviewId: 'interview-1',
         },
         { stage: 'masked' }
@@ -356,8 +356,8 @@ describe('workflow email privacy helper', () => {
         roleTitle: 'Private role title',
         scheduledAt: '2026-03-18T10:00:00.000Z',
         duration: 45,
-        platform: 'zoom',
-        meetingUrl: 'https://zoom.us/j/123',
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
         interviewId: 'interview-1',
       },
       { stage: 'masked' }

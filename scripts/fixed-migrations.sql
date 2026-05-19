@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS "interviews" (
   "match_id" uuid NOT NULL REFERENCES "matches"("id") ON DELETE CASCADE,
   "scheduled_at" timestamp NOT NULL,
   "duration_minutes" integer DEFAULT 30 NOT NULL,
-  "platform" text NOT NULL CHECK ("platform" IN ('zoom', 'google_meet')),
+  "platform" text NOT NULL CHECK ("platform" IN ('manual', 'google_meet', 'zoom', 'google')),
+  "manual_meeting_provider" text CHECK ("manual_meeting_provider" IS NULL OR "manual_meeting_provider" IN ('teams', 'zoom', 'google_meet', 'other')),
   "meeting_link" text,
   "meeting_id" text,
   "host_user_id" uuid NOT NULL REFERENCES "profiles"("id") ON DELETE CASCADE,
@@ -31,7 +32,7 @@ CREATE INDEX IF NOT EXISTS "interviews_scheduled_at_idx" ON "interviews"("schedu
 CREATE INDEX IF NOT EXISTS "interviews_status_idx" ON "interviews"("status");
 
 -- Add comment
-COMMENT ON TABLE "interviews" IS 'Interview scheduling with Zoom/Google Meet integration - uses match_id not application_id';
+COMMENT ON TABLE "interviews" IS 'Interview scheduling with launch manual-link and Google Meet support - uses match_id not application_id';
 
 -- Migration 2: Add fairness_reports table (unchanged - this one is fine)
 CREATE TABLE IF NOT EXISTS "fairness_reports" (
@@ -50,4 +51,3 @@ CREATE INDEX IF NOT EXISTS "fairness_reports_created_at_idx" ON "fairness_report
 
 -- Add comment
 COMMENT ON TABLE "fairness_reports" IS 'Automated fairness analysis reports - PRD Gap 3';
-

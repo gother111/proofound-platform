@@ -78,8 +78,8 @@ describe('POST /api/decisions', () => {
       candidateId: 'candidate-1',
       status: 'completed',
       scheduledAt: new Date('2026-03-15T00:00:00.000Z'),
-      platform: 'zoom',
-      meetingUrl: 'https://zoom.us/j/meeting',
+      platform: 'manual',
+      meetingUrl: 'https://example.com/manual-room',
       timezone: 'UTC',
       rescheduleCount: 1,
     });
@@ -239,8 +239,8 @@ describe('POST /api/decisions', () => {
       candidateId: 'candidate-1',
       status: 'scheduled',
       scheduledAt: new Date('2026-03-15T00:00:00.000Z'),
-      platform: 'zoom',
-      meetingUrl: 'https://zoom.us/j/meeting',
+      platform: 'manual',
+      meetingUrl: 'https://example.com/manual-room',
       timezone: 'UTC',
       rescheduleCount: 1,
     });

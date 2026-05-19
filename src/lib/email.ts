@@ -320,7 +320,7 @@ export async function sendInterviewScheduledEmail(
     candidateName?: string;
     scheduledAt: string;
     duration: number;
-    platform: 'zoom' | 'google-meet';
+    platform: 'manual' | 'google_meet';
     meetingUrl: string;
     timezone?: string;
     interviewId: string;

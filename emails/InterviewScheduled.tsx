@@ -18,7 +18,7 @@ interface InterviewScheduledProps {
   candidateName?: string;
   scheduledAt: string;
   duration: number;
-  platform: 'zoom' | 'google-meet';
+  platform: 'manual' | 'google_meet';
   meetingUrl: string;
   timezone?: string;
   viewInterviewUrl: string;
@@ -50,7 +50,7 @@ export default function InterviewScheduled({
     timeZoneName: 'short',
   });
 
-  const platformName = platform === 'zoom' ? 'Zoom' : 'Google Meet';
+  const platformName = platform === 'google_meet' ? 'Google Meet' : 'Manual link';
 
   return (
     <Html>
@@ -116,7 +116,7 @@ export default function InterviewScheduled({
 
               <Section style={buttonContainer}>
                 <Button style={joinButton} href={meetingUrl}>
-                  Join {platformName} Meeting
+                  Open meeting link
                 </Button>
               </Section>
 

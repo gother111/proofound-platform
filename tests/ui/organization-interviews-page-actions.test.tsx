@@ -65,8 +65,8 @@ describe('organization interviews page actions', () => {
       id: 'interview-1',
       scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       duration: 30,
-      platform: 'zoom',
-      meetingUrl: 'https://zoom.us/j/example',
+      platform: 'manual',
+      meetingUrl: 'https://example.com/manual-room',
       manualMeetingProvider: null,
       rescheduleCount: 0,
       status: 'scheduled',
@@ -108,8 +108,8 @@ describe('organization interviews page actions', () => {
             id: 'interview-1',
             scheduledAt: upcomingInterviewAt,
             duration: 30,
-            platform: 'zoom',
-            meetingUrl: 'https://zoom.us/j/example',
+            platform: 'manual',
+            meetingUrl: 'https://example.com/manual-room',
             manualMeetingProvider: null,
             rescheduleCount: 0,
             status: 'scheduled',
@@ -171,7 +171,7 @@ describe('organization interviews page actions', () => {
       expect(screen.getByRole('button', { name: /edit interview/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /cancel interview/i })).toBeInTheDocument();
     });
-    expect(screen.getByText('Manual link')).toBeInTheDocument();
+    expect(screen.getByText('Manual')).toBeInTheDocument();
     expect(screen.queryByText('zoom')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /edit interview/i }));
@@ -202,8 +202,8 @@ describe('organization interviews page actions', () => {
         id: 'interview-1',
         scheduledAt: upcomingInterviewAt,
         duration: 30,
-        platform: 'zoom',
-        meetingUrl: 'https://zoom.us/j/example',
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
         manualMeetingProvider: null,
         rescheduleCount: 0,
         status: 'completed',
@@ -348,8 +348,8 @@ describe('organization interviews page actions', () => {
             id: 'interview-1',
             scheduledAt: upcomingInterviewAt,
             duration: 30,
-            platform: 'zoom',
-            meetingUrl: 'https://zoom.us/j/example',
+            platform: 'manual',
+            meetingUrl: 'https://example.com/manual-room',
             manualMeetingProvider: null,
             rescheduleCount: 1,
             status: 'scheduled',

@@ -670,16 +670,6 @@ export async function POST(request: NextRequest) {
 
           const missingColumn = extractMissingColumn(insertResult.error);
           if (!missingColumn) {
-            const isLegacyPlatformEnumError =
-              insertResult.error?.code === '22P02' &&
-              typeof insertResult.error?.message === 'string' &&
-              insertResult.error.message.toLowerCase().includes('platform');
-
-            if (isLegacyPlatformEnumError && insertPayload.platform === 'manual') {
-              insertPayload.platform = 'zoom';
-              continue;
-            }
-
             throw insertResult.error;
           }
 

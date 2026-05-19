@@ -779,7 +779,7 @@ export async function emitInterviewScheduled(
     match_id: string;
     duration_minutes: number;
     policy_preset?: 'startup' | 'enterprise' | 'volunteer' | 'advanced';
-    platform: 'zoom' | 'google_meet' | 'manual';
+    platform: 'google_meet' | 'manual';
     days_since_match: number; // For TTV calculation
   }
 ) {
@@ -801,7 +801,7 @@ export function emitInterviewScheduledAsync(
     match_id: string;
     duration_minutes: number;
     policy_preset?: 'startup' | 'enterprise' | 'volunteer' | 'advanced';
-    platform: 'zoom' | 'google_meet' | 'manual';
+    platform: 'google_meet' | 'manual';
     days_since_match: number;
   }
 ) {

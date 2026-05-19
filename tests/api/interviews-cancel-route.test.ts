@@ -67,8 +67,8 @@ describe('POST /api/interviews/cancel', () => {
         candidateId: '44444444-4444-4444-8444-444444444444',
         status: 'scheduled',
         scheduledAt: new Date(Date.now() + 30 * 60 * 1000),
-        platform: 'zoom',
-        meetingUrl: 'https://zoom.us/j/meeting',
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
         timezone: 'UTC',
       },
     } as any);
@@ -107,8 +107,8 @@ describe('POST /api/interviews/cancel', () => {
         candidateId: '44444444-4444-4444-8444-444444444444',
         status: 'completed',
         scheduledAt: new Date(Date.now() + 30 * 60 * 1000),
-        platform: 'zoom',
-        meetingUrl: 'https://zoom.us/j/meeting',
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
         timezone: 'UTC',
       },
     } as any);
@@ -154,8 +154,8 @@ describe('POST /api/interviews/cancel', () => {
         candidateId: '44444444-4444-4444-8444-444444444444',
         status: 'scheduled',
         scheduledAt: new Date(Date.now() + 30 * 60 * 1000),
-        platform: 'zoom',
-        meetingUrl: 'https://zoom.us/j/meeting',
+        platform: 'manual',
+        meetingUrl: 'https://example.com/manual-room',
         timezone: 'UTC',
       },
     } as any);

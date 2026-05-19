@@ -514,7 +514,7 @@ export async function scheduleInterview(input: z.input<typeof ScheduleInterviewS
 
     if (normalizedPlatform === 'zoom') {
       throw new Error(
-        'Zoom integration is temporarily unavailable. Please select Google Meet or use manual link scheduling.'
+        'Zoom is outside the launch interview surface. Use Google Meet or a manual meeting link.'
       );
     }
 
@@ -660,19 +660,7 @@ export async function scheduleInterview(input: z.input<typeof ScheduleInterviewS
       lastInsertError = insertResult.error;
 
       const missingColumn = extractMissingColumn(insertResult.error);
-      if (!missingColumn) {
-        const isLegacyPlatformEnumError =
-          insertResult.error?.code === '22P02' &&
-          typeof insertResult.error?.message === 'string' &&
-          insertResult.error.message.toLowerCase().includes('platform');
-
-        if (isLegacyPlatformEnumError && insertPayload.platform === 'manual') {
-          insertPayload.platform = 'zoom';
-          continue;
-        }
-
-        throw insertResult.error;
-      }
+      if (!missingColumn) throw insertResult.error;
 
       switch (missingColumn) {
         case 'duration_minutes':
