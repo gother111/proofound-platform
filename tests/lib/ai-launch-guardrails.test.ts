@@ -36,7 +36,6 @@ const AI_LAUNCH_COVERAGE_SENTINELS = [
   'tests/api/jd-to-l4-route.test.ts',
   'tests/api/portfolio-visibility-route.test.ts',
   'tests/ui/individual-setup-proof-first.test.tsx',
-  'npm run test:ai:archived-admin',
 ] as const;
 
 async function collectRouteFiles(dir: string): Promise<string[]> {
@@ -170,6 +169,7 @@ describe('AI launch no-go guardrails', () => {
     expect(
       AI_LAUNCH_COVERAGE_SENTINELS.filter((sentinel) => !launchAiScript.includes(sentinel))
     ).toEqual([]);
+    expect(launchAiScript).not.toContain('test:ai:archived-admin');
     expect(privacyScript).toContain('tests/lib/ai-redaction.test.ts');
     expect(archivedAdminScript).toContain('vitest.archived.config.ts');
     expect(archivedAdminScript).toContain(
