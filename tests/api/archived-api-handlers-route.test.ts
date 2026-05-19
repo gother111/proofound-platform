@@ -12,6 +12,7 @@ import { POST as postCvImportWizardExtract } from '@/app/api/expertise/cv-import
 import { GET as getCvImportWizardExtractStatus } from '@/app/api/expertise/cv-import/wizard-extract/status/route';
 import { POST as postCvImportWizardSuggest } from '@/app/api/expertise/cv-import/wizard-suggest/route';
 import { POST as postPerformanceTrack } from '@/app/api/performance/track/route';
+import { GET as getProfileCompleteness } from '@/app/api/profile/completeness/route';
 
 const archivedHandlers = [
   {
@@ -63,6 +64,11 @@ const archivedHandlers = [
     route: 'POST /api/performance/track',
     handler: postPerformanceTrack,
     surface: 'Performance API',
+  },
+  {
+    route: 'GET /api/profile/completeness',
+    handler: getProfileCompleteness,
+    surface: 'Legacy Profile API',
   },
 ] as const;
 

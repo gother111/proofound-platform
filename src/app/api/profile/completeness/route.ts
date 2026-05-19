@@ -12,6 +12,8 @@ export async function GET() {
   return NextResponse.json(
     {
       error: 'Profile completeness scoring is not part of the MVP launch surface.',
+      surface: 'Legacy Profile API',
+      launchState: 'non_launch',
       replacement: '/api/individual/readiness',
     },
     { status: 410 }
