@@ -210,7 +210,6 @@ const ACTIVE_API_POLICIES = [
       pathname === '/api/user/account' ||
       pathname === '/api/user/account/cancel-deletion' ||
       pathname === '/api/user/audit-log' ||
-      pathname === '/api/user/audit-log/purpose' ||
       pathname === '/api/user/consent' ||
       pathname === '/api/user/consent/check' ||
       pathname === '/api/user/data-inventory' ||
@@ -512,7 +511,9 @@ const ARCHIVED_API_POLICIES = [
     surfaceLabel: 'User API',
     detail: 'Broad user tooling outside privacy/export/delete basics is archived for launch.',
     matches: (pathname: string) =>
-      pathname === '/api/user/import' || pathname === '/api/user/tour-status',
+      pathname === '/api/user/audit-log/purpose' ||
+      pathname === '/api/user/import' ||
+      pathname === '/api/user/tour-status',
   },
   {
     classification: 'archived',

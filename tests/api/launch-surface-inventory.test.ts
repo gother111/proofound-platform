@@ -94,7 +94,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/user/account',
   '/api/user/account/cancel-deletion',
   '/api/user/audit-log',
-  '/api/user/audit-log/purpose',
   '/api/user/consent',
   '/api/user/consent/check',
   '/api/user/data-inventory',
@@ -198,6 +197,7 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/portfolio/view',
   '/api/feedback/sus',
   '/api/surveys/sus',
+  '/api/user/audit-log/purpose',
   '/api/organizations/[orgId]/causes',
   '/api/organizations/[orgId]/culture',
   '/api/organizations/[orgId]/goals',
@@ -227,6 +227,7 @@ const ALLOWED_ARCHIVED_COMPILED_ROUTES = [
   '/api/match/test',
   '/api/performance/track',
   '/api/profile/completeness',
+  '/api/user/audit-log/purpose',
 ] as const;
 
 async function collectRoutePaths(dir: string): Promise<string[]> {

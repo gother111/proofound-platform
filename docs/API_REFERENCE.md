@@ -31,7 +31,7 @@ Canonical API documentation generated from the current App Router route handlers
 
 - Total route handlers: **140**
 - Auth tier counts: `public=41`, `session=80`, `service=1`, `cron=10`, `internal=8`
-- Launch surface counts: `active MVP=110`, `internal launch ops=16`, `archived compatibility=14`
+- Launch surface counts: `active MVP=109`, `internal launch ops=16`, `archived compatibility=15`
 - Family count: **31**
 
 ## Endpoint Inventory
@@ -292,20 +292,20 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### user
 
-| Methods       | Path                                | Auth Tier | Launch Surface | Notes                           | Source                                              |
-| ------------- | ----------------------------------- | --------- | -------------- | ------------------------------- | --------------------------------------------------- |
-| `GET\|DELETE` | `/api/user/account`                 | `session` | `active MVP`   | -                               | `src/app/api/user/account/route.ts`                 |
-| `POST`        | `/api/user/account/cancel-deletion` | `session` | `active MVP`   | -                               | `src/app/api/user/account/cancel-deletion/route.ts` |
-| `GET`         | `/api/user/audit-log`               | `session` | `active MVP`   | -                               | `src/app/api/user/audit-log/route.ts`               |
-| `GET`         | `/api/user/audit-log/purpose`       | `public`  | `active MVP`   | -                               | `src/app/api/user/audit-log/purpose/route.ts`       |
-| `GET\|POST`   | `/api/user/consent`                 | `session` | `active MVP`   | legacy/compat markers in source | `src/app/api/user/consent/route.ts`                 |
-| `GET`         | `/api/user/consent/check`           | `session` | `active MVP`   | -                               | `src/app/api/user/consent/check/route.ts`           |
-| `GET`         | `/api/user/data-inventory`          | `session` | `active MVP`   | -                               | `src/app/api/user/data-inventory/route.ts`          |
-| `GET\|PUT`    | `/api/user/email`                   | `session` | `active MVP`   | -                               | `src/app/api/user/email/route.ts`                   |
-| `GET`         | `/api/user/export`                  | `session` | `active MVP`   | legacy/compat markers in source | `src/app/api/user/export/route.ts`                  |
-| `GET`         | `/api/user/me`                      | `session` | `active MVP`   | -                               | `src/app/api/user/me/route.ts`                      |
-| `PUT`         | `/api/user/password`                | `session` | `active MVP`   | -                               | `src/app/api/user/password/route.ts`                |
-| `GET\|POST`   | `/api/user/privacy-settings`        | `session` | `active MVP`   | -                               | `src/app/api/user/privacy-settings/route.ts`        |
+| Methods       | Path                                | Auth Tier | Launch Surface           | Notes                           | Source                                              |
+| ------------- | ----------------------------------- | --------- | ------------------------ | ------------------------------- | --------------------------------------------------- |
+| `GET\|DELETE` | `/api/user/account`                 | `session` | `active MVP`             | -                               | `src/app/api/user/account/route.ts`                 |
+| `POST`        | `/api/user/account/cancel-deletion` | `session` | `active MVP`             | -                               | `src/app/api/user/account/cancel-deletion/route.ts` |
+| `GET`         | `/api/user/audit-log`               | `session` | `active MVP`             | -                               | `src/app/api/user/audit-log/route.ts`               |
+| `GET`         | `/api/user/audit-log/purpose`       | `public`  | `archived compatibility` | -                               | `src/app/api/user/audit-log/purpose/route.ts`       |
+| `GET\|POST`   | `/api/user/consent`                 | `session` | `active MVP`             | legacy/compat markers in source | `src/app/api/user/consent/route.ts`                 |
+| `GET`         | `/api/user/consent/check`           | `session` | `active MVP`             | -                               | `src/app/api/user/consent/check/route.ts`           |
+| `GET`         | `/api/user/data-inventory`          | `session` | `active MVP`             | -                               | `src/app/api/user/data-inventory/route.ts`          |
+| `GET\|PUT`    | `/api/user/email`                   | `session` | `active MVP`             | -                               | `src/app/api/user/email/route.ts`                   |
+| `GET`         | `/api/user/export`                  | `session` | `active MVP`             | legacy/compat markers in source | `src/app/api/user/export/route.ts`                  |
+| `GET`         | `/api/user/me`                      | `session` | `active MVP`             | -                               | `src/app/api/user/me/route.ts`                      |
+| `PUT`         | `/api/user/password`                | `session` | `active MVP`             | -                               | `src/app/api/user/password/route.ts`                |
+| `GET\|POST`   | `/api/user/privacy-settings`        | `session` | `active MVP`             | -                               | `src/app/api/user/privacy-settings/route.ts`        |
 
 ### verification
 
@@ -351,6 +351,7 @@ Routes with source-level `legacy`/`deprecated` markers should be treated as comp
 | `/api/match/test`                                | `src/app/api/match/test/route.ts`                                | archived by launch surface policy |
 | `/api/performance/track`                         | `src/app/api/performance/track/route.ts`                         | archived by launch surface policy |
 | `/api/profile/completeness`                      | `src/app/api/profile/completeness/route.ts`                      | archived by launch surface policy |
+| `/api/user/audit-log/purpose`                    | `src/app/api/user/audit-log/purpose/route.ts`                    | archived by launch surface policy |
 
 ## Verification Checklist
 

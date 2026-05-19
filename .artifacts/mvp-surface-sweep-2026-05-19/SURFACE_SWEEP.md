@@ -1343,3 +1343,8 @@ Non-fatal test noise:
 
 - Found retained April 29 readiness artifacts still opening without reference-spec metadata, and the rerun artifact still showing a live `go:no-go` command without the now-required restore report or `CRON_SECRET`.
 - Added historical/superseded evidence banners to both April 29 artifacts, updated their registry dates, and corrected the rerun's live launch evidence sequence to include backup, isolated restore report, and authenticated final `go:no-go`.
+
+## Continuation - Retired Purpose Audit Route Classification
+
+- Found `/api/user/audit-log/purpose` returning `410 Gone` as retired individual purpose audit history, while `src/lib/launch/surface-policy.ts`, the launch API inventory test, and `docs/API_REFERENCE.md` still classified it as active MVP.
+- Reclassified the route as archived compatibility, kept the 410 route behavior and focused route test intact, and regenerated the API reference so the route inventory matches the actual launch surface.
