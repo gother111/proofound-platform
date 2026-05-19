@@ -211,6 +211,7 @@ describe('launch gate package configuration', () => {
       'src/components/admin/organizations',
       'src/components/admin/users',
       'src/components/analytics',
+      'src/components/metrics',
       'src/components/dashboard/org/FairnessNoteCard.tsx',
       'src/lib/analytics/fairness.ts',
       'src/lib/analytics/fairness-gaps.ts',

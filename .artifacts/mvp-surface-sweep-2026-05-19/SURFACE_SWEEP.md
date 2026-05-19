@@ -244,6 +244,12 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Kept active consolidated metrics scoped to TTFQI, TTV, TTSC, Proof Fit Lift, and SUS.
 - Verified no active source/test references remain outside historical database schema and migrations.
 
+31. An orphaned metrics dashboard still lived in active components.
+
+- Confirmed `src/components/metrics/MetricsDashboard.tsx` had no active source, test, or docs imports outside its own export.
+- Moved the dashboard into `src/archive/non_launch_admin_ui/components/metrics/` as historical internal metrics UI context.
+- Added launch-gate coverage so the active `src/components/metrics` directory stays absent unless the MVP authority stack changes.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -508,11 +514,14 @@ Commands run with Node 25 path:
 - Browser plugin opened `http://localhost:33180/portfolio/demo` - passed, rendered `Public Page Unavailable | Proofound`; Browser reported one console error but the referenced MCP log artifact was not readable from the repo.
 - `rg -n "WellBeingDelta|WELLBEING_DELTA|calculateWellBeingDelta|calculateFairnessGap|FairnessGapResult|FAIRNESS_GAP|WellbeingCheckinSubmittedProps|WellbeingOptInChangedProps|ReflectionAddedProps|emitWellbeing|emitReflectionAdded|emitPrivacyBannerAcknowledged|PRIVACY_BANNER_ACKNOWLEDGED|wellbeing_checkin|wellbeing_opt_in|wellbeing_reflection|wellbeing_delta|fairness_gap" src tests -g '!src/archive/**' -g '!tests/archive/**'` - active code/test references are gone; remaining hits are historical database schema and migrations.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/cron-health-check-route.test.ts src/lib/analytics/__tests__/metrics.test.ts tests/scripts/launch-gate-config.test.ts` - passed, 3 files / 43 tests, after narrowing active analytics metrics/events.
+- `rg -n "components/metrics|MetricsDashboard" src tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active references were limited to the orphaned component export and the launch-gate archive assertion before the move.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts` - passed, 1 file / 14 tests, after moving the orphaned metrics dashboard and removing the empty active `src/components/metrics` directory.
 
 Non-fatal test noise:
 
 - Vitest/Vite reported `listen EPERM` for WebSocket port `24678` in the sandbox, but tests completed and passed.
 - Node emitted existing `--localstorage-file` warnings during Vitest runs.
+- The first launch-gate rerun after moving the orphaned metrics dashboard failed because the empty active `src/components/metrics` directory still existed. Removing the empty directory fixed the guard, and the rerun passed.
 - The admin audit-log UI test intentionally logged `Error: network unavailable` while asserting the rendered error state; the suite passed.
 - Default-runtime `npm run test:launch:routes` failed before tests because the local Node version did not expose `node:fs/promises.constants` for the current Vite package. The same route inventory command passed under the repo-required Node 25 runtime.
 - Archived `notFound()` page tests log jsdom React error output while asserting the 404 boundary; the archived tests passed.
