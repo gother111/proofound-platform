@@ -1494,3 +1494,12 @@ Non-fatal test noise:
 - Confirmed route policy already classifies `/api/data-export` as archived compatibility and the active data portability endpoint is `/api/user/export`.
 - Removed the alias from the active app route tree and preserved the boundary in `src/archive/non_launch_api/app/api/data-export/README.md`.
 - Verified route inventory and archived-handler coverage: `tests/api/launch-surface-inventory.test.ts` and `tests/api/archived-api-handlers-route.test.ts` passed.
+- Follow-up: the strict individual E2E privacy/account-control flow still called `/api/data-export`, which encouraged recreating the archived alias. Updated it to call the canonical `/api/user/export` endpoint instead.
+
+## Continuation - Assignment, Matching, And Interview Surface Polish
+
+- Kept the organization assignments page polish aligned with the MVP corridor: the header now makes the assignment corridor and `Create assignment` action obvious without adding dashboard theater.
+- Browser checked `/app/o/test-org/assignments` through the Codex Browser plugin on `localhost:33182`; after a semantic cleanup the page has one `h1`, no horizontal overflow, and no runtime-error text.
+- Tightened the individual matching empty state with a calm proof-review search icon and clearer action card hierarchy.
+- Tightened the organization interviews surface visual language by replacing inline colors with Proofound tokens, calmer badges, and a single semantic page heading.
+- Updated the strict individual E2E privacy/account-control flow to use `/api/user/export`, the canonical active export endpoint.

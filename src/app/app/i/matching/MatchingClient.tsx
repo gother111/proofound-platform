@@ -11,6 +11,7 @@ import { SnoozedMatchesList } from '@/components/matching/SnoozedMatchesList';
 import { HiddenMatchesList } from '@/components/matching/HiddenMatchesList';
 import { CardGridSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { apiFetch } from '@/lib/api/fetch';
+import { Search } from 'lucide-react';
 
 const MATCHING_DATA_TIMEOUT_MS = 10000;
 
@@ -397,24 +398,27 @@ export function MatchingClient() {
           ) : null}
         </div>
       ) : filteredMatches.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-proofound-stone/80 bg-white/60 px-4 py-12 text-center">
-          <p className="mb-2 font-display text-xl font-semibold text-proofound-charcoal">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-proofound-stone/70 bg-white px-4 py-16 text-center shadow-sm">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#eef3e8] text-proofound-forest">
+            <Search className="h-8 w-8" />
+          </div>
+          <h2 className="mb-2 font-display text-xl font-semibold text-proofound-charcoal">
             No matches yet
-          </p>
-          <p className="mx-auto max-w-lg text-sm leading-6 text-muted-foreground">
+          </h2>
+          <p className="mb-6 mx-auto max-w-md text-sm leading-6 text-muted-foreground">
             {matches.length === 0
               ? 'Nothing needs your attention right now. Keep your proof and preferences current so new opportunities can land cleanly.'
               : 'No matches fit the current filters. Loosen one filter to widen the corridor.'}
           </p>
           {ensureThreeActions(readinessActions).length > 0 ? (
-            <div className="mx-auto mt-5 max-w-xl space-y-2 text-left">
+            <div className="mx-auto w-full max-w-xl space-y-2 text-left mt-2">
               {ensureThreeActions(readinessActions).map((action) => (
                 <button
                   key={action.id}
                   onClick={() => router.push(action.actionUrl)}
-                  className="w-full rounded-lg border border-proofound-stone bg-white/70 px-3 py-2 transition-colors hover:border-proofound-forest hover:bg-japandi-bg"
+                  className="w-full rounded-lg border border-proofound-stone bg-white px-3 py-2 transition-colors hover:border-proofound-forest hover:bg-proofound-parchment/30 text-left"
                 >
-                  <p className="text-sm font-medium text-foreground">{action.title}</p>
+                  <p className="text-sm font-medium text-proofound-charcoal">{action.title}</p>
                   <p className="text-xs text-muted-foreground">{action.description}</p>
                 </button>
               ))}

@@ -495,7 +495,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
       expect(visibilityPayload).not.toHaveProperty('mission');
     }
 
-    const dataExportResponse = await page.request.get('/api/data-export');
+    const dataExportResponse = await page.request.get('/api/user/export');
     expect(dataExportResponse.ok()).toBeTruthy();
     const dataExportPayload = (await dataExportResponse.json()) as {
       userId?: string;
