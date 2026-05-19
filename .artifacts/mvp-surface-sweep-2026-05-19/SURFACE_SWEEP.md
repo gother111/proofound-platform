@@ -822,3 +822,10 @@ Non-fatal test noise:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- src/app/api/monitoring/__tests__/perf-status-route.test.ts tests/lib/api-observability-local-smoke.test.ts tests/api/assignments-list-route.test.ts` - passed, 3 files / 11 tests, after the assignment latency gate update.
 - Browser plugin rechecked the user-open local route `http://localhost:33180/portfolio/demo`: title `Public Page Unavailable | Proofound`, meaningful unavailable copy rendered, no framework overlay was visible, console warnings/errors were `0`, and the skip-link interaction preserved the safe unavailable state. Evidence saved at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/portfolio-demo-browser-recheck-2026-05-19.json`.
 - This improves launch-gate integrity but does not close the Phase 3 latency watch item by itself. A production-candidate or live/staging target still needs fresh `/api/assignments` samples and a green perf-status/go-no-go run before launch.
+
+## Continuation - Legacy Go/No-Go Script Cleanup
+
+- Found stale active launch-ops drift: `npm run go:no-go` runs `scripts/go-no-go-check.ts`, but the older weaker `scripts/go-no-go-check.mjs` still existed and `docs/performance-testing.md` still named it as the checked implementation.
+- Archived the legacy `.mjs` script under `scripts/archive/legacy_go_no_go/` and updated `docs/performance-testing.md` to point at the active TypeScript gate and its current required checks, including `/api/assignments` perf-status samples, fresh launch smoke, restore readiness, and launch-status readiness.
+- Added launch-gate config coverage so active docs cannot point back to `go-no-go-check.mjs`, while the archived script and active `go-no-go-check.ts` are both asserted in their intended locations.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts` - passed, 1 file / 25 tests, after the legacy go/no-go archive guard.

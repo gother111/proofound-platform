@@ -1,13 +1,10 @@
 /**
- * Go / No-Go Gate Script
+ * Archived Go / No-Go Gate Script
  *
- * Checks PRD Part 12 gates before deploy:
- * - Perf status endpoint OK (uses /api/monitoring/perf-status)
- * - SUS study flag (env SUS_STUDY_COMPLETE=true)
- * - Evidence files for RLS and accessibility audits
+ * This file is historical context only. The active launch gate is:
+ *   npm run go:no-go
  *
- * Usage:
- *   BASE_URL=http://localhost:3000 node ./scripts/go-no-go-check.mjs
+ * which runs scripts/go-no-go-check.ts.
  */
 
 import fs from 'node:fs';
@@ -19,7 +16,7 @@ const SKIP = process.env.SKIP_GO_NOGO === '1';
 const requiredFiles = ['RLS_DEPLOYMENT_SUMMARY.md', 'ACCESSIBILITY_AUDIT_REPORT.md'];
 
 function fail(message) {
-  console.error(`❌ Go/No-Go check failed: ${message}`);
+  console.error(`Go/No-Go check failed: ${message}`);
   process.exit(1);
 }
 
@@ -71,11 +68,11 @@ async function main() {
     return;
   }
 
-  console.log(`🔎 Running Go/No-Go gates against ${BASE_URL}`);
+  console.log(`Running Go/No-Go gates against ${BASE_URL}`);
   checkFiles();
   checkSUSFlag();
   await checkPerfStatus();
-  console.log('✅ Go/No-Go gates passed');
+  console.log('Go/No-Go gates passed');
 }
 
 main().catch((err) => fail(err.message || String(err)));

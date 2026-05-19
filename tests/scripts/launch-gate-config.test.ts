@@ -220,6 +220,25 @@ describe('launch gate package configuration', () => {
     ).toBe(true);
   });
 
+  it('keeps the legacy go/no-go script archived and out of active docs', () => {
+    expect(fs.existsSync(path.join(repoRoot, 'scripts/go-no-go-check.mjs'))).toBe(false);
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'scripts/archive/legacy_go_no_go/go-no-go-check.archived.mjs')
+      )
+    ).toBe(true);
+    expect(fs.existsSync(path.join(repoRoot, 'scripts/go-no-go-check.ts'))).toBe(true);
+
+    const activeDocs = listFiles(path.join(repoRoot, 'docs')).filter(
+      (file) => file.endsWith('.md') && !file.includes(`${path.sep}archive${path.sep}`)
+    );
+    const offenders = activeDocs
+      .filter((file) => fs.readFileSync(file, 'utf8').includes('go-no-go-check.mjs'))
+      .map((file) => path.relative(repoRoot, file));
+
+    expect(offenders).toEqual([]);
+  });
+
   it('keeps retired wellbeing API tests archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'tests/api-endpoints-test.ts'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'tests/lib/wellbeing-client.test.ts'))).toBe(false);

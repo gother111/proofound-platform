@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 # Performance Testing Guide
 
@@ -24,13 +24,16 @@ What it checks (`scripts/perf-budgets.mjs`):
 
 - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
 
-What it checks (`scripts/go-no-go-check.mjs`):
+What it checks (`scripts/go-no-go-check.ts`):
 
-- `/api/monitoring/perf-status` returns `ok`
+- `/api/monitoring/perf-status` returns `ok`, including the required `/api/assignments` latency sample gate.
 - `SUS_STUDY_COMPLETE=true`
 - Evidence files exist:
   - `RLS_DEPLOYMENT_SUMMARY.md`
   - `ACCESSIBILITY_AUDIT_REPORT.md`
+- Current launch smoke evidence is fresh for the target.
+- Restore-readiness scripts and runbook are present.
+- `/api/monitoring/launch-status` reports the full launch monitor contract as ready.
 
 ## Local Runbook
 
