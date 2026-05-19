@@ -1327,3 +1327,8 @@ Non-fatal test noise:
 
 - Found active `docs/security-scan-results.md` still claiming a 2025 all-green security scan, zero production vulnerabilities, and broad secure/PASS posture despite the refreshed 2026-05-19 dependency evidence.
 - Replaced the stale all-green report with a current security-scan evidence index: `audit:prod` passes at the high/critical threshold with 9 moderate transitive advisories, `audit:all` remains UNVERIFIED without explicit npm-registry metadata disclosure approval, and final security readiness still depends on fresh target-specific launch evidence.
+
+## Continuation - Active Doc Metadata Alignment
+
+- Scanned active docs in `docs/DOCS_REGISTRY.md` for missing `Doc Class` markers.
+- Added active metadata to `docs/caching-pagination.md` and `docs/verification-checklist.md`; left `.github/SECURITY.md` in the public GitHub security-policy shape because it already carries a `Last Verified` marker and is user-facing repository policy.

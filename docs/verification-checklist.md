@@ -1,3 +1,6 @@
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
 # Verification Checklist
 
 This checklist is authority-bound to the locked MVP docs. Authority citations below point only to the locked source-of-truth stack. Baseline notes may reference `docs/proofound-hard-audit-2026-03-14-rerun.md` as evidence, but the audit is not authority.

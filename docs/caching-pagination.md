@@ -1,3 +1,6 @@
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
 # Caching and Pagination Implementation
 
 ## Overview
