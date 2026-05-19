@@ -1360,3 +1360,10 @@ Non-fatal test noise:
 - Confirmed it is intentionally mixed-mode: normal taxonomy lookup remains active for assignment/proof skill mapping, while the legacy `context=cv_import` mode returns `410` without calling Atlas search or leaking submitted CV/evidence text. Existing coverage lives in `tests/api/expertise-taxonomy-route.test.ts`.
 - Found `PRODUCTION_CHECKLIST.md` still using a bare `npm run db:restore:verify` restore rehearsal command even though production-candidate `go:no-go` requires `.artifacts/launch-restore-report.json`.
 - Updated the root production checklist and launch-gate coverage so the isolated restore rehearsal writes `--out .artifacts/launch-restore-report.json`, keeps checkpoint evidence readable, and explicitly checks the report before final `go:no-go`.
+
+## Continuation - Retained Mobile And Database Reference Boundaries
+
+- Found `docs/mobile/IOS_PARITY_MATRIX.md` still verified from February and reading like `/api/mobile/v1/*` was active backend planning, while `src/lib/launch/surface-policy.ts` archives `/api/mobile/*` for the locked launch MVP.
+- Refreshed the matrix as post-MVP reference context only and added a visible launch-boundary note so it cannot be used as MVP route/API evidence without an explicit authority-stack change.
+- Found `test-db-flows.md` still stale and missing the current restore-report evidence command required by production-candidate `go:no-go`.
+- Updated the retained database flow guide, docs registry, and launch-gate coverage so reference DB guidance points at drift check, migration audit, backup checkpoint, versioned migrate, and restore verification with `--out .artifacts/launch-restore-report.json`.

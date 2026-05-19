@@ -763,6 +763,37 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps retained mobile planning docs outside launch evidence', () => {
+    const iosParityMatrix = fs.readFileSync(
+      path.join(repoRoot, 'docs/mobile/IOS_PARITY_MATRIX.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(iosParityMatrix).toContain('Last Verified: `2026-05-19`');
+    expect(iosParityMatrix).toContain('post-MVP mobile planning context only');
+    expect(iosParityMatrix).toContain('classifies `/api/mobile/*` as archived');
+    expect(iosParityMatrix).toContain('post-MVP only: hybrid');
+    expect(docsRegistry).toContain(
+      '| `docs/mobile/IOS_PARITY_MATRIX.md` | `reference-spec` | `docs` | `repo` | `2026-05-19`'
+    );
+  });
+
+  it('keeps retained database flow guidance aligned with restore-report evidence', () => {
+    const dbFlows = fs.readFileSync(path.join(repoRoot, 'test-db-flows.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(dbFlows).toContain('Last Verified: `2026-05-19`');
+    expect(dbFlows).toContain('npm run db:audit:migrations');
+    expect(dbFlows).toContain(
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+    );
+    expect(dbFlows).toContain('.artifacts/launch-restore-report.json');
+    expect(docsRegistry).toContain(
+      '| `test-db-flows.md`                                                                                      | `reference-spec` | `root`        | `repo`              | `2026-05-19`'
+    );
+  });
+
   it('keeps implementation contracts and milestones aligned with the locked corridor', () => {
     const implementDocs = [
       fs.readFileSync(path.join(repoRoot, 'Implement.md'), 'utf8'),

@@ -1,20 +1,26 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 # iOS Parity Matrix (SwiftUI)
 
-Last updated: 2026-02-13
+Last updated: 2026-05-19
+
+> Launch boundary: this matrix is retained post-MVP mobile planning context only.
+> It is not active MVP launch evidence. The current route-surface policy
+> classifies `/api/mobile/*` as archived for the locked launch MVP, and active
+> web launch work must not revive mobile BFF routes unless the MVP authority
+> stack is explicitly changed.
 
 ## Scope
 
 - Platform: iOS (SwiftUI), iPhone-first, iOS 18+.
 - Locales: English + Swedish.
-- Backend mode: hybrid (`/api/mobile/v1/*` + direct Supabase RLS reads where safe).
+- Backend mode, post-MVP only: hybrid (`/api/mobile/v1/*` + direct Supabase RLS reads where safe).
 
 ## Endpoint Ownership Rules
 
 - Direct Supabase RLS (client): simple profile reads, selected list views, realtime subscriptions.
-- Mobile BFF (`/api/mobile/v1`): auth-context bootstrap, matching orchestration, privacy-sensitive actions, admin views, device token registration, push delivery.
+- Mobile BFF (`/api/mobile/v1`), post-MVP only: auth-context bootstrap, matching orchestration, privacy-sensitive actions, admin views, device token registration, push delivery.
 - Legacy web APIs remain unchanged and continue serving web.
 
 ## Individual Flows (I-01 to I-20)

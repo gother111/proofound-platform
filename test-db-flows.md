@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 # Database Flow Verification Guide
 
@@ -12,12 +12,13 @@ Track database-oriented verification flows for local and pre-release checks.
 ### Schema and Migration Discipline
 
 - `npm run db:drift-check`
+- `npm run db:audit:migrations`
 - `npm run db:migrate`
 
 ### Safety and Audit Helpers
 
 - `npm run db:backup:checkpoint`
-- `npm run db:audit:migrations`
+- `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 
 ### Privacy and Policy Validation
 
@@ -30,6 +31,7 @@ Track database-oriented verification flows for local and pre-release checks.
 
 - Ordered SQL migration files are present and ledger-consistent.
 - No production workflow depends on `npm run db:push`.
+- Production-candidate launch signoff has a fresh restore report at `.artifacts/launch-restore-report.json`.
 
 ### 2) Core Entity Persistence
 
