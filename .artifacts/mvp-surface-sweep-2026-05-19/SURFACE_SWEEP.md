@@ -1174,3 +1174,11 @@ Non-fatal test noise:
 - Found stale active registry dates on the locked MVP authority stack while the documents remain current launch-binding sources under `AGENTS.md`.
 - Added explicit freshness metadata to the aligned PRD, technical requirements, and launch runbook, and refreshed metadata on `AGENTS.md`, the locked MVP source, and GTM plan without changing product scope or behavior.
 - Updated `docs/DOCS_REGISTRY.md` and the launch gate guard so future sweeps can distinguish current authority from stale reference material.
+
+## Continuation - Browser Recheck On Current Local Server
+
+- Used the Codex in-app Browser on `http://localhost:33180` after the authority-metadata checkpoint.
+- `/portfolio/demo`, `/portfolio/demo-proofound`, and `/portfolio/org/test-org` rendered launch-safe unavailable pages in this current non-mock/data-gated server state. No public profile, organization trust data, hidden identity, or private proof content was exposed.
+- `/` rendered `Proofound | Proof Behind the Claim` with H1 `Proof behind the claim`, primary CTAs to `/signup/organization` and `/signup/individual`, footer legal links to `/cookies`, `/cookies/settings`, `/privacy`, and `/terms`, and no stale broad-platform copy matching `Universal compatibility`, `Better matching`, `black-box`, `public directory`, or `social platform`.
+- `/signup`, `/signup/individual`, and `/signup/organization` rendered clear account-type and account-creation entry points with privacy/terms links and no broad marketplace or public-directory language.
+- `/login` could not be verified as logged-out in the current Browser session because the route resolved into an authenticated individual app shell. Logged-out login UI remains `UNVERIFIED` in this pass unless a clean unauthenticated Browser context is used.
