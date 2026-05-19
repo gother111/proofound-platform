@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-19`
 
 # QA Summary
 
@@ -10,7 +10,14 @@ This summary tracks the currently enforced QA automation surface and launch-gate
 ## Automated Coverage (Current)
 
 - Unit/API baseline: `npm run test`
+- Focused API baseline: `npm run test:api:focused`
 - Privacy baseline: `npm run test:privacy`
+- Extended privacy baseline: `npm run test:privacy:extended`
+- Route surface and archived-route contracts: `npm run test:launch:routes`
+- Upload privacy and lifecycle: `npm run test:launch:upload`
+- Public portfolio/export coverage: `npm run test:launch:portfolio`
+- Organization corridor coverage: `npm run test:launch:org-corridor`
+- Workflow/reveal/interview/decision coverage: `npm run test:launch:workflow`
 - E2E baseline: `npm run test:e2e`
 - Auth contracts:
   - `npm run test:e2e:auth` (mock)
@@ -24,7 +31,15 @@ This summary tracks the currently enforced QA automation surface and launch-gate
   - `npm run test:e2e:privacy:strict`
   - `npm run test:e2e:providers:strict`
 - Ops gates:
+  - `npm run docs:freshness`
+  - `npm run lint`
+  - `npm run typecheck`
+  - `npm run audit:prod`
+  - `npm run audit:all`
+  - `npm run test:launch:smoke`
   - `BASE_URL=http://localhost:3000 npm run perf:budgets`
+  - `BASE_URL=http://localhost:3000 npm run monitor:launch`
+  - `BASE_URL=http://localhost:3000 npm run launch:status`
   - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
 
 ## Primary Suite Ownership
@@ -35,12 +50,15 @@ This summary tracks the currently enforced QA automation surface and launch-gate
 - Privacy strict: `e2e/strict/privacy.strict.spec.ts`
 - Providers strict: `e2e/strict/providers.strict.spec.ts`
 - A11y: `tests/a11y/*.spec.ts`
+- Route inventory/archive policy: `tests/api/launch-surface-inventory.test.ts`, `tests/api/launch-page-inventory.test.ts`, `src/lib/__tests__/middleware-launch-archive.test.ts`
 
 ## Current Known Risks
 
-- Provider strict flows require deterministic connected provider credentials and complete env setup.
-- Launch strict runs can fail due to missing env vars or provider account readiness rather than functional regressions.
+- Provider strict flows require deterministic connected provider credentials only when `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`; the locked MVP interview posture remains manual-link first.
+- Launch strict runs can fail due to missing env vars, provider account readiness, stale smoke evidence, or stale monitor rows rather than functional regressions. Treat the failed gate as truthful until refreshed evidence proves otherwise.
 - `npm run db:push` remains dev-only and is not a production migration path.
+- Current launch readiness still requires target-specific production-candidate backup checkpoint, isolated restore rehearsal, authenticated launch-status/perf-status, `/api/assignments` latency evidence, and final go/no-go evidence for the intended target.
+- Browser desktop/mobile evidence is required when UI/public/visual behavior changes; record route, viewport, mode, and finding in the relevant artifact.
 
 ## Controlled AI / OCR Smoke Gates
 
@@ -68,20 +86,9 @@ Explicitly excluded from launch evidence:
 - Gemini skill extractor for employer review
 - taxonomy shortlist, reranker, or Cloud Vision OCR
 
-## Revamp Stabilization Validation (PRO-119, 2026-03-01)
+## Historical Evidence Boundary
 
-- Source change record:
-  - `project/changes/entries/2026-03-01T09-42-33Z__master__d9a1a144.md`
-- Core command outcomes:
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (pass)
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (pass)
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (pass)
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (pass)
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:drift-check` (pass)
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy` (pass)
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended` (pass)
-- Focused UI regression suite outcome:
-  - `npm run test -- tests/ui/dashboard-client.test.tsx tests/ui/dashboard-status-chip-style.test.tsx tests/ui/matching-organization-view-beta.test.tsx tests/ui/schedule-interview-modal.test.tsx tests/ui/share-profile-dialog.test.tsx tests/ui/matching-page-gated.test.tsx tests/ui/organization-interviews-page-actions.test.tsx` (pass)
+Older QA reports and stabilization notes, including March 2026 Node 20 command evidence, are history only. Current launch evidence must use the Node 24.15.0/npm 11.12.1 toolchain, current repo scripts, current target env, and the active checklist below.
 
 ## Canonical Verification Checklist
 

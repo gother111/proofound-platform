@@ -1132,3 +1132,9 @@ Non-fatal test noise:
 - Found `docs/local-dev.md` and `docs/TROUBLESHOOTING_LINT.md` still verified on 2026-02-12; local setup guidance was missing current metadata, lockfile install discipline, Browser/local smoke evidence guidance, and strict mock-vs-real launch boundaries.
 - Refreshed local development guidance around Node 24.15.0, npm 11.12.1, `engine-strict=true`, `npm ci`, mock Supabase limits, real Supabase strict checks, and no-secret handling in docs/artifacts/screenshots.
 - Rewrote lint troubleshooting around the current `scripts/lint-or-skip.js` ESLint wrapper, dependency-missing skips, `FORCE_LINT=true`, and lockfile install recovery so skipped lint cannot be mistaken for launch evidence.
+
+## Continuation - Launch Signoff And QA Guidance Refresh
+
+- Found `docs/full-launch-signoff-memo-template.md`, `docs/qa/bugs.md`, and `docs/qa/summary.md` still carrying stale launch/QA posture: the signoff template missed target-specific backup/restore/perf-status evidence, the bug log still listed login debug ingest as open, and the QA summary retained old Node 20 historical evidence without a clear boundary.
+- Updated the signoff template to require current target evidence: database target, deployment SHA evidence, authenticated launch-status/perf-status, `/api/assignments` latency, route-surface/archive policy, Browser desktop/mobile evidence, public-health minimization, and privacy/no-leak checks.
+- Refreshed QA docs so B-008 is fixed by the optional env-driven debug ingest sink, QA coverage names the current launch suites and Browser evidence expectations, and historical stabilization evidence cannot be mistaken for current launch proof.

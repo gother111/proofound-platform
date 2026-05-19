@@ -1481,6 +1481,59 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps launch signoff and QA guidance tied to current target evidence', () => {
+    const signoffTemplate = fs.readFileSync(
+      path.join(repoRoot, 'docs/full-launch-signoff-memo-template.md'),
+      'utf8'
+    );
+    const qaBugs = fs.readFileSync(path.join(repoRoot, 'docs/qa/bugs.md'), 'utf8');
+    const qaSummary = fs.readFileSync(path.join(repoRoot, 'docs/qa/summary.md'), 'utf8');
+    const loginPage = fs.readFileSync(path.join(repoRoot, 'src/app/(auth)/login/page.tsx'), 'utf8');
+    const debugIngest = fs.readFileSync(path.join(repoRoot, 'src/lib/debug-ingest.ts'), 'utf8');
+    const envExample = fs.readFileSync(path.join(repoRoot, '.env.example'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(signoffTemplate).toContain('Last Verified: `2026-05-19`');
+    expect(signoffTemplate).toContain('Historical GO memos');
+    expect(signoffTemplate).toContain('Database target');
+    expect(signoffTemplate).toContain('Live `/api/monitoring/perf-status`');
+    expect(signoffTemplate).toContain('/api/assignments');
+    expect(signoffTemplate).toContain('Production-candidate backup checkpoint');
+    expect(signoffTemplate).toContain('Isolated restore rehearsal');
+    expect(signoffTemplate).toContain('Browser desktop/mobile smoke evidence');
+    expect(signoffTemplate).toContain('Privacy/no-leak checks');
+
+    expect(qaSummary).toContain('Last Verified: `2026-05-19`');
+    expect(qaSummary).toContain('npm run test:launch:routes');
+    expect(qaSummary).toContain('npm run test:launch:workflow');
+    expect(qaSummary).toContain('npm run test:launch:smoke');
+    expect(qaSummary).toContain('monitor:launch');
+    expect(qaSummary).toContain('Node 24.15.0/npm 11.12.1');
+    expect(qaSummary).toContain('Browser desktop/mobile evidence');
+    expect(qaSummary).not.toContain('PATH=/opt/homebrew/opt/node@20/bin:$PATH');
+
+    expect(qaBugs).toContain('Last Verified: `2026-05-19`');
+    expect(qaBugs).toContain('B-008 Login page debug localhost ingest calls');
+    expect(qaBugs).toContain('Status: fixed');
+    expect(qaBugs).toContain('No hardcoded localhost ingest endpoint');
+    expect(qaBugs).toContain('route, viewport, role/mode');
+    expect(loginPage).toContain('sendDebugIngest');
+    expect(debugIngest).toContain('DEBUG_INGEST_URL');
+    expect(debugIngest).toContain('NEXT_PUBLIC_DEBUG_INGEST_URL');
+    expect(envExample).toContain('DEBUG_INGEST_ENABLED=false');
+    expect(`${loginPage}\n${debugIngest}\n${envExample}`).not.toMatch(/localhost:\d+\/.*ingest/);
+
+    expect(docsRegistry).toContain(
+      '| `docs/full-launch-signoff-memo-template.md`                                                             | `active`         | `docs`        | `repo`              | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/qa/bugs.md`                                                                                       | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/qa/summary.md`                                                                                    | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps launch operations guidance aligned with the current MVP corridor', () => {
     const launchOperations = fs.readFileSync(
       path.join(repoRoot, 'docs/launch-operations-mvp.md'),
