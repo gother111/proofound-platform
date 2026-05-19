@@ -1184,6 +1184,7 @@ describe('launch gate package configuration', () => {
 
   it('keeps Resend setup guidance transactional, target-scoped, and privacy-safe', () => {
     const resendSetup = fs.readFileSync(path.join(repoRoot, 'docs/RESEND_SETUP.md'), 'utf8');
+    const legacyEmailSource = fs.readFileSync(path.join(repoRoot, 'src/lib/email.ts'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
     expect(resendSetup).toContain('Last Verified: `2026-05-19`');
@@ -1210,6 +1211,9 @@ describe('launch gate package configuration', () => {
     expect(resendSetup).not.toContain('| `GET /api/cron/send-deletion-reminders`');
     expect(resendSetup).not.toContain('| `GET /api/cron/process-deletions`');
     expect(resendSetup).not.toContain('Use email digests instead of individual alerts');
+    expect(legacyEmailSource).toContain('EMAIL_CONFIG.apiKey ? new Resend(EMAIL_CONFIG.apiKey)');
+    expect(legacyEmailSource).not.toContain('placeholder_key');
+    expect(legacyEmailSource).not.toContain('process.env.RESEND_API_KEY ||');
     expect(docsRegistry).toContain(
       '| `docs/RESEND_SETUP.md`                                                                                  | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
     );

@@ -30,8 +30,10 @@ import {
 } from './email/privacy';
 import { resolveCanonicalSiteUrl } from './env';
 
-// Allow build to succeed without RESEND_API_KEY
-const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
+type ResendEmailPayload = Parameters<InstanceType<typeof Resend>['emails']['send']>[0];
+type ResendEmailResult = Awaited<ReturnType<InstanceType<typeof Resend>['emails']['send']>>;
+
+const resend = EMAIL_CONFIG.apiKey ? new Resend(EMAIL_CONFIG.apiKey) : null;
 const fromEmail = EMAIL_CONFIG.from;
 
 function recordLegacyEmailFailure(workflow: TransactionalEmailWorkflow, error: unknown) {
@@ -41,6 +43,21 @@ function recordLegacyEmailFailure(workflow: TransactionalEmailWorkflow, error: u
     provider: 'resend',
     reason: 'exception',
   });
+}
+
+async function sendLegacyResendEmail(payload: ResendEmailPayload): Promise<ResendEmailResult> {
+  if (shouldSkipTransactionalEmailDelivery()) {
+    return {
+      data: { id: 'transactional-email-delivery-skipped' },
+      error: null,
+    } as ResendEmailResult;
+  }
+
+  if (!resend) {
+    throw new Error('Email service not configured');
+  }
+
+  return resend.emails.send(payload);
 }
 
 function buildCanonicalEmailUrl(
@@ -89,7 +106,7 @@ export async function sendVerificationEmail(email: string, token: string, person
       template = VerifyEmail({ verifyUrl });
     }
 
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject,
@@ -104,7 +121,7 @@ export async function sendVerificationEmail(email: string, token: string, person
 export async function sendPasswordResetEmail(email: string, token: string) {
   try {
     const resetUrl = buildCanonicalEmailUrl('/reset-password', { token });
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: 'Reset your password - Proofound',
@@ -129,7 +146,7 @@ export async function sendOrgInviteEmail(
 
   try {
     const inviteUrl = buildCanonicalEmailUrl('/accept-invite', { token });
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: `You've been invited to join ${orgName} on Proofound`,
@@ -148,7 +165,7 @@ export async function sendCandidateInviteEmail(
   expiryDays: number
 ) {
   try {
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: `${orgName} invited you to share your Proof Card on Proofound`,
@@ -171,7 +188,7 @@ export async function sendDeletionScheduledEmail(
 ): Promise<void> {
   try {
     const cancellationUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: 'Account Deletion Scheduled - Proofound',
@@ -191,7 +208,7 @@ export async function sendDeletionReminderEmail(
 ): Promise<void> {
   try {
     const cancellationUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: `${daysRemaining} Days Until Your Proofound Account is Deleted`,
@@ -205,7 +222,7 @@ export async function sendDeletionReminderEmail(
 
 export async function sendDeletionCompleteEmail(email: string, userId: string): Promise<void> {
   try {
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: 'Your Proofound Account Has Been Deleted',
@@ -224,7 +241,7 @@ export async function sendWorkEmailVerification(
 ): Promise<void> {
   try {
     const verifyUrl = buildCanonicalEmailUrl('/verify-work-email', { token });
-    const result = await resend.emails.send({
+    const result = await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
       subject: 'Verify your work email - Proofound',
@@ -255,7 +272,7 @@ export async function sendSkillVerificationRequest(
   try {
     const verifyUrl = buildCanonicalEmailUrl(`/verify/${encodeURIComponent(token)}`);
     const declineUrl = verifyUrl;
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: verifierEmail,
       subject: `${requesterName} requested your skill verification - Proofound`,
@@ -290,7 +307,7 @@ export async function sendMatchNotification(
     const viewMatchUrl = buildCanonicalEmailUrl(
       `/app/i/matches/${encodeURIComponent(matchData.matchId)}`
     );
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipientEmail,
       subject: 'You have a new match! - Proofound',
@@ -348,7 +365,7 @@ export async function sendInterviewScheduledEmail(
         interviewData.interviewId
       )}`
     );
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipientEmail,
       subject: emailPrivacy.subject,
@@ -410,7 +427,7 @@ export async function sendIdentityRevealedEmail(
     if (!viewConversationUrl) {
       throw new Error('canonical_site_url_missing');
     }
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipientEmail,
       subject: emailPrivacy.subject,
@@ -454,7 +471,7 @@ export async function sendFeedbackRequestEmail(params: {
 
   try {
     const feedbackUrl = buildCanonicalEmailUrl(`/feedback/${encodeURIComponent(token)}`);
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to,
       subject:
@@ -477,7 +494,7 @@ export async function sendVerificationApprovedEmail(
 ): Promise<void> {
   try {
     const viewProfileUrl = buildCanonicalEmailUrl(`/app/profile/${encodeURIComponent(profileId)}`);
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipientEmail,
       subject: 'Verification Approved - Proofound',
@@ -543,7 +560,7 @@ export async function sendLinkedInVerificationPendingReviewEmail(params: {
 
   try {
     const adminQueueUrl = buildCanonicalEmailUrl('/admin/verification');
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipients,
       subject: `LinkedIn verification pending review: ${params.candidateName}`,
@@ -572,7 +589,7 @@ export async function sendVerificationRejectedEmail(
 ): Promise<void> {
   try {
     const retryUrl = buildCanonicalEmailUrl('/app/i/settings', { tab: 'verification' });
-    await resend.emails.send({
+    await sendLegacyResendEmail({
       from: fromEmail,
       to: recipientEmail,
       subject: 'Verification Not Approved - Proofound',

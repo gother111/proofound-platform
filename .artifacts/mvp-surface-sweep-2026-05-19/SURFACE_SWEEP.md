@@ -1584,3 +1584,10 @@ Non-fatal test noise:
 - Clarified that the near-matches path is a retained internal handler boundary rather than an active public `/api/core/matching/near-matches` route.
 - Updated historical load-test notes to track cache backend health/provider key-count evidence instead of unavailable cache hit-rate telemetry.
 - Added launch-gate coverage so active docs and the reference load script do not drift back to the stale `/api/core/matching/profile` public route reference.
+
+## Continuation - Transactional Email Provider Fail-Closed Cleanup
+
+- Found active `src/lib/email.ts` still created a Resend client with the literal fallback key `placeholder_key` when `RESEND_API_KEY` was missing.
+- Removed the placeholder-key provider fallback and aligned the legacy workflow-email module with `src/lib/email/config.ts`: it now creates a Resend client only when `EMAIL_CONFIG.apiKey` is present.
+- Added a shared legacy-send helper so explicit `PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY=true` dry-run targets still return a skipped delivery id, while missing provider config no longer attempts a live provider call with a fake key.
+- Added launch-gate coverage preventing the placeholder key or `process.env.RESEND_API_KEY || ...` fallback from returning to the active legacy email module.
