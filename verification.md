@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `verification.md`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-19`
 
 # Verification Checklist (Before Merging)
 
@@ -9,6 +9,12 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 ## Always (Most PRs)
 
 - Ensure the diff is scoped and intentional.
+- Clean install: `npm ci` (source: package.json, package-lock.json, .nvmrc, .npmrc)
+  - The launch-gate runtime is Node `24.15.0` / npm `11.12.1`; `.npmrc` enables engine-strict so unsupported Node versions fail closed.
+- Dependency audit:
+  - Production threshold: `npm run audit:prod` (source: package.json)
+  - All scopes threshold: `npm run audit:all` (source: package.json)
+  - Both fail on high or critical advisories. Keep `npm audit --omit=dev --json` at zero before treating the launch dependency surface as clean.
 - Lint: `npm run lint` (source: package.json)
   - Note: lint uses `scripts/lint-or-skip.js`; ensure lint actually ran when required. (source: scripts/lint-or-skip.js)
 - Typecheck: `npm run typecheck` (source: package.json)
@@ -18,6 +24,10 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - Slow benchmark/quality suites are explicit non-launch checks: `npm run test:slow:non-launch`.
   - Launch-focused Vitest groups: `npm run test:launch:upload`, `npm run test:launch:privacy`, `npm run test:launch:routes`, `npm run test:launch:org-corridor`, `npm run test:launch:portfolio`, and `npm run test:launch:workflow`.
 - Build: `npm run build` (source: package.json)
+  - Prebuild cleanup deletes stale generated `.next`, `.next-dev-*`, and `tsconfig.tsbuildinfo` state by default so launch validation does not accumulate large artifact archives.
+  - It keeps only a small latest-run summary at `.artifacts/stale-build-state-cleanup-summary.md`.
+  - If a failing generated build state must be preserved for debugging, opt in for that run with `PROOFOUND_ARCHIVE_STALE_BUILD_STATE=1 npm run build`.
+  - Run `npm run typecheck` and `npm run build` sequentially, not in parallel, because both write under `.next/`.
 - If changes touch `/api/mobile/v1/*` routes, run focused contract tests in addition to full unit tests:
   - `npm run test -- tests/api/mobile-bootstrap-route.test.ts tests/api/mobile-device-token-route.test.ts`
 - If changes touch auth, RLS, policies, migrations, or privacy-sensitive API contracts:
@@ -88,10 +98,20 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 
 - Strict MVP gate bundle (local parity): `npm run gates:mvp:strict`
 - Current strict required gate stack:
+  - `npm ci`
+  - `npm run audit:prod`
+  - `npm run audit:all`
+  - `npx playwright install --with-deps chromium`
+  - `npm run docs:freshness`
   - `npm run lint`
   - `npm run typecheck`
   - `npm run test`
+  - `npm run test:api:focused`
+  - `npm run test:privacy`
+  - `npm run test:privacy:extended`
+  - `npm run deploy:readiness:strict`
   - `npm run build`
+  - `npm run test:launch:smoke`
   - `npm run test:e2e:landing`
   - `npm run test:e2e:auth:real`
   - `npm run test:a11y:strict`
@@ -101,11 +121,15 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `npm run test:e2e:privacy:strict`
   - `npm run test:e2e:providers:strict`
   - `BASE_URL=http://localhost:3000 npm run perf:budgets`
-  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+  - `BASE_URL=http://localhost:3000 npm run monitor:launch`
+  - `BASE_URL=http://localhost:3000 npm run launch:status`
+  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 - CI also runs perf budgets and go/no-go gates after starting the app. (source: .github/workflows/ci.yml)
 - Perf budgets: `BASE_URL=http://localhost:3000 npm run perf:budgets` (source: scripts/perf-budgets.mjs)
-- Go/no-go: `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` (source: scripts/go-no-go-check.mjs)
-  - TODO: Ensure required evidence files exist before relying on this gate; do not invent missing evidence. (source: scripts/go-no-go-check.mjs)
+- Launch smoke artifact: `BASE_URL=http://localhost:3000 npm run test:launch:smoke` (source: package.json, scripts/launch-smoke-runner.ts)
+- Launch synthetic monitors: `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch` (source: package.json, scripts/run-launch-synthetic-monitors.ts)
+- Go/no-go: `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go` (source: scripts/go-no-go-check.ts)
+  - Requires a fresh launch smoke artifact, healthy `/api/monitoring/perf-status`, healthy `/api/monitoring/launch-status`, required evidence files, required safe-mode flags, and restore-drill assets. (source: scripts/go-no-go-check.ts)
 
 ## Migration and Data Safety (Before Production DDL)
 
@@ -132,18 +156,19 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - Set `PII_HASH_SALT` when running auth/signup flows to avoid GDPR hashing runtime failures.
   - Run Playwright suites sequentially when they share the same `webServer` port to avoid `EADDRINUSE` startup failures.
   - Strict launch-gate runs must keep `NEXT_PUBLIC_USE_MOCK_SUPABASE=false`.
-  - Provider strict gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true` and `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`.
+  - Provider strict gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`.
   - Provider strict gate requires deterministic provider user env vars: `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`.
-  - Deterministic provider user must have both Zoom and Google connected for launch-gate runs.
+  - Connected-provider runs should use only provider flows intentionally in scope for the target; manual-link interview posture remains the locked MVP default.
 - For credential-gated E2E smokes, document required env vars in `project/changes/entries/*.md` and mark command outcome as PASS/SKIPPED with reason.
 
-## Manual Smoke Checks (OAuth Integrations)
+## Manual Smoke Checks (Interview Scheduling)
 
-- Zoom connect:
-  - Visit `/app/i/settings/integrations`
-  - Click "Connect Zoom" and confirm you are redirected to Zoom and then back with `?success=zoom_connected`.
-- Meeting creation:
-  - Schedule an interview with `platform=zoom` and confirm the record has `meeting_link` populated.
+- Manual-link scheduling:
+  - Schedule an interview with a manual meeting link.
+  - Confirm the visible interview and API record show the meeting link without presenting native Zoom/video OAuth as a launch requirement.
+- Provider-connected scheduling:
+  - Run only for provider flows intentionally configured for the target.
+  - If a provider is unavailable, the UI must clearly preserve the manual-link fallback.
 
 ## Manual Smoke Checks (Auth Email via Supabase SMTP)
 

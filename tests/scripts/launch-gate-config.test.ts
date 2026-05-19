@@ -286,6 +286,7 @@ describe('launch gate package configuration', () => {
       'Documentation.md',
       'metrics.md',
       'Prompt.md',
+      'verification.md',
       'project/Architecture.md',
       'project/Documentation.md',
       'project/Prompt.md',
@@ -297,6 +298,8 @@ describe('launch gate package configuration', () => {
       expect(content).toContain('Last Verified: `2026-05-19`');
       expect(content).toContain('scripts/go-no-go-check.ts');
       expect(content).not.toContain('scripts/go-no-go-check.mjs');
+      expect(content).not.toContain('STRICT_PROVIDER_E2E_REQUIRE_BOTH');
+      expect(content).not.toContain('both Zoom and Google connected');
       const registryLine = docsRegistry
         .split('\n')
         .find((line) => line.includes(`| \`${docPath}\``));
@@ -306,7 +309,11 @@ describe('launch gate package configuration', () => {
     const activeDocs = listFiles(path.join(repoRoot, 'docs')).filter(
       (file) => file.endsWith('.md') && !file.includes(`${path.sep}archive${path.sep}`)
     );
-    const offenders = activeDocs
+    const rootDocs = fs
+      .readdirSync(repoRoot, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+      .map((entry) => path.join(repoRoot, entry.name));
+    const offenders = [...activeDocs, ...rootDocs]
       .filter((file) => fs.readFileSync(file, 'utf8').includes('go-no-go-check.mjs'))
       .map((file) => path.relative(repoRoot, file));
 

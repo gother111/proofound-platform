@@ -889,3 +889,10 @@ Non-fatal test noise:
 - Reran the baseline accessibility suite. The sandbox run failed before tests because Playwright could not bind `0.0.0.0:33101`; the approved outside-sandbox rerun passed `15/15` against `playwright.a11y.config.ts`.
 - Refreshed the accessibility report to `Last Verified: 2026-05-19`, recorded the exact command and scope, and kept the evidence honest: baseline public/mock-mode accessibility is green, while strict authenticated accessibility and manual screen-reader validation remain separate production-candidate/manual gates.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the report freshness, command, test count, and strict/manual caveats stay current.
+
+## Continuation - Root Verification Checklist Refresh
+
+- Found root `verification.md` still verified on 2026-05-04 and pointing at the retired `scripts/go-no-go-check.mjs` gate, while the active agent checklist already pointed at `scripts/go-no-go-check.ts`.
+- Refreshed `verification.md` to `Last Verified: 2026-05-19`, added the current clean-install, dependency-audit, docs-freshness, launch-smoke, monitor, launch-status, and TypeScript go/no-go evidence expectations, and removed stale native Zoom/both-provider launch requirements in favor of the manual-link interview default.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so root verification guidance must stay on the active TypeScript gate and must not reintroduce `STRICT_PROVIDER_E2E_REQUIRE_BOTH` or both-Zoom-and-Google launch requirements.
+- Found March root audit snapshots (`AUDIT_IMPLEMENTATION_STATUS.md`, `AUDIT_REMAINING_WORK.md`) still classified active and still citing the retired `.mjs` go/no-go script. Reclassified them as historical, added supersession banners pointing to the current sweep/readiness evidence, updated their go/no-go references to the TypeScript gate, and broadened the guard so root Markdown files cannot reintroduce `go-no-go-check.mjs`.

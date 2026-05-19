@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `verification.md`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-19`
 
 # Verification Checklist (Before Merging)
 
