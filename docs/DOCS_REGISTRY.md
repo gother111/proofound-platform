@@ -1,7 +1,7 @@
 # Documentation Registry
 
 > Doc Class: `active`
-> Last Verified: `2026-05-16`
+> Last Verified: `2026-05-19`
 > Generated for documentation freshness governance.
 > Last Generated: `2026-04-15`
 > Latest Active Docs Sync: [Proofound 0-5 execution backlog pack](../project/changes/entries/2026-03-25T21-04-06Z__master__de2cde6d.md)
@@ -59,13 +59,13 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `MANUAL_TESTING_GUIDE.md`                                                                               | `reference-spec` | `root`        | `repo`              | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `MCP_STATUS.md`                                                                                         | `active`         | `root`        | `repo+live`         | `2026-03-11`  | `-`                                                                                                     | `false`   |
 | `METRICS_INSTRUMENTATION_COMPLETE.md`                                                                   | `historical`     | `root`        | `archive`           | `-`           | `docs/archive/status-reports/root-historical/METRICS_INSTRUMENTATION_COMPLETE.md`                       | `false`   |
-| `OAUTH_SETUP_GUIDE.md`                                                                                  | `active`         | `root`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
+| `OAUTH_SETUP_GUIDE.md`                                                                                  | `reference-spec` | `root`        | `repo`              | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`                                              | `active`         | `root`        | `repo+live`         | `2026-05-03`  | `-`                                                                                                     | `false`   |
 | `PRD_TECHNICAL_REQUIREMENTS.md`                                                                         | `reference-spec` | `root`        | `repo`              | `2026-03-12`  | `-`                                                                                                     | `false`   |
 | `PRD_for_a_web_platform_MVP.md`                                                                         | `reference-spec` | `root`        | `repo`              | `2026-03-11`  | `-`                                                                                                     | `false`   |
 | `PRIVACY_DASHBOARD_IMPLEMENTATION_SUMMARY.md`                                                           | `historical`     | `root`        | `archive`           | `-`           | `docs/archive/status-reports/root-historical/PRIVACY_DASHBOARD_IMPLEMENTATION_SUMMARY.md`               | `false`   |
 | `PRIVACY_DASHBOARD_TODO.md`                                                                             | `historical`     | `root`        | `archive`           | `-`           | `docs/archive/status-reports/root-historical/PRIVACY_DASHBOARD_TODO.md`                                 | `false`   |
-| `PRODUCTION_CHECKLIST.md`                                                                               | `active`         | `root`        | `repo+live`         | `2026-02-26`  | `-`                                                                                                     | `false`   |
+| `PRODUCTION_CHECKLIST.md`                                                                               | `active`         | `root`        | `repo+live`         | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `Plans.md`                                                                                              | `active`         | `root`        | `repo+live`         | `2026-03-12`  | `-`                                                                                                     | `true`    |
 | `Prompt.md`                                                                                             | `active`         | `root`        | `repo+live`         | `2026-05-19`  | `-`                                                                                                     | `true`    |
 | `Proofound_Core_User_Flows_v1.md`                                                                       | `reference-spec` | `root`        | `repo`              | `2026-03-11`  | `-`                                                                                                     | `false`   |

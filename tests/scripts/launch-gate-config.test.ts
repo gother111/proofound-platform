@@ -344,6 +344,53 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps root production and provider docs aligned with manual-link launch posture', () => {
+    const productionChecklist = fs.readFileSync(
+      path.join(repoRoot, 'PRODUCTION_CHECKLIST.md'),
+      'utf8'
+    );
+    const providerReference = fs.readFileSync(path.join(repoRoot, 'OAUTH_SETUP_GUIDE.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(productionChecklist).toContain('Last Verified: `2026-05-19`');
+    expect(productionChecklist).toContain('Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md');
+    expect(productionChecklist).toContain('docs/production-readiness-checklist.md');
+    expect(productionChecklist).toContain('docs/release-checklist.md');
+    expect(productionChecklist).toContain(
+      'Manual-link interview scheduling is the locked MVP default'
+    );
+    expect(productionChecklist).toContain('npm run db:backup:checkpoint');
+    expect(productionChecklist).toContain('npm run db:restore:verify');
+    expect(productionChecklist).toContain('Authenticated `/api/monitoring/perf-status`');
+    expect(productionChecklist).toContain('BASE_URL=<production-candidate-url>');
+    expect(productionChecklist).not.toContain('`ZOOM_CLIENT_ID`');
+    expect(productionChecklist).not.toContain('Schedule interview with Zoom');
+    expect(productionChecklist).not.toContain('/app/admin/metrics');
+    expect(productionChecklist).not.toContain('Expertise Profile');
+    expect(productionChecklist).not.toContain('PATH=/opt/homebrew');
+
+    expect(providerReference).toContain('Last Verified: `2026-05-19`');
+    expect(providerReference).toContain('Doc Class: `reference-spec`');
+    expect(providerReference).toContain(
+      'Manual-link interview scheduling is the default launch path'
+    );
+    expect(providerReference).toContain('Zoom-native meeting creation is not required');
+    expect(providerReference).toContain('Google Calendar or Google Meet setup may be used only');
+    expect(providerReference).not.toContain(
+      'Complete guide for setting up Zoom and Google Meet OAuth integrations'
+    );
+    expect(providerReference).not.toContain('Click "Connect Zoom"');
+    expect(providerReference).not.toContain('`ZOOM_CLIENT_ID`');
+    expect(providerReference).not.toContain('Schedule interview with Zoom');
+
+    expect(docsRegistry).toContain(
+      '| `PRODUCTION_CHECKLIST.md`                                                                               | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `OAUTH_SETUP_GUIDE.md`                                                                                  | `reference-spec` | `root`        | `repo`              | `2026-05-19`'
+    );
+  });
+
   it('keeps active operator docs aligned with current deployment and provider gates', () => {
     const deploymentGuide = fs.readFileSync(
       path.join(repoRoot, 'docs/deployment-guide.md'),

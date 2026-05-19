@@ -67,7 +67,7 @@ flowchart LR
 - Repo-grounded implementation snapshots and readiness aids: `project/Architecture.md`, `project/Plans.md`, `project/Implement.md`, `PRODUCTION_CHECKLIST.md`.
 - Historical architecture context only: `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
 - APIs: `docs/API_REFERENCE.md` (generated from `src/app/api/**/route.ts` via `node scripts/generate-api-reference.mjs`; historical API specs remain archived under `docs/archive/legacy-platform/api-reference-history/`).
-- Runbooks: `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `OAUTH_SETUP_GUIDE.md`, `SETUP_SUPABASE.md`.
+- Runbooks: `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `SETUP_SUPABASE.md`. Provider setup context lives in `OAUTH_SETUP_GUIDE.md` as a reference, not a launch gate.
 - Archives: historical docs are grouped under `docs/archive/legacy-platform/`, status reports under `docs/archive/status-reports/`, demo artifacts under `docs/archive/demos/`.
 - Public/legal pages and metadata surfaces: `/`, `/login`, `/auth/login`, `/signup/**`, `/onboarding`, `/privacy`, `/terms`, `/cookies`, `/cookies/settings`, `/portfolio/[handle]`, `/portfolio/org/[slug]`, `src/lib/seo/public-metadata.ts`, `src/app/sitemap.ts`, `src/app/layout.tsx`, and `public/favicon.svg`.
 

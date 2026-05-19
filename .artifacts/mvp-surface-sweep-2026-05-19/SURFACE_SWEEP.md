@@ -218,6 +218,15 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Confirmed `/app/i/expertise` no longer has an active page handler and is classified as archived, but the old Expertise Atlas client/widgets/components still lived under `src/app/app/i/expertise`.
 - Moved that orphaned UI island to `src/archive/non_launch_pages/app/i/expertise/implementation/`.
 - Added an archive README and launch-gate coverage so the retired page implementation stays out of active `src/app`.
+
+28. Root launch/provider docs still treated optional connected providers as production launch requirements.
+
+- Rewrote `OAUTH_SETUP_GUIDE.md` as a retained connected-provider setup reference with `Doc Class: reference-spec` and `Last Verified: 2026-05-19`.
+- Removed launch-blocking Zoom setup steps, Zoom credential examples, Zoom-specific interview smoke requirements, and "Connect Zoom" instructions from the active provider reference.
+- Rewrote `PRODUCTION_CHECKLIST.md` around the locked MVP authority stack, manual-link interview posture, target-scoped connected providers, privacy gates, Browser checks, backup/restore evidence, authenticated monitoring, assignment perf evidence, and final go/no-go.
+- Updated `README.md` so the OAuth guide is no longer listed as an active launch runbook.
+- Updated `docs/DOCS_REGISTRY.md` to classify `OAUTH_SETUP_GUIDE.md` as reference-only and refresh `PRODUCTION_CHECKLIST.md`.
+- Added launch-gate test coverage so root operator docs cannot quietly reintroduce Zoom OAuth as a launch requirement, stale admin metrics, Expertise Profile checks, or machine-specific Homebrew command paths.
 - Updated the GCP CV/OCR proposal note so it no longer says active expertise/CV components still exist as code assets.
 - Registered the archive README and refreshed proposal note in `docs/DOCS_REGISTRY.md`.
 
