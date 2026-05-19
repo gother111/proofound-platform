@@ -1487,3 +1487,10 @@ Non-fatal test noise:
 - Tightened those external production-candidate rows so PASS evidence must come from docs explicitly marked `Doc Class: active`; historical April owner/evidence/signoff files can no longer satisfy current launch proof even if they contain matching PASS phrases.
 - Added focused regression coverage proving historical owner, alert, restore, and signoff evidence does not become current full-launch proof.
 - Regenerated `.artifacts/launch-validation-2026-05-19/final-launch-checklist-status.md/json`; repo scope remains `READY` with `36` pass, `0` fail, `0` blocked, and `4` external prerequisites still correctly `UNVERIFIED`.
+
+## Continuation - Archived Data Export Alias Boundary
+
+- Found an untracked `src/app/api/data-export/route.ts` alias to `/api/user/export`, which would have reintroduced `/api/data-export` into the compiled launch API surface.
+- Confirmed route policy already classifies `/api/data-export` as archived compatibility and the active data portability endpoint is `/api/user/export`.
+- Removed the alias from the active app route tree and preserved the boundary in `src/archive/non_launch_api/app/api/data-export/README.md`.
+- Verified route inventory and archived-handler coverage: `tests/api/launch-surface-inventory.test.ts` and `tests/api/archived-api-handlers-route.test.ts` passed.
