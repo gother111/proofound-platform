@@ -1191,3 +1191,11 @@ Non-fatal test noise:
 - DOM inspection found no broad marketplace, public-directory, social-platform, profile-theater, or dashboard-theater language on the logged-out login surface.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/signin-form-mobile-clarity.test.tsx` - passed, 1 file / 2 tests. The attempted mixed Vitest run did not execute the Playwright spec because it belongs to the Playwright runner.
 - `npm run test:a11y -- tests/a11y/keyboard-navigation.spec.ts` first failed in the sandbox because Playwright could not bind `0.0.0.0:33101`; the approved outside-sandbox rerun passed, 12/12 tests, including login form keyboard access and input labels.
+
+## Continuation - Phase 4 Local Smoke Refresh
+
+- Ran `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH BASE_URL=http://localhost:33183 npm run test:launch:smoke -- --scope full --base-url http://localhost:33183 --artifact .artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke-full.json` outside the sandbox after sandbox and same-port runs produced environment collisions.
+- The final fresh-port rerun passed all six full-scope checks: public individual portfolio, proof creation, seeded public organization trust fixture, strict org corridor review-to-engagement verification, hidden portfolio protection, and privacy no-leak.
+- Updated `.artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke-full.json`; the artifact now has `overallStatus: pass`, target `http://localhost:33183`, and generation time `2026-05-19T17:00:11.542Z`.
+- A read-only `go:no-go` attempt with direct smoke and synthetics disabled first failed against the previous stale artifact, then could not complete against `33183` because a temporary clean dev server did not stay healthy for protected status endpoint checks. This leaves final local go/no-go status evidence open while improving the full launch smoke evidence.
+- No database backup, restore verification, production deployment, billing, auth, permission, or infra target was touched.
