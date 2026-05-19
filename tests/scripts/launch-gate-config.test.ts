@@ -493,6 +493,44 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps manual testing docs aligned with the active MVP route corridor', () => {
+    const manualChecklist = fs.readFileSync(
+      path.join(repoRoot, 'MANUAL_TESTING_CHECKLIST.md'),
+      'utf8'
+    );
+    const manualGuide = fs.readFileSync(path.join(repoRoot, 'MANUAL_TESTING_GUIDE.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const manualDocs = `${manualChecklist}\n${manualGuide}`;
+
+    for (const content of [manualChecklist, manualGuide]) {
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).toContain('/app/i/portfolio');
+      expect(content).toContain('/app/i/verifications');
+      expect(content).toContain('/app/i/communications');
+      expect(content).toContain('/app/i/settings/privacy');
+      expect(content).toContain('/app/o/<slug>/assignments');
+      expect(content).toContain('/app/o/<slug>/communications');
+      expect(content).toContain('/admin/verification');
+      expect(content).toContain('/admin/audit');
+      expect(content).toContain('manual-link');
+      expect(content).toContain('Proof Pack');
+    }
+
+    expect(manualDocs).not.toContain('/app/i/expertise');
+    expect(manualDocs).not.toContain('/admin/fairness');
+    expect(manualDocs).not.toContain('/admin/users');
+    expect(manualDocs).not.toContain('/admin/organizations');
+    expect(manualDocs).not.toContain('Expertise Profile');
+    expect(manualDocs).not.toContain('Zen Hub');
+    expect(manualDocs).not.toContain('Well-being tracking');
+    expect(docsRegistry).toContain(
+      '| `MANUAL_TESTING_CHECKLIST.md`                                                                           | `reference-spec` | `root`        | `repo`              | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `MANUAL_TESTING_GUIDE.md`                                                                               | `reference-spec` | `root`        | `repo`              | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',

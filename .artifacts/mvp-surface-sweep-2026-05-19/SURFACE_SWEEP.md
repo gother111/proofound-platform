@@ -235,6 +235,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Kept provider-connected scheduling opt-in for targets that intentionally launch it, while preserving manual-link interview scheduling as the locked MVP default.
 - Updated `docs/ENV_VARIABLES.md`, `docs/testing-strategy.md`, `agent/checklists/verification.md`, `docs/production-readiness-checklist.md`, `docs/release-checklist.md`, and `docs/mvp-launch-master-checklist.md` so operator guidance matches the actual default.
 - Added launch-gate config tests to prevent connected-provider credentials from becoming an implicit launch requirement again.
+
+30. Manual testing docs still pointed at archived and broad platform-era routes.
+
+- Rewrote `MANUAL_TESTING_CHECKLIST.md` and `MANUAL_TESTING_GUIDE.md` around the current locked MVP corridor: public/auth, individual Proof Pack and verification surfaces, organization assignments/review/communications/interviews, and protected admin verification/audit ops.
+- Removed stale manual QA expectations for `/app/i/expertise`, broad admin users/organizations/fairness pages, and Zen/wellbeing-style checks.
+- Added manual guidance for public unavailable states, privacy/no-leak checks, mobile overflow, manual-link interview posture, and target-scoped connected-provider testing.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate config tests so manual QA docs stay aligned with active route policy.
 - Updated the GCP CV/OCR proposal note so it no longer says active expertise/CV components still exist as code assets.
 - Registered the archive README and refreshed proposal note in `docs/DOCS_REGISTRY.md`.
 
