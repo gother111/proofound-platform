@@ -552,7 +552,7 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required only when the target intentionally enables Google Meet integration or Google social login through Supabase.
 - `GOOGLE_REDIRECT_URI` — Required only for enabled Google integration flows. Must match the app integration callback (recommended runtime value: `/api/integrations/google/callback`).
 - `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required only when the target intentionally enables LinkedIn settings integration callback or LinkedIn social login through Supabase.
-- `LINKEDIN_REDIRECT_URI` - Set to your canonical app callback (recommended: `https://yourdomain.com/api/auth/linkedin/callback`).
+- `LINKEDIN_REDIRECT_URI` - Set to the canonical app callback for the target (production recommendation: `https://proofound.io/api/auth/linkedin/callback`).
 - `LINKEDIN_API_VERSION` - Optional LinkedIn REST version header for Verified APIs (`/rest/verificationReport`, `/rest/identityMe`). Defaults to `202510`.
 - `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used for OAuth callback construction (`NEXT_PUBLIC_URL` is legacy fallback only).
 - LinkedIn verification tier behavior (no extra env needed):
@@ -562,9 +562,9 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 **Provider callback split (important)**:
 
-- Google integration callback (app route): `https://yourdomain.com/api/integrations/google/callback`
+- Google integration callback (app route): `https://proofound.io/api/integrations/google/callback`
 - Google social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
-- LinkedIn integration callback (app route): `https://yourdomain.com/api/auth/linkedin/callback`
+- LinkedIn integration callback (app route): `https://proofound.io/api/auth/linkedin/callback`
 - LinkedIn social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
 
 **Used By**:
@@ -584,15 +584,15 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 **Setup**:
 
 1. Configure one Google OAuth client with callback URIs for each app host plus Supabase social auth:
-   - `https://yourdomain.com/api/integrations/google/callback`
+   - `https://proofound.io/api/integrations/google/callback`
    - `http://localhost:3000/api/integrations/google/callback`
-   - `https://preview.yourdomain.com/api/integrations/google/callback`
+   - `<preview-app-url>/api/integrations/google/callback`
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
 2. Configure LinkedIn app callback URIs:
-   - `https://yourdomain.com/api/auth/linkedin/callback`
+   - `https://proofound.io/api/auth/linkedin/callback`
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
    - Optional local callback for local OAuth testing: `http://localhost:3000/api/auth/linkedin/callback`
-   - Optional additional live-domain callbacks for each domain that can initiate `/api/auth/linkedin` (for example `https://demo.yourdomain.com/api/auth/linkedin/callback`)
+   - Optional additional live-domain callbacks for each domain that can initiate `/api/auth/linkedin` (for example `<staging-app-url>/api/auth/linkedin/callback`)
    - For LinkedIn verification, ensure OAuth scopes include `r_profile_basicinfo` and `r_verify` in addition to `openid profile email`.
 3. Set `NEXT_PUBLIC_SITE_URL` to your canonical domain (for example `https://proofound.io`).
 

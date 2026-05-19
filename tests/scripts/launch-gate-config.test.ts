@@ -1611,6 +1611,10 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'docs/mvp-launch-master-checklist.md'),
       'utf8'
     );
+    const veriffConfigScript = fs.readFileSync(
+      path.join(repoRoot, 'scripts/test-veriff-config.js'),
+      'utf8'
+    );
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
     expect(envDocs).toContain('Last Verified: `2026-05-19`');
@@ -1619,10 +1623,19 @@ describe('launch gate package configuration', () => {
     expect(envDocs).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
     expect(envDocs).toContain('Required Vars When `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`');
     expect(envDocs).toContain('Manual-link interview scheduling must still work');
+    expect(envDocs).toContain('https://proofound.io/api/integrations/google/callback');
+    expect(envDocs).toContain('https://proofound.io/api/auth/linkedin/callback');
+    expect(envDocs).toContain('<preview-app-url>/api/integrations/google/callback');
+    expect(envDocs).toContain('<staging-app-url>/api/auth/linkedin/callback');
     expect(envDocs).toContain('/api/match/profile');
     expect(envDocs).not.toContain('/api/core/matching/profile');
     expect(envDocs).toContain('retained near-matches matching handler');
     expect(envDocs).not.toContain('/api/core/matching/near-matches');
+    expect(envDocs).not.toContain('yourdomain.com');
+    expect(envDocs).not.toContain('preview.yourdomain.com');
+    expect(envDocs).not.toContain('demo.yourdomain.com');
+    expect(veriffConfigScript).toContain('https://proofound.io');
+    expect(veriffConfigScript).not.toContain('https://yourdomain.com');
     expect(envDocs).toContain(
       'src/archive/non_launch_python_internal/lib/expertise/python-cv-extract-client.ts'
     );

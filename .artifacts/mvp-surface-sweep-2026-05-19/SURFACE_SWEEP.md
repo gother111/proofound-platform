@@ -1603,3 +1603,10 @@ Non-fatal test noise:
 - Browser route smoke covered `/`, `/login`, `/signup`, `/portfolio/demo`, `/portfolio/org/demo`, and `/privacy`; all sampled routes rendered expected headings/titles, had no horizontal overflow, and public demo portfolio/org surfaces remained `noindex, nofollow, nocache`.
 - Browser mobile viewport smoke covered `/login` at `390x844` with no horizontal overflow and retained the primary `Welcome back` heading and sign-in action.
 - Browser screenshot capture timed out again in this backend session, so evidence is saved as DOM/title/action/overflow/noindex data at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-deployment-guide/route-smoke.json`.
+
+## Continuation - OAuth Callback Placeholder Cleanup
+
+- Found active `docs/ENV_VARIABLES.md` still used `yourdomain.com`, `preview.yourdomain.com`, and `demo.yourdomain.com` in Google and LinkedIn callback examples, even though launch-specific operator docs now use the canonical production domain or explicit target placeholders.
+- Replaced launch callback examples with `https://proofound.io` for production and `<preview-app-url>` / `<staging-app-url>` for non-production targets.
+- Updated `scripts/test-veriff-config.js` so its fallback webhook instruction points to `https://proofound.io` instead of a generic placeholder domain.
+- Added launch-gate coverage preventing the active environment docs and Veriff config helper from reintroducing `yourdomain.com` callback examples.
