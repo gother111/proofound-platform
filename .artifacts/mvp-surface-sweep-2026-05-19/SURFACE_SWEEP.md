@@ -336,6 +336,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Removed a stale Zoom secret entry from the active security scan results document.
 - Added launch-gate coverage so the retired Zoom/video wrappers stay out of active libraries.
 
+43. A retired platform-health script still checked old critical gaps and native Zoom wrappers.
+
+- `scripts/check-platform-health.mjs` was not wired into npm scripts, but it still reported "critical gaps", required old demo counts, checked `fairness_reports`, and expected retired native Zoom/video wrapper files.
+- Moved it to `scripts/archive/non_mvp_platform_health/check-platform-health.archived.mjs` with a README explaining why it is historical only.
+- Added launch-gate coverage so this stale launch-ops script does not return to active `scripts/` unnoticed.
+- Removed stale Zoom env requirements from active strict-gate, deploy-readiness, and Vercel preflight scripts so launch ops no longer block on retired native Zoom OAuth setup.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -681,6 +688,12 @@ Commands run with Node 25 path:
 - `npm run lint` - passed after the provider docs/E2E cleanup.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the provider docs/E2E cleanup.
 - `rg -n "ZOOM_|Zoom integration callback|src/lib/integrations/zoom|src/lib/video|STRICT_PROVIDER_E2E_REQUIRE_BOTH|e2e/org/fairness-note\.spec" docs src tests e2e -g '!docs/archive/**' -g '!src/archive/**' -g '!tests/archive/**'` - remaining active hits were launch-gate assertions and historical `docs/block-7-report.md`; no active current docs or source referenced Zoom config as launch-required.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts` - passed, 1 file / 23 tests, after archiving the retired platform-health script.
+- `npm run docs:freshness` - passed after registering the platform-health script archive README.
+- `npm run lint` - passed after removing stale Zoom env requirements from launch-ops scripts.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after removing stale Zoom env requirements from launch-ops scripts.
+- `git diff --check` - passed after the provider launch-ops cleanup.
+- `rg -n "ZOOM_|Zoom integration callback|src/lib/integrations/zoom|src/lib/video|STRICT_PROVIDER_E2E_REQUIRE_BOTH|criticalGaps|CRITICAL FEATURES CHECK" scripts docs src tests e2e -g '!scripts/archive/**' -g '!docs/archive/**' -g '!src/archive/**' -g '!tests/archive/**'` - remaining active hits were launch-gate assertions and historical `docs/block-7-report.md`; no current launch-ops script requires retired Zoom env/config.
 
 Non-fatal test noise:
 

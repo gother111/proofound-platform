@@ -129,7 +129,6 @@ if (truthy(env.GCP_CV_OCR_ENABLED)) {
 
 const hasLinkedInCreds = Boolean(env.LINKEDIN_CLIENT_ID) && Boolean(env.LINKEDIN_CLIENT_SECRET);
 const hasGoogleCreds = Boolean(env.GOOGLE_CLIENT_ID) && Boolean(env.GOOGLE_CLIENT_SECRET);
-const hasZoomCreds = Boolean(env.ZOOM_CLIENT_ID) && Boolean(env.ZOOM_CLIENT_SECRET);
 
 const googleRedirectPath = (() => {
   try {
@@ -152,10 +151,6 @@ if (hasGoogleCreds && !env.GOOGLE_REDIRECT_URI) {
   warnings.push(
     'GOOGLE_REDIRECT_URI is not set. Google OAuth may fail with redirect_uri mismatch.'
   );
-}
-
-if (hasZoomCreds && !env.ZOOM_REDIRECT_URI) {
-  warnings.push('ZOOM_REDIRECT_URI is not set. Zoom OAuth may fail with redirect_uri mismatch.');
 }
 
 if (googleRedirectPath === '/api/auth/google/callback') {

@@ -282,9 +282,6 @@ const requiredEnv = [
   'SUPABASE_SERVICE_ROLE_KEY',
   'DATABASE_URL',
   'CRON_SECRET',
-  'ZOOM_CLIENT_ID',
-  'ZOOM_CLIENT_SECRET',
-  'ZOOM_REDIRECT_URI',
   'GOOGLE_CLIENT_ID',
   'GOOGLE_CLIENT_SECRET',
   'GOOGLE_REDIRECT_URI',
@@ -336,7 +333,6 @@ const commandEnv = {
   npm_config_engine_strict: 'true',
   PLAYWRIGHT_SERVER_MODE: process.env.PLAYWRIGHT_SERVER_MODE || 'prod',
   STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'true',
-  STRICT_PROVIDER_E2E_REQUIRE_BOTH: 'true',
   PII_HASH_SALT: process.env.PII_HASH_SALT || 'strict-local-salt',
   NODE_OPTIONS: process.env.NODE_OPTIONS || '--max-old-space-size=6144',
 };
