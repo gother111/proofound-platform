@@ -1,6 +1,9 @@
 import { getInternalApiSecret } from '@/lib/api/auth';
-import { parsePositiveInt, withTimeout } from '@/lib/python-internal/request-utils';
-import { resolvePythonInternalServiceBaseUrl } from '@/lib/python-internal/service';
+import {
+  parsePositiveInt,
+  withTimeout,
+} from '@/archive/non_launch_python_internal/lib/python-internal/request-utils';
+import { resolvePythonInternalServiceBaseUrl } from '@/archive/non_launch_python_internal/lib/python-internal/service';
 
 const DEFAULT_PYTHON_INTERNAL_WORKER_WAKE_TIMEOUT_MS = 2_500;
 

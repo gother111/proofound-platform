@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 import { proxyCvRequestToPython } from '@/archive/non_launch_cv_import_wizard/lib/expertise/python-cv-proxy';
-import { PYTHON_INTERNAL_CONTRACT_VERSION } from '@/lib/python-internal/contracts';
+import { PYTHON_INTERNAL_CONTRACT_VERSION } from '@/archive/non_launch_python_internal/lib/python-internal/contracts';
 
 describe('python-cv-proxy', () => {
   const validSuggestPayload = {

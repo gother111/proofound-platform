@@ -8,7 +8,7 @@ import {
 import {
   CvImportWizardSuggestResponseSchema,
   type CvImportWizardSuggestResponse,
-} from '@/lib/expertise/cv-import-wizard-types';
+} from '@/archive/non_launch_python_internal/lib/expertise/cv-import-wizard-types';
 
 type MinimalSupabaseClient = Pick<SupabaseClient, 'from'>;
 

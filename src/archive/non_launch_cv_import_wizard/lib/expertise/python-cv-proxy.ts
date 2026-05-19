@@ -5,12 +5,12 @@ import {
   PythonCvImportExtractResponseSchema,
   PythonCvImportSuggestResponseSchema,
   PythonCvImportWizardSuggestResponseSchema,
-} from '@/lib/python-internal/contracts';
+} from '@/archive/non_launch_python_internal/lib/python-internal/contracts';
 import {
   getPythonInternalServiceSecret,
   resolvePythonInternalServiceBaseUrl,
-} from '@/lib/python-internal/service';
-import { withTimeout } from '@/lib/python-internal/request-utils';
+} from '@/archive/non_launch_python_internal/lib/python-internal/service';
+import { withTimeout } from '@/archive/non_launch_python_internal/lib/python-internal/request-utils';
 
 const DEFAULT_PROXY_TIMEOUT_MS = 10000;
 const PROXY_UNAVAILABLE_CODE = 'CV_IMPORT_PROXY_UNAVAILABLE';

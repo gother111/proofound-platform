@@ -457,6 +457,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Kept the archived wizard quality suite intentionally runnable through `npm run test:slow:non-launch`, while default release signal stays focused on Start from CV, Proof Artifact Text Extraction, and direct archived-handler behavior.
 - Added archive READMEs, docs registry entries, and launch-gate coverage so these old wizard tests and implementation files do not drift back into active MVP evidence.
 
+56. Retired TypeScript-side Python internal worker helpers still lived in active source.
+
+- Confirmed `/api/cron/python-internal-worker` and `/api/cron/cv-import-temp-cleanup` are removed/non-MVP scheduled jobs in cron setup and archived route policy.
+- Moved the old TypeScript Python internal client, queue, trigger, worker, request utilities, extract-job store, temp-storage helpers, and their direct tests into `src/archive/non_launch_python_internal/` and `tests/archive/non_mvp_python_internal/`.
+- Updated environment docs to describe those variables as archived helper settings rather than current launch infrastructure.
+- Added archive READMEs, docs registry entries, archived Vitest include, and launch-gate coverage so the worker helpers cannot drift back into active `src/lib` or default test discovery unnoticed.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.

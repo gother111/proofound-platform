@@ -15,7 +15,7 @@ import {
   CvImportWizardApplyResponseSchema,
   type CvImportWizardApplyRequest,
   type CvImportWizardApplyResponse,
-} from '@/lib/expertise/cv-import-wizard-types';
+} from '@/archive/non_launch_python_internal/lib/expertise/cv-import-wizard-types';
 
 const LANGUAGE_CODE_SET = new Set(LANGUAGE_OPTIONS.map((option) => option.key));
 

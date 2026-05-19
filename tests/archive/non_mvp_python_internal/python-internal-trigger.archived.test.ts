@@ -9,11 +9,11 @@ vi.mock('@/lib/api/auth', () => ({
   getInternalApiSecret: mocks.getInternalApiSecret,
 }));
 
-vi.mock('@/lib/python-internal/service', () => ({
+vi.mock('@/archive/non_launch_python_internal/lib/python-internal/service', () => ({
   resolvePythonInternalServiceBaseUrl: mocks.resolvePythonInternalServiceBaseUrl,
 }));
 
-import { triggerPythonInternalWorker } from '@/lib/python-internal/trigger';
+import { triggerPythonInternalWorker } from '@/archive/non_launch_python_internal/lib/python-internal/trigger';
 
 describe('triggerPythonInternalWorker', () => {
   const fetchMock = vi.fn();

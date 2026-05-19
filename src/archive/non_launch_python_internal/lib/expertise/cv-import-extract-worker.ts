@@ -4,15 +4,15 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import {
   CvImportExtractJobPayloadSchema,
   type CvImportExtractJobResult,
-} from '@/lib/expertise/cv-import-wizard-extract';
+} from '@/archive/non_launch_python_internal/lib/expertise/cv-import-wizard-extract';
 import {
   downloadCvImportTempPdf,
   removeCvImportTempPdfs,
-} from '@/lib/expertise/cv-import-temp-storage';
+} from '@/archive/non_launch_python_internal/lib/expertise/cv-import-temp-storage';
 import {
   extractPdfTextViaPython,
   PythonCvExtractError,
-} from '@/lib/expertise/python-cv-extract-client';
+} from '@/archive/non_launch_python_internal/lib/expertise/python-cv-extract-client';
 
 export async function processCvImportExtractJob(params: {
   request: NextRequest;

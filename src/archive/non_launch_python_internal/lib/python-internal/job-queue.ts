@@ -3,7 +3,7 @@ import { eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { pythonInternalJobs } from '@/db/schema';
 import { getRows } from '@/lib/db/rows';
-import type { PythonInternalJobType } from '@/lib/python-internal/contracts';
+import type { PythonInternalJobType } from '@/archive/non_launch_python_internal/lib/python-internal/contracts';
 
 const DEFAULT_PYTHON_INTERNAL_WORKER_BATCH_SIZE = 10;
 const DEFAULT_PYTHON_INTERNAL_WORKER_CONCURRENCY = 2;

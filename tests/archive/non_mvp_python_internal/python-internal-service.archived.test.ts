@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { resolvePythonInternalServiceBaseUrl } from '@/lib/python-internal/service';
+import { resolvePythonInternalServiceBaseUrl } from '@/archive/non_launch_python_internal/lib/python-internal/service';
 
 describe('resolvePythonInternalServiceBaseUrl', () => {
   const originalBaseUrl = process.env.PYTHON_CV_IMPORT_BASE_URL;

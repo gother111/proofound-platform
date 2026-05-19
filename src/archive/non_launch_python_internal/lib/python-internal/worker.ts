@@ -1,12 +1,12 @@
 import type { NextRequest } from 'next/server';
 
-import { processCvImportExtractJob } from '@/lib/expertise/cv-import-extract-worker';
-import { executePythonInternalJob } from '@/lib/python-internal/client';
+import { processCvImportExtractJob } from '@/archive/non_launch_python_internal/lib/expertise/cv-import-extract-worker';
+import { executePythonInternalJob } from '@/archive/non_launch_python_internal/lib/python-internal/client';
 import {
   markPythonInternalJobFailure,
   markPythonInternalJobSuccess,
   type ClaimedPythonInternalJob,
-} from '@/lib/python-internal/job-queue';
+} from '@/archive/non_launch_python_internal/lib/python-internal/job-queue';
 
 export type PythonInternalJobExecutionResult =
   | {

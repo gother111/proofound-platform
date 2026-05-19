@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   readCvImportExtractJob,
   saveCvImportExtractJob,
-} from '@/lib/expertise/cv-import-extract-job-store';
+} from '@/archive/non_launch_python_internal/lib/expertise/cv-import-extract-job-store';
 
 describe('cv import extraction result store', () => {
   it('does not allow one user to read another user extraction result', () => {

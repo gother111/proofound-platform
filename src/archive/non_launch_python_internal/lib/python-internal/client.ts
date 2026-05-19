@@ -5,12 +5,12 @@ import {
   PythonInternalWorkerResponseSchema,
   type PythonInternalJobType,
   type PythonInternalWorkerResponse,
-} from '@/lib/python-internal/contracts';
+} from '@/archive/non_launch_python_internal/lib/python-internal/contracts';
 import {
   getPythonInternalServiceSecret,
   resolvePythonInternalServiceBaseUrl,
-} from '@/lib/python-internal/service';
-import { withTimeout } from '@/lib/python-internal/request-utils';
+} from '@/archive/non_launch_python_internal/lib/python-internal/service';
+import { withTimeout } from '@/archive/non_launch_python_internal/lib/python-internal/request-utils';
 
 const DEFAULT_PYTHON_INTERNAL_JOB_TIMEOUT_MS = 15000;
 

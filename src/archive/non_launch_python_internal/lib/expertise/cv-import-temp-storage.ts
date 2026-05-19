@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   buildCvImportTempStoragePath,
   CV_IMPORT_TEMP_STORAGE_BUCKET,
-} from '@/lib/expertise/cv-import-wizard-extract';
+} from '@/archive/non_launch_python_internal/lib/expertise/cv-import-wizard-extract';
 
 export function uploadCvImportTempPdf(params: {
   admin: SupabaseClient;

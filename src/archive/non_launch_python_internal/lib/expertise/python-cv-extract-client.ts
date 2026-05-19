@@ -3,12 +3,15 @@ import type { NextRequest } from 'next/server';
 import {
   PYTHON_INTERNAL_CONTRACT_VERSION,
   PythonCvImportExtractResponseSchema,
-} from '@/lib/python-internal/contracts';
+} from '@/archive/non_launch_python_internal/lib/python-internal/contracts';
 import {
   getPythonInternalServiceSecret,
   resolvePythonInternalServiceBaseUrl,
-} from '@/lib/python-internal/service';
-import { parsePositiveInt, withTimeout } from '@/lib/python-internal/request-utils';
+} from '@/archive/non_launch_python_internal/lib/python-internal/service';
+import {
+  parsePositiveInt,
+  withTimeout,
+} from '@/archive/non_launch_python_internal/lib/python-internal/request-utils';
 
 const DEFAULT_PYTHON_EXTRACT_TIMEOUT_MS = 55_000;
 

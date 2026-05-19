@@ -431,7 +431,7 @@ CRON_API_KEY=your_cron_job_org_api_token
 
 ### PYTHON_INTERNAL_SERVICE_SECRET
 
-**Purpose**: Shared secret for internal TypeScript-to-Python document-intelligence calls
+**Purpose**: Shared secret for archived TypeScript-to-Python document-intelligence calls
 
 **Format**:
 
@@ -441,26 +441,26 @@ PYTHON_INTERNAL_SERVICE_SECRET=your_strong_internal_secret_here
 
 **Used By**:
 
-- `src/lib/expertise/python-cv-extract-client.ts`
-- `src/lib/python-internal/client.ts`
+- `src/archive/non_launch_python_internal/lib/expertise/python-cv-extract-client.ts`
+- `src/archive/non_launch_python_internal/lib/python-internal/client.ts`
 - `api/python/cv_import.py`
 
 **Behavior**:
 
-- Preferred secret for all internal Python calls.
+- Preferred secret for archived internal Python calls.
 - Fallback order is `PYTHON_INTERNAL_SERVICE_SECRET` → `CV_IMPORT_PROXY_INTERNAL_SECRET` → `INTERNAL_API_SECRET` → `CRON_SECRET`.
 - Local non-production fallback uses an in-process development secret only when none of the above are configured.
 
 **Without This**:
 
-- ⚠️ Production Python internal calls fail with `503` if no fallback secret is configured.
-- ⚠️ Cross-service deployments cannot authenticate safely.
+- ⚠️ Archived Python internal calls fail with `503` if no fallback secret is configured.
+- ⚠️ Reopened cross-service deployments cannot authenticate safely without a target-scoped secret.
 
 ---
 
 ### PYTHON_CV_IMPORT_BASE_URL
 
-**Purpose**: Optional base URL for a dedicated Python document-intelligence deployment used by approved extract-only proof flows.
+**Purpose**: Optional base URL retained for archived Python document-intelligence helpers.
 
 **Format**:
 
@@ -470,14 +470,14 @@ PYTHON_CV_IMPORT_BASE_URL=https://python-internal.proofound.internal
 
 **Used By**:
 
-- `src/lib/expertise/python-cv-extract-client.ts`
-- `src/lib/python-internal/client.ts`
+- `src/archive/non_launch_python_internal/lib/expertise/python-cv-extract-client.ts`
+- `src/archive/non_launch_python_internal/lib/python-internal/client.ts`
 
 **Behavior**:
 
-- If set, approved server-side document extraction flows call the Python service at this base URL instead of looping back through the current Next.js deployment.
-- Keep public clients on the Next.js routes. This variable is for server-to-server traffic only.
-- The retired `/api/expertise/cv-import/wizard-*` proxy route family remains archived and is not launch evidence.
+- If the archived helpers are intentionally rerun, server-side document extraction calls the Python service at this base URL instead of looping back through the current Next.js deployment.
+- Keep public clients on active Next.js launch routes. This variable is for archived server-to-server traffic only.
+- The retired `/api/expertise/cv-import/wizard-*` proxy route family and TypeScript Python worker helpers remain archived and are not launch evidence.
 
 **Without This**:
 
@@ -497,7 +497,7 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 **Used By**:
 
-- `src/lib/python-internal/job-queue.ts`
+- `src/archive/non_launch_python_internal/lib/python-internal/job-queue.ts`
 
 **Behavior**:
 
@@ -533,7 +533,7 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 **Used By**:
 
-- `src/lib/python-internal/job-queue.ts`
+- `src/archive/non_launch_python_internal/lib/python-internal/job-queue.ts`
 
 **Behavior**:
 

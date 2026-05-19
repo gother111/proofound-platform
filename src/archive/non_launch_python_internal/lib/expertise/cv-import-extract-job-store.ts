@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type {
   CvImportExtractFailedDocument,
   CvImportExtractedDocument,
-} from '@/lib/expertise/cv-import-wizard-extract';
+} from '@/archive/non_launch_python_internal/lib/expertise/cv-import-wizard-extract';
 
 export type CvImportExtractStoredJob =
   | {

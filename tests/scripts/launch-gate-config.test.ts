@@ -463,6 +463,50 @@ describe('launch gate package configuration', () => {
     }
   });
 
+  it('keeps retired TypeScript Python internal worker helpers archived', () => {
+    const retiredActiveSourcePaths = [
+      'src/lib/expertise/cv-import-existing-skills-filter.ts',
+      'src/lib/expertise/cv-import-extract-job-store.ts',
+      'src/lib/expertise/cv-import-extract-worker.ts',
+      'src/lib/expertise/cv-import-temp-storage.ts',
+      'src/lib/expertise/cv-import-wizard-extract.ts',
+      'src/lib/expertise/cv-import-wizard-types.ts',
+      'src/lib/expertise/python-cv-extract-client.ts',
+      'src/lib/python-internal/client.ts',
+      'src/lib/python-internal/contracts.ts',
+      'src/lib/python-internal/job-queue.ts',
+      'src/lib/python-internal/request-utils.ts',
+      'src/lib/python-internal/service.ts',
+      'src/lib/python-internal/trigger.ts',
+      'src/lib/python-internal/worker.ts',
+      'src/lib/__tests__/python-internal-request-utils.test.ts',
+      'tests/lib/cv-import-extract-job-store.test.ts',
+      'tests/lib/python-internal-service.test.ts',
+      'tests/lib/python-internal-trigger.test.ts',
+      'tests/lib/python-internal-worker.test.ts',
+    ];
+    const archivedPaths = [
+      'src/archive/non_launch_python_internal/README.md',
+      'src/archive/non_launch_python_internal/lib/python-internal/contracts.ts',
+      'src/archive/non_launch_python_internal/lib/python-internal/job-queue.ts',
+      'src/archive/non_launch_python_internal/lib/expertise/python-cv-extract-client.ts',
+      'tests/archive/non_mvp_python_internal/README.md',
+      'tests/archive/non_mvp_python_internal/cv-import-extract-job-store.archived.test.ts',
+      'tests/archive/non_mvp_python_internal/python-internal-request-utils.archived.test.ts',
+      'tests/archive/non_mvp_python_internal/python-internal-service.archived.test.ts',
+      'tests/archive/non_mvp_python_internal/python-internal-trigger.archived.test.ts',
+      'tests/archive/non_mvp_python_internal/python-internal-worker.archived.test.ts',
+    ];
+
+    for (const retiredPath of retiredActiveSourcePaths) {
+      expect(fs.existsSync(path.join(repoRoot, retiredPath))).toBe(false);
+    }
+
+    for (const archivedPath of archivedPaths) {
+      expect(fs.existsSync(path.join(repoRoot, archivedPath))).toBe(true);
+    }
+  });
+
   it('keeps the retired Expertise Atlas UI island archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'src/app/app/i/expertise'))).toBe(false);
     expect(
@@ -1271,10 +1315,14 @@ describe('launch gate package configuration', () => {
     expect(envDocs).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
     expect(envDocs).toContain('Required Vars When `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`');
     expect(envDocs).toContain('Manual-link interview scheduling must still work');
-    expect(envDocs).toContain('src/lib/expertise/python-cv-extract-client.ts');
     expect(envDocs).toContain(
-      'The retired `/api/expertise/cv-import/wizard-*` proxy route family remains archived'
+      'src/archive/non_launch_python_internal/lib/expertise/python-cv-extract-client.ts'
     );
+    expect(envDocs).toContain(
+      'The retired `/api/expertise/cv-import/wizard-*` proxy route family and TypeScript Python worker helpers remain archived'
+    );
+    expect(envDocs).not.toContain('- `src/lib/expertise/python-cv-extract-client.ts`');
+    expect(envDocs).not.toContain('- `src/lib/python-internal/client.ts`');
     expect(envDocs).not.toContain('src/lib/expertise/python-cv-proxy.ts');
     expect(envDocs).not.toContain('**Required Vars**:\n\n- `GOOGLE_CLIENT_ID`');
     expect(envDocs).not.toContain('Make provider flows launch-blocking with real tokens');

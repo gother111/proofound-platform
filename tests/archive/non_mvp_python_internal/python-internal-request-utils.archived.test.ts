@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { parsePositiveInt, withTimeout } from '@/lib/python-internal/request-utils';
+import {
+  parsePositiveInt,
+  withTimeout,
+} from '@/archive/non_launch_python_internal/lib/python-internal/request-utils';
 
 describe('python-internal/request-utils', () => {
   describe('parsePositiveInt', () => {

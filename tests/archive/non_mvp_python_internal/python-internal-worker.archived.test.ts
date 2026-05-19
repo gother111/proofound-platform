@@ -7,18 +7,18 @@ const mocks = vi.hoisted(() => ({
   markPythonInternalJobFailure: vi.fn(),
 }));
 
-vi.mock('@/lib/expertise/cv-import-extract-worker', () => ({
+vi.mock('@/archive/non_launch_python_internal/lib/expertise/cv-import-extract-worker', () => ({
   processCvImportExtractJob: mocks.processCvImportExtractJob,
 }));
 
-vi.mock('@/lib/python-internal/client', () => ({
+vi.mock('@/archive/non_launch_python_internal/lib/python-internal/client', () => ({
   executePythonInternalJob: mocks.executePythonInternalJob,
 }));
 
-vi.mock('@/lib/python-internal/job-queue', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/python-internal/job-queue')>(
-    '@/lib/python-internal/job-queue'
-  );
+vi.mock('@/archive/non_launch_python_internal/lib/python-internal/job-queue', async () => {
+  const actual = await vi.importActual<
+    typeof import('@/archive/non_launch_python_internal/lib/python-internal/job-queue')
+  >('@/archive/non_launch_python_internal/lib/python-internal/job-queue');
 
   return {
     ...actual,
@@ -27,7 +27,7 @@ vi.mock('@/lib/python-internal/job-queue', async () => {
   };
 });
 
-import { executeClaimedPythonInternalJob } from '@/lib/python-internal/worker';
+import { executeClaimedPythonInternalJob } from '@/archive/non_launch_python_internal/lib/python-internal/worker';
 
 describe('executeClaimedPythonInternalJob', () => {
   beforeEach(() => {

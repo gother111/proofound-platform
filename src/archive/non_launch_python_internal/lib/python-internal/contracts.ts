@@ -8,7 +8,7 @@ import {
 import {
   CvImportWizardSuggestRequestSchema,
   CvImportWizardSuggestResponseSchema,
-} from '@/lib/expertise/cv-import-wizard-types';
+} from '@/archive/non_launch_python_internal/lib/expertise/cv-import-wizard-types';
 
 export const PYTHON_INTERNAL_SERVICE_NAME = 'document_intelligence' as const;
 export const PYTHON_INTERNAL_CONTRACT_VERSION = '2026-03-06.python-internal.v1' as const;

@@ -19,7 +19,7 @@ import {
   type CvImportWizardLanguage,
   type CvImportWizardSuggestRequest,
   type CvImportWizardSuggestResponse,
-} from '@/lib/expertise/cv-import-wizard-types';
+} from '@/archive/non_launch_python_internal/lib/expertise/cv-import-wizard-types';
 
 type SectionType = 'work' | 'learning' | 'volunteering' | 'languages';
 
