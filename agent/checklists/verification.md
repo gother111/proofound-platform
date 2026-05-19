@@ -289,7 +289,7 @@ Fail condition: any real or pilot data is processed outside invite-only Proof Ar
 - Before launch or high-risk rollback rehearsal:
   - Run `npm run db:backup:checkpoint`
   - Restore into a recovery target using platform restore tooling
-  - Run `npm run db:restore:verify -- --checkpoint <dir>`
+  - Run `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 - Runbook:
   - `docs/launch-restore-drill.md`
 

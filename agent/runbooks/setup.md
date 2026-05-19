@@ -160,7 +160,7 @@ Strict provider E2E deterministic account:
   - `RUN_MIGRATIONS_GUIDE.md`, `APPLY_MIGRATIONS_MANUAL.md` (source: RUN_MIGRATIONS_GUIDE.md, APPLY_MIGRATIONS_MANUAL.md)
 - Safety scripts:
   - `npm run db:backup:checkpoint` creates schema and critical-table checkpoints before production DDL.
-  - `npm run db:restore:verify -- --checkpoint <dir>` validates a restored database against a saved checkpoint fingerprint.
+  - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json` validates a restored database against a saved checkpoint fingerprint and writes final go/no-go evidence.
   - `npm run db:audit:migrations` audits canonical ledger parity for `src/db/migrations/` plus supplemental policy/trigger versions against `public.app_migration_ledger`.
   - Strict legacy baseline audit: `npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json`.
   - Diagnostics-only legacy file inventory audit: `npm run db:audit:migrations -- --mode legacy-supabase`.

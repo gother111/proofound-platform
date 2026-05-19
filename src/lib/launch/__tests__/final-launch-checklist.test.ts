@@ -166,7 +166,7 @@ Configure critical alerts:
     `# Launch Restore Drill
 
 \`npm run db:backup:checkpoint\`
-\`npm run db:restore:verify -- --checkpoint <dir>\`
+\`npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json\`
 `
   );
 
