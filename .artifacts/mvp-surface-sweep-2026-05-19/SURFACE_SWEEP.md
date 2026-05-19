@@ -282,6 +282,13 @@ Active copy corridor refresh on 2026-05-19:
 - Guardrails: added focused assertions so recovery actions, dashboard readiness suggestions, and assignment-builder step 5 stay out of archived `Expertise Atlas` / `Expertise Mapping` language.
 - Evidence: focused tests for recovery actions, dashboard layout, and step 5 assignment builder passed; lint, typecheck, and `git diff --check` passed.
 
+Archived Expertise UI test cleanup on 2026-05-19:
+
+- Finding: the archive README said old Expertise Atlas UI tests were out of active discovery, but `tests/ui/proof-pack-assistant.test.tsx` still imported `@/app/app/i/expertise/components/edit-skill/ProofsSection`, a UI component inside the retired `/app/i/expertise` island. This made archived skill-editor UI look like active Proof Pack Assistant evidence.
+- Fix: moved that UI test to `tests/archive/non_mvp_expertise_ui/proof-pack-assistant.archived.tsx`, updated the archive README, and added a launch-gate assertion that active tests cannot import the retired Expertise Atlas UI island.
+- Adjacent route fix: `src/components/expertise/GapMap.tsx` no longer sends users to archived `/app/i/expertise`; its fallback action now routes to `/app/i/profile?profileView=full&tab=proof_packs` and uses proof-first button copy.
+- Evidence: active Proof Pack Assistant API/privacy tests still pass; archived-route and launch-gate tests pass; launch route inventory still passes; lint, typecheck, docs freshness, and `git diff --check` pass.
+
 ## Verification
 
 Commands run with Node 25 path:
@@ -333,6 +340,12 @@ Commands run with Node 25 path:
 - `npm run lint` - passed after the active copy corridor refresh.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the active copy corridor refresh.
 - `git diff --check` - passed after the active copy corridor refresh.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/ui/archived-mvp-routes.test.ts tests/api/proof-pack-assistant-route.test.ts tests/lib/proof-pack-assistant.test.ts` - passed, 4 files / 20 tests, after archiving the stale proof-assistant UI test.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after archiving the stale proof-assistant UI test.
+- `npm run docs:freshness` - passed with no findings after updating the non-MVP expertise UI archive README.
+- `npm run lint` - passed after the stale expertise UI test cleanup.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the stale expertise UI test cleanup.
+- `git diff --check` - passed after the stale expertise UI test cleanup.
 - `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with `/api/user/data-inventory` active.
 - `npm run lint` - passed after removing the privacy component hook-dependency warning.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.

@@ -123,4 +123,14 @@ describe('launch gate package configuration', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('keeps active tests from importing the retired Expertise Atlas UI island', () => {
+    const retiredExpertiseImport = '@' + '/app/app/i/expertise/';
+    const activeTestFiles = listTestFiles(path.join(repoRoot, 'tests'));
+    const offenders = activeTestFiles
+      .filter((file) => fs.readFileSync(file, 'utf8').includes(retiredExpertiseImport))
+      .map((file) => path.relative(repoRoot, file));
+
+    expect(offenders).toEqual([]);
+  });
 });

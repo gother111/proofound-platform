@@ -357,10 +357,10 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          window.location.href = '/app/i/expertise';
+                          window.location.href = '/app/i/profile?profileView=full&tab=proof_packs';
                         }}
                       >
-                        Update Level
+                        Add proof
                       </Button>
                     )}
                   </div>
