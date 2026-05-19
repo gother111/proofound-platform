@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TopBar } from '@/components/app/TopBar';
-import { NotificationsCard } from '@/components/dashboard/NotificationsCard';
 import { SettingsContent } from '@/components/settings/SettingsContent';
 
 const usePathnameMock = vi.fn();
@@ -65,14 +64,6 @@ describe('launch discoverability surfaces', () => {
 
     expect(screen.queryByLabelText(/notifications/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/open profile menu/i)).toBeInTheDocument();
-  });
-
-  it('hides the archived notifications dashboard card', () => {
-    const onVisibilityChange = vi.fn();
-    const { container } = render(<NotificationsCard onVisibilityChange={onVisibilityChange} />);
-
-    expect(container).toBeEmptyDOMElement();
-    expect(onVisibilityChange).toHaveBeenCalledWith(false);
   });
 
   it('removes notifications from the active settings surface', async () => {

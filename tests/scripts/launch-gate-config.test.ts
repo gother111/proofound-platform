@@ -205,7 +205,36 @@ describe('launch gate package configuration', () => {
       'src/components/dashboard/DynamicDashboard.tsx',
       'src/app/app/o/[slug]/home/OrgDashboardClient.tsx',
       'src/app/app/o/[slug]/home/SuspendedOrgDashboardClient.tsx',
+      'src/components/dashboard/ExpertiseDepthWidget.tsx',
+      'src/components/dashboard/ExploreCard.tsx',
+      'src/components/dashboard/GapMapWidget.tsx',
+      'src/components/dashboard/GoalsCard.tsx',
+      'src/components/dashboard/ImpactSnapshotCard.tsx',
+      'src/components/dashboard/InterviewsFeedbackCard.tsx',
+      'src/components/dashboard/MatchingReadinessCard.tsx',
+      'src/components/dashboard/MatchingResultsCard.tsx',
+      'src/components/dashboard/MomentumMetricsCard.tsx',
+      'src/components/dashboard/NextBestActionsWidget.tsx',
+      'src/components/dashboard/NextStepsHelper.tsx',
+      'src/components/dashboard/NotificationsCard.tsx',
+      'src/components/dashboard/OrgGoalsCard.tsx',
+      'src/components/dashboard/OrgMatchingCard.tsx',
+      'src/components/dashboard/ProfileActivationCard.tsx',
+      'src/components/dashboard/ProjectsCard.tsx',
+      'src/components/dashboard/ReadinessSprintPanel.tsx',
+      'src/components/dashboard/TasksCard.tsx',
+      'src/components/dashboard/TeamRolesCard.tsx',
+      'src/components/dashboard/WhileAwayCard.tsx',
+      'src/components/dashboard/org/NextActionsCard.tsx',
+      'src/components/dashboard/org/OrgReadinessCard.tsx',
+      'src/components/dashboard/org/TTSCTrendCard.tsx',
       'tests/ui/draggable-dashboard-while-away-visibility.test.tsx',
+      'tests/ui/dashboard-status-chip-style.test.tsx',
+      'tests/ui/next-steps-helper.test.tsx',
+      'tests/ui/org-dashboard-archived-nav.test.tsx',
+      'tests/ui/tasks-card.test.tsx',
+      'tests/ui/while-away-card.test.tsx',
+      'tests/ui/projects-card.test.tsx',
     ];
 
     for (const retiredPath of retiredPaths) {
@@ -220,6 +249,14 @@ describe('launch gate package configuration', () => {
         path.join(
           repoRoot,
           'src/archive/non_launch_dashboard_ui/app/o/[slug]/home/OrgDashboardClient.tsx'
+        )
+      )
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          repoRoot,
+          'src/archive/non_launch_dashboard_ui/components/dashboard/OrgMatchingCard.tsx'
         )
       )
     ).toBe(true);

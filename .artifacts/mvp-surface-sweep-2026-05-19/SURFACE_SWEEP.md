@@ -282,6 +282,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Removed active `getOrgGoalsData` and `getOrgProjectsData` from `src/lib/dashboard/orgDataFetchers.ts` because the active organization home no longer uses broad org goals/projects widgets.
 - Added launch-gate coverage so the old organization home dashboard client stays archived.
 
+36. The old loose dashboard widget-card layer still lived in active components after mounted homes moved to fixed corridor pages.
+
+- Confirmed no active app route imports the old dashboard widgets; active individual and organization homes render focused corridor pages instead.
+- Kept only the mounted dashboard utilities that active surfaces still import: `WidgetGridSkeleton` and `chipStyles`.
+- Moved unused dashboard card components, including notification, readiness, matching, project, goals, team, interview, momentum, and org-readiness cards, to `src/archive/non_launch_dashboard_ui/components/dashboard/`.
+- Moved direct tests for those unmounted widget cards to `tests/archive/non_mvp_dashboard_ui/`, while keeping active launch-discoverability coverage focused on mounted top-bar and settings behavior.
+- Updated the organization team API comments away from the archived `TeamRolesCard` widget and added launch-gate coverage so the unmounted card layer stays archived.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -311,6 +319,7 @@ Desktop checks:
 - `/signup`, `/signup/organization`, and `/signup/individual` loaded with expected signup headings.
 - `/portfolio/demo` was rechecked through the Codex in-app Browser after restarting the local dev server: title `Public Page Unavailable | Proofound`, H1 `Public page unavailable`, Return home link `/`, console warnings/errors `[]`.
 - `/portfolio/demo` was rechecked again through the Codex in-app Browser during the continued sweep: title `Public Page Unavailable | Proofound`, URL `http://localhost:33180/portfolio/demo`, safe unavailable copy rendered, and no obvious private-leak terms were present in the visible body text.
+- After archiving the unmounted dashboard widget-card layer, Browser smoke covered `/portfolio/demo`, `/`, and `/portfolio/org/test-org`: no runtime-error text was visible. A deeper re-read of `/portfolio/demo` after hydration confirmed H1 `Public page unavailable`, title `Public Page Unavailable | Proofound`, and the safe unavailable message plus `Return home` action.
 
 Mobile viewport check:
 
@@ -580,6 +589,14 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the orphaned organization home dashboard client.
 - `npm run docs:freshness` - passed after archiving the orphaned organization home dashboard client.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after archiving the orphaned organization home dashboard client.
+- `rg -n "ExpertiseDepthWidget|ExploreCard|GapMapWidget|GoalsCard|ImpactSnapshotCard|InterviewsFeedbackCard|MatchingReadinessCard|MatchingResultsCard|MomentumMetricsCard|NextBestActionsWidget|NextStepsHelper|NotificationsCard|OrgGoalsCard|OrgMatchingCard|ProfileActivationCard|ProjectsCard|ReadinessSprintPanel|TasksCard|TeamRolesCard|WhileAwayCard|NextActionsCard|OrgReadinessCard|TTSCTrendCard" src tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active references are now limited to launch-gate archive assertions after moving the unmounted dashboard widget-card layer.
+- `rg --pcre2 -n "components/dashboard/(?!WidgetGridSkeleton|chipStyles)|@/components/dashboard/(?!WidgetGridSkeleton|chipStyles)|src/components/dashboard/(?!WidgetGridSkeleton|chipStyles)" src tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active dashboard component references are now limited to allowed skeleton/chip utilities plus launch-gate assertions.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/ui/launch-discoverability.test.tsx tests/ui/widget-grid-skeleton.test.tsx tests/ui/metric-strip-chip-style.test.tsx tests/api/launch-page-inventory.test.ts` - passed, 5 files / 27 tests, after archiving the unmounted dashboard widget-card layer.
+- `git diff --check` - passed after archiving the unmounted dashboard widget-card layer.
+- `npm run lint` - passed after archiving the unmounted dashboard widget-card layer.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the unmounted dashboard widget-card layer.
+- `npm run docs:freshness` - passed after archiving the unmounted dashboard widget-card layer.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after archiving the unmounted dashboard widget-card layer.
 
 Non-fatal test noise:
 
