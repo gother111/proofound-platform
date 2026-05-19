@@ -1,0 +1,8 @@
+{
+  "url": "http://127.0.0.1:53451/api/health",
+  "observedAt": "2026-05-19T20:01:54.425Z",
+  "payload": {
+    "status": "ok",
+    "timestamp": "2026-05-19T20:03:43.782Z"
+  }
+}

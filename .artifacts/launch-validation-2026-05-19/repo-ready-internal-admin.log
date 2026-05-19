@@ -5,39 +5,27 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
 
  ✓ tests/api/admin-internal-ops-queue-route.test.ts  (7 tests) 14ms
- ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 45ms
- ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 88ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 38ms
+ ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 92ms
 
  Test Files  3 passed (3)
       Tests  15 passed (15)
-   Start at  21:50:46
-   Duration  923ms (transform 175ms, setup 347ms, collect 289ms, tests 147ms, environment 657ms, prepare 136ms)
+   Start at  22:03:55
+   Duration  914ms (transform 179ms, setup 345ms, collect 296ms, tests 144ms, environment 647ms, prepare 136ms)
 
 
-WebSocket server error:
-Error: listen EPERM: operation not permitted 0.0.0.0:24678
-    at Server.setupListenHandle [as _listen2] (node:net:1918:21)
-    at listenInCluster (node:net:1997:12)
-    at Server.listen (node:net:2102:7)
-    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
-    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
-    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
-    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
-    at Array.map (<anonymous>)
-    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
-    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
-(node:64852) Warning: `--localstorage-file` was provided without a valid path
+(node:72720) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:64852) Warning: `--localstorage-file` was provided without a valid path
+(node:72720) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:64852) Warning: `--localstorage-file` was provided without a valid path
+(node:72720) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)

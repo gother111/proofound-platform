@@ -1,19 +1,19 @@
 {
   "scope": "repo",
-  "generatedAt": "2026-05-19T19:50:47.024Z",
+  "generatedAt": "2026-05-19T20:04:26.404Z",
   "currentDate": "2026-05-19",
   "workspaceRoot": "/Users/yuriibakurov/proofound",
-  "gitHead": "007b9d1284326f1a6ab011aae9b563ea2c87d55b",
+  "gitHead": "a63f4e902d07857df2ccfe09a8584fe002507469",
   "gitBranch": "master",
-  "verdict": "NOT_READY",
+  "verdict": "READY",
   "includeStateful": false,
-  "liveBaseUrl": null,
+  "liveBaseUrl": "http://127.0.0.1:53451",
   "latestLaunchBundleDir": ".artifacts/launch-validation-2026-05-19",
   "statusCounts": {
-    "PASS": 32,
-    "FAIL": 4,
-    "BLOCKED": 1,
-    "UNVERIFIED": 3
+    "PASS": 35,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "UNVERIFIED": 5
   },
   "items": [
     {
@@ -137,12 +137,16 @@
         ".artifacts/launch-validation-*/24_gate_summary.json",
         ".artifacts/proofound-route-inventory.md"
       ],
-      "status": "FAIL",
-      "summary": "Skipped public org trust smoke because production boot was unavailable.",
+      "status": "PASS",
+      "summary": "Public org trust smoke scenario passed in the fresh launch smoke artifact.",
       "evidence": [
         {
           "label": "Latest launch bundle org trust smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-build.log"
+          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json"
+        },
+        {
+          "label": "Latest launch bundle org trust smoke evidence",
+          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke.log"
         }
       ],
       "blockerIds": [],
@@ -259,12 +263,16 @@
         ".artifacts/launch-validation-*/24_gate_summary.json",
         ".artifacts/proofound-master-audit-2026-03-22.md"
       ],
-      "status": "FAIL",
-      "summary": "Production boot could not start in this environment; review the captured boot error and rerun on a host that can bind localhost.",
+      "status": "PASS",
+      "summary": "`npm run start` booted successfully and `/api/health` returned ok.",
       "evidence": [
         {
           "label": "Latest launch bundle prod boot evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-prod-boot-error.log"
+          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-prod-start.log"
+        },
+        {
+          "label": "Latest launch bundle prod boot evidence",
+          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-prod-health.json"
         }
       ],
       "blockerIds": [],
@@ -413,8 +421,8 @@
         ".artifacts/launch-readiness-summary.md",
         "src/app/api/monitoring/launch-status/route.ts"
       ],
-      "status": "FAIL",
-      "summary": "Repo-ready launch-status route logic or smoke refresh did not pass on fresh local evidence.",
+      "status": "PASS",
+      "summary": "Repo-ready launch-status route tests and smoke refresh both passed on fresh local evidence.",
       "evidence": [
         {
           "label": "Launch-status route evidence",
@@ -422,7 +430,11 @@
         },
         {
           "label": "Launch smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-build.log"
+          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json"
+        },
+        {
+          "label": "Launch smoke evidence",
+          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke.log"
         }
       ],
       "blockerIds": [],
@@ -465,12 +477,16 @@
         ".artifacts/launch-validation-*/24_gate_summary.json",
         "e2e/public-org-trust.smoke.spec.ts"
       ],
-      "status": "FAIL",
-      "summary": "Skipped public org trust smoke because production boot was unavailable.",
+      "status": "PASS",
+      "summary": "Public org trust smoke scenario passed in the fresh launch smoke artifact.",
       "evidence": [
         {
           "label": "Latest launch bundle public org trust smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-build.log"
+          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json"
+        },
+        {
+          "label": "Latest launch bundle public org trust smoke evidence",
+          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke.log"
         }
       ],
       "blockerIds": [],
@@ -915,18 +931,25 @@
         "docs/scope-compliance-report-2026-03-24.md",
         "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
       ],
-      "status": "PASS",
-      "summary": "Current authority docs frame Proofound as stronger signal than CV theater, but founder-outbound proof remains outside repo scope.",
+      "status": "UNVERIFIED",
+      "summary": "No current evidence source resolved this checklist line.",
       "evidence": [
         {
-          "label": "Locked MVP source of truth",
-          "path": "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md",
-          "note": "Product promise: proof instead of profile theater."
+          "label": "Configured evidence source",
+          "path": "README.md"
+        },
+        {
+          "label": "Configured evidence source",
+          "path": "docs/scope-compliance-report-2026-03-24.md"
+        },
+        {
+          "label": "Configured evidence source",
+          "path": "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
         }
       ],
       "blockerIds": [],
       "retiredStaleClaims": [],
-      "sourceLabel": "Locked MVP source of truth",
+      "sourceLabel": "No evidence selected",
       "blocksVerdict": false,
       "blockingScope": "full"
     },
@@ -984,8 +1007,8 @@
         ".artifacts/launch-validation-*/24_gate_summary.json",
         "docs/launch-signoff-2026-04-27.md"
       ],
-      "status": "BLOCKED",
-      "summary": "Blocked by upstream checklist items: engineering_next_start_stable, engineering_launch_status_fresh_evidence. No current evidence source resolved this checklist line.",
+      "status": "UNVERIFIED",
+      "summary": "No current evidence source resolved this checklist line.",
       "evidence": [
         {
           "label": "Configured evidence source",
@@ -1000,112 +1023,14 @@
           "path": "docs/launch-signoff-2026-04-27.md"
         }
       ],
-      "blockerIds": ["engineering_next_start_stable", "engineering_launch_status_fresh_evidence"],
+      "blockerIds": [],
       "retiredStaleClaims": [],
       "sourceLabel": "No evidence selected",
       "blocksVerdict": false,
       "blockingScope": "full"
     }
   ],
-  "trueBlockers": [
-    {
-      "id": "product_org_trust_page_live",
-      "section": "Product",
-      "label": "Org trust page is minimal and live",
-      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
-      "evidenceSources": [
-        ".artifacts/launch-validation-*/24_gate_summary.json",
-        ".artifacts/proofound-route-inventory.md"
-      ],
-      "status": "FAIL",
-      "summary": "Skipped public org trust smoke because production boot was unavailable.",
-      "evidence": [
-        {
-          "label": "Latest launch bundle org trust smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-build.log"
-        }
-      ],
-      "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "Latest launch bundle org trust smoke",
-      "blocksVerdict": true,
-      "blockingScope": "both"
-    },
-    {
-      "id": "engineering_next_start_stable",
-      "section": "Engineering",
-      "label": "`next start` is stable",
-      "authorityRefs": ["agent/checklists/verification.md"],
-      "evidenceSources": [
-        ".artifacts/launch-validation-*/24_gate_summary.json",
-        ".artifacts/proofound-master-audit-2026-03-22.md"
-      ],
-      "status": "FAIL",
-      "summary": "Production boot could not start in this environment; review the captured boot error and rerun on a host that can bind localhost.",
-      "evidence": [
-        {
-          "label": "Latest launch bundle prod boot evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-prod-boot-error.log"
-        }
-      ],
-      "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "Latest launch bundle prod boot",
-      "blocksVerdict": true,
-      "blockingScope": "both"
-    },
-    {
-      "id": "engineering_launch_status_fresh_evidence",
-      "section": "Engineering",
-      "label": "Launch-status and smoke-artifact logic run on fresh evidence",
-      "authorityRefs": ["agent/checklists/verification.md"],
-      "evidenceSources": [
-        ".artifacts/launch-validation-*/24_gate_summary.json",
-        ".artifacts/launch-readiness-summary.md",
-        "src/app/api/monitoring/launch-status/route.ts"
-      ],
-      "status": "FAIL",
-      "summary": "Repo-ready launch-status route logic or smoke refresh did not pass on fresh local evidence.",
-      "evidence": [
-        {
-          "label": "Launch-status route evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-status-route.log"
-        },
-        {
-          "label": "Launch smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-build.log"
-        }
-      ],
-      "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "Repo-ready launch-status evidence",
-      "blocksVerdict": true,
-      "blockingScope": "both"
-    },
-    {
-      "id": "qa_public_org_trust_smoke",
-      "section": "QA",
-      "label": "Public-org trust smoke passes",
-      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
-      "evidenceSources": [
-        ".artifacts/launch-validation-*/24_gate_summary.json",
-        "e2e/public-org-trust.smoke.spec.ts"
-      ],
-      "status": "FAIL",
-      "summary": "Skipped public org trust smoke because production boot was unavailable.",
-      "evidence": [
-        {
-          "label": "Latest launch bundle public org trust smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-build.log"
-        }
-      ],
-      "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "Latest launch bundle public org trust smoke",
-      "blocksVerdict": true,
-      "blockingScope": "both"
-    }
-  ],
+  "trueBlockers": [],
   "externalPrerequisites": [
     {
       "id": "ops_incident_roles_assigned",
@@ -1184,6 +1109,38 @@
       "blockingScope": "full"
     },
     {
+      "id": "founder_public_story_signal_over_cvs",
+      "section": "Founder / GTM",
+      "label": "Public story sells stronger signal than CVs, not broad platform vision",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "README.md",
+        "docs/scope-compliance-report-2026-03-24.md",
+        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
+      ],
+      "status": "UNVERIFIED",
+      "summary": "No current evidence source resolved this checklist line.",
+      "evidence": [
+        {
+          "label": "Configured evidence source",
+          "path": "README.md"
+        },
+        {
+          "label": "Configured evidence source",
+          "path": "docs/scope-compliance-report-2026-03-24.md"
+        },
+        {
+          "label": "Configured evidence source",
+          "path": "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "No evidence selected",
+      "blocksVerdict": false,
+      "blockingScope": "full"
+    },
+    {
       "id": "founder_go_no_go_signed_after_green",
       "section": "Founder / GTM",
       "label": "Go/no-go is signed only after fresh evidence is green",
@@ -1193,8 +1150,8 @@
         ".artifacts/launch-validation-*/24_gate_summary.json",
         "docs/launch-signoff-2026-04-27.md"
       ],
-      "status": "BLOCKED",
-      "summary": "Blocked by upstream checklist items: engineering_next_start_stable, engineering_launch_status_fresh_evidence. No current evidence source resolved this checklist line.",
+      "status": "UNVERIFIED",
+      "summary": "No current evidence source resolved this checklist line.",
       "evidence": [
         {
           "label": "Configured evidence source",
@@ -1209,7 +1166,7 @@
           "path": "docs/launch-signoff-2026-04-27.md"
         }
       ],
-      "blockerIds": ["engineering_next_start_stable", "engineering_launch_status_fresh_evidence"],
+      "blockerIds": [],
       "retiredStaleClaims": [],
       "sourceLabel": "No evidence selected",
       "blocksVerdict": false,
@@ -1292,6 +1249,70 @@
       "sourceLabel": "Launch restore drill",
       "blocksVerdict": false,
       "blockingScope": "full"
+    },
+    {
+      "id": "founder_public_story_signal_over_cvs",
+      "section": "Founder / GTM",
+      "label": "Public story sells stronger signal than CVs, not broad platform vision",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "README.md",
+        "docs/scope-compliance-report-2026-03-24.md",
+        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
+      ],
+      "status": "UNVERIFIED",
+      "summary": "No current evidence source resolved this checklist line.",
+      "evidence": [
+        {
+          "label": "Configured evidence source",
+          "path": "README.md"
+        },
+        {
+          "label": "Configured evidence source",
+          "path": "docs/scope-compliance-report-2026-03-24.md"
+        },
+        {
+          "label": "Configured evidence source",
+          "path": "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "No evidence selected",
+      "blocksVerdict": false,
+      "blockingScope": "full"
+    },
+    {
+      "id": "founder_go_no_go_signed_after_green",
+      "section": "Founder / GTM",
+      "label": "Go/no-go is signed only after fresh evidence is green",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/launch-readiness-summary.md",
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        "docs/launch-signoff-2026-04-27.md"
+      ],
+      "status": "UNVERIFIED",
+      "summary": "No current evidence source resolved this checklist line.",
+      "evidence": [
+        {
+          "label": "Configured evidence source",
+          "path": ".artifacts/launch-readiness-summary.md"
+        },
+        {
+          "label": "Configured evidence source",
+          "path": ".artifacts/launch-validation-*/24_gate_summary.json"
+        },
+        {
+          "label": "Configured evidence source",
+          "path": "docs/launch-signoff-2026-04-27.md"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [],
+      "sourceLabel": "No evidence selected",
+      "blocksVerdict": false,
+      "blockingScope": "full"
     }
   ],
   "retiredStaleClaims": [
@@ -1307,8 +1328,6 @@
     "Retire this as current truth. `/api/contracts` is archived and returns `410`.",
     "`Google, LinkedIn, and video integrations remain live launch compatibility flows.`",
     "Retire this as current truth. Those non-launch integration routes are now removed from the active launch surface, and interview scheduling is manual-link only in the active MVP UI.",
-    "The earlier repo memo that treated the local build blocker as retired is stale for this workspace state. The current clean local `next build` run still ends in `PageNotFoundError: Cannot find module for page: /_document`, and `next start` cannot find a usable production build.",
-    "The earlier live `missing_smoke_artifact` conclusion is only partly stale. Fresh workspace smoke and monitor runs are green, but the authoritative live `/api/monitoring/launch-status` endpoint still reports `missing_smoke_artifact`, so the deployed runtime still cannot see the required smoke evidence.",
     "Assignment quality checklist disagrees with the selected PASS status for this checklist line.",
     "Route inventory disagrees with the selected PASS status for this checklist line."
   ],
