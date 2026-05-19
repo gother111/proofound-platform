@@ -2596,6 +2596,39 @@ describe('launch gate package configuration', () => {
     ).toBe(true);
   });
 
+  it('keeps the retired skill gaps UI archived with the Expertise Atlas surface', () => {
+    expect(fs.existsSync(path.join(repoRoot, 'src/components/skill-gaps'))).toBe(false);
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_pages/app/i/skill-gaps/README.md'))
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          repoRoot,
+          'src/archive/non_launch_pages/app/i/skill-gaps/implementation/SkillGapsClient.tsx'
+        )
+      )
+    ).toBe(true);
+    const archivedExpertiseAtlas = fs.readFileSync(
+      path.join(
+        repoRoot,
+        'src/archive/non_launch_pages/app/i/expertise/implementation/ExpertiseAtlasClient.tsx'
+      ),
+      'utf8'
+    );
+    const archivedSkillGapsReadme = fs.readFileSync(
+      path.join(repoRoot, 'src/archive/non_launch_pages/app/i/skill-gaps/README.md'),
+      'utf8'
+    );
+    const archivedSkillGapsImport =
+      '@' + '/archive/non_launch_pages/app/i/skill-gaps/implementation/SkillGapsClient';
+
+    expect(archivedExpertiseAtlas).toContain(archivedSkillGapsImport);
+    expect(archivedExpertiseAtlas).not.toContain('@/components/skill-gaps/SkillGapsClient');
+    expect(archivedSkillGapsReadme).toContain('/api/skill-gaps*');
+    expect(archivedSkillGapsReadme).toContain('outside the locked MVP corridor');
+  });
+
   it('keeps retired fairness settings implementation archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'src/app/app/i/settings/fairness'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'src/components/settings/DemographicOptIn.tsx'))).toBe(

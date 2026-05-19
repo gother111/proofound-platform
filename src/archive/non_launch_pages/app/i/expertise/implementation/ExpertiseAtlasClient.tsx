@@ -18,7 +18,7 @@ import { RecencyScatter } from './widgets/RecencyScatter';
 import { SkillWheel } from './widgets/SkillWheel';
 import { VerificationSourcesPie } from './widgets/VerificationSourcesPie';
 import { NextBestActions } from './widgets/NextBestActions';
-import { SkillGapsClient } from '@/components/skill-gaps/SkillGapsClient';
+import { SkillGapsClient } from '@/archive/non_launch_pages/app/i/skill-gaps/implementation/SkillGapsClient';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, BookOpen, TrendingUp, Grid3x3 } from 'lucide-react';

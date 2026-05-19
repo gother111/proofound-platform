@@ -1391,3 +1391,9 @@ Non-fatal test noise:
 - Found `agent/runbooks/release-batch-flow.md` still verified from March and describing production promotion mainly as release mechanics, workflow completion, and public health, without naming current production-candidate backup, isolated restore, protected status, and final authenticated `go:no-go` gates.
 - Refreshed the release-batch runbook so it explicitly says release mechanics do not replace the current release, production-readiness, phase-exit, and sweep evidence gates.
 - Updated `agent/checklists/verification.md` and launch-gate coverage so release-batch validation stays separate from launch readiness signoff and still requires launch smoke, protected launch/perf status, backup checkpoint, restore report, and final authenticated `go:no-go`.
+
+## Continuation - Retired Skill Gaps UI Archive Boundary
+
+- Found `src/components/skill-gaps/SkillGapsClient.tsx` and `LearningRecommendations.tsx` still under active components even though `/app/i/skill-gaps` and `/api/skill-gaps*` are archived outside the locked MVP corridor.
+- Moved the retired skill-gaps client implementation under `src/archive/non_launch_pages/app/i/skill-gaps/implementation/`, added an archive README, and updated the archived Expertise Atlas island to import the archived client path.
+- Added launch-gate coverage so the retired skill-gaps UI cannot quietly return to active `src/components` or keep active imports into archived `/api/skill-gaps*` behavior.

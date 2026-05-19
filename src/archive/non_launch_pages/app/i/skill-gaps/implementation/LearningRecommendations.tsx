@@ -80,4 +80,3 @@ export function LearningRecommendationsList({ resources, skillNames }: Props) {
     </div>
   );
 }
-
