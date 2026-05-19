@@ -5,19 +5,19 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
 
- ✓ tests/api/admin-internal-ops-queue-route.test.ts  (7 tests) 14ms
- ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 40ms
- ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 100ms
+ ✓ tests/api/admin-internal-ops-queue-route.test.ts  (7 tests) 15ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 41ms
+ ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 91ms
 
  Test Files  3 passed (3)
       Tests  15 passed (15)
-   Start at  00:12:34
-   Duration  899ms (transform 173ms, setup 318ms, collect 295ms, tests 154ms, environment 626ms, prepare 125ms)
+   Start at  00:19:35
+   Duration  885ms (transform 161ms, setup 324ms, collect 276ms, tests 147ms, environment 624ms, prepare 129ms)

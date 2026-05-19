@@ -5,19 +5,19 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
 
- ✓ tests/lib/public-portfolio-projection.test.ts  (15 tests) 28ms
- ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 91ms
- ✓ tests/ui/public-portfolio-page.test.tsx  (9 tests) 192ms
+ ✓ tests/lib/public-portfolio-projection.test.ts  (15 tests) 27ms
+ ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 89ms
+ ✓ tests/ui/public-portfolio-page.test.tsx  (9 tests) 193ms
 
  Test Files  3 passed (3)
       Tests  26 passed (26)
-   Start at  00:12:27
-   Duration  1.05s (transform 270ms, setup 354ms, collect 668ms, tests 311ms, environment 619ms, prepare 132ms)
+   Start at  00:19:29
+   Duration  1.04s (transform 260ms, setup 309ms, collect 662ms, tests 309ms, environment 615ms, prepare 120ms)

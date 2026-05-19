@@ -82,5 +82,5 @@ The full-launch recommendation remains `NO-GO` until production-candidate operat
 
 - Latest operational checklist: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`
 - Latest machine-readable bundle: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.json`
-- Generated at: `2026-05-19T22:13:02.762Z`
+- Generated at: `2026-05-19T22:20:03.037Z`
 <!-- final-launch-checklist:end -->

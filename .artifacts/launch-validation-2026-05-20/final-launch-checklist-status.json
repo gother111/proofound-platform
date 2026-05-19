@@ -1,13 +1,13 @@
 {
   "scope": "repo",
-  "generatedAt": "2026-05-19T22:13:02.762Z",
+  "generatedAt": "2026-05-19T22:20:03.037Z",
   "currentDate": "2026-05-20",
   "workspaceRoot": "/Users/yuriibakurov/proofound",
-  "gitHead": "a146729761ece275fb32aeb595f13f3018865071",
+  "gitHead": "d25210ff85a0476ea78a5fe722080f65cb1757f7",
   "gitBranch": "master",
   "verdict": "READY",
   "includeStateful": false,
-  "liveBaseUrl": "http://127.0.0.1:54419",
+  "liveBaseUrl": "http://127.0.0.1:54580",
   "latestLaunchBundleDir": ".artifacts/launch-validation-2026-05-20",
   "statusCounts": {
     "PASS": 36,

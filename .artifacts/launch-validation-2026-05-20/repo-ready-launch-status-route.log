@@ -5,14 +5,14 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
 
  ✓ src/app/api/monitoring/__tests__/launch-status-route.test.ts  (15 tests) 14ms
 
  Test Files  1 passed (1)
       Tests  15 passed (15)
-   Start at  00:12:26
-   Duration  971ms (transform 212ms, setup 19ms, collect 560ms, tests 14ms, environment 0ms, prepare 38ms)
+   Start at  00:19:27
+   Duration  922ms (transform 210ms, setup 19ms, collect 551ms, tests 14ms, environment 0ms, prepare 40ms)
 
 
 stderr | src/app/api/monitoring/__tests__/launch-status-route.test.ts > /api/monitoring/launch-status > returns blocked stale persisted monitor evidence when live refresh fails entirely

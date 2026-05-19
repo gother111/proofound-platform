@@ -1,11 +1,11 @@
 
 > proofound@0.1.0 start
-> next start -p 54419
+> next start -p 54580
 
    ▲ Next.js 15.5.18
-   - Local:        http://localhost:54419
-   - Network:      http://192.168.1.155:54419
+   - Local:        http://localhost:54580
+   - Network:      http://192.168.1.155:54580
 
  ✓ Starting...
- ✓ Ready in 433ms
-{"level":"warn","event":"database.health.timeout.recovered","timestamp":"2026-05-19T22:12:23.947Z","error":"Timed out after 1200ms"}
+ ✓ Ready in 400ms
+{"level":"warn","event":"database.health.timeout.recovered","timestamp":"2026-05-19T22:19:25.641Z","error":"Timed out after 1200ms"}

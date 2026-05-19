@@ -1521,3 +1521,4 @@ Non-fatal test noise:
 - Centralized launch artifact date slugs on the Proofound launch timezone, defaulting to `Europe/Stockholm` with `PROOFOUND_LAUNCH_TIME_ZONE` / `TZ` overrides.
 - Added regression coverage for the May 20 Stockholm boundary and reran the repo launch checklist under Node 24 with localhost binding allowed.
 - New current repo evidence is `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`: repo scope `READY`, `36` pass, `0` fail, `0` blocked, and `4` external prerequisites still unverified.
+- Reran the repo checklist after committing the launch-timezone fix; the May 20 bundle now records current HEAD `d25210ff` with the same `READY` verdict and external-only unresolved prerequisites.
