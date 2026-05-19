@@ -164,6 +164,7 @@ describe('launch surface policy', () => {
       '/api/profile',
       '/api/profile/privacy-settings',
       '/api/upload/document',
+      '/api/user/data-inventory',
       '/api/user/export',
       '/api/verification/requests/skill',
       '/api/verify/token-1',

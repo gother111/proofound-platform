@@ -136,6 +136,7 @@ describe('middleware launch archive behavior', () => {
       'http://localhost/api/monitoring/launch-status',
       'http://localhost/api/monitoring/perf-status',
       'http://localhost/api/portfolio/visibility',
+      'http://localhost/api/user/data-inventory',
       'http://localhost/api/user/export',
       'http://localhost/api/verification/requests/skill',
       'http://localhost/app/i/home',

@@ -232,6 +232,15 @@ Analytics archive follow-up on 2026-05-19:
 - Browser verified `/`, `/portfolio/org/test-org`, and non-admin `/admin` on `localhost:33180`: landing, public organization trust page, and 403 guard all rendered without runtime-error text or horizontal overflow.
 - Browser screenshot capture timed out again in this runtime, so evidence was recorded through Browser navigation, DOM/visible-state reads, console issue checks, and HTTP status/body inspection.
 
+Privacy data inventory follow-up on 2026-05-19:
+
+- Finding: the active individual privacy page rendered a placeholder/mock data inventory and mixed stale "trust badges" copy into the privacy/export surface.
+- Fix: `src/components/privacy/DataBreakdown.tsx` now reads real counts from a read-only `/api/user/data-inventory` endpoint, keeps `/api/user/export` only for the explicit download action, labels privacy tiers in plain language, and keeps a launch-safe fallback state when inventory loading fails.
+- Route policy: `/api/user/data-inventory` is explicitly classified as active MVP under the account/privacy/export/delete basics corridor and is covered by route inventory, surface-policy, and middleware launch-archive tests.
+- Browser evidence on `localhost:33180`: `/app/i/settings/privacy` rendered `Privacy settings`, `Your data`, `Proof and verification`, `Download my data`, and real count chips (`profile=2`, `professional=2`, `proof=8`, `matching=0`, `activity=5`) with no inventory error, no stale `Trust badges` copy, and no console errors.
+- Browser endpoint evidence: authenticated `/api/user/data-inventory` returned `{"counts":{"profile":2,"professional":2,"proof":8,"matching":0,"activity":5}}`; unauthenticated curl returned `401 Unauthorized`.
+- Privacy/no-leak evidence: after the read-only endpoint landed, Browser page loads produced `/api/user/data-inventory` and did not produce passive `/api/user/export` lifecycle logs. Export lifecycle remains tied to the explicit `Download my data` action.
+
 ## Verification
 
 Commands run with Node 25 path:
@@ -268,6 +277,12 @@ Commands run with Node 25 path:
 - `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with the conversation messages TODO removed.
 - `npm run docs:freshness` - passed.
 - `npm run lint` - passed.
+- `git diff --check` - passed.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/privacy-data-breakdown.test.tsx src/lib/launch/__tests__/surface-policy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts tests/api/launch-surface-inventory.test.ts` - passed, 4 files / 21 tests.
+- `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with `/api/user/data-inventory` active.
+- `npm run lint` - passed after removing the privacy component hook-dependency warning.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.
+- `npm run docs:freshness` - passed.
 - `git diff --check` - passed.
 - `rg` active-source analytics sweep after cleanup: no active UI/source fetches to `/api/analytics/**` remain outside route policy and middleware/archive tests.
 - `rg` active-test archived-import sweep after mobile/admin cleanup: active tests no longer import `@/archive/` or `src/archive` implementation modules outside launch-gate config checks.

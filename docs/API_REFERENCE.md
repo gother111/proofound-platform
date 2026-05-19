@@ -28,9 +28,9 @@ Canonical API documentation generated from the current App Router route handlers
 
 ## Coverage Summary
 
-- Total route handlers: **139**
-- Auth tier counts: `public=43`, `session=79`, `service=2`, `cron=10`, `internal=5`
-- Launch surface counts: `active MVP=109`, `internal launch ops=16`, `archived compatibility=14`
+- Total route handlers: **140**
+- Auth tier counts: `public=43`, `session=80`, `service=2`, `cron=10`, `internal=5`
+- Launch surface counts: `active MVP=110`, `internal launch ops=16`, `archived compatibility=14`
 - Family count: **31**
 
 ## Endpoint Inventory
@@ -299,6 +299,7 @@ Canonical API documentation generated from the current App Router route handlers
 | `GET`         | `/api/user/audit-log/purpose`       | `public`  | `active MVP`   | -                               | `src/app/api/user/audit-log/purpose/route.ts`       |
 | `GET\|POST`   | `/api/user/consent`                 | `session` | `active MVP`   | legacy/compat markers in source | `src/app/api/user/consent/route.ts`                 |
 | `GET`         | `/api/user/consent/check`           | `session` | `active MVP`   | -                               | `src/app/api/user/consent/check/route.ts`           |
+| `GET`         | `/api/user/data-inventory`          | `session` | `active MVP`   | -                               | `src/app/api/user/data-inventory/route.ts`          |
 | `GET\|PUT`    | `/api/user/email`                   | `session` | `active MVP`   | -                               | `src/app/api/user/email/route.ts`                   |
 | `GET`         | `/api/user/export`                  | `session` | `active MVP`   | legacy/compat markers in source | `src/app/api/user/export/route.ts`                  |
 | `GET`         | `/api/user/me`                      | `session` | `active MVP`   | -                               | `src/app/api/user/me/route.ts`                      |

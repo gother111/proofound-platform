@@ -97,6 +97,7 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/user/audit-log/purpose',
   '/api/user/consent',
   '/api/user/consent/check',
+  '/api/user/data-inventory',
   '/api/user/email',
   '/api/user/export',
   '/api/user/me',
