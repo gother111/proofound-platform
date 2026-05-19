@@ -1610,3 +1610,10 @@ Non-fatal test noise:
 - Replaced launch callback examples with `https://proofound.io` for production and `<preview-app-url>` / `<staging-app-url>` for non-production targets.
 - Updated `scripts/test-veriff-config.js` so its fallback webhook instruction points to `https://proofound.io` instead of a generic placeholder domain.
 - Added launch-gate coverage preventing the active environment docs and Veriff config helper from reintroducing `yourdomain.com` callback examples.
+
+## Continuation - Organization API Public Directory Guard
+
+- Found active `GET /api/organizations` returned up to 1000 organizations without an auth check, making an active MVP API behave like a public organization directory.
+- Changed `GET /api/organizations` to require session auth and return only the signed-in user's active organizations for scoped work-email/org selection.
+- Updated the API reference generator so routes using `requireApiAuth` are classified as `session`; regenerated `docs/API_REFERENCE.md`, which now documents `/api/organizations`, `/api/organizations/[orgId]/assignments`, `/api/match/explain/[matchId]`, and `/api/engagement-verifications/[id]` as session-scoped instead of public.
+- Added route and launch-gate coverage so organization list behavior and API reference auth tiers stay aligned with privacy-safe MVP behavior.

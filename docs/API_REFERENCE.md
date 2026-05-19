@@ -30,7 +30,7 @@ Canonical API documentation generated from the current App Router route handlers
 ## Coverage Summary
 
 - Total route handlers: **140**
-- Auth tier counts: `public=41`, `session=80`, `service=1`, `cron=10`, `internal=8`
+- Auth tier counts: `public=37`, `session=84`, `service=1`, `cron=10`, `internal=8`
 - Launch surface counts: `active MVP=108`, `internal launch ops=16`, `archived compatibility=16`
 - Family count: **31**
 
@@ -132,7 +132,7 @@ Canonical API documentation generated from the current App Router route handlers
 
 | Methods | Path                                 | Auth Tier | Launch Surface | Notes | Source                                               |
 | ------- | ------------------------------------ | --------- | -------------- | ----- | ---------------------------------------------------- |
-| `PATCH` | `/api/engagement-verifications/[id]` | `public`  | `active MVP`   | -     | `src/app/api/engagement-verifications/[id]/route.ts` |
+| `PATCH` | `/api/engagement-verifications/[id]` | `session` | `active MVP`   | -     | `src/app/api/engagement-verifications/[id]/route.ts` |
 
 ### expertise
 
@@ -197,7 +197,7 @@ Canonical API documentation generated from the current App Router route handlers
 | Methods             | Path                                  | Auth Tier | Launch Surface           | Notes                            | Source                                                |
 | ------------------- | ------------------------------------- | --------- | ------------------------ | -------------------------------- | ----------------------------------------------------- |
 | `POST`              | `/api/match/assignment`               | `public`  | `active MVP`             | -                                | `src/app/api/match/assignment/route.ts`               |
-| `GET`               | `/api/match/explain/[matchId]`        | `public`  | `active MVP`             | -                                | `src/app/api/match/explain/[matchId]/route.ts`        |
+| `GET`               | `/api/match/explain/[matchId]`        | `session` | `active MVP`             | -                                | `src/app/api/match/explain/[matchId]/route.ts`        |
 | `POST`              | `/api/match/gates`                    | `session` | `active MVP`             | -                                | `src/app/api/match/gates/route.ts`                    |
 | `GET\|POST\|DELETE` | `/api/match/hide`                     | `session` | `active MVP`             | compatibility handling in source | `src/app/api/match/hide/route.ts`                     |
 | `GET\|POST`         | `/api/match/interest`                 | `public`  | `active MVP`             | -                                | `src/app/api/match/interest/route.ts`                 |
@@ -238,9 +238,9 @@ Canonical API documentation generated from the current App Router route handlers
 
 | Methods     | Path                                                      | Auth Tier | Launch Surface        | Notes                            | Source                                                                    |
 | ----------- | --------------------------------------------------------- | --------- | --------------------- | -------------------------------- | ------------------------------------------------------------------------- |
-| `GET`       | `/api/organizations`                                      | `public`  | `active MVP`          | compatibility handling in source | `src/app/api/organizations/route.ts`                                      |
+| `GET`       | `/api/organizations`                                      | `session` | `active MVP`          | compatibility handling in source | `src/app/api/organizations/route.ts`                                      |
 | `GET\|PUT`  | `/api/organizations/[orgId]`                              | `session` | `active MVP`          | -                                | `src/app/api/organizations/[orgId]/route.ts`                              |
-| `GET`       | `/api/organizations/[orgId]/assignments`                  | `public`  | `active MVP`          | -                                | `src/app/api/organizations/[orgId]/assignments/route.ts`                  |
+| `GET`       | `/api/organizations/[orgId]/assignments`                  | `session` | `active MVP`          | -                                | `src/app/api/organizations/[orgId]/assignments/route.ts`                  |
 | `GET`       | `/api/organizations/[orgId]/audit/export`                 | `session` | `internal launch ops` | -                                | `src/app/api/organizations/[orgId]/audit/export/route.ts`                 |
 | `GET\|POST` | `/api/organizations/[orgId]/candidate-invites`            | `session` | `active MVP`          | -                                | `src/app/api/organizations/[orgId]/candidate-invites/route.ts`            |
 | `PATCH`     | `/api/organizations/[orgId]/candidate-invites/[inviteId]` | `session` | `active MVP`          | -                                | `src/app/api/organizations/[orgId]/candidate-invites/[inviteId]/route.ts` |

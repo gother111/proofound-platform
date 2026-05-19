@@ -1,28 +1,45 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { GET } from '@/app/api/organizations/route';
-import { createClient } from '@/lib/supabase/server';
+import { requireApiAuth } from '@/lib/api/auth';
 
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(),
+vi.mock('@/lib/api/auth', () => ({
+  requireApiAuth: vi.fn(),
 }));
 
 function mockOrganizationsResponse(
   rows: Array<{ id: string; display_name: string | null; slug: string }>,
   error: { message: string } | null = null
 ) {
-  const limit = vi.fn().mockResolvedValue({ data: rows, error });
-  const order = vi.fn().mockReturnValue({ limit });
-  const select = vi.fn().mockReturnValue({ order });
+  const limit = vi.fn().mockResolvedValue({
+    data: rows.map((org) => ({ org })),
+    error,
+  });
+  const eqState = vi.fn().mockReturnValue({ limit });
+  const eqUser = vi.fn().mockReturnValue({ eq: eqState });
+  const select = vi.fn().mockReturnValue({ eq: eqUser });
   const from = vi.fn().mockReturnValue({ select });
 
-  vi.mocked(createClient).mockResolvedValue({ from } as any);
+  vi.mocked(requireApiAuth).mockResolvedValue({
+    user: { id: 'user-1' },
+    supabase: { from },
+  } as any);
 }
 
 describe('GET /api/organizations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('returns 401 when caller is unauthenticated', async () => {
+    vi.mocked(requireApiAuth).mockResolvedValue(
+      NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) as any
+    );
+
+    const response = await GET(new NextRequest('http://localhost/api/organizations'));
+
+    expect(response.status).toBe(401);
   });
 
   it('returns normalized camelCase displayName while keeping display_name compatibility', async () => {
@@ -57,5 +74,18 @@ describe('GET /api/organizations', () => {
         display_name: null,
       },
     ]);
+  });
+
+  it('sorts active member organizations without exposing a global organization directory', async () => {
+    mockOrganizationsResponse([
+      { id: 'org-b', display_name: 'Zebra Works', slug: 'zebra-works' },
+      { id: 'org-a', display_name: 'Acme Impact', slug: 'acme-impact' },
+    ]);
+
+    const response = await GET(new NextRequest('http://localhost/api/organizations'));
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.organizations.map((org: { id: string }) => org.id)).toEqual(['org-a', 'org-b']);
   });
 });

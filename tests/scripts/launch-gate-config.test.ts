@@ -369,6 +369,24 @@ describe('launch gate package configuration', () => {
     }
   });
 
+  it('keeps organization APIs documented as session-scoped, not public directory surfaces', () => {
+    const apiReference = fs.readFileSync(path.join(repoRoot, 'docs/API_REFERENCE.md'), 'utf8');
+    const apiReferenceGenerator = fs.readFileSync(
+      path.join(repoRoot, 'scripts/generate-api-reference.mjs'),
+      'utf8'
+    );
+    const organizationRoutes = ['/api/organizations', '/api/organizations/[orgId]/assignments'];
+
+    expect(apiReferenceGenerator).toContain('requireApiAuth');
+
+    for (const route of organizationRoutes) {
+      const routeLine = apiReference.split('\n').find((line) => line.includes(`\`${route}\``));
+
+      expect(routeLine).toContain('| `session` |');
+      expect(routeLine).not.toContain('| `public` |');
+    }
+  });
+
   it('keeps active API reference notes distinct from archived legacy markers', () => {
     const activeLegacyRows = fs
       .readFileSync(path.join(repoRoot, 'docs/API_REFERENCE.md'), 'utf8')

@@ -76,7 +76,7 @@ function classifyTier(route, source) {
   if (serviceSignals.test(source)) return 'service';
 
   const sessionSignals =
-    /(requireSession|requireApiAuthContext|getUser\(|auth\.getUser\(|createRouteHandlerClient|csrf|x-csrf-token|assertAuthenticated)/i;
+    /(requireSession|requireApiAuth|requireApiAuthContext|getUser\(|auth\.getUser\(|createRouteHandlerClient|csrf|x-csrf-token|assertAuthenticated)/i;
   if (sessionSignals.test(source)) return 'session';
 
   return 'public';
