@@ -11,6 +11,14 @@ Authority: locked MVP stack only
 > - For narrow pilot-readiness evidence, prefer `project/changes/entries/2026-04-09__mvp-launch-audit-execution.md` or newer current evidence. That April 9 execution retired the March build/runtime, route breadth, launch smoke, and strict org corridor blockers unless those blockers are reproduced again in a fresh run.
 > - For release-clean status, use `audit/full-scale-audit-2026-04-16.md` or newer release evidence; April 16 found the repo structurally healthy but not release-clean.
 
+> Current evidence index added 2026-05-19:
+>
+> - Treat this March matrix as historical evidence only. The current surface matrix, findings, fixes, evidence, and remaining risks live in `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`.
+> - The March `no non-MVP launch surface` `FAIL`, route-count blocker, stale-smoke claims, and local `/_document` blocker are not current truth unless reproduced by a fresh run.
+> - Current verification truth is in `docs/verification-checklist.md`: the 2026-05-19 sweep marks proof-first onboarding, Proof Pack canonicality, Proof Pack anchor integrity, bounded verification, blind review, consented reveal, assignment lifecycle, full org corridor, route-surface scope, and export/delete/auditability as `PASS`.
+> - Current Phase 4 truth is partial: local full launch smoke and local monitor evidence passed, but production-candidate backup, restore, and go/no-go proof remain open.
+> - Current non-blocking watch items are separate from launch gates: assignment publish/list latency requires live or staging budget proof, and any future stale-doc cleanup must point at current May 19 evidence before reusing March conclusions.
+
 ## Purpose
 
 This matrix refreshes current-state launch truth from fresh repo evidence. Older audits remain historical evidence only and do not receive current-block credit.

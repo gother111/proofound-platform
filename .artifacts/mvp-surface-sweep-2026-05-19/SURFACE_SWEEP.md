@@ -769,6 +769,18 @@ Commands run with Node 25 path:
 - `git diff --check` - passed after the Phase 5 public-copy/crawl-surface update.
 - `npm run lint` - passed after the Phase 5 public-copy/crawl-surface update.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the Phase 5 public-copy/crawl-surface update.
+- Updated `.artifacts/launch-readiness-summary.md` and `.artifacts/proofound-current-state-reality-check.md` with 2026-05-19 evidence-index banners so the March findings remain historical and point to this sweep artifact, current route-surface truth, local smoke/monitor evidence, and still-open production-candidate gates.
+- Updated `docs/backlog/phase-exit-checklist.md` so Phase 1, Phase 2, current Phase 3 functional checks, current local Phase 4 smoke/monitor/docs checks, and Phase 5 packaging checks reflect the 2026-05-19 evidence. Backup, restore, final go/no-go, and assignment latency proof remain intentionally open.
+- Updated `docs/backlog/phase-5-launch-packaging.md` so `P5-2` and `P5-3` record the current local evidence index and separate launch blockers from non-blocking watch items.
+- Browser plugin rechecked `http://localhost:33180/portfolio/demo` in the in-app browser after the Phase 5 evidence-index refresh. The page title was `Public Page Unavailable | Proofound`, visible copy said `Public Page unavailable` and `This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.`, console warnings/errors were `0`, and the saved Browser evidence is `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/portfolio-demo-unavailable-browser-evidence.json`. Browser screenshot capture timed out twice at `Page.captureScreenshot`, so no screenshot file was produced for this pass.
+- `npm run test:e2e:landing:visual` initially failed in the sandbox because the Playwright web server could not bind `0.0.0.0:33100`; the rerun outside the sandbox passed, 2 tests.
+- `npm run test:e2e:landing` initially failed in the sandbox for the same port-bind reason. The first outside-sandbox rerun also collided with the parallel visual run, then exposed stale expectations for `Request a pilot` as a button, `Create your proof portfolio` as a button, and the retired mobile `Universal compatibility` heading. Updated `e2e/landing-page.spec.ts` to assert current link semantics and `Assignment-fit context`.
+- `npm run test:e2e:landing` passed after the stale expectation fix, 11 tests.
+- `npm run docs:freshness` - passed after the Phase 5 evidence-index and stale landing E2E expectation update.
+- `git diff --check` - passed after the Phase 5 evidence-index and stale landing E2E expectation update.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/api/launch-page-inventory.test.ts tests/api/launch-surface-inventory.test.ts tests/lib/launch-operations-contract.test.ts` - passed, 4 files / 36 tests, after the Phase 5 evidence-index update.
+- `npm run lint` - passed after the stale landing E2E expectation update.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the stale landing E2E expectation update.
 
 Non-fatal test noise:
 
@@ -786,6 +798,6 @@ Non-fatal test noise:
 - Authenticated Browser coverage now includes representative individual, organization, admin/internal, public org, 403, and mobile surfaces. Full strict Playwright evidence now covers the interactive org corridor, but Browser itself did not click through every modal/control in proof upload, reveal consent, interview scheduling/reschedule, decision recording, or engagement verification.
 - Production deployment, live auth, billing, infra, and permission behavior were not changed or smoke-tested.
 - Phase 4 is still not complete: backup, restore, and go/no-go evidence were not rerun in this slice, and the smoke/monitor pass targeted local `localhost:33180`, not a production-candidate deployment.
-- Phase 5 is still not complete: public copy/crawl-surface alignment is partially current, but final phase-status packaging, evidence index publication, and non-blocking watch-item separation remain open until Phase 4 is complete.
+- Phase 5 local packaging is current as of the 2026-05-19 sweep: public copy/crawl-surface alignment, evidence indexing, and watch-item separation have current local evidence. Launch readiness is still not complete because Phase 4 production-candidate backup, restore, and final go/no-go evidence remain open.
 - The local in-app Browser public demo check did not prove seeded public portfolio availability on port `33180`; it proved the current unavailable fallback is safe and non-leaky in the visible page state.
 - No current docs freshness warnings remain after registering the existing orphan documentation/artifact files.

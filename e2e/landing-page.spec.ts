@@ -9,7 +9,7 @@ test.describe('Landing Page', () => {
     const header = page.getByTestId('landing-header');
     await expect(header).toBeVisible();
     await expect(header.getByText(/How it works/i)).toBeVisible();
-    await expect(header.getByRole('button', { name: /Request a pilot/i })).toBeVisible();
+    await expect(header.getByRole('link', { name: /Request a pilot/i })).toBeVisible();
 
     const heading = page.getByRole('heading', { name: /Proof behind the claim/i, level: 1 });
     await expect(heading).toBeVisible();
@@ -17,9 +17,9 @@ test.describe('Landing Page', () => {
     const story = page.getByTestId('landing-story-section');
     await expect(story).toBeVisible();
 
-    await expect(page.getByRole('button', { name: /Request a pilot/i }).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /Request a pilot/i }).first()).toBeVisible();
     await expect(
-      page.getByRole('button', { name: /Create your proof portfolio/i }).first()
+      page.getByRole('link', { name: /Create your proof portfolio/i }).first()
     ).toBeVisible();
   });
 
@@ -111,7 +111,7 @@ test.describe('Landing Page', () => {
 
     await page.goto('/');
     await page
-      .getByRole('button', { name: /Request a pilot/i })
+      .getByRole('link', { name: /Request a pilot/i })
       .first()
       .click();
     await expect(page.getByTestId('signup-form-shell')).toBeVisible();
@@ -121,7 +121,7 @@ test.describe('Landing Page', () => {
 
     await page.goto('/');
     await page
-      .getByRole('button', { name: /Create your proof portfolio/i })
+      .getByRole('link', { name: /Create your proof portfolio/i })
       .first()
       .click();
     await expect(page.getByTestId('signup-form-shell')).toBeVisible();
@@ -189,7 +189,7 @@ test.describe('Landing Page', () => {
       mobileStory.getByRole('heading', { name: /Real outcomes, not bullet points/i })
     ).toBeVisible();
     await expect(
-      mobileStory.getByRole('heading', { name: /Universal compatibility/i }).first()
+      mobileStory.getByRole('heading', { name: /Assignment-fit context/i }).first()
     ).toBeVisible();
   });
 });

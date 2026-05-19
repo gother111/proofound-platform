@@ -11,6 +11,14 @@ Verdict: `NOT READY`
 > - For narrow pilot-readiness evidence, prefer `project/changes/entries/2026-04-09__mvp-launch-audit-execution.md` or newer current evidence. That April 9 execution retired the March build/runtime, route breadth, launch smoke, and strict org corridor blockers unless those blockers are reproduced again in a fresh run.
 > - For release-clean status, use `audit/full-scale-audit-2026-04-16.md` or newer release evidence; April 16 found the repo structurally healthy but not release-clean.
 
+> Current evidence index added 2026-05-19:
+>
+> - Treat this March memo as historical evidence only. The current MVP sweep artifact is `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`.
+> - Current route-surface truth is no longer the March `18` disallowed-route blocker. The 2026-05-19 route inventory passed and classifies active MVP, internal launch-ops, and archived compatibility routes explicitly.
+> - Current local launch smoke evidence is `.artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke-full.json`; the local monitor rerun against that artifact passed `10/10` with persistence disabled.
+> - Current launch blockers are narrower than this March memo: production-candidate backup checkpoint, restore rehearsal, and final go/no-go evidence have not been rerun against the intended launch target. The May 19 smoke and monitor proof is local `localhost:33180` evidence, not production-candidate sign-off.
+> - Non-blocking watch items should be read separately from launch gates: assignment publish/list latency still needs live or staging budget proof, and historical registry cleanup should not reopen retired March route blockers unless fresh evidence reproduces them.
+
 ## Current Conclusion
 
 Fresh current-state evidence from `2026-03-25` does not support launch.
