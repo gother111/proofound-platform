@@ -1244,6 +1244,11 @@ describe('launch gate package configuration', () => {
     expect(envDocs).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
     expect(envDocs).toContain('Required Vars When `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`');
     expect(envDocs).toContain('Manual-link interview scheduling must still work');
+    expect(envDocs).toContain('src/lib/expertise/python-cv-extract-client.ts');
+    expect(envDocs).toContain(
+      'The retired `/api/expertise/cv-import/wizard-*` proxy route family remains archived'
+    );
+    expect(envDocs).not.toContain('src/lib/expertise/python-cv-proxy.ts');
     expect(envDocs).not.toContain('**Required Vars**:\n\n- `GOOGLE_CLIENT_ID`');
     expect(envDocs).not.toContain('Make provider flows launch-blocking with real tokens');
 

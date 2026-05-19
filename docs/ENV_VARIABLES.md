@@ -441,7 +441,7 @@ PYTHON_INTERNAL_SERVICE_SECRET=your_strong_internal_secret_here
 
 **Used By**:
 
-- `src/lib/expertise/python-cv-proxy.ts`
+- `src/lib/expertise/python-cv-extract-client.ts`
 - `src/lib/python-internal/client.ts`
 - `api/python/cv_import.py`
 
@@ -460,7 +460,7 @@ PYTHON_INTERNAL_SERVICE_SECRET=your_strong_internal_secret_here
 
 ### PYTHON_CV_IMPORT_BASE_URL
 
-**Purpose**: Optional base URL for a dedicated Python document-intelligence deployment
+**Purpose**: Optional base URL for a dedicated Python document-intelligence deployment used by approved extract-only proof flows.
 
 **Format**:
 
@@ -470,13 +470,14 @@ PYTHON_CV_IMPORT_BASE_URL=https://python-internal.proofound.internal
 
 **Used By**:
 
-- `src/lib/expertise/python-cv-proxy.ts`
+- `src/lib/expertise/python-cv-extract-client.ts`
 - `src/lib/python-internal/client.ts`
 
 **Behavior**:
 
-- If set, TypeScript routes call the Python service at this base URL instead of looping back through the current Next.js deployment.
+- If set, approved server-side document extraction flows call the Python service at this base URL instead of looping back through the current Next.js deployment.
 - Keep public clients on the Next.js routes. This variable is for server-to-server traffic only.
+- The retired `/api/expertise/cv-import/wizard-*` proxy route family remains archived and is not launch evidence.
 
 **Without This**:
 
