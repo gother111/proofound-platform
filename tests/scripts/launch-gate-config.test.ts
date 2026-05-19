@@ -9,6 +9,18 @@ function readJson<T>(relativePath: string): T {
   return JSON.parse(fs.readFileSync(path.join(repoRoot, relativePath), 'utf8')) as T;
 }
 
+function listTestFiles(dir: string): string[] {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === 'archive') return [];
+      return listTestFiles(fullPath);
+    }
+    if (!/\.(test|spec)\.[cm]?[jt]sx?$/.test(entry.name)) return [];
+    return [fullPath];
+  });
+}
+
 describe('launch gate package configuration', () => {
   it('pins the clean-checkout runtime and package manager', () => {
     const packageJson = readJson<{
@@ -100,5 +112,15 @@ describe('launch gate package configuration', () => {
     expect(vitestConfig).toContain("'**/tests/ui/organization-settings-integrations.test.tsx'");
     expect(archivedConfig).toContain('src/archive/**/*.test.ts');
     expect(archivedConfig).toContain('tests/api/messages-legacy-route.test.ts');
+  });
+
+  it('keeps active tests from importing archived implementation modules', () => {
+    const archivedAliasPrefix = '@' + '/archive/';
+    const activeTestFiles = listTestFiles(path.join(repoRoot, 'tests'));
+    const offenders = activeTestFiles
+      .filter((file) => fs.readFileSync(file, 'utf8').includes(archivedAliasPrefix))
+      .map((file) => path.relative(repoRoot, file));
+
+    expect(offenders).toEqual([]);
   });
 });

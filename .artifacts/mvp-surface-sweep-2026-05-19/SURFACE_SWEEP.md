@@ -143,6 +143,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Updated the default Vitest excludes so `tests/archive/**` cannot accidentally re-enter the default release signal.
 - Active launch coverage remains in `tests/api/archived-api-handlers-route.test.ts`, `src/lib/__tests__/middleware-launch-archive.test.ts`, `tests/api/launch-surface-inventory.test.ts`, and `src/lib/launch/__tests__/surface-policy.test.ts`.
 
+17. Active tests still imported archived mobile/admin implementation modules.
+
+- Found active tests importing route handlers from `@/archive/non_launch_api/...`, including old `/api/mobile/v1/*` routes and archived admin CV import spend analytics.
+- Moved the mobile route suites to `tests/archive/non_mvp_mobile_api/` with `.archived` filenames and a README that explains the route family is not part of the web MVP launch surface.
+- Moved the archived CV import spend analytics route test to `tests/archive/non_mvp_admin_suite/` and updated that archive README.
+- Added a launch-gate config test that walks active `tests/` files outside `tests/archive/` and fails if any active test imports `@/archive/`.
+- Registered `tests/archive/non_mvp_mobile_api/README.md` in `docs/DOCS_REGISTRY.md`.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -246,7 +254,10 @@ Commands run with Node 25 path:
 - `npm run lint` - passed.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.
 - `npm run docs:freshness` - passed.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/api/launch-surface-inventory.test.ts` - passed, 2 files / 9 tests.
+- `npm run lint` - passed.
 - `rg` active-source analytics sweep after cleanup: no active UI/source fetches to `/api/analytics/**` remain outside route policy and middleware/archive tests.
+- `rg` active-test archived-import sweep after mobile/admin cleanup: active tests no longer import `@/archive/` or `src/archive` implementation modules outside launch-gate config checks.
 - `rg` active-test sweep after archiving: active tests no longer import `ExpertiseAtlasClient`, old CV/JD import wizard components, broad Add Skill drawer flows, or archived L4 card/widget tests outside `tests/archive/`.
 - `rg` active-test sweep after admin archiving: active tests outside `src/archive` and `tests/archive` no longer import archived admin users/fairness route modules, `OrganizationsTable`, `generateFairnessNoteResult`, or the retired `calculateFairnessGaps` broad admin helper.
 - Current-doc stale route sweep no longer finds active non-archive assertions that `/app/i/expertise`, `/app/i/projects`, legacy CV wizard routes, contracts/projects modules, or Expertise Atlas UI are launch surfaces in the patched README, retained setup, accessibility, mobile parity, and QA summary docs.
