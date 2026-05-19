@@ -128,9 +128,9 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] `npm run test:e2e:providers:strict`
 - [ ] `npm run test:privacy`
 - [ ] `npm run test:privacy:extended`
-- [ ] `BASE_URL=http://localhost:3000 npm run perf:budgets`
-- [ ] `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
-- [ ] `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+- [ ] `BASE_URL=<production-candidate-url> npm run perf:budgets`
+- [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
+- [ ] `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 - [ ] Local `next start` is stable after the build.
 - [ ] Local `/api/health` responds with `status:"ok"` and no diagnostics.
 - [ ] Local `/api/monitoring/launch-status` responds healthy.
@@ -221,7 +221,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 
 ## 9. Launch Evidence Bundle And Signoff
 
-- [ ] `BASE_URL=http://localhost:3000 npm run launch:validate`
+- [ ] `BASE_URL=<production-candidate-url> npm run launch:validate`
 - [ ] `npm run launch:checklist`
 - [ ] A fresh dated launch-validation directory exists for the intended release review.
 - [ ] The fresh bundle includes:
@@ -272,10 +272,10 @@ npm run test:privacy
 npm run test:privacy:extended
 npm run db:drift-check
 npm run db:audit:migrations
-BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch
-BASE_URL=http://localhost:3000 npm run perf:budgets
-BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go
-BASE_URL=http://localhost:3000 npm run launch:validate
+BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch
+BASE_URL=<production-candidate-url> npm run perf:budgets
+BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go
+BASE_URL=<production-candidate-url> npm run launch:validate
 npm run launch:checklist
 ```
 

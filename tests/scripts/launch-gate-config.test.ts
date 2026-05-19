@@ -1022,6 +1022,8 @@ describe('launch gate package configuration', () => {
 
     expect(launchMasterChecklist).toContain('Last Verified: `2026-05-19`');
     expect(launchMasterChecklist).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
+    expect(launchMasterChecklist).toContain('BASE_URL=<production-candidate-url>');
+    expect(launchMasterChecklist).not.toContain('BASE_URL=http://localhost:3000');
     expect(launchMasterChecklist).toContain(
       'valid only for connected-provider strict launch-gate runs'
     );

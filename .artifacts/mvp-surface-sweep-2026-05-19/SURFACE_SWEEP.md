@@ -865,7 +865,7 @@ Non-fatal test noise:
 - This pass fixed and verified a high-signal launch slice, not every authenticated data state in the product.
 - Authenticated Browser coverage now includes representative individual, organization, admin/internal, public org, 403, and mobile surfaces. Full strict Playwright evidence now covers the interactive org corridor, but Browser itself did not click through every modal/control in proof upload, reveal consent, interview scheduling/reschedule, decision recording, or engagement verification.
 - Production deployment, live auth, billing, infra, and permission behavior were not changed or smoke-tested.
-- Phase 4 is still not complete: backup, restore, and go/no-go evidence were not rerun in this slice, and the smoke/monitor pass targeted local `localhost:33180`, not a production-candidate deployment.
+- Phase 4 is still not complete: local full launch smoke has fresh passing evidence from `localhost:33183`, but production-candidate backup, isolated restore, protected launch-status/perf-status, monitor, and final go/no-go evidence remain open.
 - Phase 5 local packaging is current as of the 2026-05-19 sweep: public copy/crawl-surface alignment, evidence indexing, and watch-item separation have current local evidence. Launch readiness is still not complete because Phase 4 production-candidate backup, restore, and final go/no-go evidence remain open.
 - The local in-app Browser public demo check did not prove seeded public portfolio availability on port `33180`; it proved the current unavailable fallback is safe and non-leaky in the visible page state.
 - No current docs freshness warnings remain after registering the existing orphan documentation/artifact files.
