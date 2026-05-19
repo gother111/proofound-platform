@@ -115,7 +115,7 @@ Do not make these launch-blocking by default:
 - public directory or marketplace metrics
 - old Expertise Atlas dashboard behavior
 - LinkedIn verification as a public trust signal
-- native Zoom/Google provider success when manual meeting links still work
+- native video-provider success when manual meeting links still work
 - broad fairness analytics dashboards
 - TTSC/TTFQI/PAC business metric targets as hard production availability checks
 

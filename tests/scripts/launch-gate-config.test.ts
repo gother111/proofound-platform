@@ -2444,6 +2444,19 @@ describe('launch gate package configuration', () => {
     expect(
       fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_integrations/preserved/lib/video'))
     ).toBe(true);
+
+    const activeLaunchText = [
+      ...listFiles(path.join(repoRoot, 'src')),
+      ...listFiles(path.join(repoRoot, 'docs')),
+      ...listFiles(path.join(repoRoot, 'scripts')),
+    ]
+      .filter((file) => !file.includes(`${path.sep}archive${path.sep}`))
+      .filter((file) => /\.(md|mjs|ts|tsx)$/.test(file))
+      .map((file) => fs.readFileSync(file, 'utf8'))
+      .join('\n');
+
+    expect(activeLaunchText).not.toContain('Zoom or Google Meet');
+    expect(activeLaunchText).not.toContain('native Zoom/Google provider success');
   });
 
   it('keeps active interview fixtures on launch-safe meeting links', () => {

@@ -5,7 +5,7 @@
  * Implements PRD Gap 1: Cancel scheduled interview
  *
  * Features:
- * - Cancels meeting in Zoom or Google Meet
+ * - Cancels launch-scheduled interviews using Google Meet or manual meeting links
  * - Updates interview status
  * - Notifies all participants
  */

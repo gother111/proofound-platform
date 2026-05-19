@@ -1544,3 +1544,10 @@ Non-fatal test noise:
 - Found the regenerated `Retired Stale Claims` section was treating indented explanatory bullets as standalone stale claims. That made an old route-count explanation (`138` API handlers / `50` pages) appear beside current route evidence that already says `140` API handlers / `51` pages.
 - Fixed the final checklist parser so explicit stale-claim sections collect only top-level bullets. The generated checklist now lists the stale claims themselves without carrying stale explanatory details forward.
 - Added focused regression coverage in `src/lib/launch/__tests__/final-launch-checklist.test.ts` and reran the final checklist so `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md/json` now reflect the parser fix and current HEAD.
+
+## Continuation - Interview Provider Copy Guard
+
+- Found active interview cancellation API comments still described cancelling meetings in `Zoom or Google Meet`, even though native Zoom scheduling is archived for launch and rejected by active schedule actions/routes.
+- Updated the cancellation route comment to describe the launch posture as Google Meet or manual meeting links.
+- Updated alert guidance so native video-provider success is not launch-critical when manual meeting links still work, without pairing Zoom and Google as launch-native providers.
+- Added launch-gate coverage preventing active `src/`, `docs/`, or `scripts/` files from reintroducing `Zoom or Google Meet` or `native Zoom/Google provider success` language outside archive/history.
