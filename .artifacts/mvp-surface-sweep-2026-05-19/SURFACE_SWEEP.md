@@ -1060,3 +1060,10 @@ Non-fatal test noise:
 - Preserved the current `PII_HASH_SALT` requirement without printing or embedding secrets, and pointed production-candidate work back to drift, migration audit, repo-owned migrate, backup/checkpoint, and isolated restore evidence.
 - Added payload guardrails for active lifecycle analytics: no raw IP/user-agent, private proof content, raw evidence, hidden identity details, signed URLs, filenames, admin notes, internal queue IDs, or diagnostic dumps.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so analytics setup stays privacy-safe, no-secret, no-`db:push`, and aligned with archived route-surface policy.
+
+## Continuation - Alert Configuration Launch-Ops Refresh
+
+- Found `docs/alert-configuration.md` still verified on 2026-02-12 and oriented around older broad production monitoring, TTSC/TTFQI/PAC metric alerts, PagerDuty/team-channel placeholders, and a test route for triggering errors.
+- Rewrote it as launch-safe alert configuration for the locked MVP corridor: public availability, protected launch-status/perf-status, `/api/assignments` latency evidence, decision-reminder cron, cron-job.org observability jobs, active workflow failures, and internal queue risks.
+- Added explicit no-leak alert payload rules and removed launch-blocking defaults for broad analytics endpoints, public directories, old Expertise Atlas behavior, LinkedIn trust, native meeting-provider success, fairness dashboards, and broad business metric targets.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so alert configuration stays tied to current launch-ops evidence instead of old broad monitoring theater.

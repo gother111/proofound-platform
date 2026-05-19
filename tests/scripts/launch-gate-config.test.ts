@@ -688,6 +688,33 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps alert configuration scoped to launch-safe MVP operations', () => {
+    const alertConfig = fs.readFileSync(path.join(repoRoot, 'docs/alert-configuration.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(alertConfig).toContain('Last Verified: `2026-05-19`');
+    expect(alertConfig).toContain('/api/monitoring/launch-status');
+    expect(alertConfig).toContain('/api/monitoring/perf-status');
+    expect(alertConfig).toContain('/api/assignments` latency evidence');
+    expect(alertConfig).toContain('/api/cron/decision-reminders');
+    expect(alertConfig).toContain('/api/cron/health-check');
+    expect(alertConfig).toContain('/api/cron/performance-check');
+    expect(alertConfig).toContain('/api/cron/send-deletion-reminders');
+    expect(alertConfig).toContain('Archived standalone deletion cron routes are not active');
+    expect(alertConfig).toContain('manual meeting link default');
+    expect(alertConfig).toContain('private proof content');
+    expect(alertConfig).toContain('Do not make these launch-blocking by default');
+    expect(alertConfig).not.toContain('TTSC Exceeds Target');
+    expect(alertConfig).not.toContain('TTFQI Exceeds Target');
+    expect(alertConfig).not.toContain('Low Proof Fit Lift');
+    expect(alertConfig).not.toContain('/api/test/trigger-error');
+    expect(alertConfig).not.toContain('PagerDuty');
+    expect(alertConfig).not.toContain('team@proofound.io');
+    expect(docsRegistry).toContain(
+      '| `docs/alert-configuration.md`                                                                           | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps manual testing docs aligned with the active MVP route corridor', () => {
     const manualChecklist = fs.readFileSync(
       path.join(repoRoot, 'MANUAL_TESTING_CHECKLIST.md'),
