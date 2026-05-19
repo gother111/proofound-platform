@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-25`
+> Last Verified: `2026-05-19`
 
 # Phase Exit Checklist
 
@@ -7,12 +7,12 @@ Use this checklist together with [`../verification-checklist.md`](../verificatio
 
 ## Phase 0 exit
 
-- [ ] Route counts are reconciled to the later 2026-03-25 artifacts, and the earlier same-day `149 / 117` snapshot is explicitly marked stale wherever Phase 0 work records current truth.
-- [ ] `npm run build`
-- [ ] `npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts src/app/api/monitoring/__tests__/launch-status-route.test.ts`
-- [ ] `BASE_URL=https://proofound.io npm run test:launch:smoke`
-- [ ] `npm run monitor:launch`
-- [ ] [`../verification-checklist.md`](../verification-checklist.md) row `no non-MVP launch surface` is `PASS`.
+- [x] Route counts are reconciled to the 2026-05-19 route-policy baseline, and earlier March `149 / 117` and `138 / 106` counts are historical only.
+- [x] `npm run test:launch:routes`
+- [x] [`../verification-checklist.md`](../verification-checklist.md) row `no non-MVP launch surface` is `PASS`.
+- [ ] `npm run build` if code that can affect compilation changed after the latest build evidence.
+- [ ] `BASE_URL=https://proofound.io npm run test:launch:smoke` before a production launch candidate.
+- [ ] `npm run monitor:launch` before a production launch candidate.
 
 ## Phase 1 exit
 

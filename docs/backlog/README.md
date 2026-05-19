@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-25`
+> Last Verified: `2026-05-19`
 
 # Proofound 0-5 Execution Backlog
 
@@ -27,8 +27,10 @@ Treat [`../../audit/prioritized-roadmap.md`](../../audit/prioritized-roadmap.md)
 
 ## Current phase-status summary
 
-- Current phase being executed: `Phase 0`.
-- Current top blocker: route breadth only. The later 2026-03-25 evidence in [`../../.artifacts/proofound-route-inventory.md`](../../.artifacts/proofound-route-inventory.md) and [`../../.artifacts/proofound-current-state-reality-check.md`](../../.artifacts/proofound-current-state-reality-check.md) should be treated as canonical over the earlier same-day snapshot in [`../../.artifacts/proofound-implementation-status-snapshot.md`](../../.artifacts/proofound-implementation-status-snapshot.md).
+- Current phase being executed: post-`Phase 0` launch polish and evidence cleanup.
+- Current top blocker: no active blocker is tracked in this backlog. The 2026-05-19 surface sweep, route inventory reruns, and verification checklist now supersede the March route-breadth blocker.
+- Current route-surface truth: [`../verification-checklist.md`](../verification-checklist.md) marks `no non-MVP launch surface` as `PASS` using `npm run test:launch:routes`. Source inventory currently reports 140 compiled API route handlers and 51 compiled pages; route policy classifies 110 APIs and 48 pages as active launch paths, 16 APIs and 3 pages as internal-only launch ops, and 14 API handlers as archived compatibility responses.
+- Historical route-count truth: the 2026-03-25 `149 / 117` and `138 / 106` route counts are retained only as historical March baselines. Do not use them as current implementation truth.
 - Completed before backlog execution:
   - `npm run lint`
   - `npm run typecheck`
@@ -39,12 +41,15 @@ Treat [`../../audit/prioritized-roadmap.md`](../../audit/prioritized-roadmap.md)
   - isolated and full strict org corridor reruns
   - landing and landing-visual suites
   - launch smoke refresh and live synthetic monitor refresh
+- Completed during the 2026-05-19 MVP sweep:
+  - `npm run test:launch:routes`
+  - Browser public individual and organization fixture checks with mock mode enabled
+  - route-policy, archived-handler, middleware archive, public portfolio, proof-first onboarding, and Proof Pack anchor evidence refreshes
 - Still blocked:
-  - `no non-MVP launch surface` remains `FAIL` in [`../verification-checklist.md`](../verification-checklist.md)
-  - route counts in the older 2026-03-25 implementation snapshot are stale and must not be mixed with the later route-inventory baseline
+  - none in this backlog. Treat any future blocker as fresh evidence only after rerunning the relevant checks.
 - Next recommended phase-gated action:
-  - `P0-1` freeze the canonical allowlist and stale-count disposition
-  - `P0-2` reduce the compiled surface against that allowlist
+  - continue post-Phase-0 launch polish against the locked MVP corridor
+  - keep stale docs/tests from re-promoting archived Expertise Atlas, Zen, broad marketplace, fairness analytics, or generic dashboard behavior into the launch signal
 
 ## Backlog index
 

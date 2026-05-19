@@ -158,9 +158,21 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Added focused route coverage in `tests/api/conversation-detail-routes.test.ts` to prove the cursor applies an older-than filter and preserves masked sender behavior.
 - Regenerated `docs/API_REFERENCE.md`; the active conversations messages row no longer carries a TODO note.
 
+19. Active backlog docs still treated the retired March route-breadth blocker as current.
+
+- Found `docs/backlog/README.md` and `docs/backlog/phase-0-scope-lock.md` still saying Phase 0 route breadth was active and launch-blocking, with `no non-MVP launch surface` still `FAIL`.
+- Updated both docs to `Last Verified: 2026-05-19`, retire the March `149 / 117` and `138 / 106` counts as historical only, and point current route-surface truth at `docs/verification-checklist.md`, `npm run test:launch:routes`, and this sweep artifact.
+- Updated `docs/backlog/phase-exit-checklist.md` so Phase 0 route-surface exit reflects the 2026-05-19 pass, while keeping production launch smoke and monitor checks as pre-launch candidate actions.
+- Updated `docs/DOCS_REGISTRY.md` for the refreshed backlog docs.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
+
+Latest check on 2026-05-19:
+
+- Browser plugin connection worked in Codex. The selected in-app tab was `http://127.0.0.1:33180/portfolio/demo`.
+- Browser screenshot and DOM inspection confirmed the route rendered `Public page unavailable`, with safe explanatory copy, `Return home` link `/`, and the privacy choices banner. No public profile data or private proof details were visible.
 
 Continuation check on 2026-05-19:
 
