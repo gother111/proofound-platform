@@ -1,6 +1,8 @@
 # PRD Acceptance Criteria Validation
 
-This document validates that all PRD Part 12 acceptance criteria are covered by the comprehensive browser tests.
+This reference is historical. It originally mapped a broader PRD to comprehensive browser tests, but it is not current launch evidence and must not override the locked MVP authority stack.
+
+Current launch proof lives in the strict MVP E2E suites, route inventory tests, API/UI focused tests, and `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`. Retired Expertise Atlas, Zen, broad matching, purpose, fairness, and legacy integration flows remain archived or post-MVP unless a newer locked source explicitly brings them back.
 
 ## Test Coverage Summary
 
@@ -19,8 +21,8 @@ This document validates that all PRD Part 12 acceptance criteria are covered by 
 
 - `e2e/strict/individual.strict.spec.ts`: proof-first individual corridor coverage
 - `e2e/strict/privacy.strict.spec.ts`: individual privacy visibility excludes retired purpose fields
-- `e2e/integration/end-to-end-flows.spec.ts`: proof-first matching explainer without purpose-fit scoring
-- `e2e/integration/end-to-end-flows.spec.ts`: proof/context → Matching integration
+- Focused matching, readiness, and route-policy tests cover proof/context matching without retired purpose-fit scoring.
+- Historical broad integration specs live under `e2e/archive/non_mvp_legacy_integration/`.
 
 #### F2 — Customizable Dashboard
 
@@ -33,46 +35,45 @@ This document validates that all PRD Part 12 acceptance criteria are covered by 
 
 - Covered in existing dashboard tests (not in comprehensive tests, but structure exists)
 
-#### F3 — Expertise Atlas (L1→L4 + properties & proofs)
+#### F3 — Retired Expertise Atlas (L1→L4 + properties & proofs)
 
 **PRD Criteria:**
 
-- [x] Add ≥10 L4 skills with properties (level, months, proof)
-- [x] CV paste → receive suggestions with "why it mapped"; accept/edit-in-place
-- [x] Profile reaches Activation when minimum threshold met (configurable)
+- [x] Historical only: old broad skill-management UI and CV wizard behavior were once mapped here.
+- [x] Current MVP replacement: skills are subordinate to context and Proof Packs, and `/app/i/expertise` is archived outside the launch corridor.
+- [x] Current CV path: Start from CV and proof-artifact extraction, when enabled, remain private scaffolding or beta proof assistance rather than reactivating the old wizard.
 
 **Test Coverage:**
 
-- `e2e/expertise/comprehensive-expertise.spec.ts`: L1-L4 navigation tests
-- `e2e/expertise/comprehensive-expertise.spec.ts`: Skill creation tests (manual, CV import)
-- `e2e/expertise/comprehensive-expertise.spec.ts`: Skill properties and proofs
-- `e2e/integration/end-to-end-flows.spec.ts`: Skills → Matching integration
+- `e2e/archive/non_mvp_expertise_atlas/comprehensive-expertise.archived.ts`: historical L1-L4 navigation, skill creation, and old proof UI behavior.
+- `e2e/cv-import-non-launch.spec.ts`: current hard gate proving `/app/i/expertise` stays unavailable and archived CV wizard APIs return launch-safe responses.
+- Active Proof Pack, profile, verification, and Start from CV tests cover the launch-approved proof-first replacements.
 
 #### F4 — Matching Hub (proof-first automated matching)
 
 **PRD Criteria:**
 
-- [x] Ranked shortlist with composite score and Why this match explainer
-- [x] Quick actions: Introduce / Pass / Snooze; near-threshold hints shown
-- [x] Fairness note generated per release when opt-in demographics exist
+- [x] Current MVP: organizations review proof-backed, privacy-safe matches with reason-code explanations.
+- [x] Current MVP: intro, reveal, interview, decision, hire/engage, and engagement verification stay inside the locked corridor.
+- [x] Historical/post-MVP: broad marketplace matching, snooze-style queue management, and fairness-note product surfaces are not launch evidence.
 
 **Test Coverage:**
 
-- `e2e/matching/comprehensive-matching.spec.ts`: Match generation tests
-- `e2e/matching/comprehensive-matching.spec.ts`: Match actions (introduce, pass, snooze)
-- `e2e/matching/comprehensive-matching.spec.ts`: Match explainer modal
-- `e2e/matching/comprehensive-matching.spec.ts`: Near-matches tests
+- `e2e/strict/org-corridor.strict.spec.ts`: strict organization corridor.
+- `npm run test:launch:workflow`: review, intro, reveal, interview, decision, hire/engage, and engagement verification route behavior.
+- `npm run test:launch:org-corridor`: organization match review and corridor contracts.
+- Historical broad matching specs live under `e2e/archive/non_mvp_matching_pac/`.
 
 #### F5 — Zen Hub
 
 **PRD Criteria:**
 
-- [x] Opt-in check-ins (1–5) + reflections; privacy banner shown on first use
-- [x] Well-Being data never used in ranking; export private journal (PDF) works
+- [x] Historical/post-MVP only. Zen/wellbeing surfaces are outside the locked launch corridor.
+- [x] Current MVP requirement is narrower: wellbeing data must not affect matching or launch review.
 
 **Test Coverage:**
 
-- Covered in separate Zen Hub test file (not in comprehensive tests per plan)
+- Current launch evidence comes from route-surface policy and absence from active launch navigation, not from a runnable Zen E2E suite.
 
 #### F6 — Visibility & Boundary Controls
 
@@ -95,8 +96,8 @@ This document validates that all PRD Part 12 acceptance criteria are covered by 
 
 **Test Coverage:**
 
-- `e2e/expertise/comprehensive-expertise.spec.ts`: Verification tests
-- `e2e/matching/comprehensive-matching.spec.ts`: Verification gates tests
+- Active verification route, status/options UI, privacy, and workflow tests cover bounded verification and pre-intro gates.
+- Historical Expertise Atlas verification UI tests live under archive and are not launch evidence.
 
 ### Organization Features
 
@@ -174,19 +175,18 @@ This document validates that all PRD Part 12 acceptance criteria are covered by 
 
 1. **Test Helpers:**
    - `e2e/helpers/matching-helpers.ts` - Matching test utilities
-   - `e2e/helpers/expertise-helpers.ts` - Expertise test utilities
+   - `e2e/archive/helpers/expertise-helpers.ts` - Archived Expertise Atlas test utilities
    - `e2e/helpers/profile-helpers.ts` - Profile test utilities
-   - `e2e/helpers/test-data-setup.ts` - Test data creation utilities
+   - `e2e/archive/helpers/test-data-setup.ts` - Archived UI-based test data creation utilities for retired expertise flows
 
 2. **Comprehensive Test Files:**
-   - `e2e/matching/comprehensive-matching.spec.ts` - All matching engine tests
-   - `e2e/expertise/comprehensive-expertise.spec.ts` - All expertise atlas tests
-   - `e2e/profile/comprehensive-profile.spec.ts` - All profile tests
-   - `e2e/integration/end-to-end-flows.spec.ts` - Integration tests
+   - `e2e/archive/non_mvp_matching_pac/comprehensive-matching.archived.ts` - Historical broad matching tests
+   - `e2e/archive/non_mvp_expertise_atlas/comprehensive-expertise.archived.ts` - Historical Expertise Atlas tests
+   - `e2e/archive/non_mvp_individual_purpose/comprehensive-profile.archived.ts` - Historical broad profile tests
+   - `e2e/archive/non_mvp_legacy_integration/end-to-end-flows.archived.ts` - Historical integration tests
 
 3. **Updated Existing Files:**
-   - `e2e/matching/match-explainer.spec.ts` - Enhanced with proof-first and rank tests
-   - `tests/e2e/prd-flows-individual.spec.ts` - Enhanced with comprehensive coverage
+   - Active launch coverage now lives in `e2e/strict/**`, focused `tests/api/**`, focused `tests/ui/**`, and launch route inventory tests.
 
 ## Coverage Gaps
 
@@ -219,30 +219,21 @@ This document validates that all PRD Part 12 acceptance criteria are covered by 
 ### Run All Comprehensive Tests
 
 ```bash
-# Matching tests
-npm run test:e2e -- e2e/matching/comprehensive-matching.spec.ts
-
-# Expertise tests
-npm run test:e2e -- e2e/expertise/comprehensive-expertise.spec.ts
-
-# Profile tests
-npm run test:e2e -- e2e/profile/comprehensive-profile.spec.ts
-
-# Integration tests
-npm run test:e2e -- e2e/integration/end-to-end-flows.spec.ts
+# Current strict launch corridors
+npm run test:e2e:org:strict
+npm run test:launch:routes
+npm run test:launch:workflow
+npm run test:launch:org-corridor
 ```
 
 ### Run Specific Test Suites
 
 ```bash
-# Retired purpose-fit scoring guardrails
-npm run test:e2e -- e2e/integration/end-to-end-flows.spec.ts --grep "purpose-fit"
+# Archived CV import hard gate
+npx playwright test e2e/cv-import-non-launch.spec.ts --project=chromium --reporter=line --workers=1
 
-# Rank transparency
-npm run test:e2e -- --grep "rank"
-
-# Skill creation
-npm run test:e2e -- --grep "skill creation"
+# Focused launch route policy
+npm run test:launch:routes
 ```
 
 ## Notes

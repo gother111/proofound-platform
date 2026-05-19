@@ -289,6 +289,13 @@ Archived Expertise UI test cleanup on 2026-05-19:
 - Adjacent route fix: `src/components/expertise/GapMap.tsx` no longer sends users to archived `/app/i/expertise`; its fallback action now routes to `/app/i/profile?profileView=full&tab=proof_packs` and uses proof-first button copy.
 - Evidence: active Proof Pack Assistant API/privacy tests still pass; archived-route and launch-gate tests pass; launch route inventory still passes; lint, typecheck, docs freshness, and `git diff --check` pass.
 
+Archived Expertise E2E helper cleanup on 2026-05-19:
+
+- Finding: retired Expertise Atlas Playwright helpers still lived in active `e2e/helpers` and routed setup through `/app/i/expertise`, while archived specs already imported them as `../helpers/...` from inside `e2e/archive/*`. The active `e2e/PRD_CRITERIA_VALIDATION.md` reference also still described old comprehensive Expertise Atlas, broad matching, Zen, and legacy integration suites as current browser-test coverage.
+- Fix: moved `expertise-helpers.ts` and `test-data-setup.ts` to `e2e/archive/helpers/`, added an archive README, and added a launch-gate assertion that active E2E helpers must not navigate to `/app/i/expertise`.
+- Docs cleanup: reframed `e2e/PRD_CRITERIA_VALIDATION.md` as historical/reference-only and pointed current launch evidence to strict E2E, focused workflow/org-corridor tests, route inventory, and the archived CV import hard gate.
+- Evidence: launch-gate, archived route, launch page inventory, route inventory, docs freshness, lint, typecheck, and `git diff --check` passed.
+
 ## Verification
 
 Commands run with Node 25 path:
@@ -346,6 +353,12 @@ Commands run with Node 25 path:
 - `npm run lint` - passed after the stale expertise UI test cleanup.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the stale expertise UI test cleanup.
 - `git diff --check` - passed after the stale expertise UI test cleanup.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/api/launch-page-inventory.test.ts tests/ui/archived-mvp-routes.test.ts` - passed, 3 files / 14 tests, after moving retired Expertise E2E helpers under archive.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after moving retired Expertise E2E helpers under archive.
+- `npm run docs:freshness` - passed with no findings after reframing `e2e/PRD_CRITERIA_VALIDATION.md`.
+- `npm run lint` - passed after moving retired Expertise E2E helpers under archive.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after moving retired Expertise E2E helpers under archive.
+- `git diff --check` - passed after moving retired Expertise E2E helpers under archive.
 - `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with `/api/user/data-inventory` active.
 - `npm run lint` - passed after removing the privacy component hook-dependency warning.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.

@@ -133,4 +133,17 @@ describe('launch gate package configuration', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('keeps active E2E helpers away from the retired Expertise Atlas route', () => {
+    const activeHelperFiles = fs
+      .readdirSync(path.join(repoRoot, 'e2e/helpers'), { withFileTypes: true })
+      .filter((entry) => entry.isFile() && /\.[cm]?tsx?$/.test(entry.name))
+      .map((entry) => path.join(repoRoot, 'e2e/helpers', entry.name));
+
+    const offenders = activeHelperFiles
+      .filter((file) => fs.readFileSync(file, 'utf8').includes('/app/i/expertise'))
+      .map((file) => path.relative(repoRoot, file));
+
+    expect(offenders).toEqual([]);
+  });
 });
