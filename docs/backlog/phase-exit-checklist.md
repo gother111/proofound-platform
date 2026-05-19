@@ -11,8 +11,8 @@ Use this checklist together with [`../verification-checklist.md`](../verificatio
 - [x] `npm run test:launch:routes`
 - [x] [`../verification-checklist.md`](../verification-checklist.md) row `no non-MVP launch surface` is `PASS`.
 - [ ] `npm run build` if code that can affect compilation changed after the latest build evidence.
-- [ ] `BASE_URL=https://proofound.io npm run test:launch:smoke` before a production launch candidate.
-- [ ] `npm run monitor:launch` before a production launch candidate.
+- [ ] `BASE_URL=<production-candidate-url> npm run test:launch:smoke` before a production launch candidate.
+- [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch` before a production launch candidate.
 
 ## Phase 1 exit
 
@@ -34,7 +34,7 @@ Use this checklist together with [`../verification-checklist.md`](../verificatio
 
 - [x] `npm run test -- tests/api/assignments-publish-route.test.ts tests/lib/launch-assignment-publish-smoke.test.ts`
 - [x] `npm run test:e2e:org:strict`
-- [x] `BASE_URL=https://proofound.io npm run test:launch:smoke`
+- [x] Current local full launch smoke artifact passed against `http://localhost:33183`; production-candidate smoke remains a Phase 4 signoff gate.
 - [x] Focused decision, engagement verification, and authz reruns are green after any corridor hardening changes.
 - [x] Internal perf-status gate requires `/api/assignments` route latency samples before reporting `ok: true`.
 - [ ] Assignment publish latency is within the acceptable launch threshold, or the threshold and rationale are intentionally updated with evidence.
@@ -44,7 +44,7 @@ Use this checklist together with [`../verification-checklist.md`](../verificatio
 - [ ] `npm run db:backup:checkpoint`
 - [ ] `npm run db:restore:verify -- --checkpoint <dir>`
 - [x] Backup/restore fingerprint table coverage matches the active MVP corridor and excludes retired compatibility tables.
-- [x] `npm run test:launch:smoke` against local `http://localhost:33180` with the full launch-smoke artifact.
+- [x] `npm run test:launch:smoke` against local `http://localhost:33183` with the full launch-smoke artifact.
 - [x] `npm run monitor:launch` against local `http://localhost:33180` with persistence disabled.
 - [ ] `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go`
 - [x] Internal-only verification queue, dispute, revocation, and ops ownership docs are current and match the kept admin surfaces.

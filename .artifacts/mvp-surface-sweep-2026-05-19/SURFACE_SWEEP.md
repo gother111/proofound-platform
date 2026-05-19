@@ -1206,3 +1206,10 @@ Non-fatal test noise:
 - Updated `verification.md` so launch smoke evidence uses `BASE_URL=<production-candidate-url>` for production signoff, preserving local smoke as useful parity evidence but not final launch proof.
 - Updated `Documentation.md` and `metrics.md` labels from local-server gate parity to final production-candidate gate parity where the commands already target `<production-candidate-url>`.
 - Strengthened `tests/scripts/launch-gate-config.test.ts` so active launch evidence docs cannot reintroduce localhost-backed final `test:launch:smoke`, perf, monitor, launch-status, launch-validate, or go/no-go commands.
+
+## Continuation - Phase Exit Target Alignment
+
+- Found active Phase 0 and Phase 3 exit checklist rows still hardcoding `BASE_URL=https://proofound.io npm run test:launch:smoke`, which could be mistaken for current target-specific production-candidate evidence.
+- Updated `docs/backlog/phase-exit-checklist.md` so production-candidate smoke and monitor rows use `<production-candidate-url>` and `<secret>`, while the checked Phase 3 row names the current local smoke artifact target `http://localhost:33183` and leaves production-candidate smoke as a Phase 4 signoff gate.
+- Updated `docs/backlog/phase-4-pilot-hardening.md` so its local smoke evidence points at the fresh `localhost:33183` artifact; the separate local monitor evidence remains tied to its original `localhost:33180` run.
+- Extended the launch-gate guard so active launch evidence docs cannot reintroduce hardcoded `https://proofound.io` final gate commands either.
