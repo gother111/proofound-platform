@@ -58,6 +58,7 @@ restore rehearsal, and final go/no-go evidence.
 ## Environment and Integrations
 
 - [ ] Required strict E2E env vars set for the intended target.
+- [ ] `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` unless connected-provider scheduling is intentionally launch-blocking for the target.
 - [ ] Provider strict credentials are set only for provider flows that are intentionally in scope for the run; manual-link interview posture remains the locked MVP default.
 - [ ] `PII_HASH_SALT` configured for auth/signup test paths.
 - [ ] Sentry configured for runtime and build/source maps.

@@ -227,6 +227,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Updated `README.md` so the OAuth guide is no longer listed as an active launch runbook.
 - Updated `docs/DOCS_REGISTRY.md` to classify `OAUTH_SETUP_GUIDE.md` as reference-only and refresh `PRODUCTION_CHECKLIST.md`.
 - Added launch-gate test coverage so root operator docs cannot quietly reintroduce Zoom OAuth as a launch requirement, stale admin metrics, Expertise Profile checks, or machine-specific Homebrew command paths.
+
+29. Strict provider gates still made connected-provider credentials launch-blocking by default.
+
+- Changed `npm run test:e2e:providers:strict` so `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED` defaults to `false`, preserving fail-closed provider and manual-link fallback coverage without requiring a connected Google/LinkedIn provider path for every launch run.
+- Updated `scripts/run-mvp-strict-gates.mjs` so Google, LinkedIn, and deterministic provider-user secrets are required only when `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`.
+- Kept provider-connected scheduling opt-in for targets that intentionally launch it, while preserving manual-link interview scheduling as the locked MVP default.
+- Updated `docs/ENV_VARIABLES.md`, `docs/testing-strategy.md`, `agent/checklists/verification.md`, `docs/production-readiness-checklist.md`, `docs/release-checklist.md`, and `docs/mvp-launch-master-checklist.md` so operator guidance matches the actual default.
+- Added launch-gate config tests to prevent connected-provider credentials from becoming an implicit launch requirement again.
 - Updated the GCP CV/OCR proposal note so it no longer says active expertise/CV components still exist as code assets.
 - Registered the archive README and refreshed proposal note in `docs/DOCS_REGISTRY.md`.
 

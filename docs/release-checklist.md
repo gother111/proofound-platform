@@ -75,6 +75,7 @@ go/no-go evidence.
 - [ ] Monitoring stack configured and healthy.
 - [ ] Authenticated `/api/monitoring/launch-status` reports ready for the intended target.
 - [ ] Authenticated `/api/monitoring/perf-status` is healthy and includes `/api/assignments` latency samples.
+- [ ] `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` unless connected-provider scheduling is intentionally launch-blocking for the target.
 - [ ] Provider credentials and strict E2E env vars validated only for provider flows intentionally in scope for the run; manual-link interview posture remains the locked MVP default.
 - [ ] `CRON_SECRET` or `INTERNAL_API_SECRET` protects internal launch-ops routes.
 

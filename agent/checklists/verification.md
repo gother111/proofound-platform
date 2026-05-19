@@ -194,8 +194,8 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - Set `PII_HASH_SALT` when running auth/signup flows to avoid GDPR hashing runtime failures.
   - Run Playwright suites sequentially when they share the same `webServer` port to avoid `EADDRINUSE` startup failures.
   - Strict launch-gate runs must keep `NEXT_PUBLIC_USE_MOCK_SUPABASE=false`.
-  - Provider strict gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`.
-  - Provider strict gate requires deterministic provider user env vars: `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`.
+  - Provider strict gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false`.
+  - Deterministic provider user env vars (`E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`) are required only when `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`.
   - Connected-provider runs should use only provider flows intentionally in scope for the target; manual-link interview posture remains the locked MVP default.
 - For credential-gated E2E smokes, document required env vars in `project/changes/entries/*.md` and mark command outcome as PASS/SKIPPED with reason.
 

@@ -33,15 +33,6 @@ LINKEDIN_VERIFICATION_ADMIN_EMAILS=admin1@proofound.io,admin2@proofound.io
 CRON_SECRET=your_secure_random_token_here
 CRON_API_KEY=your_cron_job_org_api_token
 PYTHON_INTERNAL_SERVICE_SECRET=your_python_internal_secret_here
-GOOGLE_CLIENT_ID=your_google_oauth_client_id
-GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
-GOOGLE_REDIRECT_URI=/api/integrations/google/callback
-LINKEDIN_CLIENT_ID=your_linkedin_client_id
-LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
-E2E_PROVIDER_USER_ID=deterministic_user_uuid
-E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.io
-E2E_PROVIDER_USER_PASSWORD=your_deterministic_test_password
-STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true
 DIRECT_URL=postgresql://user:pass@host:5432/db  # Direct (non-pooled) recommended for migrations and tooling
 
 # ============================================================================
@@ -53,6 +44,15 @@ MATCHING_FEATURE_ENABLED=true
 NEXT_PUBLIC_WIREFRAME_MODE=false
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX=30
+GOOGLE_CLIENT_ID=your_google_oauth_client_id  # Target-scoped connected-provider/social login only
+GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+GOOGLE_REDIRECT_URI=/api/integrations/google/callback
+LINKEDIN_CLIENT_ID=your_linkedin_client_id  # Target-scoped LinkedIn/social login only
+LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
+E2E_PROVIDER_USER_ID=deterministic_user_uuid  # Only when STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true
+E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.io
+E2E_PROVIDER_USER_PASSWORD=your_deterministic_test_password
+STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false
 PYTHON_CV_IMPORT_BASE_URL=https://python-internal.proofound.internal
 PYTHON_INTERNAL_JOBS_ENABLED=false # legacy/non-launch helper toggle only
 PYTHON_INTERNAL_WORKER_BATCH_SIZE=10 # legacy/non-launch helper only
@@ -543,13 +543,13 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 ### Interview and Identity OAuth
 
-**Purpose**: Enable launch interview scheduling through Google Meet or manual meeting links, plus identity/social provider callbacks.
+**Purpose**: Enable optional connected-provider interview scheduling through Google Meet, plus identity/social provider callbacks. Manual meeting links remain the locked MVP default.
 
-**Required Vars**:
+**Target-scoped Vars**:
 
-- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required for Google Meet integration and Google social login through Supabase.
-- `GOOGLE_REDIRECT_URI` — Must match the app integration callback (recommended runtime value: `/api/integrations/google/callback`).
-- `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required for LinkedIn settings integration callback and LinkedIn social login through Supabase.
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required only when the target intentionally enables Google Meet integration or Google social login through Supabase.
+- `GOOGLE_REDIRECT_URI` — Required only for enabled Google integration flows. Must match the app integration callback (recommended runtime value: `/api/integrations/google/callback`).
+- `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required only when the target intentionally enables LinkedIn settings integration callback or LinkedIn social login through Supabase.
 - `LINKEDIN_REDIRECT_URI` - Set to your canonical app callback (recommended: `https://yourdomain.com/api/auth/linkedin/callback`).
 - `LINKEDIN_API_VERSION` - Optional LinkedIn REST version header for Verified APIs (`/rest/verificationReport`, `/rest/identityMe`). Defaults to `202510`.
 - `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used for OAuth callback construction (`NEXT_PUBLIC_URL` is legacy fallback only).
@@ -573,10 +573,11 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 **Without These**:
 
-- ❌ Google OAuth URL generation and Google Meet scheduling can fail.
-- ❌ LinkedIn integration callback cannot exchange OAuth codes.
-- ❌ Users cannot connect their video provider for interviews.
-- ❌ Social login through Google and LinkedIn cannot be initiated reliably.
+- Manual-link interview scheduling must still work.
+- Google OAuth URL generation and Google Meet scheduling can fail closed or show unavailable guidance.
+- LinkedIn integration callback cannot exchange OAuth codes.
+- Users cannot connect optional providers for interviews.
+- Social login through Google and LinkedIn cannot be initiated reliably if those providers are enabled.
 
 **Setup**:
 
@@ -597,9 +598,9 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 ### Strict Provider E2E (Deterministic User)
 
-**Purpose**: Make provider flows launch-blocking with real tokens in strict suites.
+**Purpose**: Make connected-provider flows launch-blocking with real tokens in strict suites only when the target intentionally enables those flows.
 
-**Required Vars**:
+**Required Vars When `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`**:
 
 - `E2E_PROVIDER_USER_ID`
 - `E2E_PROVIDER_USER_EMAIL`
@@ -608,7 +609,8 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 **Requirement**:
 
-- The deterministic user must already have a `google_meet` row in `user_video_integrations` when strict connected-provider checks are required.
+- The default launch posture is `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false`.
+- The deterministic user must already have a `google_meet` row in `user_video_integrations` when strict connected-provider checks are explicitly required.
 - Native Zoom scheduling is outside the locked launch corridor; use Google Meet or a manual meeting link.
 
 ---

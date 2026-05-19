@@ -193,9 +193,11 @@ fresh backup/restore evidence from `docs/production-readiness-checklist.md`.
 
 ## Environment Requirements for Strict Flows
 
-Strict flows require real env values. Provider-connected runs also require deterministic provider
-credentials for only the provider flows intentionally in scope for the target; manual-link interview
-posture remains the locked MVP default. See:
+Strict flows require real env values. The provider strict command defaults to
+`STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false`, which still checks provider connect fail-closed
+behavior and manual-link fallback posture. Provider-connected runs require
+`STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true` plus deterministic provider credentials only for the
+provider flows intentionally in scope for the target; manual-link interview posture remains the locked MVP default. See:
 
 - `agent/runbooks/setup.md`
 - `agent/checklists/verification.md`

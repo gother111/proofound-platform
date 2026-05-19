@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-14`
+> Last Verified: `2026-05-19`
 
 # Proofound MVP Launch Master Checklist
 
@@ -160,7 +160,8 @@ Use this checklist for the final launch review. Do not treat older partial check
 
 - [ ] Required strict E2E environment variables are set.
 - [ ] `PII_HASH_SALT` is configured for auth and signup test paths.
-- [ ] Provider OAuth credentials and deterministic provider user credentials are valid for strict launch-gate runs.
+- [ ] `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` unless connected-provider scheduling is intentionally launch-blocking for this target.
+- [ ] Provider OAuth credentials and deterministic provider user credentials are valid only for connected-provider strict launch-gate runs.
 - [ ] `CRON_SECRET` is configured and cron endpoints are protected.
 - [ ] Sentry is configured for runtime and release visibility.
 - [ ] `npm run vercel:preflight`

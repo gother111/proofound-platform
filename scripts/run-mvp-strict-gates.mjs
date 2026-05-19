@@ -282,21 +282,33 @@ const requiredEnv = [
   'SUPABASE_SERVICE_ROLE_KEY',
   'DATABASE_URL',
   'CRON_SECRET',
-  'GOOGLE_CLIENT_ID',
-  'GOOGLE_CLIENT_SECRET',
-  'GOOGLE_REDIRECT_URI',
-  'LINKEDIN_CLIENT_ID',
-  'LINKEDIN_CLIENT_SECRET',
-  'E2E_PROVIDER_USER_ID',
-  'E2E_PROVIDER_USER_EMAIL',
-  'E2E_PROVIDER_USER_PASSWORD',
 ];
+
+const providerConnectedRequired =
+  String(process.env.STRICT_PROVIDER_E2E_REQUIRE_CONNECTED ?? '')
+    .trim()
+    .toLowerCase() === 'true';
+
+const providerRequiredEnv = providerConnectedRequired
+  ? [
+      'GOOGLE_CLIENT_ID',
+      'GOOGLE_CLIENT_SECRET',
+      'GOOGLE_REDIRECT_URI',
+      'LINKEDIN_CLIENT_ID',
+      'LINKEDIN_CLIENT_SECRET',
+      'E2E_PROVIDER_USER_ID',
+      'E2E_PROVIDER_USER_EMAIL',
+      'E2E_PROVIDER_USER_PASSWORD',
+    ]
+  : [];
 
 function enforceEnvironment() {
   const siteUrlPresent = Boolean(
     process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim()
   );
-  const missing = requiredEnv.filter((name) => !process.env[name]?.trim());
+  const missing = [...requiredEnv, ...providerRequiredEnv].filter(
+    (name) => !process.env[name]?.trim()
+  );
   if (!siteUrlPresent) {
     missing.push('NEXT_PUBLIC_SITE_URL/SITE_URL');
   }
@@ -318,7 +330,9 @@ function enforceEnvironment() {
   }
 
   if (missing.length > 0) {
-    fail(`Missing required strict release-gate environment variables: ${missing.join(', ')}`);
+    fail(
+      `Missing required strict release-gate environment variables: ${missing.join(', ')}. Connected provider credentials are required only when STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true.`
+    );
   }
 }
 
@@ -332,7 +346,7 @@ const commandEnv = {
   FORCE_STRICT_DEPLOY_CHECK: 'true',
   npm_config_engine_strict: 'true',
   PLAYWRIGHT_SERVER_MODE: process.env.PLAYWRIGHT_SERVER_MODE || 'prod',
-  STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'true',
+  STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: providerConnectedRequired ? 'true' : 'false',
   PII_HASH_SALT: process.env.PII_HASH_SALT || 'strict-local-salt',
   NODE_OPTIONS: process.env.NODE_OPTIONS || '--max-old-space-size=6144',
 };

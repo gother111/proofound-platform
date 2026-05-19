@@ -31,6 +31,10 @@ function listFiles(dir: string): string[] {
   });
 }
 
+function compactWhitespace(value: string): string {
+  return value.replace(/\s+/g, ' ');
+}
+
 describe('launch gate package configuration', () => {
   it('pins the clean-checkout runtime and package manager', () => {
     const packageJson = readJson<{
@@ -77,6 +81,9 @@ describe('launch gate package configuration', () => {
       'tests/lib/cv-import-suggest-1000-benchmark.test.ts'
     );
     expect(scripts['test:launch:smoke']).toBe('node --import tsx ./scripts/launch-smoke-runner.ts');
+    expect(scripts['test:e2e:providers:strict']).toContain(
+      'STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=${STRICT_PROVIDER_E2E_REQUIRE_CONNECTED:-false}'
+    );
     expect(scripts['test:a11y']).toBe(
       'node ./scripts/playwright-node24.mjs test --config playwright.a11y.config.ts --project=chromium'
     );
@@ -109,6 +116,13 @@ describe('launch gate package configuration', () => {
     expect(gateScript).toContain("'launch-status'");
     expect(gateScript).toContain("'timed_out'");
     expect(gateScript).toContain('commands.json');
+    expect(gateScript).toContain('providerConnectedRequired');
+    expect(gateScript).toContain(
+      "STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: providerConnectedRequired ? 'true' : 'false'"
+    );
+    expect(gateScript).toContain(
+      'Connected provider credentials are required only when STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true.'
+    );
   });
 
   it('keeps the accessibility go/no-go evidence current and honestly scoped', () => {
@@ -416,6 +430,7 @@ describe('launch gate package configuration', () => {
     expect(activeOperatorDocs).toContain(
       'manual-link interview posture remains the locked MVP default'
     );
+    expect(activeOperatorDocs).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
     expect(activeOperatorDocs).not.toContain('STRICT_PROVIDER_E2E_REQUIRE_BOTH');
     expect(activeOperatorDocs).not.toContain('both Zoom and Google connected');
     expect(activeOperatorDocs).not.toContain('/api/cron/cleanup-expired-sessions');
@@ -443,11 +458,38 @@ describe('launch gate package configuration', () => {
     expect(testingStrategy).toContain('BASE_URL=<production-candidate-url>');
     expect(testingStrategy).toContain('fresh backup/restore evidence');
     expect(testingStrategy).toContain('manual-link interview');
-    expect(testingStrategy).toContain('posture remains the locked MVP default');
+    expect(compactWhitespace(testingStrategy)).toContain('posture remains the locked MVP default');
     expect(testingStrategy).not.toContain('STRICT_PROVIDER_E2E_REQUIRE_BOTH');
     expect(testingStrategy).not.toContain('both Zoom and Google connected');
     expect(docsRegistry).toContain(
       '| `docs/testing-strategy.md`                                                                              | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
+  it('keeps environment docs from making connected providers launch-blocking by default', () => {
+    const envDocs = fs.readFileSync(path.join(repoRoot, 'docs/ENV_VARIABLES.md'), 'utf8');
+    const launchMasterChecklist = fs.readFileSync(
+      path.join(repoRoot, 'docs/mvp-launch-master-checklist.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(envDocs).toContain('Last Verified: `2026-05-19`');
+    expect(envDocs).toContain('Manual meeting links remain the locked MVP default');
+    expect(envDocs).toContain('**Target-scoped Vars**');
+    expect(envDocs).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
+    expect(envDocs).toContain('Required Vars When `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`');
+    expect(envDocs).toContain('Manual-link interview scheduling must still work');
+    expect(envDocs).not.toContain('**Required Vars**:\n\n- `GOOGLE_CLIENT_ID`');
+    expect(envDocs).not.toContain('Make provider flows launch-blocking with real tokens');
+
+    expect(launchMasterChecklist).toContain('Last Verified: `2026-05-19`');
+    expect(launchMasterChecklist).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
+    expect(launchMasterChecklist).toContain(
+      'valid only for connected-provider strict launch-gate runs'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/mvp-launch-master-checklist.md`                                                                   | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
     );
   });
 
