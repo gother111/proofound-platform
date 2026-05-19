@@ -96,8 +96,8 @@ Interaction thesis: every public or dashboard action should either route to an a
 11. The no-non-MVP-launch-surface checklist row still carried a stale 2026-03-25 `FAIL`.
 
 - Reran `npm run test:launch:routes`: launch API inventory, launch page inventory, archived API handler, and middleware archive tests all passed.
-- Fresh route counts: 139 compiled API handlers and 51 compiled pages.
-- Current launch-surface policy explicitly classifies 109 APIs and 48 pages as active launch paths, 16 APIs and 3 pages as internal-only launch ops, and 14 compiled API handlers as archived compatibility responses.
+- Fresh route counts: 140 compiled API handlers and 51 compiled pages.
+- Current launch-surface policy explicitly classifies 110 APIs and 48 pages as active launch paths, 16 APIs and 3 pages as internal-only launch ops, and 14 compiled API handlers as archived compatibility responses.
 - Required hard-gated pages are absent from the compiled launch surface, and representative archived API/page families remain classified archived at the route-surface policy boundary.
 - Updated `docs/verification-checklist.md` so the no-non-MVP-launch-surface row records the fresh 2026-05-19 evidence and status `PASS`.
 
@@ -268,6 +268,13 @@ Current truth route-count refresh on 2026-05-19:
 - Fix: refreshed the active route-count section to the current route policy evidence: 140 API handlers, 51 pages, 110 active APIs, 16 internal-only APIs, 14 archived API compatibility handlers, 48 active pages, and 3 internal-only pages.
 - Evidence: direct route-count script using `classifyLaunchApiPath` / `classifyLaunchPagePath` produced those counts, and `npm run test:launch:routes` passed, 4 files / 25 tests.
 
+Verification checklist route-count refresh on 2026-05-19:
+
+- Finding: active `docs/verification-checklist.md` still carried the previous `139` compiled API handler / `109` active API count in the no-non-MVP-launch-surface row, while `docs/CURRENT_TRUTH.md` and the direct route-policy evidence had advanced to `140` / `110`.
+- Fix: refreshed the checklist row and this sweep artifact's running route note to the current route-policy counts: 140 API handlers, 51 pages, 110 active APIs, 16 internal-only APIs, 14 archived API compatibility handlers, 48 active pages, and 3 internal-only pages.
+- Browser evidence: reconnected the Codex in-app Browser on the existing `127.0.0.1:33180/portfolio/demo` tab. Browser is functional; the page currently renders the intentional launch-safe `Public page unavailable` state with Return home and cookie controls, matching prior public unavailable evidence for this route.
+- Test evidence: `npm run docs:freshness`, `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes`, and `git diff --check` passed.
+
 ## Verification
 
 Commands run with Node 25 path:
@@ -312,6 +319,9 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npx playwright test e2e/cv-import-non-launch.spec.ts --project=chromium --reporter=line --workers=1` - passed, 1 file / 2 tests.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts` - passed, 3 files / 20 tests.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests.
+- `npm run docs:freshness` - passed with no findings after the verification checklist route-count refresh.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after the verification checklist route-count refresh.
+- `git diff --check` - passed after the verification checklist route-count refresh.
 - `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with `/api/user/data-inventory` active.
 - `npm run lint` - passed after removing the privacy component hook-dependency warning.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.
