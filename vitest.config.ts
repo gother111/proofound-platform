@@ -24,7 +24,6 @@ const DEFAULT_SLOW_TEST_EXCLUDES = [
   // Quality/benchmark suites remain available through npm run test:slow:non-launch.
   '**/tests/lib/cv-import-suggest-1000-benchmark.test.ts',
   '**/tests/lib/cv-import-suggest-quality.test.ts',
-  '**/tests/lib/cv-import-wizard-quality.test.ts',
 ] as const;
 
 export default defineConfig({

@@ -449,6 +449,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Kept production policy explicit: no `db:push`, no dashboard paste flow as normal launch evidence, no `migrations-to-run.sql` as current migration truth, and no restore verification against a live DB.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the migration docs stay aligned with checkpoint and restore discipline.
 
+55. Active tests still exercised the retired CV import wizard behavior.
+
+- Confirmed `/api/expertise/cv-import/wizard-*` routes are archived compatibility handlers and active launch coverage already proves their `410` response behavior.
+- Moved the old wizard extractor, wizard quality, and Python wizard proxy behavior suites from active default test discovery to `tests/archive/non_mvp_cv_import_wizard/`.
+- Kept the archived wizard quality suite intentionally runnable through `npm run test:slow:non-launch`, while default release signal stays focused on Start from CV, Proof Artifact Text Extraction, and direct archived-handler behavior.
+- Added archive README, docs registry entry, and launch-gate coverage so these old wizard tests do not drift back into active MVP evidence.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.

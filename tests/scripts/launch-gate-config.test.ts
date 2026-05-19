@@ -80,6 +80,9 @@ describe('launch gate package configuration', () => {
     expect(scripts['test:slow:non-launch']).toContain(
       'tests/lib/cv-import-suggest-1000-benchmark.test.ts'
     );
+    expect(scripts['test:slow:non-launch']).toContain(
+      'tests/archive/non_mvp_cv_import_wizard/cv-import-wizard-quality.archived.test.ts'
+    );
     expect(scripts['test:launch:smoke']).toBe('node --import tsx ./scripts/launch-smoke-runner.ts');
     expect(scripts['test:e2e:providers:strict']).toContain(
       'STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=${STRICT_PROVIDER_E2E_REQUIRE_CONNECTED:-false}'
@@ -358,6 +361,7 @@ describe('launch gate package configuration', () => {
     expect(vitestConfig).toContain("'**/tests/api/analytics-track-route.test.ts'");
     expect(vitestConfig).toContain("'**/tests/lib/cv-import-suggest-1000-benchmark.test.ts'");
     expect(archivedConfig).toContain('src/archive/**/*.test.ts');
+    expect(archivedConfig).toContain('tests/archive/non_mvp_cv_import_wizard/**/*.test.ts');
     expect(archivedConfig).toContain('tests/archive/non_mvp_legacy_api/**/*.test.ts');
     expect(archivedConfig).toContain('tests/archive/non_mvp_moderation_api/**/*.test.ts');
     expect(archivedConfig).toContain('tests/archive/non_mvp_org_integrations_ui/**/*.test.ts');
@@ -413,6 +417,28 @@ describe('launch gate package configuration', () => {
       .map((file) => path.relative(repoRoot, file));
 
     expect(offenders).toEqual([]);
+  });
+
+  it('keeps retired CV import wizard behavior tests archived', () => {
+    const retiredActiveTestPaths = [
+      'tests/lib/cv-import-wizard-extractor.test.ts',
+      'tests/lib/cv-import-wizard-quality.test.ts',
+      'tests/lib/python-cv-proxy.test.ts',
+    ];
+    const archivedPaths = [
+      'tests/archive/non_mvp_cv_import_wizard/cv-import-wizard-extractor.archived.test.ts',
+      'tests/archive/non_mvp_cv_import_wizard/cv-import-wizard-quality.archived.test.ts',
+      'tests/archive/non_mvp_cv_import_wizard/python-cv-proxy.archived.test.ts',
+      'tests/archive/non_mvp_cv_import_wizard/README.md',
+    ];
+
+    for (const retiredPath of retiredActiveTestPaths) {
+      expect(fs.existsSync(path.join(repoRoot, retiredPath))).toBe(false);
+    }
+
+    for (const archivedPath of archivedPaths) {
+      expect(fs.existsSync(path.join(repoRoot, archivedPath))).toBe(true);
+    }
   });
 
   it('keeps the retired Expertise Atlas UI island archived', () => {
