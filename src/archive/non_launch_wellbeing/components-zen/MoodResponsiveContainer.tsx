@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { RiskState, riskStates } from '@/data/zen';
+import { RiskState, riskStates } from '@/archive/non_launch_wellbeing/data/zen';
 
 interface MoodContextType {
   mood: RiskState;

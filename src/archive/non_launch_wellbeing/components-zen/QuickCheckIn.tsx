@@ -8,7 +8,11 @@ import { Heart, CheckCircle2, AlertCircle, Zap, Sparkles } from 'lucide-react';
 import { useMood } from './MoodResponsiveContainer';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
-import { zenCheckInConfig, zenPractices, type RiskState } from '@/data/zen';
+import {
+  zenCheckInConfig,
+  zenPractices,
+  type RiskState,
+} from '@/archive/non_launch_wellbeing/data/zen';
 
 export function QuickCheckIn() {
   const { setMood } = useMood();

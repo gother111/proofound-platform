@@ -257,6 +257,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Updated archived self-imports and added launch-gate coverage so active `src/components/expertise` stays absent.
 - Updated retained historical CV import docs so they point at the archived component path and mark the old `/api/expertise/auto-suggest` route as removed from the active route tree.
 
+33. Generic customizable dashboard shell and Zen dashboard stubs still lived in active source.
+
+- Confirmed the active individual home is the proof-first home page and the active organization home imports only focused dashboard cards plus the shared `sanitizeLayout` helper.
+- Moved unused customizable/draggable dashboard shell files to `src/archive/non_launch_dashboard_ui/`.
+- Moved the old draggable-dashboard visibility test to `tests/archive/non_mvp_dashboard_ui/`.
+- Moved the null Zen dashboard stub and Zen data stub into `src/archive/non_launch_wellbeing/`.
+- Added launch-gate coverage so those generic dashboard and Zen stub paths stay out of active source/tests.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -529,6 +537,14 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving shared Expertise/CV import UI components.
 - `npm run docs:freshness` - passed after archiving shared Expertise/CV import UI components.
 - `git diff --check` - passed after archiving shared Expertise/CV import UI components.
+- `rg -n "CustomizeModal|DashboardSkeleton|DashboardTile|DynamicDashboard|DashboardCustomizer|CustomizableDashboard|DraggableDashboard" src tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active references were limited to the old draggable-dashboard test and the unused customizable dashboard shell before the move.
+- `rg -n "CustomizableDashboard|CustomizeModal|DashboardCustomizer|DashboardSkeleton|DashboardTile|DraggableDashboard|DynamicDashboard|ZenSnapshotCard|src/data/zen|@/data/zen" src tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active references are now limited to launch-gate assertions and the separate active `src/components/skeletons/DashboardSkeleton.tsx`.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/dashboard-layout.test.ts tests/ui/widget-grid-skeleton.test.tsx tests/ui/projects-card.test.tsx tests/ui/org-dashboard-archived-nav.test.tsx` - passed, 5 files / 28 tests, after archiving the generic customizable dashboard shell and Zen stubs.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after archiving the generic customizable dashboard shell and Zen stubs.
+- `npm run lint` - passed after archiving the generic customizable dashboard shell and Zen stubs.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the generic customizable dashboard shell and Zen stubs.
+- `npm run docs:freshness` - passed after archiving the generic customizable dashboard shell and Zen stubs.
+- `git diff --check` - passed after archiving the generic customizable dashboard shell and Zen stubs.
 
 Non-fatal test noise:
 

@@ -18,7 +18,7 @@ import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle2, Clock, Save, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
-import { burnoutDefaults } from '@/data/zen';
+import { burnoutDefaults } from '@/archive/non_launch_wellbeing/data/zen';
 import { saveWorkSchedule } from '@/lib/wellbeing/client';
 
 interface WorkSchedule {

@@ -183,9 +183,37 @@ describe('launch gate package configuration', () => {
   it('keeps retired wellbeing and Zen implementation modules archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'src/components/wellbeing'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'src/components/zen'))).toBe(false);
+    expect(fs.existsSync(path.join(repoRoot, 'src/components/dashboard/ZenSnapshotCard.tsx'))).toBe(
+      false
+    );
     expect(fs.existsSync(path.join(repoRoot, 'src/lib/wellbeing'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'src/lib/zen'))).toBe(false);
+    expect(fs.existsSync(path.join(repoRoot, 'src/data/zen.ts'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_wellbeing/README.md'))).toBe(
+      true
+    );
+  });
+
+  it('keeps generic customizable dashboard shell archived', () => {
+    const retiredPaths = [
+      'src/components/dashboard/CustomizableDashboard.tsx',
+      'src/components/dashboard/CustomizeModal.tsx',
+      'src/components/dashboard/DashboardCustomizer.tsx',
+      'src/components/dashboard/DashboardSkeleton.tsx',
+      'src/components/dashboard/DashboardTile.tsx',
+      'src/components/dashboard/DraggableDashboard.tsx',
+      'src/components/dashboard/DynamicDashboard.tsx',
+      'tests/ui/draggable-dashboard-while-away-visibility.test.tsx',
+    ];
+
+    for (const retiredPath of retiredPaths) {
+      expect(fs.existsSync(path.join(repoRoot, retiredPath))).toBe(false);
+    }
+
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_dashboard_ui/README.md'))
+    ).toBe(true);
+    expect(fs.existsSync(path.join(repoRoot, 'tests/archive/non_mvp_dashboard_ui/README.md'))).toBe(
       true
     );
   });

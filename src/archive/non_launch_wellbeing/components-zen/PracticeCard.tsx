@@ -1,6 +1,6 @@
 'use client';
 
-import { ZenPractice } from '@/data/zen';
+import { ZenPractice } from '@/archive/non_launch_wellbeing/data/zen';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

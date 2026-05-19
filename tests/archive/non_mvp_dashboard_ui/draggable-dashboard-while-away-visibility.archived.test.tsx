@@ -2,8 +2,8 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { DashboardWidget } from '../../src/lib/dashboard/layout';
-import { DraggableDashboard } from '../../src/components/dashboard/DraggableDashboard';
+import type { DashboardWidget } from '../../../src/lib/dashboard/layout';
+import { DraggableDashboard } from '../../../src/archive/non_launch_dashboard_ui/components/dashboard/DraggableDashboard';
 
 let goalsVisible = true;
 

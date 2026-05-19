@@ -1,0 +1,7 @@
+# Archived Customizable Dashboard UI
+
+The old customizable/draggable individual dashboard shell lives here as historical implementation context.
+
+This shell is outside the locked MVP corridor. Active launch surfaces use focused proof-first home, organization home, assignment, review, verification, reveal, interview, decision, privacy, and launch-ops surfaces instead of a generic customizable dashboard.
+
+Do not move these modules back into active `src/components/dashboard` unless the locked MVP source of truth changes.

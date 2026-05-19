@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DraggableDashboard } from '@/components/dashboard/DraggableDashboard';
+import { DraggableDashboard } from './DraggableDashboard';
 
 interface CustomizableDashboardProps {
   userId: string;
