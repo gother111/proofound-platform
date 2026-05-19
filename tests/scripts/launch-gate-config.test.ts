@@ -287,6 +287,46 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps active operator docs aligned with current deployment and provider gates', () => {
+    const deploymentGuide = fs.readFileSync(
+      path.join(repoRoot, 'docs/deployment-guide.md'),
+      'utf8'
+    );
+    const setupRunbook = fs.readFileSync(path.join(repoRoot, 'agent/runbooks/setup.md'), 'utf8');
+    const verificationChecklist = fs.readFileSync(
+      path.join(repoRoot, 'agent/checklists/verification.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const activeOperatorDocs = [deploymentGuide, setupRunbook, verificationChecklist].join('\n');
+
+    expect(deploymentGuide).toContain('Last Verified: `2026-05-19`');
+    expect(deploymentGuide).toContain('docs/production-readiness-checklist.md');
+    expect(deploymentGuide).toContain('docs/backlog/phase-exit-checklist.md');
+    expect(deploymentGuide).toContain('/api/cron/decision-reminders');
+    expect(deploymentGuide).toContain('/api/cron/refresh-matches-worker');
+    expect(deploymentGuide).toContain('Authenticated `/api/monitoring/launch-status`');
+    expect(deploymentGuide).toContain('Authenticated `/api/monitoring/perf-status`');
+    expect(deploymentGuide).toContain('INP < 200ms');
+    expect(activeOperatorDocs).toContain(
+      'manual-link interview posture remains the locked MVP default'
+    );
+    expect(activeOperatorDocs).not.toContain('STRICT_PROVIDER_E2E_REQUIRE_BOTH');
+    expect(activeOperatorDocs).not.toContain('both Zoom and Google connected');
+    expect(activeOperatorDocs).not.toContain('/api/cron/cleanup-expired-sessions');
+    expect(activeOperatorDocs).not.toContain('/api/cron/send-digest-emails');
+    expect(activeOperatorDocs).not.toContain('platform=zoom');
+    expect(docsRegistry).toContain(
+      '| `docs/deployment-guide.md`                                                                              | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `agent/runbooks/setup.md`                                                                               | `active`         | `agent`       | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `agent/checklists/verification.md`                                                                      | `active`         | `agent`       | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps retired wellbeing API tests archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'tests/api-endpoints-test.ts'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'tests/lib/wellbeing-client.test.ts'))).toBe(false);

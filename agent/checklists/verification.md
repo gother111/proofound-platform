@@ -194,18 +194,19 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - Set `PII_HASH_SALT` when running auth/signup flows to avoid GDPR hashing runtime failures.
   - Run Playwright suites sequentially when they share the same `webServer` port to avoid `EADDRINUSE` startup failures.
   - Strict launch-gate runs must keep `NEXT_PUBLIC_USE_MOCK_SUPABASE=false`.
-  - Provider strict gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true` and `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`.
+  - Provider strict gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`.
   - Provider strict gate requires deterministic provider user env vars: `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`.
-  - Deterministic provider user must have both Zoom and Google connected for launch-gate runs.
+  - Connected-provider runs should use only provider flows intentionally in scope for the target; manual-link interview posture remains the locked MVP default.
 - For credential-gated E2E smokes, document required env vars in `project/changes/entries/*.md` and mark command outcome as PASS/SKIPPED with reason.
 
-## Manual Smoke Checks (OAuth Integrations)
+## Manual Smoke Checks (Interview Scheduling)
 
-- Zoom connect:
-  - Visit `/app/i/settings/integrations`
-  - Click "Connect Zoom" and confirm you are redirected to Zoom and then back with `?success=zoom_connected`.
-- Meeting creation:
-  - Schedule an interview with `platform=zoom` and confirm the record has `meeting_link` populated.
+- Manual-link scheduling:
+  - Schedule an interview with a manual meeting link.
+  - Confirm the visible interview and API record show the meeting link without presenting native Zoom/video OAuth as a launch requirement.
+- Provider-connected scheduling:
+  - Run only for provider flows intentionally configured for the target.
+  - If a provider is unavailable, the UI must clearly preserve the manual-link fallback.
 
 ## Manual Smoke Checks (Auth Email via Supabase SMTP)
 

@@ -1,7 +1,7 @@
 # Deployment Guide
 
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 ## Overview
 
@@ -12,6 +12,14 @@ Canonical deployment references for this repository:
 - Production branch: `master`
 - Production domain: `https://proofound.io`
 - Node runtime source of truth: `.nvmrc` (`24.15.0`) and `package.json` engines
+- Current launch operator checklist: [`docs/production-readiness-checklist.md`](production-readiness-checklist.md)
+- Current phase gate and evidence: [`docs/backlog/phase-exit-checklist.md`](backlog/phase-exit-checklist.md) and [`../.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`](../.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md)
+
+Current 2026-05-19 status: local launch evidence is current, but production deployment is not
+launch-signed until the intended production-candidate target has fresh backup checkpoint,
+isolated restore rehearsal, authenticated launch-status/perf-status evidence, and final go/no-go
+evidence. Do not run backup, restore, migration, billing, auth, or permission-affecting production
+actions unless the exact target is explicit.
 
 ---
 
@@ -96,6 +104,7 @@ SENTRY_AUTH_TOKEN=xxx
 
 # Cron Jobs
 CRON_SECRET=generate-random-secret-here
+INTERNAL_API_SECRET=generate-random-secret-here
 
 # Feature Flags
 MATCHING_FEATURE_ENABLED=true
@@ -104,8 +113,8 @@ MATCHING_FEATURE_ENABLED=true
 LOG_LEVEL=info
 
 # App Configuration
-NEXT_PUBLIC_SITE_URL=https://yourdomain.com
-SITE_URL=https://yourdomain.com
+NEXT_PUBLIC_SITE_URL=https://proofound.io
+SITE_URL=https://proofound.io
 ```
 
 **Security Note:** Never commit `.env.local` or `.env.production` files. Use Vercel's environment variable management.
@@ -292,10 +301,11 @@ SENTRY_ORG=your-org
 SENTRY_PROJECT=proofound
 SENTRY_AUTH_TOKEN=xxx
 CRON_SECRET=generate-random-secret-here
+INTERNAL_API_SECRET=generate-random-secret-here
 MATCHING_FEATURE_ENABLED=true
 LOG_LEVEL=info
-NEXT_PUBLIC_SITE_URL=https://yourdomain.com
-SITE_URL=https://yourdomain.com
+NEXT_PUBLIC_SITE_URL=https://proofound.io
+SITE_URL=https://proofound.io
 ```
 
 **For Preview/Development:**
@@ -523,44 +533,38 @@ const { data, error } = await resend.emails.send({
 });
 ```
 
-### 3. Cron Jobs (Vercel Cron)
+### 3. Cron Jobs
 
-**Configure in vercel.json:**
+**Configured in `vercel.json`:**
 
 ```json
 {
   "crons": [
     {
-      "path": "/api/cron/cleanup-expired-sessions",
-      "schedule": "0 0 * * *"
+      "path": "/api/cron/decision-reminders",
+      "schedule": "0 10 * * *"
     },
     {
-      "path": "/api/cron/send-digest-emails",
-      "schedule": "0 9 * * 1"
+      "path": "/api/cron/refresh-matches",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-matches-worker",
+      "schedule": "15 3 * * *"
+    },
+    {
+      "path": "/api/cron/sla-enforcement",
+      "schedule": "0 8 * * *"
     }
   ]
 }
 ```
 
-**Protect Cron Endpoints:**
-
-```typescript
-// /api/cron/cleanup-expired-sessions/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-
-export async function GET(request: NextRequest) {
-  // Verify cron secret
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  // Perform cleanup
-  // ...
-
-  return NextResponse.json({ success: true });
-}
-```
+Cron and internal launch-ops routes must be protected by `CRON_SECRET` or `INTERNAL_API_SECRET`.
+For Hobby deployments, cron-job.org may own additional managed jobs such as
+`/api/cron/health-check`, `/api/cron/performance-check`, and
+`/api/cron/launch-synthetic-checks`; reconcile that set with `npm run cron:sync` only when the
+target and `CRON_API_KEY` are explicit.
 
 **Verify Cron Jobs:**
 
@@ -568,6 +572,7 @@ export async function GET(request: NextRequest) {
 2. Go to Vercel dashboard → Cron Jobs
 3. Verify jobs are scheduled
 4. Check logs after scheduled run
+5. Confirm unauthenticated cron calls return `401`
 
 ---
 
@@ -577,19 +582,22 @@ export async function GET(request: NextRequest) {
 
 **Test critical flows:**
 
-- [ ] Homepage loads (`https://yourdomain.com`)
-- [ ] Sign up new user
-- [ ] Log in existing user
-- [ ] View profile
-- [ ] Navigate app (matching, messaging)
-- [ ] Test assignment creation (organization)
-- [ ] Test matching (individual)
+- [ ] Landing page loads (`https://proofound.io`)
+- [ ] Signup and login entry points route correctly
+- [ ] Public individual and organization portfolio unavailable or published states are launch-safe
+- [ ] Individual proof-first onboarding and Proof Pack surfaces load
+- [ ] Organization assignment list/create/review/publish corridor works
+- [ ] Review, intro, reveal-consent, interview, decision, and engagement verification surfaces stay within the locked MVP corridor
+- [ ] Admin/internal launch-ops routes are protected and reachable only with the intended internal secret
 
 **Check for errors:**
 
 - [ ] No console errors in browser
 - [ ] No 500 errors in Vercel logs
 - [ ] No errors in Sentry dashboard
+- [ ] Public `/api/health` returns only `status` and `timestamp`
+- [ ] Authenticated `/api/monitoring/launch-status` is ready for the deployed target
+- [ ] Authenticated `/api/monitoring/perf-status` is healthy and includes `/api/assignments` latency samples
 
 ### 2. Monitor Logs
 
@@ -611,20 +619,19 @@ vercel logs --follow
 - Structured logs appearing
 - No error logs
 - Request IDs present
-- User IDs present (after auth)
+- No raw PII, secrets, or private proof content in logs
 
 **Example good log:**
 
 ```json
 {
   "level": "info",
-  "event": "match.profile.computed",
-  "timestamp": "2025-11-03T10:30:00.000Z",
+  "event": "launch.monitor.completed",
+  "timestamp": "2026-05-19T10:30:00.000Z",
   "requestId": "abc123xyz789",
-  "userId": "user-uuid-123",
-  "poolSize": 50,
-  "resultCount": 10,
-  "durationMs": 145
+  "target": "production-candidate",
+  "status": "ready",
+  "durationMs": 1450
 }
 ```
 
@@ -677,7 +684,7 @@ lighthouse https://yourdomain.com \
 **Check Core Web Vitals:**
 
 - LCP < 2.5s
-- FID < 100ms
+- INP < 200ms
 - CLS < 0.1
 
 ---
@@ -713,17 +720,15 @@ vercel promote <deployment-url>
 3. Click "Restore"
 4. Confirm restore
 
-**Note:** This overwrites current database. Use with caution.
+**Note:** This overwrites current database. Use only after explicit approval of the target and
+recovery plan.
 
 **Manual Migration Rollback:**
 
 ```bash
-# If using migration files, rollback specific migration
-npm run db:rollback
-
-# Or manually in SQL Editor
-DROP TABLE new_table;
--- Revert schema changes
+# Roll back with a reviewed forward migration or a documented restore drill.
+# Confirm the target, checkpoint path, and owner before touching production data.
+npm run db:restore:verify -- --checkpoint <dir>
 ```
 
 ### 3. DNS Rollback (if needed)
@@ -760,18 +765,10 @@ Add missing variables in Vercel dashboard.
 **Dependency Issues:**
 
 ```bash
-# Clear lock file and reinstall
-rm package-lock.json
-npm install
-
-# Or use Yarn if that's your lock file
-rm yarn.lock
-yarn install
-
-# Commit updated lock file
-git add package-lock.json
-git commit -m "Update dependencies"
-git push
+# Use the repo package manager and keep package-lock changes reviewed.
+npm ci
+npm run audit:prod
+npm run audit:all
 ```
 
 ### Runtime Errors
@@ -846,12 +843,14 @@ Error: sorry, too many clients already
 
 ### Pre-Deployment
 
-- [ ] All tests pass locally (`npm test`, `npm run test:e2e`)
+- [ ] Current release checklist is reviewed (`docs/release-checklist.md`)
 - [ ] TypeScript compiles (`npm run typecheck`)
 - [ ] Linting passes (`npm run lint`)
+- [ ] Focused tests pass (`npm run test`)
 - [ ] Build succeeds (`npm run build`)
 - [ ] Environment variables documented
 - [ ] Database migrations ready
+- [ ] Backup checkpoint and isolated restore rehearsal target are explicit
 - [ ] Supabase production project created
 - [ ] Domain DNS configured (if using custom domain)
 - [ ] API keys obtained (Sentry, Resend)
@@ -864,19 +863,19 @@ Error: sorry, too many clients already
 - [ ] Create Vercel KV database
 - [ ] Run database migrations
 - [ ] Seed essential data (taxonomy)
-- [ ] Deploy to production
+- [ ] Deploy prebuilt production artifact from the intended commit
 - [ ] Configure custom domain
 - [ ] Verify SSL certificate
 
 ### Post-Deployment
 
-- [ ] Run smoke tests
+- [ ] Run launch smoke, monitor, perf budgets, and final go/no-go against the deployed target
 - [ ] Monitor logs for errors
 - [ ] Verify Sentry integration
 - [ ] Check Vercel Analytics
 - [ ] Test email delivery
 - [ ] Verify caching working
-- [ ] Run Lighthouse performance test
+- [ ] Verify `/api/health`, authenticated launch-status, and authenticated perf-status
 - [ ] Check database connections
 - [ ] Verify cron jobs scheduled
 - [ ] Document deployment date and version
@@ -955,4 +954,4 @@ Error: sorry, too many clients already
 
 ---
 
-**Last Updated:** 2025-11-03
+**Last Updated:** 2026-05-19

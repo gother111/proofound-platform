@@ -102,11 +102,10 @@ Supabase social auth callback requirements (same Google and LinkedIn client IDs)
 
 Notes:
 
-- `ZOOM_REDIRECT_URI` and `GOOGLE_REDIRECT_URI` must match the redirect URIs configured in the provider consoles.
+- `GOOGLE_REDIRECT_URI` must match the redirect URI configured in the provider console.
 - `GOOGLE_CLIENT_ID` must be the raw OAuth client id (for example `...apps.googleusercontent.com`) and must not include `http://` or `https://`.
 - For app-managed Google Meet integration, prefer `GOOGLE_REDIRECT_URI=/api/integrations/google/callback`.
-- For app-managed Zoom integration, prefer `ZOOM_REDIRECT_URI=/api/integrations/zoom/callback`.
-- Add fully-qualified callback URLs for each app host in provider dashboards (production, localhost, and stable preview domains).
+- Add fully-qualified Google callback URLs for each app host in provider dashboards (production, localhost, and stable preview domains).
 - For LinkedIn settings integration, callback must include `https://<site-domain>/api/auth/linkedin/callback`.
 - LinkedIn callback URI behavior:
   - Absolute `LINKEDIN_REDIRECT_URI`: used as-is.
@@ -126,8 +125,8 @@ Strict provider E2E deterministic account:
 
 - `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`
 - `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`
-- `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`
-- Deterministic user must have both Zoom and Google connected before strict gates.
+- Connected-provider runs should use only provider flows intentionally in scope for the target.
+- The locked MVP interview posture remains manual-link first; native Zoom/video integration must not be reintroduced as a launch gate.
 
 ## Install Dependencies
 
