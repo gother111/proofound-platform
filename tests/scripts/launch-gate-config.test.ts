@@ -134,6 +134,15 @@ describe('launch gate package configuration', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('keeps the broad legacy PRD database script archived', () => {
+    expect(fs.existsSync(path.join(repoRoot, 'tests/comprehensive-prd-test.ts'))).toBe(false);
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'tests/archive/non_mvp_legacy_prd/comprehensive-prd.archived.ts')
+      )
+    ).toBe(true);
+  });
+
   it('keeps active E2E helpers away from the retired Expertise Atlas route', () => {
     const activeHelperFiles = fs
       .readdirSync(path.join(repoRoot, 'e2e/helpers'), { withFileTypes: true })

@@ -1,13 +1,17 @@
 /**
- * Comprehensive PRD Flow Testing Script
+ * Archived comprehensive PRD flow testing script
  *
- * This script systematically tests all flows from the PRD:
+ * Historical only. This script systematically tested broad flows from an older PRD:
  * - Individual flows (I-00 to I-30)
  * - Organization flows (O-01 to O-20)
  * - Database connectivity and persistence
  * - API endpoints
  *
- * Run with: npx tsx tests/comprehensive-prd-test.ts
+ * Do not use this as launch evidence for the locked MVP corridor. It includes retired
+ * Expertise Atlas and Zen/wellbeing checks.
+ *
+ * Historical run command before archive:
+ * npx tsx tests/comprehensive-prd-test.ts
  */
 
 import { db } from '@/db';

@@ -186,6 +186,12 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Added/updated focused UI expectations so active tests fail if the old legacy-bundle language returns.
 - Browser evidence on `localhost:33180`: `/app/i/settings` rendered `Account-side checks`, `Work email account check`, and `LinkedIn account check`, with no `compatibility signal`, no `Account compatibility`, no loading state, and no runtime-error text after the settings content settled.
 
+23. Legacy comprehensive PRD script still lived in the active test tree.
+
+- Found `tests/comprehensive-prd-test.ts`, a manually runnable broad PRD database script that still checked retired Expertise Atlas and Zen/wellbeing tables.
+- Moved it to `tests/archive/non_mvp_legacy_prd/comprehensive-prd.archived.ts` and added an archive README explaining that it is historical context only, not launch evidence.
+- Registered the archive README in `docs/DOCS_REGISTRY.md`.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
