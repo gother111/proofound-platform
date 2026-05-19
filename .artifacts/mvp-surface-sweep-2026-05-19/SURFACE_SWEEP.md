@@ -1168,3 +1168,9 @@ Non-fatal test noise:
 - Found `agent/scratchpad.md` still classified active even though `AGENTS.md`, preflight, verification guidance, and the sharded README all define it as a frozen legacy shared log.
 - Reclassified `agent/scratchpad.md` as historical/archive, added current metadata, and made clear it is not current launch evidence, implementation status, or verification proof.
 - Preserved the historical entries in place while keeping routine work directed to `agent/scratchpad/entries/` via `npm run log:session`.
+
+## Continuation - Authority Metadata Freshness
+
+- Found stale active registry dates on the locked MVP authority stack while the documents remain current launch-binding sources under `AGENTS.md`.
+- Added explicit freshness metadata to the aligned PRD, technical requirements, and launch runbook, and refreshed metadata on `AGENTS.md`, the locked MVP source, and GTM plan without changing product scope or behavior.
+- Updated `docs/DOCS_REGISTRY.md` and the launch gate guard so future sweeps can distinguish current authority from stale reference material.

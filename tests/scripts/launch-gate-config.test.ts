@@ -99,6 +99,29 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the locked MVP authority stack fresh and visibly classified', () => {
+    const docsRegistry = compactWhitespace(
+      fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8')
+    );
+    const authorityDocs = [
+      ['AGENTS.md', 'repo+live'],
+      ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md', 'repo'],
+      ['PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md', 'repo+live'],
+      ['PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md', 'repo+live'],
+      ['LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md', 'repo+live'],
+      ['Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md', 'repo+live'],
+    ] as const;
+
+    for (const [docPath, verificationSource] of authorityDocs) {
+      const content = fs.readFileSync(path.join(repoRoot, docPath), 'utf8');
+      expect(content).toContain('Doc Class:');
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(docsRegistry).toContain(
+        `| \`${docPath}\` | \`active\` | \`root\` | \`${verificationSource}\` | \`2026-05-19\``
+      );
+    }
+  });
+
   it('keeps local developer setup and lint troubleshooting aligned with current scripts', () => {
     const localDev = fs.readFileSync(path.join(repoRoot, 'docs/local-dev.md'), 'utf8');
     const lintTroubleshooting = fs.readFileSync(

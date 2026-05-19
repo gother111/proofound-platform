@@ -1,5 +1,8 @@
 # Proofound MVP Launch Runbook — Aligned Rewrite
 
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
 **Status:** Aligned rewrite for current MVP  
 **Date:** 2026-03-11  
 **Audience:** Engineering, ops, QA, founder, product  

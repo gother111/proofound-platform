@@ -1,5 +1,5 @@
 > Doc Class: `governance`
-> Last Verified: `2026-05-14`
+> Last Verified: `2026-05-19`
 
 # Repository Agent Instructions
 

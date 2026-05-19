@@ -1,7 +1,7 @@
 # Proofound GTM and Initial Marketing Plan
 
 Doc Class: `governance`
-Last Verified: `2026-05-03`
+Last Verified: `2026-05-19`
 Launch status: `MVP pilot ready after restore drill approval`
 
 This file restores the GTM authority document referenced by the locked MVP source of truth. It keeps GTM scope narrow: a proof-first hiring corridor for design partners who need stronger signal than CVs, not a broad marketplace launch.
