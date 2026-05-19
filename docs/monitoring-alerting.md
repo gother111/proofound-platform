@@ -1,10 +1,13 @@
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
 # Monitoring and Alerting Guide
 
 ## Overview
 
 This guide covers setting up comprehensive monitoring and alerting for the Proofound application in production. It includes error monitoring, performance tracking, log aggregation, and incident response procedures.
 
-Launch note: `PRD_TECHNICAL_REQUIREMENTS.md` Section 7 is the canonical launch contract for monitoring, logging boundaries, recovery targets, and operational readiness. This guide should be read as implementation support, not a competing launch spec.
+Launch note: `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` Section 7 is the canonical launch contract for monitoring, logging boundaries, recovery targets, and operational readiness. This guide should be read as implementation support, not a competing launch spec. Historical PASS/FAIL run logs below are not current production-candidate signoff evidence.
 
 ---
 
@@ -205,6 +208,7 @@ npm install -g @sentry/cli
 ### Pre-commit Vercel Gate (Run Log)
 
 Use this section to record local parity checks run before committing changes that could affect deploy (build, env, or Vercel settings). Do not paste secrets.
+The dated rows below are historical local/deploy-parity notes for their named commit and must not be treated as current production-candidate launch evidence.
 
 - 2026-02-06 22:50 CET (base commit at time of run: `ed6c95e3e27086fc9a028364b52e0fc6517fd3fb`, Node `v20.20.0`):
   - `npm ci`: PASS

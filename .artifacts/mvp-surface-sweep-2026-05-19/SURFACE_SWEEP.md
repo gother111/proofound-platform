@@ -1317,3 +1317,8 @@ Non-fatal test noise:
 - Found `docs/codex-progress.md` registered as historical but still opening with a March 2026 machine-readable state and stale current-block language.
 - Added historical metadata plus a visible supersession note that directs operators to `docs/CURRENT_TRUTH.md`, this sweep artifact, and fresh repo evidence before citing any PASS/FAIL/UNVERIFIED or blocker language from the log.
 - Updated `docs/DOCS_REGISTRY.md` so the preserved progress log reflects the 2026-05-19 historical-boundary refresh.
+
+## Continuation - Monitoring Guide Evidence Boundary
+
+- Found active `docs/monitoring-alerting.md` without doc metadata, still pointing at the older unaligned technical requirements filename and containing a February Vercel `PASS` run log.
+- Added active metadata, pointed the launch contract note at `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, and clarified that historical PASS/FAIL run logs are not current production-candidate signoff evidence.
