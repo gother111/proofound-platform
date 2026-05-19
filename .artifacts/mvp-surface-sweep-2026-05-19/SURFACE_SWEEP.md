@@ -876,3 +876,9 @@ Non-fatal test noise:
 - Replaced stale fairness/rank-band language with review-overprecision protection, reason-coded review, privacy-safe shortlist review, and the current internal queue mapping: `verification`, `correction_revocation`, `privacy_reveal_exception`, and `pilot_ops`.
 - Updated `docs/DOCS_REGISTRY.md` and added launch-gate coverage so the active guide cannot drift back to `fairness_suppressed_ranking`, `fairness_remediation`, `verification_pending_manual`, old broad PRD authority, or manual fairness-note scope.
 - Browser rechecked the user-open `http://localhost:33180/portfolio/demo` route after the launch-ops refresh. It rendered `Public Page Unavailable | Proofound`, a visible `Public Page unavailable` h1, safe unavailable copy, no console warnings/errors, and no visible framework overlay. Evidence saved at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/portfolio-demo-launch-ops-refresh-2026-05-19.json` and `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/portfolio-demo-launch-ops-refresh-2026-05-19.png`.
+
+## Continuation - Project Orientation Launch-Gate Refresh
+
+- Found active root/project orientation docs still pointing at the retired `scripts/go-no-go-check.mjs` gate even though `npm run go:no-go` now runs `scripts/go-no-go-check.ts` and the `.mjs` implementation is archived.
+- Refreshed `Architecture.md`, `project/Architecture.md`, `Documentation.md`, `project/Documentation.md`, `metrics.md`, `Prompt.md`, and `project/Prompt.md` to `Last Verified: 2026-05-19`, updated their launch-gate references to the active TypeScript go/no-go command, and named current evidence dependencies without reintroducing the retired script.
+- Updated `docs/DOCS_REGISTRY.md` freshness for the sync-pair docs and expanded launch-gate coverage so those active orientation docs must point at `scripts/go-no-go-check.ts` and must not point future agents back to `scripts/go-no-go-check.mjs`.

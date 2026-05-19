@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Prompt.md`
-> Last Verified: `2026-05-14`
+> Last Verified: `2026-05-19`
 
 # Proofound: Project Prompt
 
@@ -17,7 +17,7 @@ Proofound is a proof-first, privacy-first hiring credibility corridor centered o
 - API surface: server endpoints are implemented as App Router route handlers under `src/app/api/`. (source: src/app/api/)
 - Security middleware: CSP/security headers, CSRF protection, and optional edge rate limiting live in `src/middleware.ts`. (source: src/middleware.ts)
 - Deployment + cron: cron schedules are configured in `vercel.json` and target `/api/cron/*` routes. (source: vercel.json, src/app/api/cron/)
-- CI gates: lint, typecheck, unit tests, build, then perf budgets and go/no-go gates. (source: .github/workflows/ci.yml, scripts/perf-budgets.mjs, scripts/go-no-go-check.mjs)
+- CI gates: lint, typecheck, unit tests, build, then perf budgets and the TypeScript go/no-go gate run by `npm run go:no-go`. (source: .github/workflows/ci.yml, scripts/perf-budgets.mjs, package.json, scripts/go-no-go-check.ts)
 - Environment variables: templates are in `.env.example` and `docs/ENV_VARIABLES.md`; secret env files are gitignored. (source: .env.example, docs/ENV_VARIABLES.md, .gitignore)
 - Safety note: existing setup docs may contain concrete credentials; do not copy secrets into tracked files. (source: SETUP_SUPABASE.md)
 

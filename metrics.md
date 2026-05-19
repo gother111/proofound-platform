@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Documentation.md`
-> Last Verified: `2026-03-12`
+> Last Verified: `2026-05-19`
 
 # Documentation (Status + Index)
 
@@ -699,7 +699,7 @@ Open risks/TODO:
 
 TODO (missing / validate; do not create here):
 
-- `ACCESSIBILITY_AUDIT_REPORT.md` (expected because `scripts/go-no-go-check.mjs` requires it) (source: scripts/go-no-go-check.mjs)
+- `ACCESSIBILITY_AUDIT_REPORT.md` (current go/no-go evidence dependency for `npm run go:no-go`; the retired `.mjs` gate is archived) (source: scripts/go-no-go-check.ts, scripts/archive/legacy_go_no_go/README.md)
 - `playwright.a11y.config.ts` (expected because `npm run test:a11y` references it) (source: package.json)
 
 ---

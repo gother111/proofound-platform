@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Architecture.md`
-> Last Verified: `2026-05-14`
+> Last Verified: `2026-05-19`
 
 # Architecture Snapshot
 
@@ -100,11 +100,11 @@ This document records a lightweight, repo-grounded architecture view. Statements
 
 - CI runs lint, typecheck, unit tests, build, starts the app, then runs perf budgets and go/no-go gates. (source: .github/workflows/ci.yml)
 - Perf budgets are implemented in `scripts/perf-budgets.mjs` (Lighthouse + API p95). (source: scripts/perf-budgets.mjs)
-- Go/no-go checks are implemented in `scripts/go-no-go-check.mjs` and require evidence files. (source: scripts/go-no-go-check.mjs)
+- Go/no-go checks are implemented by `npm run go:no-go`, which runs `scripts/go-no-go-check.ts`. The retired `.mjs` gate is archived under `scripts/archive/legacy_go_no_go/`. (source: package.json, scripts/go-no-go-check.ts, scripts/archive/legacy_go_no_go/README.md)
 
 ## Risk Areas / TODOs
 
 - Repo Truth: CSP/security headers are set in both `next.config.js` and `src/middleware.ts`. (source: next.config.js, src/middleware.ts)
 - Guidance: Coordinate security header changes across both surfaces to avoid policy drift.
-- Go/no-go evidence remains an operational dependency through `ACCESSIBILITY_AUDIT_REPORT.md` in `scripts/go-no-go-check.mjs`. (source: scripts/go-no-go-check.mjs, ACCESSIBILITY_AUDIT_REPORT.md)
+- Go/no-go evidence remains an operational dependency through `ACCESSIBILITY_AUDIT_REPORT.md`, `RLS_DEPLOYMENT_SUMMARY.md`, fresh launch smoke, restore-readiness evidence, authenticated perf status with `/api/assignments` latency samples, and launch-status readiness. (source: scripts/go-no-go-check.ts, docs/performance-testing.md, docs/release-checklist.md)
 - Guidance: `PYTHON_INTERNAL_SERVICE_SECRET` should be configured explicitly before moving the document-intelligence service to a separate deployment; relying on `CRON_SECRET` fallback is acceptable only as a transitional compatibility path. (source: src/lib/python-internal/service.ts, api/python/cv_import.py)

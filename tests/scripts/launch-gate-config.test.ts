@@ -253,6 +253,28 @@ describe('launch gate package configuration', () => {
     ).toBe(true);
     expect(fs.existsSync(path.join(repoRoot, 'scripts/go-no-go-check.ts'))).toBe(true);
 
+    const orientationDocs = [
+      'Architecture.md',
+      'Documentation.md',
+      'metrics.md',
+      'Prompt.md',
+      'project/Architecture.md',
+      'project/Documentation.md',
+      'project/Prompt.md',
+    ];
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    for (const docPath of orientationDocs) {
+      const content = fs.readFileSync(path.join(repoRoot, docPath), 'utf8');
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).toContain('scripts/go-no-go-check.ts');
+      expect(content).not.toContain('scripts/go-no-go-check.mjs');
+      const registryLine = docsRegistry
+        .split('\n')
+        .find((line) => line.includes(`| \`${docPath}\``));
+      expect(registryLine).toContain('| `2026-05-19`');
+    }
+
     const activeDocs = listFiles(path.join(repoRoot, 'docs')).filter(
       (file) => file.endsWith('.md') && !file.includes(`${path.sep}archive${path.sep}`)
     );
