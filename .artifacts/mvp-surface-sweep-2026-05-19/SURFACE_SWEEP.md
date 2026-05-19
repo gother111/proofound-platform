@@ -1095,3 +1095,9 @@ Non-fatal test noise:
 - Found GitHub workflows still setting `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true` and the retired `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`, conflicting with current launch docs and `scripts/run-mvp-strict-gates.mjs`, where connected-provider credentials are required only for intentional connected-provider runs and manual-link interview scheduling remains the locked MVP default.
 - Reset CI, strict-quality, retry-vercel-deploy, and Playwright workflow defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` and removed the stale `STRICT_PROVIDER_E2E_REQUIRE_BOTH` variable so normal PR, manual strict, and production prebuilt deployment gates do not require Zoom/Google provider scope by default.
 - Reclassified `.vercel-deploy-trigger.md` from active launch evidence to a historical timestamp note, pointing current deployment evidence back to the prebuilt GitHub Actions workflow, Vercel deployment metadata, release checklists, and this sweep artifact.
+
+## Continuation - Historical RLS Deployment Summary Reclassification
+
+- Found `RLS_DEPLOYMENT_SUMMARY.md` still classified as active launch evidence while it contained a 2025 one-time RLS deployment snapshot with broad 100% coverage, compliance, and production-ready claims that no longer match the current migration series or MVP privacy surfaces.
+- Reclassified the file as historical and replaced the active-looking rollout report with a short supersession note pointing current RLS/privacy signoff to repo-owned migrations, drift/backup/audit/migrate/restore gates, active privacy tests, storage policy tests, and fresh target evidence.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the old `001_enable_rls_policies` snapshot cannot be mistaken for current production-candidate RLS evidence.

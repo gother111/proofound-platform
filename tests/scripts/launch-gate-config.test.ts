@@ -1042,6 +1042,31 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the old RLS deployment summary out of current launch evidence', () => {
+    const rlsSummary = fs.readFileSync(path.join(repoRoot, 'RLS_DEPLOYMENT_SUMMARY.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(rlsSummary).toContain('Doc Class: `historical`');
+    expect(rlsSummary).toContain('Last Verified: `2026-05-19`');
+    expect(compactWhitespace(rlsSummary)).toContain('Do not use it as current launch evidence');
+    expect(rlsSummary).toContain('tests/privacy/rls-mvp-isolation.test.ts');
+    expect(rlsSummary).toContain('tests/privacy/storage-policies.test.ts');
+    expect(rlsSummary).toContain('npm run db:drift-check');
+    expect(rlsSummary).toContain('npm run db:backup:checkpoint');
+    expect(rlsSummary).toContain('npm run db:audit:migrations');
+    expect(rlsSummary).toContain('npm run db:migrate');
+    expect(rlsSummary).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(rlsSummary).toContain('Do not use `npm run db:push`');
+    expect(rlsSummary).toContain('Historical Snapshot');
+    expect(rlsSummary).not.toContain('Production-ready');
+    expect(rlsSummary).not.toContain('GDPR Compliance');
+    expect(rlsSummary).not.toContain('100% Coverage');
+    expect(rlsSummary).not.toContain('Action Required');
+    expect(docsRegistry).toContain(
+      '| `RLS_DEPLOYMENT_SUMMARY.md`                                                                             | `historical`     | `root`        | `archive`           | `2026-05-19`'
+    );
+  });
+
   it('keeps the deployment checklist aligned with launch-safe migration and smoke gates', () => {
     const deploymentChecklist = fs.readFileSync(
       path.join(repoRoot, 'docs/DEPLOYMENT_CHECKLIST.md'),
