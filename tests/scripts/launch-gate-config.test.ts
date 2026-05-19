@@ -2629,6 +2629,41 @@ describe('launch gate package configuration', () => {
     expect(archivedSkillGapsReadme).toContain('outside the locked MVP corridor');
   });
 
+  it('keeps unfinished assignment and coming-soon UI out of active components', () => {
+    const activeRetiredComponents = [
+      'src/components/matching/AssignmentBuilderV2.tsx',
+      'src/components/matching/WeightsFiltersSheet.tsx',
+      'src/components/ComingSoon.tsx',
+    ];
+    const archivedRetiredComponents = [
+      'src/archive/non_launch_assignment_collaboration/components/matching/AssignmentBuilderV2.tsx',
+      'src/archive/non_launch_assignment_collaboration/components/matching/WeightsFiltersSheet.tsx',
+      'src/archive/non_launch_pages/components/ComingSoon.tsx',
+      'src/archive/non_launch_pages/components/README.md',
+    ];
+
+    for (const activePath of activeRetiredComponents) {
+      expect(fs.existsSync(path.join(repoRoot, activePath))).toBe(false);
+    }
+    for (const archivedPath of archivedRetiredComponents) {
+      expect(fs.existsSync(path.join(repoRoot, archivedPath))).toBe(true);
+    }
+
+    const assignmentArchiveReadme = fs.readFileSync(
+      path.join(repoRoot, 'src/archive/non_launch_assignment_collaboration/README.md'),
+      'utf8'
+    );
+    const genericComponentsReadme = fs.readFileSync(
+      path.join(repoRoot, 'src/archive/non_launch_pages/components/README.md'),
+      'utf8'
+    );
+
+    expect(compactWhitespace(assignmentArchiveReadme)).toContain(
+      'unfinished TODO/coming-soon behavior'
+    );
+    expect(genericComponentsReadme).toContain('should not render generic "coming soon"');
+  });
+
   it('keeps retired fairness settings implementation archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'src/app/app/i/settings/fairness'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'src/components/settings/DemographicOptIn.tsx'))).toBe(

@@ -1397,3 +1397,9 @@ Non-fatal test noise:
 - Found `src/components/skill-gaps/SkillGapsClient.tsx` and `LearningRecommendations.tsx` still under active components even though `/app/i/skill-gaps` and `/api/skill-gaps*` are archived outside the locked MVP corridor.
 - Moved the retired skill-gaps client implementation under `src/archive/non_launch_pages/app/i/skill-gaps/implementation/`, added an archive README, and updated the archived Expertise Atlas island to import the archived client path.
 - Added launch-gate coverage so the retired skill-gaps UI cannot quietly return to active `src/components` or keep active imports into archived `/api/skill-gaps*` behavior.
+
+## Continuation - Unfinished Active UI Component Archive Boundary
+
+- Found unused active components preserving TODO/coming-soon behavior: `src/components/matching/AssignmentBuilderV2.tsx`, `src/components/matching/WeightsFiltersSheet.tsx`, and `src/components/ComingSoon.tsx`.
+- Moved the retired assignment builder/filter controls into `src/archive/non_launch_assignment_collaboration/components/matching/` and the generic coming-soon component into `src/archive/non_launch_pages/components/`.
+- Added archive README coverage and launch-gate assertions so generic coming-soon placeholders and unfinished assignment controls do not sit in active MVP component paths.
