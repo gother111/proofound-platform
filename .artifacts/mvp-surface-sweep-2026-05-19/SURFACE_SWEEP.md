@@ -126,6 +126,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Registered the remaining orphan Markdown files in `docs/DOCS_REGISTRY.md` as reference or historical documentation surfaces, keeping generated source-refresh snapshots historical where appropriate.
 - Reran `npm run docs:freshness`; it now passes with no findings.
 
+15. API reference freshness lagged the launch route inventory.
+
+- Updated `scripts/generate-api-reference.mjs` so generated API docs include the launch-surface classification from `src/lib/launch/surface-policy.ts`.
+- Fixed method extraction for re-export-only handlers such as `/api/match/assignment`, `/api/match/interest`, and `/api/match/profile`, removing stale `UNKNOWN` method output.
+- Regenerated `docs/API_REFERENCE.md`: it now reports 139 route handlers, 109 active MVP APIs, 16 internal launch-ops APIs, and 14 archived compatibility APIs.
+- Admin/internal routes now show `Auth Tier` `internal` and `Launch Surface` `internal launch ops` instead of appearing as ordinary public endpoints.
+- Archived compatibility routes such as legacy analytics, CV wizard, old deletion crons, `/api/match/test`, `/api/performance/track`, and `/api/profile/completeness` are explicitly marked `archived compatibility`.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -211,8 +219,10 @@ Commands run with Node 25 path:
 - `npm run test -- tests/api/verification-status-route.test.ts tests/ui/verification-status-options.test.tsx tests/api/org-match-review-route.test.ts tests/api/conversation-reveal-route.test.ts tests/api/engagement-verifications-route.test.ts tests/lib/authz-policy.test.ts tests/lib/workflow-decision-record.test.ts` - passed, 7 files / 55 tests.
 - `npm run test:strict:quality` - passed for 8 strict E2E files.
 - `npm run test:e2e:org:strict` - first sandbox run failed before tests because the Playwright web server could not bind `0.0.0.0:33100` (`EPERM`); approved escalated rerun passed, 7/7 in 7.9m.
+- `node scripts/generate-api-reference.mjs` - regenerated `docs/API_REFERENCE.md` with 139 endpoints across 31 families and launch-surface classifications.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after the default Node runtime failed before tests on `node:fs/promises.constants`.
 - `npm run lint` - passed.
-- `npm run typecheck` - passed.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.
 - `npm run docs:freshness` - passed with no findings after registry cleanup.
 - `rg` active-test sweep after archiving: active tests no longer import `ExpertiseAtlasClient`, old CV/JD import wizard components, broad Add Skill drawer flows, or archived L4 card/widget tests outside `tests/archive/`.
 - `rg` active-test sweep after admin archiving: active tests outside `src/archive` and `tests/archive` no longer import archived admin users/fairness route modules, `OrganizationsTable`, `generateFairnessNoteResult`, or the retired `calculateFairnessGaps` broad admin helper.
@@ -222,6 +232,7 @@ Non-fatal test noise:
 
 - Vitest/Vite reported `listen EPERM` for WebSocket port `24678` in the sandbox, but tests completed and passed.
 - Node emitted existing `--localstorage-file` warnings during Vitest runs.
+- Default-runtime `npm run test:launch:routes` failed before tests because the local Node version did not expose `node:fs/promises.constants` for the current Vite package. The same route inventory command passed under the repo-required Node 25 runtime.
 - Archived `notFound()` page tests log jsdom React error output while asserting the 404 boundary; the archived tests passed.
 - Strict org E2E emitted a slow `/api/assignments` GET warning at 21633ms and `assignment.create.unknown_matrix_skills` for strict resume fixture skills. The suite still passed; assignment runtime performance remains a Phase 3 watch item.
 
