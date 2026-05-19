@@ -383,6 +383,44 @@ describe('launch gate package configuration', () => {
     expect(templates).toContain('locked MVP corridor');
   });
 
+  it('keeps launch operations guidance aligned with the current MVP corridor', () => {
+    const launchOperations = fs.readFileSync(
+      path.join(repoRoot, 'docs/launch-operations-mvp.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(launchOperations).toContain('Last Verified: `2026-05-19`');
+    expect(launchOperations).toContain('Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md');
+    expect(launchOperations).toContain('PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite');
+    expect(launchOperations).toContain('internal-ops/index.md');
+    expect(launchOperations).toContain('production-readiness-checklist.md');
+    expect(launchOperations).toContain('backlog/phase-exit-checklist.md');
+    expect(launchOperations).toContain('production-candidate backup checkpoint evidence');
+    expect(launchOperations).toContain('isolated restore rehearsal evidence');
+    expect(launchOperations).toContain('/api/assignments` latency/perf-status evidence');
+    expect(launchOperations).toContain('authenticated `/api/monitoring/perf-status`');
+    expect(launchOperations).toContain('review_overprecision_protected');
+    expect(launchOperations).toContain('reason-coded review');
+    expect(launchOperations).toContain('`verification`: pending or disputed verification reviews.');
+    expect(launchOperations).toContain('`correction_revocation`: redaction, risky upload');
+    expect(launchOperations).toContain(
+      '`privacy_reveal_exception`: privacy or reveal dispute review.'
+    );
+    expect(launchOperations).toContain(
+      '`pilot_ops`: assignment-quality, engagement-verification, and thin-supply handoffs.'
+    );
+    expect(launchOperations).not.toContain('fairness_suppressed_ranking');
+    expect(launchOperations).not.toContain('fairness_remediation');
+    expect(launchOperations).not.toContain('manual fairness note generation');
+    expect(launchOperations).not.toContain('verification_pending_manual');
+    expect(launchOperations).not.toContain('rank bands');
+    expect(launchOperations).not.toContain('PRD_for_a_web_platform_MVP.master-latest.md');
+    expect(docsRegistry).toContain(
+      '| `docs/launch-operations-mvp.md`                                                                         | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps retired wellbeing API tests archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'tests/api-endpoints-test.ts'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'tests/lib/wellbeing-client.test.ts'))).toBe(false);

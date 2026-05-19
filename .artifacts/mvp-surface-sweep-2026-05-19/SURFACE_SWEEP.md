@@ -868,3 +868,11 @@ Non-fatal test noise:
 - Refreshed the internal-ops SOP dates, linked the index to the current production-readiness, phase-exit, and sweep evidence, and made the queue access expectation explicit: admin/internal-only, with no public or logged-out queue content.
 - Added user-communication guardrails so manual workflow comms do not include private proof content, hidden identity details, secrets, queue IDs, or diagnostic output.
 - Added launch-gate coverage that keeps the internal ops SOP set current and tied to protected admin/internal queue surfaces.
+
+## Continuation - Launch Operations Scope Refresh
+
+- Found active `docs/launch-operations-mvp.md` still verified on 2026-03-25 and carrying older Block 9 language that promoted broad fairness/ranking/queue machinery as launch guidance.
+- Refreshed the launch-ops guide to the locked MVP authority stack, pointed it at current internal-ops, production-readiness, and phase-exit evidence, and named the still-open production-candidate backup, isolated restore, `/api/assignments` latency/perf-status, and final go/no-go gates.
+- Replaced stale fairness/rank-band language with review-overprecision protection, reason-coded review, privacy-safe shortlist review, and the current internal queue mapping: `verification`, `correction_revocation`, `privacy_reveal_exception`, and `pilot_ops`.
+- Updated `docs/DOCS_REGISTRY.md` and added launch-gate coverage so the active guide cannot drift back to `fairness_suppressed_ranking`, `fairness_remediation`, `verification_pending_manual`, old broad PRD authority, or manual fairness-note scope.
+- Browser rechecked the user-open `http://localhost:33180/portfolio/demo` route after the launch-ops refresh. It rendered `Public Page Unavailable | Proofound`, a visible `Public Page unavailable` h1, safe unavailable copy, no console warnings/errors, and no visible framework overlay. Evidence saved at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/portfolio-demo-launch-ops-refresh-2026-05-19.json` and `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/portfolio-demo-launch-ops-refresh-2026-05-19.png`.
