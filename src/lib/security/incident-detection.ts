@@ -1,12 +1,12 @@
 /**
  * Security Incident Detection System
- * 
+ *
  * Monitors application for security events and triggers alerts:
  * - Failed login attempts (brute force detection)
  * - Unusual data access patterns
  * - RLS policy violations
  * - Unauthorized API access attempts
- * 
+ *
  * Integrates with Sentry for real-time alerting
  */
 
@@ -49,9 +49,10 @@ interface SecurityEvent {
  * Logs to system and alerts via Sentry for HIGH/CRITICAL events
  */
 export function reportSecurityEvent(event: SecurityEvent): void {
-  const logLevel = event.severity === SecuritySeverity.CRITICAL || event.severity === SecuritySeverity.HIGH
-    ? 'error'
-    : 'warn';
+  const logLevel =
+    event.severity === SecuritySeverity.CRITICAL || event.severity === SecuritySeverity.HIGH
+      ? 'error'
+      : 'warn';
 
   // Log to application logs
   log[logLevel]('security.incident_detected', {
@@ -83,8 +84,7 @@ export function reportSecurityEvent(event: SecurityEvent): void {
     });
   }
 
-  // TODO: Send to #security-incidents Slack channel for CRITICAL events
-  // This requires Slack webhook integration
+  // Post-MVP: add Slack/webhook alerting for critical events after an owner and destination exist.
   if (event.severity === SecuritySeverity.CRITICAL) {
     // await sendSlackAlert(event);
   }
@@ -305,9 +305,8 @@ export interface SecurityStats {
   last24Hours: number;
 }
 
-// Note: This would query analytics_events table in production
 export async function getSecurityStats(): Promise<SecurityStats> {
-  // Placeholder - implement with actual database queries
+  // Post-MVP: query persisted security events when the security dashboard is active.
   return {
     totalEvents: 0,
     criticalEvents: 0,
@@ -331,8 +330,12 @@ export function withSecurityMonitoring<T extends (...args: any[]) => any>(
 ): T {
   return (async (...args: any[]) => {
     try {
-      // TODO: Add rate limiting check
-      // TODO: Add authentication check
+      if (options.requireAuth || options.rateLimit) {
+        throw new Error(
+          'withSecurityMonitoring does not enforce auth or rate limits; use the active route guard instead.'
+        );
+      }
+
       // Call actual handler
       return await handler(...args);
     } catch (error) {
@@ -348,4 +351,3 @@ export function withSecurityMonitoring<T extends (...args: any[]) => any>(
     }
   }) as T;
 }
-

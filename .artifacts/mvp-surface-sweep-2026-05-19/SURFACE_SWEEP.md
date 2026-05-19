@@ -1216,6 +1216,10 @@ Non-fatal test noise:
   - `npm run test:a11y -- --reporter=line` passed outside the sandbox with `11 passed / 4 skipped`.
   - `npx vitest run --config vitest.archived.config.ts tests/archive/non_mvp_evidence_pack/evidence-pack.archived.test.ts` passed `11/11`.
   - Focused launch-gate/inventory tests, docs freshness, lint, typecheck, and portfolio PDF smoke tests passed.
+- Follow-up active-source residue sweep removed commented SQL against a nonexistent `applications`
+  table, converted phase-2 notes to explicit post-MVP language, made the unused security-monitoring
+  wrapper fail closed when callers request auth/rate-limit enforcement it does not provide, and
+  clarified mock RPC fallback copy.
 
 ## Continuation - Phase 4 Local Smoke Refresh
 

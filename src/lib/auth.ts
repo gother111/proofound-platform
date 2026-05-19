@@ -648,7 +648,7 @@ export async function requirePersona(expected: ProfileRow['persona']) {
 
 export async function checkAdminRole(userId: string): Promise<boolean> {
   // For MVP, hardcode admin emails (Pavlo and Yurii)
-  // TODO: Move to database table in Phase 2
+  // Post-MVP: move this allowlist to a managed role table.
   const adminEmails = ['pavlo@proofound.io', 'yurii@proofound.io'];
 
   const supabase = await createClient();

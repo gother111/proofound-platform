@@ -58,43 +58,7 @@ export async function calculateNextActions(organizationId: string): Promise<Next
     }
   }
 
-  /*
-  // 2. Check for pending candidate reviews
-  // TODO: Re-enable when applications table is defined
-  const pendingApplications = await db.execute(sql`
-    SELECT 
-      COUNT(*) as pending_count,
-      a.id as assignment_id,
-      a.role
-    FROM applications app
-    JOIN ${assignments} a ON app.assignment_id = a.id
-    WHERE a.organization_id = ${organizationId}
-      AND app.status = 'pending'
-      AND app.created_at < ${new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)}
-    GROUP BY a.id, a.role
-    HAVING COUNT(*) > 0
-    ORDER BY COUNT(*) DESC
-    LIMIT 3
-  `);
-
-  for (const row of pendingApplications.rows as any[]) {
-    const count = parseInt(row.pending_count);
-    if (count > 0) {
-      actions.push({
-        id: `pending-reviews-${row.assignment_id}`,
-        priority: count > 5 ? 'critical' : 'high',
-        category: 'candidate',
-        title: `${count} ${count === 1 ? 'candidate' : 'candidates'} awaiting review`,
-        description: `${row.role || 'Untitled assignment'} has ${count} applications pending for 3+ days.`,
-        actionLabel: 'Review Candidates',
-        actionUrl: `/o/${organizationId}/assignments/${row.assignment_id}/candidates`,
-        metadata: { assignmentId: row.assignment_id, count },
-      });
-    }
-  }
-  */
-
-  // 3. Check for low match quality (average score <0.5)
+  // 2. Check for low match quality (average score <0.5)
   const lowQualityAssignments = await db.execute(sql`
     SELECT 
       a.id as assignment_id,
@@ -123,52 +87,6 @@ export async function calculateNextActions(organizationId: string): Promise<Next
       metadata: { assignmentId: row.assignment_id, avgScore },
     });
   }
-
-  /*
-  // 4. Check for drop-off patterns (high application rate, low interview rate)
-  // TODO: Re-enable when applications table is defined
-  const dropOffAnalysis = await db.execute(sql`
-    WITH assignment_funnel AS (
-      SELECT 
-        a.id as assignment_id,
-        a.role,
-        COUNT(DISTINCT CASE WHEN app.status = 'submitted' THEN app.id END) as applications,
-        COUNT(DISTINCT CASE WHEN app.status = 'interview_scheduled' THEN app.id END) as interviews
-      FROM ${assignments} a
-      LEFT JOIN applications app ON app.assignment_id = a.id
-      WHERE a.organization_id = ${organizationId}
-        AND a.created_at >= ${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
-      GROUP BY a.id, a.role
-    )
-    SELECT 
-      assignment_id,
-      role,
-      applications,
-      interviews,
-      CASE 
-        WHEN applications > 0 THEN (interviews::float / applications::float)
-        ELSE 0
-      END as conversion_rate
-    FROM assignment_funnel
-    WHERE applications >= 10 
-      AND (interviews::float / NULLIF(applications, 0)::float) < 0.2
-    LIMIT 2
-  `);
-
-  for (const row of dropOffAnalysis.rows as any[]) {
-    const conversionRate = Math.round(parseFloat(row.conversion_rate) * 100);
-    actions.push({
-      id: `high-dropoff-${row.assignment_id}`,
-      priority: 'medium',
-      category: 'process',
-      title: 'High drop-off rate detected',
-      description: `Only ${conversionRate}% of applicants reach interview stage for "${row.role}". Consider simplifying your application process.`,
-      actionLabel: 'Review Process',
-      actionUrl: `/o/${organizationId}/assignments/${row.assignment_id}`,
-      metadata: { assignmentId: row.assignment_id, conversionRate },
-    });
-  }
-  */
 
   // Sort by priority
   const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };

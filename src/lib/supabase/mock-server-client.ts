@@ -626,7 +626,7 @@ const mockSupabaseClient = {
     update: async () => ({ data: [], error: null }),
   }),
   // Return error for RPC to trigger fallback
-  rpc: async () => ({ data: null, error: { message: 'Mock RPC not implemented' } }),
+  rpc: async () => ({ data: null, error: { message: 'Mock RPC unavailable in local mode' } }),
   storage: {
     from: () => ({
       upload: async () => ({ data: null, error: null }),

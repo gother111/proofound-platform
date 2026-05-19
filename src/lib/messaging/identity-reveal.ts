@@ -125,7 +125,7 @@ export async function triggerIdentityReveal(conversationId: string): Promise<voi
       // Don't fail the request if email fails
     }
 
-    // TODO: Emit analytics event for identity_revealed
+    // Post-MVP: emit a dedicated identity_revealed analytics event.
 
     console.log(`Identity revealed for conversation ${conversationId}`);
   } catch (error) {
