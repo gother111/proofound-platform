@@ -35,6 +35,14 @@ function compactWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ');
 }
 
+function expectTextBefore(content: string, before: string, after: string): void {
+  const beforeIndex = content.indexOf(before);
+  const afterIndex = content.indexOf(after);
+  expect(beforeIndex).toBeGreaterThanOrEqual(0);
+  expect(afterIndex).toBeGreaterThanOrEqual(0);
+  expect(beforeIndex).toBeLessThan(afterIndex);
+}
+
 describe('launch gate package configuration', () => {
   it('pins the clean-checkout runtime and package manager', () => {
     const packageJson = readJson<{
@@ -614,6 +622,11 @@ describe('launch gate package configuration', () => {
     expect(releaseChecklist).toContain('npm run monitor:launch');
     expect(releaseChecklist).toContain('npm run db:backup:checkpoint');
     expect(releaseChecklist).toContain('npm run db:restore:verify');
+    expectTextBefore(
+      releaseChecklist,
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json',
+      'BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go'
+    );
     expect(releaseChecklist).toContain('/api/assignments` latency samples');
     expect(releaseChecklist).toContain(
       'manual-link interview posture remains the locked MVP default'
@@ -635,6 +648,22 @@ describe('launch gate package configuration', () => {
     );
     const launchMasterChecklist = fs.readFileSync(
       path.join(repoRoot, 'docs/mvp-launch-master-checklist.md'),
+      'utf8'
+    );
+    const deploymentChecklist = fs.readFileSync(
+      path.join(repoRoot, 'docs/DEPLOYMENT_CHECKLIST.md'),
+      'utf8'
+    );
+    const productionReadinessChecklist = fs.readFileSync(
+      path.join(repoRoot, 'docs/production-readiness-checklist.md'),
+      'utf8'
+    );
+    const releaseChecklist = fs.readFileSync(
+      path.join(repoRoot, 'docs/release-checklist.md'),
+      'utf8'
+    );
+    const phaseExitChecklist = fs.readFileSync(
+      path.join(repoRoot, 'docs/backlog/phase-exit-checklist.md'),
       'utf8'
     );
 
@@ -661,6 +690,20 @@ describe('launch gate package configuration', () => {
     expect(launchMasterChecklist).toContain(
       'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
     );
+    for (const content of [
+      deploymentChecklist,
+      launchMasterChecklist,
+      productionReadinessChecklist,
+      releaseChecklist,
+      phaseExitChecklist,
+    ]) {
+      expect(content).toContain('CRON_SECRET=<secret>');
+      expectTextBefore(
+        content,
+        'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json',
+        'BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go'
+      );
+    }
   });
 
   it('keeps root production and provider docs aligned with manual-link launch posture', () => {

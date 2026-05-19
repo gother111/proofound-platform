@@ -130,6 +130,8 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] `npm run test:privacy:extended`
 - [ ] `BASE_URL=<production-candidate-url> npm run perf:budgets`
 - [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
+- [ ] `npm run db:backup:checkpoint`
+- [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 - [ ] `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 - [ ] Local `next start` is stable after the build.
 - [ ] Local `/api/health` responds with `status:"ok"` and no diagnostics.

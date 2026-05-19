@@ -1332,3 +1332,9 @@ Non-fatal test noise:
 
 - Scanned active docs in `docs/DOCS_REGISTRY.md` for missing `Doc Class` markers.
 - Added active metadata to `docs/caching-pagination.md` and `docs/verification-checklist.md`; left `.github/SECURITY.md` in the public GitHub security-policy shape because it already carries a `Last Verified` marker and is user-facing repository policy.
+
+## Continuation - Final Restore Evidence Ordering
+
+- Found active final-gate checklists whose short command lists still went from perf or monitor directly to `go:no-go`, even though production-candidate `go:no-go` now requires a fresh restore report first.
+- Added backup checkpoint plus isolated `db:restore:verify --out .artifacts/launch-restore-report.json` steps before final `go:no-go` in the deployment, release, production-readiness, and launch-master checklist summaries.
+- Fixed the remaining Phase 4 backlog `go:no-go` examples so production-candidate runs include `CRON_SECRET=<secret>`.

@@ -36,6 +36,8 @@ go/no-go evidence.
 - [ ] `npm run test:e2e:providers:strict`
 - [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
 - [ ] `BASE_URL=<production-candidate-url> npm run perf:budgets`
+- [ ] `npm run db:backup:checkpoint` against the production-candidate target.
+- [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json` against an isolated recovery target.
 - [ ] `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 
 ### Optional Consolidated Runner
@@ -63,8 +65,7 @@ go/no-go evidence.
 - [ ] If migrations changed: `npm run db:migrate`
 - [ ] Do not use `npm run db:push` for production workflows.
 - [ ] Confirm the intended database target before running backup or restore scripts.
-- [ ] `npm run db:backup:checkpoint` against the production-candidate target.
-- [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json` against an isolated recovery target.
+- [ ] Confirm the restore report used by final `go:no-go` matches the checkpoint above.
 - [ ] Restore drill outcome is saved with date, target class, and owner.
 
 ## 4) Production Readiness Signals
