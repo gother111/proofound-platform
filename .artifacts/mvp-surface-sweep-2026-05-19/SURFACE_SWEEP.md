@@ -1233,3 +1233,11 @@ Non-fatal test noise:
 - Found three broad reference-spec root docs without explicit launch-authority boundaries at the top: `DATA_REQUIREMENTS_AND_AI_STRATEGY.md`, `FULL_PRODUCT_ARCHITECTURE_PLAN.md`, and `SPRINT_1_PLAN.md`.
 - Added `Doc Class: reference-spec`, `Last Verified: 2026-05-19`, and locked-MVP precedence notes so future sweeps do not mistake AI/data strategy, full-product architecture, or old sprint taxonomy material for current MVP launch scope.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so those broad reference docs stay visibly outside active MVP launch authority.
+
+## Continuation - Expertise Dataset Reference Boundary
+
+- Found `data/README-EXPERTISE-ATLAS-SKILLS.md` still classified as reference-spec but using active-sounding `Expertise Atlas MVP` language and import next steps, despite `/app/i/expertise` and the broad Atlas UI being archived/post-MVP.
+- Added explicit reference-spec metadata, locked-MVP precedence, and archived-UI warnings to the dataset README.
+- Reworded dataset descriptions so it is retained taxonomy/reference context, not active launch evidence or a route to revive archived Expertise Atlas UI/smart-search/database shortcuts.
+- Replaced active-sounding import/search/UI next steps with historical usage and reference-only follow-up language tied to target-approved taxonomy recovery, active migration/backup/restore runbooks, proof-skill selection, and assignment expertise helpers.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the retained dataset guidance stays aligned with the current archived Atlas posture.

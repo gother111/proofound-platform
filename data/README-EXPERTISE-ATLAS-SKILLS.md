@@ -1,12 +1,17 @@
 # Expertise Atlas - 20K Skills Dataset
 
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-19`
+> Reference note: retained taxonomy dataset context only. `/app/i/expertise` and the broad Expertise Atlas UI are archived outside the locked MVP launch corridor.
+> Current precedence: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded evidence. Do not use this dataset README to revive archived Expertise Atlas UI routes, old smart-search setup, or production database shortcuts.
+
 ## Overview
 
-This dataset contains **19,882 curated L4 skills** for the Expertise Atlas MVP, organized according to the taxonomy specified in `Expertise_Atlas_Product_Documentation_For_Individuals.md`.
+This dataset contains **19,882 curated L4 skills** for retained taxonomy/reference work, organized according to the archived taxonomy specified in `Expertise_Atlas_Product_Documentation_For_Individuals.md`. It is not active launch evidence for the old Expertise Atlas product surface.
 
 **Generated:** 2025-10-30
 **File:** `expertise-atlas-20k-l4-skills.json`
-**Based on:** ESCO/O*NET occupational frameworks, OECD transferable skills
+**Based on:** ESCO/O\*NET occupational frameworks, OECD transferable skills
 
 ---
 
@@ -25,15 +30,15 @@ The skills follow a 4-level taxonomy:
 
 ## L1 Domain Distribution
 
-| Code | Domain Name | L4 Count | % of Total | Description |
-|------|------------|----------|------------|-------------|
-| **U** | Universal Capabilities | 2,500 | 12.6% | Transferable cognitive, interpersonal, and personal effectiveness skills |
-| **F** | Functional Competencies | 5,000 | 25.1% | Professional and specialized functional capabilities |
-| **T** | Tools & Technologies | 6,000 | 30.2% | Specific tools, platforms, frameworks, and technologies |
-| **L** | Languages & Culture | 1,382 | 6.9% | Natural languages and cultural competencies |
-| **M** | Methods & Practices | 2,000 | 10.1% | Methodologies, frameworks, and best practices |
-| **D** | Domain Knowledge | 3,000 | 15.1% | Industry and domain-specific expertise |
-| **Total** | | **19,882** | **100%** | |
+| Code      | Domain Name             | L4 Count   | % of Total | Description                                                              |
+| --------- | ----------------------- | ---------- | ---------- | ------------------------------------------------------------------------ |
+| **U**     | Universal Capabilities  | 2,500      | 12.6%      | Transferable cognitive, interpersonal, and personal effectiveness skills |
+| **F**     | Functional Competencies | 5,000      | 25.1%      | Professional and specialized functional capabilities                     |
+| **T**     | Tools & Technologies    | 6,000      | 30.2%      | Specific tools, platforms, frameworks, and technologies                  |
+| **L**     | Languages & Culture     | 1,382      | 6.9%       | Natural languages and cultural competencies                              |
+| **M**     | Methods & Practices     | 2,000      | 10.1%      | Methodologies, frameworks, and best practices                            |
+| **D**     | Domain Knowledge        | 3,000      | 15.1%      | Industry and domain-specific expertise                                   |
+| **Total** |                         | **19,882** | **100%**   |                                                                          |
 
 ---
 
@@ -47,7 +52,7 @@ The skills follow a 4-level taxonomy:
     "version": "1.0.0",
     "generated_at": "2025-10-30T...",
     "total_skills": 19882,
-    "description": "20,000 L4 skills for Expertise Atlas MVP",
+    "description": "20,000 L4 skills for retained taxonomy reference",
     "distribution": {
       "U_Universal_Capabilities": 2500,
       "F_Functional_Competencies": 5000,
@@ -63,7 +68,7 @@ The skills follow a 4-level taxonomy:
       "domain": "U",
       "category": "Critical Thinking",
       "subcategory": "Analytical Reasoning"
-    },
+    }
     // ... 19,881 more skills
   ]
 }
@@ -78,9 +83,11 @@ The skills follow a 4-level taxonomy:
 
 ---
 
-## Usage
+## Historical Usage Pattern
 
-### 1. Import into Database
+The examples below are preserved to explain the original dataset shape. Do not run them against production-candidate or production data unless a current target-approved taxonomy recovery plan explicitly calls for this retained dataset and also follows the active migration, backup, and isolated-restore runbooks.
+
+### 1. Historical Database Import Shape
 
 #### Option A: PostgreSQL/Supabase (Recommended)
 
@@ -151,7 +158,7 @@ async function importSkills() {
     T: 'Tools & Technologies',
     L: 'Languages & Culture',
     M: 'Methods & Practices',
-    D: 'Domain Knowledge'
+    D: 'Domain Knowledge',
   };
 
   for (const [code, name] of Object.entries(domainMap)) {
@@ -185,10 +192,10 @@ async function importSkills() {
         if (l3Error || !l3Data) continue;
 
         // Insert L4 skills (batch)
-        const l4Skills = skills.map(name => ({
+        const l4Skills = skills.map((name) => ({
           l3_id: l3Data.id,
           name,
-          is_curated: true
+          is_curated: true,
         }));
 
         const { error: l4Error } = await supabase
@@ -207,6 +214,7 @@ importSkills().catch(console.error);
 ```
 
 Run with:
+
 ```bash
 npx tsx scripts/import-skills.ts
 ```
@@ -220,16 +228,16 @@ import skillsData from '@/data/expertise-atlas-20k-l4-skills.json';
 export function searchSkills(query: string, limit = 20) {
   const normalized = query.toLowerCase();
   return skillsData.skills
-    .filter(skill => skill.name.toLowerCase().includes(normalized))
+    .filter((skill) => skill.name.toLowerCase().includes(normalized))
     .slice(0, limit);
 }
 
 export function getSkillsByDomain(domain: 'U' | 'F' | 'T' | 'L' | 'M' | 'D') {
-  return skillsData.skills.filter(skill => skill.domain === domain);
+  return skillsData.skills.filter((skill) => skill.domain === domain);
 }
 
 export function getSkillsByCategory(category: string) {
-  return skillsData.skills.filter(skill => skill.category === category);
+  return skillsData.skills.filter((skill) => skill.category === category);
 }
 ```
 
@@ -263,7 +271,9 @@ export function SkillAutocomplete() {
         {results.map((skill, i) => (
           <li key={i}>
             <strong>{skill.name}</strong>
-            <span>{skill.domain} → {skill.category} → {skill.subcategory}</span>
+            <span>
+              {skill.domain} → {skill.category} → {skill.subcategory}
+            </span>
           </li>
         ))}
       </ul>
@@ -328,7 +338,7 @@ export function SkillAutocomplete() {
 
 ## Data Quality
 
-- ✅ **Realistic Skills:** Based on industry-standard taxonomies (ESCO, O*NET, OECD)
+- ✅ **Realistic Skills:** Based on industry-standard taxonomies (ESCO, O\*NET, OECD)
 - ✅ **Production-Ready:** Immediately usable for MVP
 - ✅ **Comprehensive Coverage:** 6 domains, multiple categories, diverse subcategories
 - ✅ **Granular:** Each skill is actionable and specific
@@ -344,14 +354,12 @@ Users can add custom L4 skills through your UI:
 
 ```typescript
 // User adds "Advanced React Performance Optimization"
-await supabase
-  .from('skills_l4')
-  .insert({
-    l3_id: 'react-subcategory-id',
-    name: 'Advanced React Performance Optimization',
-    is_curated: false, // User-created
-    created_by: userId
-  });
+await supabase.from('skills_l4').insert({
+  l3_id: 'react-subcategory-id',
+  name: 'Advanced React Performance Optimization',
+  is_curated: false, // User-created
+  created_by: userId,
+});
 ```
 
 ### Curating User Skills
@@ -388,13 +396,11 @@ data/
 
 ---
 
-## Next Steps
+## Reference Follow-Ups Only
 
-1. ✅ **Import to Database:** Run the import script above
-2. ⬜ **Create Search Index:** Add full-text search (PostgreSQL `tsvector` or Algolia)
-3. ⬜ **Build UI:** Skill picker with autocomplete
-4. ⬜ **Add Embeddings:** Generate vector embeddings for semantic search (optional)
-5. ⬜ **User Testing:** Validate skill names with real users
+1. Keep `/app/i/expertise` and the broad Expertise Atlas UI archived unless a future locked source reactivates them.
+2. Use the active migration, backup, and isolated-restore runbooks before any target-approved taxonomy data work.
+3. Validate any retained taxonomy changes through proof-skill selection and assignment expertise helpers, not the archived Atlas dashboard.
 
 ---
 
@@ -408,8 +414,8 @@ data/
 
 ## License
 
-This dataset is generated for Proofound's Expertise Atlas MVP.
-Free to use within the Proofound application.
+This dataset was generated for the historical Expertise Atlas track and is retained as taxonomy reference context.
+Use within Proofound only when the current locked MVP authority stack or a target-approved taxonomy recovery run explicitly calls for it.
 
 ---
 

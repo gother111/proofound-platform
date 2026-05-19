@@ -1516,12 +1516,16 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'docs/EXPERTISE_ATLAS_SETUP.md'),
       'utf8'
     );
+    const expertiseDatasetReadme = fs.readFileSync(
+      path.join(repoRoot, 'data/README-EXPERTISE-ATLAS-SKILLS.md'),
+      'utf8'
+    );
     const taxonomyRecovery = fs.readFileSync(
       path.join(repoRoot, 'agent/runbooks/expertise-taxonomy-recovery.md'),
       'utf8'
     );
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
-    const combined = [expertiseSetup, taxonomyRecovery].join('\n');
+    const combined = [expertiseSetup, expertiseDatasetReadme, taxonomyRecovery].join('\n');
 
     expect(expertiseSetup).toContain('Doc Class: `active`');
     expect(expertiseSetup).toContain('Last Verified: `2026-05-19`');
@@ -1530,6 +1534,23 @@ describe('launch gate package configuration', () => {
     );
     expect(expertiseSetup).toContain('Do not use archived Expertise Atlas UI files');
     expect(expertiseSetup).toContain('npm run db:drift-check');
+    expect(expertiseDatasetReadme).toContain('Doc Class: `reference-spec`');
+    expect(expertiseDatasetReadme).toContain('Last Verified: `2026-05-19`');
+    expect(expertiseDatasetReadme).toContain(
+      '/app/i/expertise` and the broad Expertise Atlas UI are archived'
+    );
+    expect(expertiseDatasetReadme).toContain('not active launch evidence');
+    expect(expertiseDatasetReadme).toContain('Historical Usage Pattern');
+    expect(expertiseDatasetReadme).toContain('Reference Follow-Ups Only');
+    expect(expertiseDatasetReadme).toContain('target-approved taxonomy recovery plan');
+    expect(expertiseDatasetReadme).toContain(
+      'proof-skill selection and assignment expertise helpers'
+    );
+    expect(expertiseDatasetReadme).not.toContain('for the Expertise Atlas MVP');
+    expect(expertiseDatasetReadme).not.toContain('20,000 L4 skills for Expertise Atlas MVP');
+    expect(expertiseDatasetReadme).not.toContain(
+      'Import to Database:** Run the import script above'
+    );
     expect(taxonomyRecovery).toContain('Last Verified: `2026-05-19`');
     expect(taxonomyRecovery).toContain('retained taxonomy APIs');
     expect(taxonomyRecovery).toContain(
@@ -1543,6 +1564,9 @@ describe('launch gate package configuration', () => {
     expect(combined).toContain('revive archived Expertise Atlas UI routes');
     expect(docsRegistry).toContain(
       '| `docs/EXPERTISE_ATLAS_SETUP.md`                                                                         | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `data/README-EXPERTISE-ATLAS-SKILLS.md`                                                                 | `reference-spec` | `data`        | `repo`              | `2026-05-19`'
     );
     expect(docsRegistry).toContain(
       '| `agent/runbooks/expertise-taxonomy-recovery.md` | `active` | `agent` | `repo+live` | `2026-05-19`'
