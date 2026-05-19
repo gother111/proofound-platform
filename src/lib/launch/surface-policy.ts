@@ -599,6 +599,12 @@ const ACTIVE_PAGE_POLICIES = [
       pathname === '/auth/login' ||
       pathname === '/auth/callback' ||
       pathname === '/auth/logout' ||
+      pathname === '/llms' ||
+      pathname === '/llms.txt' ||
+      pathname === '/llms-full.txt' ||
+      pathname === '/robots.txt' ||
+      pathname === '/security.txt' ||
+      pathname === '/.well-known/security.txt' ||
       matchExactOrPrefix('/signup')(pathname) ||
       matchExactOrPrefix('/reset-password')(pathname) ||
       matchExactOrPrefix('/verify-email')(pathname) ||
