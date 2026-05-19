@@ -1268,6 +1268,11 @@ describe('launch gate package configuration', () => {
     expect(integrationPlan).toContain('tests/integration/data-portability.test.ts');
     expect(integrationPlan).toContain('tests/integration/evidence-pack.test.ts');
     expect(integrationPlan).toContain('Historical `critical-gaps` and CV import wizard tests');
+    expect(integrationPlan).toContain('/api/mobile/*` remains archived');
+    expect(integrationPlan).toContain('post-MVP reference only');
+    expect(integrationPlan).not.toContain(
+      '/api/mobile/v1/*` bootstrap and device token routes remain compatible'
+    );
     expect(integrationPlan).not.toContain('tests/integration/critical-gaps.test.ts');
     expect(integrationPlan).not.toContain('tests/integration/cv-import.test.ts');
     for (const activeIntegrationPath of [

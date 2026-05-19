@@ -1367,3 +1367,9 @@ Non-fatal test noise:
 - Refreshed the matrix as post-MVP reference context only and added a visible launch-boundary note so it cannot be used as MVP route/API evidence without an explicit authority-stack change.
 - Found `test-db-flows.md` still stale and missing the current restore-report evidence command required by production-candidate `go:no-go`.
 - Updated the retained database flow guide, docs registry, and launch-gate coverage so reference DB guidance points at drift check, migration audit, backup checkpoint, versioned migrate, and restore verification with `--out .artifacts/launch-restore-report.json`.
+
+## Continuation - Integration Test Mobile Boundary
+
+- Found `INTEGRATION_TEST_PLAN.md` still saying `/api/mobile/v1/*` bootstrap and device-token routes remain compatible, contradicting the current route policy that archives `/api/mobile/*` for the locked MVP.
+- Replaced the active-looking mobile contract section with an archived mobile boundary: mobile docs remain post-MVP reference only, and any future mobile reactivation must include an approved route-surface change plus focused contract tests.
+- Added launch-gate coverage so the integration plan cannot quietly re-promote `/api/mobile/v1/*` compatibility as current launch evidence.

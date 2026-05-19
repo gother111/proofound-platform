@@ -49,9 +49,11 @@ Define integration-level verification paths aligned with the current test suite 
 - RLS tests prove no cross-user leakage.
 - Visibility controls and redaction semantics stay intact.
 
-### 5) Mobile API Contracts
+### 5) Archived Mobile API Boundary
 
-- `/api/mobile/v1/*` bootstrap and device token routes remain compatible.
+- `/api/mobile/*` remains archived for the locked MVP route surface.
+- Mobile planning docs are post-MVP reference only and must not be treated as launch API evidence.
+- If a future approved route-surface change reactivates mobile routes, add focused contract tests in the same change.
 
 ## Exit Criteria
 
