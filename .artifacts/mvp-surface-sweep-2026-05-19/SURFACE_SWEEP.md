@@ -835,3 +835,7 @@ Non-fatal test noise:
 - Found active `docs/API_REFERENCE.md` labeled `/api/monitoring/launch-status` and `/api/monitoring/perf-status` as `public` even though both routes call `requireInternalOpsRequest`; `/api/monitoring/health-diagnostics` uses the same internal launch-ops guard.
 - Updated `scripts/generate-api-reference.mjs` so `requireInternalOpsRequest` is classified as `internal` before broader service/session heuristics, regenerated `docs/API_REFERENCE.md`, and added the internal launch-ops bearer-token rule to the generated security model.
 - Added launch-gate config coverage so the three monitoring launch-ops routes stay documented as `internal`, not `public`.
+
+## Continuation - Production Readiness Checklist Refresh
+
+- Updated `docs/production-readiness-checklist.md` so it points at the 2026-05-19 phase-exit checklist and sweep artifact, separates local evidence from production-candidate signoff, names backup checkpoint, isolated restore rehearsal, and final go/no-go as still-open readiness gates, and records the authenticated internal launch-ops posture for perf-status and launch-status.
