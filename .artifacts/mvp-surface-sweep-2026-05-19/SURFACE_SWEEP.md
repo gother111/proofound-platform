@@ -1000,3 +1000,9 @@ Non-fatal test noise:
 - Found active `docs/SUPABASE_MCP_SETUP.md` still verified on 2026-03-11 and carrying a project-specific MCP snapshot, direct migration wording, ad-hoc migration examples, and stale table-count claims that could be mistaken for current launch evidence.
 - Rewrote it as a target-agnostic optional operator-tool guide: read-only by default, explicit target/action before mutation, no service-role/private-data exposure, no old snapshots as launch evidence, and no MCP replacement for drift/backup/audit/migrate/restore runbooks.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the guide cannot drift back to hard-coded project refs, `db:push` launch wording, ad-hoc MCP migration examples, or stale "all tables have RLS" snapshots.
+
+## Continuation - Supabase MCP Status Snapshot Refresh
+
+- Found active root `MCP_STATUS.md` still verified on 2026-03-11 and hard-coding the same old Supabase project ref plus stale MCP discovery/advisor claims.
+- Rewrote it as a current target-agnostic MCP status note: optional operator tool, read-only by default, project refs confirmed per run, no product-scope authority, no migration-runbook replacement, and no old table/advisor snapshots as launch evidence.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the status note cannot drift back to project-specific connection targets or stale discovery claims.

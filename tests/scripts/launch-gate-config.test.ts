@@ -808,6 +808,27 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the Supabase MCP status note free of stale target snapshots', () => {
+    const mcpStatus = fs.readFileSync(path.join(repoRoot, 'MCP_STATUS.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(mcpStatus).toContain('Last Verified: `2026-05-19`');
+    expect(mcpStatus).toContain('optional operator tool');
+    expect(mcpStatus).toContain('not an MVP source of truth');
+    expect(mcpStatus).toContain('Project refs are environment-specific');
+    expect(mcpStatus).toContain('read-only schema inspection');
+    expect(mcpStatus).toContain('Do not use Supabase MCP to');
+    expect(mcpStatus).toContain('migration runbooks');
+    expect(mcpStatus).toContain('old table snapshot');
+    expect(mcpStatus).not.toContain('cjpfrgmsxwxhuomnvciq');
+    expect(mcpStatus).not.toContain('Connection target: Supabase MCP for project');
+    expect(mcpStatus).not.toContain('Recent MCP discovery confirms');
+    expect(mcpStatus).not.toContain('leaked password protection was previously reported');
+    expect(docsRegistry).toContain(
+      '| `MCP_STATUS.md`                                                                                         | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',
