@@ -427,6 +427,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Pointed database operations back to the current migration/setup runbooks and limited local smoke guidance to public/auth, individual Proof Pack, organization assignment/review, and internal admin launch-ops surfaces.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the quick start cannot quietly reintroduce retired Zen/dashboard/migration promises.
 
+52. The active logging migration guide still pointed at archived Expertise Atlas files as current work.
+
+- Rewrote `LOGGING_MIGRATION_GUIDE.md` around active MVP and internal launch-ops surfaces instead of the retired Expertise Atlas page and components.
+- Replaced stale `grep` examples with `rg` searches that exclude `src/archive/**`.
+- Added privacy-specific logging rules for proof content, filenames, storage paths, verifier text, reveal-sensitive identity details, tokens, and private profile context.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the active guide cannot drift back to archived Expertise Atlas migration targets or stale console-search commands.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.

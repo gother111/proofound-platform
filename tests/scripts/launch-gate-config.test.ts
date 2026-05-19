@@ -601,6 +601,27 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the logging migration guide scoped to active MVP surfaces', () => {
+    const loggingGuide = fs.readFileSync(path.join(repoRoot, 'LOGGING_MIGRATION_GUIDE.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(loggingGuide).toContain('Last Verified: `2026-05-19`');
+    expect(loggingGuide).toContain('Proof Packs');
+    expect(loggingGuide).toContain('/admin/verification');
+    expect(loggingGuide).toContain("rg -n 'console\\.(log|warn|error|debug)'");
+    expect(loggingGuide).toContain("g '!src/archive/**'");
+    expect(loggingGuide).toContain('Never log raw private proof content');
+    expect(loggingGuide).not.toContain('src/app/app/i/expertise/page.tsx');
+    expect(loggingGuide).not.toContain('AddSkillDrawer.tsx');
+    expect(loggingGuide).not.toContain('EditSkillWindow.tsx');
+    expect(loggingGuide).not.toContain('grep -r');
+    expect(loggingGuide).not.toContain('Expertise Page');
+    expect(loggingGuide).not.toContain('Click "Connect Zoom"');
+    expect(docsRegistry).toContain(
+      '| `LOGGING_MIGRATION_GUIDE.md`                                                                            | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',
