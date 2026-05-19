@@ -171,6 +171,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Left the original audit bodies intact as historical evidence, but updated the freshness banners to say the route-breadth blocker was retired by 2026-05-19 route-surface evidence.
 - Updated `docs/DOCS_REGISTRY.md` dates for the touched historical audit/report files.
 
+21. Active backlog dependency docs still treated Phase 1 foundation work as unresolved.
+
+- Found `docs/backlog/phase-1-foundation.md` still saying proof-first onboarding, Proof Pack anchor integrity, and export/delete/auditability needed to move from `UNVERIFIED` to `PASS`.
+- Updated it to record the 2026-05-19 `PASS` disposition while keeping gated narrative-surface disposition as a non-blocking watch item.
+- Updated `docs/backlog/dependency-map.md` so Phase 0 and Phase 1 are no longer shown as blocking later phases after the current sweep evidence.
+- Updated `docs/DOCS_REGISTRY.md` dates for the refreshed backlog dependency docs.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.

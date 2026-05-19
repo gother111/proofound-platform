@@ -1,16 +1,16 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-25`
+> Last Verified: `2026-05-19`
 
 # Proofound Backlog Dependency Map
 
 ## Current execution status
 
-- `Phase 0`: active
-- `Phase 1`: planned, blocked by Phase 0
-- `Phase 2`: planned, blocked by Phase 1
-- `Phase 3`: planned, blocked by Phase 2
-- `Phase 4`: planned, blocked by Phase 3
-- `Phase 5`: planned, blocked by Phase 4
+- `Phase 0`: resolved for route-surface truth in the 2026-05-19 sweep
+- `Phase 1`: resolved for proof-first onboarding, Proof Pack anchor integrity, and export/delete/auditability in the 2026-05-19 sweep; gated narrative-surface disposition remains non-blocking
+- `Phase 2`: planned/watch, with current trust and review checklist rows already `PASS`
+- `Phase 3`: planned/watch, with assignment runtime performance kept as a non-blocking watch item unless fresh evidence proves instability
+- `Phase 4`: planned for production-candidate launch ops evidence
+- `Phase 5`: planned for final packaging and governance cleanup
 
 ## Phase-level dependency graph
 
@@ -34,8 +34,8 @@ flowchart LR
 
 ## Gate rules
 
-- Do not schedule Phase 2-5 implementation while `P0-3` is still open.
-- Do not start Phase 2 until the Phase 1 checklist rows are freshly green.
+- Do not reopen Phase 0 or Phase 1 unless fresh evidence regresses their 2026-05-19 `PASS` rows.
+- Do not start compatibility cleanup that can affect trust/review behavior without rerunning the relevant Phase 2 checks.
 - Do not refresh launch ops in Phase 4 until the narrowed corridor and assignment runtime are stable in Phase 3.
 - Do not treat Phase 5 copy or governance work as a reason to defer route-surface reduction or fresh functional verification.
 
