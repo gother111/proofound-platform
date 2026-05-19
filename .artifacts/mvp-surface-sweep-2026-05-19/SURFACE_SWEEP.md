@@ -249,6 +249,13 @@ Cookie settings copy follow-up on 2026-05-19:
 - Fix: `src/components/cookies/CookiePreferences.tsx` now frames analytics as product-quality/fix-bugs measurement and marketing cookies as consented Proofound update/campaign measurement, without ad-targeting language.
 - Browser evidence on `localhost:33180`: `/cookies/settings` rendered `Cookie Settings`, `Help us understand how Proofound is working`, and no `use our platform` or `Ad targeting` copy; no runtime error or console errors were present.
 
+Organization dashboard archived-navigation follow-up on 2026-05-19:
+
+- Finding: active organization dashboard widgets still routed team/goals actions to archived or hard-gated routes (`/app/o/[slug]/settings/team`, `/app/o/[slug]/settings/goals`, and `/app/o/[slug]/team`), even though launch inventory and route-policy tests intentionally keep those surfaces outside the MVP corridor.
+- Fix: `src/components/dashboard/OrgGoalsCard.tsx` and `src/components/dashboard/TeamRolesCard.tsx` now route dashboard actions back to the active organization profile surface and use plain launch/post-launch copy instead of false "invite", "new", or "manage" affordances.
+- Browser evidence: Browser initially hit `ERR_CONNECTION_REFUSED` on `localhost:33180`, so the local dev server was restarted on the same port. Browser then verified `/portfolio/demo` on `127.0.0.1:33180` rendered the launch-safe public unavailable card with no framework overlay and no console warnings/errors. Attempted `/app/o/test-org/home` Browser smoke redirected to `/app/i/home` under the current Browser session, so the dashboard link regression is covered by focused UI tests rather than authenticated org Browser evidence in this slice.
+- Test evidence: `tests/ui/org-dashboard-archived-nav.test.tsx` asserts the goal and team dashboard widgets expose only `/app/o/acme/profile` links and no archived settings/team hrefs.
+
 ## Verification
 
 Commands run with Node 25 path:
@@ -289,6 +296,7 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/privacy-data-breakdown.test.tsx src/lib/launch/__tests__/surface-policy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts tests/api/launch-surface-inventory.test.ts` - passed, 4 files / 21 tests.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/privacy-overview-copy.test.tsx tests/ui/privacy-data-breakdown.test.tsx` - passed, 2 files / 5 tests.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/cookie-preferences-copy.test.tsx tests/ui/cookie-settings-page.test.tsx tests/ui/cookie-banner.test.tsx` - passed, 3 files / 7 tests.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/org-dashboard-archived-nav.test.tsx tests/ui/archived-mvp-routes.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts` - passed, 4 files / 18 tests.
 - `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with `/api/user/data-inventory` active.
 - `npm run lint` - passed after removing the privacy component hook-dependency warning.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.

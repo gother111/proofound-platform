@@ -14,7 +14,6 @@
 
 import {
   Target,
-  Plus,
   CheckCircle,
   Clock,
   TrendingUp,
@@ -181,22 +180,18 @@ export function OrgGoalsCard({
         <div className="text-center py-8">
           <Target className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
           <p className="text-sm mb-4 text-muted-foreground">
-            Set organizational goals to track your progress and showcase your commitment.
+            Goals are post-launch. Keep the launch profile focused on mission, work context, and
+            assignments.
           </p>
-          {canManageSettings ? (
-            <Link href={`/app/o/${orgSlug}/settings/goals`}>
-              <Button size="sm" variant="secondary" className="rounded-full">
-                <Plus className="w-4 h-4 mr-1" />
-                Add Goal
-              </Button>
-            </Link>
-          ) : (
-            <Link href={`/app/o/${orgSlug}/profile`}>
-              <Button size="sm" variant="outline" className="rounded-full">
-                View Profile
-              </Button>
-            </Link>
-          )}
+          <Link href={`/app/o/${orgSlug}/profile`}>
+            <Button
+              size="sm"
+              variant={canManageSettings ? 'secondary' : 'outline'}
+              className="rounded-full"
+            >
+              View profile
+            </Button>
+          </Link>
         </div>
       </Card>
     );
@@ -216,12 +211,10 @@ export function OrgGoalsCard({
           )}
         </div>
         <Link
-          href={
-            canManageSettings ? `/app/o/${orgSlug}/settings/goals` : `/app/o/${orgSlug}/profile`
-          }
+          href={`/app/o/${orgSlug}/profile`}
           className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
-          {canManageSettings ? 'Manage' : 'View'}
+          View profile
         </Link>
       </div>
 
@@ -289,10 +282,9 @@ export function OrgGoalsCard({
           </span>
         </div>
         {canManageSettings && (
-          <Link href={`/app/o/${orgSlug}/settings/goals`}>
+          <Link href={`/app/o/${orgSlug}/profile`}>
             <Button size="sm" variant="ghost" className="rounded-full shrink-0">
-              <Plus className="w-4 h-4 mr-1" />
-              New
+              View profile
             </Button>
           </Link>
         )}

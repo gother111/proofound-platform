@@ -13,7 +13,7 @@
  * - Invite new members action
  */
 
-import { Users, Crown, Shield, User, Loader2, AlertCircle, UserPlus } from 'lucide-react';
+import { Users, Crown, Shield, User, Loader2, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -224,11 +224,10 @@ export function TeamRolesCard({
         <div className="text-center py-6">
           <Users className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
           <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
-            Add team members to collaborate on your organization.
+            Team management is post-launch. Keep the live organization profile focused on trust
+            context.
           </p>
-          <Link
-            href={canManageSettings ? `/app/o/${orgSlug}/settings/team` : `/app/o/${orgSlug}/team`}
-          >
+          <Link href={`/app/o/${orgSlug}/profile`}>
             <Button
               size="sm"
               className="h-7 text-xs"
@@ -240,8 +239,7 @@ export function TeamRolesCard({
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
-              <UserPlus className="w-3 h-3 mr-1" />
-              {canManageSettings ? 'Invite members' : 'View team'}
+              Open profile
             </Button>
           </Link>
         </div>
@@ -268,11 +266,11 @@ export function TeamRolesCard({
           )}
         </div>
         <Link
-          href={canManageSettings ? `/app/o/${orgSlug}/settings/team` : `/app/o/${orgSlug}/team`}
+          href={`/app/o/${orgSlug}/profile`}
           className="text-xs hover:underline"
           style={{ color: '#1C4D3A' }}
         >
-          {canManageSettings ? 'Manage' : 'View'}
+          View profile
         </Link>
       </div>
 
@@ -325,15 +323,14 @@ export function TeamRolesCard({
             )}
           </div>
           {canManageSettings && (
-            <Link href={`/app/o/${orgSlug}/settings/team`}>
+            <Link href={`/app/o/${orgSlug}/profile`}>
               <Button
                 size="sm"
                 variant="ghost"
                 className="h-6 px-2 text-xs"
                 style={{ color: '#1C4D3A' }}
               >
-                <UserPlus className="w-3 h-3 mr-1" />
-                Invite
+                View profile
               </Button>
             </Link>
           )}
