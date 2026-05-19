@@ -946,6 +946,60 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps privacy environment setup on the repo-owned migration path', () => {
+    const privacyEnvSetup = fs.readFileSync(
+      path.join(repoRoot, 'tests/privacy/ENV_SETUP.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(privacyEnvSetup).toContain('Doc Class: `reference-spec`');
+    expect(privacyEnvSetup).toContain('Last Verified: `2026-05-19`');
+    expect(privacyEnvSetup).toContain('not production-candidate launch proof');
+    expect(privacyEnvSetup).toContain('npm run db:drift-check');
+    expect(privacyEnvSetup).toContain('npm run db:backup:checkpoint');
+    expect(privacyEnvSetup).toContain('npm run db:audit:migrations');
+    expect(privacyEnvSetup).toContain('npm run db:migrate');
+    expect(privacyEnvSetup).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(privacyEnvSetup).toContain('npm run test:privacy:extended');
+    expect(privacyEnvSetup).not.toContain('supabase db push');
+    expect(privacyEnvSetup).not.toContain('SQL Editor');
+    expect(privacyEnvSetup).not.toContain('src/db/policies.sql');
+    expect(privacyEnvSetup).not.toContain('migrations/001_enable_rls_policies.sql');
+    expect(privacyEnvSetup).not.toContain('test:privacy:setup-check');
+    expect(privacyEnvSetup).not.toContain('test:privacy:cleanup');
+    expect(docsRegistry).toContain(
+      '| `tests/privacy/ENV_SETUP.md`                                                                            | `reference-spec` | `tests`       | `repo`              | `2026-05-19`'
+    );
+  });
+
+  it('keeps the integration test plan aligned with active test files', () => {
+    const integrationPlan = fs.readFileSync(
+      path.join(repoRoot, 'INTEGRATION_TEST_PLAN.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(integrationPlan).toContain('Doc Class: `reference-spec`');
+    expect(integrationPlan).toContain('Last Verified: `2026-05-19`');
+    expect(integrationPlan).toContain('tests/integration/matching.test.ts');
+    expect(integrationPlan).toContain('tests/integration/data-portability.test.ts');
+    expect(integrationPlan).toContain('tests/integration/evidence-pack.test.ts');
+    expect(integrationPlan).toContain('Historical `critical-gaps` and CV import wizard tests');
+    expect(integrationPlan).not.toContain('tests/integration/critical-gaps.test.ts');
+    expect(integrationPlan).not.toContain('tests/integration/cv-import.test.ts');
+    for (const activeIntegrationPath of [
+      'tests/integration/matching.test.ts',
+      'tests/integration/data-portability.test.ts',
+      'tests/integration/evidence-pack.test.ts',
+    ]) {
+      expect(fs.existsSync(path.join(repoRoot, activeIntegrationPath))).toBe(true);
+    }
+    expect(docsRegistry).toContain(
+      '| `INTEGRATION_TEST_PLAN.md`                                                                              | `reference-spec` | `root`        | `repo`              | `2026-05-19`'
+    );
+  });
+
   it('keeps LinkedIn verification guidance outside the launch corridor', () => {
     const linkedInSetup = fs.readFileSync(
       path.join(repoRoot, 'docs/LINKEDIN_VERIFICATION_SETUP.md'),

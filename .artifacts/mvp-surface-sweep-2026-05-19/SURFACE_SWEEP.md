@@ -1255,3 +1255,10 @@ Non-fatal test noise:
 - Added reference-spec metadata and clarified the file is historical/non-gating load-test context.
 - Removed the global install prerequisite and reframed Artillery scenarios as optional stress exploration requiring target, tool-version, date, owner, and production-data notes.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so historical load results cannot be mistaken for current launch performance evidence.
+
+## Continuation - Privacy Env And Integration Plan Drift
+
+- Found `tests/privacy/ENV_SETUP.md` still recommending `supabase db push`, SQL Editor paste flows, old policy file paths, and missing/nonexistent privacy setup/cleanup scripts.
+- Reworked the privacy env setup around the repo-owned migration path: drift check, backup checkpoint, migration audit, migrate, isolated restore verification, and current `test:privacy` / `test:privacy:extended` gates.
+- Found `INTEGRATION_TEST_PLAN.md` still naming missing active integration files for archived critical-gaps and CV import wizard suites.
+- Updated the plan to list only active integration test files and to mark critical-gaps/CV import wizard tests as historical archive material, then updated registry dates and guard coverage.

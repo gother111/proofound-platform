@@ -1,5 +1,6 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
+> Reference note: current integration-test orientation only. Archived/post-MVP suites are not launch evidence unless the locked MVP authority stack reactivates them.
 
 # Integration Test Plan
 
@@ -9,11 +10,10 @@ Define integration-level verification paths aligned with the current test suite 
 
 ## Canonical Integration Test Locations
 
-- `tests/integration/critical-gaps.test.ts`
 - `tests/integration/matching.test.ts`
 - `tests/integration/data-portability.test.ts`
 - `tests/integration/evidence-pack.test.ts`
-- `tests/integration/cv-import.test.ts`
+- Historical `critical-gaps` and CV import wizard tests live under `tests/archive/` and are not launch gates.
 
 ## Supporting API Contract Coverage
 
