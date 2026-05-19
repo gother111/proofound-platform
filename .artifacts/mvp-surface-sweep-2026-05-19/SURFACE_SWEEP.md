@@ -759,6 +759,9 @@ Commands run with Node 25 path:
 - `npm run docs:freshness` - passed after the Phase 3 backlog disposition update.
 - Browser plugin rechecked `http://localhost:33180/portfolio/demo`, `http://localhost:33180/portfolio/demo-proofound`, and `http://localhost:33180/portfolio/org/test-org` in the in-app browser. All rendered launch-safe unavailable pages in this local server state (`Public Page Unavailable | Proofound` or organization equivalent), with no Browser connection failure. This is environment/data-gated evidence, not proof that a seeded public demo is currently available.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/admin-internal-ops-queue-route.test.ts tests/ui/admin-verification-dashboard.test.tsx tests/ui/admin-dashboard-launch-links.test.tsx tests/ui/admin-audit-log-table.test.tsx tests/lib/internal-ops-queue.test.ts tests/lib/uploads-lifecycle-queue.test.ts tests/lib/launch-alerting.test.ts tests/lib/launch-operations-contract.test.ts tests/api/launch-page-inventory.test.ts` - passed, 9 files / 45 tests, refreshing Phase 4 internal-only ops queue evidence.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:smoke -- --scope repo --base-url http://localhost:33180 --artifact .artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke.json` - passed after rerunning outside the sandbox that blocked the fixture seeder's temp socket. Artifact saved at `.artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke.json`.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:smoke -- --scope full --base-url http://localhost:33180 --artifact .artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke-full.json` - passed, including the full org corridor smoke. Artifact saved at `.artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke-full.json`.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH LAUNCH_MONITOR_PERSIST=0 npm run monitor:launch -- --base-url http://localhost:33180 --artifact .artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke-full.json` - passed 10/10 with persistence disabled.
 
 Non-fatal test noise:
 
@@ -775,6 +778,6 @@ Non-fatal test noise:
 - This pass fixed and verified a high-signal launch slice, not every authenticated data state in the product.
 - Authenticated Browser coverage now includes representative individual, organization, admin/internal, public org, 403, and mobile surfaces. Full strict Playwright evidence now covers the interactive org corridor, but Browser itself did not click through every modal/control in proof upload, reveal consent, interview scheduling/reschedule, decision recording, or engagement verification.
 - Production deployment, live auth, billing, infra, and permission behavior were not changed or smoke-tested.
-- Phase 4 is still not complete: backup, restore, launch smoke, monitor, and go/no-go evidence were not rerun in this slice.
+- Phase 4 is still not complete: backup, restore, and go/no-go evidence were not rerun in this slice, and the smoke/monitor pass targeted local `localhost:33180`, not a production-candidate deployment.
 - The local in-app Browser public demo check did not prove seeded public portfolio availability on port `33180`; it proved the current unavailable fallback is safe and non-leaky in the visible page state.
 - No current docs freshness warnings remain after registering the existing orphan documentation/artifact files.
