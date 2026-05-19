@@ -1219,3 +1219,17 @@ Non-fatal test noise:
 - Found synced active root docs (`Documentation.md`, `metrics.md`) claiming `PASS` or `FAIL` results on commands that used the placeholder `BASE_URL=<production-candidate-url>`, including `go:no-go` PASS claims that conflicted with the open production-candidate signoff gates.
 - Reworded those entries as historical local runtime launch-gate notes, preserving the original local context while making clear they are not current production-candidate evidence.
 - Added guard coverage so active launch evidence docs cannot mark placeholder production-candidate gate commands as `PASS` or `FAIL`; real result claims need a concrete dated target/artifact instead.
+
+## Continuation - Browser Login Runtime Recheck
+
+- Used the Codex in-app Browser on the open `http://localhost:33180/login` tab as requested.
+- Browser first showed `Internal Server Error` because the local server on port `33180` was no longer reachable from shell (`curl` could not connect).
+- Restarted the local dev server on `33180` in mock mode, reloaded the Browser tab, and verified the logged-out login surface rendered with title `Sign In | Proofound`, H1 `Welcome back`, email/password fields, remember-me, reset-password link, primary `Sign in`, Google/LinkedIn sign-in buttons, `Create account`, Terms, and Privacy links.
+- Browser DOM check found no forbidden broad-platform/public-directory/profile-theater/dashboard-theater language on the login surface.
+- Next briefly rewrote `tsconfig.json` during server startup; the file was restored to the committed shape because `.next-dev*/types/**/*.ts` already covers the per-port generated type folders.
+
+## Continuation - Broad Reference Spec Boundary
+
+- Found three broad reference-spec root docs without explicit launch-authority boundaries at the top: `DATA_REQUIREMENTS_AND_AI_STRATEGY.md`, `FULL_PRODUCT_ARCHITECTURE_PLAN.md`, and `SPRINT_1_PLAN.md`.
+- Added `Doc Class: reference-spec`, `Last Verified: 2026-05-19`, and locked-MVP precedence notes so future sweeps do not mistake AI/data strategy, full-product architecture, or old sprint taxonomy material for current MVP launch scope.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so those broad reference docs stay visibly outside active MVP launch authority.

@@ -636,6 +636,30 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps broad reference specs visibly outside current MVP launch authority', () => {
+    const referenceDocs = [
+      'DATA_REQUIREMENTS_AND_AI_STRATEGY.md',
+      'FULL_PRODUCT_ARCHITECTURE_PLAN.md',
+      'SPRINT_1_PLAN.md',
+    ];
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    for (const docPath of referenceDocs) {
+      const content = fs.readFileSync(path.join(repoRoot, docPath), 'utf8');
+      expect(content).toContain('Doc Class: `reference-spec`');
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).toContain('not the canonical MVP launch contract');
+      expect(content).toContain(
+        'Current precedence: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`'
+      );
+      const registryLine = docsRegistry
+        .split('\n')
+        .find((line) => line.includes(`| \`${docPath}\``));
+      expect(registryLine).toContain('| `reference-spec` | `root`');
+      expect(registryLine).toContain('| `2026-05-19`');
+    }
+  });
+
   it('keeps active operator docs aligned with current deployment and provider gates', () => {
     const deploymentGuide = fs.readFileSync(
       path.join(repoRoot, 'docs/deployment-guide.md'),
