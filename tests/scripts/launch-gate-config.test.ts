@@ -519,6 +519,64 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps implementation contracts and milestones aligned with the locked corridor', () => {
+    const implementDocs = [
+      fs.readFileSync(path.join(repoRoot, 'Implement.md'), 'utf8'),
+      fs.readFileSync(path.join(repoRoot, 'project/Implement.md'), 'utf8'),
+    ];
+    const planDocs = [
+      fs.readFileSync(path.join(repoRoot, 'Plans.md'), 'utf8'),
+      fs.readFileSync(path.join(repoRoot, 'project/Plans.md'), 'utf8'),
+    ];
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    for (const content of implementDocs) {
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).toContain('For UI/public/visual changes, use Browser or Playwright evidence');
+      expect(content).toContain('route, viewport, role/mode, and finding');
+      expect(content).toContain('the command creates a real file');
+      expect(content).toContain('manual-link interview scheduling as the locked MVP default');
+      expect(content).toContain('Do not revive archived/post-MVP routes');
+      expect(content).toContain('profile theater');
+      expect(content).toContain('vanity metrics');
+      expect(content).not.toContain('Last Verified: `2026-05-14`');
+    }
+
+    for (const content of planDocs) {
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).toContain('mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md');
+      expect(content).toContain('reason-coded, privacy-safe explanations');
+      expect(content).toContain('without automated hiring recommendations');
+      expect(content).toContain(
+        'Manual-link interview coordination works as the locked MVP default'
+      );
+      expect(content).toContain('src/app/api/cron/decision-reminders/route.ts');
+      expect(content).toContain('src/app/api/cron/refresh-matches/route.ts');
+      expect(content).toContain('src/app/api/cron/refresh-matches-worker/route.ts');
+      expect(content).toContain('src/app/api/cron/sla-enforcement/route.ts');
+      expect(content).toContain('backup checkpoint and isolated restore rehearsal evidence');
+      expect(content).toContain('Browser or Playwright evidence');
+      expect(content).not.toContain('Matching endpoints return ranked results');
+      expect(content).not.toContain('Interest/shortlist/pipeline flows');
+      expect(content).not.toContain('account-deletion-workflow');
+      expect(content).not.toContain('third-party providers are not configured');
+      expect(content).not.toContain('Last Verified: `2026-05-14`');
+    }
+
+    expect(docsRegistry).toContain(
+      '| `Implement.md`                                                                                          | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `Plans.md`                                                                                              | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `project/Implement.md`                                                                                  | `active`         | `project`     | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `project/Plans.md`                                                                                      | `active`         | `project`     | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps active operator docs aligned with current deployment and provider gates', () => {
     const deploymentGuide = fs.readFileSync(
       path.join(repoRoot, 'docs/deployment-guide.md'),

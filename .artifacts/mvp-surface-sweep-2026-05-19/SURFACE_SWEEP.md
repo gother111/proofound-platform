@@ -1150,3 +1150,9 @@ Non-fatal test noise:
 - Found `agent/runbooks/proofound-ticket-finisher.md`, `agent/scratchpad/README.md`, and `project/changes/README.md` still verified on February/March dates while acting as current future-agent instructions.
 - Refreshed the ticket-finisher runbook to clarify that the helper is administrative only, cannot prove MVP/launch readiness by itself, must not mutate git/final Linear closeout, and must defer to current verification, Browser/runtime evidence, and current GitHub/Linear state when relevant.
 - Refreshed sharded log READMEs so future agents know `npm run log:session` and `npm run log:change` create real files, avoid legacy shared-log appends, avoid secrets/private proof data, and record Browser evidence with route, viewport, role/mode, and finding.
+
+## Continuation - Implementation And Milestone Contract Refresh
+
+- Found root/project `Implement.md` and `Plans.md` sync pairs verified on 2026-05-14 while still carrying older milestone language around ranked matching, pipeline flows, third-party provider fallback, and a root/project cron mismatch.
+- Refreshed implementation contracts so future work keeps Browser/Playwright evidence for UI changes, treats log scripts as real-file creators, updates sweep/docs when launch evidence changes, and blocks archived/post-MVP route revival, public-directory behavior, profile theater, vanity metrics, and broad platform language.
+- Refreshed milestone framing around reason-coded privacy-safe review, manual-link interview default, current Vercel cron routes, launch-support-only observability, production-candidate backup/restore evidence, and Browser/Playwright evidence for changed UI surfaces.
