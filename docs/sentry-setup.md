@@ -1,219 +1,115 @@
-# Sentry Error Monitoring Setup
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
 
-## Overview
+# Sentry Launch Setup
 
-Sentry error monitoring has been integrated into the Proofound application to track and debug errors in production. This document covers setup, configuration, and usage.
+This guide covers Sentry as launch-support observability for Proofound. It is scoped to runtime errors, release tracking, and privacy-safe investigation. It is not a substitute for route-surface policy, launch-status, perf-status, backup/restore, smoke, or go/no-go evidence.
 
-## Configuration Files
+Use this with:
 
-### Core Config Files
+- [alert-configuration.md](./alert-configuration.md)
+- [structured-logging.md](./structured-logging.md)
+- [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)
+- [SECURITY_INCIDENT_RESPONSE_RUNBOOK.md](./SECURITY_INCIDENT_RESPONSE_RUNBOOK.md)
 
-1. **`instrumentation-client.ts`** - Client-side error tracking
-   - Captures browser errors and exceptions
-   - Session replay for error debugging
-   - Browser tracing for performance monitoring
+## Current Config Files
 
-2. **`sentry.server.config.ts`** - Server-side error tracking
-   - Captures API route errors
-   - Server component errors
-   - Database and external service errors
+- `instrumentation-client.ts`: client-side Sentry init and browser tracing
+- `sentry.server.config.ts`: server-side Sentry init and HTTP integration
+- `sentry.edge.config.ts`: edge-runtime Sentry init
+- `instrumentation.ts`: Next.js instrumentation registration
 
-3. **`sentry.edge.config.ts`** - Edge runtime error tracking
-   - Middleware errors
-   - Edge function errors
+All configs drop events in development unless debug mode is explicitly enabled. Server and edge configs strip user context down to `user.id` and remove request cookies, headers, and body data before sending. Client config uses the same request/user scrub and keeps session replay opt-in by default.
 
-4. **`instrumentation.ts`** - Next.js instrumentation
-   - Loads Sentry before application code
-   - Handles request errors globally
+## Required Variables
 
-### Error Boundaries
+Set only for targets where Sentry should receive events:
 
-Created multiple error boundary components for different use cases:
+```env
+NEXT_PUBLIC_SENTRY_DSN=
+SENTRY_ORG=
+SENTRY_PROJECT=
+SENTRY_AUTH_TOKEN=
+```
 
-- **`ErrorBoundary`** - General-purpose error boundary with customizable fallback UI
-- **`InlineErrorBoundary`** - Compact error boundary for inline sections
-- **`FormErrorBoundary`** - Error boundary optimized for form components
-- **`DataErrorBoundary`** - Error boundary for data tables and lists with retry functionality
+Optional debug and replay controls:
 
-### Where Error Boundaries Are Used
-
-1. **Root Layout** (`src/app/layout.tsx`) - Catches all unhandled errors
-2. **Profile Forms** (`src/components/profile/EditProfileModal.tsx`) - Form validation and submission errors
-3. **Assignment Builder** (`src/components/matching/AssignmentBuilder.tsx`) - Multi-step wizard errors
-4. **Message Thread** (`src/components/messaging/MessageThread.tsx`) - Real-time messaging errors
-
-## Environment Variables
-
-Add these to your `.env.local`:
-
-```bash
-# Sentry DSN (get from sentry.io project settings)
-NEXT_PUBLIC_SENTRY_DSN=https://your-dsn@sentry.io/project-id
-
-# Optional: Enable debug logging in development
+```env
 SENTRY_DEBUG=false
-
-# Optional: Sentry organization and project for source map uploads
-SENTRY_ORG=your-org
-SENTRY_PROJECT=your-project
+NEXT_PUBLIC_SENTRY_DEBUG=
+NEXT_PUBLIC_SENTRY_REPLAY_SESSION_SAMPLE_RATE=0
+NEXT_PUBLIC_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE=0
+SENTRY_WIDEN_CLIENT_FILE_UPLOAD=0
 ```
 
-## Setup Instructions
+Launch default is no ambient session replay. If replay is temporarily enabled for a controlled investigation, keep `maskAllText` and `blockAllMedia` enabled, record the target and reason in the launch or incident artifact, and disable replay again when the investigation is complete.
 
-### 1. Create Sentry Project
+Do not expose `SENTRY_AUTH_TOKEN` or DSN-adjacent project secrets in docs, screenshots, tickets, or alert messages.
 
-1. Go to [sentry.io](https://sentry.io) and create an account
-2. Create a new project and select "Next.js" as the platform
-3. Copy the DSN from the project settings
+## Privacy Rules
 
-### 2. Configure Environment
+Sentry events must not include:
 
-Add the DSN to your environment variables:
+- private proof content or raw evidence
+- hidden candidate identity details before reveal consent
+- passwords, tokens, cookies, auth headers, API keys, or signed URLs
+- uploaded file contents, private storage paths, filenames, or diagnostic dumps
+- verifier private data, allegation text, internal queue IDs, or admin notes
+- broad matching/ranking/fairness payloads that imply archived or post-MVP behavior
 
-```bash
-NEXT_PUBLIC_SENTRY_DSN=https://your-dsn@sentry.io/project-id
-```
+Only include route, release, request id where safe, coarse workflow state, and stable internal ids needed for debugging.
 
-### 3. Deploy
+## Launch Alert Scope
 
-The Sentry configuration is already integrated. Simply deploy your application and errors will automatically be reported.
+Create alerts for active MVP and launch-ops risk:
 
-## Error Sampling
+- new production error issue
+- error spike on signup/login, public portfolio, assignment/review, reveal, interview, decision, engagement verification, export, or delete flows
+- frontend error on logged-out public surfaces
+- recurring error after a resolved release
+- Sentry release/source-map upload failure when source maps are expected
 
-To avoid overwhelming Sentry with too many events, sampling is configured:
-
-### Production
-
-- **Error sampling**: 100% (all errors captured)
-- **Performance tracing**: 20% (1 in 5 requests)
-- **Session replay**: 10% of sessions, 100% of error sessions
-
-### Development
-
-- **Errors**: Only captured if `SENTRY_DEBUG=true`
-- **All other events**: Disabled to avoid noise
-
-## Ignored Errors
-
-The following errors are automatically filtered out:
-
-### Client-side
-
-- Browser extension errors
-- Network errors (handled by UI)
-- Auth errors (handled by UI)
-- Abort errors
-
-### Server-side
-
-- Transient database connection errors
-- Auth token expiration (expected)
-- Invalid refresh tokens (handled)
-
-## Privacy
-
-To protect user privacy:
-
-- **User emails** are NOT sent to Sentry
-- **Only user IDs** are included in error context
-- **PII is stripped** from all error reports
-- **Request data** is sanitized before sending
-
-## Alerting
-
-To set up alerts:
-
-1. Go to your Sentry project
-2. Navigate to **Alerts** → **Create Alert**
-3. Recommended alert rules:
-   - New error first seen (immediate)
-   - Error frequency > 10/minute (5 min)
-   - Error affects > 100 users (15 min)
-   - Performance degradation (30 min)
-
-## Monitoring Dashboard
-
-Key metrics to monitor:
-
-1. **Error Rate** - Errors per minute/hour
-2. **Affected Users** - Number of unique users experiencing errors
-3. **Issue Frequency** - How often each issue occurs
-4. **Performance** - API response times and page load speeds
-5. **Session Replay** - Watch user sessions that encountered errors
-
-## Testing
-
-To test Sentry integration:
-
-```typescript
-// Add this to any component to test error capture
-throw new Error('Test Sentry error');
-```
-
-Or use the Sentry test button (development only):
-
-```typescript
-import * as Sentry from '@sentry/nextjs';
-
-<button onClick={() => Sentry.captureException(new Error('Test error'))}>
-  Test Sentry
-</button>
-```
+Do not make broad analytics routes, old Expertise Atlas UI, LinkedIn verification, public directory behavior, fairness dashboards, or native meeting-provider success launch-critical by default.
 
 ## Source Maps
 
-Source maps are automatically uploaded to Sentry during production builds when `SENTRY_ORG` and `SENTRY_PROJECT` are configured. This allows you to see the original source code in error stack traces.
+Source maps may be uploaded during production builds when:
 
-To configure:
+- `SENTRY_AUTH_TOKEN`
+- `SENTRY_ORG`
+- `SENTRY_PROJECT`
 
-1. Get auth token from Sentry: **Settings** → **Auth Tokens** → **Create Token**
-2. Add to Vercel environment variables:
-   ```
-   SENTRY_AUTH_TOKEN=your-token
-   SENTRY_ORG=your-org
-   SENTRY_PROJECT=your-project
-   ```
-3. Keep widened client uploads disabled by default on Vercel. This repo now uses the
-   standard Sentry client sourcemap upload surface unless you explicitly opt in with:
-   ```
-   SENTRY_WIDEN_CLIENT_FILE_UPLOAD=1
-   ```
-   Enable that only when you need extra client-side stacktrace context and can tolerate
-   slower deploys.
+are set for the build target.
 
-## Best Practices
+Keep widened client file uploads disabled by default. Enable `SENTRY_WIDEN_CLIENT_FILE_UPLOAD=1` only when the target and reason are explicit and slower deploys are acceptable.
 
-1. **Wrap critical UI sections** with error boundaries
-2. **Add user context** to errors when possible
-3. **Use breadcrumbs** to add debugging context
-4. **Set appropriate sampling rates** to control costs
-5. **Configure alerts** for critical errors
-6. **Review errors weekly** to identify patterns
-7. **Fix high-frequency issues** first
+## Verification
 
-## Troubleshooting
+Before launch, verify:
 
-### Errors not appearing in Sentry
+```bash
+npm run test -- tests/scripts/launch-gate-config.test.ts
+npm run docs:freshness
+npm run lint
+npm run typecheck
+```
 
-1. Check that `NEXT_PUBLIC_SENTRY_DSN` is set correctly
-2. Verify you're in production mode (development errors are filtered)
-3. Check browser console for Sentry initialization errors
-4. Ensure error is not in the ignore list
+Target-specific evidence:
 
-### Too many events
+1. Confirm Sentry env vars exist where expected without printing values.
+2. Confirm release-tagged events reach Sentry for the intended target.
+3. Confirm a sample event does not include cookies, headers, request body, private proof content, hidden identity details, signed URLs, or filenames.
+4. Confirm alert routing matches [alert-configuration.md](./alert-configuration.md).
+5. Confirm Sentry state is referenced as support evidence only, not as final go/no-go proof.
 
-1. Increase sampling rates in config files
-2. Add more errors to ignore lists
-3. Set up rate limiting in Sentry project settings
+Use provider-side test events or controlled preview-target errors where possible. Do not introduce a production route or destructive action just to test Sentry.
 
-### Source maps not working
+## Incident Use
 
-1. Verify `SENTRY_AUTH_TOKEN` is set in Vercel
-2. Check build logs for source map upload errors
-3. Ensure `SENTRY_ORG` and `SENTRY_PROJECT` match Sentry project
+When Sentry reports a launch issue:
 
-## Resources
-
-- [Sentry Next.js Documentation](https://docs.sentry.io/platforms/javascript/guides/nextjs/)
-- [Error Boundaries in React](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)
-- [Sentry Best Practices](https://docs.sentry.io/product/best-practices/)
+1. Identify the route, workflow, release, and primary object.
+2. Check whether privacy, reveal, export/delete, public projection, or admin/internal exposure is involved.
+3. Preserve evidence without copying private payloads.
+4. Follow the relevant incident or launch-ops runbook.
+5. If a Sentry event contains sensitive data, treat it as a privacy bug and remove the field at the caller or integration boundary.

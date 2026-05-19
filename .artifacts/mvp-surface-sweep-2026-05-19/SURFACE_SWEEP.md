@@ -1067,3 +1067,11 @@ Non-fatal test noise:
 - Rewrote it as launch-safe alert configuration for the locked MVP corridor: public availability, protected launch-status/perf-status, `/api/assignments` latency evidence, decision-reminder cron, cron-job.org observability jobs, active workflow failures, and internal queue risks.
 - Added explicit no-leak alert payload rules and removed launch-blocking defaults for broad analytics endpoints, public directories, old Expertise Atlas behavior, LinkedIn trust, native meeting-provider success, fairness dashboards, and broad business metric targets.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so alert configuration stays tied to current launch-ops evidence instead of old broad monitoring theater.
+
+## Continuation - Sentry And Structured Logging Privacy Refresh
+
+- Found `docs/sentry-setup.md` and `docs/structured-logging.md` still verified on 2026-02-12 with broad observability examples, session replay presented as default debugging, payment-style/error examples, and log aggregation patterns that were too loose for launch privacy.
+- Rewrote both docs around launch-support observability only: protected runtime errors, release tracking, route/workflow context, no private proof content, no hidden identity details, no raw request/response bodies, no secrets, no raw AI prompts/model responses, and no broad analytics/dashboard behavior.
+- Hardened Sentry config so client replay sampling defaults to `0` unless explicitly enabled by `NEXT_PUBLIC_SENTRY_REPLAY_*` env vars, while keeping `maskAllText` and `blockAllMedia` when replay is enabled.
+- Added Sentry event scrubbing in client/server/edge config to reduce user context to id-only and remove request cookies, headers, and body data before events leave the app.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so Sentry/logging docs stay current and privacy-safe.

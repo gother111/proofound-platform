@@ -5,6 +5,15 @@ import * as Sentry from '@sentry/nextjs';
 // router transition instrumentation hooks to be exported from this module.
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 
+function readSamplingRate(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
+
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) return fallback;
+
+  return Math.min(1, Math.max(0, parsed));
+}
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
@@ -17,10 +26,15 @@ Sentry.init({
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
 
-  // Capture Replay for 10% of all sessions,
-  // plus 100% of sessions with an error
-  replaysOnErrorSampleRate: 1.0,
-  replaysSessionSampleRate: 0.1,
+  // Privacy-first launch default: session replay is opt-in per target.
+  replaysOnErrorSampleRate: readSamplingRate(
+    process.env.NEXT_PUBLIC_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE,
+    0
+  ),
+  replaysSessionSampleRate: readSamplingRate(
+    process.env.NEXT_PUBLIC_SENTRY_REPLAY_SESSION_SAMPLE_RATE,
+    0
+  ),
 
   integrations: [
     Sentry.replayIntegration({
@@ -58,6 +72,16 @@ Sentry.init({
     // Filter out events without error info
     if (!event.exception && !event.message) {
       return null;
+    }
+
+    if (event.user) {
+      event.user = { id: event.user.id };
+    }
+
+    if (event.request) {
+      delete event.request.cookies;
+      delete event.request.headers;
+      delete event.request.data;
     }
 
     return event;

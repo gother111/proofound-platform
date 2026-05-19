@@ -1,5 +1,19 @@
 import * as Sentry from '@sentry/nextjs';
 
+function scrubSentryEvent(event: Sentry.Event): Sentry.Event {
+  if (event.user) {
+    event.user = { id: event.user.id };
+  }
+
+  if (event.request) {
+    delete event.request.cookies;
+    delete event.request.headers;
+    delete event.request.data;
+  }
+
+  return event;
+}
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
@@ -34,13 +48,7 @@ Sentry.init({
       return null;
     }
 
-    // Add user context if available (avoid PII)
-    if (event.user) {
-      // Remove email and other PII, keep only ID
-      event.user = {
-        id: event.user.id,
-      };
-    }
+    scrubSentryEvent(event);
 
     // Filter out events without error info
     if (!event.exception && !event.message) {
@@ -49,7 +57,7 @@ Sentry.init({
 
     // Detect security-related events
     const errorMessage = hint?.originalException?.toString() || event.message || '';
-    const isSecurityEvent = 
+    const isSecurityEvent =
       errorMessage.includes('Security Event:') ||
       errorMessage.includes('RLS') ||
       errorMessage.includes('policy') ||
@@ -69,7 +77,11 @@ Sentry.init({
       if (errorMessage.includes('CRITICAL') || errorMessage.includes('SQL injection')) {
         event.level = 'fatal';
         event.tags.security_severity = 'critical';
-      } else if (errorMessage.includes('HIGH') || errorMessage.includes('Unauthorized') || errorMessage.includes('RLS')) {
+      } else if (
+        errorMessage.includes('HIGH') ||
+        errorMessage.includes('Unauthorized') ||
+        errorMessage.includes('RLS')
+      ) {
         event.level = 'error';
         event.tags.security_severity = 'high';
       } else {

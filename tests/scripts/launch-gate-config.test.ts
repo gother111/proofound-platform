@@ -715,6 +715,53 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps Sentry and structured logging privacy-safe for launch', () => {
+    const sentrySetup = fs.readFileSync(path.join(repoRoot, 'docs/sentry-setup.md'), 'utf8');
+    const structuredLogging = fs.readFileSync(
+      path.join(repoRoot, 'docs/structured-logging.md'),
+      'utf8'
+    );
+    const clientSentryConfig = fs.readFileSync(
+      path.join(repoRoot, 'instrumentation-client.ts'),
+      'utf8'
+    );
+    const serverSentryConfig = fs.readFileSync(
+      path.join(repoRoot, 'sentry.server.config.ts'),
+      'utf8'
+    );
+    const edgeSentryConfig = fs.readFileSync(path.join(repoRoot, 'sentry.edge.config.ts'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const docs = `${sentrySetup}\n${structuredLogging}`;
+    const sentryConfigs = `${clientSentryConfig}\n${serverSentryConfig}\n${edgeSentryConfig}`;
+
+    expect(sentrySetup).toContain('Last Verified: `2026-05-19`');
+    expect(sentrySetup).toContain('session replay opt-in by default');
+    expect(sentrySetup).toContain('NEXT_PUBLIC_SENTRY_REPLAY_SESSION_SAMPLE_RATE=0');
+    expect(sentrySetup).toContain('remove request cookies, headers, and body data');
+    expect(sentrySetup).toContain('not as final go/no-go proof');
+    expect(structuredLogging).toContain('Last Verified: `2026-05-19`');
+    expect(structuredLogging).toContain('raw request or response bodies');
+    expect(structuredLogging).toContain('private proof content');
+    expect(structuredLogging).toContain('hidden candidate identity details');
+    expect(structuredLogging).toContain('raw AI prompts');
+    expect(structuredLogging).toContain('Do not migrate a risky console call');
+    expect(docs).not.toContain("throw new Error('Test Sentry error')");
+    expect(docs).not.toContain('payment.failed');
+    expect(docs).not.toContain('Session replay for error debugging');
+    expect(docs).not.toContain('Datadog (post-launch only');
+    expect(clientSentryConfig).toContain('NEXT_PUBLIC_SENTRY_REPLAY_SESSION_SAMPLE_RATE');
+    expect(clientSentryConfig).toContain('NEXT_PUBLIC_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE');
+    expect(clientSentryConfig).toContain('delete event.request.cookies');
+    expect(sentryConfigs).toContain('delete event.request.headers');
+    expect(sentryConfigs).toContain('delete event.request.data');
+    expect(docsRegistry).toContain(
+      '| `docs/sentry-setup.md`                                                                                  | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/structured-logging.md`                                                                            | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps manual testing docs aligned with the active MVP route corridor', () => {
     const manualChecklist = fs.readFileSync(
       path.join(repoRoot, 'MANUAL_TESTING_CHECKLIST.md'),
