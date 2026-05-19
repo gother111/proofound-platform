@@ -1,704 +1,188 @@
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
 # Deployment Checklist
 
-Complete pre-deployment and post-deployment checklist for Proofound. Follow this guide to ensure a smooth deployment with all features working correctly.
+Use this checklist for a production-candidate deployment of the locked Proofound MVP corridor. It
+is an operator companion to
+[`docs/production-readiness-checklist.md`](production-readiness-checklist.md),
+[`docs/release-checklist.md`](release-checklist.md), and the current sweep artifact at
+[`../.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`](../.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md).
 
-## Pre-Deployment Checklist
+Current 2026-05-19 status: local surface, route-policy, strict org, launch smoke, local monitor,
+restore-contract, docs-freshness, and public Browser fallback evidence exists. Do not treat a
+deployment as launch-ready until the intended production-candidate target has fresh backup
+checkpoint, isolated restore rehearsal, authenticated launch-monitor/perf evidence, and final
+go/no-go evidence.
 
-### 1. Environment Variables ✅
+## 1. Target and Secrets
 
-Verify all required environment variables are set:
+- [ ] Confirm the target URL and database target before running any command that can affect data.
+- [ ] Confirm `NEXT_PUBLIC_SITE_URL` matches the target deployment URL.
+- [ ] Confirm no production run is using `NEXT_PUBLIC_USE_MOCK_SUPABASE=true`, `MOCK_ADMIN_MODE`,
+      `MOCK_PLATFORM_ROLE`, or `MOBILE_MOCK_AUTH`.
+- [ ] Confirm required secrets are present in the target environment:
+  - `DATABASE_URL`
+  - `DIRECT_URL` when database scripts require a direct connection
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `RESEND_API_KEY`
+  - `EMAIL_FROM`
+  - `CRON_SECRET` or `INTERNAL_API_SECRET`
+  - `PII_HASH_SALT`
+- [ ] Confirm provider credentials are set only for flows intentionally in scope for the run.
+- [ ] Keep `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` unless connected-provider scheduling is
+      explicitly launch-blocking for this target. Manual interview links remain the locked MVP default.
+- [ ] Do not print secrets in logs, screenshots, artifacts, or chat.
 
-#### Critical (Must Have)
+## 2. Pre-Deploy Checks
 
-- [ ] `DATABASE_URL` - PostgreSQL connection string
-- [ ] `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
-- [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase public key
-- [ ] `SUPABASE_SERVICE_ROLE_KEY` - Supabase admin key
-- [ ] `NEXT_PUBLIC_SITE_URL` - Your production URL
-- [ ] `NEXT_PUBLIC_USE_MOCK_SUPABASE=false` and no mock admin/auth flags (`MOCK_ADMIN_MODE`, `MOCK_PLATFORM_ROLE`, `MOBILE_MOCK_AUTH`) in production
-
-#### Email Features
-
-- [x] `RESEND_API_KEY` - Resend API key configured ✅
-- [x] `EMAIL_FROM` - Sender email address configured ✅
-- [x] API key added to Vercel and .env.local ✅
-- [ ] Resend domain verified (optional - can use Resend's domain for now)
-- [ ] DNS records configured (optional - SPF, DKIM, DMARC)
-
-**Test email setup**: `node scripts/test-email.mjs your-email@example.com`
-
-See [RESEND_SETUP.md](./RESEND_SETUP.md) for testing and domain verification.
-
-#### Cron Jobs
-
-- [x] `CRON_SECRET` - Generated secure token ✅
-- [ ] Vercel Cron configured for the four active launch automation routes in `vercel.json`
-- [ ] cron-job.org configured only for the two active observability routes
-- [ ] Removed or non-MVP cron routes are not enabled as launch infrastructure
-- [x] Production URLs configured: `https://proofound.io/api/cron/*` ✅
-
-See [CRON_SETUP.md](./CRON_SETUP.md) for verification and monitoring.
-
-**Verification**:
+Run the best relevant local gates before promoting a deployment:
 
 ```bash
-# Run locally to check
-npm run prebuild
-
-# Expected output:
-# ✅ Deploy readiness: all required env vars present.
-```
-
----
-
-### 2. Database Setup ✅
-
-Ensure your database is properly configured:
-
-#### Supabase Database
-
-- [ ] Supabase project created
-- [ ] All migrations applied
-- [ ] Row-Level Security (RLS) policies enabled
-- [ ] Database tables verified
-- [ ] Required indexes created
-
-#### Storage Buckets
-
-- [ ] Run `supabase/storage-setup.sql` in Supabase SQL Editor
-- [ ] Verify buckets created:
-  - `avatars` (public)
-  - `covers` (public)
-  - `documents` (private)
-- [ ] RLS policies applied to storage
-
-#### Database Functions
-
-- [ ] `anonymize_user_account()` function exists (GDPR deletions)
-- [ ] `get_moderation_stats()` function exists (admin moderation)
-- [ ] Any custom functions from migrations
-
-**Verification**:
-
-```sql
--- In Supabase SQL Editor:
--- Check if tables exist
-SELECT table_name FROM information_schema.tables
-WHERE table_schema = 'public';
-
--- Check if storage buckets exist
-SELECT * FROM storage.buckets;
-
--- Check if functions exist
-SELECT routine_name FROM information_schema.routines
-WHERE routine_schema = 'public';
-```
-
----
-
-### 3. Code Quality ✅
-
-Run all checks before deploying:
-
-```bash
-# Install dependencies
-npm install
-
-# Run linter
 npm run lint
-
-# Check TypeScript types
-npm run type-check  # or npx tsc --noEmit
-
-# Run tests (if available)
-npm test
-
-# Build locally to catch errors
+npm run typecheck
+npm run test
 npm run build
+npm run docs:freshness
+npm run test:launch:routes
+npm run test:launch:smoke
 ```
 
-**Expected Output**:
-
-```
-✓ Linting and checking validity of types
-✓ Compiled successfully
-```
-
----
-
-### 4. Git Repository ✅
-
-Ensure code is properly committed and pushed:
-
-- [ ] All changes committed to Git
-- [ ] Working on correct branch
-- [ ] Pushed to GitHub/remote
-- [ ] No uncommitted sensitive files (.env, secrets)
-- [ ] `.gitignore` properly configured
+For release-candidate evidence, also run the strict corridor checks that match the target:
 
 ```bash
-# Check status
-git status
-
-# Should see:
-# nothing to commit, working tree clean
-
-# Verify remote
-git remote -v
-
-# Push if needed
-git push origin main
+npm run test:e2e:landing
+npm run test:e2e:auth:real
+npm run test:a11y:strict
+npm run test:e2e:individual:strict
+npm run test:e2e:org:strict
+npm run test:e2e:privacy:strict
+npm run test:e2e:providers:strict
 ```
 
----
+If a check cannot run, record the exact blocker and the manual verification path in the launch
+evidence.
 
-### 5. Vercel Configuration ✅
+## 3. Database and Storage Safety
 
-#### Project Settings
+Use repo-owned scripts and the migration ledger as the normal deployment path. Dashboard SQL paste
+flows are not launch evidence.
 
-- [ ] Project connected to Git repository
-- [ ] Correct branch selected for production (usually `main` or `master`)
-- [ ] Build settings configured:
-  - Build Command: `npm run build`
-  - Output Directory: `.next`
-  - Install Command: `npm install`
+- [ ] `npm run db:drift-check`
+- [ ] `npm run db:backup:checkpoint` against the production-candidate target.
+- [ ] `npm run db:audit:migrations`
+- [ ] If migrations changed, run `npm run db:migrate` and confirm
+      `public.app_migration_ledger` records the expected migration ids.
+- [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir>` against an isolated recovery
+      target.
+- [ ] Save restore-drill evidence with date, target class, owner, and result.
+- [ ] Confirm Supabase storage buckets and policies are represented by migrations or documented
+      infra setup, not an untracked one-off paste.
+- [ ] Do not use `npm run db:push` in production workflows.
+- [ ] Do not verify restore behavior against the live production database.
 
-#### Environment Variables in Vercel
+## 4. Deploy
 
-- [ ] All variables added to Vercel dashboard
-- [ ] Correct environments selected (Production/Preview/Development)
-- [ ] No typos in variable names (case-sensitive)
-- [ ] Values copied correctly (no extra spaces)
+### Vercel Git Deployment
 
-#### Domain Configuration (if custom domain)
+- [ ] Working tree is clean.
+- [ ] Release branch or commit matches the intended deployment.
+- [ ] No `.env`, secret dump, local export, or private data file is committed.
+- [ ] Push the intended branch or merge through the normal protected path.
+- [ ] Watch the Vercel deployment logs until build completion.
 
-- [ ] Custom domain added in Vercel
-- [ ] DNS records configured
-- [ ] SSL certificate provisioned
-- [ ] `NEXT_PUBLIC_SITE_URL` matches domain
+### Vercel CLI Deployment
 
----
-
-## Deployment Steps
-
-### Step 1: Deploy to Vercel
-
-**If using Vercel CLI:**
+Only use CLI deploys when they are the intended release path for the target:
 
 ```bash
 vercel --prod
 ```
 
-**If using Git integration:**
+- [ ] Confirm the CLI is linked to the correct Vercel project.
+- [ ] Confirm the promoted deployment URL matches the intended target.
+- [ ] Save deployment id, commit sha, and URL in launch evidence.
 
-1. Push to main branch
-2. Vercel auto-deploys
-3. Monitor deployment in dashboard
+## 5. Scheduler Ownership
 
----
+Use [`docs/CRON_SETUP.md`](CRON_SETUP.md) as the canonical scheduler table.
 
-### Step 2: Monitor Deployment
+- [ ] Vercel Cron schedules exactly the active launch automation routes in `vercel.json`:
+  - `/api/cron/decision-reminders`
+  - `/api/cron/refresh-matches`
+  - `/api/cron/refresh-matches-worker`
+  - `/api/cron/sla-enforcement`
+- [ ] cron-job.org is enabled only for active observability:
+  - `/api/cron/health-check`
+  - `/api/cron/performance-check`
+- [ ] Archived, removed, manual-only, and Vercel-owned routes are not enabled in cron-job.org.
+- [ ] Protected cron routes reject unauthenticated requests and accept the configured secret.
 
-1. Go to Vercel Dashboard → Your Project → **Deployments**
-2. Watch build logs in real-time
-3. Look for errors or warnings
-4. Wait for "Deployment Complete" status
+## 6. Post-Deploy Public Smoke
 
-**Common Build Errors**:
+Use Browser for representative desktop and mobile checks when validating local or deployed web
+surfaces.
 
-- Missing environment variables
-- TypeScript type errors
-- Import errors
-- Database connection issues
+- [ ] Landing page loads and CTA routing points to signup/login or the intended MVP entry.
+- [ ] Signup and login entry routes load without console/runtime errors.
+- [ ] Public individual portfolio renders without private proof leakage.
+- [ ] Public organization trust page renders only public trust/profile content.
+- [ ] Public assignment/share surfaces return the intended active, gated, archived, or 404/410
+      behavior.
+- [ ] Footer, legal links, metadata, SEO tags, and JSON-LD are present where expected.
+- [ ] Public `/api/health` returns minimal health only, with no secret, user, database, or internal
+      diagnostic details.
 
----
+## 7. Post-Deploy Authenticated Smoke
 
-### Step 3: Verify Deployment URL
+Use the production-candidate target, not stale local evidence, for launch signoff.
 
-Once deployed, Vercel provides a URL:
+- [ ] Individual onboarding and first proof flow is understandable.
+- [ ] Proof Packs, proof upload/import/linking, proof quality, and anchor context are clear.
+- [ ] Verification requests, publishing, privacy settings, export, and delete flows preserve
+      no-leak behavior.
+- [ ] Organization onboarding, trust profile, assignments, review queue, candidate proof review,
+      intro request, reveal consent, interview, decision, and engagement verification surfaces stay in
+      the locked MVP corridor.
+- [ ] Admin/internal launch-ops routes are protected and show only role-appropriate queue or
+      diagnostic data.
+- [ ] Empty, loading, error, disabled, success, archived, and gated states are covered for the
+      representative active surfaces.
 
-**Production**: `https://proofound.io` or `https://your-project.vercel.app`
-
-Test the URL:
-
-```bash
-curl https://your-domain.vercel.app
-# Should return 200 OK
-```
-
----
-
-## Post-Deployment Checklist
-
-### 1. Basic Functionality ✅
-
-Test core features immediately after deployment:
-
-#### Home Page & Navigation
-
-- [ ] Home page loads without errors
-- [ ] Navigation menu works
-- [ ] All static pages load
-- [ ] No console errors in browser
-
-#### Authentication Flow
-
-- [ ] Sign up page loads
-- [ ] Can create new account
-- [ ] Verification email sent (check Resend logs)
-- [ ] Email verification link works
-- [ ] Can log in
-- [ ] Can log out
-- [ ] Password reset flow works
-
-#### Database Connection
-
-- [ ] User profiles load
-- [ ] Data persists after page refresh
-- [ ] No "database connection" errors in logs
-
----
-
-### 2. Email Functionality ✅
-
-Test all email features:
-
-#### Resend Dashboard
-
-- [ ] Go to [Resend Logs](https://resend.com/logs)
-- [ ] Verify emails are being sent
-- [ ] Check delivery status (Delivered/Bounced)
-- [ ] No API errors
-
-#### Test Each Email Type
-
-1. **Verification Email**:
-   - [ ] Sign up with new account
-   - [ ] Check inbox for verification email
-   - [ ] Click verification link
-   - [ ] Account verified successfully
-
-2. **Password Reset**:
-   - [ ] Click "Forgot Password"
-   - [ ] Enter email
-   - [ ] Receive reset email
-   - [ ] Reset link works
-
-3. **Organization Invite** (if applicable):
-   - [ ] Create organization
-   - [ ] Invite team member
-   - [ ] Invitation email sent
-   - [ ] Invite link works
-
----
-
-### 3. Cron Jobs ✅ COMPLETED
-
-Cron ownership is split between Vercel Cron and cron-job.org. The canonical route classification table is in [CRON_SETUP.md](./CRON_SETUP.md); use it as the source of truth before changing scheduler state.
-
-#### Vercel Cron - Verification
-
-- [ ] Exactly 4 jobs configured in `vercel.json`
-  - [ ] `/api/cron/decision-reminders`
-  - [ ] `/api/cron/refresh-matches`
-  - [ ] `/api/cron/refresh-matches-worker`
-  - [ ] `/api/cron/sla-enforcement`
-- [ ] No archived, removed, manual-only, or observability route is scheduled in `vercel.json`
-
-#### cron-job.org Dashboard - Verification
-
-- [ ] Enabled external jobs:
-  - [ ] Proofound – Health Check
-  - [ ] Proofound – Performance Check
-- [ ] Disabled external jobs:
-  - [ ] Proofound - Decision Reminders
-  - [ ] Proofound - Refresh Matches
-  - [ ] Proofound - Refresh Matches Worker
-  - [ ] Proofound - SLA Enforcement
-  - [ ] Proofound - Launch Synthetic Checks
-  - [ ] Proofound - Account Deletion Workflow
-  - [ ] Proofound - Send Deletion Reminders
-  - [ ] Proofound - Process Deletions
-  - [ ] Proofound - Python Internal Worker
-  - [ ] Proofound - CV Import Temp Cleanup
-  - [ ] Proofound - Weekly Digest
-  - [ ] Proofound - Fairness Note
-  - [ ] Proofound - Fairness Report
-  - [ ] Proofound - Generate Fairness Note
-- [ ] Correct URLs configured (`https://proofound.io/api/cron/*`)
-- [ ] Authorization headers set for protected routes
-
-#### Test Cron Endpoints
+## 8. Monitoring and Go / No-Go
 
 ```bash
-# Vercel-owned daily automation
-curl -X GET https://proofound.io/api/cron/decision-reminders \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
-curl -X GET https://proofound.io/api/cron/refresh-matches \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
-curl -X GET https://proofound.io/api/cron/refresh-matches-worker \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
-curl -X GET https://proofound.io/api/cron/sla-enforcement \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
-
-# cron-job.org-owned observability
-curl -X GET https://proofound.io/api/cron/performance-check \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
-curl -X GET https://proofound.io/api/cron/health-check
+BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch
+BASE_URL=<production-candidate-url> npm run perf:budgets
+BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go
 ```
 
-#### Verify in Vercel Logs
-
-- [ ] Go to Vercel → Logs
-- [ ] Filter by `/api/cron/`
-- [ ] Should see successful executions for the Vercel-owned routes
-- [ ] No 401 Unauthorized errors on protected cron routes
-
----
-
-### 4. File Uploads ✅
-
-Test storage functionality:
-
-#### Profile Avatar Upload
-
-- [ ] Go to profile settings
-- [ ] Upload avatar image
-- [ ] Image appears immediately
-- [ ] Image persists after page refresh
-- [ ] Check Supabase Storage → `avatars` bucket
-
-#### Document Upload (if applicable)
-
-- [ ] Upload document/proof
-- [ ] File stored in Supabase Storage
-- [ ] File accessible with correct permissions
-
----
-
-### 5. Feature-Specific Tests ✅
-
-#### Matching System
-
-- [ ] Complete profile information
-- [ ] Run matching algorithm
-- [ ] View match results
-- [ ] Match scores displayed
-- [ ] Can interact with matches
-
-#### Messaging System
-
-- [ ] Can send messages
-- [ ] Messages appear in real-time
-- [ ] Read receipts work
-- [ ] Typing indicators show
-- [ ] Connection status indicator works
-
-#### Admin Dashboard (if admin)
-
-- [ ] Can access admin panel
-- [ ] User verification queue loads
-- [ ] Can approve/reject verifications
-- [ ] Moderation queue works
-- [ ] Admin actions logged
-
----
-
-### 6. Performance Monitoring ✅
-
-#### Vercel Analytics
-
-- [ ] Enable Vercel Analytics (if available)
-- [ ] Monitor page load times
-- [ ] Check Core Web Vitals
-- [ ] Identify slow pages
-
-#### Vercel Logs
-
-- [ ] Monitor function execution times
-- [ ] Check for timeout errors
-- [ ] Look for database connection issues
-- [ ] Monitor error rates
-
-#### Supabase Monitoring
-
-- [ ] Check database usage
-- [ ] Monitor connection pool
-- [ ] Check storage usage
-- [ ] Review API request counts
-
----
-
-### 7. Security Verification ✅
-
-#### Environment Variables
-
-- [ ] No secrets in client-side code
-- [ ] No secrets in Git repository
-- [ ] All `NEXT_PUBLIC_*` variables are intentionally public
-- [ ] Service role key not exposed to browser
-
-#### API Endpoints
-
-- [ ] Authentication required where needed
-- [ ] Cron endpoints protected with `CRON_SECRET`
-- [ ] Admin endpoints require admin role
-- [ ] Rate limiting working (if enabled)
-
-#### Database Security
-
-- [ ] RLS policies enabled on all tables
-- [ ] Users can only access own data
-- [ ] Admin queries use service role appropriately
-- [ ] No direct database access from client
-
----
-
-## Troubleshooting Common Issues
-
-### Build Fails
-
-**Symptom**: Deployment fails during build
-
-**Check**:
-
-1. Review build logs in Vercel
-2. Look for TypeScript errors
-3. Check for missing environment variables
-4. Verify dependencies installed correctly
-
-**Solution**:
-
-```bash
-# Test build locally first
-npm run build
-
-# Fix errors locally, commit, push
-```
-
----
-
-### "Internal Server Error" on Pages
-
-**Symptom**: 500 errors when accessing pages
-
-**Check**:
-
-1. Vercel → Logs → Filter by error status
-2. Look for specific error messages
-3. Check database connection
-4. Verify environment variables
-
-**Common Causes**:
-
-- Missing `DATABASE_URL`
-- Invalid Supabase keys
-- Database connection timeout
-- Missing database tables/functions
-
----
-
-### Emails Not Sending
-
-**Symptom**: Users not receiving emails
-
-**Check**:
-
-1. Resend Dashboard → Logs
-2. Look for failed sends
-3. Check domain verification status
-4. Verify `RESEND_API_KEY` is set
-
-**Solution**: See [RESEND_SETUP.md](./RESEND_SETUP.md) troubleshooting section
-
----
-
-### Cron Jobs Not Running
-
-**Symptom**: Scheduled tasks not executing
-
-**Check**:
-
-1. cron-job.org dashboard → Job status
-2. Verify jobs are enabled
-3. Check Authorization header
-4. Test endpoint manually with curl
-
-**Solution**: See [CRON_SETUP.md](./CRON_SETUP.md) troubleshooting section
-
----
-
-### Images/Files Not Loading
-
-**Symptom**: Uploaded files return 404 or 403
-
-**Check**:
-
-1. Supabase Storage → Check bucket exists
-2. Verify RLS policies applied
-3. Check file permissions
-4. Verify Supabase keys are correct
-
-**Solution**:
-
-```bash
-# Run storage setup SQL
-# In Supabase SQL Editor:
-# Copy contents of supabase/storage-setup.sql
-# Execute
-```
-
----
-
-## Rollback Plan
-
-If deployment has critical issues:
-
-### Option 1: Revert to Previous Deployment
-
-1. Go to Vercel Dashboard → Deployments
-2. Find last working deployment
-3. Click **"..."** → **"Promote to Production"**
-4. Previous version becomes production
-
-### Option 2: Fix Forward
-
-1. Identify issue in logs
-2. Fix locally
-3. Commit and push
-4. New deployment auto-starts
-
-### Option 3: Pause Traffic
-
-If critical security issue:
-
-1. Vercel Dashboard → Settings → **Domains**
-2. Temporarily remove domain
-3. Fix issue
-4. Re-add domain when fixed
-
----
-
-## Monitoring & Maintenance
-
-### Daily Checks
-
-- [ ] Check Vercel error logs
-- [ ] Monitor Resend email delivery rate
-- [ ] Verify cron jobs executed successfully
-
-### Weekly Checks
-
-- [ ] Review Supabase usage/quota
-- [ ] Check Resend email quota
-- [ ] Monitor Vercel function usage
-- [ ] Review performance metrics
-
-### Monthly Checks
-
-- [ ] Review and rotate API keys (if security policy)
-- [ ] Check for Next.js/dependency updates
-- [ ] Review and optimize database queries
-- [ ] Analyze user feedback and errors
-
----
-
-## Success Criteria
-
-Your deployment is successful when:
-
-✅ Build completes without errors
-✅ Application loads at production URL
-✅ Users can sign up and log in
-✅ Emails are being sent and delivered
-✅ Database queries work correctly
-✅ File uploads function properly
-✅ Cron jobs execute on schedule
-✅ No critical errors in logs
-✅ Performance is acceptable (< 3s page loads)
-
----
-
-## Post-Launch Tasks
-
-After successful deployment:
-
-### Immediate (First 24 Hours)
-
-- [ ] Monitor error rates closely
-- [ ] Test all critical user flows
-- [ ] Check email deliverability
-- [ ] Verify cron jobs ran successfully
-- [ ] Review Vercel function logs
-
-### Week 1
-
-- [ ] Gather user feedback
-- [ ] Fix any reported bugs
-- [ ] Optimize slow queries
-- [ ] Monitor resource usage
-- [ ] Update documentation if needed
-
-### Month 1
-
-- [ ] Review analytics and usage patterns
-- [ ] Optimize performance bottlenecks
-- [ ] Consider scaling database/services
-- [ ] Plan feature improvements
-- [ ] Review security practices
-
----
-
-## Resources
-
-- [Environment Variables Guide](./ENV_VARIABLES.md)
-- [Resend Setup Guide](./RESEND_SETUP.md)
-- [Cron Job Setup Guide](./CRON_SETUP.md)
-- [Vercel Documentation](https://vercel.com/docs)
-- [Supabase Documentation](https://supabase.com/docs)
-- [Next.js Documentation](https://nextjs.org/docs)
-
----
-
-## Support
-
-If you encounter issues not covered in this guide:
-
-1. Check Vercel deployment logs
-2. Review service-specific guides (Resend, Supabase)
-3. Search GitHub Issues
-4. Contact support team
-
----
-
-## Quick Command Reference
-
-```bash
-# Pre-deployment
-npm install
-npm run lint
-npm run build
-npm run prebuild  # Check env vars
-
-# Deployment
-git push origin main  # Auto-deploys on Vercel
-
-# Or manual:
-vercel --prod
-
-# Testing
-curl https://your-domain.vercel.app
-curl https://your-domain.vercel.app/api/health  # Health check
-
-# Cron endpoint testing
-curl -X GET https://your-domain.vercel.app/api/cron/refresh-matches \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
-```
-
----
-
-**Last Updated**: 2025-01-30
-
-**Deployment Time Estimate**: 30-45 minutes (first time)
-
-**Maintenance Time**: 1-2 hours/week
+- [ ] Authenticated `/api/monitoring/launch-status` reports the expected launch monitor contract.
+- [ ] Authenticated `/api/monitoring/perf-status` is healthy and includes `/api/assignments`
+      latency samples.
+- [ ] Sentry or equivalent runtime monitoring is receiving release-tagged events.
+- [ ] Vercel logs show no critical errors after smoke.
+- [ ] Resend logs show expected signup, verification, reset, invite, and workflow email behavior.
+- [ ] Final go/no-go artifact records target URL, deployment id, commit sha, owner, date, and any
+      unresolved risks.
+
+## 9. Rollback
+
+- [ ] Identify the last known good deployment in Vercel.
+- [ ] Promote the last known good deployment if the release has a critical runtime, privacy,
+      security, or data issue.
+- [ ] If a migration ran, do not improvise a live database rollback. Use the checkpoint and restore
+      runbook evidence to decide whether to fix forward, isolate recovery, or pause launch.
+- [ ] Record incident notes, user-visible impact, and remediation owner.
+
+## 10. Launch Is Successful When
+
+- [ ] Build and required checks pass for the intended commit.
+- [ ] Public and authenticated MVP corridor surfaces pass desktop and mobile smoke.
+- [ ] No public surface leaks private proof, candidate, org, assignment, or diagnostic data.
+- [ ] Cron ownership matches the canonical route classification.
+- [ ] Fresh backup checkpoint and isolated restore rehearsal are recorded.
+- [ ] Authenticated launch monitor and perf checks pass on the production-candidate target.
+- [ ] Final go/no-go is green, or the remaining risks are explicitly accepted by the launch owner.

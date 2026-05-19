@@ -669,6 +669,40 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the deployment checklist aligned with launch-safe migration and smoke gates', () => {
+    const deploymentChecklist = fs.readFileSync(
+      path.join(repoRoot, 'docs/DEPLOYMENT_CHECKLIST.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(deploymentChecklist).toContain('Last Verified: `2026-05-19`');
+    expect(deploymentChecklist).toContain('locked Proofound MVP corridor');
+    expect(deploymentChecklist).toContain('production-candidate');
+    expect(deploymentChecklist).toContain('npm run db:drift-check');
+    expect(deploymentChecklist).toContain('npm run db:backup:checkpoint');
+    expect(deploymentChecklist).toContain('npm run db:audit:migrations');
+    expect(deploymentChecklist).toContain('npm run db:migrate');
+    expect(deploymentChecklist).toContain(
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir>'
+    );
+    expect(deploymentChecklist).toContain('public.app_migration_ledger');
+    expect(deploymentChecklist).toContain('Do not use `npm run db:push`');
+    expect(deploymentChecklist).toContain('/api/monitoring/launch-status');
+    expect(deploymentChecklist).toContain('/api/monitoring/perf-status');
+    expect(deploymentChecklist).toContain('/api/assignments');
+    expect(deploymentChecklist).toContain('Use Browser');
+    expect(deploymentChecklist).toContain('Manual interview links remain');
+    expect(deploymentChecklist).not.toContain('Run `supabase/storage-setup.sql`');
+    expect(deploymentChecklist).not.toContain('In Supabase SQL Editor');
+    expect(deploymentChecklist).not.toContain('Copy contents of supabase/storage-setup.sql');
+    expect(deploymentChecklist).not.toContain('Messaging System');
+    expect(deploymentChecklist).not.toContain('Match scores displayed');
+    expect(docsRegistry).toContain(
+      '| `docs/DEPLOYMENT_CHECKLIST.md`                                                                          | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',
