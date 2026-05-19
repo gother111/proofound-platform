@@ -1617,3 +1617,13 @@ Non-fatal test noise:
 - Changed `GET /api/organizations` to require session auth and return only the signed-in user's active organizations for scoped work-email/org selection.
 - Updated the API reference generator so routes using `requireApiAuth` are classified as `session`; regenerated `docs/API_REFERENCE.md`, which now documents `/api/organizations`, `/api/organizations/[orgId]/assignments`, `/api/match/explain/[matchId]`, and `/api/engagement-verifications/[id]` as session-scoped instead of public.
 - Added route and launch-gate coverage so organization list behavior and API reference auth tiers stay aligned with privacy-safe MVP behavior.
+
+## Continuation - Landing Proof Example Copy Tightening
+
+- Visual thesis: the landing story should feel like calm proof review for mission-led hiring, not enterprise SaaS scale theater.
+- Content plan: keep the existing proof/assignment demo mechanics, but replace broad B2B SaaS, enterprise-client, and 200+ employee examples with mission-led teams, regional operations, clear handoffs, and one concrete hiring program.
+- Interaction thesis: no interaction changes; the surface already makes the proof story understandable, while the wording needed to better support the locked MVP corridor.
+- Updated `src/components/landing/sections/ScrollytellingSection.tsx` to remove broad enterprise SaaS framing from the public landing proof examples.
+- Added launch-gate coverage preventing the landing proof story from drifting back to `B2B SaaS`, `Enterprise clients`, `B2B platform`, `200+ employees`, or `growth-stage B2B` language.
+- Browser verified `http://localhost:3000/` at desktop and mobile viewports after the copy change: title/H1 rendered, no horizontal overflow, and no sampled stale enterprise SaaS copy was present in rendered body text.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-landing-copy/landing-copy-smoke.json` and `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-landing-copy/landing-copy-scroll-smoke.json`.

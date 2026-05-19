@@ -126,7 +126,12 @@ const profileModules = [
   },
 ];
 
-const assignmentContextTags = ['Growth-stage', 'B2B SaaS', 'Multi-market', 'Enterprise clients'];
+const assignmentContextTags = [
+  'Mission-led team',
+  'Regional operations',
+  'Clear handoffs',
+  'Proof-led review',
+];
 
 const assignmentValueCreate = [
   { label: 'Onboarding faster', icon: UserRound },
@@ -148,7 +153,7 @@ const assignmentBestFitSignals = [
   },
   {
     label: 'Vendor operations',
-    chips: ['Vendor mgmt', 'Multi-market ops', 'CRM systems'],
+    chips: ['Partner ops', 'Regional coordination', 'Shared systems'],
     icon: Handshake,
   },
   {
@@ -177,7 +182,7 @@ const preciseMatchMetrics = [
   { value: 'Clear', label: 'readiness', icon: TrendingUp },
 ] as const;
 
-const preciseMatchReasons = ['Process design', 'Onboarding gains', 'Multi-market scope'] as const;
+const preciseMatchReasons = ['Process design', 'Onboarding gains', 'Regional scope'] as const;
 
 const organizationChallenges = [
   'Too much time reviewing weak applications',
@@ -195,7 +200,7 @@ const candidateChallenges = [
 
 const blindExperienceRows = [
   {
-    label: 'B2B platform • 200+ employees',
+    label: 'Mission-led team • 40 people',
     sublabel: 'Operations lead · 2022 to present',
     bullets: [
       'Led cross-functional operations improvements',
@@ -217,8 +222,8 @@ const structuredProfileSummary = [
     label: 'Scale',
     items: [
       { label: 'Team led', value: '12', icon: UsersRound },
-      { label: 'Company size', value: '200+', icon: Building2 },
-      { label: 'Corporate clients', value: '45', icon: Handshake },
+      { label: 'Team size', value: '40', icon: Building2 },
+      { label: 'Partner orgs', value: '8', icon: Handshake },
     ],
   },
   {
@@ -227,13 +232,13 @@ const structuredProfileSummary = [
   },
   {
     label: 'Context',
-    chips: ['B2B SaaS', 'International', 'Growth-stage'],
+    chips: ['Mission-led', 'Regional', 'Growing team'],
   },
 ] as const;
 
 const outcomeExperienceRows = [
   {
-    label: 'B2B platform • 200+ employees',
+    label: 'Mission-led team • 40 people',
     sublabel: 'Operations lead · 2022 to present',
     bullets: [
       'Led cross-functional operations improvements',
@@ -263,7 +268,7 @@ const outcomeExperienceRows = [
     skills: [
       { label: 'Vendor ops', icon: Handshake },
       { label: 'Process coordination', icon: SquareStack },
-      { label: 'Multi-market', icon: Building2 },
+      { label: 'Partner coordination', icon: Building2 },
     ],
     artifacts: [
       { label: 'PDF', icon: FileText },
@@ -274,7 +279,7 @@ const outcomeExperienceRows = [
 
 const namedExperienceRows = [
   {
-    label: 'Growth-stage B2B team',
+    label: 'Mission-led growth team',
     sublabel: 'Operations lead · 2022 to present',
     bullets: [
       'Led cross-functional operations improvements',
@@ -1515,7 +1520,7 @@ function AssignmentCard({ state, compact = false }: { state: StoryState; compact
                 compact ? 'line-clamp-2 text-[0.62rem] leading-4' : 'text-[0.72rem] leading-4'
               )}
             >
-              Build clearer operating systems for a growth-stage B2B SaaS team.
+              Build clearer operating rhythms for a mission-driven team scaling one hiring program.
             </p>
           </div>
         </div>

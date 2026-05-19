@@ -345,6 +345,22 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps landing proof examples away from broad enterprise SaaS framing', () => {
+    const landingStory = fs.readFileSync(
+      path.join(repoRoot, 'src/components/landing/sections/ScrollytellingSection.tsx'),
+      'utf8'
+    );
+
+    expect(landingStory).toContain('Mission-led team');
+    expect(landingStory).toContain('Proof-led review');
+    expect(landingStory).toContain('mission-driven team scaling one hiring program');
+    expect(landingStory).not.toContain('B2B SaaS');
+    expect(landingStory).not.toContain('Enterprise clients');
+    expect(landingStory).not.toContain('B2B platform');
+    expect(landingStory).not.toContain('200+ employees');
+    expect(landingStory).not.toContain('growth-stage B2B');
+  });
+
   it('keeps monitoring launch-ops routes documented as internal, not public', () => {
     const apiReference = fs.readFileSync(path.join(repoRoot, 'docs/API_REFERENCE.md'), 'utf8');
     const apiReferenceGenerator = fs.readFileSync(
