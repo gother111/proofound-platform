@@ -114,7 +114,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `docs/DEPLOYMENT_CHECKLIST.md`                                                                          | `active`         | `docs`        | `repo+live`         | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `docs/DOCS_REGISTRY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-14`  | `-`                                                                                                     | `false`   |
 | `docs/ENV_VARIABLES.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-19`  | `-`                                                                                                     | `false`   |
-| `docs/EXPERTISE_ATLAS_SETUP.md`                                                                         | `active`         | `docs`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
+| `docs/EXPERTISE_ATLAS_SETUP.md`                                                                         | `active`         | `docs`        | `repo+live`         | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `e2e/archive/non_mvp_expertise_atlas/README.md`                                                         | `historical`     | `e2e`         | `archive`           | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `e2e/archive/non_mvp_legacy_integration/README.md`                                                      | `historical`     | `e2e`         | `archive`           | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `e2e/archive/non_mvp_org_analytics/README.md`                                                           | `historical`     | `e2e`         | `archive`           | `2026-05-19`  | `-`                                                                                                     | `false`   |
@@ -368,7 +368,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md` | `active` | `root` | `repo+live` | `2026-05-03` | `-` | `false` |
 | `PRD_for_a_web_platform_MVP.master-latest.md` | `historical` | `root` | `repo` | `2026-05-14` | `-` | `false` |
 | `agent/runbooks/geo-audit.md` | `governance` | `agent` | `repo+live` | `2026-03-09` | `-` | `false` |
-| `agent/runbooks/expertise-taxonomy-recovery.md` | `active` | `agent` | `repo+live` | `2026-02-26` | `-` | `false` |
+| `agent/runbooks/expertise-taxonomy-recovery.md` | `active` | `agent` | `repo+live` | `2026-05-19` | `-` | `false` |
 | `agent/runbooks/release-batch-flow.md` | `runbook` | `agent` | `repo+live` | `2026-03-11` | `-` | `false` |
 | `artifacts/docs-reconciliation/squirrel-full-2026-02-26.llm.md` | `reference-spec` | `artifacts` | `repo` | `2026-02-26` | `-` | `false` |
 | `artifacts/docs-reconciliation/squirrel-surface-2026-02-26.llm.md` | `reference-spec` | `artifacts` | `repo` | `2026-02-26` | `-` | `false` |

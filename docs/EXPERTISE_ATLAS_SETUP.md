@@ -1,3 +1,6 @@
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
 # Retained Expertise Taxonomy Setup Guide
 
 > Launch status: retained taxonomy/service context only.
@@ -13,6 +16,8 @@ The retained launch surface keeps the underlying taxonomy and narrow user-skill/
 - Broad skill-gap, dashboard, LinkedIn import, and CV wizard surfaces are archived unless the route-surface policy is explicitly changed.
 
 ## Setup Instructions
+
+This is not a production migration shortcut. For launch targets, follow the current deployment, migration, backup, and isolated-restore runbooks before applying database changes.
 
 ### 1. Apply schema migrations
 
@@ -93,6 +98,8 @@ curl -sS http://localhost:3000/api/expertise/user-skills
 - `GET /api/expertise/verifications/incoming`
 - `POST /api/expertise/verification/:requestId/respond`
 - `/api/expertise/cv-import/*`
+
+Do not use archived Expertise Atlas UI files, archived CV wizard routes, or old LinkedIn-import routes as launch evidence. They are retained only as history unless route-surface policy changes.
 
 ### Matching profile integration
 

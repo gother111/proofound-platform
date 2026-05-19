@@ -923,6 +923,44 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps retained expertise taxonomy guidance from reviving archived Atlas UI', () => {
+    const expertiseSetup = fs.readFileSync(
+      path.join(repoRoot, 'docs/EXPERTISE_ATLAS_SETUP.md'),
+      'utf8'
+    );
+    const taxonomyRecovery = fs.readFileSync(
+      path.join(repoRoot, 'agent/runbooks/expertise-taxonomy-recovery.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const combined = [expertiseSetup, taxonomyRecovery].join('\n');
+
+    expect(expertiseSetup).toContain('Doc Class: `active`');
+    expect(expertiseSetup).toContain('Last Verified: `2026-05-19`');
+    expect(expertiseSetup).toContain(
+      '/app/i/expertise` and the broad Expertise Atlas UI are archived'
+    );
+    expect(expertiseSetup).toContain('Do not use archived Expertise Atlas UI files');
+    expect(expertiseSetup).toContain('npm run db:drift-check');
+    expect(taxonomyRecovery).toContain('Last Verified: `2026-05-19`');
+    expect(taxonomyRecovery).toContain('retained taxonomy APIs');
+    expect(taxonomyRecovery).toContain(
+      'not a runbook for restoring the archived `/app/i/expertise` UI'
+    );
+    expect(taxonomyRecovery).toContain('A target is explicit and approved');
+    expect(taxonomyRecovery).toContain('isolated restore rehearsal');
+    expect(taxonomyRecovery).toContain('/app/i/expertise` remains archived/unavailable');
+    expect(combined).not.toContain('dashboard taxonomy context is missing');
+    expect(combined).toContain('Do not use this runbook to run `db:push`');
+    expect(combined).toContain('revive archived Expertise Atlas UI routes');
+    expect(docsRegistry).toContain(
+      '| `docs/EXPERTISE_ATLAS_SETUP.md`                                                                         | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `agent/runbooks/expertise-taxonomy-recovery.md` | `active` | `agent` | `repo+live` | `2026-05-19`'
+    );
+  });
+
   it('keeps the Supabase setup guide target-agnostic and launch-safe', () => {
     const setupSupabase = fs.readFileSync(path.join(repoRoot, 'SETUP_SUPABASE.md'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');

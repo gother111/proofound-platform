@@ -1044,3 +1044,11 @@ Non-fatal test noise:
 - Reclassified the root identity-verification implementation note as `reference-spec`, added current doc metadata, and replaced Project-Specification-first language with the locked MVP authority stack.
 - Refreshed `docs/verification-policy-mvp.md` to `Last Verified: 2026-05-19`, clarified that the locked MVP source of truth sets the launch promise, and added an explicit guard that older work-email/LinkedIn compatibility state stays account-side unless current scoped verification records make a specific fact safe to project.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so scoped verification docs keep the current authority order and do not imply broad identity verification or legacy provider-derived trust.
+
+## Continuation - Retained Expertise Taxonomy Guidance Refresh
+
+- Found retained Expertise taxonomy docs still verified on 2026-02-12/2026-02-26, with recovery wording that could be read as restoring the archived Expertise Atlas dashboard.
+- Added active doc metadata to `docs/EXPERTISE_ATLAS_SETUP.md`, kept the archived `/app/i/expertise` warning, and clarified that launch targets must use the current migration, backup, and isolated-restore runbooks rather than shortcuts.
+- Refreshed `agent/runbooks/expertise-taxonomy-recovery.md` to target-approved retained taxonomy recovery only: proof-skill selection, assignment expertise helpers, and retained taxonomy APIs, not the old Atlas UI.
+- Added backup/checkpoint and isolated-restore reminders for production-candidate or production targets, preserved no-`db:push` guidance, and required `/app/i/expertise` to remain archived/unavailable after recovery.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so retained taxonomy docs cannot revive broad Expertise Atlas UI, CV wizard, LinkedIn import, or old dashboard behavior as launch evidence.
