@@ -1474,3 +1474,9 @@ Non-fatal test noise:
 - Browser confirmed `/portfolio/demo` still renders the launch-safe `Public Page unavailable` state with no public profile data exposed.
 - The Browser runtime in this session did not expose direct viewport resizing; the attempted mobile Browser resize failed cleanly, so mobile coverage remains represented by the earlier saved Browser evidence and automated E2E route checks.
 - Found local DB/debug scratch scripts and `playwright-run.log` visible to Git after the continued Browser/dev-server pass. Added `.gitignore` coverage plus a launch-gate test so `/scratch/` and `playwright-run.log` stay out of launch commits without deleting local developer files.
+
+## Continuation - Strict Individual Home State Alignment
+
+- Found the strict individual E2E flow still expecting the pre-proof home state after it had seeded a proof record and completed the matching-interest path.
+- Aligned the test with the active home page state machine: once proof exists, `/app/i/home` should show `Verify strongest proof record` and the context/trust/visibility review copy rather than the first-proof prompt.
+- Verified the focused strict flow with `PLAYWRIGHT_PORT=33181 NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node24.mjs test e2e/strict/individual.strict.spec.ts --project=chromium --reporter=line --workers=1 --grep "I-10..I-14"`; result: `1 passed`.
