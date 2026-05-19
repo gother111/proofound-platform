@@ -206,6 +206,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Replaced the fallback copy with plain proof-review language: scoped verification records and Proof Pack review.
 - Added focused review-contract coverage so serialized review cards cannot reintroduce `compatibility signal` language through verification summary or trust labels.
 
+26. Retired wellbeing/Zen implementation code still lived in the active source tree.
+
+- Confirmed the old wellbeing/Zen page and APIs were already archived, but orphaned components and services still lived under active `src/components/{zen,wellbeing}` and `src/lib/{zen,wellbeing}`.
+- Moved those inactive modules to `src/archive/non_launch_wellbeing/` and added a README tying the archive to the locked MVP corridor.
+- Added launch-gate coverage so these retired implementation directories stay out of active `src/components` and `src/lib`.
+- Registered the archive README in `docs/DOCS_REGISTRY.md`.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -445,6 +452,12 @@ Commands run with Node 25 path:
 - `npm run lint` - passed after matching review-card copy cleanup.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after matching review-card copy cleanup.
 - `npm run docs:freshness` - passed after matching review-card copy cleanup.
+- `rg -n "@/components/(zen|wellbeing)|@/lib/(zen|wellbeing)|src/components/(zen|wellbeing)|src/lib/(zen|wellbeing)|/api/wellbeing|components/zen|components/wellbeing|lib/zen|lib/wellbeing" src tests -g '!src/archive/**' -g '!tests/archive/**'` - no active implementation imports remain; only launch-gate assertions and route-surface policy coverage mention the archived API family.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts src/lib/launch/__tests__/surface-policy.test.ts tests/api/launch-surface-inventory.test.ts` - passed, 3 files / 24 tests, after archiving orphaned wellbeing/Zen implementation modules.
+- `npm run docs:freshness` - passed after registering the wellbeing/Zen source archive README.
+- `git diff --check` - passed after archiving orphaned wellbeing/Zen implementation modules.
+- `npm run lint` - passed after archiving orphaned wellbeing/Zen implementation modules.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving orphaned wellbeing/Zen implementation modules.
 
 Non-fatal test noise:
 

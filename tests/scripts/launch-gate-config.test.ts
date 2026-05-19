@@ -168,6 +168,16 @@ describe('launch gate package configuration', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('keeps retired wellbeing and Zen implementation modules archived', () => {
+    expect(fs.existsSync(path.join(repoRoot, 'src/components/wellbeing'))).toBe(false);
+    expect(fs.existsSync(path.join(repoRoot, 'src/components/zen'))).toBe(false);
+    expect(fs.existsSync(path.join(repoRoot, 'src/lib/wellbeing'))).toBe(false);
+    expect(fs.existsSync(path.join(repoRoot, 'src/lib/zen'))).toBe(false);
+    expect(fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_wellbeing/README.md'))).toBe(
+      true
+    );
+  });
+
   it('keeps active E2E helpers away from the retired Expertise Atlas route', () => {
     const activeHelperFiles = fs
       .readdirSync(path.join(repoRoot, 'e2e/helpers'), { withFileTypes: true })
