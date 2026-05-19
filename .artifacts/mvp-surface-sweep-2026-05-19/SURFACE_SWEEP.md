@@ -413,6 +413,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Replaced `scripts/test-admin-dashboard-data.js` with an admin launch-ops data probe that checks only `/api/admin/internal-ops/queues` and `/api/admin/audit`, accepting protected `401/403` as pass for unauthenticated contexts.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the admin guide, E2E smoke, and probe cannot drift back to growth/fairness/vanity dashboard checks unnoticed.
 
+50. The retained admin ops audit still reported the old broad admin smoke as a current failure.
+
+- Refreshed `audit/admin-dashboard-mvp-ops-review-2026-05-03.md` to `Last Verified: 2026-05-19`.
+- Added a superseding note that the route/test-noise finding is partially resolved by the active admin smoke, admin testing guide, archived broad admin components/tests, and launch-gate evidence.
+- Kept the deeper operator-console gaps intact as follow-up risks: queue detail projection, risky upload approve/reject UI, internal ops table privacy proof, launch health card, sanitized admin DTOs/errors, and operator usability controls.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the audit cannot continue claiming the active admin Playwright smoke fails on the retired broad dashboard.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.

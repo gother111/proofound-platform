@@ -544,10 +544,16 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'scripts/test-admin-dashboard-data.js'),
       'utf8'
     );
+    const adminAudit = fs.readFileSync(
+      path.join(repoRoot, 'audit/admin-dashboard-mvp-ops-review-2026-05-03.md'),
+      'utf8'
+    );
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
     const activeAdminEvidence = `${adminGuide}\n${adminSmoke}\n${adminDataProbe}`;
 
     expect(adminGuide).toContain('Last Verified: `2026-05-19`');
+    expect(adminAudit).toContain('Last Verified: `2026-05-19`');
+    expect(adminAudit).toContain('Disposition: resolved for the active Playwright smoke');
     expect(adminGuide).toContain('/admin/verification');
     expect(adminGuide).toContain('/admin/audit');
     expect(adminGuide).toContain('tests/ui/admin-dashboard-launch-links.test.tsx');
@@ -567,6 +573,9 @@ describe('launch gate package configuration', () => {
     expect(activeAdminEvidence).not.toContain('Fairness API Endpoint');
     expect(docsRegistry).toContain(
       '| `ADMIN_DASHBOARD_TESTING_GUIDE.md`                                                                      | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `audit/admin-dashboard-mvp-ops-review-2026-05-03.md` | `reference-spec` | `audit` | `repo` | `2026-05-19`'
     );
   });
 

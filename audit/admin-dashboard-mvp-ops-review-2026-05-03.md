@@ -1,10 +1,17 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-19`
 
 # Admin Dashboard MVP Ops Review
 
 Date: 2026-05-03
 Scope: current active Proofound admin dashboard, admin APIs, internal ops queues, launch-surface policy, authorization helpers, audit logging, and focused runtime/test evidence.
+
+> 2026-05-19 update: the route/test-noise finding in this audit is partially
+> superseded. The active admin E2E smoke and root admin testing guide now match
+> the locked launch-ops corridor (`/admin`, `/admin/verification`, `/admin/audit`)
+> and no longer expect broad users, organizations, fairness, metrics, or LinkedIn
+> queue pages. The deeper operator-console gaps below remain useful follow-up
+> risks unless later evidence closes them.
 
 ## A. Executive Verdict
 
@@ -52,8 +59,11 @@ The main gap is operational depth: admins can see queue shells, IDs, summary tex
 
 - Active routes are appropriately narrow.
 - Broad admin users/orgs/fairness/metrics pages and APIs are archived in route policy.
-- Some broad admin components remain in `src/components/admin/**`, and stale tests under `src/app/api/admin/__tests__` still import archived admin APIs. This is not a runtime launch-surface issue, but it creates test and maintenance noise.
-- `e2e/admin-dashboard-smoke.spec.ts` is stale and expects the old broad admin suite (`/admin/users`, `/admin/organizations`, fairness notes, LinkedIn verification queue). When run with mock admin enabled, it fails immediately because the current dashboard correctly says "Launch Operations", not "Admin Dashboard".
+- Broad admin users/orgs/fairness/metrics pages and APIs are archived in route policy.
+- 2026-05-19 follow-up: broad admin analytics/fairness components and stale active
+  tests have been moved to archive paths, and `e2e/admin-dashboard-smoke.spec.ts`
+  now checks only `/admin`, `/admin/verification`, `/admin/audit`, and absence of
+  retired broad admin links.
 
 ## F. UX And Usability Issues
 
@@ -70,6 +80,12 @@ The main gap is operational depth: admins can see queue shells, IDs, summary tex
 
 Passing evidence:
 
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ADMIN_MODE=true PLAYWRIGHT=true npm run test:e2e -- e2e/admin-dashboard-smoke.spec.ts --project=chromium --reporter=line`: pass, 1 test, after the 2026-05-19 smoke refresh.
+- `npm run test -- tests/scripts/launch-gate-config.test.ts`: pass, 36 tests, including admin guide/smoke/probe drift guardrails.
+- `npm run test -- tests/ui/admin-dashboard-launch-links.test.tsx tests/ui/admin-verification-dashboard.test.tsx tests/ui/admin-audit-log-table.test.tsx tests/api/admin-internal-ops-queue-route.test.ts tests/api/launch-page-inventory.test.ts tests/lib/admin-break-glass.test.ts tests/api/org-audit-export-routes.test.ts`: pass, 25 tests.
+- `npm run docs:freshness`: pass after refreshing `ADMIN_DASHBOARD_TESTING_GUIDE.md` and this audit disposition.
+- `npm run lint`: pass.
+- `npm run typecheck`: pass after removing stale local `.next-dev-33100` generated-type residue.
 - `npm run test -- tests/api/admin-internal-ops-queue-route.test.ts tests/ui/admin-dashboard-launch-links.test.tsx tests/ui/admin-verification-dashboard.test.tsx tests/api/admin-organizations-verify-route.test.ts tests/api/org-audit-export-routes.test.ts src/lib/__tests__/middleware-launch-archive.test.ts src/lib/launch/__tests__/surface-policy.test.ts tests/api/launch-surface-inventory.test.ts`: pass, 33 tests.
 - `npm run test:launch:upload`: pass, 37 tests.
 - `npm run test:launch:workflow`: pass, 84 tests.
@@ -83,7 +99,6 @@ Passing evidence:
 Failing or unverified evidence:
 
 - `npm test`: failed with 2 unrelated current-checkout failures: `tests/lib/ai-provider-gemini-client.test.ts` expects no `suggestionId`, and `tests/ui/verifications-page.test.tsx` crashes reading `primaryClaim` in `src/lib/verification/request-feed.ts`.
-- `NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ADMIN_MODE=true PLAYWRIGHT=true node ./scripts/playwright-node20.mjs test e2e/admin-dashboard-smoke.spec.ts --project=chromium --reporter=line --workers=1`: failed because the spec is stale and expects the old broad admin dashboard heading.
 - Full local launch smoke was not run because no explicit live target was requested and the more relevant launch-status/monitoring route tests were run instead.
 
 ## H. Required Fixes
@@ -146,11 +161,16 @@ Success criteria: Operators can support a stuck MVP corridor without seeing broa
 
 ### P3: Remove Or Quarantine Stale Admin Test/Component Noise
 
-Problem: Stale Playwright and archived admin test files still describe the old broad dashboard.
-Evidence: `e2e/admin-dashboard-smoke.spec.ts` failed when run with mock admin enabled.
+Disposition: resolved for the active Playwright smoke and known broad admin
+component/test noise as of 2026-05-19.
+Problem: Stale Playwright and archived admin test files described the old broad dashboard.
+Evidence: `e2e/admin-dashboard-smoke.spec.ts` previously failed when run with mock admin enabled.
 File/route: `e2e/admin-dashboard-smoke.spec.ts`, archived admin test imports, unused broad admin components.
-Recommended fix: Replace the Playwright smoke with a current launch-ops smoke and move old broad admin component tests into archived/non-launch coverage or delete if no longer useful.
-Success criteria: The only active admin E2E smoke checks `/admin`, `/admin/verification`, `/admin/audit`, non-admin denial, and archived page behavior.
+Completed fix: the Playwright smoke now checks the current launch-ops corridor and
+absence of broad retired admin links; broad admin component/test noise has been
+archived in non-launch paths.
+Success criteria: The only active admin E2E smoke checks `/admin`,
+`/admin/verification`, `/admin/audit`, and absence of retired broad admin links.
 
 ## I. Codex Implementation Prompts
 
