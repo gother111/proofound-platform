@@ -1319,7 +1319,7 @@ describe('launch gate package configuration', () => {
       'src/archive/non_launch_python_internal/lib/expertise/python-cv-extract-client.ts'
     );
     expect(envDocs).toContain(
-      'The retired `/api/expertise/cv-import/wizard-*` proxy route family and TypeScript Python worker helpers remain archived'
+      'The retired `/api/expertise/cv-import/wizard-*` proxy route family, Python `wizard-suggest`/`internal-job` modes, and TypeScript Python worker helpers remain archived'
     );
     expect(envDocs).not.toContain('- `src/lib/expertise/python-cv-extract-client.ts`');
     expect(envDocs).not.toContain('- `src/lib/python-internal/client.ts`');

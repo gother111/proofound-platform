@@ -21,7 +21,7 @@ class _MultipartErrorRequest:
         raise self._exc
 
 
-@pytest.mark.parametrize("handler", [cv_import.suggest, cv_import.wizard_suggest, cv_import.extract])
+@pytest.mark.parametrize("handler", [cv_import.suggest, cv_import.extract])
 def test_multipart_utf8_decode_errors_are_normalized(handler):
     request = _MultipartErrorRequest(
         UnicodeDecodeError("utf-8", b"\xc4", 0, 1, "invalid continuation byte")
@@ -36,7 +36,7 @@ def test_multipart_utf8_decode_errors_are_normalized(handler):
     assert "utf-8" not in payload["error"].lower()
 
 
-@pytest.mark.parametrize("handler", [cv_import.suggest, cv_import.wizard_suggest, cv_import.extract])
+@pytest.mark.parametrize("handler", [cv_import.suggest, cv_import.extract])
 def test_multipart_wrapped_utf8_decode_errors_are_normalized(handler):
     request = _MultipartErrorRequest(
         RuntimeError(

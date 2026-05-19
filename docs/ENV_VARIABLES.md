@@ -447,13 +447,14 @@ PYTHON_INTERNAL_SERVICE_SECRET=your_strong_internal_secret_here
 
 **Behavior**:
 
-- Preferred secret for archived internal Python calls.
+- Preferred secret for retained internal Python `suggest` and `extract` calls.
 - Fallback order is `PYTHON_INTERNAL_SERVICE_SECRET` → `CV_IMPORT_PROXY_INTERNAL_SECRET` → `INTERNAL_API_SECRET` → `CRON_SECRET`.
 - Local non-production fallback uses an in-process development secret only when none of the above are configured.
+- The retired Python `wizard-suggest` and `internal-job` endpoint modes return archived `410` responses and are not controlled by this secret.
 
 **Without This**:
 
-- ⚠️ Archived Python internal calls fail with `503` if no fallback secret is configured.
+- ⚠️ Retained Python `suggest` and `extract` calls fail with `503` if no fallback secret is configured.
 - ⚠️ Reopened cross-service deployments cannot authenticate safely without a target-scoped secret.
 
 ---
@@ -477,7 +478,7 @@ PYTHON_CV_IMPORT_BASE_URL=https://python-internal.proofound.internal
 
 - If the archived helpers are intentionally rerun, server-side document extraction calls the Python service at this base URL instead of looping back through the current Next.js deployment.
 - Keep public clients on active Next.js launch routes. This variable is for archived server-to-server traffic only.
-- The retired `/api/expertise/cv-import/wizard-*` proxy route family and TypeScript Python worker helpers remain archived and are not launch evidence.
+- The retired `/api/expertise/cv-import/wizard-*` proxy route family, Python `wizard-suggest`/`internal-job` modes, and TypeScript Python worker helpers remain archived and are not launch evidence.
 
 **Without This**:
 

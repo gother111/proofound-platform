@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -31,18 +31,6 @@ class CvImportSuggestRequest(BaseModel):
     suggestions_limit: int | None = Field(default=None, ge=5, le=10)
 
 
-class CvImportWizardDocumentIn(BaseModel):
-    document_id: str = Field(min_length=1, max_length=128)
-    file_name: str = Field(min_length=1, max_length=260)
-    text: str = Field(min_length=1)
-    context: Literal["cv"] = "cv"
-
-
-class CvImportWizardSuggestRequest(BaseModel):
-    documents: list[CvImportWizardDocumentIn] = Field(min_length=1)
-    suggestions_limit: int | None = Field(default=None, ge=5, le=10)
-
-
 class SuggestionOut(BaseModel):
     skill_id: str
     skill_name: str
@@ -60,49 +48,6 @@ class SkillCandidateOut(BaseModel):
     unmapped_candidate: bool
 
 
-class WorkExperienceOut(BaseModel):
-    item_id: str
-    title: str
-    organization: str
-    duration: str
-    summary: str
-    evidence_snippets: list[str] = Field(min_length=1, max_length=3)
-    confidence: float = Field(ge=0, le=1)
-
-
-class LearningExperienceOut(BaseModel):
-    item_id: str
-    institution: str
-    degree: str
-    duration: str
-    skills: str
-    projects: str
-    evidence_snippets: list[str] = Field(min_length=1, max_length=3)
-    confidence: float = Field(ge=0, le=1)
-
-
-class VolunteeringOut(BaseModel):
-    item_id: str
-    title: str
-    organization: str
-    duration: str
-    cause: str
-    impact: str
-    skills_deployed: str
-    personal_why: str
-    evidence_snippets: list[str] = Field(min_length=1, max_length=3)
-    confidence: float = Field(ge=0, le=1)
-
-
-class LanguageOut(BaseModel):
-    item_id: str
-    language_code: str
-    language_name: str
-    level: Literal["A1", "A2", "B1", "B2", "C1", "C2"]
-    evidence_snippets: list[str] = Field(min_length=1, max_length=3)
-    confidence: float = Field(ge=0, le=1)
-
-
 class MetadataLimitsOut(BaseModel):
     max_documents: int
     max_chars_per_document: int
@@ -116,25 +61,6 @@ class MetadataOut(BaseModel):
     limits: MetadataLimitsOut
     service: str = PYTHON_INTERNAL_SERVICE_NAME
     contract_version: str = PYTHON_INTERNAL_CONTRACT_VERSION
-
-
-class WizardDocumentOut(BaseModel):
-    document_id: str
-    file_name: str
-    context: Literal["cv"] = "cv"
-    parsed_text: str = ""
-    parse_error: str | None = None
-    parse_error_code: str | None = None
-    work_experiences: list[WorkExperienceOut]
-    learning_experiences: list[LearningExperienceOut]
-    volunteering: list[VolunteeringOut]
-    languages: list[LanguageOut]
-    skill_candidates: list[SkillCandidateOut]
-
-
-class WizardSuggestResponse(BaseModel):
-    documents: list[WizardDocumentOut]
-    metadata: MetadataOut
 
 
 class SuggestDocumentOut(BaseModel):
@@ -165,25 +91,3 @@ class ExtractDocumentOut(BaseModel):
 class ExtractResponse(BaseModel):
     documents: list[ExtractDocumentOut]
     metadata: MetadataOut
-
-
-PythonInternalJobType = Literal[
-    "document_intelligence_skill_report",
-    "document_intelligence_wizard_report",
-    "document_intelligence_quality_report",
-]
-
-
-class PythonInternalJobRequest(BaseModel):
-    job_id: str = Field(min_length=1)
-    job_type: PythonInternalJobType
-    payload: dict[str, Any]
-
-
-class PythonInternalJobResponse(BaseModel):
-    ok: Literal[True] = True
-    service: str = PYTHON_INTERNAL_SERVICE_NAME
-    contract_version: str = PYTHON_INTERNAL_CONTRACT_VERSION
-    job_id: str = Field(min_length=1)
-    job_type: PythonInternalJobType
-    result: dict[str, Any]

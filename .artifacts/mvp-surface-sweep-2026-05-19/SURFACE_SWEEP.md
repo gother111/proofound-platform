@@ -1278,3 +1278,10 @@ Non-fatal test noise:
 - Removed the same direct schema-push/dashboard-paste troubleshooting guidance from `tests/privacy/README.md` so both privacy docs point at repo-owned migrations and target-specific backup/restore evidence.
 - Found `INTEGRATION_TEST_PLAN.md` still naming missing active integration files for archived critical-gaps and CV import wizard suites.
 - Updated the plan to list only active integration test files and to mark critical-gaps/CV import wizard tests as historical archive material, then updated registry dates and guard coverage.
+
+## Continuation - Python CV Endpoint Launch Boundary
+
+- Found `api/python/cv_import.py` still dispatching Python `wizard-suggest` and `internal-job` modes even though the active TypeScript wizard/cron surfaces are archived/non-launch.
+- Kept retained internal Python `suggest` and `extract` modes intact, but changed direct Python `wizard-suggest` and `internal-job` handlers plus `/api/python/cv_import?endpoint=...` dispatch to return archived `410` responses.
+- Updated active Python tests so they prove the retired endpoint modes stay archived, removed wizard-specific multipart and contract expectations from active tests, and kept the retained suggest/extract coverage active.
+- Updated `docs/ENV_VARIABLES.md` so `PYTHON_INTERNAL_SERVICE_SECRET` and `PYTHON_CV_IMPORT_BASE_URL` describe retained suggest/extract behavior and explicitly state that Python wizard/internal-job modes are archived and not launch evidence.
