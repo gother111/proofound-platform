@@ -1144,3 +1144,9 @@ Non-fatal test noise:
 - Found `project/MVP_FLOW_MATRIX_2026-02-12.md` still classified active while it preserved an old strict-flow matrix with a superseded dual-provider launch-blocking policy and stale February flow verdicts.
 - Found `project/PR_TRIAGE_2026-02.md` still classified active while it preserved February PR queue and merge-state claims that cannot be current without live GitHub inspection.
 - Reclassified both files as historical snapshots, pointed current flow evidence to the locked MVP stack, verification checklist, launch master checklist, testing strategy, and current sweep artifact, and updated guard coverage so old flow/PR snapshots cannot be mistaken for current launch truth.
+
+## Continuation - Ticket Finisher And Sharded Log Guidance Refresh
+
+- Found `agent/runbooks/proofound-ticket-finisher.md`, `agent/scratchpad/README.md`, and `project/changes/README.md` still verified on February/March dates while acting as current future-agent instructions.
+- Refreshed the ticket-finisher runbook to clarify that the helper is administrative only, cannot prove MVP/launch readiness by itself, must not mutate git/final Linear closeout, and must defer to current verification, Browser/runtime evidence, and current GitHub/Linear state when relevant.
+- Refreshed sharded log READMEs so future agents know `npm run log:session` and `npm run log:change` create real files, avoid legacy shared-log appends, avoid secrets/private proof data, and record Browser evidence with route, viewport, role/mode, and finding.

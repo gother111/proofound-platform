@@ -653,6 +653,50 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps ticket closeout and sharded log guidance current and no-leak', () => {
+    const ticketFinisher = fs.readFileSync(
+      path.join(repoRoot, 'agent/runbooks/proofound-ticket-finisher.md'),
+      'utf8'
+    );
+    const sessionReadme = fs.readFileSync(
+      path.join(repoRoot, 'agent/scratchpad/README.md'),
+      'utf8'
+    );
+    const changeReadme = fs.readFileSync(path.join(repoRoot, 'project/changes/README.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const shardedReadmes = `${sessionReadme}\n${changeReadme}`;
+
+    expect(ticketFinisher).toContain('Last Verified: `2026-05-19`');
+    expect(ticketFinisher).toContain('node scripts/proofound-ticket-finisher.mjs --json');
+    expect(ticketFinisher).toContain('administrative aid only');
+    expect(ticketFinisher).toContain('does not prove MVP completion');
+    expect(ticketFinisher).toContain('must not commit, push, merge');
+    expect(ticketFinisher).toContain('Never use the helper to broaden the locked MVP corridor');
+    expect(ticketFinisher).toContain('Browser/visual evidence must name the route, viewport');
+
+    for (const content of [sessionReadme, changeReadme]) {
+      expect(content).toContain('Doc Class: `active`');
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).toContain('creates a real file');
+      expect(content).toContain('extra arguments such as `--help` are not a dry run');
+      expect(content).toContain('Do not include secrets');
+      expect(content).toContain('private proof content');
+      expect(content).toContain('route, viewport, role/mode, and finding');
+    }
+
+    expect(shardedReadmes).toContain('Routine work should not append to `agent/scratchpad.md`');
+    expect(shardedReadmes).toContain('Routine per-task changes should not be appended there');
+    expect(docsRegistry).toContain(
+      '| `agent/runbooks/proofound-ticket-finisher.md`                                                           | `active`         | `agent`       | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `agent/scratchpad/README.md`                                                                            | `active`         | `agent`       | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `project/changes/README.md`                                                                             | `active`         | `project`     | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps Resend setup guidance transactional, target-scoped, and privacy-safe', () => {
     const resendSetup = fs.readFileSync(path.join(repoRoot, 'docs/RESEND_SETUP.md'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
