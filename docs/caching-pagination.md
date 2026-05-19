@@ -54,7 +54,7 @@ GET /api/expertise/taxonomy?l1=U
 // Cached separately for each L1
 ```
 
-#### 2. Matching Engine (`/api/core/matching/profile`)
+#### 2. Matching Engine (`/api/match/profile`)
 
 **What's Cached:**
 

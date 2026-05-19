@@ -159,7 +159,7 @@ Notes:
 1. **Track P95/P99 response times**
 2. **Alert on error rate > 1%**
 3. **Monitor database query performance**
-4. **Track cache hit rates**
+4. **Track cache backend health and provider-exposed key-count evidence**
 5. **Watch memory usage trends**
 
 ### Scaling Strategy

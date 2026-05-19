@@ -1256,7 +1256,7 @@ NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED=false
 
 ### MATCHING_TWO_STAGE_ENABLED
 
-**Purpose**: Enables ANN-hybrid assignment retrieval for `/api/core/matching/profile`.
+**Purpose**: Enables ANN-hybrid assignment retrieval for `/api/match/profile`.
 
 **Format**:
 
@@ -1275,7 +1275,7 @@ MATCHING_TWO_STAGE_ENABLED=true
 
 ### MATCHING_NEAR_SCAN_LIMIT
 
-**Purpose**: Caps active-assignment scan size for `/api/core/matching/near-matches`.
+**Purpose**: Caps active-assignment scan size for the retained near-matches matching handler.
 
 **Format**:
 

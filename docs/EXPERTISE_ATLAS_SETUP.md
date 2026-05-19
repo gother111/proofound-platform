@@ -112,9 +112,9 @@ Do not use archived Expertise Atlas UI files, archived CV wizard routes, or old 
   - `desired_industries`
   - `org_types`
 - PRD A7 strict gating is enforced at:
-  - `POST /api/core/matching/profile`
-  - `POST /api/core/matching/near-matches`
-  - if unmet, both return `412` with `error: "PROFILE_NOT_MATCHABLE"`, criterion diagnostics, and top actions.
+  - `POST /api/match/profile`
+  - the retained near-matches handler used by internal matching code
+  - if unmet, both paths return `412` with `error: "PROFILE_NOT_MATCHABLE"`, criterion diagnostics, and top actions.
 - Focus areas are soft ranking boosts only:
   - role `+0.04`
   - industry `+0.025`

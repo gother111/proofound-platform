@@ -391,6 +391,8 @@ describe('launch gate package configuration', () => {
     expect(cacheSource).not.toContain('placeholder for future implementation');
     expect(monitoringDocs).not.toContain('cacheStats.hitRate');
     expect(monitoringDocs).not.toContain('const cacheStats = getCacheStats();');
+    expect(monitoringDocs).toContain('/api/match/profile');
+    expect(monitoringDocs).not.toContain('/api/core/matching/profile');
   });
 
   it('keeps archived and removed non-MVP tests out of the default release signal', () => {
@@ -1267,6 +1269,10 @@ describe('launch gate package configuration', () => {
 
   it('keeps historical load-test notes non-gating and target-scoped', () => {
     const loadResults = fs.readFileSync(path.join(repoRoot, 'tests/load/RESULTS.md'), 'utf8');
+    const artilleryMatching = fs.readFileSync(
+      path.join(repoRoot, 'tests/load/artillery-matching.yml'),
+      'utf8'
+    );
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
     expect(loadResults).toContain('Doc Class: `reference-spec`');
@@ -1277,6 +1283,9 @@ describe('launch gate package configuration', () => {
     expect(loadResults).toContain('record the tool version, target, date, owner');
     expect(loadResults).not.toContain('npm install -g artillery');
     expect(loadResults).not.toContain('## How to Run Load Tests');
+    expect(loadResults).not.toContain('Track cache hit rates');
+    expect(artilleryMatching).toContain("url: '/api/match/profile'");
+    expect(artilleryMatching).not.toContain('/api/core/matching/profile');
     expect(docsRegistry).toContain(
       '| `tests/load/RESULTS.md`                                                                                 | `reference-spec` | `tests`       | `repo`              | `2026-05-19`'
     );
@@ -1596,6 +1605,10 @@ describe('launch gate package configuration', () => {
     expect(envDocs).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
     expect(envDocs).toContain('Required Vars When `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`');
     expect(envDocs).toContain('Manual-link interview scheduling must still work');
+    expect(envDocs).toContain('/api/match/profile');
+    expect(envDocs).not.toContain('/api/core/matching/profile');
+    expect(envDocs).toContain('retained near-matches matching handler');
+    expect(envDocs).not.toContain('/api/core/matching/near-matches');
     expect(envDocs).toContain(
       'src/archive/non_launch_python_internal/lib/expertise/python-cv-extract-client.ts'
     );
@@ -2103,6 +2116,10 @@ describe('launch gate package configuration', () => {
     );
     expect(expertiseSetup).toContain('Do not use archived Expertise Atlas UI files');
     expect(expertiseSetup).toContain('npm run db:drift-check');
+    expect(expertiseSetup).toContain('POST /api/match/profile');
+    expect(expertiseSetup).not.toContain('POST /api/core/matching/profile');
+    expect(expertiseSetup).toContain('retained near-matches handler');
+    expect(expertiseSetup).not.toContain('POST /api/core/matching/near-matches');
     expect(expertiseDatasetReadme).toContain('Doc Class: `reference-spec`');
     expect(expertiseDatasetReadme).toContain('Last Verified: `2026-05-19`');
     expect(expertiseDatasetReadme).toContain(

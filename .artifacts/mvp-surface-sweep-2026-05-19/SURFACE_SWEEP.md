@@ -1576,3 +1576,11 @@ Non-fatal test noise:
 - Tightened the monitoring guide around the locked MVP and existing route surface: public `/api/health` remains minimal, internal diagnostics stay behind `/api/monitoring/launch-status` and `/api/monitoring/health-diagnostics`, and alert channels are described as protected launch operator channels rather than tracked personal/team addresses or webhook examples.
 - Replaced broad business metrics with MVP corridor workflow health: signup/login, proof upload/import/linking, assignment publishing, shortlist/review, intro, reveal, interview, decision, and engagement verification.
 - Added launch-gate coverage so the active monitoring guide cannot drift back to archived/broad route examples, payment alert scope, cache-hit-rate claims, TODO alert wiring, PagerDuty references, or tracked team email examples.
+
+## Continuation - Canonical Matching Route Reference Cleanup
+
+- Found active/reference docs and the load-test script still pointed operators at `/api/core/matching/profile`, even though the route inventory and API reference expose canonical launch matching through `/api/match/profile`; `src/app/api/core/matching/profile/handler.ts` is a shared handler, not the public route.
+- Updated `docs/caching-pagination.md`, `docs/EXPERTISE_ATLAS_SETUP.md`, `docs/ENV_VARIABLES.md`, and `tests/load/artillery-matching.yml` to use `/api/match/profile` for launch-facing matching profile traffic.
+- Clarified that the near-matches path is a retained internal handler boundary rather than an active public `/api/core/matching/near-matches` route.
+- Updated historical load-test notes to track cache backend health/provider key-count evidence instead of unavailable cache hit-rate telemetry.
+- Added launch-gate coverage so active docs and the reference load script do not drift back to the stale `/api/core/matching/profile` public route reference.
