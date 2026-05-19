@@ -1213,3 +1213,9 @@ Non-fatal test noise:
 - Updated `docs/backlog/phase-exit-checklist.md` so production-candidate smoke and monitor rows use `<production-candidate-url>` and `<secret>`, while the checked Phase 3 row names the current local smoke artifact target `http://localhost:33183` and leaves production-candidate smoke as a Phase 4 signoff gate.
 - Updated `docs/backlog/phase-4-pilot-hardening.md` so its local smoke evidence points at the fresh `localhost:33183` artifact; the separate local monitor evidence remains tied to its original `localhost:33180` run.
 - Extended the launch-gate guard so active launch evidence docs cannot reintroduce hardcoded `https://proofound.io` final gate commands either.
+
+## Continuation - Placeholder Result Claim Cleanup
+
+- Found synced active root docs (`Documentation.md`, `metrics.md`) claiming `PASS` or `FAIL` results on commands that used the placeholder `BASE_URL=<production-candidate-url>`, including `go:no-go` PASS claims that conflicted with the open production-candidate signoff gates.
+- Reworded those entries as historical local runtime launch-gate notes, preserving the original local context while making clear they are not current production-candidate evidence.
+- Added guard coverage so active launch evidence docs cannot mark placeholder production-candidate gate commands as `PASS` or `FAIL`; real result claims need a concrete dated target/artifact instead.

@@ -1082,9 +1082,9 @@ How to verify:
   - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
   - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth` (PASS)
   - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:admin` (PASS)
-- Launch gates:
-  - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
-  - `BASE_URL=<production-candidate-url> npm run perf:budgets` (FAIL: TTI budgets only)
+- Historical local launch-gate notes:
+  - `go:no-go` passed in the original local production-server run for this entry; this is not current production-candidate evidence.
+  - `perf:budgets` failed TTI budgets in that local run.
 
 Open risks/TODO:
 
@@ -1594,9 +1594,9 @@ How to verify:
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy` (PASS)
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended` (PASS)
-- Runtime launch gates with local prod server:
-  - `BASE_URL=<production-candidate-url> npm run perf:budgets` (FAIL: desktop/mobile TTI above budget)
-  - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
+- Historical local runtime launch-gate notes:
+  - `perf:budgets` failed desktop/mobile TTI budgets in the original local production-server run.
+  - `go:no-go` passed in that local run; this is not current production-candidate evidence.
 
 Open risks/TODO:
 
