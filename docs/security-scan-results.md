@@ -253,7 +253,6 @@ npm run test:privacy:all
 - ✅ RESEND_API_KEY
 - ✅ SENTRY_AUTH_TOKEN
 - ✅ KV_REST_API_TOKEN
-- ✅ ZOOM_CLIENT_SECRET
 - ✅ GOOGLE_CLIENT_SECRET
 
 ---

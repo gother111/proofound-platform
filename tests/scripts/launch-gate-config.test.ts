@@ -215,6 +215,22 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps retired Zoom and scaffolded video provider wrappers archived', () => {
+    expect(fs.existsSync(path.join(repoRoot, 'src/lib/integrations/zoom.ts'))).toBe(false);
+    expect(fs.existsSync(path.join(repoRoot, 'src/lib/video'))).toBe(false);
+    expect(
+      fs.existsSync(
+        path.join(
+          repoRoot,
+          'src/archive/non_launch_integrations/preserved/lib/integrations/zoom.ts'
+        )
+      )
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_integrations/preserved/lib/video'))
+    ).toBe(true);
+  });
+
   it('keeps generic customizable dashboard shell archived', () => {
     const retiredPaths = [
       'src/components/dashboard/CustomizableDashboard.tsx',

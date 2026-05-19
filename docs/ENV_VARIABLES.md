@@ -1,7 +1,7 @@
 # Environment Variables Reference
 
 > Doc Class: `active`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-19`
 
 Complete guide to all environment variables used in Proofound, including which features require which variables and how to configure them.
 
@@ -33,9 +33,6 @@ LINKEDIN_VERIFICATION_ADMIN_EMAILS=admin1@proofound.io,admin2@proofound.io
 CRON_SECRET=your_secure_random_token_here
 CRON_API_KEY=your_cron_job_org_api_token
 PYTHON_INTERNAL_SERVICE_SECRET=your_python_internal_secret_here
-ZOOM_CLIENT_ID=your_zoom_client_id
-ZOOM_CLIENT_SECRET=your_zoom_client_secret
-ZOOM_REDIRECT_URI=/api/integrations/zoom/callback
 GOOGLE_CLIENT_ID=your_google_oauth_client_id
 GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
 GOOGLE_REDIRECT_URI=/api/integrations/google/callback
@@ -45,7 +42,6 @@ E2E_PROVIDER_USER_ID=deterministic_user_uuid
 E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.io
 E2E_PROVIDER_USER_PASSWORD=your_deterministic_test_password
 STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true
-STRICT_PROVIDER_E2E_REQUIRE_BOTH=true
 DIRECT_URL=postgresql://user:pass@host:5432/db  # Direct (non-pooled) recommended for migrations and tooling
 
 # ============================================================================
@@ -545,14 +541,12 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 ---
 
-### Zoom & Video OAuth
+### Interview and Identity OAuth
 
-**Purpose**: Enable interview scheduling via Zoom (and Google as an alternative).
+**Purpose**: Enable launch interview scheduling through Google Meet or manual meeting links, plus identity/social provider callbacks.
 
 **Required Vars**:
 
-- `ZOOM_CLIENT_ID` and `ZOOM_CLIENT_SECRET` — Zoom OAuth app credentials.
-- `ZOOM_REDIRECT_URI` — Must match the redirect URL in your Zoom app (recommended runtime value: `/api/integrations/zoom/callback`).
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required for Google Meet integration and Google social login through Supabase.
 - `GOOGLE_REDIRECT_URI` — Must match the app integration callback (recommended runtime value: `/api/integrations/google/callback`).
 - `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required for LinkedIn settings integration callback and LinkedIn social login through Supabase.
@@ -570,38 +564,34 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 - Google social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
 - LinkedIn integration callback (app route): `https://yourdomain.com/api/auth/linkedin/callback`
 - LinkedIn social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
-- Zoom integration callback (app route): `https://yourdomain.com/api/integrations/zoom/callback`
 
 **Used By**:
 
-- `src/app/api/integrations/zoom/connect/route.ts`, `src/app/api/integrations/zoom/callback/route.ts`
 - `src/app/api/integrations/google/connect/route.ts`, `src/app/api/integrations/google/callback/route.ts`
 - `src/app/api/integrations/video/[provider]/auth/route.ts` (returns connect URLs)
-- `src/lib/integrations/zoom.ts`, `src/lib/integrations/google-meet.ts`
+- `src/lib/integrations/google-meet.ts`
 
 **Without These**:
 
-- ❌ OAuth URL generation fails for Zoom/Google.
+- ❌ Google OAuth URL generation and Google Meet scheduling can fail.
 - ❌ LinkedIn integration callback cannot exchange OAuth codes.
 - ❌ Users cannot connect their video provider for interviews.
 - ❌ Social login through Google and LinkedIn cannot be initiated reliably.
 
 **Setup**:
 
-1. Create a Zoom OAuth app and copy the client ID/secret.
-2. Set `ZOOM_REDIRECT_URI` to `/api/integrations/zoom/callback` for multi-domain runtime support and add each fully-qualified callback URL to Zoom app settings.
-3. Configure one Google OAuth client with callback URIs for each app host plus Supabase social auth:
+1. Configure one Google OAuth client with callback URIs for each app host plus Supabase social auth:
    - `https://yourdomain.com/api/integrations/google/callback`
    - `http://localhost:3000/api/integrations/google/callback`
    - `https://preview.yourdomain.com/api/integrations/google/callback`
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
-4. Configure LinkedIn app callback URIs:
+2. Configure LinkedIn app callback URIs:
    - `https://yourdomain.com/api/auth/linkedin/callback`
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
    - Optional local callback for local OAuth testing: `http://localhost:3000/api/auth/linkedin/callback`
    - Optional additional live-domain callbacks for each domain that can initiate `/api/auth/linkedin` (for example `https://demo.yourdomain.com/api/auth/linkedin/callback`)
    - For LinkedIn verification, ensure OAuth scopes include `r_profile_basicinfo` and `r_verify` in addition to `openid profile email`.
-5. Set `NEXT_PUBLIC_SITE_URL` to your canonical domain (for example `https://proofound.io`).
+3. Set `NEXT_PUBLIC_SITE_URL` to your canonical domain (for example `https://proofound.io`).
 
 ---
 
@@ -615,12 +605,11 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 - `E2E_PROVIDER_USER_EMAIL`
 - `E2E_PROVIDER_USER_PASSWORD`
 - `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`
-- `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`
 
 **Requirement**:
 
-- The deterministic user must already have both `zoom` and `google_meet` rows in `user_video_integrations`.
-- Strict provider suite enforces both Zoom and Google scheduling when `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`.
+- The deterministic user must already have a `google_meet` row in `user_video_integrations` when strict connected-provider checks are required.
+- Native Zoom scheduling is outside the locked launch corridor; use Google Meet or a manual meeting link.
 
 ---
 

@@ -45,7 +45,9 @@ export function getZoomAuthUrl(state: string): string {
   const redirectUri = process.env.ZOOM_REDIRECT_URI;
 
   if (!clientId || !redirectUri) {
-    throw new Error('Zoom OAuth credentials not configured. See src/lib/video/zoom.ts for setup instructions.');
+    throw new Error(
+      'Zoom OAuth credentials not configured. See src/lib/video/zoom.ts for setup instructions.'
+    );
   }
 
   const params = new URLSearchParams({

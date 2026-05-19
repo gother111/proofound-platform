@@ -326,6 +326,16 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Updated individual and organization interview surfaces plus shared interview card/confirmation copy so legacy Zoom rows render as manual Zoom links, while explicit manual Zoom providers remain allowed.
 - Updated the organization interview UI test to expect `Manual (Zoom)` instead of presenting Zoom as a native launch platform.
 
+42. Active docs and orphaned libraries still described retired Zoom/video OAuth integration.
+
+- `docs/ENV_VARIABLES.md` still listed Zoom OAuth variables and callback routes even though the route inventory classifies Zoom/video integration routes as archived and native Zoom scheduling is rejected at runtime.
+- Moved the unused Zoom integration wrapper and older scaffolded `src/lib/video/**` wrappers into `src/archive/non_launch_integrations/preserved/lib/`.
+- Updated the active environment-variable reference to describe Google Meet or manual meeting links as the launch interview path, and removed strict-provider guidance requiring Zoom.
+- Updated the E2E matrix so it no longer points to the archived org fairness-note E2E as active admin evidence.
+- Narrowed the strict provider E2E from a Zoom+Google requirement to Google Meet/manual-link launch behavior, while leaving native Zoom rejection covered by the schedule route tests.
+- Removed a stale Zoom secret entry from the active security scan results document.
+- Added launch-gate coverage so the retired Zoom/video wrappers stay out of active libraries.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -359,6 +369,7 @@ Desktop checks:
 - After archiving the retired dashboard layout and broad org defaults libraries, Browser smoke rechecked `/portfolio/demo` and `/`: both rendered expected titles and visible content with no runtime-error text.
 - After archiving stale contract-signing and old feedback SUS trigger helpers, Browser smoke rechecked `/portfolio/demo`, `/`, and `/api/health`: public routes rendered expected launch-safe content and `/api/health` returned only `status` and `timestamp`, with no runtime-error text.
 - Browser caught a blank-body regression on missing public portfolio links during the continued sweep. After the route fix, `/portfolio/demo` rendered title `Public Page Unavailable | Proofound` with `PUBLIC PAGE UNAVAILABLE` copy, and `/portfolio/org/missing-org` rendered `ORGANIZATION PORTFOLIO UNAVAILABLE`; both had no runtime-error text and no console warnings/errors.
+- After committing the contract/SUS and critical-gaps checkpoints, Browser rechecked `/portfolio/demo`, `/portfolio/org/missing-org`, and `/`: all rendered visible launch-safe content with no runtime-error text.
 
 Mobile viewport check:
 
@@ -665,6 +676,11 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the critical-gaps archive and manual Zoom label cleanup.
 - `npm run docs:freshness` - passed after the critical-gaps archive and manual Zoom label cleanup.
 - `git diff --check` - passed after the critical-gaps archive and manual Zoom label cleanup.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/api/launch-surface-inventory.test.ts tests/api/interviews-schedule-route.test.ts` - passed, 3 files / 37 tests, after archiving orphaned Zoom/video wrappers and narrowing provider docs/E2E.
+- `npm run docs:freshness` - passed after the provider docs cleanup.
+- `npm run lint` - passed after the provider docs/E2E cleanup.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the provider docs/E2E cleanup.
+- `rg -n "ZOOM_|Zoom integration callback|src/lib/integrations/zoom|src/lib/video|STRICT_PROVIDER_E2E_REQUIRE_BOTH|e2e/org/fairness-note\.spec" docs src tests e2e -g '!docs/archive/**' -g '!src/archive/**' -g '!tests/archive/**'` - remaining active hits were launch-gate assertions and historical `docs/block-7-report.md`; no active current docs or source referenced Zoom config as launch-required.
 
 Non-fatal test noise:
 

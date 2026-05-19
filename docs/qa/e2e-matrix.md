@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 # E2E Matrix (Current)
 
@@ -48,8 +48,7 @@ This matrix maps personas and critical flows to canonical Playwright contracts.
 
 - Admin route smoke:
   - `e2e/admin-dashboard-smoke.spec.ts`
-- Additional admin/fairness checks:
-  - `e2e/org/fairness-note.spec.ts`
+- Archived admin/fairness route behavior is covered by route-surface tests; the old org fairness-note E2E is archived under `e2e/archive/non_mvp_org_analytics/`.
 
 ## Cross-Cutting Coverage
 
