@@ -813,3 +813,12 @@ Non-fatal test noise:
 - `npm run lint` - passed after the restore checkpoint contract update.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the restore checkpoint contract update.
 - Did not run `npm run db:backup:checkpoint` or `npm run db:restore:verify` in this continuation because those scripts read `DIRECT_URL`/`DATABASE_URL` from `.env.local`; the intended production-candidate or isolated recovery target still needs explicit approval before touching database state.
+
+## Continuation - Assignment Latency Gate Follow-Up
+
+- Found `/api/monitoring/perf-status` could miss the real `/api/assignments` latency signal because API observability writes `api_latency` samples to `performance_metrics`, while the perf-status route read legacy `analytics_events` first and could fall back to probing `/api/health`.
+- Updated `src/app/api/monitoring/perf-status/route.ts` so the gate reads `performance_metrics` first, retains the legacy analytics fallback, exposes `requiredRoutes`, `missingRequiredRoutes`, and `routeBreakdown`, and refuses `ok: true` unless `/api/assignments` has finite latency samples in the 24-hour window.
+- Updated `src/app/api/monitoring/__tests__/perf-status-route.test.ts` to prove the gate passes with `/api/assignments` samples, filters null durations, stays closed when only `/api/health` is sampled, falls back to legacy analytics, and returns a closed probe/unavailable payload when route samples are absent.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- src/app/api/monitoring/__tests__/perf-status-route.test.ts tests/lib/api-observability-local-smoke.test.ts tests/api/assignments-list-route.test.ts` - passed, 3 files / 11 tests, after the assignment latency gate update.
+- Browser plugin rechecked the user-open local route `http://localhost:33180/portfolio/demo`: title `Public Page Unavailable | Proofound`, meaningful unavailable copy rendered, no framework overlay was visible, console warnings/errors were `0`, and the skip-link interaction preserved the safe unavailable state. Evidence saved at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/portfolio-demo-browser-recheck-2026-05-19.json`.
+- This improves launch-gate integrity but does not close the Phase 3 latency watch item by itself. A production-candidate or live/staging target still needs fresh `/api/assignments` samples and a green perf-status/go-no-go run before launch.

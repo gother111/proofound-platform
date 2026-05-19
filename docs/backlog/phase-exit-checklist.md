@@ -36,6 +36,7 @@ Use this checklist together with [`../verification-checklist.md`](../verificatio
 - [x] `npm run test:e2e:org:strict`
 - [x] `BASE_URL=https://proofound.io npm run test:launch:smoke`
 - [x] Focused decision, engagement verification, and authz reruns are green after any corridor hardening changes.
+- [x] Internal perf-status gate requires `/api/assignments` route latency samples before reporting `ok: true`.
 - [ ] Assignment publish latency is within the acceptable launch threshold, or the threshold and rationale are intentionally updated with evidence.
 
 ## Phase 4 exit
