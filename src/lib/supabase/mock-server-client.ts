@@ -1,10 +1,22 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 
 const MOCK_USER_ID = '88888888-8888-4888-8888-888888888888';
 const ORG_ID = '99999999-9999-4999-9999-999999999999';
 
-// Determine if mock should return org_member persona (for testing org features)
-const getMockPersona = () => (process.env.MOCK_ORG_MODE === 'true' ? 'org_member' : 'individual');
+// Determine if mock should return org_member persona for local visual/testing surfaces.
+const getMockPersona = async () => {
+  try {
+    const cookieStore = await cookies();
+    const personaCookie = cookieStore.get('proofound-mock-persona')?.value;
+    if (personaCookie === 'org_member' || personaCookie === 'individual') {
+      return personaCookie;
+    }
+  } catch {
+    // Fall back to process.env outside request-bound mock server contexts.
+  }
+  return process.env.MOCK_ORG_MODE === 'true' ? 'org_member' : 'individual';
+};
 const isMockAdminTestContext = () =>
   process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true';
 const visualFixturesEnabled = () =>
@@ -541,7 +553,7 @@ const mockSupabaseClient = {
                 id: MOCK_USER_ID,
                 platform_role: getMockPlatformRole(),
                 tour_completed: true,
-                persona: getMockPersona(),
+                persona: await getMockPersona(),
               },
               error: null,
             };
@@ -612,7 +624,7 @@ const mockSupabaseClient = {
                 id: MOCK_USER_ID,
                 platform_role: getMockPlatformRole(),
                 tour_completed: true,
-                persona: getMockPersona(),
+                persona: await getMockPersona(),
               },
               error: null,
             };

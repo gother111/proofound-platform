@@ -2751,4 +2751,17 @@ describe('launch gate package configuration', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('keeps polish screenshot scratch out of default E2E discovery', () => {
+    expect(fs.existsSync(path.join(repoRoot, 'e2e/polish-audit.spec.ts'))).toBe(false);
+    expect(fs.existsSync(path.join(repoRoot, 'e2e/polish_audit.spec.ts'))).toBe(false);
+
+    const scratchReadme = fs.readFileSync(
+      path.join(repoRoot, '.artifacts/polish-audit-screenshots/README.md'),
+      'utf8'
+    );
+    expect(scratchReadme).toContain('local visual-audit scratch evidence only');
+    expect(scratchReadme).toContain('not an automated launch gate');
+    expect(scratchReadme).toContain('Use Browser');
+  });
 });

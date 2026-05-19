@@ -1444,3 +1444,11 @@ Non-fatal test noise:
 - Found `npm run test:python` and `tests/python/*` lacked a local classification note, even though those tests include retained compatibility assertions for archived `wizard-suggest` and `internal-job` dispatch behavior.
 - Added `tests/python/README.md` to classify Python document-intelligence tests as package-level regression coverage, not default MVP launch evidence.
 - Updated README specialized-test guidance and launch-gate coverage so future sweep agents do not treat Python CV compatibility tests as proof that the retired CV import wizard or Python internal worker is launch-active.
+
+## Continuation - Browser Polish Evidence Boundary
+
+- Used the Codex Browser plugin against `http://127.0.0.1:3000/portfolio/demo`; the active visible state rendered `Public Page unavailable`, explained the retired/hidden/not-ready state, produced no console errors, and did not leak profile data.
+- Used the Codex Browser plugin against `/login` on desktop and `390x844` mobile; the entry surface rendered `Welcome back`, email/password fields, password reveal, remember-me, reset-password, social sign-in buttons, signup CTA, and legal links with no console errors.
+- Saved Browser visual evidence under `.artifacts/mvp-surface-sweep-2026-05-19/browser-evidence/`.
+- Removed the active untracked polish screenshot collector from default E2E discovery because it had no assertions and would have produced noisy launch evidence rather than a gate.
+- Added `.artifacts/polish-audit-screenshots/README.md` plus a local `.gitignore` for generated PNGs so prior screenshots remain local scratch, not committed launch evidence.
