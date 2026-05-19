@@ -198,29 +198,31 @@ GET /api/conversations?limit=20&offset=20
 - Avoids expensive `COUNT(*)` queries
 - Returns only requested items
 
-#### 2. Messages API (`/api/messages`)
+#### 2. Conversation Messages API (`/api/conversations/[conversationId]/messages`)
 
 **Default Limit:** 50
-**Max Limit:** Not specified (consider adding)
+**Max Limit:** 100
 
 **Usage:**
 
 ```typescript
 // Get messages for a conversation
-GET /api/messages?conversationId={id}&limit=50&offset=0
+GET /api/conversations/{conversationId}/messages?limit=50
 
 // Response
 {
   "messages": [...],
-  "hasMore": true
+  "hasMore": true,
+  "conversationStage": "masked"
 }
 ```
 
 **Features:**
 
-- Ordered by `sentAt` (chronological)
+- Ordered by `sentAt` with newest messages returned first
 - Auto-marks messages as read
 - Supports conversation-specific filtering
+- Supports cursor pagination with `before={messageId}`
 
 #### 3. Assignments API (`/api/assignments`)
 
@@ -277,7 +279,7 @@ For real-time data like messages, cursor-based pagination is more reliable:
 
 ```typescript
 // Instead of offset
-GET /api/messages?conversationId={id}&cursor={lastMessageId}&limit=50
+GET /api/conversations/{conversationId}/messages?before={lastMessageId}&limit=50
 
 // Benefits:
 // - No missed messages with concurrent updates

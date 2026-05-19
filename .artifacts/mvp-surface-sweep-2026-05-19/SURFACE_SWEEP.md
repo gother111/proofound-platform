@@ -351,6 +351,11 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Moved those tests into `tests/archive/non_mvp_legacy_api/`, `tests/archive/non_mvp_moderation_api/`, `tests/archive/non_mvp_org_integrations_ui/`, and the existing admin-suite archive.
 - Updated the archived Vitest config to run the archived paths from `tests/archive/**`, and added launch-gate coverage so excluded compatibility tests do not return to active test directories.
 
+45. Active docs still pointed at legacy `/api/messages`.
+
+- Updated `docs/monitoring-alerting.md` issue ownership from archived `src/app/api/messages/*` to active `src/app/api/conversations/*`.
+- Updated `docs/caching-pagination.md` to document `/api/conversations/{conversationId}/messages?before=...` instead of archived `/api/messages` offset/cursor examples.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -708,6 +713,11 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/lib/ai-launch-guardrails.test.ts` - passed, 2 files / 32 tests, after moving excluded non-MVP compatibility tests under `tests/archive/**`.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npx vitest --config vitest.archived.config.ts --run tests/archive/non_mvp_legacy_api/messages-legacy-route.archived.test.ts tests/archive/non_mvp_moderation_api/moderation-appeals-route.archived.test.ts tests/archive/non_mvp_org_integrations_ui/organization-settings-integrations.archived.test.tsx --reporter=dot` - passed, 3 files / 14 tests, confirming archived config still exercises the moved compatibility tests.
 - `npm run docs:freshness` - passed after registering the new test archive READMEs.
+- `npm run docs:freshness` - passed after replacing active `/api/messages` docs with canonical conversation messages docs.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/lib/ai-launch-guardrails.test.ts` - passed, 2 files / 32 tests, after the docs/package follow-up.
+- `npm run lint` - passed after the archived-test and docs cleanup.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the archived-test and docs cleanup.
+- `git diff --check` - passed after the archived-test and docs cleanup.
 
 Non-fatal test noise:
 

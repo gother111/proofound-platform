@@ -118,7 +118,7 @@ Sentry is already configured in the application. See `docs/sentry-setup.md` for 
 ```
 # API routes
 path:src/app/api/core/matching/* backend-team@proofound.io
-path:src/app/api/messages/* backend-team@proofound.io
+path:src/app/api/conversations/* backend-team@proofound.io
 
 # Frontend components
 path:src/app/app/i/* frontend-team@proofound.io
