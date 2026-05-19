@@ -15,7 +15,7 @@ Doc class: `governance`
 >
 > - This file is preserved as historical evidence only and does not override the locked MVP stack or newer `.artifacts/*` current-state evidence.
 > - Stale categories in or around this audit: mixed live verification transport conclusions, any `PageNotFoundError: /_document` build-blocker claims, any `pilot-launchable` or similar launch verdict treated as current truth, and older route-surface claims where newer route inventory disagrees.
-> - Current 2026-03-25 repo truth is narrower and different: `npm run lint`, `npm run typecheck`, and `npm run build` pass under Node `20.20.0`; focused verification/privacy packs pass; the strict org corridor and full org strict bundle both pass in prod mode; the smoke artifact and live monitors are fresh again; and route breadth remains the open launch risk.
+> - Current repo truth differs again as of 2026-05-19: route breadth is no longer an open launch-surface blocker in `docs/verification-checklist.md`; use `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md` and newer focused checks before citing this report.
 > - Fresh blocker-1 closure evidence on 2026-03-25: `node -v` -> `v20.20.0`; `npm -v` -> `10.8.2`; `rm -rf .next && NEXT_CLEAN_BUILD_CACHE=1 npm run build` -> `PASS`; `PORT=3101 npm run start -- --hostname 127.0.0.1 --port 3101` -> `Ready`; `curl /api/health`, `/`, and `/login` -> `200`; `curl /about` -> intentional archived-scope `404`.
 > - The earlier “no safe current-block strict rerun was attempted” statement is now stale. Fresh isolated corridor evidence passed `1 passed (3.4m)` and `PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict` passed `7 passed (5.7m)`.
 
@@ -63,7 +63,7 @@ Why the verdict is not `PASS`:
 
 - the clean blocker-1 rerun now passes, so the historical `/_document` and missing-chunk failures are retired as stale evidence
 - no fresh protected prod org-corridor rerun was completed in this block, so review, reveal, interview, decision, hire, and engagement verification remain unrefreshed
-- persisted smoke evidence is still stale and route breadth remains an open launch risk outside blocker 1
+- as of this historical block, persisted smoke evidence was stale and route breadth remained an open launch risk outside blocker 1; this statement is superseded by the 2026-05-19 route-surface pass recorded in `docs/verification-checklist.md`
 
 ## Current findings
 

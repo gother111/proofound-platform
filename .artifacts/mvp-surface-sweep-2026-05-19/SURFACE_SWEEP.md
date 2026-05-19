@@ -165,6 +165,12 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Updated `docs/backlog/phase-exit-checklist.md` so Phase 0 route-surface exit reflects the 2026-05-19 pass, while keeping production launch smoke and monitor checks as pre-launch candidate actions.
 - Updated `docs/DOCS_REGISTRY.md` for the refreshed backlog docs.
 
+20. Historical audit banners still made stale current-route claims.
+
+- Found historical March audit/report files outside `docs/archive/` whose superseded banners still said route breadth remained an open launch risk.
+- Left the original audit bodies intact as historical evidence, but updated the freshness banners to say the route-breadth blocker was retired by 2026-05-19 route-surface evidence.
+- Updated `docs/DOCS_REGISTRY.md` dates for the touched historical audit/report files.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
