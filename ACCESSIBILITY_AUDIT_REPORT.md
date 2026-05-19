@@ -18,7 +18,8 @@ Result:
 
 - Overall: `PASS`
 - Total tests: `15`
-- Passed: `15`
+- Passed: `11`
+- Skipped: `4`
 - Failed: `0`
 - Runtime: Node `v25.4.0` local runtime; repo command uses `scripts/playwright-node24.mjs`.
 - Config: `playwright.a11y.config.ts`
@@ -46,7 +47,8 @@ The first sandbox run could not start the local Playwright web server because bi
 ## Known Gaps / Follow-Ups
 
 - Manual screen-reader validation with VoiceOver/NVDA is still pending.
-- `tests/a11y/keyboard-navigation.spec.ts` still contains placeholder TODO tests for deeper modal focus trapping, dropdown keyboard interaction, and table navigation. Those placeholders are not proof of full interaction coverage.
+- The deeper modal focus-trap, dropdown, table/grid, and modal focus-return checks are explicitly
+  skipped until stable active MVP fixtures are wired into the accessibility suite.
 - Strict authenticated accessibility remains a production-candidate gate through `npm run test:a11y:strict`; it was not rerun in this report because it requires strict Supabase-backed fixtures.
 
 ## Go/No-Go Note

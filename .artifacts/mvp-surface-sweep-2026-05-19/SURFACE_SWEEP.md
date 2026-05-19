@@ -969,7 +969,7 @@ Non-fatal test noise:
 ## Continuation - Accessibility Go/No-Go Evidence Refresh
 
 - Found active `ACCESSIBILITY_AUDIT_REPORT.md` still verified on 2026-02-12 even though it is a required `npm run go:no-go` evidence file.
-- Reran the baseline accessibility suite. The sandbox run failed before tests because Playwright could not bind `0.0.0.0:33101`; the approved outside-sandbox rerun passed `15/15` against `playwright.a11y.config.ts`.
+- Reran the baseline accessibility suite. The sandbox run failed before tests because Playwright could not bind `0.0.0.0:33101`; the approved outside-sandbox rerun initially reported all baseline checks green against `playwright.a11y.config.ts`, but later evidence hygiene found four TODO-only passing keyboard checks and converted them to explicit skips.
 - Refreshed the accessibility report to `Last Verified: 2026-05-19`, recorded the exact command and scope, and kept the evidence honest: baseline public/mock-mode accessibility is green, while strict authenticated accessibility and manual screen-reader validation remain separate production-candidate/manual gates.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the report freshness, command, test count, and strict/manual caveats stay current.
 
@@ -1205,7 +1205,17 @@ Non-fatal test noise:
 - Browser screenshot showed a single calm sign-in card, visible primary action, readable form labels, and no overlapping text in the desktop viewport.
 - DOM inspection found no broad marketplace, public-directory, social-platform, profile-theater, or dashboard-theater language on the logged-out login surface.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/signin-form-mobile-clarity.test.tsx` - passed, 1 file / 2 tests. The attempted mixed Vitest run did not execute the Playwright spec because it belongs to the Playwright runner.
-- `npm run test:a11y -- tests/a11y/keyboard-navigation.spec.ts` first failed in the sandbox because Playwright could not bind `0.0.0.0:33101`; the approved outside-sandbox rerun passed, 12/12 tests, including login form keyboard access and input labels.
+- `npm run test:a11y -- tests/a11y/keyboard-navigation.spec.ts` first failed in the sandbox because Playwright could not bind `0.0.0.0:33101`; the approved outside-sandbox rerun initially reported the file green, then four TODO-only passing checks were converted to explicit skips.
+- Follow-up evidence hygiene found four TODO-only keyboard tests that were passing without assertions.
+  They are now explicit skipped checks for modal focus-trap, dropdown keyboard behavior, table/grid
+  navigation, and modal focus-return until stable active MVP fixtures exist.
+- Archived the unused donor/investor evidence-pack export implementation and tests under
+  `src/archive/non_launch_evidence_pack/` and `tests/archive/non_mvp_evidence_pack/`; active
+  integration guidance no longer implies an MVP evidence-pack API endpoint exists.
+- Verification after the cleanup:
+  - `npm run test:a11y -- --reporter=line` passed outside the sandbox with `11 passed / 4 skipped`.
+  - `npx vitest run --config vitest.archived.config.ts tests/archive/non_mvp_evidence_pack/evidence-pack.archived.test.ts` passed `11/11`.
+  - Focused launch-gate/inventory tests, docs freshness, lint, typecheck, and portfolio PDF smoke tests passed.
 
 ## Continuation - Phase 4 Local Smoke Refresh
 

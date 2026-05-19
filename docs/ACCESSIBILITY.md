@@ -40,9 +40,11 @@ properly seeded strict target.
 
 As of 2026-05-19:
 
-- `npm run test:a11y` passed `15/15` tests against `playwright.a11y.config.ts`.
+- `npm run test:a11y` completed against `playwright.a11y.config.ts` with `11 passed / 4 skipped`.
 - Covered files include `tests/a11y/critical-flows.spec.ts` and
   `tests/a11y/keyboard-navigation.spec.ts`.
+- The baseline result is `11 passed / 4 skipped`; skipped checks cover deeper modal focus-trap,
+  dropdown, table/grid, and modal focus-return behavior that still require stable active MVP fixtures.
 - Strict authenticated accessibility remains a production-candidate gate through
   `npm run test:a11y:strict`.
 - Manual screen-reader validation remains required for final signoff.

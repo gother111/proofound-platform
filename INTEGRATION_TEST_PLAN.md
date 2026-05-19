@@ -12,8 +12,8 @@ Define integration-level verification paths aligned with the current test suite 
 
 - `tests/integration/matching.test.ts`
 - `tests/integration/data-portability.test.ts`
-- `tests/integration/evidence-pack.test.ts`
-- Historical `critical-gaps` and CV import wizard tests live under `tests/archive/` and are not launch gates.
+- Historical `critical-gaps`, CV import wizard, and donor/investor evidence-pack tests live under
+  `tests/archive/` and are not launch gates.
 
 ## Supporting API Contract Coverage
 
@@ -54,6 +54,14 @@ Define integration-level verification paths aligned with the current test suite 
 - `/api/mobile/*` remains archived for the locked MVP route surface.
 - Mobile planning docs are post-MVP reference only and must not be treated as launch API evidence.
 - If a future approved route-surface change reactivates mobile routes, add focused contract tests in the same change.
+
+### 6) Archived Evidence-Pack Boundary
+
+- Donor/investor evidence-pack export is outside the locked MVP corridor.
+- Archived implementation/reference tests live under `src/archive/non_launch_evidence_pack/` and
+  `tests/archive/non_mvp_evidence_pack/`.
+- No active integration test should imply an MVP evidence-pack API route exists unless the
+  route-surface policy is updated in the same change.
 
 ## Exit Criteria
 

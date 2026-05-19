@@ -210,9 +210,12 @@ describe('launch gate package configuration', () => {
     expect(accessibilityReport).toContain('npm run test:a11y');
     expect(accessibilityReport).toContain('Runtime: Node `v25.4.0`');
     expect(accessibilityReport).toContain('Total tests: `15`');
-    expect(accessibilityReport).toContain('Passed: `15`');
+    expect(accessibilityReport).toContain('Passed: `11`');
+    expect(accessibilityReport).toContain('Skipped: `4`');
     expect(accessibilityReport).toContain('tests/a11y/critical-flows.spec.ts');
     expect(accessibilityReport).toContain('tests/a11y/keyboard-navigation.spec.ts');
+    expect(accessibilityReport).toContain('explicitly');
+    expect(accessibilityReport).toContain('skipped until stable active MVP fixtures');
     expect(accessibilityReport).toContain(
       'Strict authenticated accessibility remains a production-candidate gate'
     );
@@ -244,7 +247,9 @@ describe('launch gate package configuration', () => {
 
     expect(joined).toContain('ACCESSIBILITY_AUDIT_REPORT.md');
     expect(joined).toContain('production-candidate gate');
-    expect(joined.toLowerCase()).toContain('not proof of full strict authenticated');
+    expect(compactWhitespace(joined.toLowerCase())).toContain(
+      'not proof of full strict authenticated'
+    );
     expect(joined).not.toContain(
       '@axe-core/playwright**: E2E accessibility testing (to be configured)'
     );
@@ -1266,8 +1271,13 @@ describe('launch gate package configuration', () => {
     expect(integrationPlan).toContain('Last Verified: `2026-05-19`');
     expect(integrationPlan).toContain('tests/integration/matching.test.ts');
     expect(integrationPlan).toContain('tests/integration/data-portability.test.ts');
-    expect(integrationPlan).toContain('tests/integration/evidence-pack.test.ts');
-    expect(integrationPlan).toContain('Historical `critical-gaps` and CV import wizard tests');
+    expect(integrationPlan).not.toContain('tests/integration/evidence-pack.test.ts');
+    expect(integrationPlan).toContain(
+      'Historical `critical-gaps`, CV import wizard, and donor/investor evidence-pack tests'
+    );
+    expect(integrationPlan).toContain('Archived Evidence-Pack Boundary');
+    expect(integrationPlan).toContain('tests/archive/non_mvp_evidence_pack/');
+    expect(integrationPlan).toContain('No active integration test should imply');
     expect(integrationPlan).toContain('/api/mobile/*` remains archived');
     expect(integrationPlan).toContain('post-MVP reference only');
     expect(integrationPlan).not.toContain(
@@ -1278,13 +1288,21 @@ describe('launch gate package configuration', () => {
     for (const activeIntegrationPath of [
       'tests/integration/matching.test.ts',
       'tests/integration/data-portability.test.ts',
-      'tests/integration/evidence-pack.test.ts',
     ]) {
       expect(fs.existsSync(path.join(repoRoot, activeIntegrationPath))).toBe(true);
     }
+    expect(fs.existsSync(path.join(repoRoot, 'tests/integration/evidence-pack.test.ts'))).toBe(
+      false
+    );
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'tests/archive/non_mvp_evidence_pack/evidence-pack.archived.test.ts')
+      )
+    ).toBe(true);
     expect(docsRegistry).toContain(
       '| `INTEGRATION_TEST_PLAN.md`                                                                              | `reference-spec` | `root`        | `repo`              | `2026-05-19`'
     );
+    expect(docsRegistry).toContain('`src/archive/non_launch_evidence_pack/README.md`');
   });
 
   it('keeps LinkedIn verification guidance outside the launch corridor', () => {

@@ -6,7 +6,10 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { generateEvidencePackHTML, type EvidencePackData } from '@/lib/pdf/evidence-pack';
+import {
+  generateEvidencePackHTML,
+  type EvidencePackData,
+} from '@/archive/non_launch_evidence_pack/lib/pdf/evidence-pack';
 
 describe('Evidence Pack PDF Generation', () => {
   let sampleData: EvidencePackData;
@@ -199,15 +202,5 @@ describe('Evidence Pack PDF Generation', () => {
 
     expect(html).toBeTruthy();
     expect(html).toContain('Minimal Org');
-  });
-});
-
-describe('Evidence Pack API Integration', () => {
-  it('should export evidence pack API endpoint', async () => {
-    // TODO: Add API endpoint test when server is available
-    // This would test the actual PDF generation endpoint
-    // const response = await fetch('/api/organizations/[orgId]/evidence-pack');
-    // expect(response.ok).toBe(true);
-    // expect(response.headers.get('content-type')).toContain('application/pdf');
   });
 });

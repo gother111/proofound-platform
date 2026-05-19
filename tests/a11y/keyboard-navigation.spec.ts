@@ -90,30 +90,16 @@ test.describe('Keyboard Navigation', () => {
     await page.keyboard.press('Enter');
   });
 
-  test('Dialog/Modal should trap focus', async ({ page }) => {
-    // TODO: Test modal focus trapping when a modal is opened
-    // This would require navigating to a page with a modal and testing:
-    // 1. Tab cycles through modal elements only
-    // 2. Shift+Tab cycles backwards
-    // 3. Escape closes the modal
-    // 4. Focus returns to trigger element when closed
+  test.skip('Dialog/Modal should trap focus', async () => {
+    // Pending until a stable active MVP dialog fixture is wired into the a11y suite.
   });
 
-  test('Dropdown menus should be keyboard accessible', async ({ page }) => {
-    // TODO: Test dropdown keyboard interaction
-    // Should support:
-    // - Arrow keys to navigate options
-    // - Enter/Space to select
-    // - Escape to close
-    // - Tab to move to next control
+  test.skip('Dropdown menus should be keyboard accessible', async () => {
+    // Pending until a stable active MVP dropdown fixture is wired into the a11y suite.
   });
 
-  test('Tables should be keyboard navigable', async ({ page }) => {
-    // TODO: Test table keyboard navigation
-    // Should support:
-    // - Tab to navigate to first cell
-    // - Arrow keys to move between cells
-    // - Proper row/column headers announced
+  test.skip('Tables should be keyboard navigable', async () => {
+    // Pending until an active MVP table/grid fixture is wired into the a11y suite.
   });
 });
 
@@ -163,11 +149,8 @@ test.describe('Focus Management', () => {
     expect(tabCount).toBeLessThan(maxTabs);
   });
 
-  test('Focus should return to trigger after closing modal', async ({ page }) => {
-    // TODO: Implement when testing modals
-    // 1. Click button to open modal
-    // 2. Close modal (Escape or close button)
-    // 3. Verify focus returns to the button that opened it
+  test.skip('Focus should return to trigger after closing modal', async () => {
+    // Pending until a stable active MVP dialog fixture is wired into the a11y suite.
   });
 });
 

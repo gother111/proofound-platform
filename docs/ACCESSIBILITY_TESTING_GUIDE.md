@@ -26,8 +26,10 @@ npm run test:a11y:strict
 - `tests/a11y/keyboard-navigation.spec.ts`
 - `tests/a11y/authenticated.strict.spec.ts`
 
-As of 2026-05-19, `ACCESSIBILITY_AUDIT_REPORT.md` records `npm run test:a11y` passing `15/15`
-baseline tests. That is not proof of full Strict authenticated or manual screen-reader coverage.
+As of 2026-05-19, `ACCESSIBILITY_AUDIT_REPORT.md` records `npm run test:a11y` with `11 passed /
+4 skipped` baseline checks. The skipped checks cover deeper modal focus-trap, dropdown, table/grid,
+and modal focus-return behavior that still require stable active MVP fixtures. This is not proof of
+full Strict authenticated or manual screen-reader coverage.
 
 ## Public and Logged-Out Manual Flows
 

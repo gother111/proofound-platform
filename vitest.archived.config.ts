@@ -74,6 +74,7 @@ export default defineConfig({
       'tests/archive/non_mvp_org_integrations_ui/**/*.test.tsx',
       'tests/archive/non_mvp_admin_suite/**/*.test.tsx',
       'tests/archive/non_mvp_cv_import_wizard/**/*.test.ts',
+      'tests/archive/non_mvp_evidence_pack/**/*.test.ts',
       'tests/archive/non_mvp_python_internal/**/*.test.ts',
     ],
     exclude: [

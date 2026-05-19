@@ -64,11 +64,12 @@ export interface EvidencePackData {
  * This HTML can be converted to PDF using a service like Puppeteer
  */
 export function generateEvidencePackHTML(data: EvidencePackData): string {
-  const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
 
   const formatNumber = (num: number) => num.toLocaleString('en-US');
 
@@ -226,26 +227,32 @@ export function generateEvidencePackHTML(data: EvidencePackData): string {
     ${data.organization.sector ? `<p><strong>Sector:</strong> ${data.organization.sector}</p>` : ''}
     ${data.organization.website ? `<p><strong>Website:</strong> ${data.organization.website}</p>` : ''}
     <p><strong>Generated on:</strong> ${formatDate(data.generatedAt)}</p>
-    ${data.periodStart && data.periodEnd
-      ? `<p><strong>Period:</strong> ${formatDate(data.periodStart)} - ${formatDate(data.periodEnd)}</p>`
-      : ''
+    ${
+      data.periodStart && data.periodEnd
+        ? `<p><strong>Period:</strong> ${formatDate(data.periodStart)} - ${formatDate(data.periodEnd)}</p>`
+        : ''
     }
   </div>
 
   <div class="section">
     <h2>Impact Summary</h2>
-    ${data.impactEntries.length === 0
-      ? '<p>No impact entries recorded for this period.</p>'
-      : `
+    ${
+      data.impactEntries.length === 0
+        ? '<p>No impact entries recorded for this period.</p>'
+        : `
         <p>This report documents <strong>${data.impactEntries.length}</strong> key impact ${data.impactEntries.length === 1 ? 'outcome' : 'outcomes'} achieved by ${data.organization.name}.</p>
       `
     }
   </div>
 
-  ${data.impactEntries.length > 0 ? `
+  ${
+    data.impactEntries.length > 0
+      ? `
     <div class="section">
       <h2>Documented Outcomes</h2>
-      ${data.impactEntries.map((entry, idx) => `
+      ${data.impactEntries
+        .map(
+          (entry, idx) => `
         <div class="impact-entry">
           <h3>${idx + 1}. ${entry.title}</h3>
           <div class="metric">
@@ -259,25 +266,37 @@ export function generateEvidencePackHTML(data: EvidencePackData): string {
             ${entry.beneficiaries ? ` | <strong>Beneficiaries:</strong> ${formatNumber(entry.beneficiaries)}` : ''}
           </div>
         </div>
-      `).join('')}
+      `
+        )
+        .join('')}
     </div>
-  ` : ''}
+  `
+      : ''
+  }
 
-  ${data.artifacts.length > 0 ? `
+  ${
+    data.artifacts.length > 0
+      ? `
     <div class="section">
       <h2>Supporting Documentation</h2>
       <ul class="artifacts-list">
-        ${data.artifacts.map(artifact => `
+        ${data.artifacts
+          .map(
+            (artifact) => `
           <li>
             <strong>${artifact.name}</strong>
             ${artifact.type ? `<br><span style="font-size: 9pt; color: #4A4844;">Type: ${artifact.type}</span>` : ''}
             ${artifact.description ? `<br><span style="font-size: 9pt; color: #6B6760;">${artifact.description}</span>` : ''}
             ${artifact.url ? `<br><span style="font-size: 9pt; color: #1C4D3A;">${artifact.url}</span>` : ''}
           </li>
-        `).join('')}
+        `
+          )
+          .join('')}
       </ul>
     </div>
-  ` : ''}
+  `
+      : ''
+  }
 
   <div class="footer">
     <p>This Evidence Pack was generated via Proofound on ${formatDate(data.generatedAt)}.</p>
