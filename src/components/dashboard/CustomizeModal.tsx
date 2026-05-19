@@ -45,7 +45,7 @@ const widgetOptions = [
   { id: 'projects', label: 'Projects', description: 'Your active projects' },
   { id: 'matching', label: 'Matches', description: 'Suggested matches and connections' },
   { id: 'impact', label: 'Impact Snapshot', description: 'Your impact metrics' },
-  { id: 'explore', label: 'Explore', description: 'Discover new opportunities' },
+  { id: 'explore', label: 'Review corridor', description: 'Assignment and intro steps' },
 ];
 
 export function CustomizeModal({ open, onOpenChange }: CustomizeModalProps) {
@@ -81,7 +81,7 @@ export function CustomizeModal({ open, onOpenChange }: CustomizeModalProps) {
     }
 
     toast({
-      title: 'Dashboard customization saved',
+      title: 'Home layout saved',
       description: 'Your preferences have been updated.',
     });
 
@@ -118,9 +118,9 @@ export function CustomizeModal({ open, onOpenChange }: CustomizeModalProps) {
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Customize Your Dashboard</DialogTitle>
+            <DialogTitle>Customize Your Home</DialogTitle>
             <DialogDescription>
-              Select which widgets you want to see on your dashboard
+              Select which sections you want to see on your home view
             </DialogDescription>
           </DialogHeader>
 
@@ -143,9 +143,9 @@ export function CustomizeModal({ open, onOpenChange }: CustomizeModalProps) {
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader className="text-left">
-          <DrawerTitle>Customize Your Dashboard</DrawerTitle>
+          <DrawerTitle>Customize Your Home</DrawerTitle>
           <DrawerDescription>
-            Select which widgets you want to see on your dashboard
+            Select which sections you want to see on your home view
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 py-2 max-h-[60vh] overflow-y-auto">{renderContentForm()}</div>

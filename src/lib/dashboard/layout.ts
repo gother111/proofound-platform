@@ -132,8 +132,8 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
   },
   explore: {
     id: 'explore',
-    name: 'Explore',
-    description: 'Discover new opportunities',
+    name: 'Review corridor',
+    description: 'Review launch-safe assignment and intro steps',
     category: 'matching',
     defaultSize: 'default',
     availableSizes: ['default'],

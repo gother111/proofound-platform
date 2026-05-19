@@ -505,7 +505,7 @@ describe('CVJDAutoSuggest', () => {
 
       fireEvent.click(screen.getByRole('button', { name: /analyze text/i }));
 
-      expect(screen.getByText('Submitting text to extraction service...')).toBeInTheDocument();
+      expect(screen.getByText('Preparing text for analysis...')).toBeInTheDocument();
       expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '35');
 
       expect(resolveRequest).toBeTruthy();

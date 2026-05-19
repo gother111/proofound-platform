@@ -140,4 +140,35 @@ describe('MatchResultCard', () => {
     expect(screen.queryByText('Match breakdown:')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /snooze/i })).not.toBeInTheDocument();
   });
+
+  it('keeps individual cards qualitative instead of score or rank led', () => {
+    render(
+      <MatchResultCard
+        result={{
+          id: 'match-individual-2',
+          score: 0.86,
+          assignmentId: 'assignment-2',
+          assignment: {
+            role: 'Proof operations lead',
+            locationMode: 'remote',
+          },
+          contributions: {
+            proof_fit: 0.91,
+            skills_fit: 0.88,
+            verification_fit: 0.84,
+          },
+        }}
+        variant="blind"
+      />
+    );
+
+    expect(screen.getByText('Strong proof alignment')).toBeInTheDocument();
+    expect(screen.getByText('Blind by default')).toBeInTheDocument();
+    expect(
+      screen.getByText('Trust signal visible only within this review stage')
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/% proof fit/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ranking band/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/verified profile/i)).not.toBeInTheDocument();
+  });
 });

@@ -164,16 +164,17 @@ describe('MatchExplainerModal', () => {
     ).toHaveLength(2);
     expect(screen.getByText('A reviewer manually shortlisted this candidate.')).toBeInTheDocument();
     expect(screen.getByText('Auditable verification history')).toBeInTheDocument();
-    expect(screen.getByText('Comparative score detail')).toBeInTheDocument();
+    expect(screen.queryByText('Comparative score detail')).not.toBeInTheDocument();
     expect(
       screen.getByText('Exact ranking detail is suppressed while fairness remediation is active.')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Exact rank is hidden while privacy or fairness limits apply.')
+      screen.getByText('Exact ordering is hidden while privacy or fairness limits apply.')
     ).toBeInTheDocument();
+    expect(screen.getByText('Supporting fit signal')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'This comparative score summarizes proof strength, fit rationale, and practical constraints after the privacy-safe review context above.'
+        'This fit signal summarizes proof strength, fit rationale, and practical constraints after the privacy-safe review context above.'
       )
     ).toBeInTheDocument();
   });

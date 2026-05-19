@@ -4,7 +4,7 @@
  * The explanation stays proof-first and privacy-safe:
  * - strongest proof and fit rationale lead
  * - blind-by-default review stays explicit
- * - comparative score detail stays secondary
+ * - fit-signal detail stays secondary
  */
 
 'use client';
@@ -295,16 +295,16 @@ export function MatchExplainerModal({
           </div>
         ) : null}
 
-        {/* Overall Score & Rank */}
+        {/* Supporting fit signal */}
         <div className="bg-gradient-to-br from-[#E8F5E1] to-[#F7F6F1] rounded-xl p-6 border border-proofound-stone">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Comparative score detail</p>
+              <p className="text-sm text-muted-foreground mb-1">Supporting fit signal</p>
               <p className="text-4xl font-bold text-proofound-forest">{overallPercent}%</p>
             </div>
             {(rank || rankBand) && (
               <div className="text-right">
-                <p className="text-sm text-muted-foreground mb-1">Ranking signal</p>
+                <p className="text-sm text-muted-foreground mb-1">Review band</p>
                 <div className="flex items-center gap-2">
                   <Award className="w-5 h-5" style={{ color: getRankColor() }} />
                   <p className="text-xl font-semibold" style={{ color: getRankColor() }}>
@@ -313,7 +313,7 @@ export function MatchExplainerModal({
                 </div>
                 {rankMode === 'band' && exactRankAvailable ? (
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Exact rank is hidden while privacy or fairness limits apply.
+                    Exact ordering is hidden while privacy or fairness limits apply.
                   </p>
                 ) : null}
               </div>
@@ -323,7 +323,7 @@ export function MatchExplainerModal({
           <Progress value={overallPercent} className="h-3" />
 
           <p className="text-xs text-muted-foreground mt-3">
-            This score stays secondary to proof, outcome, and verification context.
+            This signal stays secondary to proof, outcome, and verification context.
           </p>
         </div>
 
@@ -338,7 +338,7 @@ export function MatchExplainerModal({
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4 pt-4">
             <h4 className="text-sm font-semibold text-foreground mb-3">
-              Score Breakdown by Category
+              Signal Breakdown by Category
             </h4>
 
             {/* Skills */}
@@ -409,9 +409,9 @@ export function MatchExplainerModal({
 
             <div className="bg-japandi-bg rounded-lg p-4 border border-proofound-stone mt-4">
               <p className="text-xs leading-relaxed text-foreground">
-                <strong className="font-semibold">How it works:</strong> This comparative score
-                summarizes proof strength, fit rationale, and practical constraints after the
-                privacy-safe review context above.
+                <strong className="font-semibold">How it works:</strong> This fit signal summarizes
+                proof strength, fit rationale, and practical constraints after the privacy-safe
+                review context above.
               </p>
             </div>
           </TabsContent>

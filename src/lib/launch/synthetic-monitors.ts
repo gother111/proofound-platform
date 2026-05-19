@@ -330,6 +330,21 @@ function summarizeSmokeEvidenceFromRows(smokeRows: LaunchSyntheticStatusRow[], n
   };
 }
 
+function buildSmokeArtifactStatusRows(
+  artifact: Awaited<ReturnType<typeof readLaunchSmokeArtifactFromFile>>,
+  artifactPath: string,
+  lastSuccessfulByMonitorKey: Map<string, string | null>,
+  now: Date
+) {
+  return getSmokeArtifactMonitorDefinitions().map((definition) =>
+    mapResultToStatusRow(runSmokeArtifactMonitor(definition, artifact, artifactPath, now), now, {
+      lastSuccessfulCheckedAt: lastSuccessfulByMonitorKey.get(definition.monitorKey) ?? null,
+      evidenceSource: 'persisted',
+      refreshState: 'not_applicable',
+    })
+  );
+}
+
 function isHttpMonitorDefinition(
   definition: LaunchMonitorDefinition
 ): definition is Extract<LaunchMonitorDefinition, { kind: 'http' }> {
@@ -352,12 +367,17 @@ async function getLastSuccessfulMonitorRunMap() {
     return new Map<string, string | null>();
   }
 
-  const latestSuccessfulRuns = await execute(sql`
-    SELECT monitor_key, MAX(checked_at) AS last_successful_checked_at
-    FROM synthetic_monitor_runs
-    WHERE status = 'pass'
-    GROUP BY monitor_key
-  `);
+  let latestSuccessfulRuns: unknown;
+  try {
+    latestSuccessfulRuns = await execute(sql`
+      SELECT monitor_key, MAX(checked_at) AS last_successful_checked_at
+      FROM synthetic_monitor_runs
+      WHERE status = 'pass'
+      GROUP BY monitor_key
+    `);
+  } catch {
+    return new Map<string, string | null>();
+  }
   if (latestSuccessfulRuns == null) {
     return new Map<string, string | null>();
   }
@@ -602,32 +622,36 @@ export async function persistSyntheticMonitorResults(results: SyntheticMonitorRe
     return false;
   }
 
-  for (const result of results) {
-    await execute(sql`
-      INSERT INTO synthetic_monitor_runs (
-        monitor_key,
-        monitor_group,
-        status,
-        severity,
-        response_time_ms,
-        expected_state,
-        observed_state,
-        failure_class,
-        details,
-        checked_at
-      ) VALUES (
-        ${result.monitorKey},
-        ${result.monitorGroup},
-        ${result.status},
-        ${result.severity},
-        ${result.responseTimeMs},
-        ${result.expectedState},
-        ${result.observedState},
-        ${result.failureClass},
-        ${JSON.stringify(result.details)}::jsonb,
-        ${result.checkedAt}::timestamptz
-      )
-    `);
+  try {
+    for (const result of results) {
+      await execute(sql`
+        INSERT INTO synthetic_monitor_runs (
+          monitor_key,
+          monitor_group,
+          status,
+          severity,
+          response_time_ms,
+          expected_state,
+          observed_state,
+          failure_class,
+          details,
+          checked_at
+        ) VALUES (
+          ${result.monitorKey},
+          ${result.monitorGroup},
+          ${result.status},
+          ${result.severity},
+          ${result.responseTimeMs},
+          ${result.expectedState},
+          ${result.observedState},
+          ${result.failureClass},
+          ${JSON.stringify(result.details)}::jsonb,
+          ${result.checkedAt}::timestamptz
+        )
+      `);
+    }
+  } catch {
+    return false;
   }
 
   return true;
@@ -884,16 +908,53 @@ export async function getPersistedLaunchSyntheticStatus(
   let smokeEvidenceSource: 'db' | 'artifact' | 'mixed' | 'missing' = 'missing';
 
   if (persistedSmokeRows.length === smokeMonitorDefinitions.length) {
-    smokeRows = buildPersistedRowsInContractOrder([], persistedSmokeRows).filter(
+    const persistedRows = buildPersistedRowsInContractOrder([], persistedSmokeRows).filter(
       (row) => row.monitorGroup !== 'endpoint'
     );
-    const summary = summarizeSmokeEvidenceFromRows(smokeRows, now);
+    const persistedSummary = summarizeSmokeEvidenceFromRows(persistedRows, now);
+    let artifactRows: LaunchSyntheticStatusRow[] | null = null;
+    let artifactSummary: ReturnType<typeof summarizeSmokeEvidenceFromRows> | null = null;
+
+    try {
+      const artifact = await readLaunchSmokeArtifactFromFile(params.artifactPath);
+      artifactRows = buildSmokeArtifactStatusRows(
+        artifact,
+        params.artifactPath,
+        lastSuccessfulByMonitorKey,
+        now
+      );
+      artifactSummary = summarizeSmokeEvidenceFromRows(artifactRows, now);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException | undefined)?.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+
+    const persistedGeneratedAt = persistedSummary.smokeArtifactGeneratedAt
+      ? new Date(persistedSummary.smokeArtifactGeneratedAt).getTime()
+      : 0;
+    const artifactGeneratedAt = artifactSummary?.smokeArtifactGeneratedAt
+      ? new Date(artifactSummary.smokeArtifactGeneratedAt).getTime()
+      : 0;
+    const artifactIsNewerAndFresh =
+      artifactRows != null &&
+      artifactSummary != null &&
+      artifactSummary?.smokeFreshnessState === 'fresh' &&
+      artifactGeneratedAt > persistedGeneratedAt;
+
+    let summary = persistedSummary;
+    if (artifactIsNewerAndFresh && artifactRows != null && artifactSummary != null) {
+      smokeRows = artifactRows;
+      summary = artifactSummary;
+    } else {
+      smokeRows = persistedRows;
+    }
     smokeArtifactSchemaVersion = summary.smokeArtifactSchemaVersion;
     smokeArtifactGeneratedAt = summary.smokeArtifactGeneratedAt;
     smokeArtifactAgeMinutes = summary.smokeArtifactAgeMinutes;
     smokeFreshnessThresholdMinutes = summary.smokeFreshnessThresholdMinutes;
     smokeFreshnessState = summary.smokeFreshnessState;
-    smokeEvidenceSource = 'db';
+    smokeEvidenceSource = artifactIsNewerAndFresh ? 'artifact' : 'db';
   } else {
     try {
       const artifact = await readLaunchSmokeArtifactFromFile(params.artifactPath);
@@ -904,23 +965,11 @@ export async function getPersistedLaunchSyntheticStatus(
       smokeFreshnessThresholdMinutes = artifactEvaluation.freshnessThresholdMinutes;
       smokeFreshnessState = artifactEvaluation.stale ? 'stale' : 'fresh';
 
-      const artifactRows = getSmokeArtifactMonitorDefinitions().reduce<LaunchSyntheticStatusRow[]>(
-        (acc, definition) => {
-          acc.push(
-            mapResultToStatusRow(
-              runSmokeArtifactMonitor(definition, artifact, params.artifactPath, now),
-              now,
-              {
-                lastSuccessfulCheckedAt:
-                  lastSuccessfulByMonitorKey.get(definition.monitorKey) ?? null,
-                evidenceSource: 'persisted',
-                refreshState: 'not_applicable',
-              }
-            )
-          );
-          return acc;
-        },
-        []
+      const artifactRows = buildSmokeArtifactStatusRows(
+        artifact,
+        params.artifactPath,
+        lastSuccessfulByMonitorKey,
+        now
       );
 
       if (persistedSmokeRows.length > 0) {

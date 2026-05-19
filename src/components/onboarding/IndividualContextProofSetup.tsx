@@ -278,6 +278,7 @@ export function IndividualSetup({
   const [error, setError] = useState<string | null>(null);
   const [isCvImportOpen, setIsCvImportOpen] = useState(false);
   const [nextPath, setNextPath] = useState(completionPath || '/app/i/profile');
+  const [portfolioReadyAfterCompletion, setPortfolioReadyAfterCompletion] = useState(false);
   const startFromCvStatus = useStartFromCvBetaStatus();
   const displayName = `${basicDetails.firstName} ${basicDetails.lastName}`.trim();
   const canUseStartFromCv =
@@ -588,6 +589,7 @@ export function IndividualSetup({
         proofSummary,
       }));
       setVerificationFollowup(verificationMessage);
+      setPortfolioReadyAfterCompletion(Boolean(result.portfolioReady));
       setNextPath(completionPath || result.scaffoldProfilePath || '/app/i/profile');
       setPhase('success');
     } catch {
@@ -614,8 +616,8 @@ export function IndividualSetup({
               First Proof Pack created
             </CardTitle>
             <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-              Your portfolio is started with one proof-backed artifact. Stronger intro eligibility
-              can come later through public-safe details, matching preferences, and non-self
+              Your proof record is saved privately first. Public Page readiness and intro
+              eligibility still depend on public-safe visibility, context, and non-self
               verification.
             </CardDescription>
           </CardHeader>
@@ -659,6 +661,20 @@ export function IndividualSetup({
                 {verificationFollowup}
               </div>
             ) : null}
+
+            {!portfolioReadyAfterCompletion ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
+                <p className="font-medium">Public Page still locked</p>
+                <p className="mt-1 leading-6">
+                  This Proof Pack remains owner-only until you choose public-safe visibility and add
+                  enough trust context. Keep shaping the proof before sharing or requesting intros.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-100">
+                Public Page readiness is available. Review visibility before sharing.
+              </div>
+            )}
 
             <div className="space-y-3">
               <div>

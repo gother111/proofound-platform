@@ -7,7 +7,6 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { MapPin, Clock, DollarSign, Shield, Eye, EyeOff, BellOff, Loader2 } from 'lucide-react';
 import { VerificationGatesWarning } from './VerificationGatesWarning';
-import { RankDisplay } from './RankDisplay';
 import { apiFetch } from '@/lib/api/fetch';
 import {
   MATCH_EXPLAINER_TEST_IDS,
@@ -129,8 +128,12 @@ export function MatchResultCard({
     (result.profile as any)?.visibility?.showExactSalary === true ||
     (data as any)?.showExactSalary === true;
 
-  // Match score percentage
-  const scorePercent = Math.round((Number.isFinite(result.score) ? result.score : 0) * 100);
+  const proofFitLabel = (() => {
+    const score = Number.isFinite(result.score) ? result.score : 0;
+    if (score >= 0.8) return 'Strong proof alignment';
+    if (score >= 0.6) return 'Clear proof alignment';
+    return 'Proof review needed';
+  })();
 
   // Contribution bars
   const contributions = Object.entries(result.contributions ?? {})
@@ -472,7 +475,7 @@ export function MatchResultCard({
             {/* Match score */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-proofound-forest/20 bg-proofound-forest/10 px-2.5 py-1 text-xs font-medium text-proofound-forest">
-                {scorePercent}% proof fit
+                {proofFitLabel}
               </span>
               <span className="rounded-full border border-proofound-stone bg-white px-2.5 py-1 text-xs font-medium text-muted-foreground">
                 {variant === 'blind' ? 'Blind by default' : 'Identity revealed'}
@@ -504,25 +507,6 @@ export function MatchResultCard({
                       skillsMatch={matchExplanation.skillsMatch}
                       constraints={matchExplanation.constraints}
                     />
-                    {/* Rank Display - Show candidate's ranking */}
-                    {matchExplanation.rank && matchExplanation.totalCandidates && !isOrgView && (
-                      <div className="mt-2">
-                        <RankDisplay
-                          rank={matchExplanation.rank}
-                          totalCandidates={matchExplanation.totalCandidates}
-                          score={matchExplanation.compositeScore}
-                          topPercentile={Math.round(
-                            (matchExplanation.rank / matchExplanation.totalCandidates) * 100
-                          )}
-                          variant="compact"
-                        />
-                      </div>
-                    )}
-                    {!matchExplanation.rank && matchExplanation.rankBand && !isOrgView && (
-                      <div className="mt-2 text-xs font-medium text-proofound-forest">
-                        Ranking band: {matchExplanation.rankBand}
-                      </div>
-                    )}
                   </>
                 ) : matchExplanation ? (
                   <Button
@@ -618,7 +602,7 @@ export function MatchResultCard({
           {variant === 'blind' && (
             <div className="flex min-w-0 items-start gap-2">
               <Shield className="mt-0.5 h-3 w-3 shrink-0" />
-              <span>Verified profile</span>
+              <span>Trust signal visible only within this review stage</span>
             </div>
           )}
         </div>

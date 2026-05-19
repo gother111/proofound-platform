@@ -66,7 +66,7 @@ export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps)
           </p>
         </div>
         <Badge variant="outline" className={DASHBOARD_STATUS_CHIP_CLASS}>
-          Score {data.readinessScore}/100
+          {data.readinessScore}/100 checks
         </Badge>
       </div>
 
@@ -75,14 +75,14 @@ export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps)
           <div key={item.key} className="rounded-lg border border-proofound-stone bg-white p-3">
             <p className="text-xs text-muted-foreground">{item.label}</p>
             <p className="text-lg font-semibold text-foreground">
-              {item.score}/{item.maxScore}
+              {item.score}/{item.maxScore} ready
             </p>
           </div>
         ))}
       </div>
 
       <div>
-        <p className="text-sm font-semibold text-foreground mb-2">Talent Availability Insight</p>
+        <p className="text-sm font-semibold text-foreground mb-2">Pilot Supply Check</p>
         {data.talentAvailabilityInsights.length === 0 ? (
           <p className="text-xs text-muted-foreground">No active assignment skill demand yet.</p>
         ) : (
@@ -95,7 +95,7 @@ export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps)
                 <p className="text-foreground font-medium">{item.skillName}</p>
                 <p className="text-muted-foreground">
                   Required by {item.requiredByAssignments} assignment(s) • {item.availableProfiles}{' '}
-                  profile(s) available • {item.signal}
+                  proof profile(s) in the pilot pool • {item.signal}
                 </p>
               </div>
             ))}
@@ -104,7 +104,7 @@ export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps)
       </div>
 
       <div>
-        <p className="text-sm font-semibold text-foreground mb-2">Next Best Org Actions</p>
+        <p className="text-sm font-semibold text-foreground mb-2">Next Corridor Actions</p>
         {data.topActions.length === 0 ? (
           <div className="text-xs text-muted-foreground inline-flex items-center gap-2">
             <CheckCircle2 className="w-3.5 h-3.5 text-proofound-forest" />

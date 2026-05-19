@@ -3,13 +3,12 @@
 /**
  * OrgMatchingCard Widget
  *
- * Displays organization's candidate pipeline for active assignments
- * Part of the org dashboard (PRD O8)
+ * Displays organization's assignment review corridor for active assignments.
  *
  * Features:
  * - Shows open assignments count
  * - Displays candidate pipeline stages (matches, shortlist, intros)
- * - Match quality indicators
+ * - Proof review readiness indicators
  * - Quick links to view candidates
  */
 
@@ -28,7 +27,6 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api/fetch';
@@ -136,7 +134,7 @@ export function OrgMatchingCard({
       >
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Candidate Pipeline
+            Assignment Review Corridor
           </h5>
         </div>
         <div className="flex items-center justify-center py-8">
@@ -155,7 +153,7 @@ export function OrgMatchingCard({
       >
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Candidate Pipeline
+            Assignment Review Corridor
           </h5>
         </div>
         <div className="text-center py-4">
@@ -177,7 +175,7 @@ export function OrgMatchingCard({
       >
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Candidate Pipeline
+            Assignment Review Corridor
           </h5>
         </div>
         <div className="text-center py-6">
@@ -219,7 +217,7 @@ export function OrgMatchingCard({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Candidate Pipeline
+            Assignment Review Corridor
           </h5>
           <span
             className="text-xs px-1.5 py-0.5 rounded"
@@ -291,7 +289,7 @@ export function OrgMatchingCard({
         </div>
       </div>
 
-      {/* Match Quality */}
+      {/* Proof review signal */}
       {matchData.highQuality > 0 && (
         <div
           className="mb-4 p-2.5 rounded-lg flex items-center justify-between"
@@ -300,7 +298,7 @@ export function OrgMatchingCard({
           <div className="flex items-center gap-2">
             <Star className="w-4 h-4" style={{ color: '#F59E0B' }} />
             <span className="text-xs" style={{ color: '#2D3330' }}>
-              High-quality matches
+              Proof-ready reviews
             </span>
           </div>
           <span className="text-sm font-semibold" style={{ color: '#1C4D3A' }}>
@@ -309,22 +307,18 @@ export function OrgMatchingCard({
         </div>
       )}
 
-      {/* Average Score */}
+      {/* Fit signal */}
       {matchData.averageScore > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs" style={{ color: '#6B6760' }}>
-              Average Match Score
-            </span>
-            <span className="text-xs font-medium" style={{ color: '#1C4D3A' }}>
-              {Math.round(matchData.averageScore)}%
-            </span>
-          </div>
-          <Progress
-            value={matchData.averageScore}
-            className="h-1.5"
-            style={{ backgroundColor: '#E8E6DD' }}
-          />
+        <div
+          className="mb-4 rounded-lg border border-proofound-stone/70 bg-proofound-parchment/40 p-2.5"
+          style={{ borderColor: 'rgba(232, 230, 221, 0.8)' }}
+        >
+          <p className="text-xs font-medium" style={{ color: '#2D3330' }}>
+            Reason-coded fit signal is available
+          </p>
+          <p className="mt-1 text-xs" style={{ color: '#6B6760' }}>
+            Open the assignment review to inspect proof, trust state, and privacy stage.
+          </p>
         </div>
       )}
 

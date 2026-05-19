@@ -72,6 +72,12 @@ vi.mock('@/components/matching/assignment-steps', () => ({
   ),
 }));
 
+async function renderAssignmentBuilderPage() {
+  return AssignmentBuilderPage({
+    params: Promise.resolve({ slug: 'acme' }),
+  });
+}
+
 type FetchFixture = {
   draftAssignment?: Record<string, unknown> | null;
 };
@@ -166,14 +172,14 @@ describe('Assignment builder lean corridor', () => {
   it('renders the lean five-step corridor and hides advanced controls', async () => {
     setupFetch();
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText(/lean assignment corridor/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create from scratch/i })).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /import existing job description/i })
     ).toBeInTheDocument();
-    expect(screen.getByText('Why this role exists')).toBeInTheDocument();
+    expect(screen.getAllByText('Why this role exists').length).toBeGreaterThan(0);
     expect(screen.getByText('What work will actually be done')).toBeInTheDocument();
     expect(screen.getByText('What proof would count')).toBeInTheDocument();
     expect(screen.getByText('What practical constraints are real')).toBeInTheDocument();
@@ -216,7 +222,7 @@ Compensation: USD 80000 - 110000
 Full-time
 `;
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     fireEvent.click(
       await screen.findByRole('button', { name: /import existing job description/i })
@@ -261,7 +267,7 @@ Full-time
   it('shows useful guidance instead of importing very short pasted text', async () => {
     setupFetch();
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     fireEvent.click(
       await screen.findByRole('button', { name: /import existing job description/i })
@@ -280,7 +286,7 @@ Full-time
   it('advances through the lean corridor and ends in internal review routing', async () => {
     setupFetch();
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     fireEvent.click(await screen.findByRole('button', { name: 'next-step-1' }));
     expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
@@ -321,7 +327,7 @@ Full-time
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     const nextButton = await screen.findByRole('button', { name: 'next-step-1' });
     fireEvent.click(nextButton);
@@ -361,7 +367,7 @@ Full-time
       },
     });
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText(/lean assignment corridor/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
@@ -383,7 +389,7 @@ Full-time
       },
     });
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
   });
@@ -405,7 +411,7 @@ Full-time
       },
     });
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'next-step-2' }));
@@ -441,7 +447,7 @@ Full-time
       },
     });
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'next-step-3' }));
@@ -475,7 +481,7 @@ Full-time
       },
     });
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
   });
@@ -495,11 +501,11 @@ Full-time
       },
     });
 
-    const { rerender } = render(<AssignmentBuilderPage />);
+    const { rerender } = render(await renderAssignmentBuilderPage());
     expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
 
     mockDraftId = null;
-    rerender(<AssignmentBuilderPage />);
+    rerender(await renderAssignmentBuilderPage());
 
     expect(await screen.findByText('Step 1 content')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'next-step-1' }));
@@ -541,7 +547,7 @@ Full-time
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<AssignmentBuilderPage />);
+    render(await renderAssignmentBuilderPage());
 
     await act(async () => {
       await Promise.resolve();

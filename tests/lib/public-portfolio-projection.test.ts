@@ -438,6 +438,40 @@ describe('public portfolio projection', () => {
     }
   });
 
+  it('does not make a generic organization fallback summary enough for a public trust page', async () => {
+    vi.mocked(db.execute as any)
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 'org-1',
+            slug: 'thin-org',
+            display_name: 'Thin Org',
+            public_portfolio_state: 'public_link_only',
+            search_indexing_enabled_at: null,
+            trust_status: 'unverified',
+            trust_status_updated_at: null,
+            website_verified_at: null,
+            operating_region: null,
+            verified: false,
+            website: null,
+            tagline: null,
+            mission: null,
+            working_context: null,
+            type: null,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({ rows: [{ display_name: 'public', mission: 'public' }] })
+      .mockResolvedValueOnce({ rows: [] });
+
+    const projection = await getPublicOrganizationPortfolioProjectionBySlug('thin-org');
+
+    expect(projection).not.toBeNull();
+    expect(projection?.publicSummary).toBe('Public organization profile on Proofound.');
+    expect(projection?.minimumContentMet).toBe(false);
+    expect(projection?.effectiveState).toBe('unavailable');
+  });
+
   it('serves the local mock individual public page in mock Supabase mode', async () => {
     process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
 

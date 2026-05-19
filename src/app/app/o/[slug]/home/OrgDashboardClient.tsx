@@ -1,10 +1,9 @@
 'use client';
 
 /**
- * Organization Dashboard Client
+ * Organization home corridor client
  *
- * Provides customizable dashboard for organization home page
- * Uses org-specific widgets and layout storage
+ * Provides a narrow launch-corridor view for organization home.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -61,14 +60,14 @@ const ORG_AVAILABLE_WIDGETS: Record<
 > = {
   'org-pipeline': {
     id: 'org-pipeline',
-    name: 'Candidate Pipeline',
-    description: 'Overview of candidate matches and shortlists',
+    name: 'Assignment review corridor',
+    description: 'Proof-backed review, shortlist, and intro state',
     defaultSize: 'large',
   },
   'org-readiness': {
     id: 'org-readiness',
     name: 'Assignment Readiness',
-    description: 'Readiness score, demand signals, and recommended actions',
+    description: 'Assignment checks, pilot supply signals, and next corridor actions',
     defaultSize: 'large',
   },
   team: {
@@ -92,7 +91,7 @@ const ORG_AVAILABLE_WIDGETS: Record<
   explore: {
     id: 'explore',
     name: 'Explore',
-    description: 'Discover new opportunities',
+    description: 'Review the next launch-safe corridor step',
     defaultSize: 'default',
   },
 };
@@ -107,7 +106,7 @@ const ORG_LAYOUT_WIDGET_CONFIG = Object.fromEntries(
   ])
 );
 
-// Default org dashboard layout
+// Default organization corridor layout
 const DEFAULT_ORG_LAYOUT: DashboardWidget[] = [
   { widgetId: 'org-pipeline', position: 0, visible: true, size: 'large', settings: {} },
   { widgetId: 'org-readiness', position: 1, visible: true, size: 'large', settings: {} },
@@ -184,7 +183,7 @@ export function OrgDashboardClient({
   useEffect(() => {
     async function fetchLayout() {
       try {
-        // For now, use local storage for org layouts (could extend API later)
+        // For now, use local storage for org layouts.
         const stored = localStorage.getItem(`org-dashboard-layout-${orgId}`);
         if (stored) {
           const parsed = JSON.parse(stored) as DashboardWidget[];
@@ -212,7 +211,7 @@ export function OrgDashboardClient({
       const sanitizedLayout = sanitizeOrgLayout(layout);
       setLayout(sanitizedLayout);
       localStorage.setItem(`org-dashboard-layout-${orgId}`, JSON.stringify(sanitizedLayout));
-      toast.success('Dashboard layout saved!');
+      toast.success('Home layout saved.');
       setEditMode(false);
     } catch (error) {
       console.error('Error saving layout:', error);
@@ -443,11 +442,9 @@ export function OrgDashboardClient({
 
       {visibleWidgets.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-lg border border-gray-200">
-          <p className="text-lg font-medium text-foreground mb-2">
-            No dashboard widgets configured
-          </p>
+          <p className="text-lg font-medium text-foreground mb-2">No home sections configured</p>
           <p className="text-sm text-muted-foreground text-center mb-4">
-            Customize your organization dashboard to see the information that matters most
+            Restore the launch-corridor sections to keep trust, assignments, and review visible.
           </p>
           {canCustomize && (
             <Button
@@ -455,7 +452,7 @@ export function OrgDashboardClient({
               className="bg-proofound-forest hover:bg-proofound-forest/90"
             >
               <Settings2 className="w-4 h-4 mr-2" />
-              Configure Dashboard
+              Configure home
             </Button>
           )}
         </div>
@@ -467,7 +464,7 @@ export function OrgDashboardClient({
           <DialogHeader>
             <DialogTitle>Manage Widgets</DialogTitle>
             <DialogDescription>
-              Select the widgets you want to display on your organization dashboard.
+              Select the sections you want to display on your organization home.
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="h-[300px] pr-4">

@@ -241,10 +241,14 @@ describe('IndividualSetup first-proof flow', () => {
     expect(screen.getByText(/first proof pack created/i)).toBeInTheDocument();
     expect(screen.getByText(/new proof pack/i)).toBeInTheDocument();
     expect(screen.getByText(/claimed outcome: reduced review time/i)).toBeInTheDocument();
-    expect(screen.getByText(/public page readiness/i)).toBeInTheDocument();
+    expect(screen.getByText(/public page still locked/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/remains owner-only until you choose public-safe visibility/i)
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/public page readiness/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/matching preferences/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/optional non-self verification/i)).toBeInTheDocument();
-    expect(screen.getByText(/stronger intro eligibility/i)).toBeInTheDocument();
+    expect(screen.getByText(/intro eligibility still depend/i)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /continue to scaffold profile/i })
     ).toBeInTheDocument();

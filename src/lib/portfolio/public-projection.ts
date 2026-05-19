@@ -2048,22 +2048,24 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
     trustStatus: organization.trust_status,
     verified: organization.verified,
   });
-  const publicSummary =
+  const explicitPublicSummary =
     (visibility?.mission === 'public'
       ? organization.mission?.trim()
-      : organization.tagline?.trim()) ||
-    organization.tagline?.trim() ||
-    verifiedDomainPath ||
-    'Public organization profile on Proofound.';
+      : organization.tagline?.trim()) || organization.tagline?.trim();
+  const publicSummary =
+    explicitPublicSummary || verifiedDomainPath || 'Public organization profile on Proofound.';
+  const hasVerifiedTrustSignal = Boolean(
+    organization.verified ||
+      organization.trust_status === 'domain_verified' ||
+      organization.trust_status === 'platform_reviewed' ||
+      organization.website_verified_at ||
+      verificationSummary.publicBadges.length > 0
+  );
 
   const minimumContentMet = Boolean(
     organization.slug &&
       publicDisplayName &&
-      (publicSummary ||
-        organization.verified ||
-        organization.trust_status === 'domain_verified' ||
-        organization.trust_status === 'platform_reviewed' ||
-        organization.website_verified_at)
+      (explicitPublicSummary || verifiedDomainPath || hasVerifiedTrustSignal || assignmentSnapshot)
   );
 
   const effectiveState = deriveEffectivePublicPortfolioState({

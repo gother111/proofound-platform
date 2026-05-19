@@ -21,7 +21,7 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   title: 'Proofound | Proof Behind the Claim',
   description:
-    'Proofound turns a CV-like surface into a blind-safe, proof-backed, privacy-aware hiring signal built around outcomes, evidence, verification, and clearer fit.',
+    'Proofound turns real work into blind-safe, proof-backed, privacy-aware hiring signal built around outcomes, evidence, verification, and clearer fit.',
   keywords: [
     'Proofound',
     'evidence based hiring',
@@ -62,7 +62,7 @@ export default function Home() {
     path: '/',
     title: 'Proofound | Proof Behind the Claim',
     description:
-      'Proofound is a proof-first hiring platform that replaces weak CV signal with structured outcomes, evidence, verification, and privacy-safe fit.',
+      'Proofound is a proof-first hiring corridor that replaces weak CV signal with structured outcomes, evidence, verification, and privacy-safe fit.',
   });
 
   // Auth check disabled for debugging/verification of landing page
