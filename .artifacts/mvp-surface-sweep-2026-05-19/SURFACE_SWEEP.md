@@ -1348,3 +1348,8 @@ Non-fatal test noise:
 
 - Found `/api/user/audit-log/purpose` returning `410 Gone` as retired individual purpose audit history, while `src/lib/launch/surface-policy.ts`, the launch API inventory test, and `docs/API_REFERENCE.md` still classified it as active MVP.
 - Reclassified the route as archived compatibility, kept the 410 route behavior and focused route test intact, and regenerated the API reference so the route inventory matches the actual launch surface.
+
+## Continuation - Retired Cancel-Deletion Route Classification
+
+- Found `/api/user/account/cancel-deletion` returning authenticated `410 Gone` because account deletion is immediate and irreversible, while the route inventory still treated it as active MVP.
+- Reclassified the retired scheduled-deletion cancel endpoint as archived compatibility while preserving the explicit 401/410 behavior covered by `tests/api/user-account-lifecycle-routes.test.ts`.

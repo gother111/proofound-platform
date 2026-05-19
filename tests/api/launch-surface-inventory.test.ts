@@ -92,7 +92,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/upload/document',
   '/api/upload/status/[fileId]',
   '/api/user/account',
-  '/api/user/account/cancel-deletion',
   '/api/user/audit-log',
   '/api/user/consent',
   '/api/user/consent/check',
@@ -197,6 +196,7 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/portfolio/view',
   '/api/feedback/sus',
   '/api/surveys/sus',
+  '/api/user/account/cancel-deletion',
   '/api/user/audit-log/purpose',
   '/api/organizations/[orgId]/causes',
   '/api/organizations/[orgId]/culture',
@@ -227,6 +227,7 @@ const ALLOWED_ARCHIVED_COMPILED_ROUTES = [
   '/api/match/test',
   '/api/performance/track',
   '/api/profile/completeness',
+  '/api/user/account/cancel-deletion',
   '/api/user/audit-log/purpose',
 ] as const;
 

@@ -208,7 +208,6 @@ const ACTIVE_API_POLICIES = [
     detail: 'Account, privacy, export, and deletion basics remain active for launch.',
     matches: (pathname: string) =>
       pathname === '/api/user/account' ||
-      pathname === '/api/user/account/cancel-deletion' ||
       pathname === '/api/user/audit-log' ||
       pathname === '/api/user/consent' ||
       pathname === '/api/user/consent/check' ||
@@ -512,6 +511,7 @@ const ARCHIVED_API_POLICIES = [
     detail: 'Broad user tooling outside privacy/export/delete basics is archived for launch.',
     matches: (pathname: string) =>
       pathname === '/api/user/audit-log/purpose' ||
+      pathname === '/api/user/account/cancel-deletion' ||
       pathname === '/api/user/import' ||
       pathname === '/api/user/tour-status',
   },
