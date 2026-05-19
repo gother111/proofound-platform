@@ -128,7 +128,7 @@ This document defines the current testing architecture for Proofound and the com
 | Launch monitor sweep    | `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`                   |
 | Perf budget gate        | `BASE_URL=<production-candidate-url> npm run perf:budgets`                                          |
 | Go/No-Go gate           | `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go` |
-| Final launch validation | `BASE_URL=http://localhost:3000 npm run launch:validate`                                            |
+| Final launch validation | `BASE_URL=<production-candidate-url> npm run launch:validate`                                       |
 
 ## Final Launch Validation
 
@@ -158,7 +158,7 @@ npm run launch:validate
 Staging or local production-server run:
 
 ```bash
-BASE_URL=http://localhost:3000 npm run launch:validate
+BASE_URL=<production-candidate-url> npm run launch:validate
 ```
 
 For strict org corridor E2E to run instead of reporting `UNVERIFIED`, the environment must use real

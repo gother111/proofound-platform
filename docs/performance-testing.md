@@ -11,7 +11,7 @@ This guide covers the enforced performance gates used for release readiness.
 
 ### Budget Gate (required)
 
-- `BASE_URL=http://localhost:3000 npm run perf:budgets`
+- `BASE_URL=<production-candidate-url> npm run perf:budgets`
 
 What it checks (`scripts/perf-budgets.mjs`):
 
@@ -22,7 +22,7 @@ What it checks (`scripts/perf-budgets.mjs`):
 
 ### Go / No-Go Gate (required)
 
-- `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+- `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go`
 
 What it checks (`scripts/go-no-go-check.ts`):
 
@@ -35,15 +35,15 @@ What it checks (`scripts/go-no-go-check.ts`):
 - Restore-readiness scripts and runbook are present.
 - `/api/monitoring/launch-status` reports the full launch monitor contract as ready.
 
-## Local Runbook
+## Target Runbook
 
-1. Ensure app is healthy:
+1. Ensure the intended production-candidate app is healthy:
    - `npm run build`
    - `npm run start`
 2. Run budgets:
-   - `BASE_URL=http://localhost:3000 npm run perf:budgets`
+   - `BASE_URL=<production-candidate-url> npm run perf:budgets`
 3. Run go/no-go:
-   - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+   - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go`
 
 ## Optional Deeper Analysis
 

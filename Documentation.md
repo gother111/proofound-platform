@@ -850,8 +850,8 @@ How to verify:
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`
 - Gate parity (with local server at `http://localhost:3000`):
-  - `BASE_URL=http://localhost:3000 npm run perf:budgets`
-  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+  - `BASE_URL=<production-candidate-url> npm run perf:budgets`
+  - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go`
 - Perf-status source validation:
   - With no analytics rows in the 24h window, `/api/monitoring/perf-status` should return `source: "probe"`.
   - With at least one `api_latency` analytics row present, `/api/monitoring/perf-status` should return `source: "analytics_events"`.
@@ -1107,8 +1107,8 @@ How to verify:
   - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth` (PASS)
   - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:admin` (PASS)
 - Launch gates:
-  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
-  - `BASE_URL=http://localhost:3000 npm run perf:budgets` (FAIL: TTI budgets only)
+  - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
+  - `BASE_URL=<production-candidate-url> npm run perf:budgets` (FAIL: TTI budgets only)
 
 Open risks/TODO:
 
@@ -1619,8 +1619,8 @@ How to verify:
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy` (PASS)
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended` (PASS)
 - Runtime launch gates with local prod server:
-  - `BASE_URL=http://localhost:3000 npm run perf:budgets` (FAIL: desktop/mobile TTI above budget)
-  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
+  - `BASE_URL=<production-candidate-url> npm run perf:budgets` (FAIL: desktop/mobile TTI above budget)
+  - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
 
 Open risks/TODO:
 

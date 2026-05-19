@@ -1003,6 +1003,28 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps active launch evidence docs from using localhost for final gates', () => {
+    const finalGateDocs = [
+      'verification.md',
+      'metrics.md',
+      'Documentation.md',
+      'docs/performance-testing.md',
+      'docs/testing-strategy.md',
+      'docs/backlog/phase-exit-checklist.md',
+      'docs/backlog/phase-4-pilot-hardening.md',
+      'docs/qa/summary.md',
+      'docs/mvp-launch-master-checklist.md',
+    ];
+    const localhostFinalGate =
+      /BASE_URL=http:\/\/localhost:3000[^\n`]*(?:perf:budgets|monitor:launch|launch:status|launch:validate|go:no-go)/;
+
+    for (const docPath of finalGateDocs) {
+      const content = fs.readFileSync(path.join(repoRoot, docPath), 'utf8');
+      expect(content).toContain('BASE_URL=<production-candidate-url>');
+      expect(content).not.toMatch(localhostFinalGate);
+    }
+  });
+
   it('keeps environment docs from making connected providers launch-blocking by default', () => {
     const envDocs = fs.readFileSync(path.join(repoRoot, 'docs/ENV_VARIABLES.md'), 'utf8');
     const launchMasterChecklist = fs.readFileSync(

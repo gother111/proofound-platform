@@ -37,10 +37,10 @@ This summary tracks the currently enforced QA automation surface and launch-gate
   - `npm run audit:prod`
   - `npm run audit:all`
   - `npm run test:launch:smoke`
-  - `BASE_URL=http://localhost:3000 npm run perf:budgets`
-  - `BASE_URL=http://localhost:3000 npm run monitor:launch`
-  - `BASE_URL=http://localhost:3000 npm run launch:status`
-  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+  - `BASE_URL=<production-candidate-url> npm run perf:budgets`
+  - `BASE_URL=<production-candidate-url> npm run monitor:launch`
+  - `BASE_URL=<production-candidate-url> npm run launch:status`
+  - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go`
 
 ## Primary Suite Ownership
 

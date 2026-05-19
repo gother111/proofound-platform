@@ -46,7 +46,7 @@ Use this checklist together with [`../verification-checklist.md`](../verificatio
 - [x] Backup/restore fingerprint table coverage matches the active MVP corridor and excludes retired compatibility tables.
 - [x] `npm run test:launch:smoke` against local `http://localhost:33180` with the full launch-smoke artifact.
 - [x] `npm run monitor:launch` against local `http://localhost:33180` with persistence disabled.
-- [ ] `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+- [ ] `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go`
 - [x] Internal-only verification queue, dispute, revocation, and ops ownership docs are current and match the kept admin surfaces.
 - [x] `npm run docs:freshness`
 
