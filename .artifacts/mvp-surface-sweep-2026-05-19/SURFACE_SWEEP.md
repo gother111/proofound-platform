@@ -343,6 +343,7 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Added launch-gate coverage so this stale launch-ops script does not return to active `scripts/` unnoticed.
 - Removed stale Zoom env requirements from active strict-gate, deploy-readiness, and Vercel preflight scripts so launch ops no longer block on retired native Zoom OAuth setup.
 - Removed the stale `STRICT_PROVIDER_E2E_REQUIRE_BOTH` default from the strict provider npm script so provider E2E matches the Google Meet/manual-link launch corridor.
+- Added a superseded-reference banner to `docs/scope-compliance-report-2026-03-24.md` so its old route counts and launch-drift findings cannot be mistaken for current launch truth.
 
 ## Browser Evidence
 
