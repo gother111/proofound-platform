@@ -854,3 +854,10 @@ Non-fatal test noise:
 - Refreshed the deployment guide to point at the current production readiness checklist, phase-exit checklist, and sweep artifact; updated cron guidance to the current Vercel/cron-job.org split; kept public health minimal; and named the still-open production-candidate backup, restore, monitor/perf, and go/no-go gates.
 - Found `agent/runbooks/setup.md` and `agent/checklists/verification.md` still requiring both Zoom and Google connected for provider strict launch-gate runs even though the locked MVP posture is manual-link first and native Zoom/video OAuth has been removed from the launch corridor.
 - Updated those agent docs so provider strict remains connected-provider-capable only when intentionally in scope, with manual-link interview scheduling preserved as the default and native Zoom/video OAuth kept out of release requirements.
+
+## Continuation - Testing Strategy and Setup Header Refresh
+
+- Found `agent/runbooks/setup.md` had May 19 body updates but still carried a 2026-02-26 header and a broad "Video Providers (Zoom, Google Meet)" setup section.
+- Updated the setup runbook header and its root sync pair `setup.md`, and narrowed the section to current interview-provider/manual-link posture, removing native Zoom OAuth setup from active launch instructions.
+- Found `docs/testing-strategy.md` still verified on 2026-04-29 and using local-only launch gate examples without naming production-candidate target, backup/restore evidence, or manual-link provider posture.
+- Updated the testing strategy and launch-gate guard so release validation points at production-candidate monitor/perf/go-no-go evidence and keeps provider-connected tests scoped to intentionally configured flows.

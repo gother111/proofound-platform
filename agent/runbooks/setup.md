@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `setup.md`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 # Setup Runbook (Local Dev + CI Parity)
 
@@ -78,20 +78,21 @@ Use this when production should be deployed from CI-built output instead of a no
   - `gh workflow run "Retry Vercel Deploy Until Synced" --ref master`
   - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`
 
-## Video Providers (Zoom, Google Meet)
+## Interview Providers and Manual Links
 
-The app stores video provider tokens in `user_video_integrations` (Supabase) and uses these routes for OAuth:
+The locked MVP interview posture is manual-link first. Connected-provider checks exist only for
+provider flows intentionally configured for the target; native Zoom/video OAuth is not a launch
+gate.
+
+The current provider setup surface uses these routes:
 
 - Connect:
-  - `GET /api/integrations/zoom/connect`
   - `GET /api/integrations/google/connect`
 - Callback:
-  - `GET /api/integrations/zoom/callback`
   - `GET /api/integrations/google/callback`
 
 Required env vars:
 
-- Zoom: `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_REDIRECT_URI`
 - Google: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
 - LinkedIn: `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, optional `LINKEDIN_REDIRECT_URI`
 

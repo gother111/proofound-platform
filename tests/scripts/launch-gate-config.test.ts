@@ -308,6 +308,7 @@ describe('launch gate package configuration', () => {
     expect(deploymentGuide).toContain('Authenticated `/api/monitoring/launch-status`');
     expect(deploymentGuide).toContain('Authenticated `/api/monitoring/perf-status`');
     expect(deploymentGuide).toContain('INP < 200ms');
+    expect(setupRunbook).toContain('Last Verified: `2026-05-19`');
     expect(activeOperatorDocs).toContain(
       'manual-link interview posture remains the locked MVP default'
     );
@@ -324,6 +325,25 @@ describe('launch gate package configuration', () => {
     );
     expect(docsRegistry).toContain(
       '| `agent/checklists/verification.md`                                                                      | `active`         | `agent`       | `repo+live`         | `2026-05-19`'
+    );
+  });
+
+  it('keeps the testing strategy aligned with production-candidate launch gates', () => {
+    const testingStrategy = fs.readFileSync(
+      path.join(repoRoot, 'docs/testing-strategy.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(testingStrategy).toContain('Last Verified: `2026-05-19`');
+    expect(testingStrategy).toContain('BASE_URL=<production-candidate-url>');
+    expect(testingStrategy).toContain('fresh backup/restore evidence');
+    expect(testingStrategy).toContain('manual-link interview');
+    expect(testingStrategy).toContain('posture remains the locked MVP default');
+    expect(testingStrategy).not.toContain('STRICT_PROVIDER_E2E_REQUIRE_BOTH');
+    expect(testingStrategy).not.toContain('both Zoom and Google connected');
+    expect(docsRegistry).toContain(
+      '| `docs/testing-strategy.md`                                                                              | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
     );
   });
 
