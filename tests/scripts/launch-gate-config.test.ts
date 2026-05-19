@@ -929,6 +929,23 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps historical load-test notes non-gating and target-scoped', () => {
+    const loadResults = fs.readFileSync(path.join(repoRoot, 'tests/load/RESULTS.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(loadResults).toContain('Doc Class: `reference-spec`');
+    expect(loadResults).toContain('Last Verified: `2026-05-19`');
+    expect(loadResults).toContain('historical/non-gating load-test notes');
+    expect(loadResults).toContain('BASE_URL=<production-candidate-url> npm run perf:budgets');
+    expect(loadResults).toContain('optional stress exploration only');
+    expect(loadResults).toContain('record the tool version, target, date, owner');
+    expect(loadResults).not.toContain('npm install -g artillery');
+    expect(loadResults).not.toContain('## How to Run Load Tests');
+    expect(docsRegistry).toContain(
+      '| `tests/load/RESULTS.md`                                                                                 | `reference-spec` | `tests`       | `repo`              | `2026-05-19`'
+    );
+  });
+
   it('keeps LinkedIn verification guidance outside the launch corridor', () => {
     const linkedInSetup = fs.readFileSync(
       path.join(repoRoot, 'docs/LINKEDIN_VERIFICATION_SETUP.md'),

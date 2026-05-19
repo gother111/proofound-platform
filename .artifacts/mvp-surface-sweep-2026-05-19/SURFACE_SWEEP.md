@@ -1248,3 +1248,10 @@ Non-fatal test noise:
 - Added reference-spec metadata, current Node 24.15.0 and `npm ci` setup wording, and a clear note that the README is test-suite guidance rather than standalone launch readiness evidence.
 - Replaced the `100%` coverage table with target expectations and required fresh target-specific privacy test output for launch evidence.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the privacy README cannot drift back to stale runtime or overbroad launch-proof claims.
+
+## Continuation - Historical Load Test Scope
+
+- Found `tests/load/RESULTS.md` still verified on 2026-02-12 and instructing a global `npm install -g artillery`, while current launch performance proof is the `perf:budgets` gate plus authenticated perf-status/go-no-go evidence.
+- Added reference-spec metadata and clarified the file is historical/non-gating load-test context.
+- Removed the global install prerequisite and reframed Artillery scenarios as optional stress exploration requiring target, tool-version, date, owner, and production-data notes.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so historical load results cannot be mistaken for current launch performance evidence.
