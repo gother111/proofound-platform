@@ -1,369 +1,151 @@
-# Analytics GDPR Compliance Setup Guide
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
 
-## Overview
+# Analytics Privacy Setup
 
-This guide explains how to set up the GDPR-compliant analytics system that hashes IP addresses and user agents before storage.
+This guide covers privacy-safe analytics setup for the locked MVP corridor. It is an operator guide, not proof of GDPR compliance by itself and not a reason to revive broad analytics dashboards.
 
-## 🎯 What Changed
+Current launch posture:
 
-**Before**: Analytics stored raw IP addresses and user agents (GDPR violation - Article 4(1))  
-**After**: Analytics stores SHA-256 hashes (GDPR compliant - Article 4(5) pseudonymization)
+- Broad public analytics collection endpoints are archived compatibility surfaces:
+  - `/api/analytics/events`
+  - `/api/analytics/track`
+  - `/api/analytics/tour-event`
+  - `/api/analytics/web-vitals`
+- Admin analytics and fairness dashboards are archived outside the locked MVP corridor.
+- Retained analytics helpers are used for narrow product, lifecycle, performance, privacy, audit, and launch-ops signals inside active workflows.
+- `PII_HASH_SALT` is required anywhere `src/lib/analytics.ts` hashes request IP and user-agent values.
 
-## 📋 Environment Variable Setup
+Use this with:
 
-### Required Environment Variable
+- [docs/API_REFERENCE.md](./docs/API_REFERENCE.md)
+- [docs/ENV_VARIABLES.md](./docs/ENV_VARIABLES.md)
+- [docs/DEPLOYMENT_CHECKLIST.md](./docs/DEPLOYMENT_CHECKLIST.md)
+- [docs/structured-logging.md](./docs/structured-logging.md)
+- [docs/verification-policy-mvp.md](./docs/verification-policy-mvp.md)
 
-Add the following to your environment configuration:
+## Privacy Contract
 
-```bash
-PII_HASH_SALT=<your-64-character-hex-string>
+Analytics must support launch decisions without widening the product into a generic dashboard, public directory, marketplace, or social-score system.
+
+Allowed launch analytics:
+
+- onboarding and readiness milestones
+- Proof Pack and proof workflow events
+- assignment, review, shortlist, intro, reveal consent, interview, decision, and engagement-verification lifecycle events
+- privacy settings, export, delete, and audit interactions
+- route smoke, launch status, performance, and internal ops health signals
+- privacy-safe aggregate counts needed for launch operations
+
+Not allowed in analytics payloads:
+
+- raw IP addresses
+- raw user-agent strings
+- emails, names, phone numbers, or precise addresses
+- private proof content, raw evidence, uploaded file contents, storage paths, signed URLs, or filenames
+- hidden candidate identity details before reveal consent
+- verifier private data, allegation text, admin notes, internal queue IDs, or diagnostic dumps
+- broad match-score, ranking, fairness-note, or public-directory claims that imply non-MVP behavior
+
+`src/lib/analytics.ts` sanitizes common file/path properties before persistence. That is a backstop, not permission to send sensitive data.
+
+## Environment Variables
+
+Set `PII_HASH_SALT` for any target that persists analytics events through `src/lib/analytics.ts`.
+
+```env
+PII_HASH_SALT=<64-character-hex-secret>
 ```
 
-### How to Generate the Salt
+Generate a target-specific value:
 
-**Option 1: Using OpenSSL (Recommended)**
 ```bash
 openssl rand -hex 32
 ```
 
-**Option 2: Using Node.js**
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
+Store it only in the target secret manager or local `.env.local`. Do not commit it, paste it into docs, include it in screenshots, or print it in terminal output.
 
-This will output a 64-character hexadecimal string like:
-```
-a3f8c9d2e1b4f5a6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0
-```
+Use separate salts for local, preview, and production unless an explicit privacy review approves another choice. Rotating the salt breaks cross-rotation hash continuity, so record the rotation time in the launch or incident artifact when rotation is needed.
 
-### Where to Add the Salt
+## Database And Migration Rules
 
-#### 1. Local Development (.env.local)
+Do not edit migration SQL with a live secret. Do not paste salts into SQL files. Do not use `db:push` for production or production-candidate launch work.
 
-Create or update `/path/to/proofound/.env.local`:
+For launch targets, follow the current migration runbooks:
 
 ```bash
-# Generate with: openssl rand -hex 32
-PII_HASH_SALT=a3f8c9d2e1b4f5a6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0
+npm run db:drift-check
+npm run db:migration-audit
+npm run db:migrate
+npm run db:restore:verify -- --checkpoint <checkpoint-dir>
 ```
 
-**⚠️ IMPORTANT**: Add `.env.local` to `.gitignore` if not already there!
+Before applying analytics-related migrations to a production-candidate or production target:
 
-#### 2. Staging/Production (Vercel)
+1. Confirm the exact target and operator approval.
+2. Capture a fresh backup/checkpoint.
+3. Confirm the migration ledger and drift status.
+4. Apply repo-owned migrations only.
+5. Run the isolated restore rehearsal required by launch gates.
+6. Save evidence without secrets or private analytics rows.
 
-1. Go to your Vercel project dashboard
-2. Navigate to **Settings** → **Environment Variables**
-3. Add new variable:
-   - **Key**: `PII_HASH_SALT`
-   - **Value**: (paste your generated 64-char hex string)
-   - **Environments**: Select Production, Preview, and Development as needed
-4. Click **Save**
-5. Redeploy your application for changes to take effect
+## Route-Surface Alignment
 
-#### 3. Other Hosting Platforms
+Do not use archived analytics endpoints as launch evidence. Current API reference classifies broad `/api/analytics/*` endpoints as archived compatibility.
 
-- **AWS**: Add to Lambda environment variables or Secrets Manager
-- **Google Cloud**: Add to Cloud Run environment variables or Secret Manager
-- **Azure**: Add to App Service Configuration
-- **Docker**: Add to docker-compose.yml or Kubernetes secrets
+If an active workflow emits analytics internally, verify the workflow behavior itself and confirm the emitted payload is minimal and privacy-safe. The existence of an analytics event does not make a route, dashboard, feature, or metric part of the MVP.
 
-## 🔄 Database Migration
+## Verification
 
-### Step 1: Backup Your Database
-
-Before running any migration:
+Run focused checks before relying on analytics behavior:
 
 ```bash
-# Supabase backup (via CLI)
-supabase db dump > backup_before_analytics_migration.sql
-
-# Or via Supabase dashboard: Settings → Database → Download backup
+npm run test -- tests/api/archived-api-handlers-route.test.ts
+npm run test -- tests/api/launch-surface-inventory.test.ts
+npm run test -- tests/api/user-privacy-settings-route.test.ts
+npm run test -- tests/lib/api-latency-log.test.ts
+npm run docs:freshness
 ```
 
-### Step 2: Run the Migration
+For production-candidate launch evidence:
 
-The migration file is located at: `drizzle/0027_anonymize_analytics_pii.sql`
+- confirm `PII_HASH_SALT` exists without printing its value
+- confirm archived `/api/analytics/*` routes return archived behavior
+- sample active workflow analytics payloads for no private proof content, hidden identity details, secrets, signed URLs, filenames, raw IP, raw user-agent, or internal queue IDs
+- confirm privacy/export/delete events are tied to app state and audit behavior, not email-only or manual-only claims
+- record any skipped verification with the exact reason
 
-**⚠️ CRITICAL**: Before running, replace `${PII_HASH_SALT}` in the SQL file with your actual salt value!
+## Troubleshooting
 
-#### Using Supabase Dashboard
+### `PII_HASH_SALT` Missing
 
-1. Go to Supabase Dashboard → SQL Editor
-2. Open `drizzle/0027_anonymize_analytics_pii.sql`
-3. **Find and replace** `${PII_HASH_SALT}` with your actual salt
-4. Review the SQL carefully
-5. Click **Run** to execute
+`src/lib/utils/privacy.ts` throws when hashing receives a non-empty value without `PII_HASH_SALT`. Add the secret to the selected target and redeploy or restart that target.
 
-#### Using Drizzle Kit
+### Analytics Route Appears Gone
 
-```bash
-# Push schema changes to database
-npm run db:push
+That is expected for the broad analytics collection endpoints. Check [docs/API_REFERENCE.md](./docs/API_REFERENCE.md) and route-surface policy before treating an archived route as a regression.
 
-# Then manually run the migration SQL in Supabase dashboard
-```
+### Payload Contains Sensitive Data
 
-### Step 3: Verify Migration
+Treat this as a privacy bug:
 
-After running the migration, verify it worked:
+1. Stop relying on that event as launch evidence.
+2. Remove sensitive fields at the caller.
+3. Add or extend a focused test for the workflow.
+4. Redact or delete unsafe captured evidence according to the incident or privacy runbook.
 
-```sql
--- Check that new columns exist
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_name = 'analytics_events' 
-  AND column_name IN ('ip_hash', 'user_agent_hash');
+### Hashes Differ Between Targets
 
--- Check that hashes are 64 characters (SHA-256 in hex)
-SELECT 
-  COUNT(*) as total_hashed,
-  COUNT(*) FILTER (WHERE length(ip_hash) = 64) as valid_hashes
-FROM analytics_events
-WHERE ip_hash IS NOT NULL;
-```
+Different salts produce different hashes. That is expected when targets use separate secrets. Do not copy production salts into local or preview environments just to compare hashes.
 
-Expected result: All hashes should be exactly 64 characters.
+## Launch Evidence To Save
 
-### Step 4: Drop Old Columns (Optional)
+Save analytics launch evidence in the current launch/sweep artifact, not in this setup guide:
 
-**⚠️ ONLY after confirming:**
-- All code is updated (schema.ts, analytics.ts)
-- All deployments are using the new code
-- Migration completed successfully
-
-Uncomment these lines in the migration file:
-
-```sql
-ALTER TABLE analytics_events DROP COLUMN IF EXISTS ip_address;
-ALTER TABLE analytics_events DROP COLUMN IF EXISTS user_agent;
-```
-
-## 🧪 Testing the Implementation
-
-### Test 1: Verify Hashing Works
-
-Create a test file: `src/lib/utils/__tests__/privacy.test.ts`
-
-```typescript
-import { describe, it, expect } from 'vitest';
-import { hashPII, anonymizeIP, anonymizeUserAgent } from '../privacy';
-
-describe('Privacy Utilities', () => {
-  // Set test salt
-  process.env.PII_HASH_SALT = 'test-salt-for-unit-testing';
-
-  it('should hash IP consistently', () => {
-    const ip = '192.168.1.1';
-    const hash1 = anonymizeIP(ip);
-    const hash2 = anonymizeIP(ip);
-    
-    expect(hash1).toBe(hash2); // Same input = same hash
-    expect(hash1).toHaveLength(64); // SHA-256 = 64 hex chars
-    expect(hash1).not.toBe(ip); // Hash ≠ original
-  });
-
-  it('should throw error if salt not configured', () => {
-    delete process.env.PII_HASH_SALT;
-    
-    expect(() => hashPII('test')).toThrow(/PII_HASH_SALT/);
-  });
-
-  it('should return empty string for empty input', () => {
-    process.env.PII_HASH_SALT = 'test-salt';
-    
-    expect(anonymizeIP('')).toBe('');
-    expect(anonymizeUserAgent('')).toBe('');
-  });
-});
-```
-
-Run tests:
-```bash
-npm test src/lib/utils/__tests__/privacy.test.ts
-```
-
-### Test 2: Track a Sample Event
-
-In a Next.js API route:
-
-```typescript
-import { trackEvent } from '@/lib/analytics';
-
-export async function POST(request: Request) {
-  // Track event with automatic IP/UA hashing
-  await trackEvent(
-    'signed_up',
-    { method: 'email' },
-    request,
-    'user-id-123'
-  );
-  
-  return new Response('Event tracked!');
-}
-```
-
-Check database:
-```sql
-SELECT 
-  event_type,
-  substring(ip_hash, 1, 16) || '...' as ip_preview,
-  length(ip_hash) as ip_hash_length,
-  created_at
-FROM analytics_events
-ORDER BY created_at DESC
-LIMIT 5;
-```
-
-Expected: `ip_hash_length` = 64
-
-## 🔒 Security Best Practices
-
-### 1. Salt Rotation
-
-If you need to rotate the salt (e.g., security incident):
-
-1. Generate new salt: `openssl rand -hex 32`
-2. Update environment variables with new salt
-3. Run migration again to re-hash all existing data
-4. Old hashes won't match new data (this is expected)
-
-**Note**: Salt rotation breaks hash consistency. Use only if necessary.
-
-### 2. Salt Storage
-
-✅ **DO**:
-- Store salt in environment variables
-- Use different salts for dev/staging/production
-- Keep salt in secret management systems (AWS Secrets Manager, etc.)
-- Backup salt securely (you can't recover hashes without it)
-
-❌ **DON'T**:
-- Commit salt to Git
-- Share salt in Slack/email
-- Use the same salt across multiple projects
-- Store salt in client-side code
-
-### 3. Data Access
-
-Even with hashed IPs:
-- Limit database access to authorized personnel only
-- Use Row Level Security (RLS) policies
-- Audit who accesses analytics data
-- Log all analytics queries
-
-## 📊 Using the Analytics System
-
-### Tracking Events in Your Code
-
-```typescript
-import { trackEvent, trackSignUp, trackMatchAccepted } from '@/lib/analytics';
-
-// Example 1: Track signup
-export async function POST(request: Request) {
-  const user = await createUser(email, password);
-  await trackSignUp(user.id, 'email', request);
-  // ...
-}
-
-// Example 2: Track match acceptance
-export async function POST(request: Request) {
-  const { matchId, score } = await request.json();
-  const user = await getCurrentUser();
-  await trackMatchAccepted(matchId, score, user.id, request);
-  // ...
-}
-
-// Example 3: Custom event
-export async function POST(request: Request) {
-  await trackEvent(
-    'custom_event',
-    { feature: 'new-button', clicked: true },
-    request,
-    userId
-  );
-  // ...
-}
-```
-
-### Querying Analytics Data
-
-**Aggregate analytics** (GDPR-compliant - no PII revealed):
-
-```sql
--- Daily signups
-SELECT 
-  DATE(created_at) as date,
-  COUNT(*) as signups
-FROM analytics_events
-WHERE event_type = 'signed_up'
-GROUP BY DATE(created_at)
-ORDER BY date DESC;
-
--- Most common events
-SELECT 
-  event_type,
-  COUNT(*) as count
-FROM analytics_events
-WHERE created_at > NOW() - INTERVAL '7 days'
-GROUP BY event_type
-ORDER BY count DESC;
-
--- Unique users (by hashed IP - approximate)
-SELECT 
-  COUNT(DISTINCT ip_hash) as unique_visitors
-FROM analytics_events
-WHERE created_at > NOW() - INTERVAL '30 days';
-```
-
-## 🚨 Troubleshooting
-
-### Error: "PII_HASH_SALT environment variable is not set"
-
-**Cause**: Missing environment variable  
-**Fix**: Add `PII_HASH_SALT` to your `.env.local` or deployment platform
-
-### Error: "Failed to track event"
-
-**Cause**: Database connection issue or invalid data  
-**Fix**: Check Supabase connection and database logs
-
-### Hashes don't match between environments
-
-**Cause**: Different salts in dev vs production  
-**Fix**: Use the same salt across environments (or keep them separate intentionally)
-
-### Migration fails: "column already exists"
-
-**Cause**: Migration was partially run  
-**Fix**: Check which columns exist, then run only missing ALTER statements
-
-## 📚 Reference Documentation
-
-- **GDPR Article 4(1)**: Definition of Personal Data (IPs are PII)
-- **GDPR Article 4(5)**: Pseudonymisation requirements
-- **CROSS_DOCUMENT_PRIVACY_AUDIT.md**: Section 1.4 (Analytics Privacy Violation)
-- **CROSS_DOCUMENT_PRIVACY_AUDIT.md**: Section 5.4 (SQL Migration Scripts)
-- **CROSS_DOCUMENT_PRIVACY_AUDIT.md**: Section 6.1 (Implementation Examples)
-
-## ✅ Compliance Checklist
-
-After completing this setup, verify:
-
-- [ ] `PII_HASH_SALT` environment variable set in all environments
-- [ ] Database migration completed successfully
-- [ ] Old `ip_address` and `user_agent` columns dropped (or pending)
-- [ ] All analytics tracking uses `trackEvent()` function
-- [ ] Sample events show 64-character hashes in database
-- [ ] No raw IP addresses stored anywhere
-- [ ] Salt backed up securely (not in Git)
-- [ ] Team trained on analytics privacy requirements
-
-## 🎉 You're Done!
-
-Your analytics system is now GDPR-compliant! 
-
-**Before**: Raw IPs stored (GDPR violation)  
-**After**: SHA-256 hashes stored (GDPR Article 4(5) compliant)
-
-You can now track user behavior for product metrics while respecting user privacy. 🔒
-
+- target URL or environment name
+- confirmation that `PII_HASH_SALT` exists, without value
+- focused test results
+- archived route checks for broad analytics endpoints
+- sampled active workflow payload review, redacted if needed
+- migration/backup/restore evidence if analytics schema changed
+- remaining unverified analytics surfaces or privacy risks

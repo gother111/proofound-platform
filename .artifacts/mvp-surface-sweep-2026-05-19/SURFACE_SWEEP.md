@@ -1052,3 +1052,11 @@ Non-fatal test noise:
 - Refreshed `agent/runbooks/expertise-taxonomy-recovery.md` to target-approved retained taxonomy recovery only: proof-skill selection, assignment expertise helpers, and retained taxonomy APIs, not the old Atlas UI.
 - Added backup/checkpoint and isolated-restore reminders for production-candidate or production targets, preserved no-`db:push` guidance, and required `/app/i/expertise` to remain archived/unavailable after recovery.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so retained taxonomy docs cannot revive broad Expertise Atlas UI, CV wizard, LinkedIn import, or old dashboard behavior as launch evidence.
+
+## Continuation - Analytics Privacy Setup Refresh
+
+- Found root `ANALYTICS_GDPR_SETUP.md` still verified on 2026-02-12 and carrying risky launch guidance: editing migration SQL with a live salt, Supabase SQL Editor instructions, `db:push`, broad analytics tracking examples, and a blanket "GDPR-compliant" completion claim.
+- Rewrote it as a target-scoped analytics privacy setup guide for the locked MVP corridor, with broad `/api/analytics/*` routes explicitly treated as archived compatibility surfaces.
+- Preserved the current `PII_HASH_SALT` requirement without printing or embedding secrets, and pointed production-candidate work back to drift, migration audit, repo-owned migrate, backup/checkpoint, and isolated restore evidence.
+- Added payload guardrails for active lifecycle analytics: no raw IP/user-agent, private proof content, raw evidence, hidden identity details, signed URLs, filenames, admin notes, internal queue IDs, or diagnostic dumps.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so analytics setup stays privacy-safe, no-secret, no-`db:push`, and aligned with archived route-surface policy.

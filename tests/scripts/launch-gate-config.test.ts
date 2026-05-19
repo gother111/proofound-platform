@@ -662,6 +662,32 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps analytics privacy setup scoped to archived routes and no-secret launch evidence', () => {
+    const analyticsSetup = fs.readFileSync(path.join(repoRoot, 'ANALYTICS_GDPR_SETUP.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(analyticsSetup).toContain('Last Verified: `2026-05-19`');
+    expect(analyticsSetup).toContain('not proof of GDPR compliance by itself');
+    expect(analyticsSetup).toContain('/api/analytics/events');
+    expect(analyticsSetup).toContain('/api/analytics/track');
+    expect(analyticsSetup).toContain('archived compatibility surfaces');
+    expect(analyticsSetup).toContain('PII_HASH_SALT');
+    expect(analyticsSetup).toContain('Do not edit migration SQL with a live secret');
+    expect(analyticsSetup).toContain('Do not use `db:push`');
+    expect(analyticsSetup).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(analyticsSetup).toContain('private proof content');
+    expect(analyticsSetup).toContain('hidden candidate identity details');
+    expect(analyticsSetup).toContain('tests/api/archived-api-handlers-route.test.ts');
+    expect(analyticsSetup).not.toContain('Using Supabase Dashboard');
+    expect(analyticsSetup).not.toContain('replace `${PII_HASH_SALT}`');
+    expect(analyticsSetup).not.toContain('npm run db:push');
+    expect(analyticsSetup).not.toContain('Your analytics system is now GDPR-compliant');
+    expect(analyticsSetup).not.toContain('Use the same salt across environments');
+    expect(docsRegistry).toContain(
+      '| `ANALYTICS_GDPR_SETUP.md`                                                                               | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps manual testing docs aligned with the active MVP route corridor', () => {
     const manualChecklist = fs.readFileSync(
       path.join(repoRoot, 'MANUAL_TESTING_CHECKLIST.md'),
