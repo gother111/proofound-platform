@@ -154,7 +154,8 @@ export function AccessibilityCommitments({
           disabled={disabled}
         />
         <p className="text-xs text-muted-foreground">
-          Share information about DEI programs, affinity groups, mentorship, or other inclusion efforts
+          Share information about DEI programs, affinity groups, mentorship, or other inclusion
+          efforts
         </p>
       </div>
 

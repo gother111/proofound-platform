@@ -116,9 +116,7 @@ export function AddDepartmentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {department ? 'Edit Structure Entity' : 'Add Structure Entity'}
-          </DialogTitle>
+          <DialogTitle>{department ? 'Edit Structure Entity' : 'Add Structure Entity'}</DialogTitle>
           <DialogDescription>
             Add departments, teams, or working groups to your organizational structure.
           </DialogDescription>
@@ -130,9 +128,7 @@ export function AddDepartmentDialog({
             <Label htmlFor="entityType">Type *</Label>
             <Select
               value={formData.entityType}
-              onValueChange={(value: any) =>
-                setFormData({ ...formData, entityType: value })
-              }
+              onValueChange={(value: any) => setFormData({ ...formData, entityType: value })}
             >
               <SelectTrigger id="entityType">
                 <SelectValue placeholder="Select type" />

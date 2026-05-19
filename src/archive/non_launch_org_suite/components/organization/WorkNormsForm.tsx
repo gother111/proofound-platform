@@ -68,8 +68,8 @@ export function WorkNormsForm({ workNorms, onChange, disabled = false }: WorkNor
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          Synchronous work requires real-time availability (meetings, calls).
-          Asynchronous work allows flexible schedules (documents, messages).
+          Synchronous work requires real-time availability (meetings, calls). Asynchronous work
+          allows flexible schedules (documents, messages).
         </p>
       </div>
 
@@ -191,7 +191,10 @@ export function WorkNormsForm({ workNorms, onChange, disabled = false }: WorkNor
           onChange={(e) =>
             handleUpdate(
               'collaborationTools',
-              e.target.value.split(',').map((t) => t.trim()).filter(Boolean)
+              e.target.value
+                .split(',')
+                .map((t) => t.trim())
+                .filter(Boolean)
             )
           }
           disabled={disabled}

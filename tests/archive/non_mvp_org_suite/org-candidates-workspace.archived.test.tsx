@@ -2,13 +2,13 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { OrgCandidatesWorkspace } from '@/components/organization/OrgCandidatesWorkspace';
+import { OrgCandidatesWorkspace } from '@/archive/non_launch_org_suite/components/organization/OrgCandidatesWorkspace';
 
 vi.mock('@/app/app/o/[slug]/matching/DeferredOrgMatchingClient', () => ({
   DeferredOrgMatchingClient: () => <div data-testid="org-matching-page">OrgMatchingPage</div>,
 }));
 
-vi.mock('@/components/organization/OrgCandidateInvitesPanel', () => ({
+vi.mock('@/archive/non_launch_org_suite/components/organization/OrgCandidateInvitesPanel', () => ({
   OrgCandidateInvitesPanel: () => <div data-testid="org-candidate-invites-panel">InvitesPanel</div>,
 }));
 

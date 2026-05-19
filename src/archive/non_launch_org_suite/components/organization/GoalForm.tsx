@@ -253,4 +253,3 @@ export function GoalForm({ open, onOpenChange, goal, onSave }: GoalFormProps) {
     </Dialog>
   );
 }
-

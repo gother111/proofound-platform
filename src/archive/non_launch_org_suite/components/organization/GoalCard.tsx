@@ -161,4 +161,3 @@ export function GoalCard({ goal, canEdit, onEdit, onDelete }: GoalCardProps) {
     </Card>
   );
 }
-

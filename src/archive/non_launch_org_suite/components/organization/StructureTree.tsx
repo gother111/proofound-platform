@@ -118,9 +118,7 @@ function TreeNode({
             <p className="text-xs text-muted-foreground truncate">{department.description}</p>
           )}
           {department.focusArea && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Focus: {department.focusArea}
-            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">Focus: {department.focusArea}</p>
           )}
         </div>
 
@@ -202,12 +200,7 @@ function TreeNodeWrapper({
   );
 }
 
-export function StructureTree({
-  departments,
-  onEdit,
-  onDelete,
-  onAddChild,
-}: StructureTreeProps) {
+export function StructureTree({ departments, onEdit, onDelete, onAddChild }: StructureTreeProps) {
   // Build hierarchy - find root nodes (no parent)
   const rootDepartments = departments.filter((d) => !d.parentId);
 

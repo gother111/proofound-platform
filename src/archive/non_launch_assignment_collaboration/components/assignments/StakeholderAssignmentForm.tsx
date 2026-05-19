@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-import { AddProjectDialog } from '@/components/organization/AddProjectDialog';
-import { AddPartnershipDialog } from '@/components/organization/AddPartnershipDialog';
+import { AddPartnershipDialog } from '@/archive/non_launch_org_suite/components/organization/AddPartnershipDialog';
+import { AddProjectDialog } from '@/archive/non_launch_org_suite/components/organization/AddProjectDialog';
 import { apiFetch } from '@/lib/api/fetch';
 
 interface Assignment {

@@ -218,6 +218,43 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps broad organization suite components archived', () => {
+    const retiredPaths = [
+      'src/components/organization/CultureEditor.tsx',
+      'src/components/organization/ProjectsManager.tsx',
+      'src/components/organization/PartnershipsManager.tsx',
+      'src/components/organization/StructureManager.tsx',
+      'src/components/organization/ImpactDashboard.tsx',
+      'src/components/organization/GoalsManager.tsx',
+      'src/components/organization/OrgCandidatesWorkspace.tsx',
+      'src/components/organization/OrganizationBasicInfoEditor.tsx',
+      'src/components/assignments/AssignmentManager.tsx',
+      'src/components/assignments/StakeholderAssignmentForm.tsx',
+      'src/components/assignments/StakeholderInviteDialog.tsx',
+      'tests/ui/org-candidates-workspace.test.tsx',
+      'tests/ui/organization-basic-info-editor.test.tsx',
+    ];
+
+    for (const retiredPath of retiredPaths) {
+      expect(fs.existsSync(path.join(repoRoot, retiredPath))).toBe(false);
+    }
+
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/components/organization/OrgTrustProfileEditor.tsx'))
+    ).toBe(true);
+    expect(fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_org_suite/README.md'))).toBe(
+      true
+    );
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'src/archive/non_launch_assignment_collaboration/README.md')
+      )
+    ).toBe(true);
+    expect(fs.existsSync(path.join(repoRoot, 'tests/archive/non_mvp_org_suite/README.md'))).toBe(
+      true
+    );
+  });
+
   it('keeps retired Expertise shared UI components archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'src/components/expertise'))).toBe(false);
     expect(

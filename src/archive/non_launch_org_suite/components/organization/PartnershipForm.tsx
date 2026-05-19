@@ -255,4 +255,3 @@ export function PartnershipForm({ open, onOpenChange, partnership, onSave }: Par
     </Dialog>
   );
 }
-

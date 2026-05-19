@@ -1,7 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -19,12 +25,24 @@ interface StakeholderInviteDialogProps {
 
 const AVAILABLE_SECTIONS = [
   { id: 'projects', label: 'Projects', description: 'Key projects and their outcomes' },
-  { id: 'partnerships', label: 'Partnerships', description: 'Strategic partnerships and collaborations' },
+  {
+    id: 'partnerships',
+    label: 'Partnerships',
+    description: 'Strategic partnerships and collaborations',
+  },
   { id: 'impact', label: 'Impact Stories', description: 'Real-world impact and success stories' },
-  { id: 'culture', label: 'Culture & Values', description: 'Organizational culture and work environment' },
+  {
+    id: 'culture',
+    label: 'Culture & Values',
+    description: 'Organizational culture and work environment',
+  },
 ];
 
-export function StakeholderInviteDialog({ open, onOpenChange, orgId }: StakeholderInviteDialogProps) {
+export function StakeholderInviteDialog({
+  open,
+  onOpenChange,
+  orgId,
+}: StakeholderInviteDialogProps) {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
@@ -35,9 +53,7 @@ export function StakeholderInviteDialog({ open, onOpenChange, orgId }: Stakehold
 
   const handleSectionToggle = (sectionId: string) => {
     setSelectedSections((prev) =>
-      prev.includes(sectionId)
-        ? prev.filter((s) => s !== sectionId)
-        : [...prev, sectionId]
+      prev.includes(sectionId) ? prev.filter((s) => s !== sectionId) : [...prev, sectionId]
     );
   };
 
@@ -101,9 +117,7 @@ export function StakeholderInviteDialog({ open, onOpenChange, orgId }: Stakehold
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-['Crimson_Pro']">
-            Invite Stakeholder
-          </DialogTitle>
+          <DialogTitle className="text-2xl font-['Crimson_Pro']">Invite Stakeholder</DialogTitle>
         </DialogHeader>
 
         {invitationUrl ? (
@@ -126,7 +140,10 @@ export function StakeholderInviteDialog({ open, onOpenChange, orgId }: Stakehold
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleClose} className="bg-proofound-forest hover:bg-proofound-forest/90">
+              <Button
+                onClick={handleClose}
+                className="bg-proofound-forest hover:bg-proofound-forest/90"
+              >
                 Done
               </Button>
             </DialogFooter>
@@ -170,10 +187,7 @@ export function StakeholderInviteDialog({ open, onOpenChange, orgId }: Stakehold
                       onCheckedChange={() => handleSectionToggle(section.id)}
                     />
                     <div className="flex-1">
-                      <label
-                        htmlFor={section.id}
-                        className="text-sm font-medium cursor-pointer"
-                      >
+                      <label htmlFor={section.id} className="text-sm font-medium cursor-pointer">
                         {section.label}
                       </label>
                       <p className="text-xs text-muted-foreground">{section.description}</p>

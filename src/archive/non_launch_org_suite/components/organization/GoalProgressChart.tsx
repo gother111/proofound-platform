@@ -29,9 +29,11 @@ export function GoalProgressChart({ goals }: GoalProgressChartProps) {
 
   // Calculate average progress of in-progress goals
   const progressGoals = goals.filter((g) => g.status === 'in_progress' && g.currentProgress);
-  const avgProgress = progressGoals.length > 0
-    ? progressGoals.reduce((sum, g) => sum + Number(g.currentProgress || 0), 0) / progressGoals.length
-    : 0;
+  const avgProgress =
+    progressGoals.length > 0
+      ? progressGoals.reduce((sum, g) => sum + Number(g.currentProgress || 0), 0) /
+        progressGoals.length
+      : 0;
 
   if (totalGoals === 0) {
     return null;
@@ -111,10 +113,12 @@ export function GoalProgressChart({ goals }: GoalProgressChartProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {(['sustainability', 'diversity', 'innovation', 'growth', 'impact', 'other'] as const).map((type) => {
+            {(
+              ['sustainability', 'diversity', 'innovation', 'growth', 'impact', 'other'] as const
+            ).map((type) => {
               const count = goals.filter((g) => g.goalType === type).length;
               if (count === 0) return null;
-              
+
               const typeLabels = {
                 sustainability: 'Sustainability',
                 diversity: 'Diversity',
@@ -137,4 +141,3 @@ export function GoalProgressChart({ goals }: GoalProgressChartProps) {
     </div>
   );
 }
-

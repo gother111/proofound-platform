@@ -40,20 +40,18 @@ export function ImpactMetricsChart({ entries }: ImpactMetricsChartProps) {
 
   // Aggregate metrics across all entries
   const allMetrics = entries.flatMap((entry) => entry.metrics);
-  
+
   // Count total metrics and entries
   const totalMetrics = allMetrics.length;
   const totalEntries = entries.length;
-  
+
   // Get unique metric types
   const uniqueMetricNames = Array.from(new Set(allMetrics.map((m) => m.name)));
-  
+
   // Calculate some sample stats
   const recentEntry = entries
     .filter((entry) => entry.createdAt)
-    .sort((a, b) => 
-      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
-    )[0];
+    .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())[0];
 
   return (
     <div className="space-y-4">

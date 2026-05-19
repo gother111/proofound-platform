@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { OrganizationBasicInfoEditor } from '@/components/organization/OrganizationBasicInfoEditor';
+import { OrganizationBasicInfoEditor } from '@/archive/non_launch_org_suite/components/organization/OrganizationBasicInfoEditor';
 
 const toastMock = vi.fn();
 const refreshMock = vi.fn();

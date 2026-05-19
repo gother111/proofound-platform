@@ -21,38 +21,36 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 
-interface Project {
+interface Partnership {
   id?: string;
-  title: string;
-  description: string;
+  partnerName: string;
+  partnerType: 'company' | 'ngo' | 'government' | 'academic' | 'network' | 'other';
+  partnershipScope: string;
   impactCreated: string;
-  businessValue: string;
-  outcomes: string;
   startDate: string;
   endDate: string | null;
-  status: 'planning' | 'active' | 'completed' | 'on_hold' | 'cancelled';
+  status: 'active' | 'completed' | 'suspended';
   isVerified: boolean;
 }
 
-interface AddProjectDialogProps {
+interface AddPartnershipDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (project: Partial<Project>) => Promise<void>;
-  existingProject?: Project | null;
+  onSave: (data: Partial<Partnership>) => Promise<void>;
+  existingPartnership?: Partnership | null;
 }
 
-export function AddProjectDialog({
+export function AddPartnershipDialog({
   open,
   onOpenChange,
   onSave,
-  existingProject,
-}: AddProjectDialogProps) {
-  const [formData, setFormData] = useState<Partial<Project>>({
-    title: '',
-    description: '',
+  existingPartnership,
+}: AddPartnershipDialogProps) {
+  const [formData, setFormData] = useState<Partial<Partnership>>({
+    partnerName: '',
+    partnerType: 'company',
+    partnershipScope: '',
     impactCreated: '',
-    businessValue: '',
-    outcomes: '',
     startDate: '',
     endDate: null,
     status: 'active',
@@ -61,30 +59,27 @@ export function AddProjectDialog({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (existingProject) {
-      setFormData(existingProject);
+    if (existingPartnership) {
+      setFormData(existingPartnership);
     } else {
       setFormData({
-        title: '',
-        description: '',
+        partnerName: '',
+        partnerType: 'company',
+        partnershipScope: '',
         impactCreated: '',
-        businessValue: '',
-        outcomes: '',
         startDate: '',
         endDate: null,
         status: 'active',
         isVerified: false,
       });
     }
-  }, [existingProject, open]);
+  }, [existingPartnership, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setSaving(true);
       await onSave(formData);
-    } catch (error) {
-      // Error handling is done in parent
     } finally {
       setSaving(false);
     }
@@ -95,28 +90,49 @@ export function AddProjectDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-['Crimson_Pro']">
-            {existingProject ? 'Edit Project' : 'Add New Project'}
+            {existingPartnership ? 'Edit Partnership' : 'Add Partnership'}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Project Title *</Label>
+            <Label htmlFor="partnerName">Partner Name *</Label>
             <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              id="partnerName"
+              value={formData.partnerName}
+              onChange={(e) => setFormData({ ...formData, partnerName: e.target.value })}
               required
             />
           </div>
 
           <div>
-            <Label htmlFor="description">Description *</Label>
+            <Label htmlFor="partnerType">Partner Type</Label>
+            <Select
+              value={formData.partnerType}
+              onValueChange={(value: any) => setFormData({ ...formData, partnerType: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="company">Company</SelectItem>
+                <SelectItem value="ngo">NGO</SelectItem>
+                <SelectItem value="government">Government</SelectItem>
+                <SelectItem value="academic">Academic Institution</SelectItem>
+                <SelectItem value="network">Network/Association</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="partnershipScope">Partnership Scope *</Label>
             <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
+              id="partnershipScope"
+              placeholder="Describe the scope and nature of the partnership"
+              value={formData.partnershipScope}
+              onChange={(e) => setFormData({ ...formData, partnershipScope: e.target.value })}
+              rows={2}
               required
             />
           </div>
@@ -125,33 +141,9 @@ export function AddProjectDialog({
             <Label htmlFor="impactCreated">Impact Created *</Label>
             <Textarea
               id="impactCreated"
-              placeholder="What positive change did this project create?"
+              placeholder="What impact has this partnership created?"
               value={formData.impactCreated}
               onChange={(e) => setFormData({ ...formData, impactCreated: e.target.value })}
-              rows={2}
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="businessValue">Business Value *</Label>
-            <Textarea
-              id="businessValue"
-              placeholder="What business value did this project deliver?"
-              value={formData.businessValue}
-              onChange={(e) => setFormData({ ...formData, businessValue: e.target.value })}
-              rows={2}
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="outcomes">Outcomes *</Label>
-            <Textarea
-              id="outcomes"
-              placeholder="Measurable outcomes and results"
-              value={formData.outcomes}
-              onChange={(e) => setFormData({ ...formData, outcomes: e.target.value })}
               rows={2}
               required
             />
@@ -168,16 +160,13 @@ export function AddProjectDialog({
                 required
               />
             </div>
-
             <div>
               <Label htmlFor="endDate">End Date</Label>
               <Input
                 id="endDate"
                 type="date"
                 value={formData.endDate || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, endDate: e.target.value || null })
-                }
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value || null })}
               />
             </div>
           </div>
@@ -192,11 +181,9 @@ export function AddProjectDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="planning">Planning</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="on_hold">On Hold</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="suspended">Suspended</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -209,11 +196,8 @@ export function AddProjectDialog({
                 setFormData({ ...formData, isVerified: checked as boolean })
               }
             />
-            <Label
-              htmlFor="isVerified"
-              className="text-sm font-normal cursor-pointer"
-            >
-              Mark as verified (indicates project has been independently verified)
+            <Label htmlFor="isVerified" className="text-sm font-normal cursor-pointer">
+              Mark as verified
             </Label>
           </div>
 
@@ -231,7 +215,7 @@ export function AddProjectDialog({
               disabled={saving}
               className="bg-proofound-forest hover:bg-proofound-forest/90"
             >
-              {saving ? 'Saving...' : existingProject ? 'Update' : 'Create'}
+              {saving ? 'Saving...' : existingPartnership ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
         </form>

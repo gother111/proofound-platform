@@ -265,6 +265,15 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Moved the null Zen dashboard stub and Zen data stub into `src/archive/non_launch_wellbeing/`.
 - Added launch-gate coverage so those generic dashboard and Zen stub paths stay out of active source/tests.
 
+34. Broad organization-suite components still lived in active source while only the lean trust profile was mounted.
+
+- Confirmed active `/app/o/[slug]/profile` mounts only `OrgTrustProfileEditor`.
+- Confirmed the old culture, structure, impact, projects, partnerships, organization basic-info, candidate-workspace, and stakeholder-assignment collaboration components were not imported by active app routes.
+- Moved the broad organization-suite components to `src/archive/non_launch_org_suite/`.
+- Moved the orphaned stakeholder assignment manager/invite UI to `src/archive/non_launch_assignment_collaboration/`.
+- Moved stale active UI tests for those orphaned organization components to `tests/archive/non_mvp_org_suite/`.
+- Added launch-gate coverage so the broad org-suite UI stays out of active source/tests while the lean `OrgTrustProfileEditor` remains active.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -545,6 +554,14 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the generic customizable dashboard shell and Zen stubs.
 - `npm run docs:freshness` - passed after archiving the generic customizable dashboard shell and Zen stubs.
 - `git diff --check` - passed after archiving the generic customizable dashboard shell and Zen stubs.
+- `rg -n "StakeholderInviteDialog|StakeholderAssignmentForm|OrgCandidatesWorkspace|OrganizationBasicInfoEditor|OrganizationHero|OrganizationPurpose|BasicInfoForm|CultureEditor|ProjectsManager|PartnershipsManager|StructureManagerClient|ImpactDashboard|GoalsManager|JDMapper" src/app src/components tests -g '!src/archive/**' -g '!tests/archive/**'` - before the move, active hits were limited to orphaned organization-suite components/tests and orphaned assignment collaboration components.
+- `rg -n "@/components/organization|src/components/organization|@/components/assignments/(AssignmentManager|Stakeholder)|StakeholderInviteDialog|StakeholderAssignmentForm|OrgCandidatesWorkspace|OrganizationBasicInfoEditor|CultureEditor|ProjectsManager|PartnershipsManager|StructureManagerClient|ImpactDashboard|GoalsManager|JDMapper" src/app src/components tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active references are now limited to the mounted lean `OrgTrustProfileEditor`, its tests, and launch-gate assertions.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/ui/organization-trust-profile-page.test.tsx tests/ui/public-org-portfolio-page.test.tsx tests/api/launch-page-inventory.test.ts tests/api/launch-surface-inventory.test.ts tests/ui/org-dashboard-archived-nav.test.tsx` - passed, 6 files / 35 tests, after archiving the broad organization suite.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after archiving the broad organization suite.
+- `npm run lint` - passed after archiving the broad organization suite.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the broad organization suite.
+- `npm run docs:freshness` - passed after archiving the broad organization suite.
+- `git diff --check` - passed after archiving the broad organization suite.
 
 Non-fatal test noise:
 

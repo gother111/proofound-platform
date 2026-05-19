@@ -128,7 +128,8 @@ export function AssignmentManager({ orgId }: AssignmentManagerProps) {
           {assignments.map((assignment) => {
             const StatusIcon = STATUS_CONFIG[assignment.status].icon;
             const isExpired = new Date() > new Date(assignment.expiresAt);
-            const actualStatus = isExpired && assignment.status !== 'completed' ? 'expired' : assignment.status;
+            const actualStatus =
+              isExpired && assignment.status !== 'completed' ? 'expired' : assignment.status;
 
             return (
               <Card key={assignment.id}>
@@ -139,7 +140,9 @@ export function AssignmentManager({ orgId }: AssignmentManagerProps) {
                         {assignment.stakeholderName || assignment.stakeholderEmail}
                       </CardTitle>
                       {assignment.stakeholderName && (
-                        <p className="text-sm text-muted-foreground">{assignment.stakeholderEmail}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {assignment.stakeholderEmail}
+                        </p>
                       )}
                     </div>
                     <Badge className={STATUS_CONFIG[actualStatus].color} variant="outline">
@@ -165,13 +168,9 @@ export function AssignmentManager({ orgId }: AssignmentManagerProps) {
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Clock className="w-3 h-3" />
                     {assignment.completedAt ? (
-                      <span>
-                        Completed {new Date(assignment.completedAt).toLocaleDateString()}
-                      </span>
+                      <span>Completed {new Date(assignment.completedAt).toLocaleDateString()}</span>
                     ) : (
-                      <span>
-                        Expires {new Date(assignment.expiresAt).toLocaleDateString()}
-                      </span>
+                      <span>Expires {new Date(assignment.expiresAt).toLocaleDateString()}</span>
                     )}
                   </div>
 
@@ -196,11 +195,7 @@ export function AssignmentManager({ orgId }: AssignmentManagerProps) {
       )}
 
       {/* Invite Dialog */}
-      <StakeholderInviteDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        orgId={orgId}
-      />
+      <StakeholderInviteDialog open={dialogOpen} onOpenChange={setDialogOpen} orgId={orgId} />
     </div>
   );
 }

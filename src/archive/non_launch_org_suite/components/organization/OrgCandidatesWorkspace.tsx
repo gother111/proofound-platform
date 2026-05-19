@@ -2,7 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DeferredOrgMatchingClient } from '@/app/app/o/[slug]/matching/DeferredOrgMatchingClient';
-import { OrgCandidateInvitesPanel } from '@/components/organization/OrgCandidateInvitesPanel';
+import { OrgCandidateInvitesPanel } from './OrgCandidateInvitesPanel';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 interface OrgCandidatesWorkspaceProps {

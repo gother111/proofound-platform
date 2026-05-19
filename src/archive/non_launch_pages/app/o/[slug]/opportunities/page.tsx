@@ -1,4 +1,4 @@
-import { OrgScopeNotice } from '@/components/organization/OrgScopeNotice';
+import { OrgScopeNotice } from '@/archive/non_launch_org_suite/components/organization/OrgScopeNotice';
 import { getOrgSurfaceFallbackHref } from '@/lib/org/mvp-surface-policy';
 
 export const dynamic = 'force-dynamic';

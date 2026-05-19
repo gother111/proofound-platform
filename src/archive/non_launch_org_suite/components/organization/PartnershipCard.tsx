@@ -90,7 +90,10 @@ export function PartnershipCard({ partnership, canEdit, onEdit, onDelete }: Part
                     {STATUS_LABELS[partnership.status]}
                   </Badge>
                   {partnership.isVerified && (
-                    <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700">
+                    <Badge
+                      variant="outline"
+                      className="bg-green-50 border-green-300 text-green-700"
+                    >
                       <CheckCircle2 className="h-3 w-3 mr-1" />
                       Verified
                     </Badge>
@@ -154,4 +157,3 @@ export function PartnershipCard({ partnership, canEdit, onEdit, onDelete }: Part
     </Card>
   );
 }
-
