@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import {
   AVAILABLE_WIDGETS,
   DEFAULT_LAYOUT,
+  calculateProfileReadiness,
   sanitizeLayout,
   validateLayout,
 } from '@/lib/dashboard/layout';
@@ -77,5 +78,20 @@ describe('dashboard layout', () => {
       DEFAULT_LAYOUT.map((widget) => widget.widgetId)
     );
     expect(sanitized.map((widget) => widget.position)).toEqual([...Array(sanitized.length).keys()]);
+  });
+
+  it('keeps profile readiness suggestions out of archived product language', () => {
+    const result = calculateProfileReadiness({
+      headline: 'Proof-first builder',
+      bio: 'Short bio',
+      location: 'Stockholm',
+      skillCount: 0,
+      proofCount: 1,
+      verificationCount: 1,
+      experienceCount: 1,
+    });
+
+    expect(result.suggestions).toContain('Add one proof-linked skill');
+    expect(result.suggestions.join(' ')).not.toMatch(/Expertise Atlas/i);
   });
 });

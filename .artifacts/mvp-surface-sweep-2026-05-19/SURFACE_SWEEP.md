@@ -275,6 +275,13 @@ Verification checklist route-count refresh on 2026-05-19:
 - Browser evidence: reconnected the Codex in-app Browser on the existing `127.0.0.1:33180/portfolio/demo` tab. Browser is functional; the page currently renders the intentional launch-safe `Public page unavailable` state with Return home and cookie controls, matching prior public unavailable evidence for this route.
 - Test evidence: `npm run docs:freshness`, `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes`, and `git diff --check` passed.
 
+Active copy corridor refresh on 2026-05-19:
+
+- Finding: reachable or semi-reachable active helpers still used broad archived product language such as `Expertise Atlas`, `20,000+ skill taxonomy`, `Gap Analysis`, `Expertise Mapping`, and automatic Zoom/Google Meet scheduling in user-facing tour, recovery, dashboard, assignment-builder, and verification-notification copy.
+- Fix: replaced that copy with proof-first corridor language: proof-linked skills, private CV context, readiness gaps, proof requirements, assignment/engagement evidence, manual meeting-link control, and `Proof skills`.
+- Guardrails: added focused assertions so recovery actions, dashboard readiness suggestions, and assignment-builder step 5 stay out of archived `Expertise Atlas` / `Expertise Mapping` language.
+- Evidence: focused tests for recovery actions, dashboard layout, and step 5 assignment builder passed; lint, typecheck, and `git diff --check` passed.
+
 ## Verification
 
 Commands run with Node 25 path:
@@ -322,6 +329,10 @@ Commands run with Node 25 path:
 - `npm run docs:freshness` - passed with no findings after the verification checklist route-count refresh.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after the verification checklist route-count refresh.
 - `git diff --check` - passed after the verification checklist route-count refresh.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- src/lib/__tests__/recovery-actions.test.ts tests/dashboard-layout.test.ts tests/ui/step5-expertise-mapping.test.tsx` - passed, 3 files / 16 tests, after the active copy corridor refresh.
+- `npm run lint` - passed after the active copy corridor refresh.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the active copy corridor refresh.
+- `git diff --check` - passed after the active copy corridor refresh.
 - `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with `/api/user/data-inventory` active.
 - `npm run lint` - passed after removing the privacy component hook-dependency warning.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.

@@ -28,7 +28,7 @@ const STEPS = [
   'Target Outcomes',
   'Weight Matrix',
   'Practicals',
-  'Expertise Mapping',
+  'Proof Requirements',
 ];
 
 export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {

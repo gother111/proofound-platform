@@ -429,7 +429,7 @@ export function calculateProfileReadiness(profile: any): {
   const hasExperiences = profile.experienceCount > 0;
 
   if (hasSkills) completedFields++;
-  else suggestions.push('Add at least 5 skills to your Expertise Atlas');
+  else suggestions.push('Add one proof-linked skill');
 
   if (hasProofs) completedFields++;
   else suggestions.push('Upload proof of your skills');

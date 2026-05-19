@@ -18,19 +18,19 @@ export const individualTourSteps: Step[] = [
   {
     target: '[data-tour="expertise-section"]',
     content:
-      'Build your Expertise Atlas here. Add skills from our 20,000+ skill taxonomy, specify your experience level, and upload proof of expertise.',
+      'Add proof-linked skills here. Start with skills you can anchor to real work, education, volunteering, or a proof artifact.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="import-cv-tab"]',
     content:
-      'Quick start: Import skills directly from your CV or resume. Our AI will extract and suggest relevant skills from the taxonomy.',
+      'Quick start: use your CV only as private context for suggested proof work. Review everything before it becomes part of your profile.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="gap-analysis-tab"]',
     content:
-      'Use Gap Analysis to identify skill gaps for your target roles. Get personalized recommendations on which skills to develop next.',
+      'Use readiness gaps to decide which proof-backed signal to strengthen next for your target work.',
     placement: 'bottom',
   },
   {
@@ -75,7 +75,7 @@ export const organizationTourSteps: Step[] = [
   {
     target: '[data-tour="assignments-section"]',
     content:
-      'Create assignments using our 5-step workflow: Business Value → Target Outcomes → Weight Matrix → Practicals → Expertise Mapping.',
+      'Create assignments with outcomes, practical constraints, proof requirements, and a clear review path.',
     placement: 'bottom',
   },
   {
@@ -86,7 +86,7 @@ export const organizationTourSteps: Step[] = [
   {
     target: '[data-tour="projects-section"]',
     content:
-      "Track your projects and their impact. Document outcomes to build your organization's credibility.",
+      "Keep assignment and engagement evidence tied to concrete outcomes so your organization's public trust page stays credible.",
     placement: 'bottom',
   },
   {
@@ -98,7 +98,7 @@ export const organizationTourSteps: Step[] = [
   {
     target: '[data-tour="interviews-section"]',
     content:
-      'Schedule interviews directly through Proofound. We automatically include stakeholders and integrate with Zoom/Google Meet.',
+      'Schedule or reschedule interviews with clear state, consent, and manual meeting-link control.',
     placement: 'bottom',
   },
   {

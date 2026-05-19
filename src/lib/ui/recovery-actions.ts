@@ -58,7 +58,7 @@ const INDIVIDUAL_DESCRIPTION_OVERRIDES: Record<
     'add-skill': 'Add a skill so your dashboard can generate better next actions.',
   },
   'expertise-empty': {
-    'add-skill': 'Start your Expertise Atlas with a skill you actively use.',
+    'add-skill': 'Start with a skill you can connect to real proof.',
   },
   'proofs-empty': {
     'add-proof': 'Add your first proof artifact to increase credibility and ranking quality.',

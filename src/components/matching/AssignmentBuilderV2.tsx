@@ -57,7 +57,7 @@ const AssignmentFormSchema = z
     startLatest: z.string().optional(),
     duration: z.string().optional(),
 
-    // Step 5: Expertise Mapping
+    // Step 5: Proof requirements
     mustHaveSkills: z
       .array(
         z.object({
@@ -241,7 +241,7 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
         businessValue: data.businessValue,
         expectedImpact: JSON.stringify(data.outcomes), // Store outcomes as JSON
         status: 'draft',
-        creationStatus: 'pending_review', // Step 5 complete, awaiting approval
+        creationStatus: 'pending_review', // Proof requirements complete, awaiting approval
         orgSlug: slug ?? undefined,
         valuesRequired: [], // TODO: Map from form if values are collected
         causeTags: [],

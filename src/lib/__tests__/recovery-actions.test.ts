@@ -35,6 +35,15 @@ describe('recovery actions', () => {
     expect(new Set(actions.map((action) => action.actionUrl)).size).toBe(3);
   });
 
+  it('keeps empty skill recovery copy proof-first', () => {
+    const actions = getIndividualRecoveryActions('expertise-empty');
+
+    expect(actions.map((action) => action.description)).toContain(
+      'Start with a skill you can connect to real proof.'
+    );
+    expect(actions.map((action) => action.description).join(' ')).not.toMatch(/Expertise Atlas/i);
+  });
+
   it('returns exactly 3 organization actions and includes candidate matching CTA', () => {
     const actions = getOrganizationRecoveryActions('org-matching-empty', 'acme');
 

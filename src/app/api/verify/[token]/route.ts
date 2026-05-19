@@ -1886,12 +1886,12 @@ export async function POST(
               <div style="margin-top: 24px;">
                 <a href="${expertiseUrl}" 
                    style="display: inline-block; background: #1a1a1a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500;">
-                  View Your Expertise Atlas
+                  View Your Proof Skills
                 </a>
               </div>
             </div>
           `,
-          text: `Your skill verification request was ${resolvedAction === 'accept' ? 'accepted' : attestationVerdict === 'partly' ? 'partly confirmed' : 'declined'}.\n\n${relationshipText} (${normalizedVerification.verifier_email}) has ${actionText} your "${skillName}" skill.${validated.message ? `\n\nTheir message: "${validated.message}"` : ''}\n\nView your Expertise Atlas: ${expertiseUrl}`,
+          text: `Your skill verification request was ${resolvedAction === 'accept' ? 'accepted' : attestationVerdict === 'partly' ? 'partly confirmed' : 'declined'}.\n\n${relationshipText} (${normalizedVerification.verifier_email}) has ${actionText} your "${skillName}" skill.${validated.message ? `\n\nTheir message: "${validated.message}"` : ''}\n\nView your proof skills: ${expertiseUrl}`,
         });
       }
     } catch (emailError) {
