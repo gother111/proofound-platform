@@ -89,8 +89,9 @@ DATABASE_URL=postgresql://postgres:xxx@db.xxx.supabase.co:6543/postgres
 DIRECT_URL=postgresql://postgres:xxx@db.xxx.supabase.co:5432/postgres
 
 # Email (Resend)
-RESEND_API_KEY=re_xxx
-EMAIL_FROM=noreply@yourdomain.com
+RESEND_API_KEY=<stored-in-target-secret-manager>
+EMAIL_FROM="Proofound <no-reply@proofound.io>"
+EMAIL_REPLY_TO="Proofound <hello@proofound.io>"
 
 # Caching (Vercel KV)
 KV_REST_API_URL=https://xxx.kv.vercel-storage.com
@@ -234,8 +235,8 @@ ALTER TABLE skills ENABLE ROW LEVEL SECURITY;
 
 1. Go to Authentication → Settings
 2. Configure:
-   - **Site URL:** `https://yourdomain.com`
-   - **Redirect URLs:** `https://yourdomain.com/auth/callback`
+   - **Site URL:** `https://proofound.io`
+   - **Redirect URLs:** `https://proofound.io/auth/callback`
    - **JWT expiry:** 3600 (1 hour)
    - **Refresh token rotation:** Enabled
    - **Password requirements:** Minimum 8 characters
@@ -294,8 +295,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
 SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
 DATABASE_URL=postgresql://postgres:xxx@db.xxx.supabase.co:6543/postgres
 DIRECT_URL=postgresql://postgres:xxx@db.xxx.supabase.co:5432/postgres
-RESEND_API_KEY=re_xxx
-EMAIL_FROM=noreply@yourdomain.com
+RESEND_API_KEY=<stored-in-target-secret-manager>
+EMAIL_FROM="Proofound <no-reply@proofound.io>"
+EMAIL_REPLY_TO="Proofound <hello@proofound.io>"
 NEXT_PUBLIC_SENTRY_DSN=https://xxx@sentry.io/xxx
 SENTRY_ORG=your-org
 SENTRY_PROJECT=proofound
@@ -386,20 +388,20 @@ npm run vercel:deploy:prebuilt:production
 
 1. Go to Project Settings → Domains
 2. Click "Add Domain"
-3. Enter your domain: `yourdomain.com`
+3. Enter the production domain: `proofound.io`
 4. Click "Add"
 
 **DNS Configuration:**
 
 Vercel provides DNS records to add:
 
-**For root domain (yourdomain.com):**
+**For root domain (`proofound.io`):**
 
 - Type: A
 - Name: @
 - Value: 76.76.21.21
 
-**For www subdomain (www.yourdomain.com):**
+**For www subdomain (`www.proofound.io`):**
 
 - Type: CNAME
 - Name: www
@@ -422,7 +424,7 @@ Vercel automatically provisions SSL certificates via Let's Encrypt.
 1. Wait for DNS propagation
 2. Check Vercel dashboard → Domains
 3. Status should show "Valid Certificate"
-4. Visit `https://yourdomain.com` to verify
+4. Visit `https://proofound.io` to verify
 
 **Force HTTPS:**
 Vercel automatically redirects HTTP → HTTPS.
@@ -441,10 +443,10 @@ module.exports = {
         has: [
           {
             type: 'host',
-            value: 'www.yourdomain.com',
+            value: 'www.proofound.io',
           },
         ],
-        destination: 'https://yourdomain.com/:path*',
+        destination: 'https://proofound.io/:path*',
         permanent: true,
       },
     ];
@@ -490,7 +492,7 @@ SENTRY_AUTH_TOKEN=xxx
 1. Go to Sentry → Alerts
 2. Create alert rule:
    - **Condition:** Error rate > 10 per minute
-   - **Action:** Email team
+   - **Action:** Notify the monitored launch operator channel and named incident owner
 3. Save alert
 
 ### 2. Email (Resend) Setup
@@ -506,32 +508,23 @@ SENTRY_AUTH_TOKEN=xxx
 **Add Domain:**
 
 1. Go to Domains → Add Domain
-2. Enter your domain: `yourdomain.com`
+2. Enter the approved Proofound sending domain
 3. Add DNS records (TXT, CNAME) to your domain registrar
 4. Verify domain
 
 **Add to Vercel:**
 
 ```
-RESEND_API_KEY=re_xxx
-EMAIL_FROM=noreply@yourdomain.com
+RESEND_API_KEY=<stored-in-target-secret-manager>
+EMAIL_FROM="Proofound <no-reply@proofound.io>"
+EMAIL_REPLY_TO="Proofound <hello@proofound.io>"
 ```
 
-**Test Email:**
-
-```typescript
-// Test endpoint: /api/test/email
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const { data, error } = await resend.emails.send({
-  from: process.env.EMAIL_FROM!,
-  to: 'your-email@example.com',
-  subject: 'Test Email',
-  html: '<p>Test email from Proofound</p>',
-});
-```
+Follow [`docs/RESEND_SETUP.md`](RESEND_SETUP.md) for transactional email setup and
+verification. Do not add temporary public email test endpoints or paste provider
+send snippets into app routes. For launch evidence, trigger one low-risk
+transactional flow on the intended target only after the target, recipient, and
+operator approval are explicit.
 
 ### 3. Cron Jobs
 
@@ -668,7 +661,7 @@ vercel logs --follow
 **Run Lighthouse:**
 
 ```bash
-lighthouse https://yourdomain.com \
+lighthouse https://proofound.io \
   --output html \
   --output-path ./lighthouse-production.html \
   --view

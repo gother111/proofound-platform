@@ -1015,6 +1015,10 @@ describe('launch gate package configuration', () => {
     expect(deploymentGuide).toContain('Authenticated `/api/monitoring/launch-status`');
     expect(deploymentGuide).toContain('Authenticated `/api/monitoring/perf-status`');
     expect(deploymentGuide).toContain('INP < 200ms');
+    expect(deploymentGuide).toContain('docs/RESEND_SETUP.md');
+    expect(deploymentGuide).toContain('RESEND_API_KEY=<stored-in-target-secret-manager>');
+    expect(deploymentGuide).toContain('EMAIL_FROM="Proofound <no-reply@proofound.io>"');
+    expect(deploymentGuide).toContain('EMAIL_REPLY_TO="Proofound <hello@proofound.io>"');
     expect(setupRunbook).toContain('Last Verified: `2026-05-19`');
     expect(activeOperatorDocs).toContain(
       'manual-link interview posture remains the locked MVP default'
@@ -1025,6 +1029,12 @@ describe('launch gate package configuration', () => {
     expect(activeOperatorDocs).not.toContain('/api/cron/cleanup-expired-sessions');
     expect(activeOperatorDocs).not.toContain('/api/cron/send-digest-emails');
     expect(activeOperatorDocs).not.toContain('platform=zoom');
+    expect(deploymentGuide).not.toContain('RESEND_API_KEY=re_xxx');
+    expect(deploymentGuide).not.toContain('EMAIL_FROM=noreply@yourdomain.com');
+    expect(deploymentGuide).not.toContain('new Resend(process.env.RESEND_API_KEY)');
+    expect(deploymentGuide).not.toContain('/api/test/email');
+    expect(deploymentGuide).not.toContain('Email team');
+    expect(deploymentGuide).not.toContain('https://yourdomain.com');
     expect(docsRegistry).toContain(
       '| `docs/deployment-guide.md`                                                                              | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
     );

@@ -1591,3 +1591,15 @@ Non-fatal test noise:
 - Removed the placeholder-key provider fallback and aligned the legacy workflow-email module with `src/lib/email/config.ts`: it now creates a Resend client only when `EMAIL_CONFIG.apiKey` is present.
 - Added a shared legacy-send helper so explicit `PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY=true` dry-run targets still return a skipped delivery id, while missing provider config no longer attempts a live provider call with a fake key.
 - Added launch-gate coverage preventing the placeholder key or `process.env.RESEND_API_KEY || ...` fallback from returning to the active legacy email module.
+
+## Continuation - Deployment Guide Email And Alert Scope Cleanup
+
+- Found active `docs/deployment-guide.md` still carried generic transactional-email examples: `RESEND_API_KEY=re_xxx`, `EMAIL_FROM=noreply@yourdomain.com`, a direct `new Resend(process.env.RESEND_API_KEY)` test snippet, and a temporary `/api/test/email` pattern.
+- Aligned the deployment guide with `docs/RESEND_SETUP.md`: provider secrets stay in the target secret manager, sender/reply-to use approved Proofound-controlled addresses, and target-specific live email verification requires an explicit target, recipient, and operator approval.
+- Replaced generic `yourdomain.com` production launch examples with the canonical `https://proofound.io` production domain where the guide is launch-specific.
+- Tightened Sentry alert guidance from an ambiguous `Email team` action to a monitored launch operator channel and named incident owner.
+- Added launch-gate coverage so active deployment guidance cannot drift back to stale generic email placeholders, ad-hoc test endpoints, direct provider snippets, broad team-email alerting, or `https://yourdomain.com` launch examples.
+- Reconnected the Codex `@Browser` plugin and used the in-app Browser against the restarted local app on `http://localhost:3000`.
+- Browser route smoke covered `/`, `/login`, `/signup`, `/portfolio/demo`, `/portfolio/org/demo`, and `/privacy`; all sampled routes rendered expected headings/titles, had no horizontal overflow, and public demo portfolio/org surfaces remained `noindex, nofollow, nocache`.
+- Browser mobile viewport smoke covered `/login` at `390x844` with no horizontal overflow and retained the primary `Welcome back` heading and sign-in action.
+- Browser screenshot capture timed out again in this backend session, so evidence is saved as DOM/title/action/overflow/noindex data at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-deployment-guide/route-smoke.json`.
