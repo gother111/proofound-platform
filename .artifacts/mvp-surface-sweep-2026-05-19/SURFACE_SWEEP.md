@@ -213,6 +213,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Added launch-gate coverage so these retired implementation directories stay out of active `src/components` and `src/lib`.
 - Registered the archive README in `docs/DOCS_REGISTRY.md`.
 
+27. Retired Expertise Atlas implementation code still lived under the active app route tree.
+
+- Confirmed `/app/i/expertise` no longer has an active page handler and is classified as archived, but the old Expertise Atlas client/widgets/components still lived under `src/app/app/i/expertise`.
+- Moved that orphaned UI island to `src/archive/non_launch_pages/app/i/expertise/implementation/`.
+- Added an archive README and launch-gate coverage so the retired page implementation stays out of active `src/app`.
+- Updated the GCP CV/OCR proposal note so it no longer says active expertise/CV components still exist as code assets.
+- Registered the archive README and refreshed proposal note in `docs/DOCS_REGISTRY.md`.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -458,6 +466,10 @@ Commands run with Node 25 path:
 - `git diff --check` - passed after archiving orphaned wellbeing/Zen implementation modules.
 - `npm run lint` - passed after archiving orphaned wellbeing/Zen implementation modules.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving orphaned wellbeing/Zen implementation modules.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/ui/archived-mvp-routes.test.ts src/lib/launch/__tests__/surface-policy.test.ts tests/api/launch-page-inventory.test.ts` - passed, 4 files / 28 tests, after archiving the retired Expertise Atlas implementation island.
+- `npm run docs:freshness` - passed after registering the Expertise Atlas implementation archive README and refreshing the GCP CV/OCR proposal note.
+- `npm run lint` - passed after archiving the retired Expertise Atlas implementation island.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the retired Expertise Atlas implementation island.
 
 Non-fatal test noise:
 

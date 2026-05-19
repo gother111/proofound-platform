@@ -134,6 +134,18 @@ describe('launch gate package configuration', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('keeps the retired Expertise Atlas UI island archived', () => {
+    expect(fs.existsSync(path.join(repoRoot, 'src/app/app/i/expertise'))).toBe(false);
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_pages/app/i/expertise/page.tsx'))
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'src/archive/non_launch_pages/app/i/expertise/implementation')
+      )
+    ).toBe(true);
+  });
+
   it('keeps the broad legacy PRD database script archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'tests/comprehensive-prd-test.ts'))).toBe(false);
     expect(

@@ -55,7 +55,7 @@ Relevant current classifications:
 - Active API surfaces include `/api/upload/*`, `/api/expertise/taxonomy`, `/api/expertise/user-skills/*`, `/api/ai/proof-pack/suggest`, verification routes, portfolio routes, assignment routes, and the narrow matching/review corridor.
 - Broad `/api/expertise/*` routes are archived unless they are `/api/expertise/jd-to-l4`, `/api/expertise/taxonomy`, or `/api/expertise/user-skills/*`.
 - The compiled archived allowlist in `tests/api/launch-surface-inventory.test.ts` includes the CV import wizard route files while requiring their classification to remain `archived`.
-- `/app/i/expertise` is classified as an archived page path, and there is no `src/app/app/i/expertise/page.tsx` handler in the active app tree. Some expertise/CV components still exist as code assets, but they are not an approved active page surface.
+- `/app/i/expertise` is classified as an archived page path, and there is no active `src/app/app/i/expertise` implementation in the app tree. The old Expertise Atlas UI island now lives under `src/archive/non_launch_pages/app/i/expertise/implementation/` as historical context only.
 
 ## CV Import Wizard Status
 
