@@ -579,6 +579,28 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the root quick start launch-safe and free of retired migration promises', () => {
+    const quickStart = fs.readFileSync(path.join(repoRoot, 'QUICK_START.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(quickStart).toContain('Last Verified: `2026-05-19`');
+    expect(quickStart).toContain('locked Proofound MVP corridor');
+    expect(quickStart).toContain('Manual meeting links remain');
+    expect(quickStart).toContain('/app/i/portfolio');
+    expect(quickStart).toContain('/app/o/test-org/assignments');
+    expect(quickStart).toContain('/admin/verification');
+    expect(quickStart).toContain('npm run test:launch:routes');
+    expect(quickStart).not.toContain('cjpfrgmsxwxhuomnvciq');
+    expect(quickStart).not.toContain('migrations-to-run.sql');
+    expect(quickStart).not.toContain('Well-being tracking in Zen Hub');
+    expect(quickStart).not.toContain('Dashboard customization');
+    expect(quickStart).not.toContain('First-run tour appears');
+    expect(quickStart).not.toContain('Click "Connect Zoom"');
+    expect(docsRegistry).toContain(
+      '| `QUICK_START.md`                                                                                        | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',

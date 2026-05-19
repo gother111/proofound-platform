@@ -420,6 +420,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Kept the deeper operator-console gaps intact as follow-up risks: queue detail projection, risky upload approve/reject UI, internal ops table privacy proof, launch health card, sanitized admin DTOs/errors, and operator usability controls.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the audit cannot continue claiming the active admin Playwright smoke fails on the retired broad dashboard.
 
+51. The root quick start still described an old migration/demo flow outside the locked MVP corridor.
+
+- Rewrote `QUICK_START.md` as a launch-safe local setup and smoke guide instead of a Supabase Dashboard migration paste guide.
+- Removed the hard-coded Supabase project link, `migrations-to-run.sql` instructions, Zen/wellbeing tracking, dashboard customization, and broad first-run tour claims from the active quick start.
+- Pointed database operations back to the current migration/setup runbooks and limited local smoke guidance to public/auth, individual Proof Pack, organization assignment/review, and internal admin launch-ops surfaces.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the quick start cannot quietly reintroduce retired Zen/dashboard/migration promises.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
