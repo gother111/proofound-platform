@@ -1156,3 +1156,9 @@ Non-fatal test noise:
 - Found root/project `Implement.md` and `Plans.md` sync pairs verified on 2026-05-14 while still carrying older milestone language around ranked matching, pipeline flows, third-party provider fallback, and a root/project cron mismatch.
 - Refreshed implementation contracts so future work keeps Browser/Playwright evidence for UI changes, treats log scripts as real-file creators, updates sweep/docs when launch evidence changes, and blocks archived/post-MVP route revival, public-directory behavior, profile theater, vanity metrics, and broad platform language.
 - Refreshed milestone framing around reason-coded privacy-safe review, manual-link interview default, current Vercel cron routes, launch-support-only observability, production-candidate backup/restore evidence, and Browser/Playwright evidence for changed UI surfaces.
+
+## Continuation - Design And Ubiquitous Language Refresh
+
+- Found `DESIGN.md` and `docs/PROOFOUND_UBIQUITOUS_LANGUAGE.md` still verified on earlier dates while remaining active guidance for UI, copy, and naming.
+- Refreshed the design contract with active-surface checks for primary object/action clarity, privacy/trust/proof/readiness states, gated/archived/disabled/empty/loading/error/success states, no public-directory cues, no score/rank/automated-verdict presentation, and Browser/Playwright desktop/mobile evidence for meaningful UI edits.
+- Refreshed ubiquitous language with current corridor terms: primary object, primary next action, trust state, reason code, manual-link interview, privacy stage, and explicit guardrails against public directory, profile theater, vanity metric, broad marketplace, or broad platform language.

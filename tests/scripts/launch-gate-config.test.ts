@@ -227,10 +227,40 @@ describe('launch gate package configuration', () => {
   });
 
   it('keeps visual style and motion docs aligned with the active design contract', () => {
+    const designContract = fs.readFileSync(path.join(repoRoot, 'DESIGN.md'), 'utf8');
+    const ubiquitousLanguage = fs.readFileSync(
+      path.join(repoRoot, 'docs/PROOFOUND_UBIQUITOUS_LANGUAGE.md'),
+      'utf8'
+    );
     const styleMap = fs.readFileSync(path.join(repoRoot, 'docs/STYLEMAP.md'), 'utf8');
     const animationNotes = fs.readFileSync(path.join(repoRoot, 'docs/ANIMATION_NOTES.md'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
-    const designDocs = `${styleMap}\n${animationNotes}`;
+    const designDocs = `${designContract}\n${ubiquitousLanguage}\n${styleMap}\n${animationNotes}`;
+
+    expect(designContract).toContain('Last Verified: `2026-05-19`');
+    expect(designContract).toContain('primary object obvious');
+    expect(designContract).toContain('primary next action obvious and safe');
+    expect(designContract).toContain(
+      'privacy state, trust state, proof state, and readiness state'
+    );
+    expect(designContract).toContain(
+      'gated, archived, disabled, empty, loading, error, and success states'
+    );
+    expect(designContract).toContain('score-first, rank-first, or automated-verdict presentation');
+    expect(designContract).toContain('public directory behavior');
+    expect(designContract).toContain('visual thesis, content plan, and interaction thesis');
+    expect(designContract).toContain(
+      'verify representative desktop and mobile behavior with Browser or Playwright'
+    );
+
+    expect(ubiquitousLanguage).toContain('Doc Class: `active`');
+    expect(ubiquitousLanguage).toContain('Last Verified: `2026-05-19`');
+    expect(ubiquitousLanguage).toContain('Primary object');
+    expect(ubiquitousLanguage).toContain('Primary next action');
+    expect(ubiquitousLanguage).toContain('Reason code');
+    expect(ubiquitousLanguage).toContain('Manual-link interview');
+    expect(ubiquitousLanguage).toContain('Privacy stage');
+    expect(ubiquitousLanguage).toContain('public directory, profile theater, vanity metric');
 
     expect(styleMap).toContain('Last Verified: `2026-05-19`');
     expect(styleMap).toContain('DESIGN.md');
@@ -260,6 +290,12 @@ describe('launch gate package configuration', () => {
     );
     expect(docsRegistry).toContain(
       '| `docs/STYLEMAP.md`                                                                                      | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `DESIGN.md`                                                                                             | `active`         | `root`        | `repo`              | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/PROOFOUND_UBIQUITOUS_LANGUAGE.md`                                                                 | `active`         | `docs`        | `repo`              | `2026-05-19`'
     );
   });
 
