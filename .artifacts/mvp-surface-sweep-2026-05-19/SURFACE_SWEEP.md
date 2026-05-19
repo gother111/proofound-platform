@@ -296,6 +296,12 @@ Archived Expertise E2E helper cleanup on 2026-05-19:
 - Docs cleanup: reframed `e2e/PRD_CRITERIA_VALIDATION.md` as historical/reference-only and pointed current launch evidence to strict E2E, focused workflow/org-corridor tests, route inventory, and the archived CV import hard gate.
 - Evidence: launch-gate, archived route, launch page inventory, route inventory, docs freshness, lint, typecheck, and `git diff --check` passed.
 
+Archived CV import docs cleanup on 2026-05-19:
+
+- Finding: `docs/features/cv-import.md` and `docs/features/cv-import-testing-guide.md` were correctly marked historical, but remaining body copy still used launch-sounding labels such as current runtime modes, expected results, goals, current limits, and current support/maintainer ownership for the retired Expertise Atlas CV import wizard.
+- Fix: changed those sections to explicitly historical language, updated their Last Verified dates and registry entries, and registered the archived E2E helper README that supports the moved non-MVP helpers.
+- Evidence: `npm run docs:freshness` passed with no findings; focused launch page / archived API tests passed; escalated `npx playwright test e2e/cv-import-non-launch.spec.ts --project=chromium --reporter=line --workers=1` passed 2/2 after the sandboxed attempt failed to bind `0.0.0.0:33100`; `git diff --check` passed.
+
 ## Verification
 
 Commands run with Node 25 path:
@@ -359,6 +365,10 @@ Commands run with Node 25 path:
 - `npm run lint` - passed after moving retired Expertise E2E helpers under archive.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after moving retired Expertise E2E helpers under archive.
 - `git diff --check` - passed after moving retired Expertise E2E helpers under archive.
+- `npm run docs:freshness` - passed with no findings after the archived CV import docs cleanup and archive helper README registry update.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/launch-page-inventory.test.ts tests/api/archived-api-handlers-route.test.ts` - passed, 2 files / 15 tests, after the archived CV import docs cleanup.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npx playwright test e2e/cv-import-non-launch.spec.ts --project=chromium --reporter=line --workers=1` - passed, 1 file / 2 tests, after approved escalation; the first sandbox attempt failed before tests because the Playwright web server could not bind `0.0.0.0:33100`.
+- `git diff --check` - passed after the archived CV import docs cleanup.
 - `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with `/api/user/data-inventory` active.
 - `npm run lint` - passed after removing the privacy component hook-dependency warning.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.

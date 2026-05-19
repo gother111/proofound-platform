@@ -1,5 +1,5 @@
 > Doc Class: `historical`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-19`
 
 # Archived Manual Testing Guide: CV Import Feature
 
@@ -74,14 +74,14 @@ These scenarios should fail against the current MVP because the legacy UI is int
 7. Click **"Add X Selected"** button
 8. Wait for success message
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Suggestions appear with skill names and confidence scores
 - ✅ Clicking skills toggles selection (border changes color)
 - ✅ "Add X Selected" button shows correct count
 - ✅ Success toast shows "Successfully added X skill(s)!"
 - ✅ Page refreshes or navigates to Skills Atlas
-- ✅ Skills appear in your Expertise Atlas
+- ✅ Skills appeared in the retired Expertise Atlas
 
 **Check Console**:
 
@@ -101,7 +101,7 @@ These scenarios should fail against the current MVP because the legacy UI is int
 2. Paste: `The quick brown fox jumps over the lazy dog.`
 3. Click **"Analyze & Suggest Skills"**
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Info toast: "No skills found. Try pasting more detailed text."
 - ✅ No suggestions appear
@@ -111,7 +111,7 @@ These scenarios should fail against the current MVP because the legacy UI is int
 
 ### Test 3: Duplicate Skill Handling
 
-**Goal**: Verify system handles duplicate skills gracefully.
+**Historical goal**: Verify system handled duplicate skills gracefully.
 
 **Steps**:
 
@@ -123,11 +123,11 @@ These scenarios should fail against the current MVP because the legacy UI is int
    - Select JavaScript again
    - Click Add Selected
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ First import: Success message
 - ✅ Second import: Success message (counts as success, skill already exists)
-- ✅ NO duplicate skills in database (verify in Expertise Atlas)
+- ✅ No duplicate skills in database (historically verified in Expertise Atlas)
 - ✅ Console shows skill already exists (but doesn't show error to user)
 
 **Verify in Database**:
@@ -146,7 +146,7 @@ Should return 0 rows (no duplicates).
 
 ### Test 4: Multiple Skills Import
 
-**Goal**: Verify batch import of multiple skills.
+**Historical goal**: Verify batch import of multiple skills.
 
 **Steps**:
 
@@ -163,11 +163,11 @@ Should return 0 rows (no duplicates).
 4. Select 10+ skills
 5. Click Add Selected
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Loading state shown ("Adding...")
 - ✅ Success message: "Successfully added 10 skills!"
-- ✅ All selected skills appear in Expertise Atlas
+- ✅ All selected skills appeared in the retired Expertise Atlas
 - ✅ Default values applied to all:
   - Level: 2 (Competent)
   - Experience: 0 months
@@ -178,7 +178,7 @@ Should return 0 rows (no duplicates).
 
 ### Test 5: Context Switching
 
-**Goal**: Verify CV/JD/General context buttons work.
+**Historical goal**: Verify CV/JD/General context buttons worked.
 
 **Steps**:
 
@@ -188,7 +188,7 @@ Should return 0 rows (no duplicates).
 4. Click **"General Text"** button → verify it's selected
 5. Paste text and analyze with each context
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Only one button selected at a time
 - ✅ Context is sent to API (check Network tab)
@@ -198,7 +198,7 @@ Should return 0 rows (no duplicates).
 
 ### Test 6: Loading States
 
-**Goal**: Verify UI shows proper loading feedback.
+**Historical goal**: Verify UI showed proper loading feedback.
 
 **Steps**:
 
@@ -206,7 +206,7 @@ Should return 0 rows (no duplicates).
 2. Paste long CV (2000+ characters)
 3. Click Analyze and IMMEDIATELY watch the button
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Button text changes to "Analyzing..."
 - ✅ Button is disabled during analysis
@@ -218,7 +218,7 @@ Should return 0 rows (no duplicates).
 2. Click Add Selected
 3. Watch the button
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Button text changes to "Adding..."
 - ✅ Button is disabled while saving
@@ -228,7 +228,7 @@ Should return 0 rows (no duplicates).
 
 ### Test 7: Error Handling
 
-**Goal**: Verify graceful error handling.
+**Historical goal**: Verify graceful error handling.
 
 **Test 7A: Empty Text**
 
@@ -236,7 +236,7 @@ Should return 0 rows (no duplicates).
 2. Leave textarea empty
 3. Try to click Analyze
 
-**Expected**: Button should be disabled.
+**Historical expected result**: Button should be disabled.
 
 **Test 7B: Network Error (Simulate)**
 
@@ -244,7 +244,7 @@ Should return 0 rows (no duplicates).
 2. Set throttling to "Offline"
 3. Paste CV and click Analyze
 
-**Expected**:
+**Historical expected result**:
 
 - ✅ Error toast: "Failed to analyze text"
 - ✅ No crash, UI remains functional
@@ -254,7 +254,7 @@ Should return 0 rows (no duplicates).
 1. Clear your auth cookies
 2. Try to import
 
-**Expected**:
+**Historical expected result**:
 
 - ✅ Redirected to login
 - OR Error message about authentication
@@ -263,14 +263,14 @@ Should return 0 rows (no duplicates).
 
 ### Test 8: UI/UX Verification
 
-**Goal**: Verify proper UI rendering.
+**Historical goal**: Verify proper UI rendering.
 
 **Steps**:
 
 1. Import CV and get suggestions
 2. Inspect each suggestion card
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ Skill name is displayed clearly
 - ✅ Confidence badge shows percentage (e.g., "85%")
@@ -284,17 +284,17 @@ Should return 0 rows (no duplicates).
 
 ### Test 9: Data Persistence
 
-**Goal**: Verify skills are actually saved to database.
+**Historical goal**: Verify skills were actually saved to database.
 
 **Steps**:
 
 1. Import and add 3 skills
 2. Note their names
-3. Navigate away from Expertise page
-4. Come back to Expertise page
+3. Navigate away from the retired Expertise page
+4. Come back to the retired Expertise page
 5. Check Skills Atlas tab
 
-**Expected Results**:
+**Historical expected results**:
 
 - ✅ All 3 skills still appear
 - ✅ Skills have correct default values

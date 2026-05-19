@@ -1,5 +1,5 @@
 > Doc Class: `historical`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-19`
 
 # Archived CV Import Feature Documentation
 
@@ -110,14 +110,16 @@ Analyzes text and returns skill suggestions.
 }
 ```
 
-**Current Runtime Modes**:
+**Historical Runtime Modes**:
+
+These modes describe the retired CV import implementation. They are not approval to make any CV import route launch-active.
 
 - `engine=auto` (default) - deterministic JSON path, Python for multipart.
 - `engine=typescript` - deterministic TypeScript path.
 - `engine=python` - Python path for JSON and multipart.
 - `engine=gemini` - Gemini extraction with deterministic fallback.
 
-**Gemini-enabled Endpoints**:
+**Historical Gemini-enabled Endpoints**:
 
 - `POST /api/expertise/cv-import/suggest`
 - `POST /api/expertise/cv-import/wizard-suggest`
@@ -264,7 +266,7 @@ npx playwright test e2e/cv-import-non-launch.spec.ts
 
 Old integration and UI tests for skill suggestion, confidence scores, import tabs, and CV wizard interactions are historical only. Do not move them back into default launch checks unless the route-surface policy is deliberately changed.
 
-## Performance Considerations
+## Historical Performance Considerations
 
 ### Text Processing
 
@@ -285,7 +287,7 @@ Old integration and UI tests for skill suggestion, confidence scores, import tab
 3. **Score-based ranking**: Most relevant skills appear first
 4. **Client-side caching**: Suggestions are cached in component state
 
-## Known Limitations
+## Historical Known Limitations
 
 1. **Text-based PDFs only**: The CV upload wizard is Python-only and does not fall back to browser OCR or local PDF parsing.
 2. **Upload Guardrails**: Default parser limits are strict (`5MB`, `4` pages) to control latency and spend.
@@ -293,7 +295,7 @@ Old integration and UI tests for skill suggestion, confidence scores, import tab
 4. **Language Quality Variance**: Non-English CVs can still reduce mapping quality depending on taxonomy coverage.
 5. **GCP OCR Provider**: The Cloud Run + Document AI smoke path is internal-only and not connected to the user CV/import review flow until explicitly approved. It uses service account ADC, not browser-created API keys.
 
-## Future Enhancements
+## Future / Post-MVP Ideas
 
 ### Near Term
 
@@ -307,7 +309,7 @@ Old integration and UI tests for skill suggestion, confidence scores, import tab
 - [ ] Expand document support beyond PDF while preserving current privacy guarantees.
 - [ ] Add adaptive per-user throttling based on abuse signals.
 
-## Troubleshooting
+## Historical Troubleshooting
 
 ### No Skills Found
 
@@ -322,7 +324,7 @@ Old integration and UI tests for skill suggestion, confidence scores, import tab
 
 ### Skills Not Saving
 
-**Problem**: User selects skills but they don't appear in Expertise Atlas
+**Historical problem**: User selected skills but they did not appear in the retired Expertise Atlas.
 
 **Check**:
 
@@ -384,7 +386,7 @@ psql $DATABASE_URL -c "SELECT COUNT(*) FROM skills_taxonomy WHERE status = 'acti
 - Consider adding rate limiting for auto-suggest endpoint
 - Prevent abuse via multiple rapid requests
 
-## Monitoring & Analytics
+## Historical Monitoring & Analytics
 
 ### Key Metrics to Track
 
@@ -419,23 +421,23 @@ logger.info('CV import completed', {
 });
 ```
 
-## API Rate Limits
+## Historical API Rate Limits
 
-Current limits (configurable via env):
+Historical limits (configurable via env):
 
 - CV import suggest routes: `CV_IMPORT_USER_RATE_LIMIT_MAX` requests per `CV_IMPORT_USER_RATE_LIMIT_WINDOW_SECONDS` per user and route.
 - Add skill route: global API limiter defaults still apply.
 
-## Support & Contact
+## Historical Support Notes
 
-For issues or questions:
+For archived implementation context:
 
 - File a GitHub issue with label `feature:cv-import`
-- Contact engineering team via Slack #expertise-atlas channel
+- Do not use the old Slack `#expertise-atlas` ownership model as current launch ownership.
 - Check troubleshooting section above
 
 ---
 
-**Last Updated**: March 1, 2026  
-**Version**: 2.0  
-**Maintainers**: Expertise Atlas Team
+**Last Updated**: May 19, 2026
+**Version**: 2.0
+**Maintainers**: Archived reference; current launch ownership follows the locked MVP authority stack.
