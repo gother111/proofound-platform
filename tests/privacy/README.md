@@ -1,4 +1,8 @@
-# 🔐 RLS Privacy Test Suite
+# RLS Privacy Test Suite
+
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-19`
+> Reference note: this file documents the privacy test suite shape. It is not standalone launch readiness proof and must be read with the current locked MVP authority stack, `verification.md`, `docs/production-readiness-checklist.md`, and fresh test output.
 
 ## 📋 Overview
 
@@ -41,9 +45,9 @@ tests/privacy/
 
 ### 1. Prerequisites
 
-- ✅ Node.js 20.20.0 installed (see `.nvmrc`)
+- ✅ Node.js 24.15.0 installed (see `.nvmrc`)
 - ✅ Separate test Supabase project (NOT your production database!)
-- ✅ All dependencies installed (`npm install`)
+- ✅ All dependencies installed from the lockfile (`npm ci`)
 
 ### 2. Environment Setup
 
@@ -63,7 +67,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 # Run core 5 privacy tests only
 npm run test:privacy
 
-# Run all privacy tests (core + extended)
+# Run all privacy tests discovered under tests/privacy
 npm run test:privacy:all
 
 # Run in watch mode (during development)
@@ -326,26 +330,28 @@ Your RLS policies are correctly implemented if:
 - ✅ Tests run in under 2 minutes
 - ✅ No orphaned test data remains after tests
 
-## 🎯 Test Coverage Goals
+## Test Coverage Goals
 
-| Category             | Coverage | Status |
-| -------------------- | -------- | ------ |
-| Profile Privacy      | 100%     | ✅     |
-| Verification Privacy | 100%     | ✅     |
-| Message Privacy      | 100%     | ✅     |
-| Analytics Privacy    | 100%     | ✅     |
-| Compensation Privacy | 100%     | ✅     |
-| Skills Privacy       | 100%     | ✅     |
-| Assignment Privacy   | 100%     | ✅     |
-| Organization Privacy | 100%     | ✅     |
-| Blocked Users        | 100%     | ✅     |
-| Conversation Stages  | 100%     | ✅     |
+The table below is a coverage target for the privacy suite, not a current launch-readiness certificate.
+For current launch evidence, rerun the scripts above against the intended target and record dated output.
+
+| Category             | Target expectation                         |
+| -------------------- | ------------------------------------------ |
+| Profile Privacy      | Unauthorized cross-user reads are blocked. |
+| Verification Privacy | Verifier contact details stay protected.   |
+| Message Privacy      | Conversation access follows participants.  |
+| Analytics Privacy    | User analytics are isolated.               |
+| Compensation Privacy | Compensation visibility is stage-gated.    |
+| Skills Privacy       | Proof-skill changes are owner-scoped.      |
+| Assignment Privacy   | Draft/private assignment data is gated.    |
+| Organization Privacy | Internal org data requires org access.     |
+| Blocked Users        | Block relationships are respected.         |
+| Conversation Stages  | Masked/revealed states stay consistent.    |
 
 ## 📞 Need Help?
 
 - 📖 Check [ENV_SETUP.md](./ENV_SETUP.md) for setup issues
 - 🐛 Review this README's troubleshooting section
-- 💬 Ask the team in #engineering-support
 - 🔍 Check existing test files for patterns
 
 ---

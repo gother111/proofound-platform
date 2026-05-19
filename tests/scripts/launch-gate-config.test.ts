@@ -909,6 +909,26 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps privacy test guidance from overstating launch evidence', () => {
+    const privacyReadme = fs.readFileSync(path.join(repoRoot, 'tests/privacy/README.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(privacyReadme).toContain('Doc Class: `reference-spec`');
+    expect(privacyReadme).toContain('Last Verified: `2026-05-19`');
+    expect(privacyReadme).toContain('not standalone launch readiness proof');
+    expect(privacyReadme).toContain('Node.js 24.15.0');
+    expect(privacyReadme).toContain('npm ci');
+    expect(privacyReadme).toContain('not a current launch-readiness certificate');
+    expect(privacyReadme).toContain('rerun the scripts above against the intended target');
+    expect(privacyReadme).not.toContain('Node.js 20.20.0');
+    expect(privacyReadme).not.toContain('All dependencies installed (`npm install`)');
+    expect(privacyReadme).not.toContain('| Profile Privacy      | 100%');
+    expect(privacyReadme).not.toContain('#engineering-support');
+    expect(docsRegistry).toContain(
+      '| `tests/privacy/README.md`                                                                               | `reference-spec` | `tests`       | `repo`              | `2026-05-19`'
+    );
+  });
+
   it('keeps LinkedIn verification guidance outside the launch corridor', () => {
     const linkedInSetup = fs.readFileSync(
       path.join(repoRoot, 'docs/LINKEDIN_VERIFICATION_SETUP.md'),

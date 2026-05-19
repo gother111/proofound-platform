@@ -1241,3 +1241,10 @@ Non-fatal test noise:
 - Reworded dataset descriptions so it is retained taxonomy/reference context, not active launch evidence or a route to revive archived Expertise Atlas UI/smart-search/database shortcuts.
 - Replaced active-sounding import/search/UI next steps with historical usage and reference-only follow-up language tied to target-approved taxonomy recovery, active migration/backup/restore runbooks, proof-skill selection, and assignment expertise helpers.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the retained dataset guidance stays aligned with the current archived Atlas posture.
+
+## Continuation - Privacy Test Guidance Scope
+
+- Found `tests/privacy/README.md` still verified on 2026-02-12, with Node 20/npm-install setup guidance and `100%` privacy coverage rows that could be mistaken for current launch proof.
+- Added reference-spec metadata, current Node 24.15.0 and `npm ci` setup wording, and a clear note that the README is test-suite guidance rather than standalone launch readiness evidence.
+- Replaced the `100%` coverage table with target expectations and required fresh target-specific privacy test output for launch evidence.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the privacy README cannot drift back to stale runtime or overbroad launch-proof claims.
