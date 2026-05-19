@@ -1063,6 +1063,7 @@ export function buildFinalLaunchChecklistDefinitions({
           summary:
             'The dated launch owner roster assigns named humans to founder, incident, technical, product/ops, and support/verification roles.',
           patterns: [
+            /Doc Class: `active`/i,
             /Launch Owner Roster/i,
             /Yurii Bakurov/i,
             /Founder \/ launch owner/i,
@@ -1118,6 +1119,7 @@ export function buildFinalLaunchChecklistDefinitions({
           summary:
             'The dated launch evidence pack records green live launch monitoring for health, status, auth-adjacent, email/privacy, upload/privacy, workflow, and privacy-leak categories.',
           patterns: [
+            /Doc Class: `active`/i,
             /Critical alert drill status: `PASS`/i,
             /Live `\/api\/monitoring\/launch-status`: `PASS`/i,
             /auth/i,
@@ -1167,7 +1169,11 @@ export function buildFinalLaunchChecklistDefinitions({
           sourcePath: 'docs/internal-ops/production-launch-evidence-2026-04-27.md',
           sourceLabel: 'Production launch evidence pack',
           summary: 'The dated launch evidence pack records a successful isolated restore drill.',
-          patterns: [/Restore drill status: `PASS`/i, /isolated recovery target/i],
+          patterns: [
+            /Doc Class: `active`/i,
+            /Restore drill status: `PASS`/i,
+            /isolated recovery target/i,
+          ],
         });
         if (restoreEvidence.length > 0) {
           return restoreEvidence;
@@ -1439,6 +1445,7 @@ export function buildFinalLaunchChecklistDefinitions({
           summary:
             'The dated launch signoff memo records a GO decision after fresh launch evidence turned green.',
           patterns: [
+            /Doc Class: `active`/i,
             /Decision: `GO`/i,
             /Evidence bundle date: `2026-04-27`/i,
             /Founder \/ launch owner: `Yurii Bakurov` `APPROVED`/i,

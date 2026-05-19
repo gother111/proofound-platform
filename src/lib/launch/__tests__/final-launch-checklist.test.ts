@@ -241,7 +241,9 @@ assignment, proof expectations, and verification queue handoffs are documented.
     await writeFile(
       workspace,
       'docs/internal-ops/launch-owner-roster-2026-04-27.md',
-      `# Launch Owner Roster
+      `> Doc Class: \`active\`
+
+# Launch Owner Roster
 
 Status: \`PASS\`
 
@@ -258,7 +260,9 @@ Status: \`PASS\`
     await writeFile(
       workspace,
       'docs/internal-ops/production-launch-evidence-2026-04-27.md',
-      `# Production Launch Evidence
+      `> Doc Class: \`active\`
+
+# Production Launch Evidence
 
 Critical alert drill status: \`PASS\`
 
@@ -619,5 +623,81 @@ describe('final launch checklist pipeline', () => {
     expect(itemStatus('founder_candidate_supply_plan')).toBe('PASS');
     expect(itemStatus('founder_org_onboarding_playbook')).toBe('PASS');
     expect(itemStatus('ops_backup_restore_verified')).toBe('UNVERIFIED');
+  });
+
+  it('does not accept historical launch evidence as current full-launch proof', async () => {
+    const workspace = await createWorkspaceFixture({
+      includeRepoReadyBundle: true,
+      includeLaunchEvidence: true,
+    });
+
+    await writeFile(
+      workspace,
+      'docs/internal-ops/launch-owner-roster-2026-04-27.md',
+      `> Doc Class: \`historical\`
+
+# Historical Launch Owner Roster - 2026-04-27
+
+Status: \`PASS\`
+
+| Role | Named human |
+| --- | --- |
+| Founder / launch owner | Yurii Bakurov |
+| Incident owner | Yurii Bakurov |
+| Technical owner | Yurii Bakurov |
+| Product / ops owner | Yurii Bakurov |
+| Support / verification owner | Yurii Bakurov |
+`
+    );
+
+    await writeFile(
+      workspace,
+      'docs/internal-ops/production-launch-evidence-2026-04-27.md',
+      `> Doc Class: \`historical\`
+
+# Historical Production Launch Evidence - 2026-04-27
+
+Critical alert drill status: \`PASS\`
+
+Live \`/api/monitoring/launch-status\`: \`PASS\`
+
+auth email upload workflow privacy
+
+Restore drill status: \`PASS\`
+
+isolated recovery target
+`
+    );
+
+    await writeFile(
+      workspace,
+      'docs/launch-signoff-2026-04-27.md',
+      `> Doc Class: \`historical\`
+
+# Historical Production Launch Signoff - 2026-04-27
+
+Decision: \`GO\`
+
+Evidence bundle date: \`2026-04-27\`
+
+Founder / launch owner: \`Yurii Bakurov\` \`APPROVED\`
+
+Technical owner: \`Yurii Bakurov\` \`APPROVED\`
+`
+    );
+
+    const report = await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'full',
+      now: new Date('2026-04-14T21:10:00.000Z'),
+      fetchImpl: globalThis.fetch,
+    });
+
+    const itemStatus = (id: string) => report.items.find((item) => item.id === id)?.status;
+
+    expect(itemStatus('ops_incident_roles_assigned')).toBe('UNVERIFIED');
+    expect(itemStatus('ops_critical_alerts_configured')).toBe('UNVERIFIED');
+    expect(itemStatus('ops_backup_restore_verified')).toBe('UNVERIFIED');
+    expect(itemStatus('founder_go_no_go_signed_after_green')).not.toBe('PASS');
   });
 });

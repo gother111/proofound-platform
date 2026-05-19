@@ -1480,3 +1480,10 @@ Non-fatal test noise:
 - Found the strict individual E2E flow still expecting the pre-proof home state after it had seeded a proof record and completed the matching-interest path.
 - Aligned the test with the active home page state machine: once proof exists, `/app/i/home` should show `Verify strongest proof record` and the context/trust/visibility review copy rather than the first-proof prompt.
 - Verified the focused strict flow with `PLAYWRIGHT_PORT=33181 NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node24.mjs test e2e/strict/individual.strict.spec.ts --project=chromium --reporter=line --workers=1 --grep "I-10..I-14"`; result: `1 passed`.
+
+## Continuation - Historical Evidence Guard For External Launch Prerequisites
+
+- Found the final launch checklist still relied on text-pattern evidence for owner roster, critical-alert proof, restore proof, and final signoff rows.
+- Tightened those external production-candidate rows so PASS evidence must come from docs explicitly marked `Doc Class: active`; historical April owner/evidence/signoff files can no longer satisfy current launch proof even if they contain matching PASS phrases.
+- Added focused regression coverage proving historical owner, alert, restore, and signoff evidence does not become current full-launch proof.
+- Regenerated `.artifacts/launch-validation-2026-05-19/final-launch-checklist-status.md/json`; repo scope remains `READY` with `36` pass, `0` fail, `0` blocked, and `4` external prerequisites still correctly `UNVERIFIED`.
