@@ -622,6 +622,23 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps superseded Expertise fix instructions out of active launch guidance', () => {
+    const fixInstructions = fs.readFileSync(path.join(repoRoot, 'FIX_INSTRUCTIONS.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(fixInstructions).toContain('Doc Class: `historical`');
+    expect(fixInstructions).toContain('Last Verified: `2026-05-19`');
+    expect(fixInstructions).toContain('/app/i/expertise` is archived outside launch scope');
+    expect(fixInstructions).toContain('Proof Packs');
+    expect(fixInstructions).not.toContain('FINAL SOLUTION');
+    expect(fixInstructions).not.toContain('Refresh Sofia');
+    expect(fixInstructions).not.toContain('src/app/app/i/expertise/page.tsx');
+    expect(fixInstructions).not.toContain('console.log debugging');
+    expect(docsRegistry).toContain(
+      '| `FIX_INSTRUCTIONS.md`                                                                                   | `historical`     | `root`        | `archive`           | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',

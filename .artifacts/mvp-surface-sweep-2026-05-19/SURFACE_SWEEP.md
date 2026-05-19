@@ -434,6 +434,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Added privacy-specific logging rules for proof content, filenames, storage paths, verifier text, reveal-sensitive identity details, tokens, and private profile context.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the active guide cannot drift back to archived Expertise Atlas migration targets or stale console-search commands.
 
+53. The root fix instructions still described an empty Expertise Atlas tab as the current final solution.
+
+- Replaced `FIX_INSTRUCTIONS.md` with a short historical/superseded note.
+- Reclassified the file from active root guidance to historical/archive in `docs/DOCS_REGISTRY.md`.
+- Removed active instructions to refresh the retired Expertise tab, inspect `src/app/app/i/expertise/page.tsx`, and rely on temporary console debugging.
+- Added launch-gate coverage so the file cannot return as active launch guidance for the archived Expertise tab.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
