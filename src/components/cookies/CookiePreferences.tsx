@@ -39,7 +39,7 @@ const COOKIE_CATEGORIES = [
     id: 'analytics' as const,
     title: 'Analytics Cookies',
     description:
-      'Help us understand how you use our platform so we can improve your experience. We use this data to optimize performance and fix bugs.',
+      'Help us understand how Proofound is working so we can improve product quality and fix bugs.',
     icon: TrendingUp,
     locked: false,
     examples: 'Page views, feature usage, performance metrics',
@@ -48,10 +48,10 @@ const COOKIE_CATEGORIES = [
     id: 'marketing' as const,
     title: 'Marketing Cookies',
     description:
-      'Used to show you relevant content and advertisements. These cookies help us understand which campaigns work best.',
+      'Used only for relevant Proofound updates and campaign measurement when you allow them.',
     icon: Megaphone,
     locked: false,
-    examples: 'Ad targeting, campaign tracking, social media pixels',
+    examples: 'Campaign attribution, consented update measurement',
   },
 ];
 
