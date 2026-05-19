@@ -374,6 +374,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Confirmed remaining `custom_request_id` references are canonical bundle linkage for grouped verification requests, not old skill/impact request-table transport.
 - Updated `docs/backlog/phase-2-trust-review.md`, `docs/backlog/dependency-map.md`, `docs/verification-checklist.md`, and `docs/DOCS_REGISTRY.md` with the 2026-05-19 Phase 2 disposition and focused test evidence.
 
+48. Phase 3 still recorded the `/api/assignments` latency warning as a broad planned item, and the assignment list route did avoidable duplicate match-table work.
+
+- Inspected `src/app/api/assignments/route.ts` and found the list route performed a stale-active assignment match-count query and then a second matching-summary aggregate over the same `matches` table.
+- Removed the separate match-count query and now derive the low-match TTFQI warning from the matching summary already returned with each assignment.
+- Added `tests/api/assignments-list-route.test.ts` so the response still emits the warning from `matchingSummary.candidateCount` and proves the route no longer needs the extra match-count select call.
+- Updated `docs/backlog/phase-3-hiring-corridor.md` and `docs/DOCS_REGISTRY.md` to record the local route hardening, focused Phase 3 evidence, and the remaining live/staging perf-budget proof as watch-only.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -747,6 +754,9 @@ Commands run with Node 25 path:
 - Browser plugin smoke saved `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/browser-smoke.json` plus desktop/mobile screenshots for representative public, auth-entry, protected individual/org, and admin/internal surfaces.
 - `rg -n 'skill_verification_requests|impact_story_verification_requests|request_type|custom_request_id' src/app src/lib tests -g '!src/archive/**' -g '!tests/archive/**'` - no active old skill/impact request-table names remain in `src/app` or `src/lib`; remaining `custom_request_id` hits are canonical bundle linkage.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/lib/canonical-verification-request-token-resolution.test.ts tests/api/verify-impact-token-route.test.ts tests/api/custom-verification-routes.test.ts tests/api/verification-status-route.test.ts tests/ui/verification-status-options.test.tsx tests/api/org-match-review-route.test.ts tests/api/conversation-reveal-route.test.ts tests/api/engagement-verifications-route.test.ts tests/lib/authz-policy.test.ts tests/lib/workflow-decision-record.test.ts` - passed, 10 files / 82 tests, after the Phase 2 verification disposition refresh.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/assignments-list-route.test.ts` - passed, 1 file / 1 test, after removing the duplicate assignment match-count query.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/assignments-list-route.test.ts tests/api/assignments-publish-route.test.ts tests/lib/launch-assignment-publish-smoke.test.ts tests/api/engagement-verifications-route.test.ts tests/lib/workflow-decision-record.test.ts tests/lib/authz-policy.test.ts` - passed, 6 files / 35 tests, after the assignment list hardening.
+- `npm run docs:freshness` - passed after the Phase 3 backlog disposition update.
 
 Non-fatal test noise:
 

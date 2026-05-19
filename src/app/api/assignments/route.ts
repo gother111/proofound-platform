@@ -369,34 +369,6 @@ export async function GET(request: NextRequest) {
       // PRD safeguard: TTFQI 72h warning if <5 matches after 72 hours
       // -----------------------------------------------------------------------
       const now = Date.now();
-      const staleActiveAssignments = assignmentsToReturn.filter((assignment: any) => {
-        if (assignment.status !== 'active') return false;
-        const ageHours = (now - new Date(assignment.createdAt).getTime()) / (1000 * 60 * 60);
-        return ageHours >= 72;
-      });
-      const assignmentIds = staleActiveAssignments.map((a: any) => a.id);
-
-      let matchCounts: Record<string, number> = {};
-
-      if (assignmentIds.length > 0) {
-        const rows = await db
-          .select({
-            assignmentId: matches.assignmentId,
-            count: sql<number>`count(*)::int`,
-          })
-          .from(matches)
-          .where(inArray(matches.assignmentId, assignmentIds))
-          .groupBy(matches.assignmentId);
-
-        matchCounts = rows.reduce(
-          (acc, row) => {
-            acc[row.assignmentId] = row.count;
-            return acc;
-          },
-          {} as Record<string, number>
-        );
-      }
-
       const matchingSummaries: Record<
         string,
         {
@@ -464,7 +436,14 @@ export async function GET(request: NextRequest) {
 
       const itemsWithWarnings = assignmentsToReturn.map((assignment: any) => {
         const ageHours = (now - new Date(assignment.createdAt).getTime()) / (1000 * 60 * 60);
-        const count = matchCounts[assignment.id] ?? 0;
+        const matchingSummary = matchingSummaries[assignment.id] ?? {
+          candidateCount: 0,
+          reviewChangeCount: 0,
+          lastCandidateAt: null,
+          lastReviewChangeAt: null,
+          lastActivityAt: null,
+        };
+        const count = matchingSummary.candidateCount;
         const warn =
           assignment.status === 'active' && ageHours >= 72 && count < 5
             ? {
@@ -495,13 +474,7 @@ export async function GET(request: NextRequest) {
         return {
           ...assignment,
           ttfqiWarning: warn,
-          matchingSummary: matchingSummaries[assignment.id] ?? {
-            candidateCount: 0,
-            reviewChangeCount: 0,
-            lastCandidateAt: null,
-            lastReviewChangeAt: null,
-            lastActivityAt: null,
-          },
+          matchingSummary,
         };
       });
 
