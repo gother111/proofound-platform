@@ -184,6 +184,7 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Replaced the visible labels with plain MVP language: Proof Pack bundle request, Manage bundle, grouped proof items, account-side checks, work email account check, and organization-linking support.
 - Kept the underlying account-side behavior unchanged: work email can help organization linking, but it does not create public trust or intro eligibility by itself; LinkedIn remains read-only history outside the launch corridor.
 - Added/updated focused UI expectations so active tests fail if the old legacy-bundle language returns.
+- Browser evidence on `localhost:33180`: `/app/i/settings` rendered `Account-side checks`, `Work email account check`, and `LinkedIn account check`, with no `compatibility signal`, no `Account compatibility`, no loading state, and no runtime-error text after the settings content settled.
 
 ## Browser Evidence
 
