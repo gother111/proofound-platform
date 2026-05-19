@@ -1162,3 +1162,9 @@ Non-fatal test noise:
 - Found `DESIGN.md` and `docs/PROOFOUND_UBIQUITOUS_LANGUAGE.md` still verified on earlier dates while remaining active guidance for UI, copy, and naming.
 - Refreshed the design contract with active-surface checks for primary object/action clarity, privacy/trust/proof/readiness states, gated/archived/disabled/empty/loading/error/success states, no public-directory cues, no score/rank/automated-verdict presentation, and Browser/Playwright desktop/mobile evidence for meaningful UI edits.
 - Refreshed ubiquitous language with current corridor terms: primary object, primary next action, trust state, reason code, manual-link interview, privacy stage, and explicit guardrails against public directory, profile theater, vanity metric, broad marketplace, or broad platform language.
+
+## Continuation - Legacy Scratchpad Reclassification
+
+- Found `agent/scratchpad.md` still classified active even though `AGENTS.md`, preflight, verification guidance, and the sharded README all define it as a frozen legacy shared log.
+- Reclassified `agent/scratchpad.md` as historical/archive, added current metadata, and made clear it is not current launch evidence, implementation status, or verification proof.
+- Preserved the historical entries in place while keeping routine work directed to `agent/scratchpad/entries/` via `npm run log:session`.

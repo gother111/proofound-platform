@@ -756,6 +756,7 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'agent/scratchpad/README.md'),
       'utf8'
     );
+    const legacyScratchpad = fs.readFileSync(path.join(repoRoot, 'agent/scratchpad.md'), 'utf8');
     const changeReadme = fs.readFileSync(path.join(repoRoot, 'project/changes/README.md'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
     const shardedReadmes = `${sessionReadme}\n${changeReadme}`;
@@ -780,6 +781,12 @@ describe('launch gate package configuration', () => {
 
     expect(shardedReadmes).toContain('Routine work should not append to `agent/scratchpad.md`');
     expect(shardedReadmes).toContain('Routine per-task changes should not be appended there');
+    expect(legacyScratchpad).toContain('Doc Class: `historical`');
+    expect(legacyScratchpad).toContain('Last Verified: `2026-05-19`');
+    expect(legacyScratchpad).toContain('Frozen for routine per-task updates');
+    expect(legacyScratchpad).toContain('Do not use this legacy file as current launch evidence');
+    expect(legacyScratchpad).toContain('log script creates a real file');
+    expect(legacyScratchpad).toContain('Do not include private proof content');
     expect(docsRegistry).toContain(
       '| `agent/runbooks/proofound-ticket-finisher.md`                                                           | `active`         | `agent`       | `repo+live`         | `2026-05-19`'
     );
@@ -788,6 +795,9 @@ describe('launch gate package configuration', () => {
     );
     expect(docsRegistry).toContain(
       '| `project/changes/README.md`                                                                             | `active`         | `project`     | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `agent/scratchpad.md`                                                                                   | `historical`     | `agent`       | `archive`           | `2026-05-19`'
     );
   });
 
