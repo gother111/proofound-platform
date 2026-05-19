@@ -95,7 +95,7 @@ export function InterviewCard({ interview, onCancel, onReschedule }: InterviewCa
                 ? 'Other'
                 : 'Manual'
         : interview.platform === 'zoom'
-          ? 'Zoom'
+          ? 'Manual (Zoom)'
           : 'Google Meet';
 
     // Generate ICS file for calendar
@@ -148,7 +148,7 @@ END:VCALENDAR`;
       return 'Manual';
     }
 
-    return 'Zoom';
+    return 'Manual (Zoom)';
   };
 
   return (

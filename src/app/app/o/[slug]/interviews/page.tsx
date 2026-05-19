@@ -151,12 +151,20 @@ export default function OrganizationInterviewsPage() {
     });
   };
 
+  const meetingPlatformLabel = (platform: string | null | undefined) => {
+    if (platform === 'zoom') return 'Manual (Zoom)';
+    return internalValueLabel(platform);
+  };
+
   const toCalendarPayload = (interview: Interview): InterviewCalendarPayload => ({
     interviewId: interview.interview?.id ?? interview.id,
     scheduledAt: interview.interview?.scheduledAt ?? new Date().toISOString(),
     durationMinutes: interview.interview?.duration ?? 30,
     meetingUrl: interview.interview?.meetingUrl ?? 'pending',
-    platform: interview.interview?.platform ?? 'manual',
+    platform:
+      interview.interview?.platform === 'zoom'
+        ? 'manual'
+        : (interview.interview?.platform ?? 'manual'),
     title:
       interview.candidateDisplayName || interview.corridor.subjectLabel
         ? `Interview with ${interview.candidateDisplayName || interview.corridor.subjectLabel}`
@@ -571,7 +579,7 @@ export default function OrganizationInterviewsPage() {
                               <div className="flex items-center gap-2">
                                 <Video className="h-4 w-4" style={{ color: '#6B6760' }} />
                                 <span className="text-sm capitalize" style={{ color: '#6B6760' }}>
-                                  {internalValueLabel(interview.interview.platform)}
+                                  {meetingPlatformLabel(interview.interview.platform)}
                                 </span>
                               </div>
                             ) : null}

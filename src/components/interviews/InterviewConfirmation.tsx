@@ -56,12 +56,12 @@ export function InterviewConfirmation({
       return 'Google Meet';
     }
 
-    return 'Zoom';
+    return 'Manual (Zoom)';
   };
 
   const getMeetingProviderDescription = () => {
     if (interview.platform !== 'manual') {
-      return interview.platform === 'google_meet' ? 'Google Meet' : 'Zoom';
+      return interview.platform === 'google_meet' ? 'Google Meet' : 'Manual Zoom link';
     }
 
     if (interview.manual_meeting_provider === 'teams') return 'Microsoft Teams';
@@ -146,7 +146,9 @@ export function InterviewConfirmation({
             <Video className="w-5 h-5 text-proofound-forest flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-foreground">Platform</p>
-              <p className="text-sm text-muted-foreground capitalize">{getMeetingProviderLabel()}</p>
+              <p className="text-sm text-muted-foreground capitalize">
+                {getMeetingProviderLabel()}
+              </p>
             </div>
           </div>
 
@@ -275,7 +277,7 @@ function generateICS(
               : 'Manual provider'
       : interview.platform === 'google_meet'
         ? 'Google Meet'
-        : 'Zoom';
+        : 'Manual Zoom link';
 
   const start = new Date(interview.scheduled_at);
   const end = new Date(start.getTime() + interview.duration_minutes * 60000);

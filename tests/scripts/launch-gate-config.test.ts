@@ -165,6 +165,17 @@ describe('launch gate package configuration', () => {
     ).toBe(true);
   });
 
+  it('keeps the broad critical-gaps mock test archived', () => {
+    expect(fs.existsSync(path.join(repoRoot, 'tests/integration/critical-gaps.test.ts'))).toBe(
+      false
+    );
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'tests/archive/non_mvp_critical_gaps/critical-gaps.archived.test.ts')
+      )
+    ).toBe(true);
+  });
+
   it('keeps retired wellbeing API tests archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'tests/api-endpoints-test.ts'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'tests/lib/wellbeing-client.test.ts'))).toBe(false);

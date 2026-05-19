@@ -171,7 +171,7 @@ describe('organization interviews page actions', () => {
       expect(screen.getByRole('button', { name: /edit interview/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /cancel interview/i })).toBeInTheDocument();
     });
-    expect(screen.getByText('Zoom')).toBeInTheDocument();
+    expect(screen.getByText('Manual (Zoom)')).toBeInTheDocument();
     expect(screen.queryByText('zoom')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /edit interview/i }));

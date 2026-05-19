@@ -106,12 +106,20 @@ export default function InterviewsPage() {
     });
   };
 
+  const meetingPlatformLabel = (platform: string | null | undefined) => {
+    if (platform === 'zoom') return 'Manual (Zoom)';
+    return internalValueLabel(platform);
+  };
+
   const toCalendarPayload = (interview: Interview): InterviewCalendarPayload => ({
     interviewId: interview.interview?.id ?? interview.id,
     scheduledAt: interview.interview?.scheduledAt ?? new Date().toISOString(),
     durationMinutes: interview.interview?.duration ?? 30,
     meetingUrl: interview.interview?.meetingUrl ?? 'pending',
-    platform: interview.interview?.platform ?? 'manual',
+    platform:
+      interview.interview?.platform === 'zoom'
+        ? 'manual'
+        : (interview.interview?.platform ?? 'manual'),
     title: 'Proofound interview',
   });
 
@@ -299,7 +307,7 @@ export default function InterviewsPage() {
                         <div className="flex items-center gap-2">
                           <Video className="w-4 h-4" style={{ color: '#6B6760' }} />
                           <span className="text-sm" style={{ color: '#6B6760' }}>
-                            {internalValueLabel(interview.interview.platform)}
+                            {meetingPlatformLabel(interview.interview.platform)}
                           </span>
                         </div>
                       )}

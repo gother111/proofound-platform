@@ -314,6 +314,18 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Added route-local public portfolio not-found fallbacks as a defensive guard for future thrown segment 404s.
 - Updated individual and organization public portfolio tests to assert the generic unavailable state for missing handles/slugs.
 
+40. An active integration test still presented broad mock "critical gaps" as current MVP evidence.
+
+- `tests/integration/critical-gaps.test.ts` used placeholder assertions for broad fairness reporting, generic web-vitals instrumentation, Zoom interview scheduling, and matching-profile weights rather than exercising current launch behavior.
+- Moved it to `tests/archive/non_mvp_critical_gaps/critical-gaps.archived.test.ts` and added an archive README explaining why it is historical only.
+- Added launch-gate coverage so the placeholder test stays out of active `tests/integration`.
+
+41. Legacy Zoom platform labels could look like a native launch integration.
+
+- Current scheduling already rejects native `platform: zoom` and tells users to use Google Meet or a manual meeting link, but active interview list and shared interview components still displayed legacy `platform: zoom` rows as `Zoom`.
+- Updated individual and organization interview surfaces plus shared interview card/confirmation copy so legacy Zoom rows render as manual Zoom links, while explicit manual Zoom providers remain allowed.
+- Updated the organization interview UI test to expect `Manual (Zoom)` instead of presenting Zoom as a native launch platform.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -645,6 +657,14 @@ Commands run with Node 25 path:
 - `npm run docs:freshness` - passed after the missing public portfolio fallback fix.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after the missing public portfolio fallback fix.
 - `git diff --check` - passed after the missing public portfolio fallback fix.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/api/launch-page-inventory.test.ts` - passed, 2 files / 26 tests, after archiving the broad critical-gaps mock test.
+- `npm run docs:freshness` - passed after registering the critical-gaps archive README.
+- `rg -n "critical-gaps|Critical Gaps|5 critical gaps|Zoom|fairness gaps" tests -g '!tests/archive/**'` - remaining active hits were the launch-gate archive assertion and live interview tests; no active critical-gaps test remained.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/organization-interviews-page-actions.test.tsx tests/scripts/launch-gate-config.test.ts` - passed, 2 files / 25 tests, after the manual Zoom label cleanup.
+- `npm run lint` - passed after the critical-gaps archive and manual Zoom label cleanup.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the critical-gaps archive and manual Zoom label cleanup.
+- `npm run docs:freshness` - passed after the critical-gaps archive and manual Zoom label cleanup.
+- `git diff --check` - passed after the critical-gaps archive and manual Zoom label cleanup.
 
 Non-fatal test noise:
 
