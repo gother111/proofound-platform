@@ -36,7 +36,11 @@ function extractMethods(source) {
   const reExportList = /export\s*\{([^}]+)\}/g;
   while ((m = reExportList.exec(source)) !== null) {
     for (const part of m[1].split(',')) {
-      const exported = part.trim().split(/\s+as\s+/i).pop()?.trim();
+      const exported = part
+        .trim()
+        .split(/\s+as\s+/i)
+        .pop()
+        ?.trim();
       if (HTTP_METHODS.includes(exported)) methods.add(exported);
     }
   }
@@ -56,17 +60,23 @@ function sourcePath(file) {
 }
 
 function classifyTier(route, source) {
-  const internalAdminSignals = /(requirePlatformAdmin|adminListGuard|assertPlatformAdmin|isPlatformAdmin)/i;
+  const internalAdminSignals =
+    /(requirePlatformAdmin|adminListGuard|assertPlatformAdmin|isPlatformAdmin)/i;
   if (route.startsWith('/api/admin/') || internalAdminSignals.test(source)) return 'internal';
 
   const isCronRoute = route.startsWith('/api/cron/') || route === '/api/cron';
-  const cronSignals = /(CRON_SECRET|authorization\s*:\s*['"]Bearer|bearer\s+\$?\{?process\.env\.CRON_SECRET)/i;
+  const cronSignals =
+    /(CRON_SECRET|authorization\s*:\s*['"]Bearer|bearer\s+\$?\{?process\.env\.CRON_SECRET)/i;
   if (isCronRoute || cronSignals.test(source)) return 'cron';
 
-  const serviceSignals = /(createServiceRoleClient|SUPABASE_SERVICE_ROLE_KEY|service[_ -]?role|admin\.generateLink|createServerSupabaseAdminClient)/i;
+  if (/requireInternalOpsRequest/i.test(source)) return 'internal';
+
+  const serviceSignals =
+    /(createServiceRoleClient|SUPABASE_SERVICE_ROLE_KEY|service[_ -]?role|admin\.generateLink|createServerSupabaseAdminClient)/i;
   if (serviceSignals.test(source)) return 'service';
 
-  const sessionSignals = /(requireSession|requireApiAuthContext|getUser\(|auth\.getUser\(|createRouteHandlerClient|csrf|x-csrf-token|assertAuthenticated)/i;
+  const sessionSignals =
+    /(requireSession|requireApiAuthContext|getUser\(|auth\.getUser\(|createRouteHandlerClient|csrf|x-csrf-token|assertAuthenticated)/i;
   if (sessionSignals.test(source)) return 'session';
 
   return 'public';
@@ -80,7 +90,10 @@ function deriveNotes(source) {
 }
 
 function familyKey(route) {
-  const parts = route.replace(/^\/api\/?/, '').split('/').filter(Boolean);
+  const parts = route
+    .replace(/^\/api\/?/, '')
+    .split('/')
+    .filter(Boolean);
   if (parts[0] === 'mobile' && parts[1] === 'v1') return 'mobile/v1';
   return parts[0] || 'root';
 }
@@ -160,15 +173,21 @@ async function build() {
   lines.push('# API Reference');
   lines.push('');
   lines.push('> Doc Class: `active`');
-  lines.push('> Verification Source: `src/app/api/**/route.ts`, `src/middleware.ts`, `package.json`, `.github/workflows/ci.yml`, `vercel.json`');
+  lines.push(
+    '> Verification Source: `src/app/api/**/route.ts`, `src/middleware.ts`, `package.json`, `.github/workflows/ci.yml`, `vercel.json`'
+  );
   lines.push(`> Last Verified: \`${date}\``);
   lines.push('');
-  lines.push('Canonical API documentation generated from the current App Router route handlers under `src/app/api/**/route.ts`.');
+  lines.push(
+    'Canonical API documentation generated from the current App Router route handlers under `src/app/api/**/route.ts`.'
+  );
   lines.push('');
   lines.push('## Generation Method');
   lines.push('');
   lines.push('- Source of truth: filesystem route scan of `src/app/api/**/route.ts`.');
-  lines.push('- HTTP methods: parsed from exported handler functions (`GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS`).');
+  lines.push(
+    '- HTTP methods: parsed from exported handler functions (`GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS`).'
+  );
   lines.push('- Auth tier: heuristic classification from route path + handler source signals.');
   lines.push('- Launch surface: classified through `src/lib/launch/surface-policy.ts`.');
   lines.push('- Regenerate with: `node scripts/generate-api-reference.mjs`.');
@@ -181,15 +200,26 @@ async function build() {
   lines.push('## Security Model (Operational)');
   lines.push('');
   lines.push('- Session routes rely on authenticated Supabase user context.');
-  lines.push('- Mutating routes are typically CSRF-protected via middleware and route-level checks.');
+  lines.push(
+    '- Mutating routes are typically CSRF-protected via middleware and route-level checks.'
+  );
+  lines.push(
+    '- Internal launch-ops routes require the internal bearer token accepted by `requireInternalOpsRequest`.'
+  );
   lines.push('- Cron routes require `Authorization: Bearer <CRON_SECRET>`.');
-  lines.push('- Service routes may use privileged Supabase/admin operations and must remain server-only.');
+  lines.push(
+    '- Service routes may use privileged Supabase/admin operations and must remain server-only.'
+  );
   lines.push('');
   lines.push('## Coverage Summary');
   lines.push('');
   lines.push(`- Total route handlers: **${rows.length}**`);
-  lines.push(`- Auth tier counts: \`public=${tierCounts.public || 0}\`, \`session=${tierCounts.session || 0}\`, \`service=${tierCounts.service || 0}\`, \`cron=${tierCounts.cron || 0}\`, \`internal=${tierCounts.internal || 0}\``);
-  lines.push(`- Launch surface counts: \`active MVP=${surfaceCounts.active_launch_path || 0}\`, \`internal launch ops=${surfaceCounts.internal_only_launch_ops || 0}\`, \`archived compatibility=${surfaceCounts.archived || 0}\``);
+  lines.push(
+    `- Auth tier counts: \`public=${tierCounts.public || 0}\`, \`session=${tierCounts.session || 0}\`, \`service=${tierCounts.service || 0}\`, \`cron=${tierCounts.cron || 0}\`, \`internal=${tierCounts.internal || 0}\``
+  );
+  lines.push(
+    `- Launch surface counts: \`active MVP=${surfaceCounts.active_launch_path || 0}\`, \`internal launch ops=${surfaceCounts.internal_only_launch_ops || 0}\`, \`archived compatibility=${surfaceCounts.archived || 0}\``
+  );
   lines.push(`- Family count: **${familyOrder.length}**`);
   lines.push('');
   lines.push('## Endpoint Inventory');
@@ -212,7 +242,9 @@ async function build() {
 
   lines.push('## Compatibility / Deprecated Surface');
   lines.push('');
-  lines.push('Routes with source-level `legacy`/`deprecated` markers should be treated as compatibility surfaces and reviewed before removal.');
+  lines.push(
+    'Routes with source-level `legacy`/`deprecated` markers should be treated as compatibility surfaces and reviewed before removal.'
+  );
   lines.push('');
   lines.push('| Path | Source | Marker |');
   lines.push('| --- | --- | --- |');
@@ -234,11 +266,15 @@ async function build() {
   lines.push('- `STRICT_DOCS_FRESHNESS=true npm run docs:freshness`');
   lines.push('- `npm run lint`');
   lines.push('- `npm run typecheck`');
-  lines.push('- API parity check: compare generated endpoint count with `find src/app/api -name route.ts | wc -l`');
+  lines.push(
+    '- API parity check: compare generated endpoint count with `find src/app/api -name route.ts | wc -l`'
+  );
   lines.push('');
 
   fs.writeFileSync(OUTPUT, `${lines.join('\n').replace(/\n+$/, '')}\n`, 'utf8');
-  console.log(`Generated ${OUTPUT} with ${rows.length} endpoints across ${familyOrder.length} families.`);
+  console.log(
+    `Generated ${OUTPUT} with ${rows.length} endpoints across ${familyOrder.length} families.`
+  );
 }
 
 await build();

@@ -23,13 +23,14 @@ Canonical API documentation generated from the current App Router route handlers
 
 - Session routes rely on authenticated Supabase user context.
 - Mutating routes are typically CSRF-protected via middleware and route-level checks.
+- Internal launch-ops routes require the internal bearer token accepted by `requireInternalOpsRequest`.
 - Cron routes require `Authorization: Bearer <CRON_SECRET>`.
 - Service routes may use privileged Supabase/admin operations and must remain server-only.
 
 ## Coverage Summary
 
 - Total route handlers: **140**
-- Auth tier counts: `public=43`, `session=80`, `service=2`, `cron=10`, `internal=5`
+- Auth tier counts: `public=41`, `session=80`, `service=1`, `cron=10`, `internal=8`
 - Launch surface counts: `active MVP=110`, `internal launch ops=16`, `archived compatibility=14`
 - Family count: **31**
 
@@ -219,11 +220,11 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### monitoring
 
-| Methods | Path                                 | Auth Tier | Launch Surface        | Notes                           | Source                                               |
-| ------- | ------------------------------------ | --------- | --------------------- | ------------------------------- | ---------------------------------------------------- |
-| `GET`   | `/api/monitoring/health-diagnostics` | `service` | `internal launch ops` | -                               | `src/app/api/monitoring/health-diagnostics/route.ts` |
-| `GET`   | `/api/monitoring/launch-status`      | `public`  | `internal launch ops` | -                               | `src/app/api/monitoring/launch-status/route.ts`      |
-| `GET`   | `/api/monitoring/perf-status`        | `public`  | `internal launch ops` | legacy/compat markers in source | `src/app/api/monitoring/perf-status/route.ts`        |
+| Methods | Path                                 | Auth Tier  | Launch Surface        | Notes                           | Source                                               |
+| ------- | ------------------------------------ | ---------- | --------------------- | ------------------------------- | ---------------------------------------------------- |
+| `GET`   | `/api/monitoring/health-diagnostics` | `internal` | `internal launch ops` | -                               | `src/app/api/monitoring/health-diagnostics/route.ts` |
+| `GET`   | `/api/monitoring/launch-status`      | `internal` | `internal launch ops` | -                               | `src/app/api/monitoring/launch-status/route.ts`      |
+| `GET`   | `/api/monitoring/perf-status`        | `internal` | `internal launch ops` | legacy/compat markers in source | `src/app/api/monitoring/perf-status/route.ts`        |
 
 ### org
 

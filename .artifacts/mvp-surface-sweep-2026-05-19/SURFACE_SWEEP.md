@@ -829,3 +829,9 @@ Non-fatal test noise:
 - Archived the legacy `.mjs` script under `scripts/archive/legacy_go_no_go/` and updated `docs/performance-testing.md` to point at the active TypeScript gate and its current required checks, including `/api/assignments` perf-status samples, fresh launch smoke, restore readiness, and launch-status readiness.
 - Added launch-gate config coverage so active docs cannot point back to `go-no-go-check.mjs`, while the archived script and active `go-no-go-check.ts` are both asserted in their intended locations.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts` - passed, 1 file / 25 tests, after the legacy go/no-go archive guard.
+
+## Continuation - API Reference Internal Ops Auth Correction
+
+- Found active `docs/API_REFERENCE.md` labeled `/api/monitoring/launch-status` and `/api/monitoring/perf-status` as `public` even though both routes call `requireInternalOpsRequest`; `/api/monitoring/health-diagnostics` uses the same internal launch-ops guard.
+- Updated `scripts/generate-api-reference.mjs` so `requireInternalOpsRequest` is classified as `internal` before broader service/session heuristics, regenerated `docs/API_REFERENCE.md`, and added the internal launch-ops bearer-token rule to the generated security model.
+- Added launch-gate config coverage so the three monitoring launch-ops routes stay documented as `internal`, not `public`.

@@ -107,6 +107,30 @@ describe('launch gate package configuration', () => {
     expect(gateScript).toContain('commands.json');
   });
 
+  it('keeps monitoring launch-ops routes documented as internal, not public', () => {
+    const apiReference = fs.readFileSync(path.join(repoRoot, 'docs/API_REFERENCE.md'), 'utf8');
+    const apiReferenceGenerator = fs.readFileSync(
+      path.join(repoRoot, 'scripts/generate-api-reference.mjs'),
+      'utf8'
+    );
+    const monitoringRoutes = [
+      '/api/monitoring/health-diagnostics',
+      '/api/monitoring/launch-status',
+      '/api/monitoring/perf-status',
+    ];
+
+    expect(apiReferenceGenerator).toContain('requireInternalOpsRequest');
+
+    for (const route of monitoringRoutes) {
+      const routeLine = apiReference
+        .split('\n')
+        .find((line) => line.includes(`| \`GET\``) && line.includes(`\`${route}\``));
+
+      expect(routeLine).toContain('| `internal` |');
+      expect(routeLine).not.toContain('| `public` |');
+    }
+  });
+
   it('keeps archived and removed non-MVP tests out of the default release signal', () => {
     const vitestConfig = fs.readFileSync(path.join(repoRoot, 'vitest.config.ts'), 'utf8');
     const archivedConfig = fs.readFileSync(
