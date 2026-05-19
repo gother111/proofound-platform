@@ -82,9 +82,15 @@ function classifyTier(route, source) {
   return 'public';
 }
 
-function deriveNotes(source) {
+function deriveNotes(source, launchSurface) {
   const notes = [];
-  if (/(deprecated|legacy)/i.test(source)) notes.push('legacy/compat markers in source');
+  if (/(deprecated|legacy)/i.test(source)) {
+    notes.push(
+      launchSurface === 'archived'
+        ? 'legacy/compat markers in source'
+        : 'compatibility handling in source'
+    );
+  }
   if (/TODO/i.test(source)) notes.push('contains TODO');
   return notes.join('; ') || '-';
 }
@@ -148,7 +154,7 @@ async function build() {
       family: familyKey(route),
       tier: classifyTier(route, source),
       launchSurface: launchClassifications[route] || 'unclassified',
-      notes: deriveNotes(source),
+      notes: deriveNotes(source, launchClassifications[route] || 'unclassified'),
       source: sourcePath(file),
     };
   });

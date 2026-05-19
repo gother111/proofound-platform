@@ -136,24 +136,24 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### expertise
 
-| Methods         | Path                                               | Auth Tier | Launch Surface           | Notes                           | Source                                                             |
-| --------------- | -------------------------------------------------- | --------- | ------------------------ | ------------------------------- | ------------------------------------------------------------------ |
-| `POST`          | `/api/expertise/cv-import/wizard-apply`            | `public`  | `archived compatibility` | legacy/compat markers in source | `src/app/api/expertise/cv-import/wizard-apply/route.ts`            |
-| `POST`          | `/api/expertise/cv-import/wizard-extract`          | `public`  | `archived compatibility` | legacy/compat markers in source | `src/app/api/expertise/cv-import/wizard-extract/route.ts`          |
-| `GET`           | `/api/expertise/cv-import/wizard-extract/status`   | `public`  | `archived compatibility` | legacy/compat markers in source | `src/app/api/expertise/cv-import/wizard-extract/status/route.ts`   |
-| `POST`          | `/api/expertise/cv-import/wizard-suggest`          | `public`  | `archived compatibility` | legacy/compat markers in source | `src/app/api/expertise/cv-import/wizard-suggest/route.ts`          |
-| `POST`          | `/api/expertise/jd-to-l4`                          | `session` | `active MVP`             | -                               | `src/app/api/expertise/jd-to-l4/route.ts`                          |
-| `GET`           | `/api/expertise/taxonomy`                          | `service` | `active MVP`             | legacy/compat markers in source | `src/app/api/expertise/taxonomy/route.ts`                          |
-| `GET\|POST`     | `/api/expertise/user-skills`                       | `session` | `active MVP`             | legacy/compat markers in source | `src/app/api/expertise/user-skills/route.ts`                       |
-| `PATCH\|DELETE` | `/api/expertise/user-skills/[id]`                  | `session` | `active MVP`             | -                               | `src/app/api/expertise/user-skills/[id]/route.ts`                  |
-| `GET\|POST`     | `/api/expertise/user-skills/[id]/proofs`           | `session` | `active MVP`             | legacy/compat markers in source | `src/app/api/expertise/user-skills/[id]/proofs/route.ts`           |
-| `DELETE`        | `/api/expertise/user-skills/[id]/proofs/[proofId]` | `session` | `active MVP`             | legacy/compat markers in source | `src/app/api/expertise/user-skills/[id]/proofs/[proofId]/route.ts` |
+| Methods         | Path                                               | Auth Tier | Launch Surface           | Notes                            | Source                                                             |
+| --------------- | -------------------------------------------------- | --------- | ------------------------ | -------------------------------- | ------------------------------------------------------------------ |
+| `POST`          | `/api/expertise/cv-import/wizard-apply`            | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/expertise/cv-import/wizard-apply/route.ts`            |
+| `POST`          | `/api/expertise/cv-import/wizard-extract`          | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/expertise/cv-import/wizard-extract/route.ts`          |
+| `GET`           | `/api/expertise/cv-import/wizard-extract/status`   | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/expertise/cv-import/wizard-extract/status/route.ts`   |
+| `POST`          | `/api/expertise/cv-import/wizard-suggest`          | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/expertise/cv-import/wizard-suggest/route.ts`          |
+| `POST`          | `/api/expertise/jd-to-l4`                          | `session` | `active MVP`             | -                                | `src/app/api/expertise/jd-to-l4/route.ts`                          |
+| `GET`           | `/api/expertise/taxonomy`                          | `service` | `active MVP`             | compatibility handling in source | `src/app/api/expertise/taxonomy/route.ts`                          |
+| `GET\|POST`     | `/api/expertise/user-skills`                       | `session` | `active MVP`             | compatibility handling in source | `src/app/api/expertise/user-skills/route.ts`                       |
+| `PATCH\|DELETE` | `/api/expertise/user-skills/[id]`                  | `session` | `active MVP`             | -                                | `src/app/api/expertise/user-skills/[id]/route.ts`                  |
+| `GET\|POST`     | `/api/expertise/user-skills/[id]/proofs`           | `session` | `active MVP`             | compatibility handling in source | `src/app/api/expertise/user-skills/[id]/proofs/route.ts`           |
+| `DELETE`        | `/api/expertise/user-skills/[id]/proofs/[proofId]` | `session` | `active MVP`             | compatibility handling in source | `src/app/api/expertise/user-skills/[id]/proofs/[proofId]/route.ts` |
 
 ### feature-flags
 
-| Methods | Path                 | Auth Tier | Launch Surface | Notes                           | Source                               |
-| ------- | -------------------- | --------- | -------------- | ------------------------------- | ------------------------------------ |
-| `GET`   | `/api/feature-flags` | `session` | `active MVP`   | legacy/compat markers in source | `src/app/api/feature-flags/route.ts` |
+| Methods | Path                 | Auth Tier | Launch Surface | Notes                            | Source                               |
+| ------- | -------------------- | --------- | -------------- | -------------------------------- | ------------------------------------ |
+| `GET`   | `/api/feature-flags` | `session` | `active MVP`   | compatibility handling in source | `src/app/api/feature-flags/route.ts` |
 
 ### feedback
 
@@ -177,14 +177,14 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### interviews
 
-| Methods     | Path                       | Auth Tier | Launch Surface | Notes                           | Source                                     |
-| ----------- | -------------------------- | --------- | -------------- | ------------------------------- | ------------------------------------------ |
-| `GET`       | `/api/interviews`          | `session` | `active MVP`   | -                               | `src/app/api/interviews/route.ts`          |
-| `POST`      | `/api/interviews/cancel`   | `session` | `active MVP`   | -                               | `src/app/api/interviews/cancel/route.ts`   |
-| `POST`      | `/api/interviews/complete` | `session` | `active MVP`   | -                               | `src/app/api/interviews/complete/route.ts` |
-| `POST`      | `/api/interviews/edit`     | `session` | `active MVP`   | -                               | `src/app/api/interviews/edit/route.ts`     |
-| `POST`      | `/api/interviews/no-show`  | `session` | `active MVP`   | -                               | `src/app/api/interviews/no-show/route.ts`  |
-| `GET\|POST` | `/api/interviews/schedule` | `session` | `active MVP`   | legacy/compat markers in source | `src/app/api/interviews/schedule/route.ts` |
+| Methods     | Path                       | Auth Tier | Launch Surface | Notes                            | Source                                     |
+| ----------- | -------------------------- | --------- | -------------- | -------------------------------- | ------------------------------------------ |
+| `GET`       | `/api/interviews`          | `session` | `active MVP`   | -                                | `src/app/api/interviews/route.ts`          |
+| `POST`      | `/api/interviews/cancel`   | `session` | `active MVP`   | -                                | `src/app/api/interviews/cancel/route.ts`   |
+| `POST`      | `/api/interviews/complete` | `session` | `active MVP`   | -                                | `src/app/api/interviews/complete/route.ts` |
+| `POST`      | `/api/interviews/edit`     | `session` | `active MVP`   | -                                | `src/app/api/interviews/edit/route.ts`     |
+| `POST`      | `/api/interviews/no-show`  | `session` | `active MVP`   | -                                | `src/app/api/interviews/no-show/route.ts`  |
+| `GET\|POST` | `/api/interviews/schedule` | `session` | `active MVP`   | compatibility handling in source | `src/app/api/interviews/schedule/route.ts` |
 
 ### location
 
@@ -194,17 +194,17 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### match
 
-| Methods             | Path                                  | Auth Tier | Launch Surface           | Notes                           | Source                                                |
-| ------------------- | ------------------------------------- | --------- | ------------------------ | ------------------------------- | ----------------------------------------------------- |
-| `POST`              | `/api/match/assignment`               | `public`  | `active MVP`             | -                               | `src/app/api/match/assignment/route.ts`               |
-| `GET`               | `/api/match/explain/[matchId]`        | `public`  | `active MVP`             | -                               | `src/app/api/match/explain/[matchId]/route.ts`        |
-| `POST`              | `/api/match/gates`                    | `session` | `active MVP`             | -                               | `src/app/api/match/gates/route.ts`                    |
-| `GET\|POST\|DELETE` | `/api/match/hide`                     | `session` | `active MVP`             | legacy/compat markers in source | `src/app/api/match/hide/route.ts`                     |
-| `GET\|POST`         | `/api/match/interest`                 | `public`  | `active MVP`             | -                               | `src/app/api/match/interest/route.ts`                 |
-| `POST`              | `/api/match/profile`                  | `public`  | `active MVP`             | -                               | `src/app/api/match/profile/route.ts`                  |
-| `GET`               | `/api/match/snoozed`                  | `session` | `active MVP`             | -                               | `src/app/api/match/snoozed/route.ts`                  |
-| `GET`               | `/api/match/test`                     | `public`  | `archived compatibility` | -                               | `src/app/api/match/test/route.ts`                     |
-| `GET`               | `/api/match/visible-fields/[matchId]` | `session` | `active MVP`             | -                               | `src/app/api/match/visible-fields/[matchId]/route.ts` |
+| Methods             | Path                                  | Auth Tier | Launch Surface           | Notes                            | Source                                                |
+| ------------------- | ------------------------------------- | --------- | ------------------------ | -------------------------------- | ----------------------------------------------------- |
+| `POST`              | `/api/match/assignment`               | `public`  | `active MVP`             | -                                | `src/app/api/match/assignment/route.ts`               |
+| `GET`               | `/api/match/explain/[matchId]`        | `public`  | `active MVP`             | -                                | `src/app/api/match/explain/[matchId]/route.ts`        |
+| `POST`              | `/api/match/gates`                    | `session` | `active MVP`             | -                                | `src/app/api/match/gates/route.ts`                    |
+| `GET\|POST\|DELETE` | `/api/match/hide`                     | `session` | `active MVP`             | compatibility handling in source | `src/app/api/match/hide/route.ts`                     |
+| `GET\|POST`         | `/api/match/interest`                 | `public`  | `active MVP`             | -                                | `src/app/api/match/interest/route.ts`                 |
+| `POST`              | `/api/match/profile`                  | `public`  | `active MVP`             | -                                | `src/app/api/match/profile/route.ts`                  |
+| `GET`               | `/api/match/snoozed`                  | `session` | `active MVP`             | -                                | `src/app/api/match/snoozed/route.ts`                  |
+| `GET`               | `/api/match/test`                     | `public`  | `archived compatibility` | -                                | `src/app/api/match/test/route.ts`                     |
+| `GET`               | `/api/match/visible-fields/[matchId]` | `session` | `active MVP`             | -                                | `src/app/api/match/visible-fields/[matchId]/route.ts` |
 
 ### matches
 
@@ -220,11 +220,11 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### monitoring
 
-| Methods | Path                                 | Auth Tier  | Launch Surface        | Notes                           | Source                                               |
-| ------- | ------------------------------------ | ---------- | --------------------- | ------------------------------- | ---------------------------------------------------- |
-| `GET`   | `/api/monitoring/health-diagnostics` | `internal` | `internal launch ops` | -                               | `src/app/api/monitoring/health-diagnostics/route.ts` |
-| `GET`   | `/api/monitoring/launch-status`      | `internal` | `internal launch ops` | -                               | `src/app/api/monitoring/launch-status/route.ts`      |
-| `GET`   | `/api/monitoring/perf-status`        | `internal` | `internal launch ops` | legacy/compat markers in source | `src/app/api/monitoring/perf-status/route.ts`        |
+| Methods | Path                                 | Auth Tier  | Launch Surface        | Notes                            | Source                                               |
+| ------- | ------------------------------------ | ---------- | --------------------- | -------------------------------- | ---------------------------------------------------- |
+| `GET`   | `/api/monitoring/health-diagnostics` | `internal` | `internal launch ops` | -                                | `src/app/api/monitoring/health-diagnostics/route.ts` |
+| `GET`   | `/api/monitoring/launch-status`      | `internal` | `internal launch ops` | -                                | `src/app/api/monitoring/launch-status/route.ts`      |
+| `GET`   | `/api/monitoring/perf-status`        | `internal` | `internal launch ops` | compatibility handling in source | `src/app/api/monitoring/perf-status/route.ts`        |
 
 ### org
 
@@ -236,16 +236,16 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### organizations
 
-| Methods     | Path                                                      | Auth Tier | Launch Surface        | Notes                           | Source                                                                    |
-| ----------- | --------------------------------------------------------- | --------- | --------------------- | ------------------------------- | ------------------------------------------------------------------------- |
-| `GET`       | `/api/organizations`                                      | `public`  | `active MVP`          | legacy/compat markers in source | `src/app/api/organizations/route.ts`                                      |
-| `GET\|PUT`  | `/api/organizations/[orgId]`                              | `session` | `active MVP`          | -                               | `src/app/api/organizations/[orgId]/route.ts`                              |
-| `GET`       | `/api/organizations/[orgId]/assignments`                  | `public`  | `active MVP`          | -                               | `src/app/api/organizations/[orgId]/assignments/route.ts`                  |
-| `GET`       | `/api/organizations/[orgId]/audit/export`                 | `session` | `internal launch ops` | -                               | `src/app/api/organizations/[orgId]/audit/export/route.ts`                 |
-| `GET\|POST` | `/api/organizations/[orgId]/candidate-invites`            | `session` | `active MVP`          | -                               | `src/app/api/organizations/[orgId]/candidate-invites/route.ts`            |
-| `PATCH`     | `/api/organizations/[orgId]/candidate-invites/[inviteId]` | `session` | `active MVP`          | -                               | `src/app/api/organizations/[orgId]/candidate-invites/[inviteId]/route.ts` |
-| `GET`       | `/api/organizations/[orgId]/team`                         | `session` | `active MVP`          | -                               | `src/app/api/organizations/[orgId]/team/route.ts`                         |
-| `GET\|PUT`  | `/api/organizations/[orgId]/visibility`                   | `session` | `active MVP`          | -                               | `src/app/api/organizations/[orgId]/visibility/route.ts`                   |
+| Methods     | Path                                                      | Auth Tier | Launch Surface        | Notes                            | Source                                                                    |
+| ----------- | --------------------------------------------------------- | --------- | --------------------- | -------------------------------- | ------------------------------------------------------------------------- |
+| `GET`       | `/api/organizations`                                      | `public`  | `active MVP`          | compatibility handling in source | `src/app/api/organizations/route.ts`                                      |
+| `GET\|PUT`  | `/api/organizations/[orgId]`                              | `session` | `active MVP`          | -                                | `src/app/api/organizations/[orgId]/route.ts`                              |
+| `GET`       | `/api/organizations/[orgId]/assignments`                  | `public`  | `active MVP`          | -                                | `src/app/api/organizations/[orgId]/assignments/route.ts`                  |
+| `GET`       | `/api/organizations/[orgId]/audit/export`                 | `session` | `internal launch ops` | -                                | `src/app/api/organizations/[orgId]/audit/export/route.ts`                 |
+| `GET\|POST` | `/api/organizations/[orgId]/candidate-invites`            | `session` | `active MVP`          | -                                | `src/app/api/organizations/[orgId]/candidate-invites/route.ts`            |
+| `PATCH`     | `/api/organizations/[orgId]/candidate-invites/[inviteId]` | `session` | `active MVP`          | -                                | `src/app/api/organizations/[orgId]/candidate-invites/[inviteId]/route.ts` |
+| `GET`       | `/api/organizations/[orgId]/team`                         | `session` | `active MVP`          | -                                | `src/app/api/organizations/[orgId]/team/route.ts`                         |
+| `GET\|PUT`  | `/api/organizations/[orgId]/visibility`                   | `session` | `active MVP`          | -                                | `src/app/api/organizations/[orgId]/visibility/route.ts`                   |
 
 ### performance
 
@@ -292,20 +292,20 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### user
 
-| Methods       | Path                                | Auth Tier | Launch Surface           | Notes                           | Source                                              |
-| ------------- | ----------------------------------- | --------- | ------------------------ | ------------------------------- | --------------------------------------------------- |
-| `GET\|DELETE` | `/api/user/account`                 | `session` | `active MVP`             | -                               | `src/app/api/user/account/route.ts`                 |
-| `POST`        | `/api/user/account/cancel-deletion` | `session` | `archived compatibility` | -                               | `src/app/api/user/account/cancel-deletion/route.ts` |
-| `GET`         | `/api/user/audit-log`               | `session` | `active MVP`             | -                               | `src/app/api/user/audit-log/route.ts`               |
-| `GET`         | `/api/user/audit-log/purpose`       | `public`  | `archived compatibility` | -                               | `src/app/api/user/audit-log/purpose/route.ts`       |
-| `GET\|POST`   | `/api/user/consent`                 | `session` | `active MVP`             | legacy/compat markers in source | `src/app/api/user/consent/route.ts`                 |
-| `GET`         | `/api/user/consent/check`           | `session` | `active MVP`             | -                               | `src/app/api/user/consent/check/route.ts`           |
-| `GET`         | `/api/user/data-inventory`          | `session` | `active MVP`             | -                               | `src/app/api/user/data-inventory/route.ts`          |
-| `GET\|PUT`    | `/api/user/email`                   | `session` | `active MVP`             | -                               | `src/app/api/user/email/route.ts`                   |
-| `GET`         | `/api/user/export`                  | `session` | `active MVP`             | legacy/compat markers in source | `src/app/api/user/export/route.ts`                  |
-| `GET`         | `/api/user/me`                      | `session` | `active MVP`             | -                               | `src/app/api/user/me/route.ts`                      |
-| `PUT`         | `/api/user/password`                | `session` | `active MVP`             | -                               | `src/app/api/user/password/route.ts`                |
-| `GET\|POST`   | `/api/user/privacy-settings`        | `session` | `active MVP`             | -                               | `src/app/api/user/privacy-settings/route.ts`        |
+| Methods       | Path                                | Auth Tier | Launch Surface           | Notes                            | Source                                              |
+| ------------- | ----------------------------------- | --------- | ------------------------ | -------------------------------- | --------------------------------------------------- |
+| `GET\|DELETE` | `/api/user/account`                 | `session` | `active MVP`             | -                                | `src/app/api/user/account/route.ts`                 |
+| `POST`        | `/api/user/account/cancel-deletion` | `session` | `archived compatibility` | -                                | `src/app/api/user/account/cancel-deletion/route.ts` |
+| `GET`         | `/api/user/audit-log`               | `session` | `active MVP`             | -                                | `src/app/api/user/audit-log/route.ts`               |
+| `GET`         | `/api/user/audit-log/purpose`       | `public`  | `archived compatibility` | -                                | `src/app/api/user/audit-log/purpose/route.ts`       |
+| `GET\|POST`   | `/api/user/consent`                 | `session` | `active MVP`             | compatibility handling in source | `src/app/api/user/consent/route.ts`                 |
+| `GET`         | `/api/user/consent/check`           | `session` | `active MVP`             | -                                | `src/app/api/user/consent/check/route.ts`           |
+| `GET`         | `/api/user/data-inventory`          | `session` | `active MVP`             | -                                | `src/app/api/user/data-inventory/route.ts`          |
+| `GET\|PUT`    | `/api/user/email`                   | `session` | `active MVP`             | -                                | `src/app/api/user/email/route.ts`                   |
+| `GET`         | `/api/user/export`                  | `session` | `active MVP`             | compatibility handling in source | `src/app/api/user/export/route.ts`                  |
+| `GET`         | `/api/user/me`                      | `session` | `active MVP`             | -                                | `src/app/api/user/me/route.ts`                      |
+| `PUT`         | `/api/user/password`                | `session` | `active MVP`             | -                                | `src/app/api/user/password/route.ts`                |
+| `GET\|POST`   | `/api/user/privacy-settings`        | `session` | `active MVP`             | -                                | `src/app/api/user/privacy-settings/route.ts`        |
 
 ### verification
 
@@ -326,10 +326,10 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### verify
 
-| Methods     | Path                         | Auth Tier | Launch Surface | Notes                           | Source                                       |
-| ----------- | ---------------------------- | --------- | -------------- | ------------------------------- | -------------------------------------------- |
-| `GET\|POST` | `/api/verify/[token]`        | `session` | `active MVP`   | legacy/compat markers in source | `src/app/api/verify/[token]/route.ts`        |
-| `GET\|POST` | `/api/verify/custom/[token]` | `public`  | `active MVP`   | -                               | `src/app/api/verify/custom/[token]/route.ts` |
+| Methods     | Path                         | Auth Tier | Launch Surface | Notes                            | Source                                       |
+| ----------- | ---------------------------- | --------- | -------------- | -------------------------------- | -------------------------------------------- |
+| `GET\|POST` | `/api/verify/[token]`        | `session` | `active MVP`   | compatibility handling in source | `src/app/api/verify/[token]/route.ts`        |
+| `GET\|POST` | `/api/verify/custom/[token]` | `public`  | `active MVP`   | -                                | `src/app/api/verify/custom/[token]/route.ts` |
 
 ## Compatibility / Deprecated Surface
 

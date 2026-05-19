@@ -369,6 +369,18 @@ describe('launch gate package configuration', () => {
     }
   });
 
+  it('keeps active API reference notes distinct from archived legacy markers', () => {
+    const activeLegacyRows = fs
+      .readFileSync(path.join(repoRoot, 'docs/API_REFERENCE.md'), 'utf8')
+      .split('\n')
+      .filter(
+        (line) =>
+          line.includes('| `active MVP`') && line.includes('legacy/compat markers in source')
+      );
+
+    expect(activeLegacyRows).toEqual([]);
+  });
+
   it('keeps archived and removed non-MVP tests out of the default release signal', () => {
     const vitestConfig = fs.readFileSync(path.join(repoRoot, 'vitest.config.ts'), 'utf8');
     const archivedConfig = fs.readFileSync(

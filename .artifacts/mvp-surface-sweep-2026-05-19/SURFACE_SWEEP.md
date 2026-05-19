@@ -1551,3 +1551,10 @@ Non-fatal test noise:
 - Updated the cancellation route comment to describe the launch posture as Google Meet or manual meeting links.
 - Updated alert guidance so native video-provider success is not launch-critical when manual meeting links still work, without pairing Zoom and Google as launch-native providers.
 - Added launch-gate coverage preventing active `src/`, `docs/`, or `scripts/` files from reintroducing `Zoom or Google Meet` or `native Zoom/Google provider success` language outside archive/history.
+
+## Continuation - API Reference Compatibility Note Clarity
+
+- Found `docs/API_REFERENCE.md` labeled active MVP routes that handle backward-compatible fields as `legacy/compat markers in source`, making active launch APIs look archived or suspect.
+- Updated `scripts/generate-api-reference.mjs` so archived routes keep `legacy/compat markers in source`, while active MVP and internal launch-ops routes use `compatibility handling in source`.
+- Regenerated `docs/API_REFERENCE.md`; active rows no longer use archived-style legacy wording.
+- Added launch-gate coverage so future API reference generation cannot label `active MVP` rows with `legacy/compat markers in source`.
