@@ -1,3 +1,6 @@
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
 # Cron Setup Guide
 
 > Canonical status: use Vercel Cron for daily core business automation and cron-job.org only for observability jobs.

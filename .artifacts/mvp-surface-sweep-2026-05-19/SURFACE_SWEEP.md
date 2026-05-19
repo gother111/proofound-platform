@@ -971,3 +971,8 @@ Non-fatal test noise:
 - Rewrote the deployment checklist around the locked MVP corridor and current production-candidate signoff: target/secret confirmation, local and strict pre-deploy gates, repo-owned migration flow, Vercel/cron-job.org ownership, Browser-backed public smoke, authenticated MVP smoke, internal launch-ops monitoring, and rollback posture.
 - Removed broad non-MVP smoke language such as generic messaging and match-score checks, and replaced it with Proof Packs, assignment, review, reveal consent, interview, decision, engagement verification, export/delete, and admin/internal queue checks.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the checklist stays current, includes `db:drift-check`, backup checkpoint, migration audit, ledgered `db:migrate`, isolated `db:restore:verify`, authenticated launch-status/perf-status with `/api/assignments`, and does not reintroduce normal Supabase SQL Editor paste or `db:push` production guidance.
+
+## Continuation - Cron Setup Freshness Refresh
+
+- Verified `docs/CRON_SETUP.md` is aligned with `scripts/lib/cron-job-org-config.mjs` and the current `npm run cron:sync` script, but its active-doc registry date was still 2026-02-12 and it lacked the current doc-class header.
+- Added the active/verified header, updated `docs/DOCS_REGISTRY.md`, and extended cron scheduling tests so the human setup guide stays current while the canonical classification table remains the machine source of truth.
