@@ -1,3 +1,13 @@
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-19`
+>
+> Historical/superseded evidence note: this April 29 audit is retained as dated
+> evidence only. It is not current launch authority. Use
+> `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`,
+> `docs/CURRENT_TRUTH.md`, and fresh target-specific backup, restore,
+> perf/status, smoke, and go/no-go evidence before making any current launch
+> claim.
+
 # Final Post-Fix Backend, Security, Privacy, and MVP-Readiness Audit
 
 Generated: 2026-04-29T10:50:00Z

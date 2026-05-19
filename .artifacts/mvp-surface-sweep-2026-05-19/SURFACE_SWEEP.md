@@ -1338,3 +1338,8 @@ Non-fatal test noise:
 - Found active final-gate checklists whose short command lists still went from perf or monitor directly to `go:no-go`, even though production-candidate `go:no-go` now requires a fresh restore report first.
 - Added backup checkpoint plus isolated `db:restore:verify --out .artifacts/launch-restore-report.json` steps before final `go:no-go` in the deployment, release, production-readiness, and launch-master checklist summaries.
 - Fixed the remaining Phase 4 backlog `go:no-go` examples so production-candidate runs include `CRON_SECRET=<secret>`.
+
+## Continuation - April 29 Artifact Supersession Boundary
+
+- Found retained April 29 readiness artifacts still opening without reference-spec metadata, and the rerun artifact still showing a live `go:no-go` command without the now-required restore report or `CRON_SECRET`.
+- Added historical/superseded evidence banners to both April 29 artifacts, updated their registry dates, and corrected the rerun's live launch evidence sequence to include backup, isolated restore report, and authenticated final `go:no-go`.
