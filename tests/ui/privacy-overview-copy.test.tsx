@@ -81,4 +81,18 @@ describe('PrivacyOverview copy', () => {
 
     target.remove();
   });
+
+  it('uses the read-only data inventory for inline data review', async () => {
+    render(<PrivacyOverview userId="user-1" />);
+
+    expect(
+      screen.getByText(/Review stored data categories and export your data/i)
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /view your data/i }));
+
+    expect(await screen.findByText('Your data')).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalledWith('/api/user/data-inventory');
+    expect(global.fetch).not.toHaveBeenCalledWith('/api/user/export');
+  });
 });

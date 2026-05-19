@@ -240,6 +240,8 @@ Privacy data inventory follow-up on 2026-05-19:
 - Browser evidence on `localhost:33180`: `/app/i/settings/privacy` rendered `Privacy settings`, `Your data`, `Proof and verification`, `Download my data`, and real count chips (`profile=2`, `professional=2`, `proof=8`, `matching=0`, `activity=5`) with no inventory error, no stale `Trust badges` copy, and no console errors.
 - Browser endpoint evidence: authenticated `/api/user/data-inventory` returned `{"counts":{"profile":2,"professional":2,"proof":8,"matching":0,"activity":5}}`; unauthenticated curl returned `401 Unauthorized`.
 - Privacy/no-leak evidence: after the read-only endpoint landed, Browser page loads produced `/api/user/data-inventory` and did not produce passive `/api/user/export` lifecycle logs. Export lifecycle remains tied to the explicit `Download my data` action.
+- Follow-up fix: the account-settings inline privacy branch now reuses the same read-only `components/privacy/DataBreakdown` component; the stale `components/settings/DataBreakdown` component that fetched `/api/user/export` just to render data on screen was removed.
+- Browser account-settings evidence: `/app/i/settings` rendered without runtime errors; opening the `Privacy & Data` tab through Browser timed out in the browser-control layer, so the no-passive-export behavior for that branch is covered by focused UI tests rather than a completed click-through Browser trace.
 
 ## Verification
 
@@ -279,6 +281,7 @@ Commands run with Node 25 path:
 - `npm run lint` - passed.
 - `git diff --check` - passed.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/privacy-data-breakdown.test.tsx src/lib/launch/__tests__/surface-policy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts tests/api/launch-surface-inventory.test.ts` - passed, 4 files / 21 tests.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/privacy-overview-copy.test.tsx tests/ui/privacy-data-breakdown.test.tsx` - passed, 2 files / 5 tests.
 - `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with `/api/user/data-inventory` active.
 - `npm run lint` - passed after removing the privacy component hook-dependency warning.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.

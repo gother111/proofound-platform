@@ -16,7 +16,7 @@ import {
   Target,
   Settings,
 } from 'lucide-react';
-import { DataBreakdown } from './DataBreakdown';
+import { DataBreakdown } from '@/components/privacy/DataBreakdown';
 import { AuditLogTable } from './AuditLogTable';
 import { DeleteAccount } from './DeleteAccount';
 import { EnhancedDataImportDialog } from './EnhancedDataImportDialog';
@@ -132,7 +132,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
         <Button variant="outline" onClick={() => setShowDataBreakdown(false)} className="mb-4">
           ← Back to Privacy Overview
         </Button>
-        <DataBreakdown userId={userId} />
+        <DataBreakdown />
       </div>
     );
   }
@@ -511,7 +511,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           <Database className="h-5 w-5 mb-2" />
           <span className="font-medium">View your data</span>
           <span className="text-xs text-muted-foreground mt-1">
-            See exactly what we have on you
+            Review stored data categories and export your data
           </span>
         </Button>
 
