@@ -782,6 +782,32 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the Supabase MCP guide target-agnostic and read-only by default', () => {
+    const mcpGuide = fs.readFileSync(path.join(repoRoot, 'docs/SUPABASE_MCP_SETUP.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(mcpGuide).toContain('Last Verified: `2026-05-19`');
+    expect(mcpGuide).toContain('not launch evidence by itself');
+    expect(mcpGuide).toContain('Prefer read-only inspection');
+    expect(mcpGuide).toContain('project_ref=<project-ref>');
+    expect(mcpGuide).toContain('SUPABASE_SERVICE_ROLE_KEY` bypasses RLS');
+    expect(mcpGuide).toContain('npm run db:drift-check');
+    expect(mcpGuide).toContain('npm run db:backup:checkpoint');
+    expect(mcpGuide).toContain('npm run db:audit:migrations');
+    expect(mcpGuide).toContain('npm run db:migrate');
+    expect(mcpGuide).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(mcpGuide).toContain('Do not use direct schema-push commands');
+    expect(mcpGuide).toContain('Do not use dashboard SQL paste');
+    expect(mcpGuide).not.toContain('cjpfrgmsxwxhuomnvciq');
+    expect(mcpGuide).not.toContain('Running migrations (`npm run db:push`)');
+    expect(mcpGuide).not.toContain('mcp_supabase_apply_migration');
+    expect(mcpGuide).not.toContain('Your Supabase project');
+    expect(mcpGuide).not.toContain('All tables have **Row Level Security (RLS) enabled**');
+    expect(docsRegistry).toContain(
+      '| `docs/SUPABASE_MCP_SETUP.md`                                                                            | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',

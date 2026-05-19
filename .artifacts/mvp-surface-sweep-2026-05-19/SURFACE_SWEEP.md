@@ -994,3 +994,9 @@ Non-fatal test noise:
 - Found active root `SETUP_SUPABASE.md` still verified on 2026-02-12 and carrying an old MCP snapshot: a hard-coded Supabase project ref, service-role reassurance that was too casual for launch guidance, stale table counts, and a `db:push` migration recommendation.
 - Rewrote it as a target-agnostic Supabase setup checklist for the locked MVP corridor, pointing at the current environment reference and migration runbooks, requiring drift/backup/audit/migrate/restore evidence, and preserving service-role/no-secret/no-private-data boundaries.
 - Added launch-gate coverage and updated `docs/DOCS_REGISTRY.md` so the guide cannot drift back to hard-coded project refs, direct schema-push launch guidance, casual MCP/service-role wording, or broad non-MVP product scope.
+
+## Continuation - Supabase MCP Guide Launch-Safety Refresh
+
+- Found active `docs/SUPABASE_MCP_SETUP.md` still verified on 2026-03-11 and carrying a project-specific MCP snapshot, direct migration wording, ad-hoc migration examples, and stale table-count claims that could be mistaken for current launch evidence.
+- Rewrote it as a target-agnostic optional operator-tool guide: read-only by default, explicit target/action before mutation, no service-role/private-data exposure, no old snapshots as launch evidence, and no MCP replacement for drift/backup/audit/migrate/restore runbooks.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the guide cannot drift back to hard-coded project refs, `db:push` launch wording, ad-hoc MCP migration examples, or stale "all tables have RLS" snapshots.
