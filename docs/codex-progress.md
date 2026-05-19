@@ -1,3 +1,12 @@
+> Doc Class: `historical`
+> Last Verified: `2026-05-19`
+>
+> This file is a preserved March 2026 progress log, not current launch authority.
+> Use `docs/CURRENT_TRUTH.md`,
+> `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`, and fresh repo
+> evidence before treating any PASS, FAIL, UNVERIFIED, route-breadth, or blocker
+> language below as current.
+
 # Codex Progress
 
 ## 2026-03-24 refresh note

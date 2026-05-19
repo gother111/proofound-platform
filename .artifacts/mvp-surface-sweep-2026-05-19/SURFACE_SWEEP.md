@@ -1311,3 +1311,9 @@ Non-fatal test noise:
 - Found active README, setup, testing, performance, and QA summaries still describing `npm run go:no-go` as a generic perf/SUS/readiness gate or using production-candidate commands without `CRON_SECRET`.
 - Updated the summaries so operators see the current enforced contract: fresh launch smoke evidence, authenticated protected perf/launch status endpoints, required safe-mode/evidence flags, and a fresh production-candidate restore report for non-local targets.
 - Added backup checkpoint plus `db:restore:verify --out .artifacts/launch-restore-report.json` to final launch validation command lists before final `go:no-go`.
+
+## Continuation - Historical Progress Log Boundary
+
+- Found `docs/codex-progress.md` registered as historical but still opening with a March 2026 machine-readable state and stale current-block language.
+- Added historical metadata plus a visible supersession note that directs operators to `docs/CURRENT_TRUTH.md`, this sweep artifact, and fresh repo evidence before citing any PASS/FAIL/UNVERIFIED or blocker language from the log.
+- Updated `docs/DOCS_REGISTRY.md` so the preserved progress log reflects the 2026-05-19 historical-boundary refresh.
