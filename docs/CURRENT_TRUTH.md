@@ -1,9 +1,9 @@
 # Proofound Current Truth
 
 > Doc Class: `active`
-> Last Verified: `2026-05-14`
+> Last Verified: `2026-05-19`
 
-This document records the current repo-grounded truth for the locked Proofound MVP after the May 14, 2026 docs, route, test, privacy, build, and dependency verification pass.
+This document records the current repo-grounded truth for the locked Proofound MVP after the May 19, 2026 surface sweep, route inventory, docs, privacy, and launch-corridor verification passes.
 
 ## Current Authority Stack
 
@@ -24,15 +24,15 @@ This stack is now stated consistently in the main active governance docs reviewe
 
 Repo status is `MVP pilot ready for the narrow locked corridor, subject to the normal final launch evidence bundle and live/staging signoff`.
 
-Current evidence from this pass:
+Current evidence from recent verification passes:
 
 - Default unit/component/API suite passes: `365` files, `1783` tests.
 - Production build passes.
 - Core privacy suite passes after network access to the configured Supabase test project.
 - Extended privacy suite passes after network access to the configured Supabase test project.
 - Production dependency audit reports `0` production vulnerabilities.
-- Route inventory and launch-surface tests align on `138` compiled API handlers and `49` compiled app page handlers.
-- Focused route inventory verification passes: `4` files and `19` tests.
+- Route inventory and launch-surface tests align on `140` compiled API handlers and `51` compiled app page handlers.
+- Focused route inventory verification passes: `4` files and `25` tests.
 
 The GTM plan remains narrow: 3 to 5 design partners, founder-led/manual support, one concrete assignment per partner, proof-first review, blind-by-default review, consented reveal, and engagement verification.
 
@@ -40,13 +40,13 @@ The GTM plan remains narrow: 3 to 5 design partners, founder-led/manual support,
 
 Current filesystem counts:
 
-- API route handlers under `src/app/api/**/route.ts`: `138`
-- App page handlers under `src/app/**/page.tsx`: `49`
+- API route handlers under `src/app/api/**/route.ts`: `140`
+- App page handlers under `src/app/**/page.tsx`: `51`
 
 Current launch-surface policy:
 
-- API routes: `109` active launch, `16` internal-only launch ops, `13` archived compiled compatibility handlers
-- Page routes: `46` active launch, `3` internal-only launch ops, `0` archived compiled page handlers
+- API routes: `110` active launch, `16` internal-only launch ops, `14` archived compiled compatibility handlers
+- Page routes: `48` active launch, `3` internal-only launch ops, `0` archived compiled page handlers
 - Hard-gated named pages remain out of the compiled page surface: individual opportunities, org team, and org settings/team.
 
 The compiled archived API compatibility handlers are explicitly covered by `tests/api/launch-surface-inventory.test.ts` and classified as archived by `src/lib/launch/surface-policy.ts`. They do not define current launch scope.
@@ -97,18 +97,17 @@ No blocker was reproduced by the requested local verification stack.
 
 Remaining caution:
 
-- `npm run docs:freshness` still reports two warning-mode orphan registry entries: `.artifacts/mvp-ai-pilot-readiness-left-2026-05-11.md` and `supabase/migrations/README.md`.
-- The requested checks do not replace a fresh production/staging go/no-go bundle, strict browser E2E, live smoke, perf budgets, or operator signoff.
-- The worktree is dirty and includes broader pre-existing modifications; this document reflects the current local checkout, not a pristine release branch.
+- The requested checks do not replace a fresh production/staging go/no-go bundle, live smoke, perf budgets, or operator signoff.
+- This document reflects the current local checkout after focused MVP surface-sweep commits, not a production deployment.
 
 ## Verification Results
 
-| Command                                                                                                                                                                                               | Result                      | Notes                                                                                                                                                                                              |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run docs:freshness`                                                                                                                                                                              | PASS with warnings          | Exit `0`; warnings for two orphan registry entries listed above.                                                                                                                                   |
-| `npm run test`                                                                                                                                                                                        | PASS                        | `365` files and `1783` tests passed. Local warning noise included Vite websocket `EPERM`, localstorage-file warnings, and expected negative-path logs.                                             |
-| `npm run build`                                                                                                                                                                                       | PASS                        | Next.js production build completed. Warnings included `next-intl` webpack cache parsing, large cache string serialization, edge-runtime static-generation warning, and localstorage-file warnings. |
-| `npm run test:privacy`                                                                                                                                                                                | PASS after network rerun    | Sandbox run failed with DNS `ENOTFOUND` for the Supabase test host; approved network rerun passed `2` files and `22` tests.                                                                        |
-| `npm run test:privacy:extended`                                                                                                                                                                       | PASS after network approval | Passed `2` files and `31` tests against the Supabase test project.                                                                                                                                 |
-| `npm audit --omit=dev --json`                                                                                                                                                                         | PASS after network rerun    | Sandbox run failed with DNS `ENOTFOUND` for npm registry; approved network rerun returned `0` vulnerabilities across production dependency audit metadata.                                         |
-| `npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts tests/ui/command-palette-archived-links.test.tsx` | PASS                        | `4` files and `19` tests passed; this is the focused route/archived-surface confirmation used for the route inventory section.                                                                     |
+| Command                         | Result                      | Notes                                                                                                                                                                                                               |
+| ------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run docs:freshness`        | PASS                        | Exit `0`; rerun on 2026-05-19 with no findings.                                                                                                                                                                     |
+| `npm run test`                  | PASS                        | May 14 evidence: `365` files and `1783` tests passed. Local warning noise included Vite websocket `EPERM`, localstorage-file warnings, and expected negative-path logs.                                             |
+| `npm run build`                 | PASS                        | May 14 evidence: Next.js production build completed. Warnings included `next-intl` webpack cache parsing, large cache string serialization, edge-runtime static-generation warning, and localstorage-file warnings. |
+| `npm run test:privacy`          | PASS after network rerun    | May 14 evidence: sandbox run failed with DNS `ENOTFOUND` for the Supabase test host; approved network rerun passed `2` files and `22` tests.                                                                        |
+| `npm run test:privacy:extended` | PASS after network approval | May 14 evidence: passed `2` files and `31` tests against the Supabase test project.                                                                                                                                 |
+| `npm audit --omit=dev --json`   | PASS after network rerun    | May 14 evidence: sandbox run failed with DNS `ENOTFOUND` for npm registry; approved network rerun returned `0` vulnerabilities across production dependency audit metadata.                                         |
+| `npm run test:launch:routes`    | PASS                        | 2026-05-19 rerun passed `4` files and `25` tests; this is the focused route/archived-surface confirmation used for the route inventory section.                                                                     |

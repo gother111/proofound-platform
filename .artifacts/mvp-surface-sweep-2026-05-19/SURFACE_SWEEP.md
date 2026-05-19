@@ -262,6 +262,12 @@ CV import documentation and E2E hard-gate follow-up on 2026-05-19:
 - Fix: both docs now lead with the current launch truth (`/app/i/expertise` 404, `/api/expertise/cv-import/wizard-*` 410, no launch nav exposure), old manual scenarios are explicitly labeled historical, and the hard-gate spec was moved to `e2e/cv-import-non-launch.spec.ts`.
 - Test evidence: `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npx playwright test e2e/cv-import-non-launch.spec.ts --project=chromium --reporter=line --workers=1` passed, 2/2. A direct default-runtime `npx playwright test ...` failed first because the shell resolved Node 16, and the first Node 25 sandbox run failed to bind `0.0.0.0:33100`; the approved escalated rerun passed.
 
+Current truth route-count refresh on 2026-05-19:
+
+- Finding: active `docs/CURRENT_TRUTH.md` still carried May 14 route counts and stale docs-freshness warning text.
+- Fix: refreshed the active route-count section to the current route policy evidence: 140 API handlers, 51 pages, 110 active APIs, 16 internal-only APIs, 14 archived API compatibility handlers, 48 active pages, and 3 internal-only pages.
+- Evidence: direct route-count script using `classifyLaunchApiPath` / `classifyLaunchPagePath` produced those counts, and `npm run test:launch:routes` passed, 4 files / 25 tests.
+
 ## Verification
 
 Commands run with Node 25 path:
@@ -305,6 +311,7 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/org-dashboard-archived-nav.test.tsx tests/ui/archived-mvp-routes.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts` - passed, 4 files / 18 tests.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npx playwright test e2e/cv-import-non-launch.spec.ts --project=chromium --reporter=line --workers=1` - passed, 1 file / 2 tests.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts` - passed, 3 files / 20 tests.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests.
 - `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with `/api/user/data-inventory` active.
 - `npm run lint` - passed after removing the privacy component hook-dependency warning.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.
