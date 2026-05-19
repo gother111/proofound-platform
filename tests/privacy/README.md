@@ -108,7 +108,7 @@ If a test fails, it typically means an RLS policy is missing or misconfigured:
   Expected query to be unauthorized - but query succeeded with data: {...}
 ```
 
-**Action Required:** Check the RLS policy for that table in `src/db/policies.sql`
+**Action Required:** Check the repo-owned migration/policy source for that table and rerun the migration audit before changing behavior.
 
 ## 🧪 Test Architecture
 
@@ -245,11 +245,13 @@ test('❌ Negative case: User cannot access other user's data', async () => {
 
 **Solution:**
 
-1. Run migrations on your test project:
+1. Use the repo-owned migration path on the explicitly configured test target:
    ```bash
-   supabase db push --project-ref your-test-project-ref
+   npm run db:drift-check
+   npm run db:audit:migrations
+   npm run db:migrate
    ```
-2. Or manually run migrations in Supabase SQL Editor
+2. For production-candidate or production evidence, also take a backup checkpoint and run isolated restore verification before treating the target as launch evidence.
 
 ### Tests Are Slow
 
@@ -297,7 +299,7 @@ test('❌ Negative case: User cannot access other user's data', async () => {
 - **[ENV_SETUP.md](./ENV_SETUP.md)** - Detailed environment setup guide
 - **[CROSS_DOCUMENT_PRIVACY_AUDIT.md](../../CROSS_DOCUMENT_PRIVACY_AUDIT.md)** - Privacy requirements
 - **[DATA_SECURITY_PRIVACY_ARCHITECTURE.md](../../DATA_SECURITY_PRIVACY_ARCHITECTURE.md)** - RLS policy specifications
-- **[src/db/policies.sql](../../src/db/policies.sql)** - Actual RLS policy implementations
+- **[RUN_MIGRATIONS_GUIDE.md](../../RUN_MIGRATIONS_GUIDE.md)** - Repo-owned migration and policy application path
 
 ## 🤝 Contributing
 

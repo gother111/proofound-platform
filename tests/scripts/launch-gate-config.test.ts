@@ -923,6 +923,8 @@ describe('launch gate package configuration', () => {
     expect(privacyReadme).not.toContain('Node.js 20.20.0');
     expect(privacyReadme).not.toContain('All dependencies installed (`npm install`)');
     expect(privacyReadme).not.toContain('| Profile Privacy      | 100%');
+    expect(privacyReadme).not.toContain('supabase db push');
+    expect(privacyReadme).not.toContain('Supabase SQL Editor');
     expect(privacyReadme).not.toContain('#engineering-support');
     expect(docsRegistry).toContain(
       '| `tests/privacy/README.md`                                                                               | `reference-spec` | `tests`       | `repo`              | `2026-05-19`'

@@ -1260,5 +1260,6 @@ Non-fatal test noise:
 
 - Found `tests/privacy/ENV_SETUP.md` still recommending `supabase db push`, SQL Editor paste flows, old policy file paths, and missing/nonexistent privacy setup/cleanup scripts.
 - Reworked the privacy env setup around the repo-owned migration path: drift check, backup checkpoint, migration audit, migrate, isolated restore verification, and current `test:privacy` / `test:privacy:extended` gates.
+- Removed the same direct schema-push/dashboard-paste troubleshooting guidance from `tests/privacy/README.md` so both privacy docs point at repo-owned migrations and target-specific backup/restore evidence.
 - Found `INTEGRATION_TEST_PLAN.md` still naming missing active integration files for archived critical-gaps and CV import wizard suites.
 - Updated the plan to list only active integration test files and to mark critical-gaps/CV import wizard tests as historical archive material, then updated registry dates and guard coverage.
