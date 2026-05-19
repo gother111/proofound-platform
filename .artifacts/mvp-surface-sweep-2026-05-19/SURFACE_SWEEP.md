@@ -1120,3 +1120,9 @@ Non-fatal test noise:
 - Found `docs/DATA_PROCESSING_AGREEMENTS.md` still verified on 2026-03-11 with unproven legal/compliance claims: signed DPAs, SCCs, SOC/ISO status, GDPR/CCPA compliance, retention windows, and active-looking Veriff/LinkedIn processing language.
 - Rewrote it as a launch-safety processing register rather than legal proof: active/conditional vendor posture, no-leak data minimization rules, target-specific legal/privacy verification requirements, and explicit manual-link/default and archived Veriff boundaries.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so vendor guidance stays evidence-scoped and cannot be mistaken for a signed DPA repository or compliance attestation.
+
+## Continuation - Historical Launch Signoff Reclassification
+
+- Found April 27 owner/evidence/signoff docs still classified active and still reading as current GO/PASS launch authority, even though this sweep still requires fresh target-specific backup, restore, launch-status, perf-status, and go/no-go evidence.
+- Reclassified the April 27 owner roster, production evidence pack, and signoff memo as historical snapshots, preserving the old commit/evidence context while explicitly blocking their use as current launch readiness.
+- Updated `docs/internal-ops/index.md`, `docs/DOCS_REGISTRY.md`, and launch-gate coverage so internal ops links distinguish historical evidence from current launch authority.

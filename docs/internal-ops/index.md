@@ -25,13 +25,16 @@ Scope guard:
 - `Product / ops lead`
 - `Engineering on-call`
 
-Named launch owner roster:
+Historical launch owner roster:
 
 - [launch-owner-roster-2026-04-27.md](./launch-owner-roster-2026-04-27.md)
 
-Current production launch evidence:
+Historical production launch evidence:
 
 - [production-launch-evidence-2026-04-27.md](./production-launch-evidence-2026-04-27.md)
+
+Current launch readiness must be proven from the current launch artifact and checklists for the
+intended target; the April 27 files are preserved history, not current go/no-go authority.
 
 ## Doc list
 

@@ -1394,6 +1394,53 @@ describe('launch gate package configuration', () => {
     expect(templates).toContain('locked MVP corridor');
   });
 
+  it('keeps April launch signoff files historical, not current go/no-go proof', () => {
+    const ownerRoster = fs.readFileSync(
+      path.join(repoRoot, 'docs/internal-ops/launch-owner-roster-2026-04-27.md'),
+      'utf8'
+    );
+    const launchEvidence = fs.readFileSync(
+      path.join(repoRoot, 'docs/internal-ops/production-launch-evidence-2026-04-27.md'),
+      'utf8'
+    );
+    const launchSignoff = fs.readFileSync(
+      path.join(repoRoot, 'docs/launch-signoff-2026-04-27.md'),
+      'utf8'
+    );
+    const internalOpsIndex = fs.readFileSync(
+      path.join(repoRoot, 'docs/internal-ops/index.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    for (const content of [ownerRoster, launchEvidence, launchSignoff]) {
+      expect(content).toContain('Doc Class: `historical`');
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).toContain('April 27, 2026');
+    }
+
+    expect(launchEvidence).toMatch(/Do\s+not use it as current launch readiness/);
+    expect(launchEvidence).toContain('final go/no-go on the intended target');
+    expect(launchSignoff).toContain('Do not use it as current');
+    expect(launchSignoff).toContain('Current launch readiness remains unproven');
+    expect(ownerRoster).toMatch(/Do\s+not use it as proof that current launch-owner coverage/);
+    expect(internalOpsIndex).toContain('Historical launch owner roster');
+    expect(internalOpsIndex).toContain('Historical production launch evidence');
+    expect(internalOpsIndex).toContain('not current go/no-go authority');
+    expect(launchEvidence).not.toContain('Full launch gate bundle: `GO`');
+    expect(launchSignoff).not.toContain('Decision: `GO`');
+    expect(launchSignoff).not.toContain('approve GO for the founder-led production MVP launch');
+    expect(docsRegistry).toContain(
+      '| `docs/internal-ops/launch-owner-roster-2026-04-27.md`                                                   | `historical`     | `docs`        | `archive`           | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/internal-ops/production-launch-evidence-2026-04-27.md`                                            | `historical`     | `docs`        | `archive`           | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/launch-signoff-2026-04-27.md`                                                                     | `historical`     | `docs`        | `archive`           | `2026-05-19`'
+    );
+  });
+
   it('keeps launch operations guidance aligned with the current MVP corridor', () => {
     const launchOperations = fs.readFileSync(
       path.join(repoRoot, 'docs/launch-operations-mvp.md'),
