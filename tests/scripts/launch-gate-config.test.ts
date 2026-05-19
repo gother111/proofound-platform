@@ -531,6 +531,45 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the admin testing guide and smoke probe scoped to launch ops', () => {
+    const adminGuide = fs.readFileSync(
+      path.join(repoRoot, 'ADMIN_DASHBOARD_TESTING_GUIDE.md'),
+      'utf8'
+    );
+    const adminSmoke = fs.readFileSync(
+      path.join(repoRoot, 'e2e/admin-dashboard-smoke.spec.ts'),
+      'utf8'
+    );
+    const adminDataProbe = fs.readFileSync(
+      path.join(repoRoot, 'scripts/test-admin-dashboard-data.js'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const activeAdminEvidence = `${adminGuide}\n${adminSmoke}\n${adminDataProbe}`;
+
+    expect(adminGuide).toContain('Last Verified: `2026-05-19`');
+    expect(adminGuide).toContain('/admin/verification');
+    expect(adminGuide).toContain('/admin/audit');
+    expect(adminGuide).toContain('tests/ui/admin-dashboard-launch-links.test.tsx');
+    expect(adminGuide).toContain('tests/api/admin-internal-ops-queue-route.test.ts');
+    expect(adminGuide).toContain('docs/internal-ops/index.md');
+    expect(adminGuide).toContain('archived/post-MVP');
+
+    expect(activeAdminEvidence).toContain('/api/admin/internal-ops/queues');
+    expect(activeAdminEvidence).toContain('/api/admin/audit?page=1&limit=20&search=');
+    expect(activeAdminEvidence).toContain('Operations Queues');
+    expect(activeAdminEvidence).toContain('Audit Logs');
+    expect(activeAdminEvidence).not.toContain('admin dashboard/i');
+    expect(activeAdminEvidence).not.toContain('linkedin verification queue');
+    expect(activeAdminEvidence).not.toContain('/api/admin/analytics/overview');
+    expect(activeAdminEvidence).not.toContain('/api/metrics/all');
+    expect(activeAdminEvidence).not.toContain('Growth API Endpoint');
+    expect(activeAdminEvidence).not.toContain('Fairness API Endpoint');
+    expect(docsRegistry).toContain(
+      '| `ADMIN_DASHBOARD_TESTING_GUIDE.md`                                                                      | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',

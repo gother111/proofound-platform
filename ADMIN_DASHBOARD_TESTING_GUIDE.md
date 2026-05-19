@@ -1,59 +1,108 @@
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
-# Admin Dashboard Testing Guide
+# Admin Launch Ops Testing Guide
 
-## Canonical Automated Commands
+This guide covers the active admin/internal-ops launch corridor. The old broad
+admin dashboard, user-management dashboard, organization-management dashboard,
+fairness dashboard, analytics cards, and vanity metric probes are archived or
+post-MVP. They are not launch evidence.
 
-### API/Data Contract Probe
+## Active Admin Corridor
+
+- `/admin` - protected launch-ops landing with only operations queues, audit log,
+  and internal CV OCR status.
+- `/admin/verification` - protected internal operations queues for verification,
+  privacy/reveal disputes, redaction/risky uploads, and pilot follow-through.
+- `/admin/audit` - protected admin action history for dispute and trust-incident
+  traceability.
+
+## Canonical Automated Checks
+
+Run the focused admin launch checks:
 
 ```bash
-export NEXT_PUBLIC_APP_URL=http://localhost:3000
-node scripts/test-admin-dashboard-data.js
+npm run test -- tests/ui/admin-dashboard-launch-links.test.tsx tests/ui/admin-verification-dashboard.test.tsx tests/ui/admin-audit-log-table.test.tsx tests/api/admin-internal-ops-queue-route.test.ts tests/api/launch-page-inventory.test.ts tests/lib/admin-break-glass.test.ts tests/api/org-audit-export-routes.test.ts
 ```
 
-### Admin Smoke (Playwright)
+Run the active Playwright route smoke only when the mock admin environment is
+explicitly enabled:
 
 ```bash
-node ./scripts/playwright-node20.mjs test e2e/admin-dashboard-smoke.spec.ts --project=chromium --reporter=line
+NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ADMIN_MODE=true npm run test:e2e -- e2e/admin-dashboard-smoke.spec.ts --project=chromium --reporter=line
 ```
 
-## Required Routes
+Optional local API probe for a running dev server:
 
-- `/admin`
-- `/admin/users`
-- `/admin/organizations`
-- `/admin/verification`
-- `/admin/fairness`
-- `/admin/fairness/notes`
+```bash
+NEXT_PUBLIC_APP_URL=http://localhost:3000 node scripts/test-admin-dashboard-data.js
+```
 
 ## Manual Checklist
 
 ### Access Control
 
-- [ ] Admin user can access core admin routes.
-- [ ] Non-admin user receives access denial (`/403` or redirect).
+- [ ] Non-admin users cannot see `/admin`, `/admin/verification`, or `/admin/audit`.
+- [ ] Public and logged-out users do not see queue content, audit entries, admin
+      emails, internal notes, provider details, or extracted proof text.
+- [ ] Admin pages fail closed if the admin session is missing or downgraded.
 
-### Dashboard Health
+### Launch Ops Landing
 
-- [ ] Overview cards render numeric values safely.
-- [ ] Growth and analytics sections load without blocking errors.
-- [ ] Fairness section loads for authorized roles.
-- [ ] Loading and error states are user-readable.
+- [ ] `/admin` explains that this is restricted launch operations, not a generic
+      platform dashboard.
+- [ ] The only primary actions are `Open operations queues` and `Open audit log`.
+- [ ] The CV OCR status is minimal and does not expose provider secrets,
+      processor IDs, extracted content, or raw diagnostics.
 
-### Data Integrity
+### Operations Queues
 
-- [ ] API responses for admin analytics endpoints are structurally valid.
-- [ ] No `NaN` or undefined numeric output in cards/charts.
+- [ ] `/admin/verification` makes the primary object obvious: operations queue
+      items that need manual review.
+- [ ] The queue families remain narrow: `verification`,
+      `privacy_reveal_exception`, `correction_revocation`, and `pilot_ops`.
+- [ ] Empty, loading, error, disabled, and success/transition states are readable.
+- [ ] Queue cards show enough anchor context for action without leaking private
+      proof content beyond the admin-only review context.
+- [ ] The primary next action is obvious for each actionable queue item.
 
-## Common Failure Modes
+### Audit Logs
 
-- Missing admin auth/session context.
-- Missing seed data in local env.
-- Route-level permission regressions.
+- [ ] `/admin/audit` makes the primary object obvious: protected admin action
+      history.
+- [ ] Search, pagination, loading, empty, and error states are readable.
+- [ ] Break-glass organization audit access requires an explicit reason and logs
+      the admin action.
+- [ ] Audit export/read paths stay internal-only and do not expose public
+      diagnostics.
+
+### Responsive Smoke
+
+- [ ] Desktop layout stays calm and task-focused.
+- [ ] Mobile layout keeps navigation reachable and avoids overlapping sidebar,
+      header, queue cards, and table content.
+
+## Route Classification
+
+| Surface                 | Classification           | Launch expectation                              |
+| ----------------------- | ------------------------ | ----------------------------------------------- |
+| `/admin`                | internal-only launch ops | Protected landing with no broad dashboard links |
+| `/admin/verification`   | internal-only launch ops | Narrow queue review                             |
+| `/admin/audit`          | internal-only launch ops | Protected audit trail                           |
+| `/admin/users`          | archived/post-MVP        | Must not be linked or used as launch evidence   |
+| `/admin/organizations`  | archived/post-MVP        | Must not be linked or used as launch evidence   |
+| `/admin/fairness`       | archived/post-MVP        | Must not be linked or used as launch evidence   |
+| `/admin/fairness/notes` | archived/post-MVP        | Must not be linked or used as launch evidence   |
 
 ## Canonical References
 
-- `e2e/admin-dashboard-smoke.spec.ts`
-- `scripts/test-admin-dashboard-data.js`
-- `agent/checklists/verification.md`
+- `docs/internal-ops/index.md`
+- `docs/launch-operations-mvp.md`
+- `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`
+- `tests/ui/admin-dashboard-launch-links.test.tsx`
+- `tests/ui/admin-verification-dashboard.test.tsx`
+- `tests/ui/admin-audit-log-table.test.tsx`
+- `tests/api/admin-internal-ops-queue-route.test.ts`
+- `tests/api/launch-page-inventory.test.ts`
+- `tests/lib/admin-break-glass.test.ts`
+- `tests/api/org-audit-export-routes.test.ts`

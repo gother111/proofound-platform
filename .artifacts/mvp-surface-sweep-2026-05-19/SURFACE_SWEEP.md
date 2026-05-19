@@ -405,6 +405,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Added `tests/api/assignments-list-route.test.ts` so the response still emits the warning from `matchingSummary.candidateCount` and proves the route no longer needs the extra match-count select call.
 - Updated `docs/backlog/phase-3-hiring-corridor.md` and `docs/DOCS_REGISTRY.md` to record the local route hardening, focused Phase 3 evidence, and the remaining live/staging perf-budget proof as watch-only.
 
+49. The active admin testing guide and smoke probes still described the retired broad admin dashboard as launch evidence.
+
+- Rewrote `ADMIN_DASHBOARD_TESTING_GUIDE.md` around the active internal-only launch corridor: `/admin`, `/admin/verification`, and `/admin/audit`.
+- Kept broad admin users, organization management, fairness dashboards, and metric dashboards explicitly classified as archived/post-MVP instead of launch evidence.
+- Updated `e2e/admin-dashboard-smoke.spec.ts` so the active Playwright smoke checks launch operations, operations queues, and audit logs, and confirms the broad retired admin links stay absent.
+- Replaced `scripts/test-admin-dashboard-data.js` with an admin launch-ops data probe that checks only `/api/admin/internal-ops/queues` and `/api/admin/audit`, accepting protected `401/403` as pass for unauthenticated contexts.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the admin guide, E2E smoke, and probe cannot drift back to growth/fairness/vanity dashboard checks unnoticed.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
