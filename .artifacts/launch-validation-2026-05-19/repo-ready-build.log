@@ -16,7 +16,7 @@ Removed stale generated build state: .next
      · clientTraceMetadata
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 52s
+ ✓ Compiled successfully in 51s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/50) ...
@@ -176,14 +176,14 @@ Route (app)                                                     Size  First Load
 ├ ƒ /api/verification/work-email/verify                        722 B         255 kB
 ├ ƒ /api/verify/[token]                                        723 B         255 kB
 ├ ƒ /api/verify/custom/[token]                                 721 B         255 kB
-├ ƒ /app/i/communications                                      371 B         401 kB
+├ ƒ /app/i/communications                                      373 B         401 kB
 ├ ƒ /app/i/home                                                376 B         257 kB
 ├ ƒ /app/i/interviews                                        2.72 kB         285 kB
 ├ ƒ /app/i/matching                                          2.76 kB         266 kB
 ├ ƒ /app/i/matching/preferences                              20.1 kB         321 kB
 ├ ƒ /app/i/messages                                          3.75 kB         265 kB
 ├ ƒ /app/i/portfolio                                           725 B         255 kB
-├ ƒ /app/i/profile                                           3.42 kB         258 kB
+├ ƒ /app/i/profile                                           3.43 kB         258 kB
 ├ ƒ /app/i/settings                                          2.77 kB         266 kB
 ├ ƒ /app/i/settings/audit-log                                8.67 kB         277 kB
 ├ ƒ /app/i/settings/privacy                                  3.77 kB         265 kB
@@ -194,7 +194,7 @@ Route (app)                                                     Size  First Load
 ├ ƒ /app/o/[slug]/assignments/new                            1.99 kB         263 kB
 ├ ƒ /app/o/[slug]/communications                               371 B         401 kB
 ├ ƒ /app/o/[slug]/home                                       5.51 kB         269 kB
-├ ƒ /app/o/[slug]/interviews                                   384 B         332 kB
+├ ƒ /app/o/[slug]/interviews                                   386 B         332 kB
 ├ ƒ /app/o/[slug]/invitations/[token]                          722 B         255 kB
 ├ ƒ /app/o/[slug]/matching                                     720 B         255 kB
 ├ ƒ /app/o/[slug]/messages                                     856 B         255 kB
@@ -218,7 +218,7 @@ Route (app)                                                     Size  First Load
 ├ ƒ /portfolio/org/[slug]                                    3.93 kB         267 kB
 ├ ƒ /privacy                                                   867 B         257 kB
 ├ ƒ /reset-password                                          6.14 kB         269 kB
-├ ƒ /reset-password/confirm                                  8.43 kB         322 kB
+├ ƒ /reset-password/confirm                                  8.44 kB         322 kB
 ├ ƒ /robots.txt                                                722 B         255 kB
 ├ ƒ /security.txt                                              722 B         255 kB
 ├ ƒ /signup                                                  2.54 kB         286 kB
@@ -226,14 +226,14 @@ Route (app)                                                     Size  First Load
 ├ ƒ /signup/organization                                       367 B         279 kB
 ├ ƒ /sitemap.xml                                               723 B         255 kB
 ├ ƒ /terms                                                     867 B         257 kB
-├ ƒ /verify-email                                            6.03 kB         269 kB
+├ ƒ /verify-email                                            6.04 kB         269 kB
 ├ ƒ /verify-work-email                                       6.44 kB         268 kB
 ├ ƒ /verify/[token]                                          12.9 kB         293 kB
 └ ƒ /verify/custom/[token]                                   7.89 kB         288 kB
 + First Load JS shared by all                                 255 kB
   ├ chunks/4bd1b696-60762fde855476c8.js                      54.4 kB
   ├ chunks/52774a7f-c7072f5bcfc73fc8.js                      37.5 kB
-  ├ chunks/71-4e6d22eeb9d8e4d4.js                             158 kB
+  ├ chunks/71-1060cc71e186a9a6.js                             158 kB
   └ other shared chunks (total)                              4.79 kB
 
 
@@ -258,9 +258,9 @@ Route (app)                                                     Size  First Load
 <w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Parsing of /Users/yuriibakurov/proofound/node_modules/next-intl/dist/esm/production/extractor/format/index.js for build dependencies failed at 'import(t)'.
 <w> Build dependencies behind this expression are ignored and might cause incorrect cache invalidation.
  ⚠ Using edge runtime on a page currently disables static generation for that page
-(node:58980) Warning: `--localstorage-file` was provided without a valid path
+(node:64207) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:58983) Warning: `--localstorage-file` was provided without a valid path
+(node:64208) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:58981) Warning: `--localstorage-file` was provided without a valid path
+(node:64213) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)

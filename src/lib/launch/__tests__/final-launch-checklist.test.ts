@@ -419,6 +419,12 @@ queue item must say which checklist point failed or passed
               evidence: ['repo-ready-launch-status-route.log'],
             },
             {
+              id: 'public_portfolio_safe',
+              status: 'PASS',
+              summary: 'Fresh public portfolio safety tests passed.',
+              evidence: ['repo-ready-public-portfolio.log'],
+            },
+            {
               id: 'live_launch_smoke_artifact_refresh',
               status: 'PASS',
               summary: 'Fresh smoke artifact refresh passed.',
@@ -551,6 +557,9 @@ describe('final launch checklist pipeline', () => {
     expect(report.latestLaunchBundleDir).toBe('.artifacts/launch-validation-2026-04-14');
     expect(buildItem?.status).toBe('PASS');
     expect(buildItem?.summary).toContain('Fresh local build passed');
+    expect(
+      report.items.find((item) => item.id === 'product_public_portfolio_safe_and_separate')?.status
+    ).toBe('PASS');
   });
 
   it('treats external prerequisites as non-blocking in repo scope but blocking in full scope', async () => {

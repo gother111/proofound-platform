@@ -1224,6 +1224,10 @@ Non-fatal test noise:
   checklist when the local environment could not bind a localhost port. `runRepoReadyValidationBundle`
   now records that as a failed `prod_boot` gate with a captured boot-error log and continues collecting
   repo-only evidence, so checklist output remains explicit `NOT_READY` evidence instead of disappearing.
+- Added a repo-ready `public_portfolio_safe` gate using the public portfolio page, access-consistency,
+  and projection tests. Regenerated `npm run launch:checklist`; the public page privacy/separation row
+  moved from `UNVERIFIED` to `PASS`, leaving org trust smoke, local `next start`, launch-status smoke
+  freshness, and external ops signoffs as the visible remaining blockers.
 
 ## Continuation - Phase 4 Local Smoke Refresh
 

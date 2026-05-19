@@ -5,22 +5,22 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
 
- ✓ tests/ui/profile-dialogs-edit-routing.test.tsx  (1 test) 49ms
- ✓ tests/ui/education-form-skill-picker.test.tsx  (2 tests) 99ms
+ ✓ tests/ui/profile-dialogs-edit-routing.test.tsx  (1 test) 51ms
+ ✓ tests/ui/education-form-skill-picker.test.tsx  (2 tests) 100ms
  ✓ tests/actions/onboarding-private-context-scaffolding.test.ts  (3 tests) 5ms
 
  Test Files  3 passed (3)
       Tests  6 passed (6)
-   Start at  21:44:44
-   Duration  1.11s (transform 246ms, setup 326ms, collect 595ms, tests 153ms, environment 621ms, prepare 129ms)
+   Start at  21:50:40
+   Duration  1.14s (transform 232ms, setup 368ms, collect 584ms, tests 156ms, environment 680ms, prepare 129ms)
 
 
 WebSocket server error:
@@ -35,9 +35,9 @@ Error: listen EPERM: operation not permitted 0.0.0.0:24678
     at Array.map (<anonymous>)
     at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
     at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
-(node:59775) Warning: `--localstorage-file` was provided without a valid path
+(node:64720) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:59775) Warning: `--localstorage-file` was provided without a valid path
+(node:64720) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:59775) Warning: `--localstorage-file` was provided without a valid path
+(node:64720) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)

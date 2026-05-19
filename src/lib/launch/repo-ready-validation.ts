@@ -472,6 +472,23 @@ export async function runRepoReadyValidationBundle(options: RepoReadyValidationO
           'Launch-status route tests failed for the current persisted/live monitor logic.',
       },
       {
+        gateId: 'public_portfolio_safe',
+        command: [
+          'npm',
+          'run',
+          'test',
+          '--',
+          'tests/ui/public-portfolio-access-consistency.test.tsx',
+          'tests/ui/public-portfolio-page.test.tsx',
+          'tests/lib/public-portfolio-projection.test.ts',
+        ],
+        logFileName: 'repo-ready-public-portfolio.log',
+        passSummary:
+          'Public portfolio page, access consistency, and projection tests passed for public-safe direct-link behavior.',
+        failSummary:
+          'Public portfolio page, access consistency, or projection tests failed for public-safe direct-link behavior.',
+      },
+      {
         gateId: 'private_context_scaffolding',
         command: [
           'npm',

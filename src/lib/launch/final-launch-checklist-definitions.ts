@@ -194,9 +194,7 @@ export function buildFinalLaunchChecklistDefinitions({
       evaluateDirect: (context) => {
         const observations: FinalLaunchChecklistObservation[] = [];
         const smokeGateId =
-          context.scope === 'repo'
-            ? 'public_org_trust_smoke'
-            : 'live_launch_smoke_artifact_refresh';
+          context.scope === 'repo' ? 'public_portfolio_safe' : 'live_launch_smoke_artifact_refresh';
         const smokeGate = context.latestLaunchBundle?.gates.get(smokeGateId);
         const revealRow = verificationRow(context, 'candidate-consented reveal');
         const blindRow = verificationRow(context, 'blind-by-default review');
@@ -211,12 +209,17 @@ export function buildFinalLaunchChecklistDefinitions({
             sourceLabel: 'Launch bundle plus verification evidence',
             status: 'PASS',
             summary:
-              'Fresh smoke, blind-review coverage, and consented reveal evidence all point to a privacy-safe Public Page that stays separate from reveal.',
+              context.scope === 'repo'
+                ? 'Fresh public portfolio tests, blind-review coverage, and consented reveal evidence all point to a privacy-safe Public Page that stays separate from reveal.'
+                : 'Fresh smoke, blind-review coverage, and consented reveal evidence all point to a privacy-safe Public Page that stays separate from reveal.',
             evidence: [
-              {
-                label: 'Launch smoke gate',
-                path: path.posix.join(context.latestLaunchBundle!.dir, '24_gate_summary.json'),
-              },
+              ...smokeGate.evidence.map((evidencePath) => ({
+                label:
+                  context.scope === 'repo'
+                    ? 'Repo-ready public portfolio gate'
+                    : 'Launch smoke gate',
+                path: evidencePath,
+              })),
               {
                 label: 'Verification checklist: blind review',
                 path: 'docs/verification-checklist.md',

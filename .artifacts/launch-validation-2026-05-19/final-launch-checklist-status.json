@@ -1,19 +1,19 @@
 {
   "scope": "repo",
-  "generatedAt": "2026-05-19T19:44:50.614Z",
+  "generatedAt": "2026-05-19T19:50:47.024Z",
   "currentDate": "2026-05-19",
   "workspaceRoot": "/Users/yuriibakurov/proofound",
-  "gitHead": "7e812183f81afea7cad0b3af6c77850cd3e38729",
+  "gitHead": "007b9d1284326f1a6ab011aae9b563ea2c87d55b",
   "gitBranch": "master",
   "verdict": "NOT_READY",
   "includeStateful": false,
   "liveBaseUrl": null,
   "latestLaunchBundleDir": ".artifacts/launch-validation-2026-05-19",
   "statusCounts": {
-    "PASS": 31,
+    "PASS": 32,
     "FAIL": 4,
     "BLOCKED": 1,
-    "UNVERIFIED": 4
+    "UNVERIFIED": 3
   },
   "items": [
     {
@@ -106,25 +106,25 @@
         ".artifacts/proofound-current-state-reality-check.md",
         "docs/verification-checklist.md"
       ],
-      "status": "UNVERIFIED",
-      "summary": "No current evidence source resolved this checklist line.",
+      "status": "PASS",
+      "summary": "Fresh public portfolio tests, blind-review coverage, and consented reveal evidence all point to a privacy-safe Public Page that stays separate from reveal.",
       "evidence": [
         {
-          "label": "Configured evidence source",
-          "path": ".artifacts/launch-validation-*/24_gate_summary.json"
+          "label": "Repo-ready public portfolio gate",
+          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-public-portfolio.log"
         },
         {
-          "label": "Configured evidence source",
-          "path": ".artifacts/proofound-current-state-reality-check.md"
+          "label": "Verification checklist: blind review",
+          "path": "docs/verification-checklist.md"
         },
         {
-          "label": "Configured evidence source",
+          "label": "Verification checklist: consented reveal",
           "path": "docs/verification-checklist.md"
         }
       ],
       "blockerIds": [],
       "retiredStaleClaims": [],
-      "sourceLabel": "No evidence selected",
+      "sourceLabel": "Launch bundle plus verification evidence",
       "blocksVerdict": true,
       "blockingScope": "both"
     },
@@ -1009,41 +1009,6 @@
   ],
   "trueBlockers": [
     {
-      "id": "product_public_portfolio_safe_and_separate",
-      "section": "Product",
-      "label": "Public Page is calm, safe, and separate from review reveal",
-      "authorityRefs": [
-        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md",
-        "LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"
-      ],
-      "evidenceSources": [
-        ".artifacts/launch-validation-*/24_gate_summary.json",
-        ".artifacts/proofound-current-state-reality-check.md",
-        "docs/verification-checklist.md"
-      ],
-      "status": "UNVERIFIED",
-      "summary": "No current evidence source resolved this checklist line.",
-      "evidence": [
-        {
-          "label": "Configured evidence source",
-          "path": ".artifacts/launch-validation-*/24_gate_summary.json"
-        },
-        {
-          "label": "Configured evidence source",
-          "path": ".artifacts/proofound-current-state-reality-check.md"
-        },
-        {
-          "label": "Configured evidence source",
-          "path": "docs/verification-checklist.md"
-        }
-      ],
-      "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "No evidence selected",
-      "blocksVerdict": true,
-      "blockingScope": "both"
-    },
-    {
       "id": "product_org_trust_page_live",
       "section": "Product",
       "label": "Org trust page is minimal and live",
@@ -1252,41 +1217,6 @@
     }
   ],
   "missingEvidence": [
-    {
-      "id": "product_public_portfolio_safe_and_separate",
-      "section": "Product",
-      "label": "Public Page is calm, safe, and separate from review reveal",
-      "authorityRefs": [
-        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md",
-        "LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"
-      ],
-      "evidenceSources": [
-        ".artifacts/launch-validation-*/24_gate_summary.json",
-        ".artifacts/proofound-current-state-reality-check.md",
-        "docs/verification-checklist.md"
-      ],
-      "status": "UNVERIFIED",
-      "summary": "No current evidence source resolved this checklist line.",
-      "evidence": [
-        {
-          "label": "Configured evidence source",
-          "path": ".artifacts/launch-validation-*/24_gate_summary.json"
-        },
-        {
-          "label": "Configured evidence source",
-          "path": ".artifacts/proofound-current-state-reality-check.md"
-        },
-        {
-          "label": "Configured evidence source",
-          "path": "docs/verification-checklist.md"
-        }
-      ],
-      "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "No evidence selected",
-      "blocksVerdict": true,
-      "blockingScope": "both"
-    },
     {
       "id": "ops_incident_roles_assigned",
       "section": "Ops",

@@ -5,22 +5,22 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
 
- ✓ tests/api/admin-internal-ops-queue-route.test.ts  (7 tests) 17ms
- ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 41ms
- ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 98ms
+ ✓ tests/api/admin-internal-ops-queue-route.test.ts  (7 tests) 14ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 45ms
+ ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 88ms
 
  Test Files  3 passed (3)
       Tests  15 passed (15)
-   Start at  21:44:49
-   Duration  1.04s (transform 177ms, setup 372ms, collect 320ms, tests 156ms, environment 679ms, prepare 143ms)
+   Start at  21:50:46
+   Duration  923ms (transform 175ms, setup 347ms, collect 289ms, tests 147ms, environment 657ms, prepare 136ms)
 
 
 WebSocket server error:
@@ -35,9 +35,9 @@ Error: listen EPERM: operation not permitted 0.0.0.0:24678
     at Array.map (<anonymous>)
     at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
     at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
-(node:60011) Warning: `--localstorage-file` was provided without a valid path
+(node:64852) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:60011) Warning: `--localstorage-file` was provided without a valid path
+(node:64852) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:60011) Warning: `--localstorage-file` was provided without a valid path
+(node:64852) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
