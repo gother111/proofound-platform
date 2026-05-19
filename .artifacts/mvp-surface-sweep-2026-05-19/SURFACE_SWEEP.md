@@ -1013,3 +1013,12 @@ Non-fatal test noise:
 - Rewrote both docs around the current MVP/accessibility posture: baseline `npm run test:a11y` evidence, strict authenticated `npm run test:a11y:strict` as a production-candidate gate, manual keyboard/screen-reader signoff, and representative public, individual, organization, and admin/internal launch surfaces.
 - Removed stale claims that axe E2E was still "to be configured", old `.eslintrc` guidance, broad static Lighthouse instructions as launch proof, and launch-sounding accessibility expectations for archived/post-MVP surfaces.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so accessibility docs stay tied to the current audit report, Proof Packs, privacy/no-leak checks, strict authenticated gates, and manual validation requirements.
+
+## Continuation - Resend Transactional Email Guidance Refresh
+
+- Found active `docs/RESEND_SETUP.md` still verified on 2026-02-12 and making unverified target-specific claims that Resend was already configured in production and local development.
+- Rewrote the guide as a target-agnostic transactional email runbook for the locked MVP corridor: `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, optional dry-run skip behavior, approved sender domains, and explicit "do not send live email without target/recipient/operator approval" guidance.
+- Removed stale launch guidance for a missing `scripts/test-email.mjs`, broad "Skill & Matching System" language, marketing/digest optimization, and old active-looking deletion cron table entries.
+- Preserved route-surface policy by naming `/api/cron/decision-reminders` as active launch email cron and `/api/cron/send-deletion-reminders` plus `/api/cron/process-deletions` as archived standalone deletion cron routes.
+- Added privacy guardrails for email templates and links: no private proof content, raw evidence, hidden candidate identity details, queue IDs, private storage paths, signed URLs, secrets, service-role data, or diagnostic payloads.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the guide stays transactional, current, target-scoped, and privacy-safe.

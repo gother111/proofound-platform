@@ -484,6 +484,39 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps Resend setup guidance transactional, target-scoped, and privacy-safe', () => {
+    const resendSetup = fs.readFileSync(path.join(repoRoot, 'docs/RESEND_SETUP.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(resendSetup).toContain('Last Verified: `2026-05-19`');
+    expect(resendSetup).toContain('transactional email');
+    expect(resendSetup).toContain('RESEND_API_KEY');
+    expect(resendSetup).toContain('EMAIL_FROM');
+    expect(resendSetup).toContain('EMAIL_REPLY_TO');
+    expect(resendSetup).toContain('PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY');
+    expect(resendSetup).toContain('docs:freshness');
+    expect(resendSetup).toContain('tests/lib/workflow-email-privacy.test.ts');
+    expect(resendSetup).toContain('/api/cron/decision-reminders');
+    expect(resendSetup).toContain('private proof content');
+    expect(resendSetup).toContain('hidden candidate identity details');
+    expect(resendSetup).toContain('Do not run live email sends');
+    expect(resendSetup).toContain('/api/cron/send-deletion-reminders');
+    expect(resendSetup).toContain('/api/cron/process-deletions');
+    expect(compactWhitespace(resendSetup)).toContain(
+      'Archived standalone deletion cron routes are not active launch infrastructure'
+    );
+    expect(resendSetup).not.toContain('STATUS: RESEND CONFIGURED');
+    expect(resendSetup).not.toContain('Since your RESEND_API_KEY is already configured');
+    expect(resendSetup).not.toContain('node scripts/test-email.mjs');
+    expect(resendSetup).not.toContain('Skill & Matching System');
+    expect(resendSetup).not.toContain('| `GET /api/cron/send-deletion-reminders`');
+    expect(resendSetup).not.toContain('| `GET /api/cron/process-deletions`');
+    expect(resendSetup).not.toContain('Use email digests instead of individual alerts');
+    expect(docsRegistry).toContain(
+      '| `docs/RESEND_SETUP.md`                                                                                  | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps the testing strategy aligned with production-candidate launch gates', () => {
     const testingStrategy = fs.readFileSync(
       path.join(repoRoot, 'docs/testing-strategy.md'),
