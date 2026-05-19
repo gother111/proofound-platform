@@ -801,3 +801,15 @@ Non-fatal test noise:
 - Phase 5 local packaging is current as of the 2026-05-19 sweep: public copy/crawl-surface alignment, evidence indexing, and watch-item separation have current local evidence. Launch readiness is still not complete because Phase 4 production-candidate backup, restore, and final go/no-go evidence remain open.
 - The local in-app Browser public demo check did not prove seeded public portfolio availability on port `33180`; it proved the current unavailable fallback is safe and non-leaky in the visible page state.
 - No current docs freshness warnings remain after registering the existing orphan documentation/artifact files.
+
+## Continuation - Phase 4 Restore Contract Follow-Up
+
+- Found `scripts/lib/db-checkpoint-utils.mjs` and `docs/launch-restore-drill.md` still using an old restore fingerprint table set that included retired compatibility tables (`fairness_notes`, `verification_requests`, `user_video_integrations`, `decision_reminders`) while missing current MVP corridor state such as Proof Packs, verification records, capability tokens, publication state, match/reveal/decision/engagement state, export/delete state, uploads, audit logs, and internal ops queue items.
+- Updated the checkpoint critical-table list and restore drill docs so the backup/restore fingerprint contract tracks active MVP, internal launch-ops, privacy/export/delete, and audit-trail state.
+- Added `tests/scripts/db-checkpoint-critical-tables.test.ts` to lock the restore fingerprint contract to the current MVP corridor and reject retired compatibility tables as launch restore gates.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/db-checkpoint-critical-tables.test.ts tests/lib/launch-operations-contract.test.ts` - passed, 2 files / 6 tests, after the restore checkpoint contract update.
+- `npm run docs:freshness` - passed after the restore checkpoint contract update.
+- `git diff --check` - passed after the restore checkpoint contract update.
+- `npm run lint` - passed after the restore checkpoint contract update.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the restore checkpoint contract update.
+- Did not run `npm run db:backup:checkpoint` or `npm run db:restore:verify` in this continuation because those scripts read `DIRECT_URL`/`DATABASE_URL` from `.env.local`; the intended production-candidate or isolated recovery target still needs explicit approval before touching database state.

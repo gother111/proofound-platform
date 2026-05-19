@@ -42,6 +42,7 @@ Use this checklist together with [`../verification-checklist.md`](../verificatio
 
 - [ ] `npm run db:backup:checkpoint`
 - [ ] `npm run db:restore:verify -- --checkpoint <dir>`
+- [x] Backup/restore fingerprint table coverage matches the active MVP corridor and excludes retired compatibility tables.
 - [x] `npm run test:launch:smoke` against local `http://localhost:33180` with the full launch-smoke artifact.
 - [x] `npm run monitor:launch` against local `http://localhost:33180` with persistence disabled.
 - [ ] `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`

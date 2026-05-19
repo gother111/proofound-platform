@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-10`
+> Last Verified: `2026-05-19`
 
 # Launch Restore Drill
 
@@ -12,16 +12,34 @@ This drill validates that Proofound launch rollback readiness is backed by a rep
 - Fingerprint helper: `scripts/lib/db-checkpoint-utils.mjs`
 - Critical tables covered by fingerprinting:
   - `profiles`
+  - `individual_profiles`
   - `organizations`
+  - `organization_members`
+  - `proof_artifacts`
+  - `proof_packs`
+  - `proof_pack_items`
+  - `verification_records`
+  - `capability_tokens`
+  - `capability_token_events`
+  - `portfolio_publication_states`
   - `assignments`
+  - `matches`
+  - `match_review_states`
+  - `intro_workflows`
+  - `reveal_events`
   - `interviews`
+  - `decisions`
+  - `engagement_verifications`
   - `conversations`
   - `messages`
+  - `data_portability_exports`
+  - `profile_deletion_requests`
+  - `uploaded_files`
+  - `internal_ops_queue_items`
+  - `audit_logs`
   - `analytics_events`
-  - `fairness_notes`
-  - `verification_requests`
-  - `user_video_integrations`
-  - `decision_reminders`
+
+The checkpoint table list is intentionally limited to active MVP, internal launch-ops, privacy/export/delete, and audit-trail state. Retired compatibility tables such as legacy verification requests, native video integrations, fairness notes, and decision reminders are not launch restore gates unless the locked MVP scope changes.
 
 ## What Is Repo-Proven
 
@@ -34,6 +52,7 @@ This drill validates that Proofound launch rollback readiness is backed by a rep
   - schema and data dumps when `pg_dump` is available
 - `npm run db:restore:verify -- --checkpoint <dir>` compares a restored database against the checkpoint fingerprint and fails on drift.
 - `npm run go:no-go` requires both scripts and this runbook to exist before the launch gate can pass.
+- `tests/scripts/db-checkpoint-critical-tables.test.ts` keeps the fingerprint table list aligned with the current MVP corridor and rejects retired compatibility tables as launch restore gates.
 
 ## What Is Still Manual
 
