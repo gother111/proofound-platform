@@ -762,6 +762,46 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps security policy and incident response no-leak and launch-scoped', () => {
+    const securityPolicy = fs.readFileSync(path.join(repoRoot, '.github/SECURITY.md'), 'utf8');
+    const incidentRunbook = fs.readFileSync(
+      path.join(repoRoot, 'docs/SECURITY_INCIDENT_RESPONSE_RUNBOOK.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const combined = `${securityPolicy}\n${incidentRunbook}`;
+
+    expect(securityPolicy).toContain('Last Verified: `2026-05-19`');
+    expect(securityPolicy).toContain('Do not send passwords');
+    expect(securityPolicy).toContain('private proof files');
+    expect(securityPolicy).toContain('archived/post-MVP surfaces');
+    expect(securityPolicy).toContain(
+      'Security and compliance claims should be based on current evidence'
+    );
+    expect(incidentRunbook).toContain('Last Verified: `2026-05-19`');
+    expect(incidentRunbook).toContain('not legal advice or proof of compliance by itself');
+    expect(incidentRunbook).toContain('First 15 Minutes');
+    expect(incidentRunbook).toContain('private proof content');
+    expect(incidentRunbook).toContain('hidden candidate identity details');
+    expect(incidentRunbook).toContain('raw request/response bodies');
+    expect(incidentRunbook).toContain('Do not run destructive production');
+    expect(incidentRunbook).toContain(
+      'Store incident records under the approved internal location'
+    );
+    expect(combined).not.toContain('SOC 2');
+    expect(combined).not.toContain('GDPR and CCPA compliant from day one');
+    expect(combined).not.toContain('#security-incidents Slack channel');
+    expect(combined).not.toContain('Supabase SQL Editor');
+    expect(combined).not.toContain('UPDATE auth.refresh_tokens');
+    expect(combined).not.toContain('Emergency Phone');
+    expect(docsRegistry).toContain(
+      '| `.github/SECURITY.md`                                                                                   | `active`         | `github`      | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/SECURITY_INCIDENT_RESPONSE_RUNBOOK.md`                                                            | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps manual testing docs aligned with the active MVP route corridor', () => {
     const manualChecklist = fs.readFileSync(
       path.join(repoRoot, 'MANUAL_TESTING_CHECKLIST.md'),

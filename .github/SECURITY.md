@@ -1,118 +1,79 @@
 # Security Policy
 
-## Reporting a Vulnerability
+> Last Verified: `2026-05-19`
 
-Proofound takes security seriously. We appreciate your efforts to responsibly disclose any security vulnerabilities you find.
+Proofound welcomes responsible security reports for the public web app, active API routes, authentication, privacy/no-leak behavior, file upload handling, public portfolio/public organization trust surfaces, organization review flows, reveal/consent, export/delete, and admin/internal route protection.
 
-### How to Report
+## Reporting A Vulnerability
 
-**Email**: security@proofound.io
+Email: `security@proofound.io`
 
-Please include the following information in your report:
+Include:
 
-- Description of the vulnerability
-- Steps to reproduce the issue
-- Potential impact
-- Any suggested fixes (optional)
-- Your contact information for follow-up
+- a short description of the issue
+- affected URL, route, or workflow
+- steps to reproduce with test accounts or your own data
+- expected impact
+- screenshots or logs only if they do not include private proof content, hidden identity details, secrets, tokens, cookies, signed URLs, or private user data
+- your contact information for follow-up
 
-### What to Expect
+Do not send passwords, API keys, session cookies, government ID documents, private proof files, raw exports, or other sensitive material by email.
 
-1. **Acknowledgment**: We will acknowledge receipt of your vulnerability report within 24 hours.
+## Response Expectations
 
-2. **Assessment**: We will investigate and assess the vulnerability within 5 business days.
+- We aim to acknowledge reports within 24 hours.
+- We triage impact against active launch surfaces and privacy/no-leak risk.
+- Critical privacy, auth, token, public projection, upload, or admin/internal exposure issues receive priority handling.
+- We coordinate disclosure timing after the issue is understood and a fix path is in place.
 
-3. **Resolution Timeline**:
-   - Critical vulnerabilities: Fixed within 7 days
-   - High severity: Fixed within 14 days
-   - Medium severity: Fixed within 30 days
-   - Low severity: Fixed within 60 days
+Timelines can vary based on severity, reproducibility, and whether a provider or infrastructure owner is involved.
 
-4. **Updates**: We will keep you informed throughout the remediation process.
+## In Scope
 
-5. **Disclosure**: After the vulnerability is fixed, we will coordinate with you on public disclosure timing.
+- `https://proofound.io`
+- active MVP and launch-ops API routes
+- signup, login, verification, password reset, invite, and token redemption flows
+- public portfolio and public organization trust pages
+- assignment/review, reveal consent, interview, decision, and engagement-verification workflows
+- export/delete and privacy settings
+- file upload/import and private proof storage behavior
+- admin/internal route authorization and no-leak behavior
 
-### Scope
+## Out Of Scope
 
-The following are **in scope** for security reports:
+- social engineering
+- denial-of-service testing without prior approval
+- physical attacks
+- attacks requiring access to a device/account you do not own
+- broad scraping or enumeration without a specific vulnerability
+- previously reported issues already under remediation
+- theoretical findings without a reproducible path
+- archived/post-MVP surfaces unless they expose active data, active routes, or launch behavior
 
-- **Web Application**: https://proofound.io
-- **API Endpoints**: https://proofound.io/api/*
-- **Authentication System**: Login, signup, password reset
-- **Data Privacy**: Unauthorized access to user data
-- **Database Security**: SQL injection, RLS policy bypasses
-- **File Uploads**: Malicious file execution
-- **Session Management**: Session hijacking, fixation
+## Safe Harbor
 
-The following are **out of scope**:
+We support good-faith research when you:
 
-- Social engineering attacks
-- Denial of Service (DoS) attacks
-- Physical attacks against our offices or equipment
-- Attacks requiring physical access to user devices
-- Previously reported vulnerabilities
-- Theoretical attacks without proof of concept
+- avoid privacy violations and service disruption
+- use only accounts and data you own or have explicit permission to test
+- access only the minimum data needed to demonstrate the issue
+- stop testing and report promptly if you encounter private data
+- give us reasonable time to investigate before public disclosure
 
-### Safe Harbor
+## Recognition
 
-We support safe harbor for security researchers who:
+We do not currently operate a paid bug bounty program. We may acknowledge valid reports with permission from the reporter.
 
-- Make a good faith effort to avoid privacy violations, data destruction, and service disruption
-- Only interact with test accounts you own or with explicit permission from the account holder
-- Give us a reasonable time to fix the issue before public disclosure
-- Do not exploit the vulnerability beyond the minimum necessary to demonstrate it
+## Security Posture
 
-We will not pursue legal action against researchers who follow these guidelines.
+Proofound’s active launch posture emphasizes:
 
-### Bug Bounty Program
+- privacy-first public projection
+- blind-by-default review and consent before reveal
+- scoped verification rather than broad identity claims
+- private proof/document storage
+- route-surface policy for archived and internal surfaces
+- structured logging and Sentry redaction boundaries
+- repo-owned launch checks, smoke evidence, and go/no-go gates
 
-We currently do not have a paid bug bounty program. However, we will:
-
-- Publicly acknowledge researchers who report valid vulnerabilities (with permission)
-- Provide swag/merchandise for significant findings
-- Consider implementing a paid program in the future as we scale
-
-### Recognition
-
-We maintain a Hall of Fame for security researchers who have helped us improve our security:
-
-**2025**:
-
-- (No reports yet)
-
-### Security Best Practices
-
-We follow these security practices:
-
-- **Encryption**: All data encrypted at rest (AES-256) and in transit (TLS 1.3)
-- **Authentication**: JWT-based with optional MFA
-- **Authorization**: Row-Level Security (RLS) policies on all database tables
-- **Input Validation**: All user input validated and sanitized
-- **Rate Limiting**: API endpoints protected against brute force attacks
-- **Audit Logging**: All sensitive actions logged for security review
-- **Regular Updates**: Dependencies updated monthly, security patches applied immediately
-- **Code Review**: All code reviewed before deployment
-- **Privacy by Design**: GDPR and CCPA compliant from day one
-
-### Compliance
-
-Proofound complies with:
-
-- **GDPR** (General Data Protection Regulation)
-- **CCPA** (California Consumer Privacy Act)
-- **SOC 2** (in preparation)
-
-### Security Contact
-
-**Email**: security@proofound.io  
-**Emergency**: For critical vulnerabilities affecting live systems  
-**Response Time**: 24 hours acknowledgment, 5 days assessment
-
-### Version History
-
-- **v1.0** (2025-11-06): Initial security policy
-- (Future updates will be documented here)
-
----
-
-Thank you for helping keep Proofound and our users safe!
+Security and compliance claims should be based on current evidence and applicable legal/privacy review, not on this policy alone.

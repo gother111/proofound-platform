@@ -1075,3 +1075,11 @@ Non-fatal test noise:
 - Hardened Sentry config so client replay sampling defaults to `0` unless explicitly enabled by `NEXT_PUBLIC_SENTRY_REPLAY_*` env vars, while keeping `maskAllText` and `blockAllMedia` when replay is enabled.
 - Added Sentry event scrubbing in client/server/edge config to reduce user context to id-only and remove request cookies, headers, and body data before events leave the app.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so Sentry/logging docs stay current and privacy-safe.
+
+## Continuation - Security Policy And Incident Response Refresh
+
+- Found `.github/SECURITY.md` and `docs/SECURITY_INCIDENT_RESPONSE_RUNBOOK.md` still verified on 2026-02-12/old November 2025 content with overbroad compliance/security claims, unsafe operational examples, old contact/status placeholders, and evidence instructions that could leak private payloads.
+- Rewrote the public security policy around responsible disclosure for active MVP and launch-ops surfaces, excluding archived/post-MVP surfaces unless they expose active data or launch behavior.
+- Rewrote the incident response runbook around launch-safe containment: first 15 minutes, no-leak evidence preservation, public projection leaks, reveal/identity leaks, upload/proof leaks, auth/token incidents, admin/internal exposure, legal/privacy notification decision boundaries, remediation, and post-incident review.
+- Removed unsafe SQL/dashboard examples, blanket SOC/GDPR/CCPA claims, status-page/emergency placeholders, and instructions to paste secrets/private data into shared docs or support flows.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so security guidance stays no-leak, target-scoped, and evidence-based.
