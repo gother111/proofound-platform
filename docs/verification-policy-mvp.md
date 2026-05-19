@@ -1,9 +1,9 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-11`
+> Last Verified: `2026-05-19`
 
 # Block 7: Launch-Safe Verification Trust Model
 
-> Canonical scope note: `Proofound_Project_Specification_2026-03-11.md` sets the launch promise. This policy defines the scoped trust model beneath that promise. It must not be read as a generic identity-verification or broad verified-badge spec.
+> Canonical scope note: the locked MVP source of truth sets the launch promise, followed by the aligned PRD, technical requirements, launch runbook, GTM plan, and fresh repo evidence. This policy defines the scoped trust model beneath that promise. It must not be read as a generic identity-verification or broad verified-badge spec.
 
 ## Recommendation summary
 
@@ -122,6 +122,7 @@ Interpretation rules:
   - `verified` applies only when pack-level threshold rules are satisfied
   - `disputed` applies when a material contradiction or dispute suppresses active positive pack-level trust
 - The badge layer is more granular than the coarse states and must not be flattened into a single public claim of `verified`.
+- Compatibility fields or older provider-derived states, including work-email or LinkedIn history, must stay account-side unless a current scoped verification record makes the specific fact launch-safe to project.
 
 ## Verification source and eligibility model
 

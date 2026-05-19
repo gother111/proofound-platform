@@ -1,7 +1,10 @@
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-19`
+
 # Scoped Verification Implementation Context
 
 > This file is implementation context, not the canonical MVP product contract.
-> Launch scope is defined first by `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then by `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, and fresh repo-grounded evidence. This document is implementation context only.
+> Launch scope is defined first by `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then by `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, and fresh repo-grounded evidence. This document is reference-only implementation context.
 
 ## Purpose
 
@@ -15,7 +18,7 @@ The launch product promise is a scoped trust model, not a generic identity-verif
 - The launch-safe user-facing trust families are documented in `docs/verification-policy-mvp.md`.
 - Organization-linked checks, peer attestations, human review, and automated integrity checks may coexist without implying legal identity proof or profile-wide certification.
 - Government-ID self-serve verification is not a canonical MVP promise.
-- Any legacy implementation for stronger identity checks must be treated as optional implementation history unless the Project Specification explicitly requires it.
+- Any legacy implementation for stronger identity checks must be treated as optional implementation history unless the locked MVP authority stack explicitly promotes it.
 
 ## Implementation History in This Repo
 
@@ -58,7 +61,7 @@ Some older implementation work references providers or flows such as:
 - LinkedIn-derived signals
 - Veriff or other document-check vendors
 
-Those references should now be interpreted as implementation options or historical experiments. They do not redefine the active Project Specification trust contract on their own.
+Those references should now be interpreted as implementation options or historical experiments. They do not redefine the locked MVP trust contract on their own.
 
 ## Product Copy Guidance
 
@@ -70,7 +73,7 @@ Those references should now be interpreted as implementation options or historic
 
 When implementation and product wording conflict:
 
-1. follow the Project Specification
+1. follow the locked MVP authority stack
 2. follow `docs/verification-policy-mvp.md`
 3. narrow the product claim rather than broadening it
 

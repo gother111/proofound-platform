@@ -584,6 +584,38 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps scoped verification docs under the locked MVP authority stack', () => {
+    const identityContext = fs.readFileSync(
+      path.join(repoRoot, 'IDENTITY_VERIFICATION_IMPLEMENTATION.md'),
+      'utf8'
+    );
+    const verificationPolicy = fs.readFileSync(
+      path.join(repoRoot, 'docs/verification-policy-mvp.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(identityContext).toContain('Doc Class: `reference-spec`');
+    expect(identityContext).toContain('Last Verified: `2026-05-19`');
+    expect(identityContext).toContain('reference-only implementation context');
+    expect(identityContext).toContain('locked MVP authority stack');
+    expect(identityContext).not.toContain('Project Specification explicitly requires');
+    expect(identityContext).not.toContain('active Project Specification trust contract');
+    expect(verificationPolicy).toContain('Last Verified: `2026-05-19`');
+    expect(verificationPolicy).toContain('the locked MVP source of truth sets the launch promise');
+    expect(verificationPolicy).toContain('must stay account-side');
+    expect(verificationPolicy).toContain('including work-email or LinkedIn history');
+    expect(verificationPolicy).not.toContain(
+      'Proofound_Project_Specification_2026-03-11.md` sets the launch promise'
+    );
+    expect(docsRegistry).toContain(
+      '| `IDENTITY_VERIFICATION_IMPLEMENTATION.md`                                                               | `reference-spec` | `root`        | `repo`              | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/verification-policy-mvp.md`                                                                       | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps the testing strategy aligned with production-candidate launch gates', () => {
     const testingStrategy = fs.readFileSync(
       path.join(repoRoot, 'docs/testing-strategy.md'),

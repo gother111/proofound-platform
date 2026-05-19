@@ -1037,3 +1037,10 @@ Non-fatal test noise:
 - Rewrote it as an active support operations guide for `hello@proofound.io`: mailbox/MFA/DNS setup, launch-corridor triage, plain-language templates, privacy/no-leak response rules, self-service export/delete routing, and urgent security/privacy escalation.
 - Refreshed `SUPPORT.md` to the current authority stack and manual-link interview posture.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so support guidance stays aligned with self-service privacy actions, no-leak support records, no help-center/in-app-chat claims unless those surfaces are active, and no deletion from a bare email reply.
+
+## Continuation - Scoped Verification Authority Refresh
+
+- Found `IDENTITY_VERIFICATION_IMPLEMENTATION.md` still classified active even though it describes itself as implementation context only, and found `docs/verification-policy-mvp.md` still verified on 2026-03-11 with the old Project Specification-first scope note.
+- Reclassified the root identity-verification implementation note as `reference-spec`, added current doc metadata, and replaced Project-Specification-first language with the locked MVP authority stack.
+- Refreshed `docs/verification-policy-mvp.md` to `Last Verified: 2026-05-19`, clarified that the locked MVP source of truth sets the launch promise, and added an explicit guard that older work-email/LinkedIn compatibility state stays account-side unless current scoped verification records make a specific fact safe to project.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so scoped verification docs keep the current authority order and do not imply broad identity verification or legacy provider-derived trust.
