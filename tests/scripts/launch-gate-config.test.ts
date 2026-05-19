@@ -1675,6 +1675,32 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps monitoring and alerting docs aligned with launch-safe operations', () => {
+    const monitoringAlerting = fs.readFileSync(
+      path.join(repoRoot, 'docs/monitoring-alerting.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(monitoringAlerting).toContain('Last Verified: `2026-05-19`');
+    expect(monitoringAlerting).toContain('Use the existing public liveness endpoint');
+    expect(monitoringAlerting).toContain('/api/monitoring/launch-status');
+    expect(monitoringAlerting).toContain('/api/monitoring/health-diagnostics');
+    expect(monitoringAlerting).toContain('private proof content');
+    expect(monitoringAlerting).not.toContain('/api/core/matching/profile');
+    expect(monitoringAlerting).not.toContain('Payment processing errors');
+    expect(monitoringAlerting).not.toContain('Cache hit rate');
+    expect(monitoringAlerting).not.toContain('TODO: Send');
+    expect(monitoringAlerting).not.toContain('Create health check API');
+    expect(monitoringAlerting).not.toContain('PagerDuty');
+    expect(monitoringAlerting).not.toContain('team@proofound.io');
+    expect(monitoringAlerting).not.toContain('backend-team@proofound.io');
+    expect(monitoringAlerting).not.toContain('frontend-team@proofound.io');
+    expect(docsRegistry).toContain(
+      '| `docs/monitoring-alerting.md`                                                                           | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps Sentry and structured logging privacy-safe for launch', () => {
     const sentrySetup = fs.readFileSync(path.join(repoRoot, 'docs/sentry-setup.md'), 'utf8');
     const structuredLogging = fs.readFileSync(

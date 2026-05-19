@@ -1569,3 +1569,10 @@ Non-fatal test noise:
 - Browser route smoke covered `/`, `/login`, `/signup`, `/portfolio/demo`, `/portfolio/org/demo`, and `/privacy`; all sampled routes rendered expected headings/titles, no horizontal overflow, and no sampled public demo/profile data leak.
 - Browser confirmed `/portfolio/demo` and `/portfolio/org/demo` remain `noindex, nofollow, nocache` unavailable public surfaces.
 - Browser screenshot capture timed out again in this Browser backend session, so this pass records Browser DOM/title/action/overflow/noindex evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-cache-monitoring/route-smoke.json`.
+
+## Continuation - Monitoring Alerting Launch-Ops Scope Cleanup
+
+- Found active `docs/monitoring-alerting.md` still carried broad generic ops examples: `/api/core/matching/profile` as the monitored transaction, direct team email examples, a `TODO` alert send note, a suggested new health endpoint implementation, payment and cache-hit-rate alert categories, and PagerDuty/Twilio-style escalation language.
+- Tightened the monitoring guide around the locked MVP and existing route surface: public `/api/health` remains minimal, internal diagnostics stay behind `/api/monitoring/launch-status` and `/api/monitoring/health-diagnostics`, and alert channels are described as protected launch operator channels rather than tracked personal/team addresses or webhook examples.
+- Replaced broad business metrics with MVP corridor workflow health: signup/login, proof upload/import/linking, assignment publishing, shortlist/review, intro, reveal, interview, decision, and engagement verification.
+- Added launch-gate coverage so the active monitoring guide cannot drift back to archived/broad route examples, payment alert scope, cache-hit-rate claims, TODO alert wiring, PagerDuty references, or tracked team email examples.

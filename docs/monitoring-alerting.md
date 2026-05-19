@@ -84,7 +84,7 @@ Sentry is already configured in the application. See `docs/sentry-setup.md` for 
 - **Name:** Production Error Rate Spike
 - **Environment:** production
 - **Condition:** Errors > 10 in 1 minute
-- **Action:** Send email to team
+- **Action:** Notify the monitored launch operator channel
 - **Priority:** High
 
 **Alert 2: New Issue**
@@ -93,22 +93,22 @@ Sentry is already configured in the application. See `docs/sentry-setup.md` for 
 - **Environment:** production
 - **Condition:** First seen event
 - **Filter:** level:error
-- **Action:** Send email to on-call
+- **Action:** Notify the launch incident owner
 - **Priority:** High
 
 **Alert 3: Regression**
 
 - **Name:** Error Regression Detected
 - **Condition:** Issue is marked resolved and occurs again
-- **Action:** Send email to responsible developer
+- **Action:** Assign to the responsible protected owner group
 - **Priority:** Medium
 
 **Alert 4: Performance Degradation**
 
 - **Name:** Slow API Response
 - **Condition:** p95 response time > 2000ms for 5 minutes
-- **Transaction:** /api/core/matching/profile
-- **Action:** Send Slack notification
+- **Transaction:** active MVP API route, such as `/api/assignments`
+- **Action:** Notify the monitored launch operator channel
 - **Priority:** Medium
 
 ### Issue Assignment
@@ -118,18 +118,9 @@ Sentry is already configured in the application. See `docs/sentry-setup.md` for 
 1. Go to Settings → Issue Owners
 2. Add ownership rules:
 
-```
-# API routes
-path:src/app/api/core/matching/* backend-team@proofound.io
-path:src/app/api/conversations/* backend-team@proofound.io
-
-# Frontend components
-path:src/app/app/i/* frontend-team@proofound.io
-path:src/components/* frontend-team@proofound.io
-
-# Database layer
-path:src/db/* backend-team@proofound.io
-```
+Use private Sentry owner groups or protected team handles. Do not put personal
+email addresses, private proof content, raw payloads, signed URLs, or internal
+queue identifiers in issue-owner examples or alert messages.
 
 ### Sentry Performance Monitoring
 
@@ -413,9 +404,8 @@ async function monitorErrors() {
   });
 
   if (errors.length > 10) {
-    // Send alert
     console.error(`High error rate: ${errors.length} errors in 5 minutes`);
-    // TODO: Send email/Slack notification
+    // Notify the configured launch operator channel without including raw logs.
   }
 }
 
@@ -555,27 +545,27 @@ Target: < 50 connections (90% of Supabase pooler limit).
 **Monitor 1: Homepage**
 
 - **Type:** HTTP(s)
-- **URL:** https://yourdomain.com
+- **URL:** https://proofound.io
 - **Interval:** 5 minutes
 - **Alert:** Email when down for 5 minutes
 
 **Monitor 2: API Health Check**
 
 - **Type:** HTTP(s)
-- **URL:** https://yourdomain.com/api/health
+- **URL:** https://proofound.io/api/health
 - **Interval:** 5 minutes
 - **Expected Status:** 200
 
-**Monitor 3: API Matching Endpoint**
+**Monitor 3: Authenticated Launch Status**
 
 - **Type:** HTTP(s)
-- **URL:** https://yourdomain.com/api/core/matching/profile
+- **URL:** production-candidate `/api/monitoring/launch-status`
 - **Interval:** 10 minutes
-- **Custom Headers:** Authorization: Bearer [test-token]
+- **Custom Headers:** Use the protected internal launch-ops secret
 
 4. Configure alerts:
-   - Email alerts to team@proofound.io
-   - SMS alerts to on-call phone
+   - Notify the monitored launch operator channel
+   - Keep escalation owner details in the protected operations roster
 
 ### Option 2: Better Uptime (Recommended)
 
@@ -588,61 +578,14 @@ Target: < 50 connections (90% of Supabase pooler limit).
    - Incident timeline
    - Status page
    - On-call scheduling
-   - Slack/PagerDuty integration
+   - Launch operator channel integration
 
 ### Health Check Endpoint
 
-**Create health check API:**
-
-```typescript
-// src/app/api/health/route.ts
-import { NextResponse } from 'next/server';
-import { db } from '@/db';
-import { kv } from '@vercel/kv';
-
-export async function GET() {
-  const checks = {
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    services: {
-      database: 'unknown',
-      cache: 'unknown',
-    },
-  };
-
-  try {
-    // Check database
-    await db.execute('SELECT 1');
-    checks.services.database = 'ok';
-  } catch (error) {
-    checks.services.database = 'error';
-    checks.status = 'degraded';
-  }
-
-  try {
-    // Check cache
-    await kv.ping();
-    checks.services.cache = 'ok';
-  } catch (error) {
-    checks.services.cache = 'error';
-    checks.status = 'degraded';
-  }
-
-  const statusCode = checks.status === 'ok' ? 200 : 503;
-
-  return NextResponse.json(checks, { status: statusCode });
-}
-
-// Expected response:
-// {
-//   "status": "ok",
-//   "timestamp": "2025-11-03T10:30:00.000Z",
-//   "services": {
-//     "database": "ok",
-//     "cache": "ok"
-//   }
-// }
-```
+Use the existing public liveness endpoint at `/api/health`. It intentionally
+returns only `status` and `timestamp`; internal diagnostics belong behind
+authenticated launch-ops routes such as `/api/monitoring/launch-status` and
+`/api/monitoring/health-diagnostics`.
 
 ---
 
@@ -655,7 +598,7 @@ export async function GET() {
 - Site down (uptime monitor)
 - Database connection failures
 - Error rate > 50 per minute
-- Payment processing errors
+- Privacy, reveal, export, delete, or public portfolio safety failure
 
 **P1 - High (Action Required Within 1 Hour):**
 
@@ -674,7 +617,7 @@ export async function GET() {
 **P3 - Low (Action Required Within 24 Hours):**
 
 - Warning logs spike
-- Cache hit rate < 50%
+- Cache backend or key-count drift where provider evidence is available
 - Scheduled job failures
 - Non-critical feature degradation
 
@@ -682,24 +625,16 @@ export async function GET() {
 
 **Email:**
 
-- P0, P1: On-call engineer + team lead
-- P2, P3: Team email
+- P0, P1: monitored launch operator channel and incident owner
+- P2, P3: protected operations channel
 
 **Slack:**
 
-```bash
-# Set up incoming webhook
-# https://api.slack.com/messaging/webhooks
+Use a protected launch operator channel if Slack is the chosen incident channel.
+Do not paste webhook URLs or secrets into repository docs.
 
-# Send alert to Slack
-curl -X POST \
-  -H 'Content-Type: application/json' \
-  -d '{"text":"[P1 ALERT] High error rate detected: 15 errors/min"}' \
-  https://hooks.slack.com/services/YOUR/WEBHOOK/URL
-```
-
-**SMS (for P0):**
-Use services like Twilio or PagerDuty for critical alerts.
+**Escalation (for P0):**
+Keep escalation details in the protected operations roster, not in tracked docs.
 
 ### Alert Fatigue Prevention
 
@@ -875,7 +810,7 @@ export default function MonitoringPage() {
 Severity: P0
 Status: Investigating
 Impact: Site unavailable for some users
-Time: 2025-11-03 10:30 UTC
+Time: 2026-05-19 10:30 UTC
 Next update: 10:45 UTC
 ```
 
@@ -889,7 +824,7 @@ Impact: Site fully restored
 Root cause: Database connection pool exhausted
 Fix: Increased connection pool limit
 Duration: 15 minutes
-Post-mortem: Scheduled for 2025-11-04
+Post-mortem: Scheduled if this is a P1 privacy/trust incident
 ```
 
 ---
@@ -910,18 +845,16 @@ Post-mortem: Scheduled for 2025-11-04
 
 - API response time (p50, p95, p99)
 - Database query time
-- Cache hit rate
+- Cache backend and key-count evidence where the provider exposes it
 - Core Web Vitals (LCP, FID, CLS)
 - Time to First Byte (TTFB)
 
-**Business Metrics:**
+**MVP Corridor Metrics:**
 
-- New user signups
-- Active users (DAU, MAU)
-- Matches computed
-- Interviews scheduled
-- Messages sent
-- Assignments created
+- signup/login health
+- proof upload/import/linking health
+- assignment create/edit/review/publish health
+- shortlist/review, intro, reveal, interview, decision, and engagement-verification health
 
 ### Infrastructure Metrics
 
@@ -943,10 +876,9 @@ Post-mortem: Scheduled for 2025-11-04
 
 **Vercel KV:**
 
-- Cache hit rate
-- Cache miss rate
-- Total keys
-- Memory usage
+- backend configured as expected
+- key count where runtime evidence can expose it
+- provider health from Vercel dashboard
 
 ---
 
@@ -994,12 +926,11 @@ Post-mortem: Scheduled for 2025-11-04
 
 ### Optional Advanced Tools (post-launch only, non-canonical for MVP)
 
-| Tool      | Purpose             | Cost               |
-| --------- | ------------------- | ------------------ |
-| Datadog   | Full observability  | Paid ($15/host/mo) |
-| New Relic | APM monitoring      | Paid ($49/mo)      |
-| LogDNA    | Log aggregation     | Paid ($15/GB/mo)   |
-| PagerDuty | Incident management | Paid ($21/user/mo) |
+| Tool      | Purpose            | Cost               |
+| --------- | ------------------ | ------------------ |
+| Datadog   | Full observability | Paid ($15/host/mo) |
+| New Relic | APM monitoring     | Paid ($49/mo)      |
+| LogDNA    | Log aggregation    | Paid ($15/GB/mo)   |
 
 ---
 
@@ -1014,4 +945,4 @@ Post-mortem: Scheduled for 2025-11-04
 
 ---
 
-**Last Updated:** 2025-11-03
+**Last Updated:** 2026-05-19
