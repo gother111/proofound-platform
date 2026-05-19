@@ -14,7 +14,7 @@ vi.mock('@/db', () => ({
   },
 }));
 
-import { generateFairnessNoteResult } from '@/lib/analytics/fairness-note-generator';
+import { generateFairnessNoteResult } from '@/archive/non_launch_admin_ui/lib/analytics/fairness-note-generator';
 
 describe('generateFairnessNoteResult', () => {
   beforeEach(() => {

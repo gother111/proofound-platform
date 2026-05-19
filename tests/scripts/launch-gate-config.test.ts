@@ -202,6 +202,30 @@ describe('launch gate package configuration', () => {
     ).toBe(true);
   });
 
+  it('keeps broad admin analytics and fairness modules archived', () => {
+    const retiredPaths = [
+      'src/components/admin/FairnessDashboard.tsx',
+      'src/components/admin/FairnessReport.tsx',
+      'src/components/admin/MetricsDashboard.tsx',
+      'src/components/admin/PerformanceDashboard.tsx',
+      'src/components/admin/organizations',
+      'src/components/admin/users',
+      'src/components/analytics',
+      'src/components/dashboard/org/FairnessNoteCard.tsx',
+      'src/lib/analytics/fairness.ts',
+      'src/lib/analytics/fairness-gaps.ts',
+      'src/lib/analytics/fairness-note-generator.ts',
+      'src/lib/reports/fairness-note.ts',
+    ];
+
+    for (const retiredPath of retiredPaths) {
+      expect(fs.existsSync(path.join(repoRoot, retiredPath))).toBe(false);
+    }
+    expect(fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_admin_ui/README.md'))).toBe(
+      true
+    );
+  });
+
   it('keeps active E2E helpers away from the retired Expertise Atlas route', () => {
     const activeHelperFiles = fs
       .readdirSync(path.join(repoRoot, 'e2e/helpers'), { withFileTypes: true })

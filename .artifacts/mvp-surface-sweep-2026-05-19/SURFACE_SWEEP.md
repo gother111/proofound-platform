@@ -228,6 +228,15 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Added archive README and launch-gate coverage so the old demographic/fairness settings implementation stays out of active app and shared component surfaces.
 - Registered the archive README in `docs/DOCS_REGISTRY.md`.
 
+29. Broad admin analytics/fairness dashboard code still lived in active source.
+
+- Confirmed the active admin corridor only imports the admin shell, verification queue, and audit table, while broad users, organizations, metrics, performance, and fairness dashboard components were orphaned in active `src/components/admin`.
+- Confirmed broad fairness note/report helpers were not imported by active launch code and belonged to archived admin/fairness routes.
+- Moved broad admin analytics/fairness UI and helper modules to `src/archive/non_launch_admin_ui/`.
+- Updated archived routes/tests to import the archived fairness helpers from their new archive location.
+- Added launch-gate coverage so those broad dashboard/report modules stay out of active admin and analytics source.
+- Registered the archive README in `docs/DOCS_REGISTRY.md`.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -483,11 +492,18 @@ Commands run with Node 25 path:
 - `git diff --check` - passed after archiving the retired fairness settings implementation.
 - `npm run lint` - passed after archiving the retired fairness settings implementation.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the retired fairness settings implementation.
+- `rg -n "@/lib/analytics/fairness|@/lib/analytics/fairness-gaps|@/lib/analytics/fairness-note-generator|@/lib/analytics/fairness-types|@/lib/reports/fairness-note|@/components/admin/(DateRange|Fairness|Metric|Metrics|Performance)|@/components/admin/(analytics|organizations|users)|@/components/analytics|@/components/dashboard/org/FairnessNoteCard|FairnessDashboard|FairnessReportView|FairnessNoteDashboard|calculateFairnessGaps" src tests -g '!src/archive/**' -g '!tests/archive/**'` - no active source/test consumers remain beyond the launch-gate archive assertions.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/ui/admin-dashboard-launch-links.test.tsx tests/ui/admin-verification-dashboard.test.tsx tests/ui/admin-audit-log-table.test.tsx tests/ui/archived-mvp-routes.test.ts tests/api/launch-page-inventory.test.ts` - passed, 6 files / 29 tests, after archiving broad admin analytics/fairness modules.
+- `npm run docs:freshness` - passed after registering the broad admin analytics/fairness archive README.
+- `git diff --check` - passed after archiving broad admin analytics/fairness modules.
+- `npm run lint` - passed after archiving broad admin analytics/fairness modules.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving broad admin analytics/fairness modules.
 
 Non-fatal test noise:
 
 - Vitest/Vite reported `listen EPERM` for WebSocket port `24678` in the sandbox, but tests completed and passed.
 - Node emitted existing `--localstorage-file` warnings during Vitest runs.
+- The admin audit-log UI test intentionally logged `Error: network unavailable` while asserting the rendered error state; the suite passed.
 - Default-runtime `npm run test:launch:routes` failed before tests because the local Node version did not expose `node:fs/promises.constants` for the current Vite package. The same route inventory command passed under the repo-required Node 25 runtime.
 - Archived `notFound()` page tests log jsdom React error output while asserting the 404 boundary; the archived tests passed.
 - Strict org E2E emitted a slow `/api/assignments` GET warning at 21633ms and `assignment.create.unknown_matrix_skills` for strict resume fixture skills. The suite still passed; assignment runtime performance remains a Phase 3 watch item.

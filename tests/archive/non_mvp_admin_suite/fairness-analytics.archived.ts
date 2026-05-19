@@ -34,7 +34,9 @@ describe('calculateFairnessGaps', () => {
       ])
       .mockResolvedValueOnce([]);
 
-    const { calculateFairnessGaps } = await import('@/lib/analytics/fairness');
+    const { calculateFairnessGaps } = await import(
+      '@/archive/non_launch_admin_ui/lib/analytics/fairness'
+    );
     const report = await calculateFairnessGaps('release-1');
 
     expect(report.overallMetrics).toEqual({

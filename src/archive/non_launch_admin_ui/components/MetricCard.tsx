@@ -28,7 +28,7 @@ export function MetricCard({
   className,
 }: MetricCardProps) {
   const isGood = status === 'meeting_target';
-  
+
   return (
     <Card className={cn('', className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -60,19 +60,15 @@ export function MetricCard({
           </div>
           {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
         </div>
-        
-        {subtitle && (
-          <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
-        )}
-        
+
+        {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+
         {status && (
           <div className="mt-2 flex items-center space-x-2">
             <div
               className={cn(
                 'flex items-center space-x-1 rounded-full px-2 py-0.5 text-xs font-medium',
-                isGood
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-red-100 text-red-700'
+                isGood ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
               )}
             >
               {isGood ? '✓' : '✗'} {isGood ? 'Meeting Target' : 'Below Target'}
@@ -85,7 +81,7 @@ export function MetricCard({
             )}
           </div>
         )}
-        
+
         {sampleSize !== undefined && (
           <p className="text-xs text-muted-foreground mt-2">
             Based on {sampleSize.toLocaleString()} data point{sampleSize !== 1 ? 's' : ''}
@@ -95,4 +91,3 @@ export function MetricCard({
     </Card>
   );
 }
-

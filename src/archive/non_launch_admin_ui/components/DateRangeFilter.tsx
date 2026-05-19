@@ -31,8 +31,10 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
 
   const handlePresetClick = (days: number | null) => {
     const endDate = new Date();
-    const startDate = days ? new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000) : new Date(2024, 0, 1);
-    
+    const startDate = days
+      ? new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000)
+      : new Date(2024, 0, 1);
+
     onChange({ startDate, endDate });
     setIsOpen(false);
   };
@@ -51,10 +53,14 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
           </Button>
         ))}
       </div>
-      
+
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="w-[260px] justify-start text-left font-normal">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-[260px] justify-start text-left font-normal"
+          >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {format(value.startDate, 'MMM d, yyyy')} - {format(value.endDate, 'MMM d, yyyy')}
           </Button>
@@ -85,4 +91,3 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
     </div>
   );
 }
-

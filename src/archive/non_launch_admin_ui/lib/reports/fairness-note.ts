@@ -5,7 +5,7 @@
  * Implements PRD Part 7: Automated fairness reporting
  */
 
-import type { FairnessReport } from '@/lib/analytics/fairness';
+import type { FairnessReport } from '@/archive/non_launch_admin_ui/lib/analytics/fairness';
 
 // ============================================================================
 // MARKDOWN GENERATOR

@@ -2,7 +2,15 @@
 
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from 'recharts';
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  ReferenceLine,
+} from 'recharts';
 
 export interface DataPoint {
   date: string;
@@ -17,11 +25,20 @@ export interface MetricsTrendChartProps {
   className?: string;
 }
 
-export function MetricsTrendChart({ title, data, target, unit, className }: MetricsTrendChartProps) {
+export function MetricsTrendChart({
+  title,
+  data,
+  target,
+  unit,
+  className,
+}: MetricsTrendChartProps) {
   const chartData = useMemo(() => {
     return data.map((point) => ({
       ...point,
-      dateLabel: new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      dateLabel: new Date(point.date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }),
     }));
   }, [data]);
 
@@ -66,11 +83,15 @@ export function MetricsTrendChart({ title, data, target, unit, className }: Metr
                     <div className="rounded-lg border bg-background p-2 shadow-sm">
                       <div className="grid grid-cols-2 gap-2">
                         <div className="flex flex-col">
-                          <span className="text-[0.70rem] uppercase text-muted-foreground">Date</span>
+                          <span className="text-[0.70rem] uppercase text-muted-foreground">
+                            Date
+                          </span>
                           <span className="font-bold text-muted-foreground">{data.dateLabel}</span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[0.70rem] uppercase text-muted-foreground">Value</span>
+                          <span className="text-[0.70rem] uppercase text-muted-foreground">
+                            Value
+                          </span>
                           <span className="font-bold">
                             {data.value}
                             {unit ? ` ${unit}` : ''}
@@ -86,7 +107,12 @@ export function MetricsTrendChart({ title, data, target, unit, className }: Metr
                   y={target}
                   stroke="#22c55e"
                   strokeDasharray="3 3"
-                  label={{ value: `Target: ${target}`, position: 'right', fill: '#22c55e', fontSize: 12 }}
+                  label={{
+                    value: `Target: ${target}`,
+                    position: 'right',
+                    fill: '#22c55e',
+                    fontSize: 12,
+                  }}
                 />
               )}
               <Line
@@ -104,4 +130,3 @@ export function MetricsTrendChart({ title, data, target, unit, className }: Metr
     </Card>
   );
 }
-

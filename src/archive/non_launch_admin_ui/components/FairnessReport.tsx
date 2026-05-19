@@ -32,7 +32,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { FairnessReport } from '@/lib/analytics/fairness';
+import type { FairnessReport } from '@/archive/non_launch_admin_ui/lib/analytics/fairness';
 
 interface FairnessReportViewProps {
   initialReports?: any[];
