@@ -548,6 +548,34 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the legacy Linear bulk import out of active launch operations', () => {
+    const linearSetup = fs.readFileSync(
+      path.join(repoRoot, 'LINEAR_SETUP_INSTRUCTIONS.md'),
+      'utf8'
+    );
+    const importScript = fs.readFileSync(
+      path.join(repoRoot, 'scripts/import-linear-issues.mjs'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(linearSetup).toContain('Doc Class: `historical`');
+    expect(linearSetup).toContain('Last Verified: `2026-05-19`');
+    expect(compactWhitespace(linearSetup)).toContain(
+      'Do not use it as current Proofound MVP launch planning guidance'
+    );
+    expect(linearSetup).toContain('agent/runbooks/proofound-ticket-finisher.md');
+    expect(linearSetup).toContain('PROOFOUND_ALLOW_LEGACY_LINEAR_IMPORT=true');
+    expect(linearSetup).not.toContain('Ready to import?');
+    expect(linearSetup).not.toContain('Start Sprint 1');
+    expect(linearSetup).not.toContain('npm install node-fetch dotenv');
+    expect(importScript).toContain('PROOFOUND_ALLOW_LEGACY_LINEAR_IMPORT');
+    expect(importScript).toContain('Refusing to run historical Linear bulk import');
+    expect(docsRegistry).toContain(
+      '| `LINEAR_SETUP_INSTRUCTIONS.md`                                                                          | `historical`     | `root`        | `archive`           | `2026-05-19`'
+    );
+  });
+
   it('keeps Resend setup guidance transactional, target-scoped, and privacy-safe', () => {
     const resendSetup = fs.readFileSync(path.join(repoRoot, 'docs/RESEND_SETUP.md'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');

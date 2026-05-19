@@ -1101,3 +1101,9 @@ Non-fatal test noise:
 - Found `RLS_DEPLOYMENT_SUMMARY.md` still classified as active launch evidence while it contained a 2025 one-time RLS deployment snapshot with broad 100% coverage, compliance, and production-ready claims that no longer match the current migration series or MVP privacy surfaces.
 - Reclassified the file as historical and replaced the active-looking rollout report with a short supersession note pointing current RLS/privacy signoff to repo-owned migrations, drift/backup/audit/migrate/restore gates, active privacy tests, storage policy tests, and fresh target evidence.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the old `001_enable_rls_policies` snapshot cannot be mistaken for current production-candidate RLS evidence.
+
+## Continuation - Legacy Linear Bulk Import Guard
+
+- Found `LINEAR_SETUP_INSTRUCTIONS.md` still classified active even though it described a January 2025 bulk import from an archived plan and encouraged creating broad labels/issues that predate the locked MVP corridor.
+- Reclassified the setup note as historical, pointed current ticket administration to `agent/runbooks/proofound-ticket-finisher.md`, and kept Linear state subordinate to the locked MVP docs, current repo behavior, and fresh evidence.
+- Added a fail-closed guard to `scripts/import-linear-issues.mjs` requiring `PROOFOUND_ALLOW_LEGACY_LINEAR_IMPORT=true` before the legacy import can create or duplicate external Linear issues.
