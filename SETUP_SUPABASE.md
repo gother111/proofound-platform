@@ -1,126 +1,116 @@
-# ⚡ Quick Setup: Add Supabase MCP to Your Project
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
 
-## What You Need to Do
+# Supabase Setup
 
-Since `.env.local` is gitignored (which is good for security!), you need to create it manually. Here's exactly what to do:
+Use this guide to configure a local or production-candidate Supabase target for the locked Proofound
+MVP corridor. It is intentionally target-agnostic: do not hard-code a project ref in docs, scripts,
+screenshots, or launch evidence.
 
-### 🪄 Step 1: Create the `.env.local` file
+For the full environment variable reference, use
+[`docs/ENV_VARIABLES.md`](docs/ENV_VARIABLES.md). For migration discipline, use
+[`APPLY_MIGRATIONS_MANUAL.md`](APPLY_MIGRATIONS_MANUAL.md) and
+[`RUN_MIGRATIONS_GUIDE.md`](RUN_MIGRATIONS_GUIDE.md).
 
-1. Open your terminal in the project folder
-2. Create a new file called `.env.local`:
-   ```bash
-   touch .env.local
-   ```
-3. Open the file in your text editor and paste this content:
+## 1. Create `.env.local`
+
+Create `.env.local` locally. Never commit it.
 
 ```env
-# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
-# Server-side URL (same as public)
-SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-
-# Database connection for Drizzle (pooled connection)
-DATABASE_URL=postgresql://postgres.your-project-ref:[PASSWORD]@aws-1-eu-west-1.pooler.supabase.com:6543/postgres
-
-# Direct connection for migrations
+DATABASE_URL=postgresql://postgres.your-project-ref:[PASSWORD]@aws-1-region.pooler.supabase.com:6543/postgres
 DIRECT_URL=postgresql://postgres:[PASSWORD]@db.your-project-ref.supabase.co:5432/postgres
 
-# Service role key (IMPORTANT: Get this from Supabase Dashboard)
-SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# Site URL for authentication
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SITE_URL=http://localhost:3000
+
+PII_HASH_SALT=your-64-character-secret
+CRON_SECRET=your-local-or-target-secret
 ```
 
-### 🪄 Step 2: Get Your Service Role Key
+Notes:
 
-This key is required for MCP to work properly. Here's where to find it:
+- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are browser-visible and designed
+  for client use.
+- `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `DIRECT_URL`, `PII_HASH_SALT`, and cron/internal
+  secrets are server-only. Do not paste them into public logs, screenshots, tickets, or artifacts.
+- Use the pooled `DATABASE_URL` for runtime queries and `DIRECT_URL` for migration/tooling paths
+  that need a direct connection.
 
-1. Go to [Supabase Dashboard](https://supabase.com/dashboard/project/cjpfrgmsxwxhuomnvciq/settings/api)
-2. Scroll down to find **"service_role"** key (NOT the anon key)
-3. Copy the entire key (it's very long, starts with `eyJ...`)
-4. Paste it into `SUPABASE_SERVICE_ROLE_KEY=` in your `.env.local` file
-
-💡 **Why is this needed?** The service role key allows MCP to bypass Row Level Security (RLS) to perform administrative operations. This is safe because MCP only runs in your development environment and never in production.
-
-### Step 3: Restart Your Dev Server
-
-After creating `.env.local`:
+## 2. Confirm Local App Setup
 
 ```bash
+npm install
+npm run prebuild
 npm run dev
 ```
 
-### Step 4: Test the Connection
+If `npm run prebuild` reports missing variables, fix `.env.local` before continuing.
 
-Try asking me to:
+## 3. Apply Database Changes Safely
 
-- "List all database tables"
-- "Check for security issues"
-- "Show migration status"
+Use the repo-owned migration path:
 
-I should be able to respond using Supabase MCP! 🎉
+```bash
+npm run db:drift-check
+npm run db:backup:checkpoint
+npm run db:audit:migrations
+npm run db:migrate
+npm run db:restore:verify -- --checkpoint <checkpoint-dir>
+```
 
-## What's Already Configured
+Launch rules:
 
-✅ **MCP Configuration** - Your `mcp-config.json` is already set up with:
+- Do not use direct schema-push commands for production or production-candidate workflows.
+- Do not use dashboard SQL paste as normal launch evidence.
+- Confirm the intended target before running any command that can affect data.
+- Run restore verification only against an isolated recovery target, never the live database.
 
-- Figma MCP (for design tokens)
-- Supabase MCP (for database operations)
+## 4. Verify MVP Data Surfaces
 
-✅ **Database Connection** - Successfully connected to project `cjpfrgmsxwxhuomnvciq`
+Use focused checks that match the current corridor:
 
-✅ **Tables Found** - Your database has 23 tables including:
+```bash
+npm run test:launch:routes
+npm run test:launch:smoke
+npm run test:privacy
+npm run test -- tests/privacy/storage-policies.test.ts
+```
 
-- `profiles` (4 rows)
-- `individual_profiles` (3 rows)
-- `organizations`
-- `skills`, `capabilities`, `evidence`
-- And 18 more tables!
+For production-candidate signoff, also use the production readiness checklist and final go/no-go
+flow:
 
-✅ **Migrations** - Found 15 migrations in your database
+```bash
+BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch
+BASE_URL=<production-candidate-url> npm run perf:budgets
+BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go
+```
 
-## ⚠️ Security Note Found
+## 5. Optional Supabase MCP
 
-When I checked your database, I found:
+Supabase MCP can be useful for read-only inspection, advisor checks, logs, and explicit database
+operations. Treat it as an operator tool, not product scope.
 
-**Leaked Password Protection is Disabled**
+- Use [`docs/SUPABASE_MCP_SETUP.md`](docs/SUPABASE_MCP_SETUP.md) for MCP-specific setup.
+- Prefer read-only inspection unless the target and operation are explicit.
+- Do not use MCP results from an old project snapshot as current launch evidence.
+- Do not expose service-role credentials or query results containing private proof/user/org data.
 
-- **What it means:** Your Supabase Auth isn't checking against HaveIBeenPwned.org
-- **Why it matters:** Users might use passwords that have been leaked in data breaches
-- **How to fix:** [Enable leaked password protection](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)
+## 6. Current Launch Boundaries
 
-## Using Drizzle vs Supabase MCP
+Supabase setup supports the MVP corridor only:
 
-### Use Drizzle for:
+- public landing, signup/login, public individual portfolio, public organization trust page, and
+  active assignment/share surfaces;
+- individual onboarding, Proof Packs, proof uploads/imports/links, verification requests, publishing,
+  privacy, export, and delete;
+- organization onboarding, trust profile, assignments, review queue, shortlist/matching, intro,
+  reveal consent, interviews, decisions, and engagement verification;
+- protected admin/internal launch-ops queues, audit, monitoring, and cron surfaces.
 
-- Writing schema changes (`src/db/schema.ts`)
-- Running migrations (`npm run db:push`)
-- Type-safe queries in your code
-- IDE autocomplete
-
-### Use Supabase MCP for:
-
-- Checking security issues
-- Viewing database logs
-- Running ad-hoc queries
-- Monitoring performance
-
-## Next Steps
-
-After completing the steps above:
-
-1. ✅ Test MCP by asking me questions about your database
-2. ✅ Enable leaked password protection in Supabase Dashboard
-3. ✅ Read the full guide in `docs/SUPABASE_MCP_SETUP.md`
-4. ✅ Keep building your awesome platform! 🚀
-
-## Need Help?
-
-- **Can't find service role key?** It's under Settings → API → service_role
-- **Getting connection errors?** Make sure `.env.local` exists in project root
-- **Env variables not working?** Restart your dev server after creating `.env.local`
+It does not re-enable archived broad Expertise Atlas UI, Zen/wellbeing, generic dashboards, public
+directory behavior, or non-MVP marketplace/platform scope.

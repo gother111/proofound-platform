@@ -754,6 +754,34 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the Supabase setup guide target-agnostic and launch-safe', () => {
+    const setupSupabase = fs.readFileSync(path.join(repoRoot, 'SETUP_SUPABASE.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(setupSupabase).toContain('Last Verified: `2026-05-19`');
+    expect(setupSupabase).toContain('locked Proofound');
+    expect(setupSupabase).toContain('MVP corridor');
+    expect(setupSupabase).toContain('docs/ENV_VARIABLES.md');
+    expect(setupSupabase).toContain('APPLY_MIGRATIONS_MANUAL.md');
+    expect(setupSupabase).toContain('npm run db:drift-check');
+    expect(setupSupabase).toContain('npm run db:backup:checkpoint');
+    expect(setupSupabase).toContain('npm run db:audit:migrations');
+    expect(setupSupabase).toContain('npm run db:migrate');
+    expect(setupSupabase).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(setupSupabase).toContain('Do not use direct schema-push commands');
+    expect(setupSupabase).toContain('Do not use dashboard SQL paste');
+    expect(setupSupabase).toContain('Supabase MCP can be useful for read-only inspection');
+    expect(setupSupabase).toContain('Proof Packs');
+    expect(setupSupabase).not.toContain('cjpfrgmsxwxhuomnvciq');
+    expect(setupSupabase).not.toContain('This is safe because MCP only runs');
+    expect(setupSupabase).not.toContain('Running migrations (`npm run db:push`)');
+    expect(setupSupabase).not.toContain('awesome platform');
+    expect(setupSupabase).not.toContain('🎉');
+    expect(docsRegistry).toContain(
+      '| `SETUP_SUPABASE.md`                                                                                     | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',

@@ -988,3 +988,9 @@ Non-fatal test noise:
 - Found root `DEPLOYMENT_STEPS_SMART_SEARCH.md` still classified active even though it described the retired Expertise Atlas smart-search rollout, hard-coded an old Supabase project ref, and recommended direct Supabase schema-push plus SQL Editor paste flows.
 - Replaced the body with a historical supersession note that points current operators to retained taxonomy setup and the migration runbooks, and explicitly says not to use it as active launch guidance for `/app/i/expertise`, old smart-search UI behavior, or production database deployment.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the file stays historical/archive and cannot reintroduce the old project ref, SQL Editor path, direct schema-push command, or "Navigate to the Expertise tab" launch instructions.
+
+## Continuation - Supabase Setup Launch-Safety Refresh
+
+- Found active root `SETUP_SUPABASE.md` still verified on 2026-02-12 and carrying an old MCP snapshot: a hard-coded Supabase project ref, service-role reassurance that was too casual for launch guidance, stale table counts, and a `db:push` migration recommendation.
+- Rewrote it as a target-agnostic Supabase setup checklist for the locked MVP corridor, pointing at the current environment reference and migration runbooks, requiring drift/backup/audit/migrate/restore evidence, and preserving service-role/no-secret/no-private-data boundaries.
+- Added launch-gate coverage and updated `docs/DOCS_REGISTRY.md` so the guide cannot drift back to hard-coded project refs, direct schema-push launch guidance, casual MCP/service-role wording, or broad non-MVP product scope.
