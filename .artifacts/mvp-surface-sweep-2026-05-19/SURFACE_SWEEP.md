@@ -1503,3 +1503,14 @@ Non-fatal test noise:
 - Tightened the individual matching empty state with a calm proof-review search icon and clearer action card hierarchy.
 - Tightened the organization interviews surface visual language by replacing inline colors with Proofound tokens, calmer badges, and a single semantic page heading.
 - Updated the strict individual E2E privacy/account-control flow to use `/api/user/export`, the canonical active export endpoint.
+
+## Continuation - Codex Browser Live Route Recheck
+
+- Reconnected the Codex `@Browser` plugin and restarted the local app at `http://localhost:33180` after the previous dev server had stopped responding.
+- Browser verified `/login` renders `Welcome back`, email/password entry, password reveal, remember-me, reset link, sign-in action, social sign-in actions, signup CTA, and legal links with one `h1`, no horizontal overflow, and no console errors.
+- Browser verified the login signup CTA points to `/signup`; direct Browser navigation to `/signup` renders `Join Proofound`, clear Individual and Organization account choices, sign-in fallback, legal links, one `h1`, no horizontal overflow, and no console errors.
+- Browser verified `/portfolio/demo` renders the launch-safe `Public Page unavailable` guard and does not expose profile data.
+- Browser verified `/org/test-org` and `/admin/launch-status` render launch-safe not-found/archive messaging instead of active public/admin surfaces.
+- Browser verified logged-out requests to `/app/i/matching` and `/app/o/test-org/interviews` route to `/login`, preserving protected app access.
+- Browser viewport override verified mobile `390x844` behavior for `/login`, `/signup`, and `/portfolio/demo`; all retained one primary heading, no horizontal overflow, and no console errors.
+- Browser screenshot capture timed out in this Browser backend session, so this pass records Browser DOM, URL, heading, CTA, overflow, and console-log evidence; earlier saved Browser screenshots remain under `.artifacts/mvp-surface-sweep-2026-05-19/browser-evidence/`.
