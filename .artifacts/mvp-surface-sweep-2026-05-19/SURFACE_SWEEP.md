@@ -1459,3 +1459,10 @@ Non-fatal test noise:
 - Root cause: the launch-smoke runner forced shared `BASE_URL=http://localhost:3000` into every command scenario, while the strict org corridor is intended to run against Playwright's managed production-mode server.
 - Fixed the runner so scenario env can override shared env, cleared `BASE_URL` for the strict org smoke, pinned it to `PLAYWRIGHT_SERVER_MODE=prod`, skipped transactional email delivery, and used dedicated `PLAYWRIGHT_PORT=33101`.
 - Refreshed `.artifacts/launch-smoke-report.json`; full launch smoke now passes all six checks, including strict org corridor review to engagement verification.
+
+## Continuation - Final Checklist Stale-Claim Cleanup
+
+- Found the regenerated final launch checklist still listing two retired stale-claim warnings even though the selected rows were `PASS`: assignment quality checklist vs assignment publish enforcement, and route inventory vs current route-surface tests.
+- Fixed `src/lib/launch/final-launch-checklist-definitions.ts` so the assignment SOP is only used as fallback `UNVERIFIED` evidence when no enforcement test is selected, rather than becoming a false stale claim after tests pass.
+- Refreshed `.artifacts/proofound-route-inventory.md` with the May 19 route counts and a current-route-policy boundary so old route-breadth language no longer contradicts the passing route-surface gate.
+- Regenerated `.artifacts/launch-validation-2026-05-19/final-launch-checklist-status.md/json`; repo scope remains `READY` with `36` pass, `0` fail, `0` blocked, and the same `4` external prerequisites unverified.

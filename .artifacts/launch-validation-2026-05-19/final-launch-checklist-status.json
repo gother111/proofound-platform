@@ -1,9 +1,9 @@
 {
   "scope": "repo",
-  "generatedAt": "2026-05-19T20:16:47.623Z",
+  "generatedAt": "2026-05-19T21:19:59.389Z",
   "currentDate": "2026-05-19",
   "workspaceRoot": "/Users/yuriibakurov/proofound",
-  "gitHead": "245e8f1f40c0122bbeca4bb9b48a88653279c7f9",
+  "gitHead": "7f87741316764cdc641bb82a91e3a3d0046810d7",
   "gitBranch": "master",
   "verdict": "READY",
   "includeStateful": false,
@@ -174,9 +174,7 @@
         }
       ],
       "blockerIds": [],
-      "retiredStaleClaims": [
-        "Assignment quality checklist disagrees with the selected PASS status for this checklist line."
-      ],
+      "retiredStaleClaims": [],
       "sourceLabel": "Assignment publish route test",
       "blocksVerdict": true,
       "blockingScope": "both"
@@ -301,9 +299,7 @@
         }
       ],
       "blockerIds": [],
-      "retiredStaleClaims": [
-        "Route inventory disagrees with the selected PASS status for this checklist line."
-      ],
+      "retiredStaleClaims": [],
       "sourceLabel": "Latest launch bundle route-surface gate",
       "blocksVerdict": true,
       "blockingScope": "both"
@@ -1256,9 +1252,7 @@
     "`The contracts API remains a live launch surface.`",
     "Retire this as current truth. `/api/contracts` is archived and returns `410`.",
     "`Google, LinkedIn, and video integrations remain live launch compatibility flows.`",
-    "Retire this as current truth. Those non-launch integration routes are now removed from the active launch surface, and interview scheduling is manual-link only in the active MVP UI.",
-    "Assignment quality checklist disagrees with the selected PASS status for this checklist line.",
-    "Route inventory disagrees with the selected PASS status for this checklist line."
+    "Retire this as current truth. Those non-launch integration routes are now removed from the active launch surface, and interview scheduling is manual-link only in the active MVP UI."
   ],
   "outputs": {
     "markdownPath": ".artifacts/launch-validation-2026-05-19/final-launch-checklist-status.md",

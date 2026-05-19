@@ -265,25 +265,7 @@ export function buildFinalLaunchChecklistDefinitions({
         'tests/api/assignments-publish-route.test.ts',
       ],
       evaluateDirect: (context) => {
-        const observations: FinalLaunchChecklistObservation[] = passIfDocs(context, {
-          markdown: context.assignmentQualityChecklist,
-          observedAt: null,
-          sourcePath: 'docs/internal-ops/assignment-quality-checklist.md',
-          sourceLabel: 'Assignment quality checklist',
-          summary:
-            'Assignment-quality SOP explicitly checks business value, real work, proof expectation, and practical constraints before publish.',
-          patterns: [
-            /business value/i,
-            /real outcomes/i,
-            /proof expectation/i,
-            /practical constraints/i,
-          ],
-        }).map((observation) => ({
-          ...observation,
-          status: 'UNVERIFIED' as const,
-          summary:
-            'The operator checklist names the required fields, but docs alone do not prove the builder enforces them.',
-        }));
+        const observations: FinalLaunchChecklistObservation[] = [];
 
         if (
           textContainsAll(context.assignmentPublishRouteTest, [
@@ -309,6 +291,28 @@ export function buildFinalLaunchChecklistDefinitions({
             observedAt: null,
             priority: SOURCE_PRIORITY.tests,
           });
+        }
+
+        if (observations.length === 0) {
+          observations.push(
+            ...passIfDocs(context, {
+              markdown: context.assignmentQualityChecklist,
+              observedAt: null,
+              sourcePath: 'docs/internal-ops/assignment-quality-checklist.md',
+              sourceLabel: 'Assignment quality checklist',
+              summary:
+                'Assignment-quality SOP explicitly checks business value, real work, proof expectation, and practical constraints before publish, but no enforcement test was selected.',
+              patterns: [
+                /business value/i,
+                /real outcomes/i,
+                /proof expectation/i,
+                /practical constraints/i,
+              ],
+            }).map((observation) => ({
+              ...observation,
+              status: 'UNVERIFIED' as const,
+            }))
+          );
         }
 
         return observations;

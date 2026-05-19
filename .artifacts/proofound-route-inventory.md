@@ -3,6 +3,11 @@
 Generated: 2026-05-14
 Workspace: `/Users/yuriibakurov/proofound`
 
+> Current sweep refresh added 2026-05-19:
+>
+> - This artifact is retained as a route-inventory reference, but the current launch-surface truth is the May 19 route policy/test evidence in `docs/CURRENT_TRUTH.md`, `src/lib/launch/surface-policy.ts`, `tests/api/launch-surface-inventory.test.ts`, and `tests/api/launch-page-inventory.test.ts`.
+> - The older route-breadth blocker language below is superseded. Current route-surface tests pass and the remaining final-launch unverified items are external ops/signoff prerequisites, not route inventory blockers.
+
 > Historical/superseded freshness banner added 2026-05-14:
 >
 > - Do not treat this March route inventory as current route-surface truth without checking newer compiled inventory, tests, and launch evidence first.
@@ -27,11 +32,11 @@ This is a code-grounded route-surface snapshot for the current workspace. It is 
 
 ## Current Counts
 
-- API route handlers under `src/app/api/**`: `138`
-- App page routes under `src/app/**/page.tsx`: `49`
+- API route handlers under `src/app/api/**/route.ts`: `140`
+- App page handlers under `src/app/**/page.tsx`: `51`
 - Launch-surface classification from `src/lib/launch/surface-policy.ts`:
-  - API routes: `109` active launch, `16` internal-only launch ops, `13` archived compiled compatibility handlers
-  - Page routes: `46` active launch, `3` internal-only launch ops, `0` archived compiled page handlers
+  - API routes: `110` active launch, `16` internal-only launch ops, `14` archived compiled compatibility handlers
+  - Page routes: `48` active launch, `3` internal-only launch ops, `0` archived compiled page handlers
 - Cross-check:
   - filesystem counts and focused launch inventory tests match the reduced current workspace
 
@@ -71,7 +76,7 @@ These are the narrowest current routes that still matter most for the locked MVP
 
 ## Route-Surface Truth For This Pass
 
-- The stale `187` API / `91` page claims are retired. Fresh current-state counts are `138` APIs and `49` pages.
+- The stale `187` API / `91` page claims are retired. Fresh current-state counts are `140` APIs and `51` pages.
 - Fresh protected corridor evidence is now green:
   - isolated strict corridor rerun: `1 passed (3.4m)`
   - full org strict bundle: `7 passed (5.7m)`
@@ -79,7 +84,7 @@ These are the narrowest current routes that still matter most for the locked MVP
   - `.artifacts/launch-smoke-report.json` refreshed at `2026-03-25T08:00:27.400Z`
   - `overallStatus: "pass"`
   - live synthetic monitors passed `10/10` at `2026-03-25T08:00:31.808Z`
-- The remaining route-surface blocker is breadth, not stale smoke or missing corridor evidence.
+- Route-surface tests now pass against the active launch allowlist; route breadth is tracked as a managed launch-surface policy, not a current checklist blocker.
 - Internal-only launch ops remain concentrated in admin verification/audit surfaces and cron launch-ops endpoints.
 
 ## Representative Archived Scope
@@ -141,6 +146,6 @@ The current workspace now hard-gates or archives representative excluded surface
 
 ## Launch-Surface Risk Note
 
-- Keep treating the compiled surface as broader than the locked MVP corridor until more active families are removed or hard-gated.
+- Keep treating the compiled surface as governed by the current launch allowlist and archived-route policy; future reductions are useful risk-reduction work, not evidence that the current route gate is failing.
 - `/api/contracts` and `/app/o/[slug]/settings` are now intentionally archived, and the strict org suite was updated to assert that archived behavior.
-- Fresh smoke and protected corridor evidence are no longer blockers in this pass. The remaining blocker is the size of the surviving active launch allowlist.
+- Fresh smoke, protected corridor, route inventory, and archived-surface evidence are no longer blockers in this pass.

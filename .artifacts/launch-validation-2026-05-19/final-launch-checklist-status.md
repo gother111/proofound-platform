@@ -1,9 +1,9 @@
 # Proofound Final Launch Checklist Status
 
-Generated: 2026-05-19T20:16:47.623Z
+Generated: 2026-05-19T21:19:59.389Z
 Scope: `repo`
 Workspace: `/Users/yuriibakurov/proofound`
-Git: `master` @ `245e8f1f40c0122bbeca4bb9b48a88653279c7f9`
+Git: `master` @ `7f87741316764cdc641bb82a91e3a3d0046810d7`
 Verdict: `READY`
 Live base URL: `http://127.0.0.1:57376`
 Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
@@ -53,7 +53,6 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
 - [PASS] Assignment builder enforces why / work / proof / constraints
   - Summary: Assignment publish tests assert hard publish blocks for missing work summary, proof expectations, and constraints, with business-value coverage in the route fixture.
   - Evidence: Assignment publish route test: `tests/api/assignments-publish-route.test.ts` (Assertions include work_summary_required, proof_expectations_required, and constraints_required.)
-  - Retired stale claims: Assignment quality checklist disagrees with the selected PASS status for this checklist line.
 - [PASS] Review queue is blind-by-default and reason-coded
   - Summary: 2026-05-19 current rerun passed npm run test:launch:org-corridor, the Phase 2 review/reveal/authz pack, and escalated npm run test:e2e:org:strict 7/7. Evidence covers privacy-safe matching review, hidden identity fields before reveal, shortlist review, strict organization flow screens, and workflow email privacy.
   - Evidence: Verification checklist: blind-by-default review: `docs/verification-checklist.md` (2026-05-19 current rerun passed npm run test:launch:org-corridor, the Phase 2 review/reveal/authz pack, and escalated npm run test:e2e:org:strict 7/7. Evidence covers privacy-safe matching review, hidden identity fields before reveal, shortlist review, strict organization flow screens, and workflow email privacy.)
@@ -72,7 +71,6 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
 - [PASS] Route surface is reduced to the launch allowlist
   - Summary: Launch route and page inventory tests passed against the current repo state.
   - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-route-surface.log`
-  - Retired stale claims: Route inventory disagrees with the selected PASS status for this checklist line.
 - [PASS] Canonical 3-role model is true across code, DB, and API
   - Summary: tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.
   - Evidence: Current-state reality check: canonical role and RLS truth: `.artifacts/proofound-current-state-reality-check.md` (tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.)
@@ -184,5 +182,3 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
 - Retire this as current truth. `/api/contracts` is archived and returns `410`.
 - `Google, LinkedIn, and video integrations remain live launch compatibility flows.`
 - Retire this as current truth. Those non-launch integration routes are now removed from the active launch surface, and interview scheduling is manual-link only in the active MVP UI.
-- Assignment quality checklist disagrees with the selected PASS status for this checklist line.
-- Route inventory disagrees with the selected PASS status for this checklist line.
