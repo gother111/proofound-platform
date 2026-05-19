@@ -345,6 +345,12 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Removed the stale `STRICT_PROVIDER_E2E_REQUIRE_BOTH` default from the strict provider npm script so provider E2E matches the Google Meet/manual-link launch corridor.
 - Added a superseded-reference banner to `docs/scope-compliance-report-2026-03-24.md` so its old route counts and launch-drift findings cannot be mistaken for current launch truth.
 
+44. Excluded non-MVP tests still lived under active `tests/api` and `tests/ui`.
+
+- The default Vitest config excluded compatibility tests for legacy messages, moderation APIs, org test matches, org settings integrations, admin AI spend, and admin fairness notes, but the files still lived in active test directories.
+- Moved those tests into `tests/archive/non_mvp_legacy_api/`, `tests/archive/non_mvp_moderation_api/`, `tests/archive/non_mvp_org_integrations_ui/`, and the existing admin-suite archive.
+- Updated the archived Vitest config to run the archived paths from `tests/archive/**`, and added launch-gate coverage so excluded compatibility tests do not return to active test directories.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -699,6 +705,9 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts` - passed, 1 file / 23 tests, after removing `STRICT_PROVIDER_E2E_REQUIRE_BOTH` from the provider E2E npm script.
 - `npm run lint` - passed after the provider E2E npm script cleanup.
 - `rg -n "STRICT_PROVIDER_E2E_REQUIRE_BOTH|ZOOM_|Zoom OAuth|Zoom integration callback|critical gaps|Critical Gaps|check-platform-health|src/lib/integrations/zoom|src/lib/video" package.json scripts docs src tests e2e -g '!scripts/archive/**' -g '!docs/archive/**' -g '!src/archive/**' -g '!tests/archive/**'` - remaining active hits were launch-gate assertions and historical `docs/block-7-report.md`.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/lib/ai-launch-guardrails.test.ts` - passed, 2 files / 32 tests, after moving excluded non-MVP compatibility tests under `tests/archive/**`.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npx vitest --config vitest.archived.config.ts --run tests/archive/non_mvp_legacy_api/messages-legacy-route.archived.test.ts tests/archive/non_mvp_moderation_api/moderation-appeals-route.archived.test.ts tests/archive/non_mvp_org_integrations_ui/organization-settings-integrations.archived.test.tsx --reporter=dot` - passed, 3 files / 14 tests, confirming archived config still exercises the moved compatibility tests.
+- `npm run docs:freshness` - passed after registering the new test archive READMEs.
 
 Non-fatal test noise:
 

@@ -172,7 +172,9 @@ describe('AI launch no-go guardrails', () => {
     ).toEqual([]);
     expect(privacyScript).toContain('tests/lib/ai-redaction.test.ts');
     expect(archivedAdminScript).toContain('vitest.archived.config.ts');
-    expect(archivedAdminScript).toContain('tests/ui/admin-ai-spend-page.test.tsx');
+    expect(archivedAdminScript).toContain(
+      'tests/archive/non_mvp_admin_suite/admin-ai-spend-page.archived.test.tsx'
+    );
   });
 
   it('keeps JD-to-L4 parsing local even if legacy provider env is present', async () => {

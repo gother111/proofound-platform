@@ -118,10 +118,42 @@ describe('launch gate package configuration', () => {
     expect(vitestConfig).toContain("'**/tests/archive/**'");
     expect(vitestConfig).toContain("'**/tests/api/analytics-track-route.test.ts'");
     expect(vitestConfig).toContain("'**/tests/lib/cv-import-suggest-1000-benchmark.test.ts'");
-    expect(vitestConfig).toContain("'**/tests/api/messages-legacy-route.test.ts'");
-    expect(vitestConfig).toContain("'**/tests/ui/organization-settings-integrations.test.tsx'");
     expect(archivedConfig).toContain('src/archive/**/*.test.ts');
-    expect(archivedConfig).toContain('tests/api/messages-legacy-route.test.ts');
+    expect(archivedConfig).toContain('tests/archive/non_mvp_legacy_api/**/*.test.ts');
+    expect(archivedConfig).toContain('tests/archive/non_mvp_moderation_api/**/*.test.ts');
+    expect(archivedConfig).toContain('tests/archive/non_mvp_org_integrations_ui/**/*.test.ts');
+    expect(archivedConfig).toContain('tests/archive/non_mvp_org_integrations_ui/**/*.test.tsx');
+  });
+
+  it('keeps excluded compatibility tests in the archive tree', () => {
+    const retiredActiveTestPaths = [
+      'tests/api/messages-legacy-route.test.ts',
+      'tests/api/moderation-appeals-route.test.ts',
+      'tests/api/moderation-statements-of-reasons-route.test.ts',
+      'tests/api/moderation-transparency-report-route.test.ts',
+      'tests/api/organization-test-matches-route.test.ts',
+      'tests/api/updates-cache-flag-route.test.ts',
+      'tests/ui/admin-ai-spend-page.test.tsx',
+      'tests/ui/admin-fairness-notes-page.test.tsx',
+      'tests/ui/organization-settings-integrations.test.tsx',
+    ];
+
+    for (const retiredPath of retiredActiveTestPaths) {
+      expect(fs.existsSync(path.join(repoRoot, retiredPath))).toBe(false);
+    }
+
+    const archivedPaths = [
+      'tests/archive/non_mvp_legacy_api/messages-legacy-route.archived.test.ts',
+      'tests/archive/non_mvp_legacy_api/updates-cache-flag-route.archived.test.ts',
+      'tests/archive/non_mvp_moderation_api/moderation-appeals-route.archived.test.ts',
+      'tests/archive/non_mvp_org_integrations_ui/organization-settings-integrations.archived.test.tsx',
+      'tests/archive/non_mvp_admin_suite/admin-ai-spend-page.archived.test.tsx',
+      'tests/archive/non_mvp_admin_suite/admin-fairness-notes-page.archived.test.tsx',
+    ];
+
+    for (const archivedPath of archivedPaths) {
+      expect(fs.existsSync(path.join(repoRoot, archivedPath))).toBe(true);
+    }
   });
 
   it('keeps active tests from importing archived implementation modules', () => {

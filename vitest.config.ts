@@ -18,17 +18,6 @@ const DEFAULT_NON_MVP_TEST_EXCLUDES = [
   '**/tests/api/analytics-track-route.test.ts',
   '**/tests/api/analytics-web-vitals-route.test.ts',
   '**/tests/api/performance-track-route.test.ts',
-  // These tests target removed or intentionally gated non-MVP routes/pages that should not block
-  // the default unit test signal for the locked launch corridor.
-  '**/tests/api/messages-legacy-route.test.ts',
-  '**/tests/api/moderation-appeals-route.test.ts',
-  '**/tests/api/moderation-statements-of-reasons-route.test.ts',
-  '**/tests/api/moderation-transparency-report-route.test.ts',
-  '**/tests/api/organization-test-matches-route.test.ts',
-  '**/tests/api/updates-cache-flag-route.test.ts',
-  '**/tests/ui/admin-ai-spend-page.test.tsx',
-  '**/tests/ui/admin-fairness-notes-page.test.tsx',
-  '**/tests/ui/organization-settings-integrations.test.tsx',
 ] as const;
 
 const DEFAULT_SLOW_TEST_EXCLUDES = [
