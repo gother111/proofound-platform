@@ -749,7 +749,7 @@ import { db } from '@/db';
 
 async function MonitoringStats() {
   // Get cache stats
-  const cacheStats = getCacheStats();
+  const cacheStats = await getCacheStats();
 
   // Get database stats
   const dbStats = await db.execute(`
@@ -765,8 +765,11 @@ async function MonitoringStats() {
   return (
     <div className="grid grid-cols-3 gap-4">
       <div className="card">
-        <h3>Cache Hit Rate</h3>
-        <p className="text-3xl">{cacheStats.hitRate}</p>
+        <h3>Cache Backend</h3>
+        <p className="text-3xl">{cacheStats.type === 'redis' ? 'KV' : 'Memory'}</p>
+        <p className="text-sm text-muted-foreground">
+          {cacheStats.keys == null ? 'Key counts managed by provider' : `${cacheStats.keys} keys`}
+        </p>
       </div>
       <div className="card">
         <h3>Total Users</h3>

@@ -381,6 +381,18 @@ describe('launch gate package configuration', () => {
     expect(activeLegacyRows).toEqual([]);
   });
 
+  it('keeps cache monitoring docs aligned with implemented stats', () => {
+    const cacheSource = fs.readFileSync(path.join(repoRoot, 'src/lib/cache.ts'), 'utf8');
+    const monitoringDocs = [
+      fs.readFileSync(path.join(repoRoot, 'docs/monitoring-alerting.md'), 'utf8'),
+      fs.readFileSync(path.join(repoRoot, 'docs/caching-pagination.md'), 'utf8'),
+    ].join('\n');
+
+    expect(cacheSource).not.toContain('placeholder for future implementation');
+    expect(monitoringDocs).not.toContain('cacheStats.hitRate');
+    expect(monitoringDocs).not.toContain('const cacheStats = getCacheStats();');
+  });
+
   it('keeps archived and removed non-MVP tests out of the default release signal', () => {
     const vitestConfig = fs.readFileSync(path.join(repoRoot, 'vitest.config.ts'), 'utf8');
     const archivedConfig = fs.readFileSync(

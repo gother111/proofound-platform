@@ -256,13 +256,8 @@ export async function getCacheStats(): Promise<{
   keys?: number;
 }> {
   if (hasKVConfigured()) {
-    try {
-      // Note: dbsize is not available in Vercel KV REST API
-      // This is a placeholder for future implementation
-      return { type: 'redis' };
-    } catch {
-      return { type: 'redis' };
-    }
+    // Vercel KV REST does not expose DB-wide key counts; report backend type only.
+    return { type: 'redis' };
   } else {
     return {
       type: 'memory',

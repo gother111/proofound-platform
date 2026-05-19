@@ -344,15 +344,14 @@ KV_REST_API_TOKEN=your-token
 
 ## Monitoring
 
-### Cache Hit Rate
+### Cache Backend Health
 
-Monitor cache effectiveness:
+Monitor cache backend selection and key counts where the runtime can expose them:
 
 ```typescript
-// Add to monitoring dashboard
-const cacheHits = await redis.get('cache:hits');
-const cacheMisses = await redis.get('cache:misses');
-const hitRate = cacheHits / (cacheHits + cacheMisses);
+const stats = await getCacheStats();
+console.log('Cache backend:', stats.type);
+console.log('Known key count:', stats.keys ?? 'managed by provider');
 ```
 
 ### Pagination Usage

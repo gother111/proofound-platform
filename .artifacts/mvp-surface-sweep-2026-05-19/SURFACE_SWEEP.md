@@ -1558,3 +1558,14 @@ Non-fatal test noise:
 - Updated `scripts/generate-api-reference.mjs` so archived routes keep `legacy/compat markers in source`, while active MVP and internal launch-ops routes use `compatibility handling in source`.
 - Regenerated `docs/API_REFERENCE.md`; active rows no longer use archived-style legacy wording.
 - Added launch-gate coverage so future API reference generation cannot label `active MVP` rows with `legacy/compat markers in source`.
+
+## Continuation - Cache Monitoring Evidence Alignment And Browser Smoke
+
+- Found active cache monitoring code still described Vercel KV stats as a `placeholder for future implementation`, while active monitoring docs showed `cacheStats.hitRate` even though `getCacheStats()` only returns backend type and optional in-memory key counts.
+- Updated `src/lib/cache.ts` so KV stats explicitly report backend type only, matching the Vercel KV REST limitation rather than implying an unfinished launch feature.
+- Updated `docs/monitoring-alerting.md` and `docs/caching-pagination.md` so launch-ops guidance shows implemented cache backend/key-count evidence instead of a non-existent cache hit-rate metric.
+- Added launch-gate coverage preventing active docs/code from reintroducing the stale cache placeholder or `cacheStats.hitRate` example.
+- Reconnected the Codex `@Browser` plugin through the in-app Browser and tested `http://localhost:3000` after starting the local dev server.
+- Browser route smoke covered `/`, `/login`, `/signup`, `/portfolio/demo`, `/portfolio/org/demo`, and `/privacy`; all sampled routes rendered expected headings/titles, no horizontal overflow, and no sampled public demo/profile data leak.
+- Browser confirmed `/portfolio/demo` and `/portfolio/org/demo` remain `noindex, nofollow, nocache` unavailable public surfaces.
+- Browser screenshot capture timed out again in this Browser backend session, so this pass records Browser DOM/title/action/overflow/noindex evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-cache-monitoring/route-smoke.json`.
