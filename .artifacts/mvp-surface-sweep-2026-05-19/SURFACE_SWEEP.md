@@ -1126,3 +1126,9 @@ Non-fatal test noise:
 - Found April 27 owner/evidence/signoff docs still classified active and still reading as current GO/PASS launch authority, even though this sweep still requires fresh target-specific backup, restore, launch-status, perf-status, and go/no-go evidence.
 - Reclassified the April 27 owner roster, production evidence pack, and signoff memo as historical snapshots, preserving the old commit/evidence context while explicitly blocking their use as current launch readiness.
 - Updated `docs/internal-ops/index.md`, `docs/DOCS_REGISTRY.md`, and launch-gate coverage so internal ops links distinguish historical evidence from current launch authority.
+
+## Continuation - Local Dev And Lint Troubleshooting Refresh
+
+- Found `docs/local-dev.md` and `docs/TROUBLESHOOTING_LINT.md` still verified on 2026-02-12; local setup guidance was missing current metadata, lockfile install discipline, Browser/local smoke evidence guidance, and strict mock-vs-real launch boundaries.
+- Refreshed local development guidance around Node 24.15.0, npm 11.12.1, `engine-strict=true`, `npm ci`, mock Supabase limits, real Supabase strict checks, and no-secret handling in docs/artifacts/screenshots.
+- Rewrote lint troubleshooting around the current `scripts/lint-or-skip.js` ESLint wrapper, dependency-missing skips, `FORCE_LINT=true`, and lockfile install recovery so skipped lint cannot be mistaken for launch evidence.

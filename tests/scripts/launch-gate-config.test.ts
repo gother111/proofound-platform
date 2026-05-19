@@ -99,6 +99,46 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps local developer setup and lint troubleshooting aligned with current scripts', () => {
+    const localDev = fs.readFileSync(path.join(repoRoot, 'docs/local-dev.md'), 'utf8');
+    const lintTroubleshooting = fs.readFileSync(
+      path.join(repoRoot, 'docs/TROUBLESHOOTING_LINT.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const localDevCompact = compactWhitespace(localDev);
+
+    expect(localDev).toContain('Last Verified: `2026-05-19`');
+    expect(localDev).toContain('Node `24.15.0`');
+    expect(localDev).toContain('npm `11.12.1`');
+    expect(localDev).toContain('npm ci');
+    expect(localDev).toContain('engine-strict=true');
+    expect(localDev).toContain('NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run dev');
+    expect(localDev).toContain('Use Browser for route inspection');
+    expect(localDevCompact).toContain(
+      'Mock mode is useful for Browser and Playwright layout checks, but it is not proof of RLS'
+    );
+    expect(localDev).toContain('Strict or launch-adjacent checks must keep');
+    expect(localDev).not.toContain('node20');
+
+    expect(lintTroubleshooting).toContain('Last Verified: `2026-05-19`');
+    expect(lintTroubleshooting).toContain('scripts/lint-or-skip.js');
+    expect(lintTroubleshooting).toContain('npx eslint . --ext .js,.jsx,.ts,.tsx');
+    expect(lintTroubleshooting).toContain('Skipping lint: eslint is not installed');
+    expect(lintTroubleshooting).toContain('npm ci');
+    expect(lintTroubleshooting).toContain('FORCE_LINT=true npm run lint');
+    expect(lintTroubleshooting).toContain('Do not count a dependency-missing skip');
+    expect(lintTroubleshooting).not.toContain('npm install');
+    expect(lintTroubleshooting).not.toContain('Next.js CLI');
+
+    expect(docsRegistry).toContain(
+      '| `docs/local-dev.md`                                                                                     | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/TROUBLESHOOTING_LINT.md`                                                                          | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps the strict MVP gate wired to timeout-aware release commands', () => {
     const gateScript = fs.readFileSync(
       path.join(repoRoot, 'scripts/run-mvp-strict-gates.mjs'),
