@@ -221,6 +221,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Updated the GCP CV/OCR proposal note so it no longer says active expertise/CV components still exist as code assets.
 - Registered the archive README and refreshed proposal note in `docs/DOCS_REGISTRY.md`.
 
+28. Retired fairness settings implementation code still lived in active source.
+
+- Confirmed `/app/i/settings/fairness` is archived, but its old client and demographic opt-in component still lived under active `src/app` / `src/components`.
+- Moved `FairnessSettingsClient` and `DemographicOptIn` into `src/archive/non_launch_pages/app/i/settings/fairness/implementation/`.
+- Added archive README and launch-gate coverage so the old demographic/fairness settings implementation stays out of active app and shared component surfaces.
+- Registered the archive README in `docs/DOCS_REGISTRY.md`.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -470,6 +477,12 @@ Commands run with Node 25 path:
 - `npm run docs:freshness` - passed after registering the Expertise Atlas implementation archive README and refreshing the GCP CV/OCR proposal note.
 - `npm run lint` - passed after archiving the retired Expertise Atlas implementation island.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the retired Expertise Atlas implementation island.
+- `rg -n "FairnessSettingsClient|DemographicOptIn|settings/fairness|demographic analytics|demographic-opt-in" src tests -g '!src/archive/**' -g '!tests/archive/**'` - no active UI implementation references remain; retained hits are schema types, archive/route guardrails, and route-surface policy.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/ui/archived-mvp-routes.test.ts src/lib/launch/__tests__/surface-policy.test.ts tests/api/launch-page-inventory.test.ts` - passed, 4 files / 29 tests, after archiving the retired fairness settings implementation.
+- `npm run docs:freshness` - passed after registering the archived fairness settings README.
+- `git diff --check` - passed after archiving the retired fairness settings implementation.
+- `npm run lint` - passed after archiving the retired fairness settings implementation.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the retired fairness settings implementation.
 
 Non-fatal test noise:
 
