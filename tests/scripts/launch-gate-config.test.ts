@@ -639,6 +639,36 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps migration runbooks aligned with checkpoint and restore discipline', () => {
+    const applyManual = fs.readFileSync(path.join(repoRoot, 'APPLY_MIGRATIONS_MANUAL.md'), 'utf8');
+    const runGuide = fs.readFileSync(path.join(repoRoot, 'RUN_MIGRATIONS_GUIDE.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const migrationDocs = `${applyManual}\n${runGuide}`;
+
+    for (const content of [applyManual, runGuide]) {
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).toContain('npm run db:drift-check');
+      expect(content).toContain('npm run db:backup:checkpoint');
+      expect(content).toContain('npm run db:audit:migrations');
+      expect(content).toContain('npm run db:migrate');
+      expect(content).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+      expect(content).toContain('docs/launch-restore-drill.md');
+      expect(content).toContain('Do not');
+    }
+
+    expect(migrationDocs).toContain('Do not use `npm run db:push`');
+    expect(migrationDocs).toContain('public.app_migration_ledger');
+    expect(migrationDocs).toContain('production-candidate');
+    expect(migrationDocs).not.toContain('Supabase Dashboard method');
+    expect(migrationDocs).not.toContain('copy it into Supabase SQL Editor');
+    expect(docsRegistry).toContain(
+      '| `APPLY_MIGRATIONS_MANUAL.md`                                                                            | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `RUN_MIGRATIONS_GUIDE.md`                                                                               | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',

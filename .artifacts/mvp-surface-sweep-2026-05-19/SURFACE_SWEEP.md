@@ -441,6 +441,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Removed active instructions to refresh the retired Expertise tab, inspect `src/app/app/i/expertise/page.tsx`, and rely on temporary console debugging.
 - Added launch-gate coverage so the file cannot return as active launch guidance for the archived Expertise tab.
 
+54. Migration runbooks were stale and did not name current checkpoint/restore launch evidence.
+
+- Refreshed `APPLY_MIGRATIONS_MANUAL.md` and `RUN_MIGRATIONS_GUIDE.md` to `Last Verified: 2026-05-19`.
+- Added the current safety sequence: target confirmation, `db:drift-check`, backup checkpoint, migration audit, ledgered `db:migrate`, and isolated `db:restore:verify`.
+- Pointed final launch evidence back to `docs/launch-restore-drill.md` and production readiness/checklist docs.
+- Kept production policy explicit: no `db:push`, no dashboard paste flow as normal launch evidence, no `migrations-to-run.sql` as current migration truth, and no restore verification against a live DB.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the migration docs stay aligned with checkpoint and restore discipline.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
