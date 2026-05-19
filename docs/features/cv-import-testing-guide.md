@@ -86,7 +86,7 @@ These scenarios should fail against the current MVP because the legacy UI is int
 **Check Console**:
 
 - No JavaScript errors
-- Network request to `/api/expertise/auto-suggest` returns 200
+- Historical network request to `/api/expertise/auto-suggest` returned 200 before the route was removed from the active tree
 - Network requests to `/api/expertise/user-skills` return 201
 
 ---
@@ -328,7 +328,7 @@ Should show your recently imported skills with:
 **Check**:
 
 1. Console for errors
-2. Network tab: `/api/expertise/auto-suggest` response
+2. Historical network tab: `/api/expertise/auto-suggest` response
 3. Response should have `suggestions` array
 
 **Common Issues**:
@@ -392,8 +392,8 @@ If tests fail:
 1. Document which tests failed
 2. Check the troubleshooting section
 3. Review code changes in:
-   - `/src/app/api/expertise/auto-suggest/route.ts`
-   - `/src/components/expertise/CVJDAutoSuggest.tsx`
+   - historical `/src/app/api/expertise/auto-suggest/route.ts` (removed from the active route tree)
+   - `/src/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/CVJDAutoSuggest.tsx`
 4. Check console logs and network requests
 5. Ask for help if stuck!
 

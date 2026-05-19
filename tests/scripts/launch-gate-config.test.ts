@@ -190,6 +190,18 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps retired Expertise shared UI components archived', () => {
+    expect(fs.existsSync(path.join(repoRoot, 'src/components/expertise'))).toBe(false);
+    expect(
+      fs.existsSync(
+        path.join(
+          repoRoot,
+          'src/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise'
+        )
+      )
+    ).toBe(true);
+  });
+
   it('keeps retired fairness settings implementation archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'src/app/app/i/settings/fairness'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'src/components/settings/DemographicOptIn.tsx'))).toBe(

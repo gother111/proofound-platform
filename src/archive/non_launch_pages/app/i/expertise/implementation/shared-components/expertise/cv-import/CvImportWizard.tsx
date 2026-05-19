@@ -11,20 +11,20 @@ import {
   type AnalyzeProgressPhase,
   type AnalyzeProgressState,
   createIdleAnalyzeProgressState,
-} from '@/components/expertise/cv-import/AnalyzeProgressPanel';
-import { EntitySummaryCard } from '@/components/expertise/cv-import/EntitySummaryCard';
+} from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/AnalyzeProgressPanel';
+import { EntitySummaryCard } from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/EntitySummaryCard';
 import {
   ImportActionBanner,
   type ImportActionSummary,
-} from '@/components/expertise/cv-import/ImportActionBanner';
-import { resolveInitialSkillSelectionState } from '@/components/expertise/cv-import/initial-selection';
-import { buildManualSuggestion } from '@/components/expertise/cv-import/manual-suggestion';
-import { buildCvImportTaxonomySearchUrl } from '@/components/expertise/cv-import/taxonomy-search';
+} from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/ImportActionBanner';
+import { resolveInitialSkillSelectionState } from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/initial-selection';
+import { buildManualSuggestion } from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/manual-suggestion';
+import { buildCvImportTaxonomySearchUrl } from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/taxonomy-search';
 import {
   SkillReviewPanel,
   type SkillReviewOutcome,
   type SkillReviewSelectionMeta,
-} from '@/components/expertise/cv-import/SkillReviewPanel';
+} from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/SkillReviewPanel';
 import { buildCvImportReviewTelemetry } from '@/lib/expertise/cv-review-telemetry';
 import { getAmbiguousTokenHints } from '@/lib/expertise/skill-confidence';
 import { LANGUAGE_OPTIONS, CEFR_LEVELS } from '@/lib/taxonomy/data';

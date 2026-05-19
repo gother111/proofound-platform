@@ -11,22 +11,22 @@ import {
   type AnalyzeProgressPhase,
   type AnalyzeProgressState,
   createIdleAnalyzeProgressState,
-} from '@/components/expertise/cv-import/AnalyzeProgressPanel';
-import { resolveInitialSkillSelectionState } from '@/components/expertise/cv-import/initial-selection';
-import { buildManualSuggestion } from '@/components/expertise/cv-import/manual-suggestion';
-import { buildCvImportTaxonomySearchUrl } from '@/components/expertise/cv-import/taxonomy-search';
+} from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/AnalyzeProgressPanel';
+import { resolveInitialSkillSelectionState } from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/initial-selection';
+import { buildManualSuggestion } from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/manual-suggestion';
+import { buildCvImportTaxonomySearchUrl } from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/taxonomy-search';
 import {
   SkillReviewPanel,
   type SkillReviewOutcome,
   type SkillReviewSelectionMeta,
-} from '@/components/expertise/cv-import/SkillReviewPanel';
+} from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/SkillReviewPanel';
 import { getAmbiguousTokenHints } from '@/lib/expertise/skill-confidence';
 import { skillDisplayLabel } from '@/lib/copy/labels';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { CvImportWizard } from '@/components/expertise/cv-import/CvImportWizard';
+import { CvImportWizard } from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/CvImportWizard';
 
 type ImportContext = 'cv' | 'jd' | 'general';
 

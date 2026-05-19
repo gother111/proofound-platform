@@ -250,6 +250,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Moved the dashboard into `src/archive/non_launch_admin_ui/components/metrics/` as historical internal metrics UI context.
 - Added launch-gate coverage so the active `src/components/metrics` directory stays absent unless the MVP authority stack changes.
 
+32. Retired Expertise/CV import shared UI components still lived in active components.
+
+- Confirmed `src/components/expertise/*` had no active source imports outside self-imports and archived documentation references.
+- Moved the orphaned Expertise shared UI components, including the old CV/JD auto-suggest and CV import wizard UI, into the archived Expertise implementation tree.
+- Updated archived self-imports and added launch-gate coverage so active `src/components/expertise` stays absent.
+- Updated retained historical CV import docs so they point at the archived component path and mark the old `/api/expertise/auto-suggest` route as removed from the active route tree.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -516,6 +523,12 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/cron-health-check-route.test.ts src/lib/analytics/__tests__/metrics.test.ts tests/scripts/launch-gate-config.test.ts` - passed, 3 files / 43 tests, after narrowing active analytics metrics/events.
 - `rg -n "components/metrics|MetricsDashboard" src tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active references were limited to the orphaned component export and the launch-gate archive assertion before the move.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts` - passed, 1 file / 14 tests, after moving the orphaned metrics dashboard and removing the empty active `src/components/metrics` directory.
+- `rg -n "CvImportWizard|CVJDAutoSuggest|components/expertise|@/components/expertise|expertise/cv-import" src tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active component references were limited to orphaned shared Expertise UI, docs that already classify the CV wizard as archived, active library/parser tests, and archive/route-policy assertions.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/api/archived-api-handlers-route.test.ts tests/api/launch-surface-inventory.test.ts` - passed, 3 files / 29 tests, after archiving shared Expertise/CV import UI components.
+- `npm run lint` - passed after archiving shared Expertise/CV import UI components.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving shared Expertise/CV import UI components.
+- `npm run docs:freshness` - passed after archiving shared Expertise/CV import UI components.
+- `git diff --check` - passed after archiving shared Expertise/CV import UI components.
 
 Non-fatal test noise:
 

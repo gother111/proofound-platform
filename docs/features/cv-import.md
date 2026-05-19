@@ -33,7 +33,7 @@ The old flow below is retained only to explain what was removed:
 
 #### 1. Frontend Component
 
-**File**: `/src/components/expertise/CVJDAutoSuggest.tsx`
+**Historical file**: `/src/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/CVJDAutoSuggest.tsx`
 
 A React component that provides the UI for CV import:
 
@@ -68,9 +68,9 @@ interface Suggestion {
 
 #### 2. Auto-Suggest API
 
-**Endpoint**: `POST /api/expertise/auto-suggest`
+**Historical endpoint**: `POST /api/expertise/auto-suggest` (removed from the active route tree)
 
-**File**: `/src/app/api/expertise/auto-suggest/route.ts`
+**Historical file**: `/src/app/api/expertise/auto-suggest/route.ts` (no active file remains)
 
 Analyzes text and returns skill suggestions.
 
@@ -123,7 +123,7 @@ These modes describe the retired CV import implementation. They are not approval
 
 - `POST /api/expertise/cv-import/suggest`
 - `POST /api/expertise/cv-import/wizard-suggest`
-- `POST /api/expertise/auto-suggest`
+- `POST /api/expertise/auto-suggest` (historical; removed)
 
 **Gemini Request Controls**:
 

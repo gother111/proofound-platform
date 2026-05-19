@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   SkillMatchPicker,
   type SkillMatchOption,
-} from '@/components/expertise/cv-import/SkillMatchPicker';
+} from '@/archive/non_launch_pages/app/i/expertise/implementation/shared-components/expertise/cv-import/SkillMatchPicker';
 import {
   evaluateSuggestionSelectionRisk,
   type SelectionRiskReason,
