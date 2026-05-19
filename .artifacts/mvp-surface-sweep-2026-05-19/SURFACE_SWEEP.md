@@ -1181,4 +1181,13 @@ Non-fatal test noise:
 - `/portfolio/demo`, `/portfolio/demo-proofound`, and `/portfolio/org/test-org` rendered launch-safe unavailable pages in this current non-mock/data-gated server state. No public profile, organization trust data, hidden identity, or private proof content was exposed.
 - `/` rendered `Proofound | Proof Behind the Claim` with H1 `Proof behind the claim`, primary CTAs to `/signup/organization` and `/signup/individual`, footer legal links to `/cookies`, `/cookies/settings`, `/privacy`, and `/terms`, and no stale broad-platform copy matching `Universal compatibility`, `Better matching`, `black-box`, `public directory`, or `social platform`.
 - `/signup`, `/signup/individual`, and `/signup/organization` rendered clear account-type and account-creation entry points with privacy/terms links and no broad marketplace or public-directory language.
-- `/login` could not be verified as logged-out in the current Browser session because the route resolved into an authenticated individual app shell. Logged-out login UI remains `UNVERIFIED` in this pass unless a clean unauthenticated Browser context is used.
+- `/login` initially resolved into an authenticated individual app shell in the current Browser session. The logged-out login state was rechecked in the continuation below after visiting `/auth/logout`.
+
+## Continuation - Logged-Out Login Browser Evidence
+
+- Used the Codex in-app Browser to visit `/auth/logout`, then `/login`, on `http://localhost:33180` so the route rendered as a logged-out user.
+- Browser verified title `Sign In | Proofound`, H1 `Welcome back`, email/password fields, `Remember me`, `Forgot password?`, primary `Sign in` action, Google/LinkedIn sign-in buttons, `Create account` routing to `/signup`, and Terms/Privacy links.
+- Browser screenshot showed a single calm sign-in card, visible primary action, readable form labels, and no overlapping text in the desktop viewport.
+- DOM inspection found no broad marketplace, public-directory, social-platform, profile-theater, or dashboard-theater language on the logged-out login surface.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/signin-form-mobile-clarity.test.tsx` - passed, 1 file / 2 tests. The attempted mixed Vitest run did not execute the Playwright spec because it belongs to the Playwright runner.
+- `npm run test:a11y -- tests/a11y/keyboard-navigation.spec.ts` first failed in the sandbox because Playwright could not bind `0.0.0.0:33101`; the approved outside-sandbox rerun passed, 12/12 tests, including login form keyboard access and input labels.
