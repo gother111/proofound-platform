@@ -190,7 +190,11 @@ export const LAUNCH_SMOKE_MATRIX: LaunchSmokeScenario[] = [
         '--workers=1',
       ],
       env: {
+        BASE_URL: '',
         NEXT_PUBLIC_USE_MOCK_SUPABASE: 'false',
+        PLAYWRIGHT_PORT: '33101',
+        PLAYWRIGHT_SERVER_MODE: 'prod',
+        PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY: '1',
       },
     },
     expectedState: 'full_org_corridor_review_to_engagement_verification_live',

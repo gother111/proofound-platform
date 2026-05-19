@@ -73,6 +73,15 @@ describe('launch hardening contract', () => {
     if (strictOrgCorridor?.runner.kind === 'command') {
       expect(strictOrgCorridor.runner.command).toContain('./scripts/playwright-node24.mjs');
       expect(strictOrgCorridor.runner.command).not.toContain('./scripts/playwright-node20.mjs');
+      expect(strictOrgCorridor.runner.env).toEqual(
+        expect.objectContaining({
+          BASE_URL: '',
+          NEXT_PUBLIC_USE_MOCK_SUPABASE: 'false',
+          PLAYWRIGHT_PORT: '33101',
+          PLAYWRIGHT_SERVER_MODE: 'prod',
+          PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY: '1',
+        })
+      );
     }
   });
 

@@ -2764,4 +2764,13 @@ describe('launch gate package configuration', () => {
     expect(scratchReadme).toContain('not an automated launch gate');
     expect(scratchReadme).toContain('Use Browser');
   });
+
+  it('lets launch-smoke command scenarios override shared local environment', () => {
+    const launchSmokeRunner = fs.readFileSync(
+      path.join(repoRoot, 'scripts/launch-smoke-runner.ts'),
+      'utf8'
+    );
+
+    expectTextBefore(launchSmokeRunner, '...sharedEnv,', '...scenario.runner.env,');
+  });
 });

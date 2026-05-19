@@ -89,6 +89,22 @@ function getLocalBaseUrlSocket(baseUrl: string) {
   }
 }
 
+function getCommandReleaseBaseUrl(
+  scenarioEnv: Record<string, string | undefined>,
+  fallbackBaseUrl: string
+) {
+  const configuredBaseUrl = scenarioEnv.BASE_URL?.trim();
+  if (configuredBaseUrl) {
+    return configuredBaseUrl;
+  }
+
+  const configuredPort = Number.parseInt(
+    scenarioEnv.PLAYWRIGHT_PORT || process.env.PLAYWRIGHT_PORT || '33100',
+    10
+  );
+  return Number.isFinite(configuredPort) ? `http://127.0.0.1:${configuredPort}` : fallbackBaseUrl;
+}
+
 function isPortAcceptingConnections(host: string, port: number) {
   return new Promise<boolean>((resolve) => {
     const socket = net.createConnection({ host, port });
@@ -165,6 +181,7 @@ async function main() {
     const outputSegments: string[] = [];
     let status: LaunchSmokeCheckResult['status'] = 'pass';
     let message: string | undefined;
+    let commandReleaseBaseUrl = baseUrl;
 
     if (scenario.runner.kind === 'vitest') {
       const run = executeCommand(
@@ -179,9 +196,10 @@ async function main() {
       }
     } else {
       const scenarioEnv = {
-        ...scenario.runner.env,
         ...sharedEnv,
+        ...scenario.runner.env,
       };
+      commandReleaseBaseUrl = getCommandReleaseBaseUrl(scenarioEnv, baseUrl);
 
       for (const preCommand of scenario.runner.preCommands ?? []) {
         const run = executeCommand(preCommand.command, scenarioEnv);
@@ -231,7 +249,7 @@ async function main() {
     }
 
     if (scenario.runner.kind === 'command') {
-      await waitForLocalPlaywrightServerRelease(baseUrl);
+      await waitForLocalPlaywrightServerRelease(commandReleaseBaseUrl);
     }
   }
 

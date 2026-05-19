@@ -1452,3 +1452,10 @@ Non-fatal test noise:
 - Saved Browser visual evidence under `.artifacts/mvp-surface-sweep-2026-05-19/browser-evidence/`.
 - Removed the active untracked polish screenshot collector from default E2E discovery because it had no assertions and would have produced noisy launch evidence rather than a gate.
 - Added `.artifacts/polish-audit-screenshots/README.md` plus a local `.gitignore` for generated PNGs so prior screenshots remain local scratch, not committed launch evidence.
+
+## Continuation - Launch Smoke Runner Alignment
+
+- Found `.artifacts/launch-smoke-report.json` had been refreshed to `FAIL` for `full_org_corridor_review_to_engagement_verification` even though a direct strict org-corridor replay passed.
+- Root cause: the launch-smoke runner forced shared `BASE_URL=http://localhost:3000` into every command scenario, while the strict org corridor is intended to run against Playwright's managed production-mode server.
+- Fixed the runner so scenario env can override shared env, cleared `BASE_URL` for the strict org smoke, pinned it to `PLAYWRIGHT_SERVER_MODE=prod`, skipped transactional email delivery, and used dedicated `PLAYWRIGHT_PORT=33101`.
+- Refreshed `.artifacts/launch-smoke-report.json`; full launch smoke now passes all six checks, including strict org corridor review to engagement verification.
