@@ -1627,3 +1627,10 @@ Non-fatal test noise:
 - Added launch-gate coverage preventing the landing proof story from drifting back to `B2B SaaS`, `Enterprise clients`, `B2B platform`, `200+ employees`, or `growth-stage B2B` language.
 - Browser verified `http://localhost:3000/` at desktop and mobile viewports after the copy change: title/H1 rendered, no horizontal overflow, and no sampled stale enterprise SaaS copy was present in rendered body text.
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-landing-copy/landing-copy-smoke.json` and `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-landing-copy/landing-copy-scroll-smoke.json`.
+
+## Continuation - Monitoring Guide Dashboard Scope Cleanup
+
+- Found active `docs/monitoring-alerting.md` still suggested creating a new `src/app/admin/monitoring/page.tsx` custom monitoring dashboard with total-user and 24-hour signup widgets.
+- Replaced the custom-dashboard implementation guidance with existing provider views and protected launch-status routes: `/api/monitoring/launch-status`, `/api/monitoring/perf-status`, and `/api/monitoring/health-diagnostics`.
+- Tightened the overview from broad `comprehensive monitoring` to launch-safe monitoring evidence, so the guide supports alerting, perf, logs, protected diagnostics, and incident response without adding new broad admin-dashboard scope.
+- Added launch-gate coverage preventing the monitoring guide from reintroducing the custom admin dashboard snippet, broad user-growth widgets, or comprehensive-monitoring phrasing.

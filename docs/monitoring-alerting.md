@@ -5,7 +5,7 @@
 
 ## Overview
 
-This guide covers setting up comprehensive monitoring and alerting for the Proofound application in production. It includes error monitoring, performance tracking, log aggregation, and incident response procedures.
+This guide covers launch-safe monitoring and alerting for the Proofound application in production. It focuses on existing provider dashboards, protected launch-status routes, performance evidence, log review, and incident response procedures.
 
 Launch note: `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` Section 7 is the canonical launch contract for monitoring, logging boundaries, recovery targets, and operational readiness. This guide should be read as implementation support, not a competing launch spec. Historical PASS/FAIL run logs below are not current production-candidate signoff evidence.
 
@@ -20,7 +20,7 @@ Launch note: `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` Section 
 5. [Database Monitoring](#database-monitoring)
 6. [Uptime Monitoring](#uptime-monitoring)
 7. [Alert Configuration](#alert-configuration)
-8. [Dashboards](#dashboards)
+8. [Operational Views](#operational-views)
 9. [Incident Response](#incident-response)
 10. [Metrics to Track](#metrics-to-track)
 
@@ -648,21 +648,21 @@ Keep escalation details in the protected operations roster, not in tracked docs.
 
 ---
 
-## Dashboards
+## Operational Views
 
-### Sentry Dashboard
+### Sentry
 
-**Custom Dashboard:**
+**Provider view:**
 
-1. Go to Sentry → Dashboards → Create Dashboard
-2. Add widgets:
+1. Go to Sentry → Dashboards.
+2. Use or create a launch operator view with:
    - Error count (last 24 hours)
    - Top 5 error types
    - Error rate by environment
    - p95 response time
    - Apdex score
 
-### Vercel Dashboard
+### Vercel
 
 **Key Metrics to Monitor:**
 
@@ -672,63 +672,19 @@ Keep escalation details in the protected operations roster, not in tracked docs.
 - Function execution time
 - Bandwidth usage
 
-### Custom Monitoring Dashboard
+### Protected Launch Status
 
-**Create admin dashboard:**
+Use the existing protected launch-ops routes for app-owned evidence instead of adding a new
+admin dashboard during launch hardening:
 
-```typescript
-// src/app/admin/monitoring/page.tsx
-import { Suspense } from 'react';
-import { getCacheStats } from '@/lib/cache';
-import { db } from '@/db';
+- Authenticated `/api/monitoring/launch-status`
+- Authenticated `/api/monitoring/perf-status`
+- Authenticated `/api/monitoring/health-diagnostics`
 
-async function MonitoringStats() {
-  // Get cache stats
-  const cacheStats = await getCacheStats();
-
-  // Get database stats
-  const dbStats = await db.execute(`
-    SELECT
-      count(*) as total_users,
-      count(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours') as new_users_24h
-    FROM profiles
-  `);
-
-  // Get error count from logs (if stored)
-  // ...
-
-  return (
-    <div className="grid grid-cols-3 gap-4">
-      <div className="card">
-        <h3>Cache Backend</h3>
-        <p className="text-3xl">{cacheStats.type === 'redis' ? 'KV' : 'Memory'}</p>
-        <p className="text-sm text-muted-foreground">
-          {cacheStats.keys == null ? 'Key counts managed by provider' : `${cacheStats.keys} keys`}
-        </p>
-      </div>
-      <div className="card">
-        <h3>Total Users</h3>
-        <p className="text-3xl">{dbStats.rows[0].total_users}</p>
-      </div>
-      <div className="card">
-        <h3>New Users (24h)</h3>
-        <p className="text-3xl">{dbStats.rows[0].new_users_24h}</p>
-      </div>
-    </div>
-  );
-}
-
-export default function MonitoringPage() {
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">System Monitoring</h1>
-      <Suspense fallback={<div>Loading...</div>}>
-        <MonitoringStats />
-      </Suspense>
-    </div>
-  );
-}
-```
+These routes keep diagnostics internal and avoid creating broad public or admin dashboard scope.
+Record the route response status, target URL, timestamp, and operator context in the launch
+artifact. Do not paste private proof content, user identifiers, queue payloads, secrets, or raw
+provider diagnostic details into monitoring notes.
 
 ---
 
