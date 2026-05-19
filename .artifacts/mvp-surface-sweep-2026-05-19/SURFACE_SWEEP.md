@@ -1006,3 +1006,10 @@ Non-fatal test noise:
 - Found active root `MCP_STATUS.md` still verified on 2026-03-11 and hard-coding the same old Supabase project ref plus stale MCP discovery/advisor claims.
 - Rewrote it as a current target-agnostic MCP status note: optional operator tool, read-only by default, project refs confirmed per run, no product-scope authority, no migration-runbook replacement, and no old table/advisor snapshots as launch evidence.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the status note cannot drift back to project-specific connection targets or stale discovery claims.
+
+## Continuation - Accessibility Guidance Refresh
+
+- Found active `docs/ACCESSIBILITY.md` and `docs/ACCESSIBILITY_TESTING_GUIDE.md` still verified on 2026-02-12/2026-02-26 while the active audit evidence had been refreshed to 2026-05-19.
+- Rewrote both docs around the current MVP/accessibility posture: baseline `npm run test:a11y` evidence, strict authenticated `npm run test:a11y:strict` as a production-candidate gate, manual keyboard/screen-reader signoff, and representative public, individual, organization, and admin/internal launch surfaces.
+- Removed stale claims that axe E2E was still "to be configured", old `.eslintrc` guidance, broad static Lighthouse instructions as launch proof, and launch-sounding accessibility expectations for archived/post-MVP surfaces.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so accessibility docs stay tied to the current audit report, Proof Packs, privacy/no-leak checks, strict authenticated gates, and manual validation requirements.

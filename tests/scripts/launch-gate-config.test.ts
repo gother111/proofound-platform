@@ -149,6 +149,43 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps accessibility guidance aligned with current MVP launch gates', () => {
+    const accessibilityDocs = [
+      fs.readFileSync(path.join(repoRoot, 'docs/ACCESSIBILITY.md'), 'utf8'),
+      fs.readFileSync(path.join(repoRoot, 'docs/ACCESSIBILITY_TESTING_GUIDE.md'), 'utf8'),
+    ];
+    const joined = accessibilityDocs.join('\n');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    for (const content of accessibilityDocs) {
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).toContain('WCAG 2.1 AA');
+      expect(content).toContain('npm run test:a11y');
+      expect(content).toContain('npm run test:a11y:strict');
+      expect(content).toContain('Strict authenticated');
+      expect(content).toContain('Manual');
+      expect(content).toContain('Proof Packs');
+      expect(content).toContain('admin/internal');
+    }
+
+    expect(joined).toContain('ACCESSIBILITY_AUDIT_REPORT.md');
+    expect(joined).toContain('production-candidate gate');
+    expect(joined.toLowerCase()).toContain('not proof of full strict authenticated');
+    expect(joined).not.toContain(
+      '@axe-core/playwright**: E2E accessibility testing (to be configured)'
+    );
+    expect(joined).not.toContain('.eslintrc.json');
+    expect(joined).not.toContain('npx lighthouse https://proofound.io --view');
+    expect(joined).not.toContain('/app/i/expertise');
+    expect(joined).not.toContain('Zen Hub');
+    expect(docsRegistry).toContain(
+      '| `docs/ACCESSIBILITY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/ACCESSIBILITY_TESTING_GUIDE.md`                                                                   | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps monitoring launch-ops routes documented as internal, not public', () => {
     const apiReference = fs.readFileSync(path.join(repoRoot, 'docs/API_REFERENCE.md'), 'utf8');
     const apiReferenceGenerator = fs.readFileSync(

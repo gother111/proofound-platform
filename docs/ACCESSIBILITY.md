@@ -1,325 +1,106 @@
-# Accessibility Documentation
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
 
-**Target**: WCAG 2.1 AA Compliance  
-**Last Updated**: 2025-11-05  
-**PRD Reference**: Part 8 (lines 1831-1834), Part 12.2
+# Accessibility
 
-## Compliance Status
+Target baseline: WCAG 2.1 AA for the locked MVP corridor.
 
-**Current Level**: WCAG 2.1 AA (In Progress)  
-**Testing Status**: Automated testing configured, manual testing in progress  
-**Color Contrast**: ≥4.5:1 verified on primary components
+Current evidence lives in [`ACCESSIBILITY_AUDIT_REPORT.md`](../ACCESSIBILITY_AUDIT_REPORT.md). That
+report proves the baseline public/mock-mode accessibility suite passed on 2026-05-19. It does not
+close strict authenticated accessibility or manual screen-reader validation by itself.
 
-## Automated Testing
+## Launch Scope
 
-### Tools Configured
+Accessibility launch checks cover active MVP and internal launch-ops surfaces:
 
-- **eslint-plugin-jsx-a11y**: Static analysis for React components
-- **@axe-core/playwright**: E2E accessibility testing (to be configured)
-- **Lighthouse**: Performance and accessibility auditing
+- public landing, signup/login, public individual portfolio, public organization trust page, and
+  active assignment/share surfaces;
+- individual onboarding, Proof Packs, proof upload/import/linking, verification requests, public
+  portfolio publishing, privacy settings, export, and delete;
+- organization onboarding, trust profile, assignments, review queue, candidate proof review, intro,
+  reveal consent, interview, decision, and engagement verification;
+- protected admin/internal verification, audit, queue, monitoring, and launch-ops surfaces.
 
-### Configuration
+Archived Expertise Atlas, Zen/wellbeing, broad dashboard, public directory, generic marketplace, and
+post-MVP surfaces are not launch accessibility evidence unless the route-surface policy changes.
 
-ESLint accessibility rules are enabled in `.eslintrc.json`:
-
-```json
-{
-  "extends": ["plugin:jsx-a11y/recommended"],
-  "plugins": ["jsx-a11y"]
-}
-```
-
-### Running Automated Tests
+## Canonical Commands
 
 ```bash
-# Lint check for accessibility issues
 npm run lint
-
-# Run E2E tests with accessibility checks (when configured)
-npm run test:e2e
-
-# Run Lighthouse audit
-npx lighthouse https://proofound.io --view
+npm run test:a11y
+npm run test:a11y:strict
 ```
 
-## Manual Testing
+Use `npm run test:a11y` for the baseline public/auth/mock-mode suite. Use
+`npm run test:a11y:strict` for strict authenticated accessibility on a production-candidate or
+properly seeded strict target.
 
-### Keyboard Navigation
+## Current Evidence
 
-**All interactive elements must be keyboard accessible.**
+As of 2026-05-19:
 
-#### Critical Flows Tested:
+- `npm run test:a11y` passed `15/15` tests against `playwright.a11y.config.ts`.
+- Covered files include `tests/a11y/critical-flows.spec.ts` and
+  `tests/a11y/keyboard-navigation.spec.ts`.
+- Strict authenticated accessibility remains a production-candidate gate through
+  `npm run test:a11y:strict`.
+- Manual screen-reader validation remains required for final signoff.
 
-1. **Login/Signup Flow**
-   - ✅ Tab order is logical
-   - ✅ Focus visible on all interactive elements
-   - ✅ Enter/Space keys activate buttons
-   - ✅ Escape key closes modals
+## Manual Checks
 
-2. **Profile Editing**
-   - ✅ Tab navigates through all form fields
-   - ✅ Mission/Vision editors keyboard accessible
-   - ✅ Values selection keyboard accessible
-   - ✅ Causes selection keyboard accessible
+For representative desktop and mobile viewports, verify:
 
-3. **Proof Portfolio and Proof Pack Workflows**
-   - ✅ Proof Pack links and proof actions remain reachable by keyboard
-   - ⚠️ Retained taxonomy pickers should keep basic Tab/Enter behavior where they appear inside proof flows
+- skip link appears first in tab order and moves focus to main content;
+- each page has a meaningful page-level heading;
+- tab order follows visual and task order;
+- focus indicators remain visible and high contrast;
+- forms have labels, descriptions, and perceivable error/success messages;
+- dialogs trap focus while open and restore focus after close;
+- menus, segmented controls, tabs, and upload controls work with keyboard;
+- loading, empty, error, disabled, success, archived, and gated states are announced or obvious;
+- public pages do not expose private proof, candidate, org, assignment, queue, storage, or diagnostic
+  data to assistive technology.
 
-4. **Matching Hub**
-   - ✅ Introduce/Pass/Snooze buttons keyboard accessible
-   - ✅ Match cards navigable with Tab
-   - ✅ Dialogs close with Escape
+## Screen Reader Spot Checks
 
-5. **Assignment Creation**
-   - ✅ 5-step wizard fully keyboard navigable
-   - ✅ Step navigation with keyboard
-   - ✅ Form inputs accessible
+Use VoiceOver or NVDA for:
 
-#### Keyboard Shortcuts
+- public landing and auth entry;
+- public portfolio unavailable/available states;
+- individual first-proof onboarding and Proof Pack editing;
+- organization assignment review and reveal-consent surfaces;
+- admin/internal queue and audit pages, using only authorized test data.
 
-| Key           | Action                                          |
-| ------------- | ----------------------------------------------- |
-| `Tab`         | Navigate forward                                |
-| `Shift + Tab` | Navigate backward                               |
-| `Enter`       | Activate button/link                            |
-| `Space`       | Activate button/checkbox                        |
-| `Escape`      | Close dialog/modal                              |
-| `Arrow Keys`  | Navigate within components (e.g., select, menu) |
+Check landmark regions, heading order, control names, form instructions, validation messages, modal
+title/description announcements, and status updates.
 
-### Screen Reader Testing
+## Design Requirements
 
-**Tested with**: NVDA (Windows), VoiceOver (Mac)
+- Minimum contrast: 4.5:1 for normal text, 3:1 for large text and UI components.
+- Icons used as buttons need accessible names through visible text, `aria-label`, or `sr-only`
+  labels.
+- Decorative images should use `alt=""`.
+- Motion should respect reduced-motion preferences where animation is not essential.
+- Product copy should stay plain-language and task-specific; avoid internal jargon in accessible
+  labels.
 
-#### Semantic HTML Verified:
+## Regression Policy
 
-- ✅ Proper heading hierarchy (h1 → h2 → h3)
-- ✅ Landmark regions (`<main>`, `<nav>`, `<aside>`, `<footer>`)
-- ✅ Form labels associated with inputs
-- ✅ Button and link purposes clear
-- ✅ Alt text for images
-- ✅ ARIA labels where needed
+When fixing an accessibility defect:
 
-#### Dynamic Content:
+1. Add or update an automated test in `tests/a11y/` or the relevant focused UI/API test.
+2. Update `ACCESSIBILITY_AUDIT_REPORT.md` only when the relevant suite has actually been rerun.
+3. Update `docs/qa/bugs.md` when the issue is a tracked release defect.
+4. Re-run `npm run test:a11y`; also run `npm run test:a11y:strict` when the change affects
+   authenticated MVP, org, admin, privacy, reveal, export/delete, or launch-ops surfaces.
 
-- ✅ Toast notifications announced (using `sonner` library)
-- ⚠️ Real-time updates (e.g., new matches) may need `aria-live` regions
-- ✅ Loading states communicated
+## Final Signoff
 
-#### Focus Management:
+Do not call accessibility launch-ready unless all of the following are true:
 
-- ✅ Focus moves to modal/dialog when opened
-- ✅ Focus returns to trigger element when closed
-- ✅ Focus never trapped unintentionally
-- ✅ Skip-to-content link available
-
-### Color Contrast
-
-**Minimum Requirement**: 4.5:1 for normal text, 3:1 for large text
-
-#### Verified Elements:
-
-- ✅ Primary text on background: 7:1
-- ✅ Secondary text on background: 5:1
-- ✅ Button text on button background: 6:1
-- ✅ Link text: Underlined + sufficient contrast
-- ⚠️ Muted text: Verify meets 4.5:1
-
-#### Color Palette:
-
-```
-Primary Background: #FFFFFF (White)
-Primary Text: #2D3330 (Dark Forest)
-Secondary Text: #6B7280 (Gray-600)
-Proofound Forest: #2D3330
-Proofound Sage: #9CAF88
-```
-
-### Common Issues & Fixes
-
-#### 1. Missing Alt Text
-
-**Issue**: Images without alt attributes  
-**Fix**: Add descriptive alt text or `alt=""` for decorative images
-
-```tsx
-// Good
-<img src="profile.jpg" alt="User profile photo" />
-
-// Decorative (empty alt)
-<img src="decoration.svg" alt="" role="presentation" />
-```
-
-#### 2. Missing Form Labels
-
-**Issue**: Input fields without associated labels  
-**Fix**: Use `<Label>` component with proper `htmlFor` attribute
-
-```tsx
-// Good
-<Label htmlFor="mission">Mission Statement</Label>
-<Input id="mission" name="mission" />
-```
-
-#### 3. Insufficient Color Contrast
-
-**Issue**: Text not readable against background  
-**Fix**: Adjust color values or add background
-
-```tsx
-// Before: text-gray-400 (insufficient contrast)
-<p className="text-gray-400">Description</p>
-
-// After: text-gray-600 (sufficient contrast)
-<p className="text-gray-600">Description</p>
-```
-
-#### 4. Missing Focus Indicators
-
-**Issue**: No visible focus state  
-**Fix**: Ensure `focus:` styles are applied
-
-```tsx
-// Good - visible focus ring
-<button className="... focus:ring-2 focus:ring-proofound-forest focus:ring-offset-2">
-  Click me
-</button>
-```
-
-#### 5. Unlabeled Icons
-
-**Issue**: Icon buttons without text labels  
-**Fix**: Add `aria-label` or `<span className="sr-only">`
-
-```tsx
-// Good
-<button aria-label="Close dialog">
-  <X className="h-4 w-4" />
-</button>
-
-// Also good
-<button>
-  <X className="h-4 w-4" />
-  <span className="sr-only">Close dialog</span>
-</button>
-```
-
-## ARIA Attributes Guide
-
-### Common ARIA Labels
-
-- `aria-label`: Provides accessible name for element
-- `aria-labelledby`: References element(s) that label this element
-- `aria-describedby`: References element(s) that describe this element
-- `aria-hidden`: Hides element from screen readers
-- `aria-live`: Announces dynamic content changes
-
-### Usage Examples
-
-```tsx
-// Modal dialog
-<div role="dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description">
-  <h2 id="dialog-title">Confirm Action</h2>
-  <p id="dialog-description">Are you sure you want to proceed?</p>
-</div>
-
-// Live region for notifications
-<div aria-live="polite" aria-atomic="true">
-  {notification}
-</div>
-
-// Icon button
-<button aria-label="Delete item">
-  <Trash2 />
-</button>
-```
-
-## Known Issues
-
-### High Priority (P1)
-
-None identified yet.
-
-### Medium Priority (P2)
-
-1. **Retained taxonomy pickers**: richer arrow-key navigation would improve efficiency where taxonomy pickers appear in proof flows
-2. **Real-time Updates**: Some dynamic content may not announce to screen readers
-3. **Complex Forms**: Multi-step forms could benefit from progress announcements
-
-### Low Priority (P3)
-
-1. **Keyboard Shortcuts**: Custom shortcuts could improve efficiency
-2. **High Contrast Mode**: Support for Windows High Contrast Mode
-3. **Reduced Motion**: Respect `prefers-reduced-motion` for all animations
-
-## Testing Procedures
-
-### Before Each Release
-
-1. **Automated Linting**
-
-   ```bash
-   npm run lint
-   ```
-
-2. **Keyboard Navigation**
-   - Test all critical user flows
-   - Verify tab order is logical
-   - Ensure focus is visible
-
-3. **Screen Reader**
-   - Test with NVDA or VoiceOver
-   - Verify all interactive elements are announced
-   - Check form labels and error messages
-
-4. **Color Contrast**
-   - Use browser DevTools or WebAIM Contrast Checker
-   - Verify all text meets 4.5:1 minimum
-
-5. **Lighthouse Audit**
-   ```bash
-   npx lighthouse https://proofound.io --view
-   ```
-   Target: Accessibility score ≥90
-
-## Resources
-
-### Tools
-
-- [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
-- [WAVE Browser Extension](https://wave.webaim.org/extension/)
-- [axe DevTools](https://www.deque.com/axe/devtools/)
-- [Lighthouse](https://developers.google.com/web/tools/lighthouse)
-
-### Guidelines
-
-- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
-- [MDN Accessibility](https://developer.mozilla.org/en-US/docs/Web/Accessibility)
-- [React Accessibility](https://react.dev/learn/accessibility)
-
-### Screen Readers
-
-- [NVDA](https://www.nvaccess.org/) (Windows, free)
-- [JAWS](https://www.freedomscientific.com/products/software/jaws/) (Windows, paid)
-- [VoiceOver](https://www.apple.com/accessibility/voiceover/) (Mac/iOS, built-in)
-
-## Contact
-
-For accessibility concerns or issues, please contact:
-
-- **Email**: accessibility@proofound.io
-- **Support**: support@proofound.io
-
-## Commitment
-
-Proofound is committed to ensuring our platform is accessible to all users, regardless of ability. We continuously work to improve accessibility and welcome feedback from our community.
-
----
-
-**Next Steps**:
-
-1. Configure @axe-core/playwright for automated E2E testing
-2. Complete manual keyboard navigation testing for all flows
-3. Conduct comprehensive screen reader testing
-4. Address any identified P1/P2 issues
-5. Schedule quarterly accessibility reviews
+- baseline automated accessibility is green and current;
+- strict authenticated accessibility is green on the intended target;
+- manual keyboard and screen-reader checks are recorded for representative public, individual, org,
+  and admin/internal surfaces;
+- remaining issues are triaged with severity, owner, and launch decision.

@@ -1,18 +1,24 @@
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-05-19`
 
 # Accessibility Testing Guide
 
-Target baseline: WCAG 2.1 AA.
+Target baseline: WCAG 2.1 AA for active MVP and internal launch-ops surfaces.
+
+Use this guide with [`docs/ACCESSIBILITY.md`](ACCESSIBILITY.md),
+[`ACCESSIBILITY_AUDIT_REPORT.md`](../ACCESSIBILITY_AUDIT_REPORT.md), and
+[`agent/checklists/verification.md`](../agent/checklists/verification.md).
 
 ## Canonical Commands
 
-- Baseline public and auth a11y sweep:
-  - `npm run test:a11y`
-- Strict authenticated a11y contract:
-  - `npm run test:a11y:strict`
-- Full verification context:
-  - `agent/checklists/verification.md`
+```bash
+npm run test:a11y
+npm run test:a11y:strict
+```
+
+- `npm run test:a11y` runs the baseline public/auth/mock-mode suite.
+- `npm run test:a11y:strict` runs Strict authenticated accessibility with real Supabase-backed
+  fixtures and remains a production-candidate gate.
 
 ## Automated Coverage
 
@@ -20,59 +26,101 @@ Target baseline: WCAG 2.1 AA.
 - `tests/a11y/keyboard-navigation.spec.ts`
 - `tests/a11y/authenticated.strict.spec.ts`
 
-## Manual Accessibility Flows
+As of 2026-05-19, `ACCESSIBILITY_AUDIT_REPORT.md` records `npm run test:a11y` passing `15/15`
+baseline tests. That is not proof of full Strict authenticated or manual screen-reader coverage.
 
-### Public/Auth
+## Public and Logged-Out Manual Flows
+
+Check:
 
 1. `/`
 2. `/signup`
 3. `/login`
 4. `/reset-password`
 5. `/verify-email`
+6. public individual portfolio states
+7. public organization trust page states
+8. active assignment/share states, including gated or archived behavior
 
-Checks:
+Verify:
 
-- Skip link appears first in tab order.
-- Heading hierarchy is valid.
-- Visible focus ring on interactive controls.
-- Form fields are labeled and announced.
-- Error and success messages are perceivable.
+- skip link and page-level heading;
+- visible focus on every control;
+- meaningful link/button names;
+- form labels, instructions, errors, and success messages;
+- no public exposure of private proof, queue, storage, candidate, org, or diagnostic data.
 
-### App Shell Flows
+## Individual App Manual Flows
 
-1. `/app/i/home`
-2. `/app/i/profile`
-3. `/app/i/matching`
-4. `/app/o/<slug>/home`
-5. `/admin`
+Check:
 
-Checks:
+1. onboarding / first proof flow;
+2. profile shell and private context;
+3. Proof Packs;
+4. proof upload/import/linking;
+5. proof quality and anchor context;
+6. verification requests;
+7. public portfolio publishing;
+8. matching/opportunities surfaces when active;
+9. intros, reveals, interviews, decisions/feedback;
+10. privacy settings, export, and delete.
 
-- Keyboard-only navigation works with no traps.
-- Dialog focus is trapped and restored after close.
-- Menus and dropdowns are operable with keyboard.
-- Toasts/alerts are announced and do not block navigation.
+Verify keyboard order, focus restoration, upload status announcements, gated/empty/error states, and
+plain-language labels for privacy, trust, proof, and readiness states.
+
+## Organization App Manual Flows
+
+Check:
+
+1. org onboarding and trust profile;
+2. assignments list/create/edit/review/publish;
+3. review queue, shortlist/matching, and candidate proof cards;
+4. reason-code explanations;
+5. intro request;
+6. reveal request and candidate consent;
+7. interview scheduling/reschedule;
+8. decision recording and engagement verification.
+
+Verify keyboard operability, headings, table/list semantics, disabled states, status announcements,
+and no-leak behavior for private candidate proof and identity details.
+
+## Admin/Internal Manual Flows
+
+Check protected internal routes only with authorized test data:
+
+- `/admin`
+- `/admin/verification`
+- `/admin/audit`
+- internal ops queues and launch-status/monitoring surfaces when accessible
+
+Verify role-appropriate content, no public/logged-out queue visibility, focus order, empty/loading
+states, and clear labels for queue/action state.
 
 ## Screen Reader Spot Checks
 
-Use VoiceOver or NVDA for:
+Use VoiceOver or NVDA for representative public, individual, organization, and admin/internal
+surfaces. Check:
 
-- Landmark regions (`header`, `nav`, `main`, `footer`).
-- Button/link names.
-- Form instructions and validation messages.
-- Modal title + description announcements.
-
-## Contrast and Focus
-
-- Text contrast meets WCAG AA thresholds:
-  - 4.5:1 normal text
-  - 3:1 large text and UI components
-- Focus indicators must remain visible and high-contrast across themes.
+- landmarks: `header`, `nav`, `main`, `footer`;
+- page heading order;
+- button and link names;
+- modal title and description announcements;
+- upload, save, reveal, decision, and error/status announcements;
+- form instructions and validation messages.
 
 ## Regression Policy
 
-When a11y defects are fixed:
+When an accessibility bug is fixed:
 
-1. Add or update an automated test in `tests/a11y/`.
-2. Add/update bug entry in `docs/qa/bugs.md`.
-3. Re-run `npm run test:a11y` and, if relevant, `npm run test:a11y:strict`.
+1. Add or update focused automated coverage.
+2. Re-run `npm run test:a11y`.
+3. Re-run `npm run test:a11y:strict` if the fix touches authenticated, org, admin/internal, privacy,
+   reveal, export/delete, or launch-ops surfaces.
+4. Record manual verification if the issue required keyboard or screen-reader inspection.
+
+## Non-Launch Surfaces
+
+Archived Expertise Atlas, Zen/wellbeing, broad dashboards, generic marketplace/platform pages, and
+post-MVP flows are not launch accessibility evidence. If they appear in an active accessibility run,
+either remove them from the active run or reclassify the route/test according to the route-surface
+policy.
