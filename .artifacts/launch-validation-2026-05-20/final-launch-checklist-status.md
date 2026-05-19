@@ -1,9 +1,9 @@
 # Proofound Final Launch Checklist Status
 
-Generated: 2026-05-19T22:20:03.037Z
+Generated: 2026-05-19T22:22:31.545Z
 Scope: `repo`
 Workspace: `/Users/yuriibakurov/proofound`
-Git: `master` @ `d25210ff85a0476ea78a5fe722080f65cb1757f7`
+Git: `master` @ `60a5bcfeae2edc06b11981c5f6168e2be2b20906`
 Verdict: `READY`
 Live base URL: `http://127.0.0.1:54580`
 Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
@@ -75,8 +75,8 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
   - Summary: tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.
   - Evidence: Current-state reality check: canonical role and RLS truth: `.artifacts/proofound-current-state-reality-check.md` (tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.)
 - [PASS] Verification status semantics are canonical and freshness-aware
-  - Summary: Launch-status route tests passed, .artifacts/launch-smoke-report.json refreshed at 2026-03-25T08:00:27.400Z with overallStatus: pass, and live synthetic monitors passed 10/10 at 2026-03-25T08:00:31.808Z.
-  - Evidence: Current-state reality check: launch ops / smoke freshness / launch-status truth: `.artifacts/proofound-current-state-reality-check.md` (Launch-status route tests passed, .artifacts/launch-smoke-report.json refreshed at 2026-03-25T08:00:27.400Z with overallStatus: pass, and live synthetic monitors passed 10/10 at 2026-03-25T08:00:31.808Z.)
+  - Summary: Launch-status route tests passed with current persisted/live monitor logic.
+  - Evidence: Latest repo-ready launch-status gate evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-status-route.log`
 - [PASS] Upload metadata/original filename leaks are closed
   - Summary: Upload privacy tests cover filename sanitization, metadata review flags, generic public/review display labels, and queue handoff with generic filename review labels.
   - Evidence: Upload privacy helpers test: `tests/lib/uploads-privacy.test.ts` (Covers sanitized filenames, metadata review flags, and generic display names.); Upload lifecycle queue test: `tests/lib/uploads-lifecycle-queue.test.ts` (Asserts correction_revocation queue metadata includes filenameReviewLabel and reviewReasons.)

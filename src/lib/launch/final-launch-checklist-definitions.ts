@@ -567,6 +567,13 @@ export function buildFinalLaunchChecklistDefinitions({
       ],
       evaluateDirect: (context) => {
         const observations: FinalLaunchChecklistObservation[] = [];
+        const launchStatusGate = gateObservation(
+          context.latestLaunchBundle,
+          'launch_status_route_logic',
+          'Latest repo-ready launch-status gate'
+        );
+        if (launchStatusGate) observations.push(launchStatusGate);
+
         const verificationObs = checklistRowObservation(
           verificationRow(context, 'bounded verification semantics'),
           'verification_checklist'

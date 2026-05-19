@@ -1,9 +1,9 @@
 {
   "scope": "repo",
-  "generatedAt": "2026-05-19T22:20:03.037Z",
+  "generatedAt": "2026-05-19T22:22:31.545Z",
   "currentDate": "2026-05-20",
   "workspaceRoot": "/Users/yuriibakurov/proofound",
-  "gitHead": "d25210ff85a0476ea78a5fe722080f65cb1757f7",
+  "gitHead": "60a5bcfeae2edc06b11981c5f6168e2be2b20906",
   "gitBranch": "master",
   "verdict": "READY",
   "includeStateful": false,
@@ -340,17 +340,16 @@
         "src/app/api/monitoring/launch-status/route.ts"
       ],
       "status": "PASS",
-      "summary": "Launch-status route tests passed, .artifacts/launch-smoke-report.json refreshed at 2026-03-25T08:00:27.400Z with overallStatus: pass, and live synthetic monitors passed 10/10 at 2026-03-25T08:00:31.808Z.",
+      "summary": "Launch-status route tests passed with current persisted/live monitor logic.",
       "evidence": [
         {
-          "label": "Current-state reality check: launch ops / smoke freshness / launch-status truth",
-          "path": ".artifacts/proofound-current-state-reality-check.md",
-          "note": "Launch-status route tests passed, .artifacts/launch-smoke-report.json refreshed at 2026-03-25T08:00:27.400Z with overallStatus: pass, and live synthetic monitors passed 10/10 at 2026-03-25T08:00:31.808Z."
+          "label": "Latest repo-ready launch-status gate evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-launch-status-route.log"
         }
       ],
       "blockerIds": [],
       "retiredStaleClaims": [],
-      "sourceLabel": "Current-state reality check",
+      "sourceLabel": "Latest repo-ready launch-status gate",
       "blocksVerdict": true,
       "blockingScope": "both"
     },
