@@ -30,7 +30,7 @@ export function BuiltForSection({
       benefits: [
         'Build a verified Public Page in minutes',
         'Aggregate evidence, signals, and outcomes',
-        'Get matched based on proven capability, not resume keywords',
+        'Enter assignment review through proven capability, not resume keywords',
       ],
       cta: 'Create your portfolio',
       onAction: onIndividualSignup,
@@ -43,11 +43,11 @@ export function BuiltForSection({
       title: 'For Organizations',
       description: 'Hire and collaborate based on validated proof and true mission alignment.',
       benefits: [
-        'Discover talent with verified capabilities',
-        'Reduce bias with evidence-based matching',
+        'Review proof submissions with clearer trust context',
+        'Reduce bias with evidence-based review',
         'Streamline hiring without sifting through CV noise',
       ],
-      cta: 'Find aligned talent',
+      cta: 'Review proof first',
       onAction: onOrganizationSignup,
       baseColor:
         'bg-proofound-forest/5 border-proofound-forest/20 dark:bg-proofound-parchment/5 dark:border-proofound-parchment/20',
@@ -74,8 +74,8 @@ export function BuiltForSection({
             Built for you
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground font-sans">
-            Whether you&apos;re an individual showcasing work, or an organization finding talent,
-            Proofound is built around verifiable proof.
+            Whether you&apos;re an individual sharing work, or an organization reviewing proof,
+            Proofound is built around verifiable evidence.
           </p>
         </motion.div>
 

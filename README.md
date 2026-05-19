@@ -1,7 +1,7 @@
 # Proofound MVP
 
 > Doc Class: `active`
-> Last Verified: `2026-05-14`
+> Last Verified: `2026-05-19`
 
 Production-ready scaffold for a proof-first, privacy-first hiring corridor centered on Proof Packs, with one individual side and one organization side.
 
@@ -50,7 +50,7 @@ flowchart LR
   U[Sign up / Login] --> V{Email verified?}
   V -- No --> X[Send magic link / verify email]
   V -- Yes --> W{Persona chosen?}
-  W -- Individual --> I[(Individual profile + matches)]
+  W -- Individual --> I[(Individual profile + Proof Packs)]
   W -- Organization --> O[(Organization + members + roles)]
   I --> S[App Shell /app/i/*]
   O --> T[App Shell /app/o/[slug]/*]
@@ -179,7 +179,7 @@ Run migrations and triggers:
 # Apply ordered SQL migrations + policy/trigger supplements
 PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:migrate
 
-# Optional but recommended for matching
+# Optional but recommended for assignment-fit review
 PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:seed-taxonomy
 ```
 
@@ -194,7 +194,7 @@ PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:seed-taxonomy
   - Strict legacy baseline audit: `npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json`.
   - Optional diagnostics-only file inventory audit: `npm run db:audit:migrations -- --mode legacy-supabase`.
 - `npm run db:seed` — Seed feature flags (and demo data when enabled).
-- `npm run db:seed-taxonomy` — Seed the expertise taxonomy slice used by matching.
+- `npm run db:seed-taxonomy` — Seed the expertise taxonomy slice used by assignment-fit review.
 
 ### 5. Seed Database (Optional)
 

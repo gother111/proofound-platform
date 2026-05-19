@@ -38,7 +38,7 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   {
     id: 'artifacts',
     title: 'Backed with proof artifacts',
-    body: 'Each outcome can carry links, files, visuals, repositories, certificates, and case fragments. The profile stops asking for belief and starts pointing to proof.',
+    body: 'Each outcome can carry links, files, visuals, repositories, certificates, and case fragments. The Public Page stops asking for belief and starts pointing to proof.',
     microcopy: 'Claims gain artifacts. Signal gains weight.',
   },
   {
@@ -55,15 +55,15 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   },
   {
     id: 'compatibility',
-    title: 'Universal compatibility',
-    body: 'The proof-backed profile becomes a Proof Pack inside a wider system. Structured assignments enter from one side, proof enters from the other, and a shared assessment layer makes them comparable.',
-    microcopy: 'This is not a prettier CV. It is a compatibility model.',
+    title: 'Assignment-fit context',
+    body: 'A Proof Pack stays anchored to real outcomes while the assignment defines the work, constraints, and proof expectations. Reviewers compare proof to the role instead of guessing from polish.',
+    microcopy: 'This is not a prettier CV. It is a review corridor.',
   },
   {
     id: 'precision',
     title: 'For precise solutions',
-    body: 'Once requirements and proof are both structured, broad possibility can collapse into a more precise fit. Better matching becomes explainable instead of impressionistic.',
-    microcopy: 'Signal sharpens. Fit becomes visible.',
+    body: 'Once requirements and proof are both structured, fit can be explained with reason codes, readiness states, and gaps that still need human review.',
+    microcopy: 'Signal sharpens. The next review step becomes visible.',
   },
   {
     id: 'challenges',

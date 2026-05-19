@@ -27,8 +27,8 @@ export function PracticalTrustSection({ shouldReduceMotion }: PracticalTrustSect
     },
     {
       icon: Fingerprint,
-      title: 'Explainable matching',
-      desc: 'When you are matched, you see exactly why. No black-box AI making opaque decisions about your future.',
+      title: 'Explainable review',
+      desc: 'When proof is reviewed, the reasons stay visible. No opaque score decides the next step.',
     },
   ];
 

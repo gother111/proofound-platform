@@ -174,10 +174,10 @@ const assignmentProofSignals = [
 const preciseMatchMetrics = [
   { value: '3 / 4', label: 'outcomes', icon: BarChart3 },
   { value: '2', label: 'verified', icon: ShieldCheck },
-  { value: 'High', label: 'confidence', icon: TrendingUp },
+  { value: 'Clear', label: 'readiness', icon: TrendingUp },
 ] as const;
 
-const preciseMatchReasons = ['Process design', 'Onboarding gains', 'Multi-market'] as const;
+const preciseMatchReasons = ['Process design', 'Onboarding gains', 'Multi-market scope'] as const;
 
 const organizationChallenges = [
   'Too much time reviewing weak applications',
@@ -1599,7 +1599,7 @@ function AssignmentCard({ state, compact = false }: { state: StoryState; compact
         {!compact ? (
           <div className="mt-3 border-t border-border/45 pt-3">
             <p className="text-[0.58rem] font-medium uppercase tracking-[0.28em] text-proofound-forest/82">
-              Best-fit signal
+              Review-fit signal
             </p>
             <div className="mt-2.5 grid grid-cols-4 divide-x divide-border/45">
               {assignmentBestFitSignals.map(({ label, chips, icon: Icon }) => (
@@ -1692,7 +1692,7 @@ function AssessmentCard({ state, compact = false }: { state: StoryState; compact
             )}
           >
             <Blend className={compact ? 'h-3.5 w-3.5' : 'h-5 w-5'} aria-hidden="true" />
-            Strong fit
+            Review-ready
           </div>
         </div>
 
@@ -1703,7 +1703,7 @@ function AssessmentCard({ state, compact = false }: { state: StoryState; compact
               compact ? 'text-[1.7rem]' : 'whitespace-nowrap text-[2.35rem]'
             )}
           >
-            Strong match
+            Strong fit
           </p>
           <p
             className={cn(
@@ -1713,7 +1713,7 @@ function AssessmentCard({ state, compact = false }: { state: StoryState; compact
                 : 'max-w-[13rem] text-[0.92rem] leading-5'
             )}
           >
-            Proof and outcomes align with the role.
+            Proof and outcomes are ready for a focused review.
           </p>
         </div>
 
@@ -1758,7 +1758,7 @@ function AssessmentCard({ state, compact = false }: { state: StoryState; compact
 
         <div className={cn('text-left', compact ? 'mt-4' : 'mt-4')}>
           <p className={cn('font-display text-foreground', compact ? 'text-lg' : 'text-[1.12rem]')}>
-            Why
+            Why this fit
           </p>
           <div className={cn('mt-2 flex flex-wrap gap-1.5')}>
             {preciseMatchReasons.map((reason) => (

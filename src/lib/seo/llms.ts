@@ -112,7 +112,7 @@ export function renderLlmsTxt({ detailed = false }: { detailed?: boolean } = {})
     '- Individual Public Pages stay out of search indexing; organization trust pages require publication requirements.'
   );
   lines.push(
-    '- Review stays blind by default until a reveal step is needed inside the hiring corridor.'
+    '- Assignment review stays blind by default until a reveal step is needed inside the hiring corridor.'
   );
   lines.push('');
   lines.push('## Contact');

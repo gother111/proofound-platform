@@ -28,7 +28,7 @@ export function HiringTeamsSection() {
           </h2>
           <p className="mt-5 text-[1.08rem] leading-8 text-[var(--landing-text)]">
             Proofound is not another talent feed. It helps lean teams define the work clearly,
-            review fewer stronger candidates, and waste less interview time.
+            review fewer stronger proof submissions, and waste less interview time.
           </p>
         </div>
 

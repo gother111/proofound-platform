@@ -10,7 +10,7 @@
 - `Phase 2`: resolved for current canonical verification token transport, launch-client verification dependence, and trust/review rechecks in the 2026-05-19 sweep
 - `Phase 3`: partially resolved in the 2026-05-19 sweep; assignment list duplicate match-count work was removed, corridor/role checks remain green, and live/staging perf-budget proof stays as a non-blocking watch item
 - `Phase 4`: partially resolved for internal-only ops queue, local full smoke, and local monitor evidence in the 2026-05-19 sweep; production-candidate backup, restore, and go/no-go proof remains open
-- `Phase 5`: planned for final packaging and governance cleanup
+- `Phase 5`: partially resolved for public copy and crawl-surface alignment in the 2026-05-19 sweep; final packaging waits for Phase 4 completion
 
 ## Phase-level dependency graph
 
@@ -30,7 +30,7 @@ flowchart LR
 3. `P2-1`, `P2-2`, and `P2-3` are resolved for the current sweep; reopen Phase 2 only if old request-table transport returns to active launch code
 4. `P3-1` is locally hardened but still needs live/staging perf evidence; `P3-2` and `P3-3` are resolved for the current sweep
 5. `P4-1` has current local smoke and monitor evidence but still needs backup, restore, and go/no-go proof; `P4-2` internal-only queue behavior is current as of 2026-05-19, and `P4-3` stays open for final docs/evidence reconciliation
-6. `P5-1` -> `P5-2` -> `P5-3`
+6. `P5-1` public copy/crawl alignment is partially current as of 2026-05-19; `P5-2` and `P5-3` wait for Phase 4 completion and final evidence packaging
 
 ## Gate rules
 
