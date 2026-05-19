@@ -405,7 +405,7 @@ function buildTrustLabels(input: {
   } else if (input.proofPack?.verificationStatus === 'partially_verified') {
     labels.push('Verification partially complete');
   } else if ((input.verificationCount ?? 0) > 0) {
-    labels.push('Compatibility signals present');
+    labels.push('Scoped verification records present');
   } else {
     labels.push('Verification still narrow');
   }
@@ -2015,11 +2015,11 @@ export function buildProofFirstReviewCard(input: {
   const verificationSummaryLabel =
     applyBlindSafeText(proofPack?.contract.verificationSummary.summary) ??
     (proofPack?.verificationStatus === 'verified'
-      ? 'Verified proof signal present'
+      ? 'Verified Proof Pack review present'
       : proofPack?.verificationStatus === 'partially_verified'
-        ? 'Partial verification signal present'
+        ? 'Partial Proof Pack review present'
         : verificationCount && verificationCount > 0
-          ? `${verificationCount} compatibility signal${verificationCount === 1 ? '' : 's'} present`
+          ? `${verificationCount} scoped verification record${verificationCount === 1 ? '' : 's'} present`
           : 'No verification signal recorded yet');
   const trustLabels = buildTrustLabels({
     fairnessStatus: input.fairnessStatus,

@@ -359,6 +359,20 @@ describe('matching review contract', () => {
     expect(why.summary).toContain('Rank band: Top 10');
   });
 
+  it('uses plain proof-review copy for verification fallback labels', () => {
+    const reviewCard = buildProofFirstReviewCard({
+      profileId: 'profile-1',
+      reasonCodes: ['skills_strong'],
+      fairnessStatus: 'pass',
+      verificationCount: 2,
+    });
+    const serialized = JSON.stringify(reviewCard);
+
+    expect(reviewCard.verification.summaryLabel).toBe('2 scoped verification records present');
+    expect(reviewCard.trustLabels).toContain('Scoped verification records present');
+    expect(serialized).not.toMatch(/compatibility signal/i);
+  });
+
   it('redacts upload-derived filenames from early review cards', () => {
     const reviewCard = buildProofFirstReviewCard({
       profileId: 'profile-1',

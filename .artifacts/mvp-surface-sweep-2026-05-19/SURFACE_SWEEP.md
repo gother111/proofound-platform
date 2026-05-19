@@ -200,6 +200,12 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Added launch-gate coverage so the retired broad script, wellbeing client suite, and active-test `/api/wellbeing` references cannot return to the default launch signal.
 - Registered the archive README in `docs/DOCS_REGISTRY.md`.
 
+25. Matching review-card copy still exposed internal compatibility wording.
+
+- Found `src/lib/matching/review-contract.ts` producing `compatibility signal(s) present` labels when a candidate had verification history but no current Proof Pack verification summary.
+- Replaced the fallback copy with plain proof-review language: scoped verification records and Proof Pack review.
+- Added focused review-contract coverage so serialized review cards cannot reintroduce `compatibility signal` language through verification summary or trust labels.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -433,6 +439,12 @@ Commands run with Node 25 path:
 - `npm run lint` - passed after archiving retired wellbeing API tests.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving retired wellbeing API tests.
 - `npm run docs:freshness` - passed after registering the retired wellbeing API archive README.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/lib/matching-review-contract.test.ts tests/api/org-match-review-route.test.ts tests/api/match-explain-route.test.ts` - passed, 3 files / 36 tests, after matching review-card copy cleanup.
+- `rg -n "compatibility signal|Compatibility signals" src tests -g '!tests/archive/**' -g '!src/archive/**'` - only the new negative review-contract assertion remains.
+- `git diff --check` - passed after matching review-card copy cleanup.
+- `npm run lint` - passed after matching review-card copy cleanup.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after matching review-card copy cleanup.
+- `npm run docs:freshness` - passed after matching review-card copy cleanup.
 
 Non-fatal test noise:
 
