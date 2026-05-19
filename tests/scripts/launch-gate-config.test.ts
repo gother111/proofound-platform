@@ -517,6 +517,43 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps LinkedIn verification guidance outside the launch corridor', () => {
+    const linkedInSetup = fs.readFileSync(
+      path.join(repoRoot, 'docs/LINKEDIN_VERIFICATION_SETUP.md'),
+      'utf8'
+    );
+    const linkedInSummary = fs.readFileSync(
+      path.join(repoRoot, 'docs/LINKEDIN_VERIFICATION_IMPLEMENTATION_SUMMARY.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(linkedInSetup).toContain('Doc Class: `reference-spec`');
+    expect(linkedInSetup).toContain('Last Verified: `2026-05-19`');
+    expect(linkedInSetup).toContain('outside the locked MVP launch corridor');
+    expect(linkedInSetup).toContain('Work email is the only launch-active account-side check');
+    expect(linkedInSetup).toContain('LinkedIn state is read-only history when present');
+    expect(linkedInSetup).toContain('never creates proof trust');
+    expect(linkedInSetup).toContain('/api/admin/internal-ops/queues');
+    expect(linkedInSetup).toContain('/api/admin/verification/linkedin/queue');
+    expect(compactWhitespace(linkedInSetup)).toContain(
+      'Do not add them to required MVP launch gates'
+    );
+    expect(linkedInSetup).not.toContain('Free automated checking');
+    expect(linkedInSetup).not.toContain('Quick approvals');
+    expect(linkedInSetup).not.toContain('Admin dashboard shows request sorted by confidence');
+    expect(linkedInSetup).not.toContain('High Confidence (80-100%)');
+    expect(linkedInSetup).not.toContain('Use ngrok for LinkedIn OAuth');
+    expect(linkedInSetup).not.toContain('Track these metrics after deployment');
+    expect(linkedInSummary).toContain(
+      'Current reference-only note: `docs/LINKEDIN_VERIFICATION_SETUP.md`'
+    );
+    expect(linkedInSummary).not.toContain('Canonical active reference');
+    expect(docsRegistry).toContain(
+      '| `docs/LINKEDIN_VERIFICATION_SETUP.md`                                                                   | `reference-spec` | `docs`        | `repo`              | `2026-05-19`'
+    );
+  });
+
   it('keeps the testing strategy aligned with production-candidate launch gates', () => {
     const testingStrategy = fs.readFileSync(
       path.join(repoRoot, 'docs/testing-strategy.md'),

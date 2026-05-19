@@ -1022,3 +1022,11 @@ Non-fatal test noise:
 - Preserved route-surface policy by naming `/api/cron/decision-reminders` as active launch email cron and `/api/cron/send-deletion-reminders` plus `/api/cron/process-deletions` as archived standalone deletion cron routes.
 - Added privacy guardrails for email templates and links: no private proof content, raw evidence, hidden candidate identity details, queue IDs, private storage paths, signed URLs, secrets, service-role data, or diagnostic payloads.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the guide stays transactional, current, target-scoped, and privacy-safe.
+
+## Continuation - LinkedIn Verification Reference Reclassification
+
+- Found `docs/LINKEDIN_VERIFICATION_SETUP.md` still classified as active even though the current settings verification UI says LinkedIn checks are outside the launch corridor, account-side only, and read-only when present.
+- Reclassified the guide as `reference-spec`, rewrote it as a compatibility/reference note, and removed launch-sounding setup language for scraping, confidence-score dashboards, high-confidence quick approvals, ngrok OAuth QA, broad admin-review tabs, and deployment metrics.
+- Preserved the bounded current contract: work email is the only launch-active account-side check, LinkedIn never creates proof trust, public reputation, org review lift, intro eligibility, reveal readiness, or match/ranking advantage by itself.
+- Kept route-surface policy explicit: old LinkedIn admin review routes are archived; current internal manual work belongs under `/api/admin/internal-ops/queues`.
+- Updated the historical implementation-summary pointer and launch-gate coverage so future docs cannot present LinkedIn verification as an active launch corridor surface by default.
