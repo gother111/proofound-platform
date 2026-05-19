@@ -7,57 +7,25 @@
 
 ## Overview
 
-The CV Import feature allows users to extract and add skills to their Expertise Atlas from pasted text and uploaded PDFs. The runtime supports a cost-controlled Gemini extraction path with deterministic fallback, per-key monthly SEK budgets, request-level usage logging, and a Python-only PDF extraction queue for CV uploads.
+This document describes a retired CV Import implementation that historically extracted and added skills to Expertise Atlas from pasted text and uploaded PDFs. It is not a current launch workflow. The locked MVP corridor now routes proof import and review work through the active proof/onboarding surfaces, and any approved Start from CV or proof-artifact extraction work must stay separate from this archived wizard.
 
-## User Flow
+## Launch Status
 
-### Step 1: Navigate to Import Tab
+- `/app/i/expertise` is not a compiled active MVP page.
+- `/api/expertise/cv-import/wizard-*` routes are archived compatibility endpoints and should return `410`.
+- This document must not be used as setup, QA, product, or launch-smoke guidance for the MVP.
+- Keep any future OCR or CV-assisted work behind an explicitly approved route-surface change.
 
-1. Go to **Expertise Atlas** page (`/app/i/expertise`)
-2. Click the **"Import from CV"** tab
+## Historical User Flow
 
-### Step 2: Select Context
+The old flow below is retained only to explain what was removed:
 
-Choose the type of text you're pasting:
-
-- **CV/Resume**: For personal resumes and CVs
-- **Job Description**: For job posting text
-- **General Text**: For any other skill-related text
-
-### Step 3: Paste Text or Upload PDF
-
-Paste your CV, resume, or job description text, or upload PDF documents in the CV Import Wizard flow.
-
-### Step 4: Analyze
-
-Click **"Analyze & Suggest Skills"** to process the text. The system will:
-
-- Extract potential skill keywords
-- Match them against the skills taxonomy
-- Rank results by confidence score
-
-### Step 5: Review Suggestions
-
-Review the suggested skills, which show:
-
-- Skill name
-- Confidence percentage (how well it matched)
-- Alternative names (aliases)
-- Description
-
-### Step 6: Select & Add
-
-1. Click on skills to select/deselect them
-2. Click **"Add X Selected"** to add them to your profile
-3. Skills are saved with default values:
-   - Level: 2 (Competent)
-   - Experience: 0 months
-   - Last Used: Today
-   - Relevance: Current
-
-### Step 7: Verification
-
-After import, the page refreshes to show your newly added skills in the Expertise Atlas.
+1. Open the old Expertise Atlas page.
+2. Use an Import from CV tab.
+3. Paste CV/JD/general text or upload a PDF.
+4. Analyze and rank suggested taxonomy skills.
+5. Select suggested skills and add them to a profile.
+6. Refresh the old Expertise Atlas skill list.
 
 ## Technical Architecture
 
@@ -280,45 +248,21 @@ CREATE TABLE skills (
 
 ## Testing
 
-### Integration Tests
+### Active Launch Gate
 
-**File**: `/tests/integration/cv-import.test.ts`
+**File**: `e2e/cv-import-non-launch.spec.ts`
 
-Tests cover:
+The active test is a non-launch hard gate. It proves the archived wizard API returns `410` and `/app/i/expertise` stays unavailable, rather than proving a CV import workflow works.
 
-- Auto-suggest API with various CV texts
-- Skill extraction accuracy
-- Duplicate skill handling
-- Error scenarios (unauthorized, invalid input)
-- Multiple skill import workflow
-- End-to-end CV import flow
-
-**Run Tests**:
+**Run Test**:
 
 ```bash
-npm run test:integration -- cv-import
+npx playwright test e2e/cv-import-non-launch.spec.ts
 ```
 
-### E2E Tests
+### Archived Historical Coverage
 
-**File**: `tests/e2e/cv-import.spec.ts`
-
-Tests cover:
-
-- Complete user workflow
-- Empty state handling
-- Context switching (CV/JD/General)
-- Confidence score display
-- Skill selection/deselection
-- Loading states
-- Keyboard navigation
-- ARIA labels for accessibility
-
-**Run Tests**:
-
-```bash
-npm run test:e2e -- cv-import
-```
+Old integration and UI tests for skill suggestion, confidence scores, import tabs, and CV wizard interactions are historical only. Do not move them back into default launch checks unless the route-surface policy is deliberately changed.
 
 ## Performance Considerations
 

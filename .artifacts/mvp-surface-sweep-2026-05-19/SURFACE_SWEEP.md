@@ -256,6 +256,12 @@ Organization dashboard archived-navigation follow-up on 2026-05-19:
 - Browser evidence: Browser initially hit `ERR_CONNECTION_REFUSED` on `localhost:33180`, so the local dev server was restarted on the same port. Browser then verified `/portfolio/demo` on `127.0.0.1:33180` rendered the launch-safe public unavailable card with no framework overlay and no console warnings/errors. Attempted `/app/o/test-org/home` Browser smoke redirected to `/app/i/home` under the current Browser session, so the dashboard link regression is covered by focused UI tests rather than authenticated org Browser evidence in this slice.
 - Test evidence: `tests/ui/org-dashboard-archived-nav.test.tsx` asserts the goal and team dashboard widgets expose only `/app/o/acme/profile` links and no archived settings/team hrefs.
 
+CV import documentation and E2E hard-gate follow-up on 2026-05-19:
+
+- Finding: `docs/features/cv-import.md` and `docs/features/cv-import-testing-guide.md` were classified as historical, but still contained body copy and commands that made the retired `/app/i/expertise` CV import wizard read like a runnable launch QA flow. The only CV import hard-gate Playwright spec also lived under `tests/e2e`, while `playwright.config.ts` discovers `e2e`, so the documented direct command could not find the test.
+- Fix: both docs now lead with the current launch truth (`/app/i/expertise` 404, `/api/expertise/cv-import/wizard-*` 410, no launch nav exposure), old manual scenarios are explicitly labeled historical, and the hard-gate spec was moved to `e2e/cv-import-non-launch.spec.ts`.
+- Test evidence: `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npx playwright test e2e/cv-import-non-launch.spec.ts --project=chromium --reporter=line --workers=1` passed, 2/2. A direct default-runtime `npx playwright test ...` failed first because the shell resolved Node 16, and the first Node 25 sandbox run failed to bind `0.0.0.0:33100`; the approved escalated rerun passed.
+
 ## Verification
 
 Commands run with Node 25 path:
@@ -297,6 +303,8 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/privacy-overview-copy.test.tsx tests/ui/privacy-data-breakdown.test.tsx` - passed, 2 files / 5 tests.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/cookie-preferences-copy.test.tsx tests/ui/cookie-settings-page.test.tsx tests/ui/cookie-banner.test.tsx` - passed, 3 files / 7 tests.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/org-dashboard-archived-nav.test.tsx tests/ui/archived-mvp-routes.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts` - passed, 4 files / 18 tests.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npx playwright test e2e/cv-import-non-launch.spec.ts --project=chromium --reporter=line --workers=1` - passed, 1 file / 2 tests.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts` - passed, 3 files / 20 tests.
 - `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with `/api/user/data-inventory` active.
 - `npm run lint` - passed after removing the privacy component hook-dependency warning.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.

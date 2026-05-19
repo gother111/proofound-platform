@@ -5,13 +5,25 @@
 
 > Launch status: archived/non-launch. The CV import wizard is not an active MVP feature and is explicitly excluded from the controlled assistive AI / Document AI OCR rollout. Do not use this guide as MVP launch smoke evidence unless a future approved route-surface change reactivates CV import.
 
-## 🎯 Purpose
+## Purpose
 
-This guide helps you verify that the CV import feature is working correctly after the bug fixes.
+This guide is historical. It documents how the retired CV import wizard used to be manually tested, but the current MVP launch check is the opposite: the legacy wizard must stay unavailable.
 
-## ✅ Pre-Testing Checklist
+Do not follow the scenario checklist below as launch QA. Use the active non-launch hard gate instead:
 
-Before you start testing, ensure:
+```bash
+npx playwright test e2e/cv-import-non-launch.spec.ts
+```
+
+Expected current behavior:
+
+- `/app/i/expertise` returns `404`.
+- `/api/expertise/cv-import/wizard-suggest` returns `410`.
+- No launch navigation exposes the old CV import wizard.
+
+## Historical Pre-Testing Checklist
+
+The checklist below is retained only for old implementation context. It is not current MVP guidance.
 
 - [ ] Your local development server is running (`npm run dev`)
 - [ ] You're logged in as a test user
@@ -28,11 +40,13 @@ Should return > 0 skills.
 
 ---
 
-## 🧪 Test Scenarios
+## Historical Test Scenarios
 
-### Test 1: Basic CV Import Flow ✅
+These scenarios should fail against the current MVP because the legacy UI is intentionally unavailable. They are retained only to explain the old manual QA shape.
 
-**Goal**: Verify complete import workflow from CV text to saved skills.
+### Test 1: Basic CV Import Flow
+
+**Historical goal**: Verify complete import workflow from CV text to saved skills.
 
 **Steps**:
 
@@ -79,7 +93,7 @@ Should return > 0 skills.
 
 ### Test 2: No Skills Found
 
-**Goal**: Verify graceful handling when no skills are detected.
+**Historical goal**: Verify graceful handling when no skills are detected.
 
 **Steps**:
 
@@ -361,18 +375,17 @@ Mark each as complete:
 - [ ] Test 8: UI renders correctly
 - [ ] Test 9: Data persists in database
 
-**All tests passing?** ✅ Feature is ready!
+**All historical tests passing?** This no longer means the feature is launch-ready. For the MVP, the required result is that the old route and API remain unavailable.
 
 ---
 
 ## 🎉 Post-Testing
 
-If all tests pass:
+If old workflow tests pass:
 
-1. ✅ Mark the verify-fix todo as complete
-2. ✅ Consider running automated tests: `npm run test:integration -- cv-import`
-3. ✅ Deploy to staging for QA team testing
-4. ✅ Update issue tracker or project board
+1. Do not deploy or promote the retired CV import wizard.
+2. Run the active hard-gate test instead: `npx playwright test e2e/cv-import-non-launch.spec.ts`.
+3. Update issue tracker or project board only if an approved route-surface change reactivates this work.
 
 If tests fail:
 
@@ -386,6 +399,6 @@ If tests fail:
 
 ---
 
-**Happy Testing!** 🚀
+Historical note ends here.
 
 If you encounter any issues not covered here, please update this guide or reach out to the team.
