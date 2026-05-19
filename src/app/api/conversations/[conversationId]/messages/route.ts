@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db, conversations, messages, profiles } from '@/db';
-import { eq, and, desc, or, inArray } from 'drizzle-orm';
+import { eq, and, desc, or, inArray, lt } from 'drizzle-orm';
 import { detectPII, shouldBlockMessage } from '@/lib/privacy/pii-detection';
 import { log } from '@/lib/log';
 import {
@@ -78,15 +78,33 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
+    let messageWhere = eq(messages.conversationId, conversationId);
+
+    if (beforeId) {
+      const [cursorMessage] = await db
+        .select({ sentAt: messages.sentAt })
+        .from(messages)
+        .where(and(eq(messages.id, beforeId), eq(messages.conversationId, conversationId)))
+        .limit(1);
+
+      if (!cursorMessage) {
+        return NextResponse.json({
+          messages: [],
+          hasMore: false,
+          conversationStage: conversation.stage,
+        });
+      }
+
+      messageWhere = and(messageWhere, lt(messages.sentAt, cursorMessage.sentAt)) ?? messageWhere;
+    }
+
     // Fetch messages with RLS protection
-    let query = db
+    const query = db
       .select()
       .from(messages)
-      .where(eq(messages.conversationId, conversationId))
+      .where(messageWhere)
       .orderBy(desc(messages.sentAt))
       .limit(limit);
-
-    // TODO: Add pagination with beforeId if needed
 
     const messageList = await query;
 

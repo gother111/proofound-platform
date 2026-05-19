@@ -92,12 +92,12 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### conversations
 
-| Methods     | Path                                           | Auth Tier | Launch Surface | Notes         | Source                                                         |
-| ----------- | ---------------------------------------------- | --------- | -------------- | ------------- | -------------------------------------------------------------- |
-| `GET\|POST` | `/api/conversations`                           | `session` | `active MVP`   | -             | `src/app/api/conversations/route.ts`                           |
-| `GET\|POST` | `/api/conversations/[conversationId]`          | `session` | `active MVP`   | -             | `src/app/api/conversations/[conversationId]/route.ts`          |
-| `GET\|POST` | `/api/conversations/[conversationId]/messages` | `session` | `active MVP`   | contains TODO | `src/app/api/conversations/[conversationId]/messages/route.ts` |
-| `POST`      | `/api/conversations/[conversationId]/reveal`   | `session` | `active MVP`   | -             | `src/app/api/conversations/[conversationId]/reveal/route.ts`   |
+| Methods     | Path                                           | Auth Tier | Launch Surface | Notes | Source                                                         |
+| ----------- | ---------------------------------------------- | --------- | -------------- | ----- | -------------------------------------------------------------- |
+| `GET\|POST` | `/api/conversations`                           | `session` | `active MVP`   | -     | `src/app/api/conversations/route.ts`                           |
+| `GET\|POST` | `/api/conversations/[conversationId]`          | `session` | `active MVP`   | -     | `src/app/api/conversations/[conversationId]/route.ts`          |
+| `GET\|POST` | `/api/conversations/[conversationId]/messages` | `session` | `active MVP`   | -     | `src/app/api/conversations/[conversationId]/messages/route.ts` |
+| `POST`      | `/api/conversations/[conversationId]/reveal`   | `session` | `active MVP`   | -     | `src/app/api/conversations/[conversationId]/reveal/route.ts`   |
 
 ### cron
 

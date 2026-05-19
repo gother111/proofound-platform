@@ -151,6 +151,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Added a launch-gate config test that walks active `tests/` files outside `tests/archive/` and fails if any active test imports `@/archive/`.
 - Registered `tests/archive/non_mvp_mobile_api/README.md` in `docs/DOCS_REGISTRY.md`.
 
+18. Active messages API reference still flagged a TODO.
+
+- `docs/API_REFERENCE.md` showed `/api/conversations/[conversationId]/messages` as active MVP with `contains TODO` because the route documented a `before` cursor but did not use it.
+- Implemented the `before` message cursor in the active messages route: the cursor must belong to the same conversation, and the message query now returns messages older than that cursor.
+- Added focused route coverage in `tests/api/conversation-detail-routes.test.ts` to prove the cursor applies an older-than filter and preserves masked sender behavior.
+- Regenerated `docs/API_REFERENCE.md`; the active conversations messages row no longer carries a TODO note.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -256,6 +263,12 @@ Commands run with Node 25 path:
 - `npm run docs:freshness` - passed.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/api/launch-surface-inventory.test.ts` - passed, 2 files / 9 tests.
 - `npm run lint` - passed.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/conversation-detail-routes.test.ts` - passed, 1 file / 3 tests.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.
+- `node scripts/generate-api-reference.mjs` plus Prettier - regenerated `docs/API_REFERENCE.md` with the conversation messages TODO removed.
+- `npm run docs:freshness` - passed.
+- `npm run lint` - passed.
+- `git diff --check` - passed.
 - `rg` active-source analytics sweep after cleanup: no active UI/source fetches to `/api/analytics/**` remain outside route policy and middleware/archive tests.
 - `rg` active-test archived-import sweep after mobile/admin cleanup: active tests no longer import `@/archive/` or `src/archive` implementation modules outside launch-gate config checks.
 - `rg` active-test sweep after archiving: active tests no longer import `ExpertiseAtlasClient`, old CV/JD import wizard components, broad Add Skill drawer flows, or archived L4 card/widget tests outside `tests/archive/`.
