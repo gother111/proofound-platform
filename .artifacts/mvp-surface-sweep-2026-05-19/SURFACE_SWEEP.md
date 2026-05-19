@@ -1385,3 +1385,9 @@ Non-fatal test noise:
 - Found `agent/runbooks/geo-audit.md` still listing archived public marketing pages (`/about`, `/manifesto`, `/careers`, `/contact`, `/support`) as GEO audit targets, while `src/lib/launch/surface-policy.ts` classifies those paths as archived.
 - Updated the runbook so GEO work stays on active public launch pages, legal pages, technical crawl surfaces, public portfolios, organization trust pages, and enabled assignment/public-share surfaces.
 - Added guard coverage that archived marketing pages are treated as route-policy outcomes, not missing SEO work or a reason to revive broad marketing pages during MVP launch hardening.
+
+## Continuation - Release Batch Launch-Gate Boundary
+
+- Found `agent/runbooks/release-batch-flow.md` still verified from March and describing production promotion mainly as release mechanics, workflow completion, and public health, without naming current production-candidate backup, isolated restore, protected status, and final authenticated `go:no-go` gates.
+- Refreshed the release-batch runbook so it explicitly says release mechanics do not replace the current release, production-readiness, phase-exit, and sweep evidence gates.
+- Updated `agent/checklists/verification.md` and launch-gate coverage so release-batch validation stays separate from launch readiness signoff and still requires launch smoke, protected launch/perf status, backup checkpoint, restore report, and final authenticated `go:no-go`.

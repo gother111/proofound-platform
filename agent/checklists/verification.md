@@ -128,6 +128,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Confirm the PR to `master` passes the release-branch gate only when the head branch matches `release/*`.
 - Confirm the release branch receives a normal preview deployment before merging to `master`.
 - Confirm merging to `master` triggers the prebuilt production workflow instead of relying on a normal Vercel cloud build.
+- Confirm launch readiness separately with the current release and production-readiness checklists: launch smoke, protected launch/perf status, production-candidate backup checkpoint, isolated restore report, and final authenticated `go:no-go`.
 
 ## CI Gate Parity (When Appropriate)
 

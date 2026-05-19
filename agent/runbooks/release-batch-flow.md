@@ -1,9 +1,14 @@
 > Doc Class: `runbook`
-> Last Verified: `2026-03-11`
+> Last Verified: `2026-05-19`
 
 # Release Batch Flow
 
 Use this flow to ship smaller production batches while keeping Vercel on the single `proofound-platform` project.
+
+This runbook describes release mechanics only. It does not replace the current
+production-candidate gates in `docs/release-checklist.md`,
+`docs/production-readiness-checklist.md`, `docs/backlog/phase-exit-checklist.md`,
+or `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`.
 
 ## Goal
 
@@ -32,6 +37,7 @@ Use this flow to ship smaller production batches while keeping Vercel on the sin
 - Open a PR from `release/*` to `master`.
 - Wait for the normal preview deployment on the release branch.
 - Verify the selected changes only. Do not add unrelated fixes directly to the release branch unless they are part of the batch.
+- Before treating the release candidate as launch-ready, run the current target-specific release checklist, including launch smoke, protected launch/perf status, production-candidate backup checkpoint, isolated restore report, and final authenticated `go:no-go`.
 
 ## Promote to production
 
@@ -40,6 +46,12 @@ Use this flow to ship smaller production batches while keeping Vercel on the sin
   - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`
 - Confirm the deployed commit matches `master`:
   - `curl -sS https://proofound.io/api/health`
+- Confirm the current launch evidence still exists for the promoted target:
+  - production-candidate backup checkpoint
+  - isolated restore report at `.artifacts/launch-restore-report.json`
+  - authenticated `/api/monitoring/launch-status`
+  - authenticated `/api/monitoring/perf-status`
+  - final `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 - Note:
   - If Vercel Git auto-deploys are still enabled for production, Vercel can still create cloud-build deployments until that setting is intentionally disabled.
 

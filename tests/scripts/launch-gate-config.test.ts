@@ -1403,6 +1403,36 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps release batch mechanics below current launch evidence gates', () => {
+    const releaseBatchFlow = fs.readFileSync(
+      path.join(repoRoot, 'agent/runbooks/release-batch-flow.md'),
+      'utf8'
+    );
+    const verificationChecklist = fs.readFileSync(
+      path.join(repoRoot, 'agent/checklists/verification.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(releaseBatchFlow).toContain('Last Verified: `2026-05-19`');
+    expect(releaseBatchFlow).toContain('describes release mechanics only');
+    expect(releaseBatchFlow).toContain('production-candidate backup checkpoint');
+    expect(releaseBatchFlow).toContain(
+      'isolated restore report at `.artifacts/launch-restore-report.json`'
+    );
+    expect(releaseBatchFlow).toContain('authenticated `/api/monitoring/launch-status`');
+    expect(releaseBatchFlow).toContain('authenticated `/api/monitoring/perf-status`');
+    expect(releaseBatchFlow).toContain(
+      'BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go'
+    );
+    expect(verificationChecklist).toContain(
+      'Confirm launch readiness separately with the current release and production-readiness checklists'
+    );
+    expect(docsRegistry).toContain(
+      '| `agent/runbooks/release-batch-flow.md` | `runbook` | `agent` | `repo+live` | `2026-05-19`'
+    );
+  });
+
   it('keeps scoped verification docs under the locked MVP authority stack', () => {
     const identityContext = fs.readFileSync(
       path.join(repoRoot, 'IDENTITY_VERIFICATION_IMPLEMENTATION.md'),
