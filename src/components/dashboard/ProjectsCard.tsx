@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { apiFetch } from '@/lib/api/fetch';
 
 interface IndividualProject {
   id: string;
@@ -123,7 +122,7 @@ function normalizeOrganizationProject(raw: Record<string, any>): OrganizationPro
 }
 
 function getOrgProjectsPath(orgSlug?: string): string {
-  return orgSlug ? `/app/o/${orgSlug}/projects` : '/app/o';
+  return orgSlug ? `/app/o/${orgSlug}/assignments` : '/app/o';
 }
 
 function computeOrganizationStats(projects: OrganizationProject[]): OrganizationProjectsStats {
@@ -139,7 +138,6 @@ function computeOrganizationStats(projects: OrganizationProject[]): Organization
 
 export function ProjectsCard({
   persona = 'individual',
-  orgId,
   orgSlug,
   initialData,
   onVisibilityChange,
@@ -156,7 +154,7 @@ export function ProjectsCard({
   const [organizationStats, setOrganizationStats] = useState<OrganizationProjectsStats | null>(
     persona === 'organization' && initialData?.stats ? initialData.stats : null
   );
-  const [isLoading, setIsLoading] = useState(!initialData);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -177,59 +175,13 @@ export function ProjectsCard({
       return;
     }
 
-    async function fetchProjects() {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        if (persona === 'organization') {
-          if (!orgId) {
-            throw new Error('Organization context is missing');
-          }
-
-          const response = await apiFetch(`/api/organizations/${orgId}/projects`);
-          if (!response.ok) {
-            throw new Error('Failed to fetch organization projects');
-          }
-
-          const data = await response.json();
-          const normalized = ((data.projects as Record<string, any>[] | undefined) || []).map(
-            normalizeOrganizationProject
-          );
-
-          setOrganizationProjects(
-            normalized.filter((project) => project.status !== 'cancelled').slice(0, 3)
-          );
-          setOrganizationStats(computeOrganizationStats(normalized));
-          setIndividualProjects([]);
-          setIndividualStats(null);
-          return;
-        }
-
-        const response = await apiFetch('/api/projects?limit=5');
-        if (!response.ok) {
-          throw new Error('Failed to fetch projects');
-        }
-
-        const data = await response.json();
-        const activeProjects = ((data.projects as IndividualProject[] | undefined) || []).filter(
-          (project) => project.status !== 'archived'
-        );
-
-        setIndividualProjects(activeProjects.slice(0, 3));
-        setIndividualStats(data.stats || null);
-        setOrganizationProjects([]);
-        setOrganizationStats(null);
-      } catch (err) {
-        console.error('Error fetching projects:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load projects');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchProjects();
-  }, [orgId, persona, initialData]);
+    setIsLoading(false);
+    setError(null);
+    setIndividualProjects([]);
+    setOrganizationProjects([]);
+    setIndividualStats(null);
+    setOrganizationStats(null);
+  }, [persona, initialData]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -303,7 +255,7 @@ export function ProjectsCard({
           <div className="text-center py-6">
             <Building2 className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
             <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
-              Add organization projects to showcase current work and outcomes.
+              Create an assignment to define the work, outcomes, and proof expectations.
             </p>
             <Link href={organizationPath}>
               <Button
@@ -318,7 +270,7 @@ export function ProjectsCard({
                 onMouseLeave={() => setIsHovered(false)}
               >
                 <Plus className="w-3 h-3 mr-1" />
-                Add Project
+                Open Assignments
               </Button>
             </Link>
           </div>
@@ -433,7 +385,7 @@ export function ProjectsCard({
           <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
             Add your projects to showcase your experience and build stronger matches.
           </p>
-          <Link href="/app/i/projects/new">
+          <Link href="/app/i/portfolio">
             <Button
               size="sm"
               className="h-7 text-xs"
@@ -446,7 +398,7 @@ export function ProjectsCard({
               onMouseLeave={() => setIsHovered(false)}
             >
               <Plus className="w-3 h-3 mr-1" />
-              Add Project
+              Open Proof Packs
             </Button>
           </Link>
         </div>
@@ -471,7 +423,7 @@ export function ProjectsCard({
           )}
         </div>
         <Link
-          href="/app/i/projects"
+          href="/app/i/portfolio"
           className="text-xs hover:underline"
           style={{ color: '#1C4D3A' }}
         >
@@ -533,7 +485,7 @@ export function ProjectsCard({
               </span>
             )}
           </div>
-          <Link href="/app/i/projects/new">
+          <Link href="/app/i/portfolio">
             <Button
               size="sm"
               variant="ghost"
@@ -541,7 +493,7 @@ export function ProjectsCard({
               style={{ color: '#1C4D3A' }}
             >
               <Plus className="w-3 h-3 mr-1" />
-              New
+              Open
             </Button>
           </Link>
         </div>

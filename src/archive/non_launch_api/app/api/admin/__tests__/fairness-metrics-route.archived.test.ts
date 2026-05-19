@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 import { GET } from '@/archive/non_launch_api/app/api/admin/fairness-metrics/route';
-import { adminListGuard } from '../_utils';
+import { adminListGuard } from '@/app/api/admin/_utils';
 import { createClient } from '@/lib/supabase/server';
 
-vi.mock('../_utils', () => ({
+vi.mock('@/app/api/admin/_utils', () => ({
   adminListGuard: vi.fn(),
 }));
 

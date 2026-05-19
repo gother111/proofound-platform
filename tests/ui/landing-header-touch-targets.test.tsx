@@ -44,7 +44,12 @@ describe('landing header touch targets', () => {
         expect.objectContaining({ className: expect.stringContaining('min-h-11') }),
       ])
     );
-    expect(screen.getByRole('button', { name: 'Start' })).toHaveClass('min-h-11');
-    expect(screen.getByRole('button', { name: 'Request a pilot' })).toHaveClass('min-h-11');
+    const startLink = screen.getByRole('link', { name: 'Start' });
+    expect(startLink).toHaveClass('min-h-11');
+    expect(startLink).toHaveAttribute('href', '/signup');
+
+    const pilotLink = screen.getByRole('link', { name: 'Request a pilot' });
+    expect(pilotLink).toHaveClass('min-h-11');
+    expect(pilotLink).toHaveAttribute('href', '/signup/organization');
   });
 });

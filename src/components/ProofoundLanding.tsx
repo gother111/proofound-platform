@@ -141,22 +141,22 @@ export function ProofoundLanding({
             >
               Sign in
             </Link>
-            <button
-              type="button"
-              onClick={handleGetStarted}
+            <Link
+              href="/signup"
+              onClick={() => onGetStarted?.()}
               className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full bg-[#65755d] px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5c6b54] hover:shadow-[0_20px_36px_-22px_rgba(101,117,93,0.78)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] active:translate-y-0 sm:px-5 sm:py-3 sm:text-sm lg:hidden"
             >
               <span>Start</span>
               <ArrowRight className="hidden h-4 w-4 sm:block" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              onClick={handleOrganizationSignup}
+            </Link>
+            <Link
+              href="/signup/organization"
+              onClick={() => onOrganizationSignup?.()}
               className="hidden min-h-11 items-center gap-2 whitespace-nowrap rounded-full bg-[#65755d] px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5c6b54] hover:shadow-[0_20px_36px_-22px_rgba(101,117,93,0.78)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] active:translate-y-0 sm:px-5 sm:py-3 sm:text-sm md:px-6 lg:inline-flex"
             >
               <span>Request a pilot</span>
               <ArrowRight className="hidden h-4 w-4 sm:block" aria-hidden="true" />
-            </button>
+            </Link>
           </div>
         </div>
       </header>

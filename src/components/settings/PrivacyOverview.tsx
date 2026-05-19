@@ -326,7 +326,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           </CardContent>
         </Card>
 
-        {/* Skills & Expertise */}
+        {/* Proof skills and evidence */}
         <Card
           variant="bento"
           className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow"
@@ -339,7 +339,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
                 </div>
                 <div>
                   <CardTitle className="text-lg font-['Crimson_Pro']">
-                    Skills and expertise
+                    Proof skills and work evidence
                   </CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
                     Sensitive
@@ -350,7 +350,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           </CardHeader>
           <CardContent>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Includes:</strong> Skills, experience, education, verifications
+              <strong>Includes:</strong> Skills, experience, education, proof, verifications
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
               <strong>Purpose:</strong> Help match you with relevant opportunities

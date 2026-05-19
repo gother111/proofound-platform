@@ -356,11 +356,10 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - Vercel function logs for detailed errors.
   - DB tables: `fairnessNotes`, `fairnessReports` for outputs; other crons rely on logs/status JSON.
   - Success = 200 JSON; 401 = bad/missing bearer; 500 = code/data/env issue (check logs).
-- Legacy CV import PDF analyze is archived/non-launch. These routes remain historical context and must not be treated as active MVP launch evidence:
-  1. `POST /api/expertise/cv-import/wizard-extract` uploads PDFs into private temp storage and enqueues `document_intelligence_extract_only`
-  2. `GET /api/expertise/cv-import/wizard-extract/status?job_id=...` polls until extraction completes or fails
-  3. the client submits extracted text to the existing JSON `POST /api/expertise/cv-import/wizard-suggest`
-  4. browser-side PDF extraction remains the automatic fallback if the async extract job cannot be accepted or completed
+- Legacy CV import PDF analyze is archived/non-launch.
+  - `/api/expertise/cv-import/wizard-*` routes are retained only as archived compatibility handlers and must return launch-safe `410` responses.
+  - Do not use the legacy CV wizard as MVP launch evidence or as approval for broad OCR/import behavior.
+  - Active assisted import/proof work belongs to the approved Start from CV private scaffolding and Proof Artifact Text Extraction corridors.
 - Manual test (example):
   ```bash
   curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches

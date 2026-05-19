@@ -79,8 +79,9 @@ Regression coverage:
 
 Known mismatch to resolve before any future route work:
 
-- `tests/api/cv-import-wizard-routes.test.ts` still describes active CV wizard behavior and conflicts with the current `410` route handlers. Treat that test as stale/non-launch unless the user explicitly approves a route-surface change.
-- `tests/ui/cv-import-wizard.test.tsx`, `tests/ui/cvjd-auto-suggest.test.tsx`, and `tests/ui/profile-context-cv-import.test.tsx` still cover legacy component behavior and must not be used as evidence that the wizard is launch-active.
+- `tests/api/archived-api-handlers-route.test.ts` asserts launch-safe `410` responses for the legacy CV wizard route handlers.
+- Legacy Expertise Atlas/CV wizard UI tests were moved to `tests/archive/non_mvp_expertise_ui/` and renamed with `.archived` suffixes so they are not active launch evidence.
+- `tests/ui/profile-context-cv-import.test.tsx` remains active because it covers the approved Start from CV private scaffolding entry point, not the archived `/app/i/expertise` wizard page.
 
 ## Would A New Active Route Broaden MVP Scope?
 
@@ -265,10 +266,9 @@ Before production consideration:
 
 Tests that must not be treated as launch evidence unless rewritten:
 
-- `tests/api/cv-import-wizard-routes.test.ts`
-- `tests/ui/cv-import-wizard.test.tsx`
-- `tests/ui/cvjd-auto-suggest.test.tsx`
-- `tests/ui/profile-context-cv-import.test.tsx`
+- `tests/archive/non_mvp_expertise_ui/cv-import-wizard.archived.tsx`
+- `tests/archive/non_mvp_expertise_ui/cvjd-auto-suggest.archived.tsx`
+- `tests/archive/non_mvp_expertise_ui/cv-import-wizard-routes.archived.ts`
 
 ## Rollback Path
 

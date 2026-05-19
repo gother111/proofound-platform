@@ -22,7 +22,7 @@ export function ProfileSkillPicker({
   selectedSkills,
   onChange,
   inputId = 'profile-skill-picker-search',
-  searchPlaceholder = 'Search your Expertise Atlas skills',
+  searchPlaceholder = 'Search your proof skills',
   maxSelections,
 }: ProfileSkillPickerProps) {
   const [query, setQuery] = useState('');

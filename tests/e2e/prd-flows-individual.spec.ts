@@ -56,13 +56,13 @@ test.describe('Individual Flows - Unauthenticated Contract Profile Setup (I-05 t
   });
 });
 
-test.describe('Individual Flows - Unauthenticated Contract Expertise Atlas (I-11 to I-14)', () => {
-  test('I-11: Expertise Hub page loads', async ({ page }) => {
-    await expectAuthRedirect(page, '/app/i/expertise');
+test.describe('Individual Flows - Unauthenticated Contract Proof Packs (I-11 to I-14)', () => {
+  test('I-11: Proof portfolio workspace remains protected', async ({ page }) => {
+    await expectAuthRedirect(page, '/app/i/portfolio');
   });
 
-  test('I-12: Taxonomy navigation structure exists', async ({ page }) => {
-    await expectAuthRedirect(page, '/app/i/expertise');
+  test('I-12: Verification requests workspace remains protected', async ({ page }) => {
+    await expectAuthRedirect(page, '/app/i/verifications');
   });
 });
 
@@ -92,9 +92,9 @@ test.describe('Individual Flows - Unauthenticated Contract Matching (I-15 to I-1
   });
 });
 
-test.describe('Individual Flows - Unauthenticated Contract Private Check-ins (I-26 to I-30)', () => {
-  test('I-26: Private check-ins page accessible', async ({ page }) => {
-    await expectAuthRedirect(page, '/app/i/zen');
+test.describe('Individual Flows - Unauthenticated Contract Communications (I-26 to I-30)', () => {
+  test('I-26: Communications hub remains protected', async ({ page }) => {
+    await expectAuthRedirect(page, '/app/i/communications');
   });
 });
 
@@ -103,7 +103,7 @@ test.describe('Individual Flows - Unauthenticated Contract Settings (I-23 to I-2
     await expectAuthRedirect(page, '/app/i/settings');
   });
 
-  test('I-24: Data export page accessible', async ({ page }) => {
-    await expectAuthRedirect(page, '/app/i/settings/data');
+  test('I-24: Privacy settings page accessible', async ({ page }) => {
+    await expectAuthRedirect(page, '/app/i/settings/privacy');
   });
 });

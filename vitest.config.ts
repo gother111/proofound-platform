@@ -16,7 +16,6 @@ const DEFAULT_NON_MVP_TEST_EXCLUDES = [
   '**/tests/api/analytics-tour-event-route.test.ts',
   '**/tests/api/analytics-track-route.test.ts',
   '**/tests/api/analytics-web-vitals-route.test.ts',
-  '**/tests/api/cv-import-wizard-routes.test.ts',
   '**/tests/api/performance-track-route.test.ts',
   // These tests target removed or intentionally gated non-MVP routes/pages that should not block
   // the default unit test signal for the locked launch corridor.

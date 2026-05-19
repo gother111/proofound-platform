@@ -27,8 +27,8 @@ Last updated: 2026-02-13
 | I-04 Profile Basics               | `Individual/Profile`              | Supabase `profiles`, `individual_profiles`                           |
 | I-05 Experience & Education       | `Individual/Profile`              | Supabase `experiences`, `education`                                  |
 | I-06 Mission/Vision/Values        | `Individual/Profile`              | Supabase `individual_profiles`                                       |
-| I-07 Expertise Atlas              | `Individual/Expertise`            | Supabase `skills`, taxonomy endpoints                                |
-| I-08 Attach Proofs                | `Individual/Expertise/Proofs`     | Upload + proof endpoints                                             |
+| I-07 Proof Packs                  | `Individual/ProofPacks`           | Proof Pack, skill, taxonomy, and proof endpoints                     |
+| I-08 Attach Proofs                | `Individual/ProofPacks/Proofs`    | Upload + proof endpoints                                             |
 | I-09 Request Verification         | `Individual/Verifications`        | verification endpoints                                               |
 | I-10 Matching Preferences         | `Individual/Matching/Preferences` | matching profile endpoints                                           |
 | I-11 Recommended Feed             | `Individual/Matching/Feed`        | `POST /api/mobile/v1/matching/feed`                                  |
@@ -37,8 +37,8 @@ Last updated: 2026-02-13
 | I-14 Apply / Interest             | `Individual/Assignments/Interest` | `POST /api/mobile/v1/matching/interest`                              |
 | I-15 Messaging                    | `Shared/Messaging`                | `/api/mobile/v1/conversations`, `/api/mobile/v1/messages`            |
 | I-16 Schedule Interview           | `Shared/Interviews`               | `/api/mobile/v1/interviews`                                          |
-| I-17 Accept Offer                 | `Individual/Contracts`            | contracts APIs                                                       |
-| I-18 Deliverables & Milestones    | `Individual/Projects`             | projects + updates                                                   |
+| I-17 Decision / Feedback          | `Individual/Decisions`            | decisions + feedback APIs                                            |
+| I-18 Engagement Verification      | `Individual/Engagements`          | engagement verification APIs                                         |
 | I-19 Post-Engagement Verification | `Individual/Verifications`        | verification APIs                                                    |
 | I-20 Account & Privacy            | `Settings/Privacy`                | `/api/mobile/v1/profile/visibility`, `/api/mobile/v1/account/status` |
 
@@ -59,13 +59,13 @@ Last updated: 2026-02-13
 | O-11 Messaging                | `Shared/Messaging`                 | conversations/messages APIs                 |
 | O-12 Schedule Interviews      | `Shared/Interviews`                | `/api/mobile/v1/interviews`                 |
 | O-13 Interview Feedback       | `Organization/Interviews`          | interview completion APIs                   |
-| O-14 Offer / Scope            | `Organization/Contracts`           | contracts APIs                              |
-| O-15 Approve Deliverables     | `Organization/Projects`            | projects/progress APIs                      |
+| O-14 Decision / Engage        | `Organization/Decisions`           | decisions + engagement APIs                 |
+| O-15 Engagement Verification  | `Organization/Engagements`         | engagement verification APIs                |
 | O-16 Issue Verifications      | `Organization/Verifications`       | verification response APIs                  |
 | O-17 Manage Assignments       | `Organization/Assignments`         | assignments APIs                            |
 | O-18 Team & Permissions       | `Organization/Team`                | `/api/mobile/v1/organizations/[orgId]/team` |
-| O-19 Analytics Snapshot       | `Organization/Analytics`           | org analytics APIs                          |
-| O-20 Org Admin & Compliance   | `Organization/Settings`            | goals/projects/profile/privacy              |
+| O-19 Launch Ops Snapshot      | `Organization/LaunchOps`           | readiness and internal launch-ops evidence  |
+| O-20 Org Admin & Compliance   | `Organization/Settings`            | profile, visibility, audit, and privacy     |
 
 ## Admin Flows
 

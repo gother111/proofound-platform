@@ -58,7 +58,9 @@ test.describe('Expertise Atlas - L1-L4 Navigation', () => {
     expect(count >= 0 && count <= 6).toBeTruthy();
   });
 
-  test('L1 domain grid: domain stats shown (L4 count, avg level, recency mix)', async ({ page }) => {
+  test('L1 domain grid: domain stats shown (L4 count, avg level, recency mix)', async ({
+    page,
+  }) => {
     await navigateToExpertise(page);
     await waitForL1Domains(page);
 
@@ -146,7 +148,9 @@ test.describe('Expertise Atlas - L1-L4 Navigation', () => {
       await page.waitForTimeout(1000);
 
       // Verify search results shown
-      const searchResults = page.locator('[data-testid*="search-result"], [class*="search-result"]');
+      const searchResults = page.locator(
+        '[data-testid*="search-result"], [class*="search-result"]'
+      );
       const hasResults = await searchResults.isVisible().catch(() => false);
 
       expect(typeof hasResults === 'boolean').toBeTruthy();
@@ -364,7 +368,9 @@ test.describe('Expertise Atlas - Skill Properties', () => {
       await page.waitForTimeout(1000);
 
       // Look for skill edit button
-      const editButton = page.locator('button:has-text("Edit"), [data-testid*="edit-skill"]').first();
+      const editButton = page
+        .locator('button:has-text("Edit"), [data-testid*="edit-skill"]')
+        .first();
       const hasEdit = await editButton.isVisible().catch(() => false);
 
       if (hasEdit) {
@@ -422,9 +428,9 @@ test.describe('Expertise Atlas - Verification', () => {
       await page.waitForTimeout(1000);
 
       // Look for verification button
-      const verifyButton = page.locator(
-        'button:has-text("Verify"), button:has-text("Request Verification")'
-      ).first();
+      const verifyButton = page
+        .locator('button:has-text("Verify"), button:has-text("Request Verification")')
+        .first();
       const hasVerify = await verifyButton.isVisible().catch(() => false);
 
       if (hasVerify) {
@@ -550,4 +556,3 @@ test.describe('Expertise Atlas - Gap Map', () => {
     }
   });
 });
-

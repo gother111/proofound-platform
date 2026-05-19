@@ -1882,21 +1882,21 @@ function HeroDesktopCopy({
           </div>
 
           <div className="flex flex-col gap-4 pt-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={onOrganizationSignup}
+            <a
+              href="/signup/organization"
+              onClick={() => onOrganizationSignup?.()}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-proofound-forest px-7 py-4 text-base font-medium text-white shadow-[0_14px_30px_-18px_rgba(28,77,58,0.52)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 hover:shadow-[0_20px_38px_-24px_rgba(28,77,58,0.58)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-proofound-parchment active:translate-y-0"
             >
               Request a pilot
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              onClick={onIndividualSignup}
+            </a>
+            <a
+              href="/signup/individual"
+              onClick={() => onIndividualSignup?.()}
               className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/72 px-7 py-4 text-base font-medium text-foreground shadow-[0_12px_28px_-24px_rgba(45,51,48,0.36)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_18px_34px_-26px_rgba(45,51,48,0.42)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-proofound-parchment active:translate-y-0"
             >
               Create your proof portfolio
-            </button>
+            </a>
           </div>
         </motion.div>
       </AnimatePresence>
@@ -2660,21 +2660,21 @@ function HeroToBlindDesktopScene({
               </div>
 
               <div className="flex flex-col gap-4 pt-2 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={onOrganizationSignup}
+                <a
+                  href="/signup/organization"
+                  onClick={() => onOrganizationSignup?.()}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-proofound-forest px-7 py-4 text-base font-medium text-white shadow-[0_14px_30px_-18px_rgba(28,77,58,0.52)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 hover:shadow-[0_20px_38px_-24px_rgba(28,77,58,0.58)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-proofound-parchment active:translate-y-0"
                 >
                   Request a pilot
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={onIndividualSignup}
+                </a>
+                <a
+                  href="/signup/individual"
+                  onClick={() => onIndividualSignup?.()}
                   className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/72 px-7 py-4 text-base font-medium text-foreground shadow-[0_12px_28px_-24px_rgba(45,51,48,0.36)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_18px_34px_-26px_rgba(45,51,48,0.42)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-proofound-parchment active:translate-y-0"
                 >
                   Create your proof portfolio
-                </button>
+                </a>
               </div>
             </motion.div>
           </div>
@@ -3593,21 +3593,21 @@ function MobileStoryCard({
           </div>
 
           <div className="grid gap-2.5 [@media(max-height:760px)]:gap-2">
-            <button
-              type="button"
-              onClick={onOrganizationSignup}
+            <a
+              href="/signup/organization"
+              onClick={() => onOrganizationSignup?.()}
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-proofound-forest px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_-22px_rgba(28,77,58,0.56)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 [@media(max-height:760px)]:min-h-11 [@media(max-height:760px)]:py-2.5"
             >
               Request a pilot
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              onClick={onIndividualSignup}
+            </a>
+            <a
+              href="/signup/individual"
+              onClick={() => onIndividualSignup?.()}
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-border/80 bg-white/76 px-5 py-3 text-sm font-medium text-foreground shadow-[0_12px_26px_-24px_rgba(45,51,48,0.34)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 [@media(max-height:760px)]:min-h-11 [@media(max-height:760px)]:py-2.5"
             >
               Create your proof portfolio
-            </button>
+            </a>
           </div>
         </div>
       </article>

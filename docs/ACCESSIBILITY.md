@@ -62,9 +62,9 @@ npx lighthouse https://proofound.io --view
    - ✅ Values selection keyboard accessible
    - ✅ Causes selection keyboard accessible
 
-3. **Expertise Atlas (L1→L4 Navigation)**
-   - ⚠️ Requires testing with keyboard-only navigation
-   - Arrow keys should navigate between taxonomy items
+3. **Proof Portfolio and Proof Pack Workflows**
+   - ✅ Proof Pack links and proof actions remain reachable by keyboard
+   - ⚠️ Retained taxonomy pickers should keep basic Tab/Enter behavior where they appear inside proof flows
 
 4. **Matching Hub**
    - ✅ Introduce/Pass/Snooze buttons keyboard accessible
@@ -242,7 +242,7 @@ None identified yet.
 
 ### Medium Priority (P2)
 
-1. **Expertise Atlas Navigation**: Arrow key navigation needs implementation
+1. **Retained taxonomy pickers**: richer arrow-key navigation would improve efficiency where taxonomy pickers appear in proof flows
 2. **Real-time Updates**: Some dynamic content may not announce to screen readers
 3. **Complex Forms**: Multi-step forms could benefit from progress announcements
 
