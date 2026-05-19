@@ -342,6 +342,7 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Moved it to `scripts/archive/non_mvp_platform_health/check-platform-health.archived.mjs` with a README explaining why it is historical only.
 - Added launch-gate coverage so this stale launch-ops script does not return to active `scripts/` unnoticed.
 - Removed stale Zoom env requirements from active strict-gate, deploy-readiness, and Vercel preflight scripts so launch ops no longer block on retired native Zoom OAuth setup.
+- Removed the stale `STRICT_PROVIDER_E2E_REQUIRE_BOTH` default from the strict provider npm script so provider E2E matches the Google Meet/manual-link launch corridor.
 
 ## Browser Evidence
 
@@ -694,6 +695,9 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after removing stale Zoom env requirements from launch-ops scripts.
 - `git diff --check` - passed after the provider launch-ops cleanup.
 - `rg -n "ZOOM_|Zoom integration callback|src/lib/integrations/zoom|src/lib/video|STRICT_PROVIDER_E2E_REQUIRE_BOTH|criticalGaps|CRITICAL FEATURES CHECK" scripts docs src tests e2e -g '!scripts/archive/**' -g '!docs/archive/**' -g '!src/archive/**' -g '!tests/archive/**'` - remaining active hits were launch-gate assertions and historical `docs/block-7-report.md`; no current launch-ops script requires retired Zoom env/config.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts` - passed, 1 file / 23 tests, after removing `STRICT_PROVIDER_E2E_REQUIRE_BOTH` from the provider E2E npm script.
+- `npm run lint` - passed after the provider E2E npm script cleanup.
+- `rg -n "STRICT_PROVIDER_E2E_REQUIRE_BOTH|ZOOM_|Zoom OAuth|Zoom integration callback|critical gaps|Critical Gaps|check-platform-health|src/lib/integrations/zoom|src/lib/video" package.json scripts docs src tests e2e -g '!scripts/archive/**' -g '!docs/archive/**' -g '!src/archive/**' -g '!tests/archive/**'` - remaining active hits were launch-gate assertions and historical `docs/block-7-report.md`.
 
 Non-fatal test noise:
 
