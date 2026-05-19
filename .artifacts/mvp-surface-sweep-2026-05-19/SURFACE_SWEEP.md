@@ -31,7 +31,7 @@ Interaction thesis: every public or dashboard action should either route to an a
 | Organization app   | `/app/o/[slug]/assignments` and assignment-oriented dashboard entry                                                                 | Active MVP, auth/org-gated            | ProjectsCard no longer fetches archived project APIs and links orgs to assignments.                                                                                      |
 | Internal/admin/ops | `/admin`, `/admin/verification`, `/admin/audit`, launch route inventories, archived API handlers, middleware archive policy         | Internal launch ops                   | Route inventory and admin UI tests pass. Broader admin users/fairness/analytics tests were removed from the active launch signal. No public diagnostics expanded.        |
 | Archived/post-MVP  | Expertise Atlas, fairness note, team coverage analytics, legacy integration edge flows, broad admin users/fairness/metrics surfaces | Archive/post-MVP                      | Active E2E/unit discovery no longer runs these as launch expectations. Archive READMEs explain why.                                                                      |
-| Cross-cutting      | CTA routing, route-surface policy tests, stale docs/tests, Browser desktop/mobile smoke                                             | Active launch readiness               | Focused tests and Browser checks completed. Docs freshness remains warning-only with pre-existing orphan warnings.                                                       |
+| Cross-cutting      | CTA routing, route-surface policy tests, stale docs/tests, Browser desktop/mobile smoke                                             | Active launch readiness               | Focused tests and Browser checks completed. Docs freshness now passes with no findings after registering the remaining artifact/audit docs.                              |
 
 ## Findings Fixed
 
@@ -110,9 +110,35 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Mobile Browser pass covered `/admin/verification` and `/portfolio/org/test-org` at 390 x 844 with no horizontal overflow or runtime-error text.
 - Browser copy sweep found stale privacy-page wording, so `PrivacyOverview` now uses `Proof skills and work evidence` instead of `Skills and expertise`.
 
+13. The remaining interaction E2E risk still needed fresh strict-corridor evidence.
+
+- Reran `npm run test:launch:workflow`: 14 files / 88 tests passed, covering org match review, interview schedule/edit/complete/cancel, decision routes/windows, engagement verification, reveal, workflow contracts, idempotency, email privacy, and reveal timeout.
+- Reran `npm run test:launch:org-corridor`: 5 files / 41 tests passed, covering matching review contracts, org match review, hiring corridor snapshots, organization interview actions, and engagement verification smoke.
+- Reran Phase 3 focused checks: `tests/api/assignments-publish-route.test.ts`, `tests/lib/launch-assignment-publish-smoke.test.ts`, `tests/api/engagement-verifications-route.test.ts`, `tests/lib/workflow-decision-record.test.ts`, and `tests/lib/authz-policy.test.ts` passed, 5 files / 34 tests.
+- Reran Phase 2 focused review/reveal/authz checks: verification status/options, org match review, conversation reveal, engagement verification, authz, and decision-record tests passed, 7 files / 55 tests.
+- Ran `npm run test:strict:quality`: strict E2E quality guard passed for 8 files.
+- Attempted `npm run test:e2e:org:strict` in the sandbox; the web server could not bind `0.0.0.0:33100` due `EPERM`. Reran with approved escalation and the strict org Playwright suite passed `7/7` in 7.9m.
+- Strict E2E emitted a slow `/api/assignments` GET warning at 21633ms and an unknown matrix skill warning for strict resume fixture skills; both are recorded as operational watch noise because the strict suite passed and Phase 3 already tracks assignment publish/perf hardening.
+- Updated `docs/verification-checklist.md` so blind review, candidate-consented reveal, assignment create/edit/publish, and the full review-to-engagement corridor rows cite the fresh 2026-05-19 strict/workflow evidence.
+
+14. Docs freshness still carried 44 registry warnings for existing artifact, audit, and migration README files.
+
+- Registered the remaining orphan Markdown files in `docs/DOCS_REGISTRY.md` as reference or historical documentation surfaces, keeping generated source-refresh snapshots historical where appropriate.
+- Reran `npm run docs:freshness`; it now passes with no findings.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
+
+Continuation check on 2026-05-19:
+
+- Reconnected the Codex in-app Browser after the original local server had stopped.
+- Restarted the local dev server normally; `/portfolio/demo` and `/portfolio/demo-proofound` correctly rendered `Public page unavailable` in non-mock mode, with no public leak surface.
+- Restarted the local dev server in mock mode after sandboxed port binding failed with `EPERM`; approved escalation allowed `NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ORG_MODE=true MOCK_ADMIN_MODE=true npm run dev` to bind `localhost:3000`.
+- Browser verified `/portfolio/demo-proofound` in mock mode: title `Proofound Public Page`, H1 `Mika Andersson`, primary actions `Copy share link`, `Download trust PDF`, `Copy recruiter summary`, and `Request introduction`; visible copy kept public-safe Proof Pack, direct-link, search-off, and private-details-hidden language.
+- Browser verified `/portfolio/org/test-org` in mock mode: title `Proofound organization portfolio`, H1 `Test Organization`, action `Copy share link`, return link `/`, website link `https://test-org.example`, assignment clarity/proof expectations/seriousness-of-review sections, verified domain path, and blind-by-default consent separation.
+- Browser verified `/` in mock mode: title `Proofound | Proof Behind the Claim`, H1 `Proof behind the claim`, CTAs route to `/signup`, `/signup/individual`, `/signup/organization`, `/login`, and legal links route to `/cookies`, `/cookies/settings`, `/privacy`, and `/terms`.
+- Browser screenshot capture timed out in this runtime, so evidence was gathered through Browser navigation plus DOM/visible-state reads instead of screenshots.
 
 Desktop checks:
 
@@ -179,9 +205,15 @@ Commands run with Node 25 path:
 - `npm run test -- tests/api/public-portfolio-summary-route.test.ts tests/api/public-portfolio-export-route.test.ts tests/api/portfolio-export-route.test.ts tests/api/portfolio-org-export-route.test.ts tests/api/org-audit-export-routes.test.ts tests/api/cron-account-deletion-workflow-route.test.ts tests/api/user-account-lifecycle-routes.test.ts tests/api/user-export-route.test.ts tests/api/user-audit-log-purpose-route.test.ts tests/ui/settings-audit-log-page.test.tsx tests/ui/privacy-overview-copy.test.tsx` - passed, 11 files / 55 tests.
 - `npm run test:launch:routes` - passed, 4 files / 25 tests.
 - `npm run test -- tests/ui/privacy-overview-copy.test.tsx` - passed, 1 file / 2 tests.
+- `npm run test:launch:workflow` - passed, 14 files / 88 tests.
+- `npm run test:launch:org-corridor` - passed, 5 files / 41 tests.
+- `npm run test -- tests/api/assignments-publish-route.test.ts tests/lib/launch-assignment-publish-smoke.test.ts tests/api/engagement-verifications-route.test.ts tests/lib/workflow-decision-record.test.ts tests/lib/authz-policy.test.ts` - passed, 5 files / 34 tests.
+- `npm run test -- tests/api/verification-status-route.test.ts tests/ui/verification-status-options.test.tsx tests/api/org-match-review-route.test.ts tests/api/conversation-reveal-route.test.ts tests/api/engagement-verifications-route.test.ts tests/lib/authz-policy.test.ts tests/lib/workflow-decision-record.test.ts` - passed, 7 files / 55 tests.
+- `npm run test:strict:quality` - passed for 8 strict E2E files.
+- `npm run test:e2e:org:strict` - first sandbox run failed before tests because the Playwright web server could not bind `0.0.0.0:33100` (`EPERM`); approved escalated rerun passed, 7/7 in 7.9m.
 - `npm run lint` - passed.
 - `npm run typecheck` - passed.
-- `npm run docs:freshness` - passed in warning mode; reported 44 pre-existing orphan warnings in artifact/audit/reference files.
+- `npm run docs:freshness` - passed with no findings after registry cleanup.
 - `rg` active-test sweep after archiving: active tests no longer import `ExpertiseAtlasClient`, old CV/JD import wizard components, broad Add Skill drawer flows, or archived L4 card/widget tests outside `tests/archive/`.
 - `rg` active-test sweep after admin archiving: active tests outside `src/archive` and `tests/archive` no longer import archived admin users/fairness route modules, `OrganizationsTable`, `generateFairnessNoteResult`, or the retired `calculateFairnessGaps` broad admin helper.
 - Current-doc stale route sweep no longer finds active non-archive assertions that `/app/i/expertise`, `/app/i/projects`, legacy CV wizard routes, contracts/projects modules, or Expertise Atlas UI are launch surfaces in the patched README, retained setup, accessibility, mobile parity, and QA summary docs.
@@ -191,10 +223,11 @@ Non-fatal test noise:
 - Vitest/Vite reported `listen EPERM` for WebSocket port `24678` in the sandbox, but tests completed and passed.
 - Node emitted existing `--localstorage-file` warnings during Vitest runs.
 - Archived `notFound()` page tests log jsdom React error output while asserting the 404 boundary; the archived tests passed.
+- Strict org E2E emitted a slow `/api/assignments` GET warning at 21633ms and `assignment.create.unknown_matrix_skills` for strict resume fixture skills. The suite still passed; assignment runtime performance remains a Phase 3 watch item.
 
 ## Remaining Risks / Unverified
 
 - This pass fixed and verified a high-signal launch slice, not every authenticated data state in the product.
-- Authenticated Browser coverage now includes representative individual, organization, admin/internal, public org, 403, and mobile surfaces, but it is still not a full interactive E2E traversal of proof upload, assignment review, reveal consent, interview scheduling/reschedule, decision recording, or engagement verification.
+- Authenticated Browser coverage now includes representative individual, organization, admin/internal, public org, 403, and mobile surfaces. Full strict Playwright evidence now covers the interactive org corridor, but Browser itself did not click through every modal/control in proof upload, reveal consent, interview scheduling/reschedule, decision recording, or engagement verification.
 - Production deployment, live auth, billing, infra, and permission behavior were not changed or smoke-tested.
-- Docs freshness warnings remain because the repo is in warning mode and existing orphan documentation/artifact files are outside this slice.
+- No current docs freshness warnings remain after registering the existing orphan documentation/artifact files.
