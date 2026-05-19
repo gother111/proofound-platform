@@ -703,6 +703,34 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps the storage setup guide aligned with private upload lifecycle', () => {
+    const storageSetup = fs.readFileSync(path.join(repoRoot, 'docs/STORAGE_SETUP.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(storageSetup).toContain('Last Verified: `2026-05-19`');
+    expect(storageSetup).toContain('user-uploads-quarantine');
+    expect(storageSetup).toContain('user-uploads-private');
+    expect(storageSetup).toContain('manual_review');
+    expect(storageSetup).toContain('uploaded_files');
+    expect(storageSetup).toContain('POST /api/upload/document');
+    expect(storageSetup).toContain('DELETE /api/upload/document?fileId=<uploaded-file-id>');
+    expect(storageSetup).toContain(
+      'Does not return a public URL for private proof/document uploads'
+    );
+    expect(storageSetup).toContain('Do not use `npm run db:push`');
+    expect(storageSetup).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(storageSetup).toContain('tests/privacy/storage-policies.test.ts');
+    expect(storageSetup).toContain('tests/lib/public-portfolio-projection.test.ts');
+    expect(storageSetup).not.toContain('Recommended for First-Time Setup');
+    expect(storageSetup).not.toContain('supabase db push');
+    expect(storageSetup).not.toContain('Run the SQL Migration');
+    expect(storageSetup).not.toContain('DELETE /api/upload/document?path=');
+    expect(storageSetup).not.toContain('Public files are viewable by everyone');
+    expect(docsRegistry).toContain(
+      '| `docs/STORAGE_SETUP.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',

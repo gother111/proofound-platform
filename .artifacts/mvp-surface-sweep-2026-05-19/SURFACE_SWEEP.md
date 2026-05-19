@@ -976,3 +976,9 @@ Non-fatal test noise:
 
 - Verified `docs/CRON_SETUP.md` is aligned with `scripts/lib/cron-job-org-config.mjs` and the current `npm run cron:sync` script, but its active-doc registry date was still 2026-02-12 and it lacked the current doc-class header.
 - Added the active/verified header, updated `docs/DOCS_REGISTRY.md`, and extended cron scheduling tests so the human setup guide stays current while the canonical classification table remains the machine source of truth.
+
+## Continuation - Storage Setup Privacy Refresh
+
+- Found active `docs/STORAGE_SETUP.md` still describing dashboard-first storage setup, `supabase db push`, a broadly public `user-uploads` bucket, path-based document deletion, and older proof/document size and response assumptions.
+- Rewrote it around the current upload lifecycle in `src/lib/uploads/lifecycle.ts`: quarantine-first ingestion, `user-uploads-private` durable proof/document storage, `manual_review` queue behavior, avatar/cover-only public promotion after validation, uploaded-file-id deletion, and no public URL for private proof/document uploads.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the storage guide keeps private/quarantine bucket posture, no-leak public projection expectations, migration/restore launch gates, and focused storage/upload tests current.
