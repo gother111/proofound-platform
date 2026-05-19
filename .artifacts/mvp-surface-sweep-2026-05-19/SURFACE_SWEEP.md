@@ -1285,3 +1285,10 @@ Non-fatal test noise:
 - Kept retained internal Python `suggest` and `extract` modes intact, but changed direct Python `wizard-suggest` and `internal-job` handlers plus `/api/python/cv_import?endpoint=...` dispatch to return archived `410` responses.
 - Updated active Python tests so they prove the retired endpoint modes stay archived, removed wizard-specific multipart and contract expectations from active tests, and kept the retained suggest/extract coverage active.
 - Updated `docs/ENV_VARIABLES.md` so `PYTHON_INTERNAL_SERVICE_SECRET` and `PYTHON_CV_IMPORT_BASE_URL` describe retained suggest/extract behavior and explicitly state that Python wizard/internal-job modes are archived and not launch evidence.
+
+## Continuation - Production-Candidate Restore Evidence Gate
+
+- Found `scripts/go-no-go-check.ts` still checking only that backup/restore scripts and `docs/launch-restore-drill.md` exist, while current launch docs say final go/no-go requires production-candidate backup checkpoint and isolated restore evidence.
+- Tightened go/no-go behavior so localhost targets keep the existing local-parity restore-tooling check, but non-local production-candidate targets now require a fresh passing restore verification report at `.artifacts/launch-restore-report.json` or `LAUNCH_RESTORE_REPORT_PATH`.
+- The production-candidate restore report must have `ok: true`, a valid `generatedAt`, be no older than `LAUNCH_RESTORE_REPORT_MAX_AGE_HOURS` (default 72), and point to readable `summary.json` and `row-fingerprint.json` checkpoint evidence.
+- Updated `docs/launch-restore-drill.md`, `agent/checklists/verification.md`, and `docs/mvp-launch-master-checklist.md` so final launch operators write the restore report with `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json` before running final go/no-go.

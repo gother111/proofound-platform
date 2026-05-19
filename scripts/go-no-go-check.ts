@@ -26,6 +26,11 @@ const ARTIFACT_PATH =
   process.env.LAUNCH_SMOKE_ARTIFACT_PATH || '.artifacts/launch-smoke-report.json';
 const RUN_SMOKE_DIRECT = process.env.GO_NO_GO_DIRECT_SMOKE !== '0';
 const RUN_SYNTHETICS = process.env.GO_NO_GO_RUN_SYNTHETICS !== '0';
+const RESTORE_REPORT_PATH =
+  process.env.LAUNCH_RESTORE_REPORT_PATH || '.artifacts/launch-restore-report.json';
+const RESTORE_REPORT_MAX_AGE_HOURS = Number(
+  process.env.LAUNCH_RESTORE_REPORT_MAX_AGE_HOURS || '72'
+);
 
 const requiredFiles = ['RLS_DEPLOYMENT_SUMMARY.md', 'ACCESSIBILITY_AUDIT_REPORT.md'];
 
@@ -54,6 +59,25 @@ function internalOpsHeaders() {
 
 function command(name: string) {
   return process.platform === 'win32' ? `${name}.cmd` : name;
+}
+
+function isLocalLaunchBaseUrl() {
+  try {
+    const url = new URL(BASE_URL);
+    return ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function readJsonFile(filePath: string) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (error) {
+    fail(
+      `could not read JSON evidence at ${filePath}: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
 }
 
 function checkFiles() {
@@ -264,6 +288,51 @@ function checkRestoreReadiness() {
   }
   if (!fs.existsSync(restoreDrillDoc)) {
     fail('restore readiness missing docs/launch-restore-drill.md');
+  }
+
+  if (isLocalLaunchBaseUrl()) {
+    console.log(
+      'Local go/no-go target detected; restore tooling exists, but production-candidate launch still requires restore evidence.'
+    );
+    return;
+  }
+
+  if (!fs.existsSync(RESTORE_REPORT_PATH)) {
+    fail(
+      `production-candidate go/no-go requires a restore verification report at ${RESTORE_REPORT_PATH}. Run npm run db:restore:verify -- --checkpoint <dir> --out ${RESTORE_REPORT_PATH} against an isolated recovery target.`
+    );
+  }
+
+  const report = readJsonFile(RESTORE_REPORT_PATH);
+  if (report.ok !== true) {
+    fail(`restore verification report is not passing: ${RESTORE_REPORT_PATH}`);
+  }
+
+  const generatedAt = new Date(String(report.generatedAt || ''));
+  if (Number.isNaN(generatedAt.getTime())) {
+    fail(
+      `restore verification report is missing a valid generatedAt timestamp: ${RESTORE_REPORT_PATH}`
+    );
+  }
+
+  const maxAgeMs = Number.isFinite(RESTORE_REPORT_MAX_AGE_HOURS)
+    ? RESTORE_REPORT_MAX_AGE_HOURS * 60 * 60 * 1000
+    : 72 * 60 * 60 * 1000;
+  if (Date.now() - generatedAt.getTime() > maxAgeMs) {
+    fail(
+      `restore verification report is stale: ${RESTORE_REPORT_PATH}. Regenerate it for the intended production-candidate target.`
+    );
+  }
+
+  const checkpointDir = String(report.checkpointDir || '');
+  if (!checkpointDir) {
+    fail(`restore verification report is missing checkpointDir: ${RESTORE_REPORT_PATH}`);
+  }
+  for (const fileName of ['summary.json', 'row-fingerprint.json']) {
+    const evidencePath = path.join(checkpointDir, fileName);
+    if (!fs.existsSync(evidencePath)) {
+      fail(`restore verification report references missing checkpoint evidence: ${evidencePath}`);
+    }
   }
 }
 

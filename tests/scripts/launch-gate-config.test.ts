@@ -623,6 +623,46 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps go/no-go restore evidence tied to production-candidate targets', () => {
+    const goNoGoScript = fs.readFileSync(path.join(repoRoot, 'scripts/go-no-go-check.ts'), 'utf8');
+    const restoreDrill = fs.readFileSync(
+      path.join(repoRoot, 'docs/launch-restore-drill.md'),
+      'utf8'
+    );
+    const verificationChecklist = fs.readFileSync(
+      path.join(repoRoot, 'agent/checklists/verification.md'),
+      'utf8'
+    );
+    const launchMasterChecklist = fs.readFileSync(
+      path.join(repoRoot, 'docs/mvp-launch-master-checklist.md'),
+      'utf8'
+    );
+
+    expect(goNoGoScript).toContain('LAUNCH_RESTORE_REPORT_PATH');
+    expect(goNoGoScript).toContain('.artifacts/launch-restore-report.json');
+    expect(goNoGoScript).toContain('isLocalLaunchBaseUrl');
+    expect(goNoGoScript).toContain(
+      'production-candidate go/no-go requires a restore verification report'
+    );
+    expect(goNoGoScript).toContain('restore verification report is stale');
+    expect(goNoGoScript).toContain('summary.json');
+    expect(goNoGoScript).toContain('row-fingerprint.json');
+
+    expect(restoreDrill).toContain(
+      'Production-candidate `npm run go:no-go` additionally requires a fresh passing restore verification report'
+    );
+    expect(restoreDrill).toContain('--out .artifacts/launch-restore-report.json');
+    expect(restoreDrill).toContain('summary.json');
+    expect(restoreDrill).toContain('row-fingerprint.json');
+
+    expect(verificationChecklist).toContain(
+      'Production-candidate runs additionally require a fresh passing restore verification report'
+    );
+    expect(launchMasterChecklist).toContain(
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+    );
+  });
+
   it('keeps root production and provider docs aligned with manual-link launch posture', () => {
     const productionChecklist = fs.readFileSync(
       path.join(repoRoot, 'PRODUCTION_CHECKLIST.md'),

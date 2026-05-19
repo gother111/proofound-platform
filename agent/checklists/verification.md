@@ -166,11 +166,14 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Launch smoke artifact: `BASE_URL=http://localhost:3000 npm run test:launch:smoke` (source: package.json, scripts/launch-smoke-runner.ts)
 - Launch synthetic monitors: `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch` (source: package.json, scripts/run-launch-synthetic-monitors.ts)
 - Go/no-go: `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go` (source: scripts/go-no-go-check.ts)
-  - Requires a fresh launch smoke artifact, healthy `/api/monitoring/perf-status`, healthy `/api/monitoring/launch-status`, required evidence files, required safe-mode flags, and restore-drill assets. (source: scripts/go-no-go-check.ts)
+  - Localhost runs prove local parity only: they require a fresh launch smoke artifact, healthy `/api/monitoring/perf-status`, healthy `/api/monitoring/launch-status`, required evidence files, required safe-mode flags, and restore-drill tooling. (source: scripts/go-no-go-check.ts)
+  - Production-candidate runs additionally require a fresh passing restore verification report, defaulting to `.artifacts/launch-restore-report.json`, with readable `summary.json` and `row-fingerprint.json` checkpoint evidence. (source: scripts/go-no-go-check.ts, docs/launch-restore-drill.md)
 
 ## Migration and Data Safety (Before Production DDL)
 
 - Create a checkpoint: `npm run db:backup:checkpoint`
+- For final go/no-go evidence, write restore verification output to `.artifacts/launch-restore-report.json`:
+  - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 - Reconcile canonical migration ledger: `npm run db:audit:migrations`
 - Optional strict legacy baseline parity audit: `npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json`
 - Diagnostics-only legacy file inventory audit: `npm run db:audit:migrations -- --mode legacy-supabase`

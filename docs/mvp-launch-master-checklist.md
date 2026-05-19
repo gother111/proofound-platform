@@ -272,6 +272,8 @@ npm run test:privacy
 npm run test:privacy:extended
 npm run db:drift-check
 npm run db:audit:migrations
+npm run db:backup:checkpoint
+npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json
 BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch
 BASE_URL=<production-candidate-url> npm run perf:budgets
 BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go
