@@ -356,6 +356,16 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Updated `docs/monitoring-alerting.md` issue ownership from archived `src/app/api/messages/*` to active `src/app/api/conversations/*`.
 - Updated `docs/caching-pagination.md` to document `/api/conversations/{conversationId}/messages?before=...` instead of archived `/api/messages` offset/cursor examples.
 
+46. User-requested Codex in-app Browser testing needed a fresh evidence pass after the docs/test cleanup.
+
+- Reconnected the Browser plugin against the in-app browser and verified the live local target on `http://localhost:33180`.
+- Captured desktop viewport evidence for `/`, `/portfolio/demo`, `/portfolio/org/test-org`, `/signup`, `/login`, `/onboarding`, `/app/i/portfolio`, `/app/o/test-org/assignments`, and `/admin/verification`.
+- Captured mobile 390 x 844 evidence for `/`, `/portfolio/demo`, `/portfolio/org/test-org`, `/app/i/portfolio`, `/app/o/test-org/assignments`, and `/admin/verification`.
+- Browser evidence showed no horizontal overflow, no runtime-error text, and no blank body across the sampled routes.
+- Public demo portfolio and organization pages rendered the generic unavailable public surface in non-mock mode, preserving the no-leak behavior.
+- Protected individual/org routes failed closed to login while unauthenticated; `/admin/verification` failed closed to `403`.
+- Saved `browser-smoke.json` and viewport screenshots under `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/`.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -457,6 +467,14 @@ Cookie settings copy follow-up on 2026-05-19:
 - Finding: the public cookie preferences page used broad "use our platform" language and ad-targeting examples that did not match the calm locked-MVP corridor.
 - Fix: `src/components/cookies/CookiePreferences.tsx` now frames analytics as product-quality/fix-bugs measurement and marketing cookies as consented Proofound update/campaign measurement, without ad-targeting language.
 - Browser evidence on `localhost:33180`: `/cookies/settings` rendered `Cookie Settings`, `Help us understand how Proofound is working`, and no `use our platform` or `Ad targeting` copy; no runtime error or console errors were present.
+
+Codex Browser screenshot evidence follow-up on 2026-05-19:
+
+- Browser plugin screenshot capture worked in this pass and saved viewport images under `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/`.
+- Desktop Browser smoke covered `/`, `/portfolio/demo`, `/portfolio/org/test-org`, `/signup`, `/login`, `/onboarding`, `/app/i/portfolio`, `/app/o/test-org/assignments`, and `/admin/verification`.
+- Mobile Browser smoke covered `/`, `/portfolio/demo`, `/portfolio/org/test-org`, `/app/i/portfolio`, `/app/o/test-org/assignments`, and `/admin/verification` at 390 x 844.
+- Across the sampled routes Browser recorded `horizontalOverflow=false`, `hasRuntimeErrorText=false`, and `bodyEmpty=false`.
+- Non-mock `/portfolio/demo` and `/portfolio/org/test-org` rendered `Public Page Unavailable | Proofound`; unauthenticated app routes failed closed to login and `/admin/verification` failed closed to `403`.
 
 Organization dashboard archived-navigation follow-up on 2026-05-19:
 
@@ -718,6 +736,7 @@ Commands run with Node 25 path:
 - `npm run lint` - passed after the archived-test and docs cleanup.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the archived-test and docs cleanup.
 - `git diff --check` - passed after the archived-test and docs cleanup.
+- Browser plugin smoke saved `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/browser-smoke.json` plus desktop/mobile screenshots for representative public, auth-entry, protected individual/org, and admin/internal surfaces.
 
 Non-fatal test noise:
 
