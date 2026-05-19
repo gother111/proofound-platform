@@ -982,3 +982,9 @@ Non-fatal test noise:
 - Found active `docs/STORAGE_SETUP.md` still describing dashboard-first storage setup, `supabase db push`, a broadly public `user-uploads` bucket, path-based document deletion, and older proof/document size and response assumptions.
 - Rewrote it around the current upload lifecycle in `src/lib/uploads/lifecycle.ts`: quarantine-first ingestion, `user-uploads-private` durable proof/document storage, `manual_review` queue behavior, avatar/cover-only public promotion after validation, uploaded-file-id deletion, and no public URL for private proof/document uploads.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the storage guide keeps private/quarantine bucket posture, no-leak public projection expectations, migration/restore launch gates, and focused storage/upload tests current.
+
+## Continuation - Retired Smart Search Deployment Note
+
+- Found root `DEPLOYMENT_STEPS_SMART_SEARCH.md` still classified active even though it described the retired Expertise Atlas smart-search rollout, hard-coded an old Supabase project ref, and recommended direct Supabase schema-push plus SQL Editor paste flows.
+- Replaced the body with a historical supersession note that points current operators to retained taxonomy setup and the migration runbooks, and explicitly says not to use it as active launch guidance for `/app/i/expertise`, old smart-search UI behavior, or production database deployment.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so the file stays historical/archive and cannot reintroduce the old project ref, SQL Editor path, direct schema-push command, or "Navigate to the Expertise tab" launch instructions.

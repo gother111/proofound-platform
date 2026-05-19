@@ -731,6 +731,29 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps retired smart search deployment steps out of active launch guidance', () => {
+    const smartSearchSteps = fs.readFileSync(
+      path.join(repoRoot, 'DEPLOYMENT_STEPS_SMART_SEARCH.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(smartSearchSteps).toContain('Doc Class: `historical`');
+    expect(smartSearchSteps).toContain('Last Verified: `2026-05-19`');
+    expect(smartSearchSteps).toContain(
+      '/app/i/expertise` and the broad Expertise Atlas UI are archived'
+    );
+    expect(smartSearchSteps).toContain('Proof Packs');
+    expect(smartSearchSteps).toContain('APPLY_MIGRATIONS_MANUAL.md');
+    expect(smartSearchSteps).not.toContain('supabase db push');
+    expect(smartSearchSteps).not.toContain('SQL Editor');
+    expect(smartSearchSteps).not.toContain('cjpfrgmsxwxhuomnvciq');
+    expect(smartSearchSteps).not.toContain('Navigate to the Expertise tab');
+    expect(docsRegistry).toContain(
+      '| `DEPLOYMENT_STEPS_SMART_SEARCH.md`                                                                      | `historical`     | `root`        | `archive`           | `2026-05-19`'
+    );
+  });
+
   it('keeps internal ops SOPs current and protected-route scoped', () => {
     const internalOpsDocs = [
       'docs/internal-ops/index.md',
