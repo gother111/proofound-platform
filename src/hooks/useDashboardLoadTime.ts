@@ -66,23 +66,6 @@ async function reportDashboardLoadTime(metrics: DashboardLoadMetrics & { loadTim
       });
     }
 
-    // Send to backend
-    await fetch('/api/analytics/dashboard-load-time', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        dashboardType: metrics.dashboardType,
-        loadTimeMs: metrics.loadTimeMs,
-        tileCount: metrics.tileCount,
-        dataFetchTimeMs: metrics.dataFetchTimeMs,
-        renderTimeMs: metrics.renderTimeMs,
-        pagePath: window.location.pathname,
-      }),
-      keepalive: true,
-    });
-
     // Log in development
     if (process.env.NODE_ENV === 'development') {
       console.log('[Dashboard Load Time]', {

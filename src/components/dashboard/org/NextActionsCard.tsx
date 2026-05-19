@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,26 +39,13 @@ interface NextActionsCardProps {
 
 export function NextActionsCard({ organizationId }: NextActionsCardProps) {
   const [actions, setActions] = useState<NextAction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchNextActions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [organizationId]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchNextActions = async () => {
+    void organizationId;
     setIsLoading(true);
-    try {
-      const response = await fetch(`/api/analytics/org/next-actions?orgId=${organizationId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setActions(data.actions || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch next actions:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    setActions([]);
+    setIsLoading(false);
   };
 
   const getPriorityIcon = (priority: string) => {

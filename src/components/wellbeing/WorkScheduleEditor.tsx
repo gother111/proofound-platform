@@ -108,24 +108,6 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
 
       toast.success('Work schedule saved successfully');
       setHasUnsavedChanges(false);
-
-      // Log analytics event if burnout threshold exceeded
-      const totalHours = calculateTotalHours();
-      if (totalHours > BURNOUT_THRESHOLDS.warning) {
-        await fetch('/api/analytics/track', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            eventType: 'custom',
-            entityType: 'custom',
-            properties: {
-              legacy_event_type: 'burnout_risk_detected',
-              totalHours,
-              threshold: BURNOUT_THRESHOLDS.warning,
-            },
-          }),
-        });
-      }
     } catch (error) {
       console.error('Failed to save work schedule:', error);
       toast.error('Failed to save work schedule');

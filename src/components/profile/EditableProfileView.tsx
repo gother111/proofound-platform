@@ -212,18 +212,7 @@ export function EditableProfileView({
       ? `${pathname ?? '/app/i/profile'}?${query}`
       : (pathname ?? '/app/i/profile');
     router.replace(nextUrl);
-
-    void fetch('/api/analytics/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event_type: 'profile_guided_open_full',
-        event_data: {
-          stage: completionState.stage,
-        },
-      }),
-    }).catch(() => undefined);
-  }, [completionState.stage, pathname, router, searchParams]);
+  }, [pathname, router, searchParams]);
 
   const openProfileTab = useCallback(
     (tab: 'proof_packs' | 'verification' | 'visibility') => {

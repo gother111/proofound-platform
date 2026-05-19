@@ -131,7 +131,6 @@ export function SUSDialog({
 
     try {
       const totalScore = calculateSUSScore();
-      const individualScores = SUS_QUESTIONS.map((q) => responses[q.id]);
       const grade = calculateGrade(totalScore);
 
       // Submit to API
@@ -152,29 +151,6 @@ export function SUSDialog({
       if (!response.ok) {
         throw new Error('Failed to submit survey');
       }
-
-      // Fire analytics via server API to avoid bundling server-only deps in client
-      const data = await response.json().catch(() => ({}));
-      const surveyId = data?.survey?.id;
-      apiFetch('/api/analytics/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventType: 'sus_survey_completed',
-          userId,
-          entityType: 'survey',
-          entityId: surveyId,
-          properties: {
-            trigger,
-            score: totalScore,
-            grade,
-            meetsTarget: totalScore >= 75,
-            individual_scores: individualScores,
-          },
-        }),
-      }).catch((error) => {
-        console.error('Failed to emit SUS analytics event', error);
-      });
 
       toast.success(`Survey completed! Your score: ${totalScore.toFixed(0)}/100`);
 

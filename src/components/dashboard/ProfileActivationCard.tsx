@@ -99,15 +99,6 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
     await navigator.clipboard.writeText(data.publicPortfolioUrl);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
-    await fetch('/api/analytics/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        eventType: 'portfolio_share_link_copied',
-        entityType: 'profile',
-        properties: { source: 'dashboard_portfolio_card' },
-      }),
-    });
   }
 
   return (

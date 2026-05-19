@@ -32,9 +32,8 @@ interface GuidedTourProps {
   onSkip: () => void;
 }
 
-export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: GuidedTourProps) {
+export function GuidedTour({ persona, shouldRun, onComplete, onSkip }: GuidedTourProps) {
   const [run, setRun] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
 
   const steps = persona === 'individual' ? individualTourSteps : organizationTourSteps;
 
@@ -74,18 +73,6 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
       setRun(false);
     }
   }, [shouldRun]);
-
-  // Emit tour started event when tour begins
-  useEffect(() => {
-    if (shouldRun && run) {
-      // Emit analytics event via API to avoid Node.js imports in client component
-      fetch('/api/analytics/tour-event', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, event: 'started' }),
-      }).catch(console.error);
-    }
-  }, [shouldRun, run, userId]);
 
   // Start tour after ensuring elements are available
   useEffect(() => {
@@ -134,21 +121,11 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
 
   const handleJoyrideCallback = useCallback(
     (data: CallBackProps) => {
-      const { status, type, index, action } = data;
-
-      // Update step index for analytics
-      if (type === EVENTS.STEP_AFTER) {
-        setStepIndex(index + 1);
-      }
+      const { status, type, action } = data;
 
       // Handle tour completion
       if (status === STATUS.FINISHED) {
         setRun(false);
-        fetch('/api/analytics/tour-event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, event: 'completed' }),
-        }).catch(console.error);
         onComplete();
         toast.success('Tour completed! You can replay it anytime from Settings.');
       }
@@ -156,11 +133,6 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
       // Handle tour being skipped
       if (status === STATUS.SKIPPED || action === ACTIONS.CLOSE) {
         setRun(false);
-        fetch('/api/analytics/tour-event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, event: 'skipped', stepIndex }),
-        }).catch(console.error);
         onSkip();
         toast.info('Tour skipped. You can restart it anytime from Settings.');
       }
@@ -170,7 +142,7 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
         console.error('Tour error:', data);
       }
     },
-    [userId, onComplete, onSkip, stepIndex]
+    [onComplete, onSkip]
   );
 
   return (

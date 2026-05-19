@@ -155,24 +155,14 @@ export function DraggableDashboard({
         | 'next_best_action_clicked',
       properties?: Record<string, any>
     ) => {
-      try {
-        await fetch('/api/analytics/dashboard', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            eventType,
-            properties: {
-              ...properties,
-              fromMock: mockMode,
-            },
-          }),
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Dashboard event captured locally', {
+          eventType,
+          properties,
         });
-      } catch (error) {
-        console.error('Failed to log dashboard event', error);
-        onErrorRef.current?.('Failed to log dashboard event');
       }
     },
-    [mockMode]
+    []
   );
 
   useEffect(() => {

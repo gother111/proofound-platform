@@ -93,6 +93,7 @@ describe('launch gate package configuration', () => {
     );
 
     expect(vitestConfig).toContain("'**/src/archive/**'");
+    expect(vitestConfig).toContain("'**/tests/archive/**'");
     expect(vitestConfig).toContain("'**/tests/api/analytics-track-route.test.ts'");
     expect(vitestConfig).toContain("'**/tests/lib/cv-import-suggest-1000-benchmark.test.ts'");
     expect(vitestConfig).toContain("'**/tests/api/messages-legacy-route.test.ts'");

@@ -13,22 +13,9 @@ type ShareLinkButtonProps = {
 export function ShareLinkButton({ url, className }: ShareLinkButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  function trackShareLinkCopied() {
-    void fetch('/api/analytics/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        eventType: 'portfolio_share_link_copied',
-        entityType: 'profile',
-        properties: { source: 'portfolio_share_link_button' },
-      }),
-    }).catch(() => undefined);
-  }
-
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(url);
-      trackShareLinkCopied();
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {

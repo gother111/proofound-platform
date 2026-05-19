@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +33,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { FairnessReport } from '@/lib/analytics/fairness';
-import { apiFetch } from '@/lib/api/fetch';
 
 interface FairnessReportViewProps {
   initialReports?: any[];
@@ -45,60 +44,17 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (initialReports.length === 0) {
-      fetchReports();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const fetchReports = async () => {
     setIsLoading(true);
-    try {
-      const response = await apiFetch('/api/analytics/fairness/report?limit=20');
-      if (response.ok) {
-        const data = await response.json();
-        setReports(data.reports || []);
-        if (data.reports && data.reports.length > 0) {
-          setSelectedReport(data.reports[0]);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch fairness reports:', error);
-      toast.error('Failed to load fairness reports');
-    } finally {
-      setIsLoading(false);
-    }
+    setReports(initialReports);
+    setSelectedReport(initialReports[0] || null);
+    setIsLoading(false);
   };
 
   const generateReport = async () => {
-    const version = prompt('Enter release version (e.g., v1.2.3):');
-    if (!version) return;
-
     setIsGenerating(true);
-    try {
-      const response = await apiFetch('/api/analytics/fairness/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ releaseVersion: version }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate report');
-      }
-
-      const data = await response.json();
-      toast.success('Fairness report generated successfully');
-
-      // Refresh list
-      await fetchReports();
-      setSelectedReport(data.report);
-    } catch (error) {
-      console.error('Failed to generate fairness report:', error);
-      toast.error('Failed to generate fairness report');
-    } finally {
-      setIsGenerating(false);
-    }
+    toast.info('Fairness reporting is not part of the locked MVP launch surface.');
+    setIsGenerating(false);
   };
 
   const downloadMarkdown = () => {

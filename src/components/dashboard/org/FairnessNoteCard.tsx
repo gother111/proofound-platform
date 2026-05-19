@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle2, RefreshCw, BarChart3 } from 'lucide-react';
@@ -31,31 +31,15 @@ interface FairnessNoteData {
 
 export function FairnessNoteCard({ orgSlug }: FairnessNoteCardProps) {
   const [data, setData] = useState<FairnessNoteData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchFairnessNote();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgSlug]);
-
   const fetchFairnessNote = async () => {
+    void orgSlug;
     setIsLoading(true);
     setError(null);
-    try {
-      const response = await fetch(`/api/analytics/org/fairness-note?orgSlug=${orgSlug}`);
-      if (response.ok) {
-        const result = await response.json();
-        setData(result);
-      } else {
-        setError('Failed to load fairness analysis');
-      }
-    } catch (err) {
-      console.error('Failed to fetch fairness note:', err);
-      setError('Failed to load fairness analysis');
-    } finally {
-      setIsLoading(false);
-    }
+    setData(null);
+    setIsLoading(false);
   };
 
   const formatLastGenerated = (dateString: string | null) => {

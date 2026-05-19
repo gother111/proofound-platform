@@ -36,29 +36,11 @@ interface PerformanceMetricPayload {
 }
 
 /**
- * Send metric to backend for storage and analysis
+ * Keep client-side web-vitals capture local while broad analytics endpoints are archived for MVP.
  */
 async function sendMetricToBackend(payload: PerformanceMetricPayload): Promise<void> {
-  try {
-    // Use sendBeacon for reliability (works even on page unload)
-    if (navigator.sendBeacon) {
-      const blob = new Blob([JSON.stringify(payload)], {
-        type: 'application/json',
-      });
-      navigator.sendBeacon('/api/analytics/web-vitals', blob);
-    } else {
-      // Fallback to fetch
-      fetch('/api/analytics/web-vitals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        keepalive: true,
-      }).catch((error) => {
-        console.error('Failed to send web vital:', error);
-      });
-    }
-  } catch (error) {
-    console.error('Failed to send web vital:', error);
+  if (process.env.NODE_ENV === 'development') {
+    console.debug('Web vital captured locally', payload);
   }
 }
 

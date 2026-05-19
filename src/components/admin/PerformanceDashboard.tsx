@@ -7,21 +7,11 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Activity,
-  TrendingDown,
-  TrendingUp,
-  Zap,
-  Clock,
-  AlertTriangle,
-  CheckCircle2,
-} from 'lucide-react';
-import { apiFetch } from '@/lib/api/fetch';
+import { TrendingDown, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface WebVitalMetric {
   metric_name: string;
@@ -69,33 +59,8 @@ const METRIC_INFO = {
 };
 
 export function PerformanceDashboard() {
-  const [metrics, setMetrics] = useState<WebVitalMetric[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [metrics] = useState<WebVitalMetric[]>([]);
   const [days, setDays] = useState(7);
-
-  const loadMetrics = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await apiFetch(`/api/analytics/web-vitals?days=${days}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to load metrics');
-      }
-
-      const data = await response.json();
-      setMetrics(data.metrics || []);
-    } catch (error) {
-      console.error('performance.dashboard.load.failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [days]);
-
-  useEffect(() => {
-    loadMetrics();
-  }, [loadMetrics]);
 
   const getRatingColor = (metric: WebVitalMetric) => {
     const info = METRIC_INFO[metric.metric_name as keyof typeof METRIC_INFO];
@@ -128,18 +93,6 @@ export function PerformanceDashboard() {
     }
     return `${Math.round(value)}ms`;
   };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="py-12">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6">

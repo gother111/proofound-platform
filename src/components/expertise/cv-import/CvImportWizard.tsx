@@ -25,7 +25,6 @@ import {
   type SkillReviewOutcome,
   type SkillReviewSelectionMeta,
 } from '@/components/expertise/cv-import/SkillReviewPanel';
-import { EventType } from '@/lib/analytics/constants';
 import { buildCvImportReviewTelemetry } from '@/lib/expertise/cv-review-telemetry';
 import { getAmbiguousTokenHints } from '@/lib/expertise/skill-confidence';
 import { LANGUAGE_OPTIONS, CEFR_LEVELS } from '@/lib/taxonomy/data';
@@ -1270,22 +1269,11 @@ function createEmptyParsedDocumentState(params: {
 }
 
 async function trackCvImportUiEvent(action: string, properties?: Record<string, unknown>) {
-  try {
-    await apiFetch('/api/analytics/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        eventType: EventType.CUSTOM_EVENT,
-        entityType: 'cv_import_review',
-        entityId: action,
-        properties: {
-          action,
-          ...(properties || {}),
-        },
-      }),
+  if (process.env.NODE_ENV === 'development') {
+    console.debug('CV import UI event captured locally', {
+      action,
+      ...(properties || {}),
     });
-  } catch {
-    // Analytics should never block UX.
   }
 }
 

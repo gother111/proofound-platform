@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Shield, AlertTriangle, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api/fetch';
 
 interface FairnessMetric {
   cohortId: string;
@@ -43,46 +41,10 @@ export function FairnessNoteDashboard() {
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState<'30d' | '90d' | '180d'>('90d');
 
-  const loadFairnessNote = useCallback(async () => {
-    setLoading(true);
-    try {
-      const endDate = new Date();
-      const startDate = new Date();
-
-      switch (dateRange) {
-        case '30d':
-          startDate.setDate(startDate.getDate() - 30);
-          break;
-        case '90d':
-          startDate.setDate(startDate.getDate() - 90);
-          break;
-        case '180d':
-          startDate.setDate(startDate.getDate() - 180);
-          break;
-      }
-
-      const response = await apiFetch(
-        `/api/analytics/fairness?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to load fairness note');
-      }
-
-      const data = await response.json();
-      setFairnessNote(data.fairnessNote);
-    } catch (error) {
-      console.error('Fairness note error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to load fairness note');
-    } finally {
-      setLoading(false);
-    }
-  }, [dateRange]);
-
-  useEffect(() => {
-    loadFairnessNote();
-  }, [loadFairnessNote]);
+  const loadFairnessNote = () => {
+    setLoading(false);
+    setFairnessNote(null);
+  };
 
   const getStatusBadge = (status: 'passing' | 'warning' | 'failing') => {
     switch (status) {

@@ -173,29 +173,6 @@ export function MatchingClient() {
         setBlockedState(null);
         setMatches(matchItems);
         setFilteredMatches(matchItems);
-
-        // Track first match shown for TTFQI metric
-        if (matchItems.length > 0) {
-          try {
-            await fetch('/api/analytics/track', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                eventType: 'first_match_shown',
-                userId: matchItems[0].userId || matchItems[0].user_id,
-                entityType: 'match',
-                entityId: matchItems[0].id,
-                properties: {
-                  totalMatches: matchItems.length,
-                  topScore: matchItems[0].score || matchItems[0].totalScore,
-                },
-              }),
-            });
-          } catch (analyticsError) {
-            // Log but don't fail the page load
-            console.error('Failed to track first match shown:', analyticsError);
-          }
-        }
       } else {
         setBlockedState(null);
       }

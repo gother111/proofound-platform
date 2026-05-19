@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TrendingDown, TrendingUp, Calendar, Target } from 'lucide-react';
@@ -38,30 +38,15 @@ interface TTSCTrendCardProps {
 export function TTSCTrendCard({ orgSlug, groupBy = 'week' }: TTSCTrendCardProps) {
   const [trends, setTrends] = useState<TTSCTrendPoint[]>([]);
   const [target, setTarget] = useState(30);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedGroupBy, setSelectedGroupBy] = useState(groupBy);
 
-  useEffect(() => {
-    fetchTrends();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgSlug, selectedGroupBy]);
-
   const fetchTrends = async () => {
+    void orgSlug;
     setIsLoading(true);
-    try {
-      const response = await fetch(
-        `/api/analytics/org/ttsc-trend?orgSlug=${orgSlug}&groupBy=${selectedGroupBy}&limit=12`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setTrends(data.trends || []);
-        setTarget(data.target || 30);
-      }
-    } catch (error) {
-      console.error('Failed to fetch TTSC trends:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    setTrends([]);
+    setTarget(30);
+    setIsLoading(false);
   };
 
   // Calculate trend direction (comparing latest to previous)

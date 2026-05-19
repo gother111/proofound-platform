@@ -134,6 +134,15 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Admin/internal routes now show `Auth Tier` `internal` and `Launch Surface` `internal launch ops` instead of appearing as ordinary public endpoints.
 - Archived compatibility routes such as legacy analytics, CV wizard, old deletion crons, `/api/match/test`, `/api/performance/track`, and `/api/profile/completeness` are explicitly marked `archived compatibility`.
 
+16. Active source still called archived broad analytics APIs.
+
+- Confirmed `src/lib/launch/surface-policy.ts` classifies `/api/analytics/**` as archived compatibility, while active UI/source code still posted to or read from broad analytics endpoints.
+- Removed active UI calls to `/api/analytics/track`, `/api/analytics/events`, `/api/analytics/tour-event`, `/api/analytics/web-vitals`, `/api/analytics/dashboard-load-time`, `/api/analytics/demographic-opt-in`, and `/api/analytics/org/*`.
+- Preserved local development diagnostics where useful, but stopped user-facing MVP surfaces from depending on archived analytics network calls.
+- Moved stale pre-archive analytics route tests to `tests/archive/non_mvp_analytics_suite/` and added a README describing their historical status.
+- Updated the default Vitest excludes so `tests/archive/**` cannot accidentally re-enter the default release signal.
+- Active launch coverage remains in `tests/api/archived-api-handlers-route.test.ts`, `src/lib/__tests__/middleware-launch-archive.test.ts`, `tests/api/launch-surface-inventory.test.ts`, and `src/lib/launch/__tests__/surface-policy.test.ts`.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -200,6 +209,14 @@ Authenticated admin/internal Browser pass:
 - `/admin/audit` rendered `Audit Logs` with administrative action rows and pagination.
 - Mobile viewport 390 x 844: `/admin/verification` and `/portfolio/org/test-org` rendered with `hasHorizontalOverflow=false` and no runtime-error text.
 
+Analytics archive follow-up on 2026-05-19:
+
+- The requested Browser target `http://localhost:33180/portfolio/demo` initially refused connections; restarted the local dev server on port `33180`.
+- Browser verified `/portfolio/demo` on `localhost:33180` as an intentional not-found/public-unavailable route with no runtime-error text or horizontal overflow.
+- Browser verified `/portfolio/demo-proofound` on `localhost:33180`: title `Proofound Public Page`, H1 `Mika Andersson`, direct-link proof snapshot actions, no runtime-error text, and no horizontal overflow.
+- Browser verified `/`, `/portfolio/org/test-org`, and non-admin `/admin` on `localhost:33180`: landing, public organization trust page, and 403 guard all rendered without runtime-error text or horizontal overflow.
+- Browser screenshot capture timed out again in this runtime, so evidence was recorded through Browser navigation, DOM/visible-state reads, console issue checks, and HTTP status/body inspection.
+
 ## Verification
 
 Commands run with Node 25 path:
@@ -224,6 +241,12 @@ Commands run with Node 25 path:
 - `npm run lint` - passed.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.
 - `npm run docs:freshness` - passed with no findings after registry cleanup.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts tests/api/launch-surface-inventory.test.ts tests/scripts/launch-gate-config.test.ts` - passed, 4 files / 24 tests.
+- `git diff --check` - passed.
+- `npm run lint` - passed.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed.
+- `npm run docs:freshness` - passed.
+- `rg` active-source analytics sweep after cleanup: no active UI/source fetches to `/api/analytics/**` remain outside route policy and middleware/archive tests.
 - `rg` active-test sweep after archiving: active tests no longer import `ExpertiseAtlasClient`, old CV/JD import wizard components, broad Add Skill drawer flows, or archived L4 card/widget tests outside `tests/archive/`.
 - `rg` active-test sweep after admin archiving: active tests outside `src/archive` and `tests/archive` no longer import archived admin users/fairness route modules, `OrganizationsTable`, `generateFairnessNoteResult`, or the retired `calculateFairnessGaps` broad admin helper.
 - Current-doc stale route sweep no longer finds active non-archive assertions that `/app/i/expertise`, `/app/i/projects`, legacy CV wizard routes, contracts/projects modules, or Expertise Atlas UI are launch surfaces in the patched README, retained setup, accessibility, mobile parity, and QA summary docs.

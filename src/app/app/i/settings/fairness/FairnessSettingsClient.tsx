@@ -1,62 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DemographicOptIn } from '@/components/settings/DemographicOptIn';
-import { toast } from 'sonner';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export function FairnessSettingsClient() {
-  const [initialData, setInitialData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Fetch existing demographic opt-in data
-    async function fetchOptIn() {
-      try {
-        const response = await fetch('/api/analytics/demographic-opt-in');
-        if (response.ok) {
-          const data = await response.json();
-          setInitialData(data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch demographic opt-in:', error);
-        toast.error('Failed to load fairness settings');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchOptIn();
-  }, []);
+  const [initialData] = useState<any>({});
 
   const handleSave = async (data: any) => {
-    try {
-      const response = await fetch('/api/analytics/demographic-opt-in', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save');
-      }
-
-      return Promise.resolve();
-    } catch (error) {
-      console.error('Failed to save demographic opt-in:', error);
-      return Promise.reject(error);
+    if (process.env.NODE_ENV === 'development') {
+      console.debug('Demographic opt-in preference captured locally', data);
     }
+    return Promise.resolve();
   };
-
-  if (loading) {
-    return (
-      <AppSurface>
-        <div className="flex items-center justify-center">
-          <div className="text-muted-foreground">Loading fairness settings...</div>
-        </div>
-      </AppSurface>
-    );
-  }
 
   return (
     <AppSurface>

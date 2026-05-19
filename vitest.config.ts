@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 const DEFAULT_NON_MVP_TEST_EXCLUDES = [
   // Archived launch surfaces live under src/archive and are verified separately when needed.
   '**/src/archive/**',
+  '**/tests/archive/**',
   // These suites assert the pre-archive behavior of APIs that now intentionally return 410.
   // The active launch gate keeps direct 410 coverage in tests/api/archived-api-handlers-route.test.ts
   // and route inventory coverage in tests/api/launch-surface-inventory.test.ts.
