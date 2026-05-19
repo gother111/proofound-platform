@@ -79,7 +79,7 @@ npm run db:drift-check
 npm run db:backup:checkpoint
 npm run db:audit:migrations
 npm run db:migrate
-npm run db:restore:verify -- --checkpoint <checkpoint-dir>
+npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json
 ```
 
 ## Vendor Change Process

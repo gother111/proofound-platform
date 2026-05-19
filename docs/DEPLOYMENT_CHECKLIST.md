@@ -75,8 +75,8 @@ flows are not launch evidence.
 - [ ] `npm run db:audit:migrations`
 - [ ] If migrations changed, run `npm run db:migrate` and confirm
       `public.app_migration_ledger` records the expected migration ids.
-- [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir>` against an isolated recovery
-      target.
+- [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
+      against an isolated recovery target.
 - [ ] Save restore-drill evidence with date, target class, owner, and result.
 - [ ] Confirm Supabase storage buckets and policies are represented by migrations or documented
       infra setup, not an untracked one-off paste.

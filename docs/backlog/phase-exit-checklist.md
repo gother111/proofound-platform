@@ -42,7 +42,7 @@ Use this checklist together with [`../verification-checklist.md`](../verificatio
 ## Phase 4 exit
 
 - [ ] `npm run db:backup:checkpoint`
-- [ ] `npm run db:restore:verify -- --checkpoint <dir>`
+- [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 - [x] Backup/restore fingerprint table coverage matches the active MVP corridor and excludes retired compatibility tables.
 - [x] `npm run test:launch:smoke` against local `http://localhost:33183` with the full launch-smoke artifact.
 - [x] `npm run monitor:launch` against local `http://localhost:33180` with persistence disabled.

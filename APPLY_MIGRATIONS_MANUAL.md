@@ -40,7 +40,7 @@ npm run db:migrate
    recovery target and verify it:
 
 ```bash
-npm run db:restore:verify -- --checkpoint <checkpoint-dir>
+npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json
 ```
 
 Use `docs/launch-restore-drill.md` for the full restore rehearsal.

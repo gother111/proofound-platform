@@ -64,7 +64,7 @@ go/no-go evidence.
 - [ ] Do not use `npm run db:push` for production workflows.
 - [ ] Confirm the intended database target before running backup or restore scripts.
 - [ ] `npm run db:backup:checkpoint` against the production-candidate target.
-- [ ] `npm run db:restore:verify -- --checkpoint <dir>` against an isolated recovery target.
+- [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json` against an isolated recovery target.
 - [ ] Restore drill outcome is saved with date, target class, and owner.
 
 ## 4) Production Readiness Signals

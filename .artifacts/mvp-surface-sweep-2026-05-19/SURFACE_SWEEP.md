@@ -1299,3 +1299,9 @@ Non-fatal test noise:
 - Current audit output still reports 9 moderate transitive advisories: `protobufjs` through `@xenova/transformers`/`onnxruntime-web` and `ws` through `react-email`/Socket.IO. `npm audit fix --force` would introduce breaking dependency changes, so no automatic force fix was applied in this sweep checkpoint.
 - Attempted `npm run audit:all`; the sandbox run failed with DNS `ENOTFOUND`, and the escalated external audit was rejected by local policy because it sends dependency metadata to the npm registry. Treat the all-scope audit as UNVERIFIED until the user explicitly approves that disclosure.
 - Updated `docs/CURRENT_TRUTH.md` so it no longer claims zero production dependency vulnerabilities from stale May 14 evidence.
+
+## Continuation - Restore Report Command Alignment
+
+- Found active operator docs still using `npm run db:restore:verify -- --checkpoint <dir>` without the `--out .artifacts/launch-restore-report.json` evidence path now required by production-candidate `go:no-go`.
+- Updated production, release, deployment, phase-exit, storage, DPA, Supabase MCP, privacy-env, and historical RLS command examples so final launch-oriented restore verification writes the canonical restore report artifact.
+- Left `docs/launch-restore-drill.md`'s generic source-of-truth description unchanged, because the drill already includes the explicit `--out .artifacts/launch-restore-report.json` final evidence command below that description.

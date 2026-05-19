@@ -28,7 +28,7 @@ npm run db:drift-check
 npm run db:backup:checkpoint
 npm run db:audit:migrations
 npm run db:migrate
-npm run db:restore:verify -- --checkpoint <checkpoint-dir>
+npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json
 ```
 
 Do not use direct schema-push CLI shortcuts or dashboard paste flows for production-candidate or production evidence.

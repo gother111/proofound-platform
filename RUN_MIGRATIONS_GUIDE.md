@@ -28,7 +28,7 @@ Then, for launch evidence, restore the captured backup into an isolated recovery
 database and verify it:
 
 ```bash
-npm run db:restore:verify -- --checkpoint <checkpoint-dir>
+npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json
 ```
 
 The restore rehearsal is documented in `docs/launch-restore-drill.md`.

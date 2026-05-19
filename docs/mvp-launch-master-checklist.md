@@ -150,7 +150,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] A backup checkpoint exists before any high-risk DDL or launch-sensitive schema step.
 - [ ] `npm run db:backup:checkpoint`
 - [ ] A restore rehearsal has been run against an isolated recovery target.
-- [ ] `npm run db:restore:verify -- --checkpoint <dir>`
+- [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 - [ ] The restore drill outcome is recorded with date and owner.
 - [ ] Live schema and launch-critical policies reflect the intended release.
 - [ ] Launch-critical data safety checks were run against the actual DB target used for launch.

@@ -1090,7 +1090,9 @@ describe('launch gate package configuration', () => {
     expect(vendorRegister).toContain('private proof content');
     expect(vendorRegister).toContain('hidden identity details');
     expect(vendorRegister).toContain('npm run test:privacy');
-    expect(vendorRegister).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(vendorRegister).toContain(
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+    );
     expect(vendorRegister).not.toContain('All vendors are carefully vetted');
     expect(vendorRegister).not.toContain('DPA Signed');
     expect(vendorRegister).not.toContain('SOC 2 Type II certified');
@@ -1154,7 +1156,9 @@ describe('launch gate package configuration', () => {
     expect(privacyEnvSetup).toContain('npm run db:backup:checkpoint');
     expect(privacyEnvSetup).toContain('npm run db:audit:migrations');
     expect(privacyEnvSetup).toContain('npm run db:migrate');
-    expect(privacyEnvSetup).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(privacyEnvSetup).toContain(
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+    );
     expect(privacyEnvSetup).toContain('npm run test:privacy:extended');
     expect(privacyEnvSetup).not.toContain('supabase db push');
     expect(privacyEnvSetup).not.toContain('SQL Editor');
@@ -1391,7 +1395,9 @@ describe('launch gate package configuration', () => {
     expect(analyticsSetup).toContain('PII_HASH_SALT');
     expect(analyticsSetup).toContain('Do not edit migration SQL with a live secret');
     expect(analyticsSetup).toContain('Do not use `db:push`');
-    expect(analyticsSetup).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(analyticsSetup).toContain(
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+    );
     expect(analyticsSetup).toContain('private proof content');
     expect(analyticsSetup).toContain('hidden candidate identity details');
     expect(analyticsSetup).toContain('tests/api/archived-api-handlers-route.test.ts');
@@ -1677,7 +1683,9 @@ describe('launch gate package configuration', () => {
       expect(content).toContain('npm run db:backup:checkpoint');
       expect(content).toContain('npm run db:audit:migrations');
       expect(content).toContain('npm run db:migrate');
-      expect(content).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+      expect(content).toContain(
+        'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+      );
       expect(content).toContain('docs/launch-restore-drill.md');
       expect(content).toContain('Do not');
     }
@@ -1708,7 +1716,9 @@ describe('launch gate package configuration', () => {
     expect(rlsSummary).toContain('npm run db:backup:checkpoint');
     expect(rlsSummary).toContain('npm run db:audit:migrations');
     expect(rlsSummary).toContain('npm run db:migrate');
-    expect(rlsSummary).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(rlsSummary).toContain(
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+    );
     expect(rlsSummary).toContain('Do not use `npm run db:push`');
     expect(rlsSummary).toContain('Historical Snapshot');
     expect(rlsSummary).not.toContain('Production-ready');
@@ -1735,7 +1745,7 @@ describe('launch gate package configuration', () => {
     expect(deploymentChecklist).toContain('npm run db:audit:migrations');
     expect(deploymentChecklist).toContain('npm run db:migrate');
     expect(deploymentChecklist).toContain(
-      'npm run db:restore:verify -- --checkpoint <checkpoint-dir>'
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
     );
     expect(deploymentChecklist).toContain('public.app_migration_ledger');
     expect(deploymentChecklist).toContain('Do not use `npm run db:push`');
@@ -1769,7 +1779,9 @@ describe('launch gate package configuration', () => {
       'Does not return a public URL for private proof/document uploads'
     );
     expect(storageSetup).toContain('Do not use `npm run db:push`');
-    expect(storageSetup).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(storageSetup).toContain(
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+    );
     expect(storageSetup).toContain('tests/privacy/storage-policies.test.ts');
     expect(storageSetup).toContain('tests/lib/public-portfolio-projection.test.ts');
     expect(storageSetup).not.toContain('Recommended for First-Time Setup');
@@ -1880,7 +1892,9 @@ describe('launch gate package configuration', () => {
     expect(setupSupabase).toContain('npm run db:backup:checkpoint');
     expect(setupSupabase).toContain('npm run db:audit:migrations');
     expect(setupSupabase).toContain('npm run db:migrate');
-    expect(setupSupabase).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(setupSupabase).toContain(
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+    );
     expect(setupSupabase).toContain('Do not use direct schema-push commands');
     expect(setupSupabase).toContain('Do not use dashboard SQL paste');
     expect(setupSupabase).toContain('Supabase MCP can be useful for read-only inspection');
@@ -1908,7 +1922,9 @@ describe('launch gate package configuration', () => {
     expect(mcpGuide).toContain('npm run db:backup:checkpoint');
     expect(mcpGuide).toContain('npm run db:audit:migrations');
     expect(mcpGuide).toContain('npm run db:migrate');
-    expect(mcpGuide).toContain('npm run db:restore:verify -- --checkpoint <checkpoint-dir>');
+    expect(mcpGuide).toContain(
+      'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+    );
     expect(mcpGuide).toContain('Do not use direct schema-push commands');
     expect(mcpGuide).toContain('Do not use dashboard SQL paste');
     expect(mcpGuide).not.toContain('cjpfrgmsxwxhuomnvciq');

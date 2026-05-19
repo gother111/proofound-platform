@@ -728,7 +728,7 @@ recovery plan.
 ```bash
 # Roll back with a reviewed forward migration or a documented restore drill.
 # Confirm the target, checkpoint path, and owner before touching production data.
-npm run db:restore:verify -- --checkpoint <dir>
+npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json
 ```
 
 ### 3. DNS Rollback (if needed)

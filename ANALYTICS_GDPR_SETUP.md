@@ -77,7 +77,7 @@ For launch targets, follow the current migration runbooks:
 npm run db:drift-check
 npm run db:migration-audit
 npm run db:migrate
-npm run db:restore:verify -- --checkpoint <checkpoint-dir>
+npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json
 ```
 
 Before applying analytics-related migrations to a production-candidate or production target:
