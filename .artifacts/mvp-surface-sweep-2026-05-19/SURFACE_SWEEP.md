@@ -237,6 +237,13 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Added launch-gate coverage so those broad dashboard/report modules stay out of active admin and analytics source.
 - Registered the archive README in `docs/DOCS_REGISTRY.md`.
 
+30. Active analytics constants and metric exports still advertised retired wellbeing/fairness families.
+
+- Removed active `Well-Being Delta` and `Fairness Gap` metric exports/calculators from `src/lib/analytics/metrics.ts` after broad wellbeing/fairness surfaces were archived.
+- Removed inactive wellbeing/reflection/privacy-banner event emitters and event constants from active analytics modules.
+- Kept active consolidated metrics scoped to TTFQI, TTV, TTSC, Proof Fit Lift, and SUS.
+- Verified no active source/test references remain outside historical database schema and migrations.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -498,6 +505,9 @@ Commands run with Node 25 path:
 - `git diff --check` - passed after archiving broad admin analytics/fairness modules.
 - `npm run lint` - passed after archiving broad admin analytics/fairness modules.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving broad admin analytics/fairness modules.
+- Browser plugin opened `http://localhost:33180/portfolio/demo` - passed, rendered `Public Page Unavailable | Proofound`; Browser reported one console error but the referenced MCP log artifact was not readable from the repo.
+- `rg -n "WellBeingDelta|WELLBEING_DELTA|calculateWellBeingDelta|calculateFairnessGap|FairnessGapResult|FAIRNESS_GAP|WellbeingCheckinSubmittedProps|WellbeingOptInChangedProps|ReflectionAddedProps|emitWellbeing|emitReflectionAdded|emitPrivacyBannerAcknowledged|PRIVACY_BANNER_ACKNOWLEDGED|wellbeing_checkin|wellbeing_opt_in|wellbeing_reflection|wellbeing_delta|fairness_gap" src tests -g '!src/archive/**' -g '!tests/archive/**'` - active code/test references are gone; remaining hits are historical database schema and migrations.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/api/cron-health-check-route.test.ts src/lib/analytics/__tests__/metrics.test.ts tests/scripts/launch-gate-config.test.ts` - passed, 3 files / 43 tests, after narrowing active analytics metrics/events.
 
 Non-fatal test noise:
 

@@ -7,8 +7,6 @@
  * - TTSC: Time to Signed Contract
  * - Proof Fit Lift
  * - SUS: System Usability Scale
- * - Well-Being Delta: Change in well-being scores
- * - Fairness Gap: Demographic disparity in outcomes
  */
 
 import { db } from '@/db';
@@ -70,17 +68,6 @@ export interface SUSResult extends MetricResult {
   unit: 'score';
   target: 75; // PRD: ≥75
   responses: number;
-}
-
-export interface WellBeingDeltaResult {
-  metric: 'WELLBEING_DELTA';
-  averageDelta: number;
-  byDimension: Record<string, number>;
-  positiveChange: number; // Percentage of users with improvement
-  target: number; // PRD: ≥70% users improve
-  onTrack: boolean;
-  sampleSize: number;
-  calculatedAt: Date;
 }
 
 export interface FirstTenMinuteActivationRate {
@@ -488,83 +475,6 @@ export async function calculateSUS(startDate?: Date, endDate?: Date): Promise<SU
 }
 
 // ============================================================================
-// WELL-BEING DELTA
-// ============================================================================
-
-/**
- * Calculate Well-Being Delta: Change in user well-being over time
- * PRD Target: ≥70% of users show improvement
- */
-export async function calculateWellBeingDelta(
-  startDate?: Date,
-  endDate?: Date
-): Promise<WellBeingDeltaResult> {
-  try {
-    const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-    const end = endDate || new Date();
-
-    // Get first and last checkin for each user
-    const result = await db.execute(sql`
-      WITH ranked_checkins AS (
-        SELECT
-          user_id,
-          (properties->>'overall_score')::float as score,
-          properties->'dimensions' as dimensions,
-          occurred_at,
-          ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY occurred_at ASC) as first_rank,
-          ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY occurred_at DESC) as last_rank
-        FROM analytics_events
-        WHERE event_type = 'wellbeing_checkin'
-          AND occurred_at >= ${start.toISOString()}
-          AND occurred_at <= ${end.toISOString()}
-      ),
-      first_last AS (
-        SELECT
-          user_id,
-          MAX(CASE WHEN first_rank = 1 THEN score END) as first_score,
-          MAX(CASE WHEN last_rank = 1 THEN score END) as last_score
-        FROM ranked_checkins
-        GROUP BY user_id
-        HAVING COUNT(*) >= 2
-      )
-      SELECT
-        AVG(last_score - first_score) as avg_delta,
-        COUNT(*) as sample_size,
-        SUM(CASE WHEN last_score > first_score THEN 1 ELSE 0 END) as improved_count
-      FROM first_last
-    `);
-
-    const row = (getRows(result)[0] ?? {}) as any;
-    const avgDelta = parseFloat(row.avg_delta || '0');
-    const sampleSize = parseInt(row.sample_size || '0');
-    const improvedCount = parseInt(row.improved_count || '0');
-    const positiveChange = sampleSize > 0 ? (improvedCount / sampleSize) * 100 : 0;
-
-    log.info('metrics.wellbeing_delta.calculated', {
-      avgDelta,
-      positiveChange,
-      sampleSize,
-    });
-
-    return {
-      metric: 'WELLBEING_DELTA',
-      averageDelta: avgDelta,
-      byDimension: {}, // TODO: Calculate per dimension if needed
-      positiveChange,
-      target: 70,
-      onTrack: positiveChange >= 70,
-      sampleSize,
-      calculatedAt: new Date(),
-    };
-  } catch (error) {
-    log.error('metrics.wellbeing_delta.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    throw error;
-  }
-}
-
-// ============================================================================
 // CONSOLIDATED METRICS
 // ============================================================================
 
@@ -580,15 +490,13 @@ export async function calculateAllMetrics(
   ttsc: TTSCResult;
   pacLift: PACLiftResult;
   sus: SUSResult;
-  wellBeingDelta: WellBeingDeltaResult;
 }> {
-  const [ttfqi, ttv, ttsc, pacLift, sus, wellBeingDelta] = await Promise.all([
+  const [ttfqi, ttv, ttsc, pacLift, sus] = await Promise.all([
     calculateTTFQI(undefined, startDate, endDate),
     calculateTTV(undefined, startDate, endDate),
     calculateTTSC(undefined, startDate, endDate),
     calculatePACLift(startDate, endDate),
     calculateSUS(startDate, endDate),
-    calculateWellBeingDelta(startDate, endDate),
   ]);
 
   return {
@@ -597,175 +505,7 @@ export async function calculateAllMetrics(
     ttsc,
     pacLift,
     sus,
-    wellBeingDelta,
   };
-}
-
-// ============================================================================
-// FAIRNESS GAP (placeholder to unblock build)
-// ============================================================================
-
-export type FairnessGapResult = {
-  cohortA: { name: string; introductionRate: number; contractRate: number; sampleSize: number };
-  cohortB: { name: string; introductionRate: number; contractRate: number; sampleSize: number };
-  gap: number;
-  pValue: number;
-  isSignificant: boolean;
-  confidence: 'high' | 'medium' | 'low';
-};
-
-function normalCdf(value: number): number {
-  // Abramowitz and Stegun approximation.
-  const abs = Math.abs(value);
-  const t = 1 / (1 + 0.2316419 * abs);
-  const d = 0.3989423 * Math.exp((-value * value) / 2);
-  const probability =
-    d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + 1.330274 * t))));
-  return value > 0 ? 1 - probability : probability;
-}
-
-function twoProportionPValue(successA: number, totalA: number, successB: number, totalB: number) {
-  if (totalA === 0 || totalB === 0) {
-    return 1;
-  }
-
-  const pooled = (successA + successB) / (totalA + totalB);
-  const denominator = Math.sqrt(pooled * (1 - pooled) * (1 / totalA + 1 / totalB));
-  if (denominator === 0) {
-    return 1;
-  }
-
-  const z = (successA / totalA - successB / totalB) / denominator;
-  const pOneTail = 1 - normalCdf(Math.abs(z));
-  return Math.max(0, Math.min(1, pOneTail * 2));
-}
-
-function inferConfidence(sampleSizeA: number, sampleSizeB: number): 'high' | 'medium' | 'low' {
-  const minSample = Math.min(sampleSizeA, sampleSizeB);
-  if (minSample >= 100) return 'high';
-  if (minSample >= 40) return 'medium';
-  return 'low';
-}
-
-async function querySingleCohortAnalytics(cohort: string, startIso: string, endIso: string) {
-  const result = await db.execute(sql`
-    SELECT
-      COUNT(*) FILTER (WHERE e.event_type = 'match_generated')::int as generated,
-      COUNT(*) FILTER (WHERE e.event_type = 'match_introduced')::int as introduced,
-      COUNT(*) FILTER (WHERE e.event_type = 'contract_signed')::int as contracted
-    FROM analytics_events e
-    INNER JOIN demographic_opt_ins d ON d.profile_id = e.user_id
-    WHERE d.opted_in = true
-      AND (
-        LOWER(COALESCE(d.gender, '')) = LOWER(${cohort})
-        OR LOWER(COALESCE(d.ethnicity, '')) = LOWER(${cohort})
-        OR LOWER(COALESCE(d.age_range, '')) = LOWER(${cohort})
-      )
-      AND e.created_at >= ${startIso}
-      AND e.created_at <= ${endIso}
-  `);
-
-  const row = (getRows(result)[0] ?? {}) as {
-    generated?: number | string | null;
-    introduced?: number | string | null;
-    contracted?: number | string | null;
-  };
-
-  return {
-    generated: Number(row.generated || 0),
-    introduced: Number(row.introduced || 0),
-    contracted: Number(row.contracted || 0),
-  };
-}
-
-export async function calculateFairnessGap(
-  cohortA: string,
-  cohortB: string,
-  startDate?: Date,
-  endDate?: Date
-): Promise<FairnessGapResult | null> {
-  try {
-    const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-    const end = endDate || new Date();
-    const startIso = start.toISOString();
-    const endIso = end.toISOString();
-    const [cohortAStats, cohortBStats] = await Promise.all([
-      querySingleCohortAnalytics(cohortA, startIso, endIso),
-      querySingleCohortAnalytics(cohortB, startIso, endIso),
-    ]);
-
-    const toStats = (
-      cohortName: string,
-      stats: { generated: number; introduced: number; contracted: number }
-    ) => {
-      const generated = stats.generated;
-      const introduced = stats.introduced;
-      const contracted = stats.contracted;
-      const introductionRate = generated > 0 ? (introduced / generated) * 100 : 0;
-      const contractRate = generated > 0 ? (contracted / generated) * 100 : 0;
-      return {
-        name: cohortName,
-        generated,
-        introduced,
-        contracted,
-        introductionRate,
-        contractRate,
-      };
-    };
-
-    const statsA = toStats(cohortA, cohortAStats);
-    const statsB = toStats(cohortB, cohortBStats);
-
-    if (statsA.generated === 0 || statsB.generated === 0) {
-      return null;
-    }
-
-    const pValue = twoProportionPValue(
-      statsA.introduced,
-      statsA.generated,
-      statsB.introduced,
-      statsB.generated
-    );
-    const gap = statsA.introductionRate - statsB.introductionRate;
-    const confidence = inferConfidence(statsA.generated, statsB.generated);
-    const isSignificant = pValue < 0.05 && Math.abs(gap) >= 5;
-
-    log.info('metrics.fairness_gap.calculated', {
-      cohortA,
-      cohortB,
-      gap,
-      pValue,
-      confidence,
-      sampleA: statsA.generated,
-      sampleB: statsB.generated,
-    });
-
-    return {
-      cohortA: {
-        name: statsA.name,
-        introductionRate: statsA.introductionRate,
-        contractRate: statsA.contractRate,
-        sampleSize: statsA.generated,
-      },
-      cohortB: {
-        name: statsB.name,
-        introductionRate: statsB.introductionRate,
-        contractRate: statsB.contractRate,
-        sampleSize: statsB.generated,
-      },
-      gap,
-      pValue,
-      isSignificant,
-      confidence,
-    };
-  } catch (error) {
-    log.error('metrics.fairness_gap.failed', {
-      cohortA,
-      cohortB,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return null;
-  }
 }
 
 function toRate(numerator: number, denominator: number): number {

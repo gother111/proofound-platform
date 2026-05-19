@@ -104,21 +104,6 @@ function normalizeEntityReference(event: AnalyticsEvent): {
   return { entityId: null, properties };
 }
 
-export type WellbeingCheckinSubmittedProps = {
-  checkin_id: string;
-  scores: { stress: number; control: number };
-  from_trigger?: 'manual' | 'rejection' | 'interview' | 'offer';
-};
-
-export type WellbeingOptInChangedProps = {
-  enabled: boolean;
-};
-
-export type ReflectionAddedProps = {
-  word_count: number;
-  from_trigger?: 'rejection' | 'interview' | 'offer';
-};
-
 // ============================================================================
 // EVENT EMISSION
 // ============================================================================
@@ -895,80 +880,6 @@ export async function emitContractSigned(
 // ============================================================================
 // WELL-BEING EVENTS
 // ============================================================================
-
-export async function emitWellbeingCheckin(
-  userId: string,
-  checkinId: string,
-  properties: {
-    checkin_id: string;
-    overall_score: number;
-    dimensions: Record<string, number>;
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'wellbeing_checkin',
-    userId,
-    properties,
-  });
-}
-
-// Preferred zen hub check-in event with explicit partition and trigger context
-export async function emitWellbeingCheckinSubmitted(
-  userId: string,
-  properties: WellbeingCheckinSubmittedProps
-) {
-  await emitAnalyticsEvent({
-    eventType: 'wellbeing_checkin_submitted',
-    userId,
-    properties,
-    privacyPartition: 'wellbeing',
-  });
-}
-
-export async function emitWellbeingOptIn(
-  userId: string,
-  properties: {
-    opt_in_type: 'demographic' | 'wellbeing' | 'analytics';
-    demographic_fields?: string[];
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'wellbeing_opt_in',
-    userId,
-    properties,
-  });
-}
-
-// Updated opt-in flag for Zen Hub (private partition)
-export async function emitWellbeingOptInChanged(
-  userId: string,
-  properties: WellbeingOptInChangedProps
-) {
-  await emitAnalyticsEvent({
-    eventType: 'wellbeing_opt_in_changed',
-    userId,
-    properties,
-    privacyPartition: 'wellbeing',
-  });
-}
-
-export async function emitReflectionAdded(userId: string, properties: ReflectionAddedProps) {
-  await emitAnalyticsEvent({
-    eventType: 'reflection_added',
-    userId,
-    properties,
-    privacyPartition: 'wellbeing',
-  });
-}
-
-export async function emitPrivacyBannerAcknowledged(userId: string) {
-  await emitAnalyticsEvent({
-    eventType: 'privacy_banner_acknowledged',
-    userId,
-    properties: {},
-    privacyPartition: 'wellbeing',
-  });
-}
 
 // ============================================================================
 // SURVEY EVENTS

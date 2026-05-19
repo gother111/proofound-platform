@@ -125,20 +125,11 @@ export const EventType = {
   OPERATOR_OVERRIDE_LOGGED: 'operator_override_logged',
   SYNTHETIC_CHECK_FAILED: 'synthetic_check_failed',
 
-  // Well-being (Zen Hub)
-  WELLBEING_OPT_IN: 'wellbeing_opt_in',
-  WELLBEING_CHECKIN: 'wellbeing_checkin',
-  WELLBEING_REFLECTION: 'wellbeing_reflection',
-  WELLBEING_CHECKIN_SUBMITTED: 'wellbeing_checkin_submitted',
-  WELLBEING_OPT_IN_CHANGED: 'wellbeing_opt_in_changed',
-  REFLECTION_ADDED: 'reflection_added',
-
   // Usability
   SUS_SURVEY_COMPLETED: 'sus_survey_completed',
   TOUR_STARTED: 'tour_started',
   TOUR_COMPLETED: 'tour_completed',
   TOUR_SKIPPED: 'tour_skipped',
-  PRIVACY_BANNER_ACKNOWLEDGED: 'privacy_banner_acknowledged',
 
   // Verification & attestations
   ATTESTATION_REQUESTED: 'attestation_requested',
@@ -192,22 +183,10 @@ export const TTV_TARGET_DAYS = 7;
 export const SUS_TARGET_SCORE = 75;
 
 /**
- * Well-Being Delta
- * Target: ≥60% show ≥+1 improvement on stress or control
- */
-export const WELLBEING_DELTA_TARGET_PERCENT = 60;
-
-/**
  * Proof Fit Lift
  * Target: top-decile proof-fit matches show at least 20% higher intro acceptance
  */
 export const PAC_LIFT_TARGET_PERCENT = 20;
-
-/**
- * Fairness Gap
- * Target: No statistically significant negative gap
- */
-export const FAIRNESS_GAP_SIGNIFICANCE_LEVEL = 0.05; // p-value threshold
 
 // ============================================================================
 // COHORT DEFINITIONS
@@ -349,9 +328,7 @@ export const CacheKey = {
   TTFQI_MEDIAN: 'metrics:ttfqi:median',
   TTV_MEDIAN: 'metrics:ttv:median',
   TTSC_MEDIAN: 'metrics:ttsc:median',
-  WELLBEING_DELTA: 'metrics:wellbeing:delta',
   PAC_LIFT: 'metrics:pac:lift',
-  FAIRNESS_GAP: 'metrics:fairness:gap',
   SUS_AVERAGE: 'metrics:sus:average',
 } as const;
 
@@ -433,17 +410,10 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.ASSIGNMENT_PUBLISH_SUCCEEDED]: 'Assignment Publish Succeeded',
     [EventType.ASSIGNMENT_TEMPLATE_APPLIED]: 'Assignment Template Applied',
     [EventType.TTFQI_WARNING_EMITTED]: 'TTFQI Warning Emitted',
-    [EventType.WELLBEING_OPT_IN]: 'Well-being Opt-In',
-    [EventType.WELLBEING_CHECKIN]: 'Well-being Check-In',
-    [EventType.WELLBEING_REFLECTION]: 'Well-being Reflection',
-    [EventType.WELLBEING_CHECKIN_SUBMITTED]: 'Well-being Check-In Submitted',
-    [EventType.WELLBEING_OPT_IN_CHANGED]: 'Well-being Opt-In Changed',
-    [EventType.REFLECTION_ADDED]: 'Reflection Added',
     [EventType.SUS_SURVEY_COMPLETED]: 'SUS Survey Completed',
     [EventType.TOUR_STARTED]: 'Tour Started',
     [EventType.TOUR_COMPLETED]: 'Tour Completed',
     [EventType.TOUR_SKIPPED]: 'Tour Skipped',
-    [EventType.PRIVACY_BANNER_ACKNOWLEDGED]: 'Privacy Banner Acknowledged',
     [EventType.ATTESTATION_REQUESTED]: 'Attestation Requested',
     [EventType.ATTESTATION_PROVIDED]: 'Attestation Provided',
     [EventType.SKILL_PROOF_ADDED]: 'Skill Proof Added',
