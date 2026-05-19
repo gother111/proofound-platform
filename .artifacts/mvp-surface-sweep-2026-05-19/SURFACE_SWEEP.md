@@ -1089,3 +1089,9 @@ Non-fatal test noise:
 - Found the root `preflight.md` sync-pair stale against `agent/checklists/preflight.md`: the root copy still pointed at `vercel build --prod` and deploy-hook secret guidance, while the current deployment path expects production env pull, prebuilt Vercel build output, and token/org/project deployment automation.
 - Refreshed both preflight copies to `2026-05-19`, aligned the root copy with the current prebuilt deployment gate, and added guardrails for active-doc registry updates, route-surface classification, Browser-backed UI checks, privacy/no-leak route tests, and production-candidate database checkpoint/restore discipline.
 - Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so both preflight files stay current, keep `DESIGN.md` plus Browser requirements visible for UI work, and cannot drift back to `VERCEL_DEPLOY_HOOK_URL` or `vercel build --prod` launch guidance.
+
+## Continuation - GitHub Workflow Provider Gate Refresh
+
+- Found GitHub workflows still setting `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true` and the retired `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`, conflicting with current launch docs and `scripts/run-mvp-strict-gates.mjs`, where connected-provider credentials are required only for intentional connected-provider runs and manual-link interview scheduling remains the locked MVP default.
+- Reset CI, strict-quality, retry-vercel-deploy, and Playwright workflow defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` and removed the stale `STRICT_PROVIDER_E2E_REQUIRE_BOTH` variable so normal PR, manual strict, and production prebuilt deployment gates do not require Zoom/Google provider scope by default.
+- Reclassified `.vercel-deploy-trigger.md` from active launch evidence to a historical timestamp note, pointing current deployment evidence back to the prebuilt GitHub Actions workflow, Vercel deployment metadata, release checklists, and this sweep artifact.

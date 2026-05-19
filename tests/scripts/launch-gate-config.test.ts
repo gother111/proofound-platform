@@ -520,6 +520,34 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps GitHub launch workflows from requiring connected providers by default', () => {
+    const workflowPaths = [
+      '.github/workflows/ci.yml',
+      '.github/workflows/strict-quality.yml',
+      '.github/workflows/retry-vercel-deploy.yml',
+      '.github/workflows/playwright.yml',
+    ];
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const deployTrigger = fs.readFileSync(path.join(repoRoot, '.vercel-deploy-trigger.md'), 'utf8');
+
+    for (const workflowPath of workflowPaths) {
+      const workflow = fs.readFileSync(path.join(repoRoot, workflowPath), 'utf8');
+      expect(workflow).toContain("STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'false'");
+      expect(workflow).not.toContain('STRICT_PROVIDER_E2E_REQUIRE_BOTH');
+      expect(workflow).not.toContain("STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'true'");
+    }
+
+    expect(deployTrigger).toContain('Doc Class: `historical`');
+    expect(deployTrigger).toContain('Last Verified: `2026-05-19`');
+    expect(deployTrigger).toContain('.github/workflows/retry-vercel-deploy.yml');
+    expect(deployTrigger).toContain('VERCEL_TOKEN');
+    expect(deployTrigger).toContain('VERCEL_ORG_ID');
+    expect(deployTrigger).toContain('VERCEL_PROJECT_ID');
+    expect(docsRegistry).toContain(
+      '| `.vercel-deploy-trigger.md`                                                                             | `historical`     | `root`        | `archive`           | `2026-05-19`'
+    );
+  });
+
   it('keeps Resend setup guidance transactional, target-scoped, and privacy-safe', () => {
     const resendSetup = fs.readFileSync(path.join(repoRoot, 'docs/RESEND_SETUP.md'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');

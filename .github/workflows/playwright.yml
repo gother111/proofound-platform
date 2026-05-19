@@ -46,8 +46,7 @@ jobs:
         E2E_PROVIDER_USER_ID: ${{ secrets.E2E_PROVIDER_USER_ID }}
         E2E_PROVIDER_USER_EMAIL: ${{ secrets.E2E_PROVIDER_USER_EMAIL }}
         E2E_PROVIDER_USER_PASSWORD: ${{ secrets.E2E_PROVIDER_USER_PASSWORD }}
-        STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: ${{ secrets.E2E_PROVIDER_USER_ID != '' && secrets.E2E_PROVIDER_USER_EMAIL != '' && secrets.E2E_PROVIDER_USER_PASSWORD != '' && 'true' || 'false' }}
-        STRICT_PROVIDER_E2E_REQUIRE_BOTH: ${{ secrets.E2E_PROVIDER_USER_ID != '' && secrets.E2E_PROVIDER_USER_EMAIL != '' && secrets.E2E_PROVIDER_USER_PASSWORD != '' && 'true' || 'false' }}
+        STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'false'
     - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       if: always()
       with:
