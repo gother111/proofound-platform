@@ -11,5 +11,5 @@ stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  00:07:47
-   Duration  1.10s (transform 150ms, setup 98ms, collect 433ms, tests 26ms, environment 194ms, prepare 38ms)
+   Start at  00:12:30
+   Duration  1.09s (transform 151ms, setup 96ms, collect 421ms, tests 26ms, environment 196ms, prepare 39ms)

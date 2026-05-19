@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import type { Dirent } from 'node:fs';
 
 import { normalizeLaunchBaseUrl } from '@/lib/launch/contracts';
+import { getLaunchDateSlug } from '@/lib/launch/date-slug';
 import { REPO_READY_VALIDATION_FILE_NAME } from '@/lib/launch/repo-ready-validation';
 import { buildFinalLaunchChecklistDefinitions } from '@/lib/launch/final-launch-checklist-definitions';
 
@@ -946,12 +947,7 @@ function buildJsonReport(report: FinalLaunchChecklistReport) {
 }
 
 function getCurrentDate(now: Date) {
-  return new Intl.DateTimeFormat('en-CA', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: process.env.TZ || 'UTC',
-  }).format(now);
+  return getLaunchDateSlug(now);
 }
 
 async function resolveGitValue(args: string[], workspaceRoot: string) {

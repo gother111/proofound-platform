@@ -1,14 +1,14 @@
 {
   "scope": "repo",
-  "generatedAt": "2026-05-19T22:08:19.153Z",
-  "currentDate": "2026-05-19",
+  "generatedAt": "2026-05-19T22:13:02.762Z",
+  "currentDate": "2026-05-20",
   "workspaceRoot": "/Users/yuriibakurov/proofound",
   "gitHead": "a146729761ece275fb32aeb595f13f3018865071",
   "gitBranch": "master",
   "verdict": "READY",
   "includeStateful": false,
-  "liveBaseUrl": "http://127.0.0.1:54307",
-  "latestLaunchBundleDir": ".artifacts/launch-validation-2026-05-19",
+  "liveBaseUrl": "http://127.0.0.1:54419",
+  "latestLaunchBundleDir": ".artifacts/launch-validation-2026-05-20",
   "statusCounts": {
     "PASS": 36,
     "FAIL": 0,
@@ -84,7 +84,7 @@
       "evidence": [
         {
           "label": "Repo-ready private context validation evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-private-context.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-private-context.log"
         }
       ],
       "blockerIds": [],
@@ -111,7 +111,7 @@
       "evidence": [
         {
           "label": "Repo-ready public portfolio gate",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-public-portfolio.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-public-portfolio.log"
         },
         {
           "label": "Verification checklist: blind review",
@@ -142,11 +142,11 @@
       "evidence": [
         {
           "label": "Latest launch bundle org trust smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json"
         },
         {
           "label": "Latest launch bundle org trust smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke.log"
         }
       ],
       "blockerIds": [],
@@ -243,7 +243,7 @@
       "evidence": [
         {
           "label": "Latest launch bundle prod build evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-build.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-build.log"
         }
       ],
       "blockerIds": [],
@@ -266,11 +266,11 @@
       "evidence": [
         {
           "label": "Latest launch bundle prod boot evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-prod-start.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-prod-start.log"
         },
         {
           "label": "Latest launch bundle prod boot evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-prod-health.json"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-prod-health.json"
         }
       ],
       "blockerIds": [],
@@ -295,7 +295,7 @@
       "evidence": [
         {
           "label": "Latest launch bundle route-surface gate evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-route-surface.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log"
         }
       ],
       "blockerIds": [],
@@ -398,7 +398,7 @@
       "evidence": [
         {
           "label": "Latest launch bundle route-surface gate evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-route-surface.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log"
         }
       ],
       "blockerIds": [],
@@ -422,15 +422,15 @@
       "evidence": [
         {
           "label": "Launch-status route evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-status-route.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-launch-status-route.log"
         },
         {
           "label": "Launch smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json"
         },
         {
           "label": "Launch smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke.log"
         }
       ],
       "blockerIds": [],
@@ -478,11 +478,11 @@
       "evidence": [
         {
           "label": "Latest launch bundle public org trust smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json"
         },
         {
           "label": "Latest launch bundle public org trust smoke evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke.log"
         }
       ],
       "blockerIds": [],
@@ -529,7 +529,7 @@
       "evidence": [
         {
           "label": "Repo-ready manual privacy validation evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-manual-privacy.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-manual-privacy.log"
         }
       ],
       "blockerIds": [],
@@ -552,7 +552,7 @@
       "evidence": [
         {
           "label": "Repo-ready workflow email privacy validation evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-workflow-email-privacy.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-workflow-email-privacy.log"
         }
       ],
       "blockerIds": [],
@@ -577,7 +577,7 @@
       "evidence": [
         {
           "label": "Latest launch bundle route-surface gate evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-route-surface.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log"
         }
       ],
       "blockerIds": [],
@@ -625,11 +625,11 @@
       "evidence": [
         {
           "label": "Generated Markdown report",
-          "path": ".artifacts/launch-validation-2026-05-19/final-launch-checklist-status.md"
+          "path": ".artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md"
         },
         {
           "label": "Generated JSON bundle",
-          "path": ".artifacts/launch-validation-2026-05-19/final-launch-checklist-status.json"
+          "path": ".artifacts/launch-validation-2026-05-20/final-launch-checklist-status.json"
         }
       ],
       "blockerIds": [],
@@ -818,7 +818,7 @@
       "evidence": [
         {
           "label": "Repo-ready internal admin surface validation evidence",
-          "path": ".artifacts/launch-validation-2026-05-19/repo-ready-internal-admin.log"
+          "path": ".artifacts/launch-validation-2026-05-20/repo-ready-internal-admin.log"
         }
       ],
       "blockerIds": [],
@@ -1255,7 +1255,7 @@
     "Retire this as current truth. Those non-launch integration routes are now removed from the active launch surface, and interview scheduling is manual-link only in the active MVP UI."
   ],
   "outputs": {
-    "markdownPath": ".artifacts/launch-validation-2026-05-19/final-launch-checklist-status.md",
-    "jsonPath": ".artifacts/launch-validation-2026-05-19/final-launch-checklist-status.json"
+    "markdownPath": ".artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md",
+    "jsonPath": ".artifacts/launch-validation-2026-05-20/final-launch-checklist-status.json"
   }
 }

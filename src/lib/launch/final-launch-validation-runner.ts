@@ -3,6 +3,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 
+import { getLaunchDateSlug } from '@/lib/launch/date-slug';
+
 export const FINAL_LAUNCH_VALIDATION_SCHEMA_VERSION = 1;
 
 export type FinalLaunchGateStatus = 'PASS' | 'FAIL' | 'UNVERIFIED' | 'NOT APPLICABLE';
@@ -121,12 +123,7 @@ function nodeCommand(args: string[], timeoutMs?: number, env?: Record<string, st
 }
 
 function getDateSlug(now: Date) {
-  return new Intl.DateTimeFormat('en-CA', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: process.env.TZ || 'UTC',
-  }).format(now);
+  return getLaunchDateSlug(now);
 }
 
 function hasAnyEnv(env: NodeJS.ProcessEnv, names: readonly string[]) {

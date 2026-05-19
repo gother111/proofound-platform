@@ -5,27 +5,19 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
 
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
-
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
-
- ✓ tests/lib/uploads-privacy.test.ts  (14 tests) 6ms
- ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 47ms
- ✓ tests/api/org-match-review-route.test.ts  (18 tests) 33ms
+ ✓ tests/lib/uploads-privacy.test.ts  (14 tests) 7ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 46ms
+ ✓ tests/api/org-match-review-route.test.ts  (18 tests) 30ms
 
  Test Files  3 passed (3)
       Tests  38 passed (38)
-   Start at  22:16:16
-   Duration  1.24s (transform 316ms, setup 383ms, collect 640ms, tests 86ms, environment 664ms, prepare 142ms)
-
-
-(node:85207) Warning: `--localstorage-file` was provided without a valid path
-(Use `node --trace-warnings ...` to show where the warning was created)
-(node:85207) Warning: `--localstorage-file` was provided without a valid path
-(Use `node --trace-warnings ...` to show where the warning was created)
-(node:85207) Warning: `--localstorage-file` was provided without a valid path
-(Use `node --trace-warnings ...` to show where the warning was created)
+   Start at  00:07:48
+   Duration  1.13s (transform 233ms, setup 307ms, collect 615ms, tests 83ms, environment 611ms, prepare 120ms)

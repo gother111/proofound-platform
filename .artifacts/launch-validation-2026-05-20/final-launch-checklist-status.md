@@ -1,12 +1,12 @@
 # Proofound Final Launch Checklist Status
 
-Generated: 2026-05-19T22:08:19.153Z
+Generated: 2026-05-19T22:13:02.762Z
 Scope: `repo`
 Workspace: `/Users/yuriibakurov/proofound`
 Git: `master` @ `a146729761ece275fb32aeb595f13f3018865071`
 Verdict: `READY`
-Live base URL: `http://127.0.0.1:54307`
-Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
+Live base URL: `http://127.0.0.1:54419`
+Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 
 ## Summary
 
@@ -43,13 +43,13 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
   - Evidence: Launch runbook: `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
 - [PASS] Private context scaffolding works for work / volunteering / education
   - Summary: Private work, education, and volunteering context scaffolding tests passed.
-  - Evidence: Repo-ready private context validation evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-private-context.log`
+  - Evidence: Repo-ready private context validation evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-private-context.log`
 - [PASS] Public Page is calm, safe, and separate from review reveal
   - Summary: Fresh public portfolio tests, blind-review coverage, and consented reveal evidence all point to a privacy-safe Public Page that stays separate from reveal.
-  - Evidence: Repo-ready public portfolio gate: `.artifacts/launch-validation-2026-05-19/repo-ready-public-portfolio.log`; Verification checklist: blind review: `docs/verification-checklist.md`; Verification checklist: consented reveal: `docs/verification-checklist.md`
+  - Evidence: Repo-ready public portfolio gate: `.artifacts/launch-validation-2026-05-20/repo-ready-public-portfolio.log`; Verification checklist: blind review: `docs/verification-checklist.md`; Verification checklist: consented reveal: `docs/verification-checklist.md`
 - [PASS] Org trust page is minimal and live
   - Summary: Public org trust smoke scenario passed in the fresh launch smoke artifact.
-  - Evidence: Latest launch bundle org trust smoke evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json`; Latest launch bundle org trust smoke evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke.log`
+  - Evidence: Latest launch bundle org trust smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json`; Latest launch bundle org trust smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke.log`
 - [PASS] Assignment builder enforces why / work / proof / constraints
   - Summary: Assignment publish tests assert hard publish blocks for missing work summary, proof expectations, and constraints, with business-value coverage in the route fixture.
   - Evidence: Assignment publish route test: `tests/api/assignments-publish-route.test.ts` (Assertions include work_summary_required, proof_expectations_required, and constraints_required.)
@@ -64,13 +64,13 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
 
 - [PASS] `npm run build` passes cleanly under launch Node version
   - Summary: `npm run build` passed under the launch Node/runtime configuration.
-  - Evidence: Latest launch bundle prod build evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-build.log`
+  - Evidence: Latest launch bundle prod build evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-build.log`
 - [PASS] `next start` is stable
   - Summary: `npm run start` booted successfully and `/api/health` returned ok.
-  - Evidence: Latest launch bundle prod boot evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-prod-start.log`; Latest launch bundle prod boot evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-prod-health.json`
+  - Evidence: Latest launch bundle prod boot evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-prod-start.log`; Latest launch bundle prod boot evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-prod-health.json`
 - [PASS] Route surface is reduced to the launch allowlist
   - Summary: Launch route and page inventory tests passed against the current repo state.
-  - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-route-surface.log`
+  - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log`
 - [PASS] Canonical 3-role model is true across code, DB, and API
   - Summary: tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.
   - Evidence: Current-state reality check: canonical role and RLS truth: `.artifacts/proofound-current-state-reality-check.md` (tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.)
@@ -82,10 +82,10 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
   - Evidence: Upload privacy helpers test: `tests/lib/uploads-privacy.test.ts` (Covers sanitized filenames, metadata review flags, and generic display names.); Upload lifecycle queue test: `tests/lib/uploads-lifecycle-queue.test.ts` (Asserts correction_revocation queue metadata includes filenameReviewLabel and reviewReasons.)
 - [PASS] Legacy decision and non-MVP route drift are removed or hard-gated
   - Summary: Launch route and page inventory tests passed against the current repo state.
-  - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-route-surface.log`
+  - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log`
 - [PASS] Launch-status and smoke-artifact logic run on fresh evidence
   - Summary: Repo-ready launch-status route tests and smoke refresh both passed on fresh local evidence.
-  - Evidence: Launch-status route evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-launch-status-route.log`; Launch smoke evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json`; Launch smoke evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke.log`
+  - Evidence: Launch-status route evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-status-route.log`; Launch smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json`; Launch smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke.log`
 
 ## QA
 
@@ -94,25 +94,25 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
   - Evidence: Current-state reality check: review -> intro -> reveal -> interview -> decision -> hire -> engagement verification: `.artifacts/proofound-current-state-reality-check.md` (Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario.)
 - [PASS] Public-org trust smoke passes
   - Summary: Public org trust smoke scenario passed in the fresh launch smoke artifact.
-  - Evidence: Latest launch bundle public org trust smoke evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke-report.json`; Latest launch bundle public org trust smoke evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-launch-smoke.log`
+  - Evidence: Latest launch bundle public org trust smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json`; Latest launch bundle public org trust smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke.log`
 - [PASS] RLS/privacy tests pass against actual DB state
   - Summary: tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.
   - Evidence: Current-state reality check: canonical role and RLS truth: `.artifacts/proofound-current-state-reality-check.md` (tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.)
 - [PASS] Manual privacy leak sweep passes
   - Summary: Privacy-sensitive review, uploads, and launch archive protection tests passed.
-  - Evidence: Repo-ready manual privacy validation evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-manual-privacy.log`
+  - Evidence: Repo-ready manual privacy validation evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-manual-privacy.log`
 - [PASS] Workflow email privacy sweep passes
   - Summary: Workflow email privacy tests passed for masked and pre-reveal flows.
-  - Evidence: Repo-ready workflow email privacy validation evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-workflow-email-privacy.log`
+  - Evidence: Repo-ready workflow email privacy validation evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-workflow-email-privacy.log`
 - [PASS] Archived-route and launch-surface tests pass
   - Summary: Launch route and page inventory tests passed against the current repo state.
-  - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-route-surface.log`
+  - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log`
 - [PASS] Assignment publish smoke passes
   - Summary: PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict passed 7/7, including the narrowed org assignment lifecycle checks.
   - Evidence: Current-state reality check: assignment create / edit / publish: `.artifacts/proofound-current-state-reality-check.md` (PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict passed 7/7, including the narrowed org assignment lifecycle checks.)
 - [PASS] Final evidence packet is assembled and dated
   - Summary: This checklist run generated a dated Markdown report and JSON bundle.
-  - Evidence: Generated Markdown report: `.artifacts/launch-validation-2026-05-19/final-launch-checklist-status.md`; Generated JSON bundle: `.artifacts/launch-validation-2026-05-19/final-launch-checklist-status.json`
+  - Evidence: Generated Markdown report: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`; Generated JSON bundle: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.json`
 
 ## Ops
 
@@ -139,7 +139,7 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
   - Evidence: Launch restore drill: `docs/launch-restore-drill.md`
 - [PASS] Internal ops/admin surfaces are protected and usable
   - Summary: Internal admin surface tests passed for route protection, queue APIs, and dashboard links.
-  - Evidence: Repo-ready internal admin surface validation evidence: `.artifacts/launch-validation-2026-05-19/repo-ready-internal-admin.log`
+  - Evidence: Repo-ready internal admin surface validation evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-internal-admin.log`
 
 ## Founder / GTM
 

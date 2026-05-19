@@ -1,0 +1,23 @@
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/ui/profile-dialogs-edit-routing.test.tsx tests/ui/education-form-skill-picker.test.tsx tests/actions/onboarding-private-context-scaffolding.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+ ✓ tests/ui/profile-dialogs-edit-routing.test.tsx  (1 test) 53ms
+ ✓ tests/ui/education-form-skill-picker.test.tsx  (2 tests) 105ms
+ ✓ tests/actions/onboarding-private-context-scaffolding.test.ts  (3 tests) 6ms
+
+ Test Files  3 passed (3)
+      Tests  6 passed (6)
+   Start at  00:12:29
+   Duration  1.13s (transform 241ms, setup 317ms, collect 647ms, tests 164ms, environment 616ms, prepare 125ms)

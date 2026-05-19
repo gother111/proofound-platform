@@ -1514,3 +1514,10 @@ Non-fatal test noise:
 - Browser verified logged-out requests to `/app/i/matching` and `/app/o/test-org/interviews` route to `/login`, preserving protected app access.
 - Browser viewport override verified mobile `390x844` behavior for `/login`, `/signup`, and `/portfolio/demo`; all retained one primary heading, no horizontal overflow, and no console errors.
 - Browser screenshot capture timed out in this Browser backend session, so this pass records Browser DOM, URL, heading, CTA, overflow, and console-log evidence; earlier saved Browser screenshots remain under `.artifacts/mvp-surface-sweep-2026-05-19/browser-evidence/`.
+
+## Continuation - Launch Evidence Date Boundary
+
+- Found the launch checklist was generating after midnight in the Proofound operating timezone while still writing to `launch-validation-2026-05-19` when the shell `TZ` variable was unset.
+- Centralized launch artifact date slugs on the Proofound launch timezone, defaulting to `Europe/Stockholm` with `PROOFOUND_LAUNCH_TIME_ZONE` / `TZ` overrides.
+- Added regression coverage for the May 20 Stockholm boundary and reran the repo launch checklist under Node 24 with localhost binding allowed.
+- New current repo evidence is `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`: repo scope `READY`, `36` pass, `0` fail, `0` blocked, and `4` external prerequisites still unverified.
