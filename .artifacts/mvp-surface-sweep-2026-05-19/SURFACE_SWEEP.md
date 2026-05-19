@@ -1138,3 +1138,9 @@ Non-fatal test noise:
 - Found `docs/full-launch-signoff-memo-template.md`, `docs/qa/bugs.md`, and `docs/qa/summary.md` still carrying stale launch/QA posture: the signoff template missed target-specific backup/restore/perf-status evidence, the bug log still listed login debug ingest as open, and the QA summary retained old Node 20 historical evidence without a clear boundary.
 - Updated the signoff template to require current target evidence: database target, deployment SHA evidence, authenticated launch-status/perf-status, `/api/assignments` latency, route-surface/archive policy, Browser desktop/mobile evidence, public-health minimization, and privacy/no-leak checks.
 - Refreshed QA docs so B-008 is fixed by the optional env-driven debug ingest sink, QA coverage names the current launch suites and Browser evidence expectations, and historical stabilization evidence cannot be mistaken for current launch proof.
+
+## Continuation - Historical Project Flow And PR Triage Reclassification
+
+- Found `project/MVP_FLOW_MATRIX_2026-02-12.md` still classified active while it preserved an old strict-flow matrix with a superseded dual-provider launch-blocking policy and stale February flow verdicts.
+- Found `project/PR_TRIAGE_2026-02.md` still classified active while it preserved February PR queue and merge-state claims that cannot be current without live GitHub inspection.
+- Reclassified both files as historical snapshots, pointed current flow evidence to the locked MVP stack, verification checklist, launch master checklist, testing strategy, and current sweep artifact, and updated guard coverage so old flow/PR snapshots cannot be mistaken for current launch truth.

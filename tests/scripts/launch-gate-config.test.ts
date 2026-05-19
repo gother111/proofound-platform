@@ -1534,6 +1534,43 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps February project flow and PR triage snapshots historical', () => {
+    const flowMatrix = fs.readFileSync(
+      path.join(repoRoot, 'project/MVP_FLOW_MATRIX_2026-02-12.md'),
+      'utf8'
+    );
+    const prTriage = fs.readFileSync(path.join(repoRoot, 'project/PR_TRIAGE_2026-02.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    for (const content of [flowMatrix, prTriage]) {
+      expect(content).toContain('Doc Class: `historical`');
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).not.toContain('Doc Class: `active`');
+    }
+
+    expect(flowMatrix).toMatch(/Do\s+not\s+use it as current MVP flow truth/);
+    expect(flowMatrix).toContain('manual-link first');
+    expect(flowMatrix).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true');
+    expect(flowMatrix).toContain('Browser desktop/mobile evidence');
+    expect(flowMatrix).not.toContain('both Zoom + Google connected');
+    expect(flowMatrix).not.toContain('both Zoom and Google connected');
+    expect(flowMatrix).not.toContain('MVP 100% readiness is **not yet reached**');
+
+    expect(prTriage).toMatch(/Do\s+not\s+use it as current\s+GitHub PR state/);
+    expect(prTriage).toContain(
+      'current GitHub PR state only when the task explicitly requires PR work'
+    );
+    expect(prTriage).not.toContain('Current Active Queue');
+    expect(prTriage).not.toContain('Merge state');
+
+    expect(docsRegistry).toContain(
+      '| `project/MVP_FLOW_MATRIX_2026-02-12.md`                                                                 | `historical`     | `project`     | `archive`           | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `project/PR_TRIAGE_2026-02.md`                                                                          | `historical`     | `project`     | `archive`           | `2026-05-19`'
+    );
+  });
+
   it('keeps launch operations guidance aligned with the current MVP corridor', () => {
     const launchOperations = fs.readFileSync(
       path.join(repoRoot, 'docs/launch-operations-mvp.md'),
