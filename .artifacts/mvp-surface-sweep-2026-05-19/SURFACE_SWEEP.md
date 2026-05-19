@@ -1199,3 +1199,10 @@ Non-fatal test noise:
 - Updated `.artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke-full.json`; the artifact now has `overallStatus: pass`, target `http://localhost:33183`, and generation time `2026-05-19T17:00:11.542Z`.
 - A read-only `go:no-go` attempt with direct smoke and synthetics disabled first failed against the previous stale artifact, then could not complete against `33183` because a temporary clean dev server did not stay healthy for protected status endpoint checks. This leaves final local go/no-go status evidence open while improving the full launch smoke evidence.
 - No database backup, restore verification, production deployment, billing, auth, permission, or infra target was touched.
+
+## Continuation - Final Gate Command Alignment
+
+- Found `verification.md` still documenting the launch smoke artifact as `BASE_URL=http://localhost:3000 npm run test:launch:smoke` while the surrounding final perf, monitor, launch-status, and go/no-go gates already required `<production-candidate-url>`.
+- Updated `verification.md` so launch smoke evidence uses `BASE_URL=<production-candidate-url>` for production signoff, preserving local smoke as useful parity evidence but not final launch proof.
+- Updated `Documentation.md` and `metrics.md` labels from local-server gate parity to final production-candidate gate parity where the commands already target `<production-candidate-url>`.
+- Strengthened `tests/scripts/launch-gate-config.test.ts` so active launch evidence docs cannot reintroduce localhost-backed final `test:launch:smoke`, perf, monitor, launch-status, launch-validate, or go/no-go commands.

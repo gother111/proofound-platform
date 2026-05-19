@@ -1016,12 +1016,13 @@ describe('launch gate package configuration', () => {
       'docs/mvp-launch-master-checklist.md',
     ];
     const localhostFinalGate =
-      /BASE_URL=http:\/\/localhost:3000[^\n`]*(?:perf:budgets|monitor:launch|launch:status|launch:validate|go:no-go)/;
+      /BASE_URL=http:\/\/localhost:3000[^\n`]*(?:test:launch:smoke|perf:budgets|monitor:launch|launch:status|launch:validate|go:no-go)/;
 
     for (const docPath of finalGateDocs) {
       const content = fs.readFileSync(path.join(repoRoot, docPath), 'utf8');
       expect(content).toContain('BASE_URL=<production-candidate-url>');
       expect(content).not.toMatch(localhostFinalGate);
+      expect(content).not.toContain('Gate parity (with local server at `http://localhost:3000`)');
     }
   });
 

@@ -825,7 +825,7 @@ How to verify:
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`
-- Gate parity (with local server at `http://localhost:3000`):
+- Final launch gate parity (against the intended production-candidate URL):
   - `BASE_URL=<production-candidate-url> npm run perf:budgets`
   - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go`
 - Perf-status source validation:
