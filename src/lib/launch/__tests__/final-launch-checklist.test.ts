@@ -40,6 +40,7 @@ async function createWorkspaceFixture(
 ## Stale Claims To Retire Now
 
 - Older route counts are stale.
+  - Retire this as current truth. Old explanatory route-count details should not become a separate stale claim.
 `
   );
 
@@ -503,6 +504,10 @@ describe('final launch checklist pipeline', () => {
     expect(buildItem?.status).toBe('FAIL');
     expect(buildItem?.summary).toContain('PageNotFoundError');
     expect(buildItem?.retiredStaleClaims.length).toBeGreaterThan(0);
+    expect(report.retiredStaleClaims).toContain('Older route counts are stale.');
+    expect(report.retiredStaleClaims).not.toContain(
+      'Retire this as current truth. Old explanatory route-count details should not become a separate stale claim.'
+    );
   });
 
   it('propagates blocker dependencies to the go/no-go signoff row', async () => {

@@ -1537,3 +1537,10 @@ Non-fatal test noise:
 - Browser screenshot capture still timed out in this Browser backend session, so this pass records Browser navigation, DOM, title, heading, action, `noindex`, and overflow evidence rather than image evidence.
 - Ran `npm run db:drift-check`: passed.
 - Ran `npm run db:audit:migrations`: sandbox DNS failed, then the network-enabled audit reached Supabase and reported `126` local migration files and `126` DB migration rows. Current ledger mismatch is expected until the new local interview-platform migration is applied: `20260520103000_align_interview_platform_launch_values.sql` is present locally but not applied, and the DB still has historical `20260317224741_canonicalize_org_role_constraints` without a matching local file.
+
+## Continuation - Final Checklist Stale-Claim Parser Cleanup
+
+- Refreshed the May 20 repo launch checklist at current HEAD `4086cf7e`; repo scope remains `READY` with `36` pass, `0` fail, `0` blocked, and `4` external prerequisites still unverified.
+- Found the regenerated `Retired Stale Claims` section was treating indented explanatory bullets as standalone stale claims. That made an old route-count explanation (`138` API handlers / `50` pages) appear beside current route evidence that already says `140` API handlers / `51` pages.
+- Fixed the final checklist parser so explicit stale-claim sections collect only top-level bullets. The generated checklist now lists the stale claims themselves without carrying stale explanatory details forward.
+- Added focused regression coverage in `src/lib/launch/__tests__/final-launch-checklist.test.ts` and reran the final checklist so `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md/json` now reflect the parser fix and current HEAD.

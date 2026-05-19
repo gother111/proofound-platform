@@ -5,19 +5,19 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
-
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
 
- ✓ tests/lib/public-portfolio-projection.test.ts  (15 tests) 41ms
- ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 96ms
- ✓ tests/ui/public-portfolio-page.test.tsx  (9 tests) 203ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+ ✓ tests/lib/public-portfolio-projection.test.ts  (15 tests) 28ms
+ ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 88ms
+ ✓ tests/ui/public-portfolio-page.test.tsx  (9 tests) 189ms
 
  Test Files  3 passed (3)
       Tests  26 passed (26)
-   Start at  00:32:08
-   Duration  1.11s (transform 274ms, setup 336ms, collect 694ms, tests 340ms, environment 624ms, prepare 134ms)
+   Start at  01:01:24
+   Duration  1.05s (transform 267ms, setup 317ms, collect 683ms, tests 305ms, environment 630ms, prepare 120ms)

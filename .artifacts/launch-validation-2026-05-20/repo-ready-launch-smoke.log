@@ -1,7 +1,7 @@
 > proofound@0.1.0 test:launch:smoke
-> node --import tsx ./scripts/launch-smoke-runner.ts --scope repo --base-url http://127.0.0.1:54860 --artifact /Users/yuriibakurov/proofound/.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json
+> node --import tsx ./scripts/launch-smoke-runner.ts --scope repo --base-url http://127.0.0.1:55731 --artifact /Users/yuriibakurov/proofound/.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json
 
-Running repo launch smoke checks against http://127.0.0.1:54860 (local)
+Running repo launch smoke checks against http://127.0.0.1:55731 (local)
 AI assistant smoke state: disabled_local_fallback_verified
 PASS public_individual_portfolio_visible
 PASS proof_creation_case

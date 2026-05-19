@@ -5,11 +5,11 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
 
- ✓ tests/lib/workflow-email-privacy.test.ts  (11 tests) 26ms
+ ✓ tests/lib/workflow-email-privacy.test.ts  (11 tests) 25ms
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  00:32:11
-   Duration  1.12s (transform 151ms, setup 98ms, collect 424ms, tests 26ms, environment 197ms, prepare 39ms)
+   Start at  01:01:28
+   Duration  1.07s (transform 146ms, setup 95ms, collect 423ms, tests 25ms, environment 195ms, prepare 42ms)

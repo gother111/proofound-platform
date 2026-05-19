@@ -577,11 +577,11 @@ function extractRetiredStaleClaims(markdown: string | null) {
     if (inExplicitSection && trimmed.startsWith('## ')) {
       inExplicitSection = false;
     }
-    if (inExplicitSection && trimmed.startsWith('- ')) {
+    if (inExplicitSection && line.startsWith('- ')) {
       collected.push(trimmed.slice(2).trim());
       continue;
     }
-    if (!inExplicitSection && trimmed.startsWith('- ') && /\bstale\b/i.test(trimmed)) {
+    if (!inExplicitSection && line.startsWith('- ') && /\bstale\b/i.test(trimmed)) {
       collected.push(trimmed.slice(2).trim());
     }
   }

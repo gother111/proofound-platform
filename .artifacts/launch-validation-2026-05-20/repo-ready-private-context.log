@@ -5,19 +5,19 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
 
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
-
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
-
- ✓ tests/ui/profile-dialogs-edit-routing.test.tsx  (1 test) 51ms
- ✓ tests/ui/education-form-skill-picker.test.tsx  (2 tests) 100ms
- ✓ tests/actions/onboarding-private-context-scaffolding.test.ts  (3 tests) 5ms
+ ✓ tests/ui/profile-dialogs-edit-routing.test.tsx  (1 test) 52ms
+ ✓ tests/ui/education-form-skill-picker.test.tsx  (2 tests) 102ms
+ ✓ tests/actions/onboarding-private-context-scaffolding.test.ts  (3 tests) 6ms
 
  Test Files  3 passed (3)
       Tests  6 passed (6)
-   Start at  00:32:09
-   Duration  1.15s (transform 245ms, setup 319ms, collect 648ms, tests 156ms, environment 621ms, prepare 126ms)
+   Start at  01:01:26
+   Duration  1.14s (transform 245ms, setup 318ms, collect 656ms, tests 160ms, environment 598ms, prepare 125ms)

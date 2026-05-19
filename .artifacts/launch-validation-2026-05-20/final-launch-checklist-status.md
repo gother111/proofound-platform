@@ -1,11 +1,11 @@
 # Proofound Final Launch Checklist Status
 
-Generated: 2026-05-19T22:32:44.621Z
+Generated: 2026-05-19T23:01:59.055Z
 Scope: `repo`
 Workspace: `/Users/yuriibakurov/proofound`
-Git: `master` @ `e36eef9e039113e9bae53d4e527569e5db635fc7`
+Git: `master` @ `4086cf7e7350927399205327e736268d3d739011`
 Verdict: `READY`
-Live base URL: `http://127.0.0.1:54860`
+Live base URL: `http://127.0.0.1:55731`
 Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 
 ## Summary
@@ -171,14 +171,8 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 ## Retired Stale Claims
 
 - `The persisted smoke artifact is stale and still blocking launch readiness.`
-- Retire this as current truth. The smoke artifact was refreshed at `2026-03-25T08:00:27.400Z` and expires at `2026-03-25T09:00:27.400Z`.
 - `No safe strict org-corridor rerun was attempted in this block.`
-- Retire this as current truth. Fresh isolated and full org strict reruns both passed in prod mode.
 - `The active route surface is still 187 APIs and 91 pages.`
-- Retire this as current truth. Fresh current-state counts are `138` APIs and `50` pages.
 - `The org settings surface remains a live gate page.`
-- Retire this as current truth. `/app/o/[slug]/settings` is now archived and returns the launch-archive not-found copy.
 - `The contracts API remains a live launch surface.`
-- Retire this as current truth. `/api/contracts` is archived and returns `410`.
 - `Google, LinkedIn, and video integrations remain live launch compatibility flows.`
-- Retire this as current truth. Those non-launch integration routes are now removed from the active launch surface, and interview scheduling is manual-link only in the active MVP UI.
