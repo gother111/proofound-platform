@@ -453,8 +453,9 @@ Interaction thesis: every public or dashboard action should either route to an a
 
 - Confirmed `/api/expertise/cv-import/wizard-*` routes are archived compatibility handlers and active launch coverage already proves their `410` response behavior.
 - Moved the old wizard extractor, wizard quality, and Python wizard proxy behavior suites from active default test discovery to `tests/archive/non_mvp_cv_import_wizard/`.
+- Moved the clearly orphaned retired wizard implementation modules out of active `src/lib/expertise` and into `src/archive/non_launch_cv_import_wizard/`: `cv-import-wizard-apply.ts`, `cv-import-wizard-extractor.ts`, and `python-cv-proxy.ts`.
 - Kept the archived wizard quality suite intentionally runnable through `npm run test:slow:non-launch`, while default release signal stays focused on Start from CV, Proof Artifact Text Extraction, and direct archived-handler behavior.
-- Added archive README, docs registry entry, and launch-gate coverage so these old wizard tests do not drift back into active MVP evidence.
+- Added archive READMEs, docs registry entries, and launch-gate coverage so these old wizard tests and implementation files do not drift back into active MVP evidence.
 
 ## Browser Evidence
 

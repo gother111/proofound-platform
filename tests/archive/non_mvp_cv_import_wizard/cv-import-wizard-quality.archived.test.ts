@@ -59,7 +59,7 @@ describe('cv-import wizard quality', () => {
 
   it('extracts multi-entity suggestions with evidence from diverse CV inputs', async () => {
     const { suggestWizardForDocuments } = await import(
-      '@/lib/expertise/cv-import-wizard-extractor'
+      '@/archive/non_launch_cv_import_wizard/lib/expertise/cv-import-wizard-extractor'
     );
 
     const inputs = [
@@ -151,7 +151,7 @@ describe('cv-import wizard quality', () => {
 
   it('returns deterministic wizard extraction for repeated identical input', async () => {
     const { suggestWizardForDocuments } = await import(
-      '@/lib/expertise/cv-import-wizard-extractor'
+      '@/archive/non_launch_cv_import_wizard/lib/expertise/cv-import-wizard-extractor'
     );
 
     const request = {

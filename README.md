@@ -158,16 +158,9 @@ SENTRY_DEBUG=false
 
 # Cron jobs
 CRON_SECRET=your-cron-bearer-token
-PYTHON_INTERNAL_SERVICE_SECRET=your-python-internal-secret
-
-# Optional Python compute routing
-PYTHON_CV_IMPORT_BASE_URL=http://127.0.0.1:3000
-PYTHON_INTERNAL_JOBS_ENABLED=true
-PYTHON_INTERNAL_WORKER_BATCH_SIZE=10
-PYTHON_INTERNAL_WORKER_CONCURRENCY=2
-PYTHON_INTERNAL_WORKER_LEASE_SECONDS=180
-PYTHON_INTERNAL_MAX_ATTEMPTS=3
 ```
+
+Archived Python document-intelligence helper variables are documented in `docs/ENV_VARIABLES.md`; they are not default MVP launch requirements.
 
 > **Heads up:** Once this works locally, open your Vercel project, go to **Settings → Environment Variables**, and add each of the keys above (Production, Preview, and Development tabs). For `DATABASE_URL`, copy the Supabase value from **Project Settings → Database → Connection string → Node.js**.
 
@@ -322,26 +315,27 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - `/api/cron/sla-enforcement` — 08:00 (expire stale matches and flag overdue interview decisions)
   - `/api/cron/python-internal-worker` — archived/non-MVP compatibility route; not scheduled
   - `/api/cron/cv-import-temp-cleanup` — removed from active launch infrastructure; not scheduled
-- Env requirements:
+- Active launch env requirements:
   - `CRON_SECRET` (for inbound cron calls)
   - `CRON_API_KEY` (optional, for syncing cron-job.org jobs from the repo)
-  - `PYTHON_INTERNAL_SERVICE_SECRET` (preferred secret for internal TypeScript-to-Python calls; falls back to `INTERNAL_API_SECRET` or `CRON_SECRET`)
-  - `PYTHON_CV_IMPORT_BASE_URL` (optional base URL when document intelligence moves out of the monolith into a separate Python service)
   - `SUPABASE_SERVICE_ROLE_KEY` (required for queue worker + matching internals)
   - `MATCHING_REFRESH_QUEUE_ENABLED` (default `true`)
   - `MATCHING_REFRESH_WORKER_BATCH_SIZE` (default `100`)
   - `MATCHING_REFRESH_WORKER_CONCURRENCY` (default `4`)
   - `MATCHING_REFRESH_MAX_ATTEMPTS` (default `3`)
-  - `PYTHON_INTERNAL_JOBS_ENABLED` (default `true`)
-  - `PYTHON_INTERNAL_WORKER_BATCH_SIZE` (default `10`)
-  - `PYTHON_INTERNAL_WORKER_CONCURRENCY` (default `2`)
-  - `PYTHON_INTERNAL_WORKER_LEASE_SECONDS` (default `180`)
-  - `PYTHON_INTERNAL_MAX_ATTEMPTS` (default `3`)
   - `MATCHING_TWO_STAGE_ENABLED` (default `true`)
   - `MATCHING_NEAR_SCAN_LIMIT` (default `300`)
-  - `CV_IMPORT_ENGINE_MODE` (default `auto`)
-  - `CV_IMPORT_TEMP_TTL_HOURS` (default `24`, controls private temp CV upload retention)
   - `PERF_API_P95_BUDGET_MS` (default `1500`)
+- Archived compatibility/helper env, not default launch requirements:
+  - `PYTHON_INTERNAL_SERVICE_SECRET`
+  - `PYTHON_CV_IMPORT_BASE_URL`
+  - `PYTHON_INTERNAL_JOBS_ENABLED`
+  - `PYTHON_INTERNAL_WORKER_BATCH_SIZE`
+  - `PYTHON_INTERNAL_WORKER_CONCURRENCY`
+  - `PYTHON_INTERNAL_WORKER_LEASE_SECONDS`
+  - `PYTHON_INTERNAL_MAX_ATTEMPTS`
+  - `CV_IMPORT_ENGINE_MODE`
+  - `CV_IMPORT_TEMP_TTL_HOURS`
 - Observability routes managed through cron-job.org:
   - `/api/cron/performance-check` — daily at 06:00 Europe/Stockholm
   - `/api/cron/health-check` — every 3 hours (no auth required by the route)

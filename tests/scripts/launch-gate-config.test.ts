@@ -441,6 +441,28 @@ describe('launch gate package configuration', () => {
     }
   });
 
+  it('keeps retired CV import wizard implementation modules archived', () => {
+    const retiredActiveSourcePaths = [
+      'src/lib/expertise/cv-import-wizard-apply.ts',
+      'src/lib/expertise/cv-import-wizard-extractor.ts',
+      'src/lib/expertise/python-cv-proxy.ts',
+    ];
+    const archivedSourcePaths = [
+      'src/archive/non_launch_cv_import_wizard/README.md',
+      'src/archive/non_launch_cv_import_wizard/lib/expertise/cv-import-wizard-apply.ts',
+      'src/archive/non_launch_cv_import_wizard/lib/expertise/cv-import-wizard-extractor.ts',
+      'src/archive/non_launch_cv_import_wizard/lib/expertise/python-cv-proxy.ts',
+    ];
+
+    for (const retiredPath of retiredActiveSourcePaths) {
+      expect(fs.existsSync(path.join(repoRoot, retiredPath))).toBe(false);
+    }
+
+    for (const archivedPath of archivedSourcePaths) {
+      expect(fs.existsSync(path.join(repoRoot, archivedPath))).toBe(true);
+    }
+  });
+
   it('keeps the retired Expertise Atlas UI island archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'src/app/app/i/expertise'))).toBe(false);
     expect(
@@ -704,6 +726,11 @@ describe('launch gate package configuration', () => {
 
     expect(readme).toContain('Launch-candidate scaffold');
     expect(readme).toContain('Final launch readiness still depends on the target-specific gates');
+    expect(readme).toContain('Active launch env requirements');
+    expect(readme).toContain('Archived compatibility/helper env, not default launch requirements');
+    expect(readme).toContain(
+      'Archived Python document-intelligence helper variables are documented in `docs/ENV_VARIABLES.md`; they are not default MVP launch requirements.'
+    );
     expect(readme).not.toContain('Production-ready scaffold');
 
     expect(userFlows).toContain('historical reference');

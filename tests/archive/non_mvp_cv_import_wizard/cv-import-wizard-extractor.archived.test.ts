@@ -58,7 +58,7 @@ describe('cv-import wizard extractor', () => {
 
   it('extracts wizard entities with evidence and maps languages to CEFR levels', async () => {
     const { suggestWizardForDocuments } = await import(
-      '@/lib/expertise/cv-import-wizard-extractor'
+      '@/archive/non_launch_cv_import_wizard/lib/expertise/cv-import-wizard-extractor'
     );
 
     const response = await suggestWizardForDocuments(
@@ -128,7 +128,7 @@ describe('cv-import wizard extractor', () => {
 
   it('extracts compact work headers and split inline learning entries with mixed date formats', async () => {
     const { suggestWizardForDocuments } = await import(
-      '@/lib/expertise/cv-import-wizard-extractor'
+      '@/archive/non_launch_cv_import_wizard/lib/expertise/cv-import-wizard-extractor'
     );
 
     const response = await suggestWizardForDocuments(
@@ -184,7 +184,7 @@ describe('cv-import wizard extractor', () => {
 
   it('rejects non-cv context for wizard suggest route', async () => {
     const { suggestWizardForDocuments } = await import(
-      '@/lib/expertise/cv-import-wizard-extractor'
+      '@/archive/non_launch_cv_import_wizard/lib/expertise/cv-import-wizard-extractor'
     );
 
     await expect(
@@ -212,7 +212,7 @@ describe('cv-import wizard extractor', () => {
     mockSuggestSkillsForDocuments.mockRejectedValueOnce(new Error('relation "skills_taxonomy"'));
 
     const { suggestWizardForDocuments } = await import(
-      '@/lib/expertise/cv-import-wizard-extractor'
+      '@/archive/non_launch_cv_import_wizard/lib/expertise/cv-import-wizard-extractor'
     );
 
     const response = await suggestWizardForDocuments(
@@ -266,7 +266,7 @@ describe('cv-import wizard extractor', () => {
     );
 
     const { suggestWizardForDocuments } = await import(
-      '@/lib/expertise/cv-import-wizard-extractor'
+      '@/archive/non_launch_cv_import_wizard/lib/expertise/cv-import-wizard-extractor'
     );
 
     await expect(
