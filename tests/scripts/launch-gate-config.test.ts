@@ -2424,6 +2424,15 @@ describe('launch gate package configuration', () => {
   it('keeps retired Zoom and scaffolded video provider wrappers archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'src/lib/integrations/zoom.ts'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'src/lib/video'))).toBe(false);
+    expect(fs.existsSync(path.join(repoRoot, 'src/components/interviews/InterviewCard.tsx'))).toBe(
+      false
+    );
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/components/interviews/InterviewConfirmation.tsx'))
+    ).toBe(false);
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/components/interviews/ScheduleInterviewDialog.tsx'))
+    ).toBe(false);
     expect(
       fs.existsSync(
         path.join(

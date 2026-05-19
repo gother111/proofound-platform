@@ -153,7 +153,7 @@ export default function OrganizationInterviewsPage() {
   };
 
   const meetingPlatformLabel = (platform: string | null | undefined) => {
-    if (platform === 'zoom') return 'Manual (Zoom)';
+    if (platform === 'zoom') return 'Manual link';
     return internalValueLabel(platform);
   };
 
