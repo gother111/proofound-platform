@@ -1373,3 +1373,9 @@ Non-fatal test noise:
 - Found `INTEGRATION_TEST_PLAN.md` still saying `/api/mobile/v1/*` bootstrap and device-token routes remain compatible, contradicting the current route policy that archives `/api/mobile/*` for the locked MVP.
 - Replaced the active-looking mobile contract section with an archived mobile boundary: mobile docs remain post-MVP reference only, and any future mobile reactivation must include an approved route-surface change plus focused contract tests.
 - Added launch-gate coverage so the integration plan cannot quietly re-promote `/api/mobile/v1/*` compatibility as current launch evidence.
+
+## Continuation - Legacy PRD Mirror Authority Boundary
+
+- Found `Proofound_PRD_MVP.md` still listing the preserved Project Specification and old technical/runbook files first in its reading order, despite the current AGENTS authority stack putting the locked MVP source of truth and aligned PRD/technical/runbook/GTM stack first.
+- Refreshed `Proofound_PRD_MVP.md` and `PRD_for_a_web_platform_MVP.md` as reference-spec mirrors verified on 2026-05-19, with explicit language that old master/latest and Project Specification files are reference-only and cannot broaden the locked MVP corridor.
+- Added launch-gate coverage so these legacy PRD mirrors cannot silently re-rank the authority stack above the locked MVP source of truth.

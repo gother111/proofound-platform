@@ -1354,6 +1354,36 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps legacy PRD mirrors below the locked MVP authority stack', () => {
+    const compatibilityPrd = fs.readFileSync(
+      path.join(repoRoot, 'PRD_for_a_web_platform_MVP.md'),
+      'utf8'
+    );
+    const executivePrd = fs.readFileSync(path.join(repoRoot, 'Proofound_PRD_MVP.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    for (const content of [compatibilityPrd, executivePrd]) {
+      expect(content).toContain('Last Verified: `2026-05-19`');
+      expect(content).toContain('Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md');
+      expect(content).toContain(
+        'PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md'
+      );
+      expect(content).toContain('PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md');
+      expect(content).toContain('LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md');
+    }
+    expect(compatibilityPrd).not.toContain(
+      'conflicts with the Project Specification or the stable canonical docs'
+    );
+    expect(executivePrd).not.toContain('1. `Proofound_Project_Specification_2026-03-11.md`');
+    expect(executivePrd).toContain('reference-only context and must not broaden');
+    expect(docsRegistry).toContain(
+      '| `PRD_for_a_web_platform_MVP.md`                                                                         | `reference-spec` | `root`        | `repo`              | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `Proofound_PRD_MVP.md`                                                                                  | `reference-spec` | `root`        | `repo`              | `2026-05-19`'
+    );
+  });
+
   it('keeps scoped verification docs under the locked MVP authority stack', () => {
     const identityContext = fs.readFileSync(
       path.join(repoRoot, 'IDENTITY_VERIFICATION_IMPLEMENTATION.md'),

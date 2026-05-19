@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-03-11`
+> Last Verified: `2026-05-19`
 
 # Proofound MVP PRD Compatibility Mirror
 
@@ -77,4 +77,4 @@ This file is a compatibility mirror for workflows that still open `PRD_for_a_web
 - implementation-complete requirements
 - lifecycle edge cases
 - security, privacy, or operational detail
-- authority decisions when it conflicts with the Project Specification or the stable canonical docs
+- authority decisions when it conflicts with the locked MVP source of truth, aligned PRD, aligned technical requirements, aligned launch runbook, GTM plan, or fresh repo evidence

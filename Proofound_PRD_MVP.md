@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-03-11`
+> Last Verified: `2026-05-19`
 
 # Proofound MVP Executive Summary
 
@@ -47,7 +47,13 @@ Proofound MVP is a proof-first, privacy-first hiring credibility corridor center
 
 ## Reading Order
 
-1. `Proofound_Project_Specification_2026-03-11.md`
-2. `PRD_TECHNICAL_REQUIREMENTS.md`
-3. `PRD_for_a_web_platform_MVP.master-latest.md`
-4. `LAUNCH_RUNBOOK.md`
+1. `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
+2. `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`
+3. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`
+4. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
+5. `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`
+6. Fresh repo-grounded audits and evidence
+
+`Proofound_Project_Specification_2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.md`,
+`PRD_for_a_web_platform_MVP.master-latest.md`, and `LAUNCH_RUNBOOK.md` are
+reference-only context and must not broaden the locked MVP corridor.
