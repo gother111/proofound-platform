@@ -495,15 +495,21 @@ describe('Public individual portfolio page', () => {
     expect(screen.queryByRole('heading', { name: 'Jane Doe' })).not.toBeInTheDocument();
   });
 
-  it('calls notFound when handle has no public portfolio', async () => {
+  it('renders the generic unavailable state when handle has no public portfolio', async () => {
     vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
       status: 'missing',
       projection: null,
     });
 
-    await expect(PortfolioPage({ params: Promise.resolve({ handle: 'missing' }) })).rejects.toThrow(
-      'NOT_FOUND'
-    );
-    expect(notFoundMock).toHaveBeenCalledTimes(1);
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'missing' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('heading', { name: 'Public Page unavailable' })).toBeInTheDocument();
+    expect(screen.getByText(/this public page link is unavailable/i)).toBeInTheDocument();
+    expect(notFoundMock).not.toHaveBeenCalled();
   });
 });

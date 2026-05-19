@@ -298,6 +298,22 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Moved those org defaults/copy modules to `src/archive/non_launch_org_suite/lib/org/`.
 - Added launch-gate coverage so the retired dashboard layout engine and broad org-type defaults stay out of active source/tests.
 
+38. Active tests and helpers still described archived contract-signing and old feedback SUS flows.
+
+- Confirmed the active E2E `complete-user-journey` still described signup-to-contract-signing, imported a `ContractPage`, and referenced `/app/contracts/:id` and `/app/settings/data`.
+- Moved that stale E2E and its page-object helpers to `tests/archive/non_mvp_contract_flow/`.
+- Archived the unused `ContractSigned` email template plus unused contract-signed email and notification helper entry points that linked to archived `/app/contracts/*` routes.
+- Confirmed `SUSTriggerProvider`, `SUSSurvey`, and the old `src/lib/feedback/sus-scoring.ts` were orphaned and called retired `/api/feedback/sus/*` endpoints, including a `post_contract` trigger.
+- Moved the old feedback SUS trigger UI/scoring code to `src/archive/non_launch_feedback_sus/` while keeping the active `/api/surveys/sus` prompt components and calculator in place.
+- Added launch-gate coverage so active code cannot reintroduce `/app/contracts` links and the retired contract/SUS trigger files stay archived.
+
+39. Browser showed missing public portfolio links could render as a blank body.
+
+- The Codex in-app Browser recheck of `/portfolio/demo` after the contract/SUS archive initially showed no runtime error but an empty visible body with a `NEXT_HTTP_ERROR_FALLBACK;404` template.
+- Changed missing individual and organization public portfolio pages to render the same generic unavailable surface already used for hidden/unavailable public pages, avoiding existence leakage while ensuring first-time visitors see a clear outcome.
+- Added route-local public portfolio not-found fallbacks as a defensive guard for future thrown segment 404s.
+- Updated individual and organization public portfolio tests to assert the generic unavailable state for missing handles/slugs.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -329,6 +345,8 @@ Desktop checks:
 - `/portfolio/demo` was rechecked again through the Codex in-app Browser during the continued sweep: title `Public Page Unavailable | Proofound`, URL `http://localhost:33180/portfolio/demo`, safe unavailable copy rendered, and no obvious private-leak terms were present in the visible body text.
 - After archiving the unmounted dashboard widget-card layer, Browser smoke covered `/portfolio/demo`, `/`, and `/portfolio/org/test-org`: no runtime-error text was visible. A deeper re-read of `/portfolio/demo` after hydration confirmed H1 `Public page unavailable`, title `Public Page Unavailable | Proofound`, and the safe unavailable message plus `Return home` action.
 - After archiving the retired dashboard layout and broad org defaults libraries, Browser smoke rechecked `/portfolio/demo` and `/`: both rendered expected titles and visible content with no runtime-error text.
+- After archiving stale contract-signing and old feedback SUS trigger helpers, Browser smoke rechecked `/portfolio/demo`, `/`, and `/api/health`: public routes rendered expected launch-safe content and `/api/health` returned only `status` and `timestamp`, with no runtime-error text.
+- Browser caught a blank-body regression on missing public portfolio links during the continued sweep. After the route fix, `/portfolio/demo` rendered title `Public Page Unavailable | Proofound` with `PUBLIC PAGE UNAVAILABLE` copy, and `/portfolio/org/missing-org` rendered `ORGANIZATION PORTFOLIO UNAVAILABLE`; both had no runtime-error text and no console warnings/errors.
 
 Mobile viewport check:
 
@@ -614,6 +632,19 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving retired dashboard layout and org defaults libraries.
 - `npm run docs:freshness` - passed after archiving retired dashboard layout and org defaults libraries.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after archiving retired dashboard layout and org defaults libraries.
+- `rg -n "sendContractSignedEmail|notifyContractSigned|ContractSigned|/app/contracts|contract-signed|CONTRACT_SIGNED|SUSTriggerProvider|@/lib/feedback/sus-scoring|feedback/sus/check-trigger|feedback/sus/submit|feedback/sus/dismiss|post_contract" src emails tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active hits are now limited to schema/notification compatibility, TTSC metric constants, and launch-gate assertions; unused active helpers/routes/templates were archived or removed.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/api/launch-page-inventory.test.ts tests/lib/sus-calculator.test.ts` - passed, 3 files / 28 tests, after archiving the stale contract-signing E2E and old feedback SUS trigger UI.
+- `git diff --check` - passed after archiving the stale contract-signing E2E and old feedback SUS trigger UI.
+- `npm run lint` - passed after archiving stale contract-signing and old feedback SUS trigger helpers.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving stale contract-signing and old feedback SUS trigger helpers.
+- `npm run docs:freshness` - passed after registering the contract-flow and feedback SUS archive READMEs.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after archiving stale contract-signing and old feedback SUS trigger helpers.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/ui/public-portfolio-page.test.tsx tests/ui/public-org-portfolio-page.test.tsx tests/ui/public-portfolio-access-consistency.test.tsx` - passed, 3 files / 17 tests, after making missing public portfolio links render generic unavailable pages.
+- `npm run lint` - passed after the missing public portfolio fallback fix.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the missing public portfolio fallback fix.
+- `npm run docs:freshness` - passed after the missing public portfolio fallback fix.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after the missing public portfolio fallback fix.
+- `git diff --check` - passed after the missing public portfolio fallback fix.
 
 Non-fatal test noise:
 

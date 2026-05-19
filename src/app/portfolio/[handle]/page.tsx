@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { notFound, permanentRedirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, CircleDot, ExternalLink, Link2, Mail } from 'lucide-react';
 
 import { Logo } from '@/components/brand/Logo';
@@ -105,7 +105,7 @@ export default async function PortfolioPage({
 
       return renderUnavailablePage(handle);
     }
-    notFound();
+    return renderUnavailablePage(handle);
   }
 
   if (access.status === 'unavailable') {

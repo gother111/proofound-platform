@@ -256,18 +256,3 @@ export async function notifyInterviewScheduled(
     metadata: { interviewDate: interviewDate.toISOString() },
   });
 }
-
-/**
- * Notify user of a signed contract
- */
-export async function notifyContractSigned(userId: string, contractId: string, orgName: string) {
-  return createNotification({
-    userId,
-    type: 'contract_signed',
-    title: 'Contract Signed!',
-    message: `Your contract with ${orgName} has been signed`,
-    actionUrl: `/app/i/contracts/${contractId}`,
-    entityType: 'contract',
-    entityId: contractId,
-  });
-}

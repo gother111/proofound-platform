@@ -35,7 +35,7 @@ export class SignupPage {
 
     // Complete onboarding
     await this.page.waitForURL('/onboarding');
-    await this.page.click('text=I\'m an individual');
+    await this.page.click("text=I'm an individual");
     await this.page.fill('[name="displayName"]', name);
     await this.page.click('button:has-text("Continue")');
   }

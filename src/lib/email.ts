@@ -12,7 +12,6 @@ import WorkEmailVerification from '../../emails/WorkEmailVerification';
 import SkillVerificationRequest from '../../emails/SkillVerificationRequest';
 import NewMatchNotification from '../../emails/NewMatchNotification';
 import FeedbackRequest from '../../emails/FeedbackRequest';
-import ContractSigned from '../../emails/ContractSigned';
 import InterviewScheduled from '../../emails/InterviewScheduled';
 import IdentityRevealed from '../../emails/IdentityRevealed';
 import VerificationApproved from '../../emails/VerificationApproved';
@@ -308,66 +307,6 @@ export async function sendMatchNotification(
   } catch (error) {
     recordLegacyEmailFailure('match', error);
     throw new Error('Failed to send match notification');
-  }
-}
-
-export async function sendContractSignedEmail(
-  recipientEmail: string,
-  recipientName: string,
-  role: 'candidate' | 'organization',
-  contractData: {
-    roleTitle?: string;
-    organizationName?: string;
-    candidateName?: string;
-    contractType: string;
-    startDate?: string;
-    compensationAmount?: number;
-    compensationCurrency?: string;
-    compensationPeriod?: string;
-    contractId: string;
-  },
-  privacy?: WorkflowEmailPrivacyOptions
-): Promise<void> {
-  const maskedStage = privacy?.stage === 'masked';
-  const emailPrivacy = applyWorkflowEmailPrivacy(
-    {
-      subject: 'Contract Successfully Signed - Proofound',
-      organizationName: contractData.organizationName,
-      candidateName: contractData.candidateName,
-    },
-    {
-      neutralSubject: 'Proofound workflow update',
-      identityVisible: false,
-      organizationVisible: false,
-      ...privacy,
-    }
-  );
-
-  try {
-    const viewContractUrl = buildCanonicalEmailUrl(
-      `/app/contracts/${encodeURIComponent(contractData.contractId)}`
-    );
-    await resend.emails.send({
-      from: fromEmail,
-      to: recipientEmail,
-      subject: emailPrivacy.subject,
-      react: ContractSigned({
-        recipientName,
-        role,
-        roleTitle: maskedStage ? undefined : contractData.roleTitle,
-        organizationName: emailPrivacy.organizationName ?? undefined,
-        candidateName: emailPrivacy.candidateName ?? undefined,
-        contractType: contractData.contractType,
-        startDate: contractData.startDate,
-        compensationAmount: contractData.compensationAmount,
-        compensationCurrency: contractData.compensationCurrency,
-        compensationPeriod: contractData.compensationPeriod,
-        viewContractUrl,
-      }),
-    });
-  } catch (error) {
-    recordLegacyEmailFailure('contract', error);
-    throw new Error('Failed to send contract signed email');
   }
 }
 

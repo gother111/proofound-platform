@@ -21,6 +21,16 @@ function listTestFiles(dir: string): string[] {
   });
 }
 
+function listFiles(dir: string): string[] {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      return listFiles(fullPath);
+    }
+    return [fullPath];
+  });
+}
+
 describe('launch gate package configuration', () => {
   it('pins the clean-checkout runtime and package manager', () => {
     const packageJson = readJson<{
@@ -312,6 +322,78 @@ describe('launch gate package configuration', () => {
     expect(fs.existsSync(path.join(repoRoot, 'tests/archive/non_mvp_org_suite/README.md'))).toBe(
       true
     );
+  });
+
+  it('keeps retired contract-signing E2E journeys archived', () => {
+    const retiredPaths = [
+      'emails/ContractSigned.tsx',
+      'tests/e2e/complete-user-journey.spec.ts',
+      'tests/e2e/helpers/page-objects.ts',
+    ];
+
+    for (const retiredPath of retiredPaths) {
+      expect(fs.existsSync(path.join(repoRoot, retiredPath))).toBe(false);
+    }
+
+    expect(
+      fs.existsSync(path.join(repoRoot, 'tests/archive/non_mvp_contract_flow/README.md'))
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_contract_flow/README.md'))
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'src/archive/non_launch_contract_flow/emails/ContractSigned.tsx')
+      )
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          repoRoot,
+          'tests/archive/non_mvp_contract_flow/complete-user-journey.archived.spec.ts'
+        )
+      )
+    ).toBe(true);
+  });
+
+  it('keeps active code from linking users into archived contract routes', () => {
+    const activeRoots = ['src', 'emails'].map((root) => path.join(repoRoot, root));
+    const activeFiles = activeRoots.flatMap((root) =>
+      fs.existsSync(root)
+        ? listFiles(root).filter(
+            (file) =>
+              /\.[cm]?(?:ts|tsx|js|jsx)$/.test(file) &&
+              !file.includes(`${path.sep}archive${path.sep}`)
+          )
+        : []
+    );
+
+    const offenders = activeFiles
+      .filter((file) => fs.readFileSync(file, 'utf8').includes('/app/contracts'))
+      .map((file) => path.relative(repoRoot, file));
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('keeps retired feedback SUS trigger UI archived', () => {
+    const retiredPaths = [
+      'src/components/feedback/SUSTriggerProvider.tsx',
+      'src/components/feedback/SUSSurvey.tsx',
+      'src/lib/feedback/sus-scoring.ts',
+    ];
+
+    for (const retiredPath of retiredPaths) {
+      expect(fs.existsSync(path.join(repoRoot, retiredPath))).toBe(false);
+    }
+
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_feedback_sus/README.md'))
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'src/archive/non_launch_feedback_sus/components/feedback/SUSSurvey.tsx')
+      )
+    ).toBe(true);
   });
 
   it('keeps retired Expertise shared UI components archived', () => {

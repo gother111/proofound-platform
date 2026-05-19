@@ -48,7 +48,6 @@ const enabledEnvValues = new Set(['1', 'true', 'yes', 'on']);
 export const EMAIL_TEMPLATES = {
   ASSIGNMENT_INVITATION: 'assignment-invitation',
   INTERVIEW_SCHEDULED: 'interview-scheduled',
-  CONTRACT_SIGNED: 'contract-signed',
   DECISION_FEEDBACK: 'decision-feedback',
   VERIFICATION_REQUEST: 'verification-request',
   MATCH_NOTIFICATION: 'match-notification',

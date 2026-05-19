@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { notFound, permanentRedirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import { ArrowLeft, Building2, Globe2 } from 'lucide-react';
 
 import { PublicProfileEmptyState } from '@/components/public-profile/PublicProfileEmptyState';
@@ -103,7 +103,7 @@ export default async function OrganizationPortfolioPage({
 
       return renderUnavailablePage(slug);
     }
-    notFound();
+    return renderUnavailablePage(slug);
   }
 
   if (!isAccessiblePublicPortfolioState(data.effectiveState)) {

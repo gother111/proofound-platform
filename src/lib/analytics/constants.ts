@@ -286,28 +286,6 @@ export interface InterviewScheduledProperties {
 }
 
 /**
- * Standard properties for contract signed event
- */
-export interface ContractSignedProperties {
-  assignment_id: string;
-  match_id?: string;
-  interview_id?: string;
-  contract_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'volunteer';
-  days_since_activation: number;
-  days_since_first_intro: number;
-}
-
-/**
- * Standard properties for well-being check-in event
- */
-export interface WellbeingCheckinProperties {
-  stress_level: 1 | 2 | 3 | 4 | 5; // 1=low, 5=high
-  control_level: 1 | 2 | 3 | 4 | 5; // 1=low, 5=high
-  milestone?: 'rejection' | 'interview' | 'offer' | 'contract' | null;
-  checkin_number: number; // Sequential count for user
-}
-
-/**
  * Standard properties for SUS survey completion
  */
 export interface SUSSurveyProperties {

@@ -327,12 +327,20 @@ describe('Organization public portfolio page', () => {
     expect(metadata.openGraph?.title).toBe('Acme Labs on Proofound');
   });
 
-  it('calls notFound when slug has no public portfolio', async () => {
+  it('renders the generic unavailable state when slug has no public portfolio', async () => {
     vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(null);
 
-    await expect(
-      OrganizationPortfolioPublicPage({ params: Promise.resolve({ slug: 'missing' }) })
-    ).rejects.toThrow('NOT_FOUND');
-    expect(notFoundMock).toHaveBeenCalledTimes(1);
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'missing' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(
+      screen.getByRole('heading', { name: 'Organization portfolio unavailable' })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/this organization link is unavailable/i)).toBeInTheDocument();
+    expect(notFoundMock).not.toHaveBeenCalled();
   });
 });

@@ -852,36 +852,6 @@ export async function emitDecisionMade(
 }
 
 // ============================================================================
-// CONTRACT EVENTS
-// ============================================================================
-
-export async function emitContractSigned(
-  userId: string,
-  contractId: string,
-  properties: {
-    contract_id?: string;
-    assignment_id?: string;
-    match_id?: string;
-    ttsc_days?: number; // Time to signed contract (from match)
-    contract_type?: string;
-    days_since_activation?: number;
-    days_since_first_intro?: number;
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'contract_signed',
-    userId,
-    entityType: 'contract',
-    entityId: contractId,
-    properties,
-  });
-}
-
-// ============================================================================
-// WELL-BEING EVENTS
-// ============================================================================
-
-// ============================================================================
 // SURVEY EVENTS
 // ============================================================================
 
