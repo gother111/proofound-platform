@@ -554,6 +554,36 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps support guidance aligned with self-service privacy and no-leak handling', () => {
+    const emailSupport = fs.readFileSync(path.join(repoRoot, 'EMAIL_SUPPORT_SETUP.md'), 'utf8');
+    const support = fs.readFileSync(path.join(repoRoot, 'SUPPORT.md'), 'utf8');
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(emailSupport).toContain('Last Verified: `2026-05-19`');
+    expect(emailSupport).toContain('Use the app workflow whenever possible');
+    expect(emailSupport).toContain('Do not process deletion from a bare email reply');
+    expect(emailSupport).toContain('Do not mention an in-app chat or help center');
+    expect(emailSupport).toContain('manual-link interviews by default');
+    expect(emailSupport).toContain('private proof files');
+    expect(emailSupport).toContain('hidden identity details');
+    expect(emailSupport).toContain('admin/internal route exposed publicly');
+    expect(emailSupport).not.toContain('CONFIRM DELETE');
+    expect(emailSupport).not.toContain('Use our in-app chat');
+    expect(emailSupport).not.toContain('https://proofound.io/help');
+    expect(emailSupport).not.toContain('we will reset it manually');
+    expect(emailSupport).not.toContain('skills, matches, messages');
+    expect(support).toContain('Last Verified: `2026-05-19`');
+    expect(support).toContain('locked MVP source of truth');
+    expect(support).toContain('Add a manual meeting link');
+    expect(support).not.toContain('Proofound_Project_Specification_2026-03-11.md` first');
+    expect(docsRegistry).toContain(
+      '| `EMAIL_SUPPORT_SETUP.md`                                                                                | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+    expect(docsRegistry).toContain(
+      '| `SUPPORT.md`                                                                                            | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps the testing strategy aligned with production-candidate launch gates', () => {
     const testingStrategy = fs.readFileSync(
       path.join(repoRoot, 'docs/testing-strategy.md'),

@@ -1,6 +1,9 @@
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
+
 # Proofound Support
 
-> Scope note: support guidance follows `Proofound_Project_Specification_2026-03-11.md` first, then the active PRD, technical requirements, and launch runbook.
+> Scope note: support guidance follows the locked MVP source of truth, aligned PRD, technical requirements, launch runbook, GTM plan, and fresh repo evidence.
 
 Proofound support covers account access, proof-building, portfolio publication, privacy-safe matching, and organization review workflows.
 
@@ -87,7 +90,7 @@ Proofound uses blind-by-default progressive reveal:
 1. Open the relevant intro or review thread.
 2. Move to the interview coordination step.
 3. Choose a time and add the meeting details.
-4. Use the live provider path supported by the current launch contract, or add a manual meeting link if needed.
+4. Add a manual meeting link unless a connected provider path has been explicitly enabled and verified for the target.
 
 Interview scheduling is available only after the workflow reaches the correct reveal stage.
 

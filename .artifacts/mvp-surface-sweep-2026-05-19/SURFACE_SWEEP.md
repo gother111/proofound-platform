@@ -1030,3 +1030,10 @@ Non-fatal test noise:
 - Preserved the bounded current contract: work email is the only launch-active account-side check, LinkedIn never creates proof trust, public reputation, org review lift, intro eligibility, reveal readiness, or match/ranking advantage by itself.
 - Kept route-surface policy explicit: old LinkedIn admin review routes are archived; current internal manual work belongs under `/api/admin/internal-ops/queues`.
 - Updated the historical implementation-summary pointer and launch-gate coverage so future docs cannot present LinkedIn verification as an active launch corridor surface by default.
+
+## Continuation - Support Guidance Launch-Safety Refresh
+
+- Found root `EMAIL_SUPPORT_SETUP.md` still carrying old November 2025 support setup language: non-existent help center/in-app chat references, personal operator names, manual deletion by email reply, broad "skills/matches/messages" deletion copy, and stale profile/matching guidance.
+- Rewrote it as an active support operations guide for `hello@proofound.io`: mailbox/MFA/DNS setup, launch-corridor triage, plain-language templates, privacy/no-leak response rules, self-service export/delete routing, and urgent security/privacy escalation.
+- Refreshed `SUPPORT.md` to the current authority stack and manual-link interview posture.
+- Updated `docs/DOCS_REGISTRY.md` and launch-gate coverage so support guidance stays aligned with self-service privacy actions, no-leak support records, no help-center/in-app-chat claims unless those surfaces are active, and no deletion from a bare email reply.

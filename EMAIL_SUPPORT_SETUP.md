@@ -1,632 +1,212 @@
-# Email Support Setup Guide
+> Doc Class: `active`
+> Last Verified: `2026-05-19`
 
-**Document Version:** 1.0  
-**Last Updated:** November 5, 2025  
-**Email Address:** hello@proofound.io  
-**Team:** Pavlo Samoshko (Product/User Questions), Yurii Bakurov (Technical Issues)
+# Email Support Setup
 
----
+This guide covers human support operations for `hello@proofound.io`. It is not the transactional-email provider setup; use [docs/RESEND_SETUP.md](./docs/RESEND_SETUP.md) for Resend.
 
-## Table of Contents
+Support should reinforce the locked MVP corridor: proof-first portfolios, Proof Packs, privacy-safe assignment review, consent before reveal, manual-link interviews by default, clear decisions, engagement verification, and self-service privacy rights.
 
-1. [Email Provider Configuration](#1-email-provider-configuration)
-2. [Auto-Responder Setup](#2-auto-responder-setup)
-3. [Email Templates](#3-email-templates)
-4. [Forwarding Rules](#4-forwarding-rules)
-5. [Response Workflow](#5-response-workflow)
-6. [Common Issues & Responses](#6-common-issues--responses)
+## Mailbox Setup
 
----
+Use a shared mailbox or helpdesk that can send and receive from `hello@proofound.io`.
 
-## 1. Email Provider Configuration
+Minimum setup:
 
-### Provider Options
+- mailbox access is limited to approved operators
+- MFA is enabled for every operator
+- SPF, DKIM, and DMARC are configured for the sending domain
+- support replies do not expose secrets, raw logs, service-role output, private proof files, signed URLs, hidden identity details, internal queue IDs, or diagnostic payloads
+- support records store only what is needed to resolve the issue
 
-**Option A: Google Workspace (Recommended)**
+Do not publish personal operator addresses in public support docs.
 
-- **Cost:** $6/user/month
-- **Features:** Gmail interface, 30GB storage, custom domain
-- **Setup:** Add hello@proofound.io as an alias or separate user
-- **Link:** https://workspace.google.com
+## Auto-Reply
 
-**Option B: ProtonMail**
+Use an always-on auto-reply only if the mailbox provider supports it without leaking ticket metadata.
 
-- **Cost:** Free (1 custom domain) or $3.99/month
-- **Features:** Privacy-focused, custom domain
-- **Setup:** Configure hello@proofound.io
-- **Link:** https://proton.me/mail
+Subject:
 
-**Option C: Zoho Mail**
-
-- **Cost:** Free (5 users) or $1/user/month
-- **Features:** Ad-free, custom domain
-- **Setup:** Add hello@proofound.io mailbox
-- **Link:** https://www.zoho.com/mail/
-
----
-
-### Initial Setup Steps
-
-1. **Add custom domain to email provider**
-   - Domain: proofound.io
-   - Verify domain ownership (DNS TXT record)
-
-2. **Create hello@proofound.io mailbox**
-   - Type: Shared mailbox or individual user
-   - Access: Grant to Pavlo and Yurii
-
-3. **Configure DNS records** (if not using Vercel Email)
-   - MX records: Point to email provider
-   - SPF record: Authorize email provider to send
-   - DKIM: Enable email authentication
-   - DMARC: Set email policy
-
-4. **Test email delivery**
-   - Send test email to hello@proofound.io
-   - Reply from hello@proofound.io to personal email
-   - Verify SPF/DKIM passing (use mail-tester.com)
-
----
-
-## 2. Auto-Responder Setup
-
-### Google Workspace Auto-Responder
-
-1. **Open Gmail Settings**
-   - Go to Settings → See all settings → General
-   - Scroll to "Vacation responder"
-
-2. **Configure Auto-Responder**
-   - **Subject:** We received your message
-   - **Message:** (See template below)
-   - **First day:** (Leave blank for always-on)
-   - **Last day:** (Leave blank for always-on)
-   - **Send a response to people in my Contacts:** Checked
-   - **Send a response to people outside my Contacts:** Checked
-   - **Save Changes**
-
----
-
-### Auto-Responder Template
-
-```
-Hi there,
-
-Thanks for reaching out to Proofound! We've received your message and will respond within 24 hours (Monday-Friday, 9 AM - 6 PM UTC).
-
-For immediate help, check our Help Center: https://proofound.io/help
-
-If this is urgent (site down, data loss, security issue), please reply with "URGENT" in the subject line and we'll prioritize your request.
-
-Best regards,
-The Proofound Team
-
----
-Need faster support? Use our in-app chat (available Mon-Fri 9 AM - 6 PM UTC).
+```text
+We received your message
 ```
 
----
+Body:
 
-### Zoho Mail Auto-Responder
+```text
+Hi,
 
-1. **Open Zoho Mail Settings**
-   - Go to Settings → Mail → Vacation Responder
+Thanks for contacting Proofound. We received your message and will reply within one business day.
 
-2. **Enable Auto-Responder**
-   - Toggle "Enable Auto-Reply"
-   - **Subject:** We received your message
-   - **Message:** (Use template above)
-   - **Send replies to:** Everyone
-   - **Save**
+If this is a security, privacy, data-loss, or account-access issue, reply with URGENT in the subject line and include the affected account email. Do not send passwords, API keys, private proof files, or government ID documents by email.
 
----
+For account deletion or data export, use the in-app privacy controls when you can. If you cannot access your account, tell us the account email and the action you need.
 
-## 3. Email Templates
-
-### Template 1: Password Reset Help
-
-**Subject:** Re: Password reset help
-
-**Body:**
-
+Proofound Support
 ```
+
+Do not mention an in-app chat or help center unless those routes are active and tested.
+
+## Intake Triage
+
+Classify each message by the user's current workflow:
+
+- account access: login, signup, email verification, password reset
+- individual app: onboarding, first proof, Proof Packs, proof upload/import/linking, publishing, privacy settings, export, delete
+- organization app: onboarding, trust page, assignments, review, shortlist, intro, reveal consent, interviews, decisions, engagement verification
+- public surface: portfolio, organization trust page, public assignment/share route, footer/legal link, CTA routing
+- admin/internal: verification queue, privacy/reveal dispute, launch-status, monitoring, cron or ops issue
+- security/privacy: suspected leak, unauthorized access, data request, deletion/export problem
+
+Escalate security/privacy issues immediately. Keep the first reply calm and factual; avoid promising deletion, restoration, reveal, verification, or hiring outcomes until the app state is confirmed.
+
+## Response Principles
+
+- Plain language first.
+- Give one obvious next action.
+- Keep privacy stage, trust state, proof state, and readiness state accurate.
+- Ask for the minimum needed information.
+- Do not request passwords, secrets, raw private evidence, or ID documents by email.
+- Do not paste internal logs or provider payloads into replies.
+- Do not describe broad marketplace, directory, social-score, or generic dashboard behavior.
+- Send users back to the app surface that enforces the relevant auth, role, consent, archive, and privacy gates.
+
+## Common Templates
+
+### Verification Email Not Received
+
+```text
 Hi [Name],
 
-Thanks for reaching out! Here's how to reset your password:
+Please check spam or junk first. Then request a fresh email from the same sign-in or verification screen.
 
-1. Go to https://proofound.io/login
-2. Click "Forgot password?"
-3. Enter your email address: [USER_EMAIL]
-4. Check your email for the reset link (it may take up to 5 minutes)
-5. Click the link and enter your new password
+If it still does not arrive, reply with the email address you used to sign up. We will check delivery status without exposing any account secrets.
 
-Didn't receive the email? Try these:
-- Check your spam/junk folder
-- Make sure you're using the same email you signed up with
-- Wait 5 minutes and try again (rate limiting may be in effect)
-- If still no luck, reply to this email and we'll reset it manually
-
-Best regards,
-[Yurii/Pavlo]
-Proofound Team
+Proofound Support
 ```
 
----
+### Password Reset
 
-### Template 2: Profile Completion Guidance
-
-**Subject:** Re: How to complete my profile?
-
-**Body:**
-
-```
+```text
 Hi [Name],
 
-Great question! Here's your step-by-step guide to completing your profile:
+Open https://proofound.io/login and choose Forgot password. Enter the email address for your Proofound account and use the reset link from your inbox.
 
-**For Individuals:**
-1. Add your professional headline and bio (Profile → Basics)
-2. Build at least one strong Proof Pack with evidence and outcomes
-3. Add the experience or context that supports that proof
-4. Fill out your mission and values (Profile → Purpose)
-5. Set your matching preferences and practical constraints (Matching → Preferences)
+If you cannot receive the email, reply with the account email and the time you tried. We can investigate delivery, but we will not ask for your password.
 
-The day-1 goal is to become portfolio-ready with a clear, shareable trust surface. Intro-eligible is a stricter later state and may require stronger proof or scoped trust signals.
-
-**For Organizations:**
-1. Complete your organization profile (Profile → Edit)
-2. Add your mission, vision, and values (Profile → Purpose)
-3. Create your first assignment (Assignments → New Assignment)
-4. Publish the assignment when it is ready for blind-by-default review
-
-Need help with a specific step? Just reply to this email.
-
-Best regards,
-[Pavlo]
-Proofound Team
+Proofound Support
 ```
 
----
+### First Proof Or Proof Pack Help
 
-### Template 3: Bug Report Acknowledgment
-
-**Subject:** Re: [Bug Description]
-
-**Body:**
-
-```
+```text
 Hi [Name],
 
-Thanks for reporting this issue! We've logged it as ticket #[TICKET_ID] and are investigating.
+The fastest path is to create one focused Proof Pack around a real capability claim.
 
-**What we know so far:**
-- Issue: [BRIEF_DESCRIPTION]
-- Affected: [WHO/WHAT_IS_AFFECTED]
-- Priority: [P0/P1/P2/P3]
+Add 1 to 3 pieces of evidence, explain the context, and connect the proof to the outcome it supports. Portfolio-ready means the proof is clear enough to share. Intro-eligible is stricter and depends on readiness, privacy stage, and workflow fit.
 
-**What's next:**
-- We'll investigate the root cause
-- Expected fix timeline: [TIMEFRAME based on severity]
-- We'll update you as soon as we have more information
+If you are stuck, tell us which step is unclear and what page you are on.
 
-**Need a workaround in the meantime?**
-[WORKAROUND if applicable, or "We'll prioritize a fix"]
-
-Thanks for helping us improve Proofound! Your feedback makes the platform better for everyone.
-
-Best regards,
-[Yurii]
-Proofound Team
-
----
-Bug Details (for our records):
-- Reported: [DATE_TIME]
-- Browser: [IF_PROVIDED]
-- Device: [IF_PROVIDED]
-- Steps to reproduce: [IF_PROVIDED]
+Proofound Support
 ```
 
----
+### Assignment Or Candidate Review Help
 
-### Template 4: Feature Request Acknowledgment
-
-**Subject:** Re: Feature request - [Feature Name]
-
-**Body:**
-
-```
+```text
 Hi [Name],
 
-Thanks for the suggestion! We love hearing ideas from users.
+Please open the assignment or review queue in your organization workspace. The next action should be on that page: review proofs, request an intro, request reveal consent, schedule or reschedule an interview, record a decision, or request engagement verification.
 
-**Your request:** [FEATURE_NAME_OR_DESCRIPTION]
+If the next action is missing or disabled, send the assignment name and the action you expected. Do not email candidate private proof files or hidden identity details.
 
-We've added it to our roadmap backlog: [LINK_TO_LINEAR_ISSUE or "Internal tracking: #[ID]"]
-
-While we can't commit to a timeline, here's what happens next:
-1. We'll review the request with the team
-2. If it aligns with our product vision, we'll prioritize it
-3. We'll keep you posted if/when we start building it
-
-**In the meantime:**
-[ALTERNATIVE_SOLUTION if applicable, or "Thanks for your patience"]
-
-Keep the feedback coming! User input shapes our roadmap.
-
-Best regards,
-[Pavlo]
-Proofound Team
-
----
-Have more ideas? We'd love to hear them: just reply to this email.
+Proofound Support
 ```
 
----
+### Export Request
 
-### Template 5: Account Deletion Request
-
-**Subject:** Re: Account deletion request
-
-**Body:**
-
-```
+```text
 Hi [Name],
 
-We're sorry to see you go. We've received your account deletion request.
+If you can access your account, use Settings -> Privacy -> Data Rights to request an export. The app will handle the export through the current privacy workflow.
 
-**Before we proceed:**
-- Are you sure you want to delete your account? This action is permanent and cannot be undone.
-- All your data (profile, skills, matches, messages) will be deleted within 30 days.
-- If you're having an issue, we'd love to help fix it instead!
+If you cannot access your account, reply with the account email and a short description of the access problem. We will verify ownership before taking any action.
 
-**To confirm deletion:**
-Reply to this email with "CONFIRM DELETE" and we'll process your request within 48 hours.
-
-**Need help instead?**
-If something isn't working right, reply with your issue and we'll work to fix it.
-
-Best regards,
-[Pavlo/Yurii]
-Proofound Team
-
----
-Your privacy matters to us. Learn more: https://proofound.io/privacy
+Proofound Support
 ```
 
----
+### Delete Request
 
-### Template 6: GDPR Data Export Request
-
-**Subject:** Re: Data export request (GDPR)
-
-**Body:**
-
-```
+```text
 Hi [Name],
 
-We've received your request to export your personal data under GDPR Article 15 (Right to Access).
+If you can access your account, use Settings -> Account -> Delete Account. Public projections are removed immediately and residual retention follows the current deletion policy.
 
-**What's included:**
-- Profile information (name, email, bio, etc.)
-- Skills and expertise data
-- Matches and applications
-- Messages (with identities masked as per privacy policy)
-- Account activity logs
-- Verification data (if any)
+If you cannot access your account, reply with the account email and the access problem. We will verify ownership before taking any action.
 
-**Timeline:**
-We'll prepare your data export within 30 days (GDPR requirement).
-
-**Delivery:**
-We'll send a secure download link to this email address when your export is ready. The link will expire in 7 days.
-
-**Questions?**
-Reply to this email if you need clarification on what's included.
-
-Best regards,
-[Yurii]
-Proofound Team
-
----
-Learn more about your data rights: https://proofound.io/privacy
+Proofound Support
 ```
 
----
+Do not process deletion from a bare email reply. Use the app workflow whenever possible and escalate inaccessible-account cases for ownership verification.
 
-### Template 7: General Inquiry Response
+### Bug Report
 
-**Subject:** Re: [Original Subject]
-
-**Body:**
-
-```
+```text
 Hi [Name],
 
-Thanks for reaching out!
+Thanks for reporting this. Please send:
 
-[ANSWER_TO_QUESTION or CUSTOM_RESPONSE]
+- the page or workflow
+- what you expected
+- what happened instead
+- browser/device if relevant
+- a screenshot only if it does not reveal private proof content, hidden identity details, secrets, or internal data
 
-Is there anything else I can help with?
+We will investigate and reply with the next step.
 
-Best regards,
-[Pavlo/Yurii]
-Proofound Team
-
----
-Quick links:
-- Help Center: https://proofound.io/help
-- Profile Settings: https://proofound.io/app/i/settings
-- Contact us: Just reply to this email
+Proofound Support
 ```
 
----
+### Security Or Privacy Concern
 
-## 4. Forwarding Rules
-
-### Google Workspace Forwarding
-
-**Option A: Forward all to both Pavlo and Yurii**
-
-1. Go to Settings → Forwarding and POP/IMAP
-2. Add forwarding address: pavlo@proofound.io, yurii@proofound.io
-3. Confirm forwarding via email
-
-**Option B: Filters for auto-routing**
-
-1. Technical keywords → Yurii
-2. Product/UX keywords → Pavlo
-3. All others → Both
-
-**Filter Example (Technical → Yurii):**
-
-```
-From: *
-To: hello@proofound.io
-Subject: [bug, error, crash, broken, not working, slow, down, login issue, password, database]
-Action: Forward to yurii@proofound.io, Skip Inbox
-```
-
-**Filter Example (Product → Pavlo):**
-
-```
-From: *
-To: hello@proofound.io
-Subject: [feature, suggestion, feedback, improvement, UX, profile, matching, assignment]
-Action: Forward to pavlo@proofound.io, Skip Inbox
-```
-
----
-
-## 5. Response Workflow
-
-### Daily Email Triage (9 AM UTC)
-
-**Step 1: Review Inbox (5 min)**
-
-- Check hello@proofound.io for new emails
-- Count: How many new emails?
-- Categorize: Bug / Question / Feature Request / Other
-
-**Step 2: Prioritize (2 min)**
-
-- **P0 (Urgent):** Site down, data loss, security issue → Respond immediately
-- **P1 (High):** Feature broken, login issue → Respond within 4 hours
-- **P2 (Medium):** General question, minor bug → Respond within 24 hours
-- **P3 (Low):** Feature request, feedback → Respond within 1 week
-
-**Step 3: Assign Owner (1 min)**
-
-- Technical issues → Yurii
-- Product/UX questions → Pavlo
-- General inquiries → Whoever is available
-
-**Step 4: Respond (varies)**
-
-- Use email templates for common issues
-- Personalize greeting and closing
-- Keep responses friendly and concise
-- Offer next steps or alternatives
-
-**Step 5: Track (1 min)**
-
-- Log email in support tracker (spreadsheet or Linear)
-- Mark as: New / In Progress / Waiting / Resolved
-- Set follow-up reminder if needed
-
----
-
-### Support Tracker (Google Sheets)
-
-**Columns:**
-| Date | User Email | Subject | Category | Priority | Owner | Status | Resolution | Time to Resolve |
-|------|------------|---------|----------|----------|-------|--------|------------|-----------------|
-| 2025-11-15 | user@example.com | Password reset | Technical | P1 | Yurii | Resolved | Sent reset link | 15 min |
-| 2025-11-16 | org@example.com | Feature request | Product | P3 | Pavlo | Open | Logged in roadmap | - |
-
-**Link:** [Create shared Google Sheet and add link here]
-
----
-
-### Response Time SLAs
-
-| Priority        | Response Time | Resolution Time | Owner       |
-| --------------- | ------------- | --------------- | ----------- |
-| **P0 - Urgent** | 1 hour        | Same day        | Yurii       |
-| **P1 - High**   | 4 hours       | 1-2 days        | Yurii       |
-| **P2 - Medium** | 24 hours      | 3-5 days        | Pavlo/Yurii |
-| **P3 - Low**    | 1 week        | 2-4 weeks       | Pavlo       |
-
----
-
-## 6. Common Issues & Responses
-
-### Issue: "I didn't receive the verification email"
-
-**Quick Response:**
-
-```
+```text
 Hi [Name],
 
-Try these steps:
-1. Check your spam/junk folder
-2. Add hello@proofound.io to your contacts
-3. Try resending the verification email: https://proofound.io/resend-verification
-4. If still no luck, reply with your email address and I'll manually verify your account.
+Thanks for flagging this. We are treating it as urgent.
 
-Best,
-[Yurii]
+Please send the affected account email, the page or workflow, and a short description of what you saw. Do not send passwords, API keys, private proof files, government ID documents, or raw exports by email.
+
+We will review the issue and follow the security/privacy response process.
+
+Proofound Support
 ```
 
----
+## Escalation
 
-### Issue: "Why aren't I seeing any matches?"
+Escalate immediately when a message mentions:
 
-**Quick Response:**
+- unauthorized access
+- private proof or identity leak
+- reveal without consent
+- export/download sent to the wrong person
+- deletion not taking effect
+- admin/internal route exposed publicly
+- service outage or data loss
+- suspicious email, phishing, or credential exposure
 
-```
-Hi [Name],
+Save the escalation context in the support tracker or incident record. Redact secrets and private proof content before sharing internally.
 
-A few things to check:
-1. Is your profile complete? (At least 5 skills, bio, preferences)
-2. Have you activated your profile? (Profile → Activate)
-3. Are there assignments in your area/skills? (Matching Hub → Browse)
-4. Are your matching preferences too narrow? (Settings → Preferences)
+## Evidence To Keep
 
-If everything looks good, it may just take time for new assignments to be posted. We'll notify you as soon as new matches are available.
+For each support issue, keep:
 
-Best,
-[Pavlo]
-```
+- date and time
+- requester email
+- affected surface or route
+- workflow stage
+- plain-language issue summary
+- support response
+- escalation owner if any
+- final outcome
 
----
-
-### Issue: "How do I delete my account?"
-
-**Quick Response:**
-
-```
-Hi [Name],
-
-To delete your account:
-1. Go to Settings → Account → Delete Account
-2. Confirm deletion (this is permanent!)
-3. All your data will be deleted within 30 days per GDPR
-
-Before you go: Is there something we can fix? We'd love to help if you're having an issue.
-
-Best,
-[Pavlo]
-```
-
----
-
-### Issue: "I think I found a bug"
-
-**Quick Response:**
-
-```
-Hi [Name],
-
-Thanks for reporting! To help us investigate, could you provide:
-1. What were you trying to do?
-2. What happened instead?
-3. What browser/device are you using?
-4. Screenshot (if possible)
-
-I'll log this as a bug and update you on the fix timeline.
-
-Best,
-[Yurii]
-```
-
----
-
-### Issue: "Can you add [feature]?"
-
-**Quick Response:**
-
-```
-Hi [Name],
-
-Great idea! We're always looking to improve Proofound.
-
-I've added your suggestion to our roadmap backlog. While I can't promise a timeline, we'll definitely consider it for a future release.
-
-Have any other ideas? We'd love to hear them!
-
-Best,
-[Pavlo]
-```
-
----
-
-## Appendix A: Email Signature
-
-**Standard Signature:**
-
-```
-Best regards,
-[Pavlo Samoshko / Yurii Bakurov]
-Proofound Team
-
----
-Need faster support? Use our in-app chat (Mon-Fri 9 AM - 6 PM UTC)
-Help Center: https://proofound.io/help
-Privacy Policy: https://proofound.io/privacy
-```
-
----
-
-## Appendix B: Email Etiquette
-
-**Guidelines:**
-
-1. **Tone:** Friendly, helpful, professional (not corporate)
-2. **Length:** Keep responses concise (max 200 words)
-3. **Personalization:** Use user's name, reference their specific issue
-4. **Empathy:** Acknowledge frustration for bugs/issues
-5. **Next steps:** Always provide clear next steps or timeline
-6. **Follow-up:** Set reminder to follow up if no response in 3 days
-
-**Examples:**
-
-- ✅ Good: "Hi Maria, sorry for the confusion! Here's how..."
-- ❌ Bad: "Dear User, per your inquiry regarding..."
-
----
-
-## Appendix C: Escalation Path
-
-**When to escalate:**
-
-- User threatens legal action
-- Data breach or security concern
-- Repeated complaints (3+ emails about same issue)
-- Request for refund (if payments implemented)
-- Press/media inquiry
-- Angry user (3+ frustrated emails)
-
-**How to escalate:**
-
-- Forward email to Pavlo (CEO) with context
-- Mark as "Escalation" in support tracker
-- Respond to user: "I'm looping in our CEO to address this personally"
-
----
-
-## Document Revision History
-
-| Date        | Version | Changes                     | Author        |
-| ----------- | ------- | --------------------------- | ------------- |
-| Nov 5, 2025 | 1.0     | Initial email support guide | Yurii Bakurov |
-
----
-
-**Last Updated:** November 5, 2025  
-**Next Review:** December 1, 2025  
-**Document Owner:** Yurii Bakurov & Pavlo Samoshko
-
----
-
-**Questions?**  
-Contact: yurii@proofound.io or pavlo@proofound.io
+Do not keep unnecessary private proof files, hidden identity details, access tokens, signed URLs, or full diagnostic dumps in support records.
