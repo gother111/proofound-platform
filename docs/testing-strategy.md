@@ -85,7 +85,7 @@ This document defines the current testing architecture for Proofound and the com
 - Performance budgets:
   - `npm run perf:budgets`
 - Go / No-Go:
-  - `npm run go:no-go`
+  - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 - End-to-end strict gate runner:
   - `npm run gates:mvp:strict`
 
@@ -189,7 +189,9 @@ fresh backup/restore evidence from `docs/production-readiness-checklist.md`.
 17. `npm run test:e2e:providers:strict`
 18. `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
 19. `BASE_URL=<production-candidate-url> npm run perf:budgets`
-20. `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+20. `npm run db:backup:checkpoint`
+21. `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
+22. `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 
 ## Environment Requirements for Strict Flows
 

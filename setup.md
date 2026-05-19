@@ -172,7 +172,7 @@ Strict provider E2E deterministic account:
 - Perf budgets: `npm run perf:budgets` implemented in `scripts/perf-budgets.mjs`. (source: package.json, scripts/perf-budgets.mjs)
 - Launch smoke: `npm run test:launch:smoke` implemented in `scripts/launch-smoke-runner.ts` and writes `.artifacts/launch-smoke-report.json`. (source: package.json, scripts/launch-smoke-runner.ts)
 - Launch synthetic monitors: `npm run monitor:launch` implemented in `scripts/run-launch-synthetic-monitors.ts` and uses the launch smoke artifact plus live endpoints. (source: package.json, scripts/run-launch-synthetic-monitors.ts)
-- Go/no-go: `npm run go:no-go` implemented in `scripts/go-no-go-check.ts` and requires evidence files, a fresh smoke artifact, healthy monitor routes, required safe-mode flags, and restore-drill assets. (source: package.json, scripts/go-no-go-check.ts)
+- Go/no-go: `npm run go:no-go` implemented in `scripts/go-no-go-check.ts` and requires evidence files, a fresh smoke artifact, authenticated perf-status and launch-status, required safe-mode flags, and production-candidate restore-report evidence for non-local targets. (source: package.json, scripts/go-no-go-check.ts)
 - Restore drill runbook: `docs/launch-restore-drill.md`.
 
 ## Hooks (Repo Truth)

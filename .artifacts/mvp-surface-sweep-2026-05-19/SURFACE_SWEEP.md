@@ -1305,3 +1305,9 @@ Non-fatal test noise:
 - Found active operator docs still using `npm run db:restore:verify -- --checkpoint <dir>` without the `--out .artifacts/launch-restore-report.json` evidence path now required by production-candidate `go:no-go`.
 - Updated production, release, deployment, phase-exit, storage, DPA, Supabase MCP, privacy-env, and historical RLS command examples so final launch-oriented restore verification writes the canonical restore report artifact.
 - Left `docs/launch-restore-drill.md`'s generic source-of-truth description unchanged, because the drill already includes the explicit `--out .artifacts/launch-restore-report.json` final evidence command below that description.
+
+## Continuation - Go/No-Go Summary Command Alignment
+
+- Found active README, setup, testing, performance, and QA summaries still describing `npm run go:no-go` as a generic perf/SUS/readiness gate or using production-candidate commands without `CRON_SECRET`.
+- Updated the summaries so operators see the current enforced contract: fresh launch smoke evidence, authenticated protected perf/launch status endpoints, required safe-mode/evidence flags, and a fresh production-candidate restore report for non-local targets.
+- Added backup checkpoint plus `db:restore:verify --out .artifacts/launch-restore-report.json` to final launch validation command lists before final `go:no-go`.

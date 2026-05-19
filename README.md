@@ -299,7 +299,7 @@ npm run test:archived:non-launch # Archived/removed non-MVP tests kept out of np
 npm run test:e2e         # Run E2E tests (Playwright)
 npm run test:e2e:ui      # Run E2E tests with UI
 npm run perf:budgets     # Perf budgets (Lighthouse TTI/CLS + API p95)
-npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
+npm run go:no-go         # Go/No-Go gating (smoke + protected perf/launch status + restore evidence)
 ```
 
 > **Troubleshooting:** If `npm run lint` reports that `next` cannot be found, follow the steps in [`docs/TROUBLESHOOTING_LINT.md`](docs/TROUBLESHOOTING_LINT.md).
@@ -456,7 +456,7 @@ E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pa
 - `npm run test:archived:non-launch` — archived/removed non-MVP regression tests that are preserved but do not block the default launch gate.
 - `npm run test:a11y` — Playwright accessibility-only suite.
 - `npm run perf:budgets` — Lighthouse-based performance budget check.
-- `npm run go:no-go` — Composite gate (perf + a11y + readiness signals).
+- `npm run go:no-go` — Composite gate for fresh smoke, protected perf/launch status, safe-mode flags, required evidence files, and production-candidate restore evidence.
 
 ## Deployment
 

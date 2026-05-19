@@ -38,9 +38,11 @@ This summary tracks the currently enforced QA automation surface and launch-gate
   - `npm run audit:all`
   - `npm run test:launch:smoke`
   - `BASE_URL=<production-candidate-url> npm run perf:budgets`
-  - `BASE_URL=<production-candidate-url> npm run monitor:launch`
-  - `BASE_URL=<production-candidate-url> npm run launch:status`
-  - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go`
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`
+  - `npm run db:backup:checkpoint`
+  - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
+  - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 
 ## Primary Suite Ownership
 

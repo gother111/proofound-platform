@@ -22,7 +22,7 @@ What it checks (`scripts/perf-budgets.mjs`):
 
 ### Go / No-Go Gate (required)
 
-- `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go`
+- `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 
 What it checks (`scripts/go-no-go-check.ts`):
 
@@ -32,8 +32,8 @@ What it checks (`scripts/go-no-go-check.ts`):
   - `RLS_DEPLOYMENT_SUMMARY.md`
   - `ACCESSIBILITY_AUDIT_REPORT.md`
 - Current launch smoke evidence is fresh for the target.
-- Restore-readiness scripts and runbook are present.
-- `/api/monitoring/launch-status` reports the full launch monitor contract as ready.
+- Production-candidate restore report evidence exists and is fresh for non-local targets.
+- Authenticated `/api/monitoring/launch-status` reports the full launch monitor contract as ready.
 
 ## Target Runbook
 
@@ -42,8 +42,11 @@ What it checks (`scripts/go-no-go-check.ts`):
    - `npm run start`
 2. Run budgets:
    - `BASE_URL=<production-candidate-url> npm run perf:budgets`
-3. Run go/no-go:
-   - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go`
+3. Capture restore evidence for the same production-candidate data checkpoint:
+   - `npm run db:backup:checkpoint`
+   - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
+4. Run go/no-go:
+   - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 
 ## Optional Deeper Analysis
 
