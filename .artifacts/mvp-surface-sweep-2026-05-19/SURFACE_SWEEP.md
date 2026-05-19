@@ -1425,3 +1425,10 @@ Non-fatal test noise:
 - Found unused active components preserving TODO/coming-soon behavior: `src/components/matching/AssignmentBuilderV2.tsx`, `src/components/matching/WeightsFiltersSheet.tsx`, and `src/components/ComingSoon.tsx`.
 - Moved the retired assignment builder/filter controls into `src/archive/non_launch_assignment_collaboration/components/matching/` and the generic coming-soon component into `src/archive/non_launch_pages/components/`.
 - Added archive README coverage and launch-gate assertions so generic coming-soon placeholders and unfinished assignment controls do not sit in active MVP component paths.
+
+## Continuation - Browser Plugin Visual Smoke
+
+- Reconnected the Codex `@Browser` plugin through its Browser runtime and started the local app at `http://127.0.0.1:3000`.
+- Browser smoke for `/login` redirected to the authenticated individual home, confirming the active session resolves to `/app/i/home` and renders the proof-first object/action structure: `Proof-first home`, `Your Proof Wallet`, `Privacy controls`, and `Export or delete`.
+- Browser smoke for `/portfolio/demo` rendered the launch-safe unavailable Public Page state instead of exposing demo/private profile data: `This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.`
+- No UI code changes were made from this Browser pass; the evidence confirms the current local Browser path is usable and that the checked public fallback is privacy-safe.
