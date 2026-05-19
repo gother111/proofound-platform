@@ -1292,3 +1292,10 @@ Non-fatal test noise:
 - Tightened go/no-go behavior so localhost targets keep the existing local-parity restore-tooling check, but non-local production-candidate targets now require a fresh passing restore verification report at `.artifacts/launch-restore-report.json` or `LAUNCH_RESTORE_REPORT_PATH`.
 - The production-candidate restore report must have `ok: true`, a valid `generatedAt`, be no older than `LAUNCH_RESTORE_REPORT_MAX_AGE_HOURS` (default 72), and point to readable `summary.json` and `row-fingerprint.json` checkpoint evidence.
 - Updated `docs/launch-restore-drill.md`, `agent/checklists/verification.md`, and `docs/mvp-launch-master-checklist.md` so final launch operators write the restore report with `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json` before running final go/no-go.
+
+## Continuation - Dependency Audit Evidence Refresh
+
+- Reran `npm run audit:prod` after sandbox DNS blocked npm registry access; the approved network rerun exited `0` at the high/critical threshold.
+- Current audit output still reports 9 moderate transitive advisories: `protobufjs` through `@xenova/transformers`/`onnxruntime-web` and `ws` through `react-email`/Socket.IO. `npm audit fix --force` would introduce breaking dependency changes, so no automatic force fix was applied in this sweep checkpoint.
+- Attempted `npm run audit:all`; the sandbox run failed with DNS `ENOTFOUND`, and the escalated external audit was rejected by local policy because it sends dependency metadata to the npm registry. Treat the all-scope audit as UNVERIFIED until the user explicitly approves that disclosure.
+- Updated `docs/CURRENT_TRUTH.md` so it no longer claims zero production dependency vulnerabilities from stale May 14 evidence.
