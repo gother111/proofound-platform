@@ -290,6 +290,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Moved direct tests for those unmounted widget cards to `tests/archive/non_mvp_dashboard_ui/`, while keeping active launch-discoverability coverage focused on mounted top-bar and settings behavior.
 - Updated the organization team API comments away from the archived `TeamRolesCard` widget and added launch-gate coverage so the unmounted card layer stays archived.
 
+37. Retired dashboard layout and broad organization-type defaults still lived in active libraries.
+
+- Confirmed `src/lib/dashboard/layout.ts` was only referenced by its own active test after the customizable/dashboard-card UI was archived.
+- Moved the retired dashboard widget definitions, preset layouts, layout sanitizer, drag-reorder helper, and their active test to the dashboard archive.
+- Confirmed `src/lib/org/defaults.ts` and `src/lib/org/copy-variants.ts` had no active consumers and still carried broad organization-suite defaults for NGO, government, academic, cooperative, individual, dashboard widgets, public revenue/funding copy, and broad onboarding checklists.
+- Moved those org defaults/copy modules to `src/archive/non_launch_org_suite/lib/org/`.
+- Added launch-gate coverage so the retired dashboard layout engine and broad org-type defaults stay out of active source/tests.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -320,6 +328,7 @@ Desktop checks:
 - `/portfolio/demo` was rechecked through the Codex in-app Browser after restarting the local dev server: title `Public Page Unavailable | Proofound`, H1 `Public page unavailable`, Return home link `/`, console warnings/errors `[]`.
 - `/portfolio/demo` was rechecked again through the Codex in-app Browser during the continued sweep: title `Public Page Unavailable | Proofound`, URL `http://localhost:33180/portfolio/demo`, safe unavailable copy rendered, and no obvious private-leak terms were present in the visible body text.
 - After archiving the unmounted dashboard widget-card layer, Browser smoke covered `/portfolio/demo`, `/`, and `/portfolio/org/test-org`: no runtime-error text was visible. A deeper re-read of `/portfolio/demo` after hydration confirmed H1 `Public page unavailable`, title `Public Page Unavailable | Proofound`, and the safe unavailable message plus `Return home` action.
+- After archiving the retired dashboard layout and broad org defaults libraries, Browser smoke rechecked `/portfolio/demo` and `/`: both rendered expected titles and visible content with no runtime-error text.
 
 Mobile viewport check:
 
@@ -597,6 +606,14 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the unmounted dashboard widget-card layer.
 - `npm run docs:freshness` - passed after archiving the unmounted dashboard widget-card layer.
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after archiving the unmounted dashboard widget-card layer.
+- `rg -n "sanitizeLayout|DEFAULT_LAYOUT|AVAILABLE_WIDGETS|PRESET_LAYOUTS|calculateProfileReadiness|reorderWidgets|validateLayout|@/lib/dashboard/layout|src/lib/dashboard/layout" src tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active references are now limited to launch-gate archive assertions after archiving the retired dashboard layout engine.
+- `rg -n "getOrgDefaults|getFieldVisibilityDefaults|getOnboardingChecklist|ORG_DEFAULTS|ORG_COPY|getOrgCopy|copy-variants|recommendedDashboardWidgets|src/lib/org/defaults|@/lib/org/defaults" src tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active references are now limited to launch-gate archive assertions after archiving broad organization-type defaults/copy variants.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/api/launch-page-inventory.test.ts tests/ui/widget-grid-skeleton.test.tsx tests/ui/metric-strip-chip-style.test.tsx` - passed, 4 files / 25 tests, after archiving retired dashboard layout and org defaults libraries.
+- `git diff --check` - passed after archiving retired dashboard layout and org defaults libraries.
+- `npm run lint` - passed after archiving retired dashboard layout and org defaults libraries.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving retired dashboard layout and org defaults libraries.
+- `npm run docs:freshness` - passed after archiving retired dashboard layout and org defaults libraries.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after archiving retired dashboard layout and org defaults libraries.
 
 Non-fatal test noise:
 

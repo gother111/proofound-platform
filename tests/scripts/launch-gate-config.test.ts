@@ -205,6 +205,7 @@ describe('launch gate package configuration', () => {
       'src/components/dashboard/DynamicDashboard.tsx',
       'src/app/app/o/[slug]/home/OrgDashboardClient.tsx',
       'src/app/app/o/[slug]/home/SuspendedOrgDashboardClient.tsx',
+      'src/lib/dashboard/layout.ts',
       'src/components/dashboard/ExpertiseDepthWidget.tsx',
       'src/components/dashboard/ExploreCard.tsx',
       'src/components/dashboard/GapMapWidget.tsx',
@@ -235,6 +236,7 @@ describe('launch gate package configuration', () => {
       'tests/ui/tasks-card.test.tsx',
       'tests/ui/while-away-card.test.tsx',
       'tests/ui/projects-card.test.tsx',
+      'tests/dashboard-layout.test.ts',
     ];
 
     for (const retiredPath of retiredPaths) {
@@ -260,6 +262,11 @@ describe('launch gate package configuration', () => {
         )
       )
     ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'src/archive/non_launch_dashboard_ui/lib/dashboard/layout.ts')
+      )
+    ).toBe(true);
     expect(fs.existsSync(path.join(repoRoot, 'tests/archive/non_mvp_dashboard_ui/README.md'))).toBe(
       true
     );
@@ -278,6 +285,8 @@ describe('launch gate package configuration', () => {
       'src/components/assignments/AssignmentManager.tsx',
       'src/components/assignments/StakeholderAssignmentForm.tsx',
       'src/components/assignments/StakeholderInviteDialog.tsx',
+      'src/lib/org/defaults.ts',
+      'src/lib/org/copy-variants.ts',
       'tests/ui/org-candidates-workspace.test.tsx',
       'tests/ui/organization-basic-info-editor.test.tsx',
     ];
@@ -288,6 +297,9 @@ describe('launch gate package configuration', () => {
 
     expect(
       fs.existsSync(path.join(repoRoot, 'src/components/organization/OrgTrustProfileEditor.tsx'))
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_org_suite/lib/org/defaults.ts'))
     ).toBe(true);
     expect(fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_org_suite/README.md'))).toBe(
       true
