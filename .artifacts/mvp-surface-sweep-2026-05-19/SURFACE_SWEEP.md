@@ -1432,3 +1432,9 @@ Non-fatal test noise:
 - Browser smoke for `/login` redirected to the authenticated individual home, confirming the active session resolves to `/app/i/home` and renders the proof-first object/action structure: `Proof-first home`, `Your Proof Wallet`, `Privacy controls`, and `Export or delete`.
 - Browser smoke for `/portfolio/demo` rendered the launch-safe unavailable Public Page state instead of exposing demo/private profile data: `This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing.`
 - No UI code changes were made from this Browser pass; the evidence confirms the current local Browser path is usable and that the checked public fallback is privacy-safe.
+
+## Continuation - Founder Public-Story Evidence Wiring
+
+- Found the final launch checklist still marking `founder_public_story_signal_over_cvs` as `UNVERIFIED` because it depended on stale launch-summary wording that had been correctly removed.
+- Rewired that checklist row to use the canonical public-story evidence instead: locked MVP stronger-signal/proof-over-profile-theater language plus README's narrow corridor and no-public-directory launch exclusion.
+- Regenerated the final launch checklist: repo scope remains `READY`, with `36` pass, `0` fail, `0` blocked, and only `4` external prerequisites still unverified: incident/support owners, critical alerts, backup/restore verification, and final founder go/no-go signoff.

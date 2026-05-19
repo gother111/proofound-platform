@@ -8,24 +8,24 @@ stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
 
- ✓ tests/lib/public-portfolio-projection.test.ts  (15 tests) 26ms
- ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 88ms
- ✓ tests/ui/public-portfolio-page.test.tsx  (9 tests) 192ms
+ ✓ tests/lib/public-portfolio-projection.test.ts  (15 tests) 27ms
+ ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 87ms
+ ✓ tests/ui/public-portfolio-page.test.tsx  (9 tests) 195ms
 
  Test Files  3 passed (3)
       Tests  26 passed (26)
-   Start at  22:03:48
-   Duration  1.15s (transform 313ms, setup 356ms, collect 750ms, tests 306ms, environment 650ms, prepare 141ms)
+   Start at  22:16:10
+   Duration  1.18s (transform 294ms, setup 367ms, collect 669ms, tests 309ms, environment 675ms, prepare 199ms)
 
 
-(node:72541) Warning: `--localstorage-file` was provided without a valid path
+(node:85071) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:72541) Warning: `--localstorage-file` was provided without a valid path
+(node:85071) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:72541) Warning: `--localstorage-file` was provided without a valid path
+(node:85071) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)

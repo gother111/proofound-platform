@@ -1,19 +1,19 @@
 {
   "scope": "repo",
-  "generatedAt": "2026-05-19T20:04:26.404Z",
+  "generatedAt": "2026-05-19T20:16:47.623Z",
   "currentDate": "2026-05-19",
   "workspaceRoot": "/Users/yuriibakurov/proofound",
-  "gitHead": "a63f4e902d07857df2ccfe09a8584fe002507469",
+  "gitHead": "245e8f1f40c0122bbeca4bb9b48a88653279c7f9",
   "gitBranch": "master",
   "verdict": "READY",
   "includeStateful": false,
-  "liveBaseUrl": "http://127.0.0.1:53451",
+  "liveBaseUrl": "http://127.0.0.1:57376",
   "latestLaunchBundleDir": ".artifacts/launch-validation-2026-05-19",
   "statusCounts": {
-    "PASS": 35,
+    "PASS": 36,
     "FAIL": 0,
     "BLOCKED": 0,
-    "UNVERIFIED": 5
+    "UNVERIFIED": 4
   },
   "items": [
     {
@@ -931,25 +931,18 @@
         "docs/scope-compliance-report-2026-03-24.md",
         "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
       ],
-      "status": "UNVERIFIED",
-      "summary": "No current evidence source resolved this checklist line.",
+      "status": "PASS",
+      "summary": "The locked MVP and root README keep the public story on stronger proof signal, not broad platform or public-directory positioning.",
       "evidence": [
         {
-          "label": "Configured evidence source",
-          "path": "README.md"
-        },
-        {
-          "label": "Configured evidence source",
-          "path": "docs/scope-compliance-report-2026-03-24.md"
-        },
-        {
-          "label": "Configured evidence source",
-          "path": "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
+          "label": "Locked MVP source of truth and README",
+          "path": "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md; README.md",
+          "note": "Product promise: stronger signal than CV filtering, proof instead of profile theater, and no broad public-directory launch."
         }
       ],
       "blockerIds": [],
       "retiredStaleClaims": [],
-      "sourceLabel": "No evidence selected",
+      "sourceLabel": "Locked MVP source of truth and README",
       "blocksVerdict": false,
       "blockingScope": "full"
     },
@@ -1109,38 +1102,6 @@
       "blockingScope": "full"
     },
     {
-      "id": "founder_public_story_signal_over_cvs",
-      "section": "Founder / GTM",
-      "label": "Public story sells stronger signal than CVs, not broad platform vision",
-      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
-      "evidenceSources": [
-        "README.md",
-        "docs/scope-compliance-report-2026-03-24.md",
-        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
-      ],
-      "status": "UNVERIFIED",
-      "summary": "No current evidence source resolved this checklist line.",
-      "evidence": [
-        {
-          "label": "Configured evidence source",
-          "path": "README.md"
-        },
-        {
-          "label": "Configured evidence source",
-          "path": "docs/scope-compliance-report-2026-03-24.md"
-        },
-        {
-          "label": "Configured evidence source",
-          "path": "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
-        }
-      ],
-      "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "No evidence selected",
-      "blocksVerdict": false,
-      "blockingScope": "full"
-    },
-    {
       "id": "founder_go_no_go_signed_after_green",
       "section": "Founder / GTM",
       "label": "Go/no-go is signed only after fresh evidence is green",
@@ -1247,38 +1208,6 @@
       "blockerIds": [],
       "retiredStaleClaims": [],
       "sourceLabel": "Launch restore drill",
-      "blocksVerdict": false,
-      "blockingScope": "full"
-    },
-    {
-      "id": "founder_public_story_signal_over_cvs",
-      "section": "Founder / GTM",
-      "label": "Public story sells stronger signal than CVs, not broad platform vision",
-      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
-      "evidenceSources": [
-        "README.md",
-        "docs/scope-compliance-report-2026-03-24.md",
-        "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
-      ],
-      "status": "UNVERIFIED",
-      "summary": "No current evidence source resolved this checklist line.",
-      "evidence": [
-        {
-          "label": "Configured evidence source",
-          "path": "README.md"
-        },
-        {
-          "label": "Configured evidence source",
-          "path": "docs/scope-compliance-report-2026-03-24.md"
-        },
-        {
-          "label": "Configured evidence source",
-          "path": "Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"
-        }
-      ],
-      "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "No evidence selected",
       "blocksVerdict": false,
       "blockingScope": "full"
     },

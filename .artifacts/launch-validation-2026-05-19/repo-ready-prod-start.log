@@ -1,13 +1,13 @@
 
 > proofound@0.1.0 start
-> next start -p 53451
+> next start -p 57376
 
    ▲ Next.js 15.5.18
-   - Local:        http://localhost:53451
-   - Network:      http://192.168.1.155:53451
+   - Local:        http://localhost:57376
+   - Network:      http://192.168.1.155:57376
 
  ✓ Starting...
- ✓ Ready in 444ms
-(node:72344) Warning: `--localstorage-file` was provided without a valid path
+ ✓ Ready in 417ms
+(node:84892) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-{"level":"warn","event":"database.health.timeout.recovered","timestamp":"2026-05-19T20:03:43.780Z","error":"Timed out after 1200ms"}
+{"level":"warn","event":"database.health.timeout.recovered","timestamp":"2026-05-19T20:16:06.709Z","error":"Timed out after 1200ms"}

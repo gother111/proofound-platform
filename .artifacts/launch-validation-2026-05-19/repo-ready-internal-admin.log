@@ -5,27 +5,27 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
 
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
-
- ✓ tests/api/admin-internal-ops-queue-route.test.ts  (7 tests) 14ms
+ ✓ tests/api/admin-internal-ops-queue-route.test.ts  (7 tests) 15ms
  ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 38ms
- ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 92ms
+ ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 90ms
 
  Test Files  3 passed (3)
       Tests  15 passed (15)
-   Start at  22:03:55
-   Duration  914ms (transform 179ms, setup 345ms, collect 296ms, tests 144ms, environment 647ms, prepare 136ms)
+   Start at  22:16:18
+   Duration  958ms (transform 207ms, setup 352ms, collect 320ms, tests 143ms, environment 709ms, prepare 140ms)
 
 
-(node:72720) Warning: `--localstorage-file` was provided without a valid path
+(node:85253) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:72720) Warning: `--localstorage-file` was provided without a valid path
+(node:85253) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:72720) Warning: `--localstorage-file` was provided without a valid path
+(node:85253) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)

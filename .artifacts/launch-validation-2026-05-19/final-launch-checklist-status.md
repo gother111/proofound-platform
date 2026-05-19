@@ -1,19 +1,19 @@
 # Proofound Final Launch Checklist Status
 
-Generated: 2026-05-19T20:04:26.404Z
+Generated: 2026-05-19T20:16:47.623Z
 Scope: `repo`
 Workspace: `/Users/yuriibakurov/proofound`
-Git: `master` @ `a63f4e902d07857df2ccfe09a8584fe002507469`
+Git: `master` @ `245e8f1f40c0122bbeca4bb9b48a88653279c7f9`
 Verdict: `READY`
-Live base URL: `http://127.0.0.1:53451`
+Live base URL: `http://127.0.0.1:57376`
 Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
 
 ## Summary
 
-- PASS: 35
+- PASS: 36
 - FAIL: 0
 - BLOCKED: 0
-- UNVERIFIED: 5
+- UNVERIFIED: 4
 
 ## True Blockers
 
@@ -24,7 +24,6 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
 - Ops — Incident owner / support lead roles are assigned: Operational roles are named in docs, but this repo does not identify the currently assigned people for launch.
 - Ops — Critical alerts are configured: Monitoring docs describe critical alerts, but this checklist has no fresh environment-backed proof that they are configured in the live stack.
 - Ops — Backups and restore discipline are verified: Backup and restore discipline is documented with a checkpoint and restore-verify workflow, but this checklist does not rerun the drill itself.
-- Founder / GTM — Public story sells stronger signal than CVs, not broad platform vision: No current evidence source resolved this checklist line.
 - Founder / GTM — Go/no-go is signed only after fresh evidence is green: No current evidence source resolved this checklist line.
 
 ## Missing Evidence
@@ -32,7 +31,6 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
 - Ops — Incident owner / support lead roles are assigned
 - Ops — Critical alerts are configured
 - Ops — Backups and restore discipline are verified
-- Founder / GTM — Public story sells stronger signal than CVs, not broad platform vision
 - Founder / GTM — Go/no-go is signed only after fresh evidence is green
 
 ## Product
@@ -159,9 +157,9 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-19`
 - [PASS] Founder outbound and homepage messaging match the wedge
   - Summary: The GTM plan pins outbound copy to the same proof-over-CV wedge used by the production homepage.
   - Evidence: GTM and initial marketing plan: `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`
-- [UNVERIFIED] Public story sells stronger signal than CVs, not broad platform vision
-  - Summary: No current evidence source resolved this checklist line.
-  - Evidence: Configured evidence source: `README.md`; Configured evidence source: `docs/scope-compliance-report-2026-03-24.md`; Configured evidence source: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
+- [PASS] Public story sells stronger signal than CVs, not broad platform vision
+  - Summary: The locked MVP and root README keep the public story on stronger proof signal, not broad platform or public-directory positioning.
+  - Evidence: Locked MVP source of truth and README: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md; README.md` (Product promise: stronger signal than CV filtering, proof instead of profile theater, and no broad public-directory launch.)
 - [PASS] Candidate supply-seeding plan exists for the chosen corridor
   - Summary: The GTM plan defines the first-wave candidate supply channels, volume assumptions, readiness criteria, and operating loop.
   - Evidence: GTM and initial marketing plan: `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`

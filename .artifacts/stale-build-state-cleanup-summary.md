@@ -1,12 +1,13 @@
 # Stale Build State Cleanup Summary
 
-Generated: 2026-05-19T20:01:55.048Z
+Generated: 2026-05-19T20:14:08.722Z
 Mode: delete
-Paths cleaned: 1
-Estimated reclaimed space: 2.6 GB
+Paths cleaned: 2
+Estimated reclaimed space: 2.7 GB
 
-| Path    | Action  |   Size |
-| ------- | ------- | -----: |
-| `.next` | removed | 2.6 GB |
+| Path             | Action  |     Size |
+| ---------------- | ------- | -------: |
+| `.next`          | removed |   2.6 GB |
+| `.next-dev-3000` | removed | 155.5 MB |
 
 Generated build snapshots were deleted. Re-run the build to regenerate current `.next` output.

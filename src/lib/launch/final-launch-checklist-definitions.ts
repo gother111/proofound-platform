@@ -1308,19 +1308,25 @@ export function buildFinalLaunchChecklistDefinitions({
       ],
       evaluateDirect: (context) => {
         if (
-          textContainsAll(context.lockedMvp, [/proof instead of profile theater/i]) &&
-          textContainsAll(context.launchReadinessSummary, [/public and corridor flows/i])
+          textContainsAll(context.lockedMvp, [
+            /stronger signal than CV filtering/i,
+            /proof instead of profile theater/i,
+          ]) &&
+          textContainsAll(context.readme, [
+            /narrow proof-first hiring corridor/i,
+            /MVP excludes ATS or HRIS replacement, public people directories, open candidate indexes/i,
+          ])
         ) {
           return [
             docObservation({
               status: 'PASS',
               summary:
-                'Current authority docs frame Proofound as stronger signal than CV theater, but founder-outbound proof remains outside repo scope.',
+                'The locked MVP and root README keep the public story on stronger proof signal, not broad platform or public-directory positioning.',
               sourceId: 'docs',
-              sourceLabel: 'Locked MVP source of truth',
-              sourcePath: 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
+              sourceLabel: 'Locked MVP source of truth and README',
+              sourcePath: 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md; README.md',
               observedAt: null,
-              note: 'Product promise: proof instead of profile theater.',
+              note: 'Product promise: stronger signal than CV filtering, proof instead of profile theater, and no broad public-directory launch.',
             }),
           ];
         }

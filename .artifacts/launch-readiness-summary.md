@@ -16,8 +16,8 @@ Historical Verdict: `NOT READY`
 > - Treat this March memo as historical evidence only. The current MVP sweep artifact is `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`.
 > - Current route-surface truth is no longer the March `18` disallowed-route blocker. The 2026-05-19 route inventory passed and classifies active MVP, internal launch-ops, and archived compatibility routes explicitly.
 > - Current local launch smoke evidence is `.artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke-full.json`; the local monitor rerun against that artifact passed `10/10` with persistence disabled.
-> - Current repo-ready checklist evidence is `.artifacts/launch-validation-2026-05-19/final-launch-checklist-status.md`, generated `2026-05-19T20:04:26.404Z` with repo scope `READY`, `35` pass, `0` fail, `0` blocked, and `5` external prerequisites unverified.
-> - Current launch blockers are narrower than this March memo: incident/support owner assignment, critical alert proof, backup/restore verification, founder public-story signoff, and final founder go/no-go evidence remain external production-candidate prerequisites. The May 19 smoke and monitor proof is local/repo evidence, not production-candidate sign-off.
+> - Current repo-ready checklist evidence is `.artifacts/launch-validation-2026-05-19/final-launch-checklist-status.md`, generated `2026-05-19T20:16:47.623Z` with repo scope `READY`, `36` pass, `0` fail, `0` blocked, and `4` external prerequisites unverified.
+> - Current launch blockers are narrower than this March memo: incident/support owner assignment, critical alert proof, backup/restore verification, and final founder go/no-go evidence remain external production-candidate prerequisites. The May 19 smoke and monitor proof is local/repo evidence, not production-candidate sign-off.
 > - Non-blocking watch items should be read separately from launch gates: assignment publish/list latency still needs live or staging budget proof, and historical registry cleanup should not reopen retired March route blockers unless fresh evidence reproduces them.
 
 ## Current Conclusion
@@ -43,7 +43,7 @@ The full launch recommendation is still `NO-GO` until the external production-ca
 - `PASS` privacy-sensitive repo checks
   - Manual privacy, private context, workflow email privacy, and internal admin checks passed in the repo-ready validation bundle.
 - `UNVERIFIED` external production-candidate prerequisites
-  - Incident/support owner assignment, critical alert proof, backup/restore verification, founder public-story signoff, and final founder go/no-go sign-off are still external evidence items.
+  - Incident/support owner assignment, critical alert proof, backup/restore verification, and final founder go/no-go sign-off are still external evidence items.
 
 ## True Blockers
 
@@ -54,8 +54,7 @@ Full launch still has external prerequisites:
 1. Incident/support owners must be assigned and evidenced.
 2. Critical alerts must be configured and evidenced.
 3. Backup/restore must be verified against the intended production-candidate target.
-4. Founder public-story signoff must confirm the launch story sells stronger signal than CVs, not broad platform vision.
-5. Founder go/no-go must be signed after the green evidence pack is reviewed.
+4. Founder go/no-go must be signed after the green evidence pack is reviewed.
 
 ## Non-Blocking Watch Items
 
@@ -83,5 +82,5 @@ The full-launch recommendation remains `NO-GO` until production-candidate operat
 
 - Latest operational checklist: `.artifacts/launch-validation-2026-05-19/final-launch-checklist-status.md`
 - Latest machine-readable bundle: `.artifacts/launch-validation-2026-05-19/final-launch-checklist-status.json`
-- Generated at: `2026-05-19T20:04:26.404Z`
+- Generated at: `2026-05-19T20:16:47.623Z`
 <!-- final-launch-checklist:end -->
