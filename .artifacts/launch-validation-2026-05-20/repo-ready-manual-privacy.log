@@ -5,19 +5,19 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
 
  ✓ tests/lib/uploads-privacy.test.ts  (14 tests) 7ms
- ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 44ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 46ms
  ✓ tests/api/org-match-review-route.test.ts  (18 tests) 30ms
 
  Test Files  3 passed (3)
       Tests  38 passed (38)
-   Start at  00:19:34
-   Duration  1.12s (transform 255ms, setup 317ms, collect 605ms, tests 81ms, environment 594ms, prepare 123ms)
+   Start at  00:32:13
+   Duration  1.19s (transform 225ms, setup 325ms, collect 629ms, tests 83ms, environment 630ms, prepare 128ms)

@@ -5,15 +5,15 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
 
- ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 34ms
- ✓ tests/api/launch-page-inventory.test.ts  (6 tests) 79ms
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 35ms
+ ✓ tests/api/launch-page-inventory.test.ts  (6 tests) 77ms
 
  Test Files  2 passed (2)
       Tests  10 passed (10)
-   Start at  00:19:26
-   Duration  1.04s (transform 53ms, setup 338ms, collect 60ms, tests 113ms, environment 653ms, prepare 101ms)
+   Start at  00:32:04
+   Duration  1.30s (transform 54ms, setup 453ms, collect 53ms, tests 112ms, environment 802ms, prepare 116ms)
