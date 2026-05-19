@@ -3,7 +3,7 @@
 > Doc Class: `active`
 > Last Verified: `2026-05-19`
 
-Production-ready scaffold for a proof-first, privacy-first hiring corridor centered on Proof Packs, with one individual side and one organization side.
+Launch-candidate scaffold for a proof-first, privacy-first hiring corridor centered on Proof Packs, with one individual side and one organization side. Final launch readiness still depends on the target-specific gates below.
 
 ## Overview
 

@@ -15,9 +15,9 @@
 
 This audit reviews all architecture documentation and codebase artifacts against the comprehensive privacy and security requirements established in `DATA_SECURITY_PRIVACY_ARCHITECTURE.md`.
 
-**Key Finding**: The project demonstrates **strong privacy-by-design principles in documentation** and **critical RLS policies have been successfully deployed** (2025-10-30).
+**Historical finding**: the 2025 audit recorded strong privacy-by-design principles in documentation and an RLS deployment snapshot. This is not current production-candidate privacy evidence.
 
-**🎉 Major Update**: Row-Level Security (RLS) policies deployed to all 20 existing database tables with 100% coverage (124 total policies). See Section 1.2 for deployment details.
+**Historical update**: Row-Level Security (RLS) policy coverage was recorded for the then-existing database tables on 2025-10-30. Current launch evidence must come from fresh privacy tests, migration audit, backup, and isolated restore verification against the intended target.
 
 ### Audit Results at a Glance
 
@@ -355,7 +355,7 @@ compMax: integer('comp_max'), // @privacy Tier-2: Sensitive compensation data
 
 ### Step 1: Enable RLS on All Tables
 
-Run this SQL in Supabase SQL Editor:
+Historical remediation SQL example:
 
 ```sql
 -- Enable RLS on all 28 privacy-sensitive tables
@@ -1144,10 +1144,10 @@ Response: {
    - Add "Who has accessed my data" log
    - Add granular privacy controls (per-field visibility)
 
-**Success Criteria**:
-- ✅ Pass external security audit
-- ✅ GDPR compliance checklist 100% complete
-- ✅ All DPAs signed with subprocessors
+**Historical Success Criteria**:
+- Pass external security audit
+- Complete the GDPR checklist with fresh dated evidence
+- Confirm current subprocessors and signed DPAs before launch
 
 ---
 
@@ -2030,7 +2030,7 @@ describe('Privacy Flow Tests', () => {
 | Do Not Sell        | ✅     | No data selling (document in Privacy Policy) |
 | Non-Discrimination | ✅     | No service degradation for opt-outs          |
 
-**Overall CCPA Compliance**: 100% (5/5 implemented)
+**Historical CCPA checklist status**: recorded as complete in this 2025 snapshot; current launch signoff still requires fresh legal/privacy evidence.
 
 ---
 

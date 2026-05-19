@@ -660,6 +660,61 @@ describe('launch gate package configuration', () => {
     }
   });
 
+  it('keeps broad reference snapshots from making current launch claims', () => {
+    const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8');
+    const userFlows = fs.readFileSync(
+      path.join(repoRoot, 'USER_FLOWS_TECHNICAL_SPECIFICATIONS.md'),
+      'utf8'
+    );
+    const systemArchitecture = fs.readFileSync(
+      path.join(repoRoot, 'SYSTEM_ARCHITECTURE_COMPREHENSIVE.md'),
+      'utf8'
+    );
+    const privacyAudit = fs.readFileSync(
+      path.join(repoRoot, 'CROSS_DOCUMENT_PRIVACY_AUDIT.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(readme).toContain('Launch-candidate scaffold');
+    expect(readme).toContain('Final launch readiness still depends on the target-specific gates');
+    expect(readme).not.toContain('Production-ready scaffold');
+
+    expect(userFlows).toContain('historical reference');
+    expect(userFlows).toContain('not production-ready MVP launch evidence');
+    expect(userFlows).toContain('only the locked MVP corridor');
+    expect(userFlows).not.toContain('production-ready technical specifications');
+    expect(userFlows).not.toContain(
+      'All 40 flows (20 Individual + 20 Organization) fully specified.'
+    );
+
+    expect(systemArchitecture).toContain('Historical MVP Scope Snapshot');
+    expect(systemArchitecture).toContain('not current launch evidence');
+    expect(systemArchitecture).toContain('Archived UI; retained taxonomy only');
+    expect(systemArchitecture).toContain('npm run db:migrate');
+    expect(systemArchitecture).not.toContain('npx drizzle-kit push:pg');
+    expect(systemArchitecture).not.toContain('Supabase Dashboard → SQL Editor');
+
+    expect(privacyAudit).toContain('Historical finding');
+    expect(privacyAudit).toContain('not current production-candidate privacy evidence');
+    expect(privacyAudit).toContain('Current launch evidence must come from fresh privacy tests');
+    expect(privacyAudit).not.toContain('critical RLS policies have been successfully deployed');
+    expect(privacyAudit).not.toContain('GDPR compliance checklist 100% complete');
+    expect(privacyAudit).not.toContain('Overall CCPA Compliance');
+    expect(privacyAudit).not.toContain('Run this SQL in Supabase SQL Editor');
+
+    for (const docPath of [
+      'CROSS_DOCUMENT_PRIVACY_AUDIT.md',
+      'SYSTEM_ARCHITECTURE_COMPREHENSIVE.md',
+      'USER_FLOWS_TECHNICAL_SPECIFICATIONS.md',
+    ]) {
+      const registryLine = docsRegistry
+        .split('\n')
+        .find((line) => line.includes(`| \`${docPath}\``));
+      expect(registryLine).toContain('| `2026-05-19`');
+    }
+  });
+
   it('keeps active operator docs aligned with current deployment and provider gates', () => {
     const deploymentGuide = fs.readFileSync(
       path.join(repoRoot, 'docs/deployment-guide.md'),

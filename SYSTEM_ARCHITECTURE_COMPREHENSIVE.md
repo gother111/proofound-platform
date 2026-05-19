@@ -39,9 +39,9 @@
 - **Dual-Persona Architecture**: Separate experiences for individuals (`/app/i/*`) and organizations (`/app/o/[slug]/*`)
 - **Zero Tolerance for Bias**: No race/gender/age/YOE filters; bias-safe early views
 
-### 1.3 MVP Scope (Current Status)
+### 1.3 Historical MVP Scope Snapshot
 
-**Live Features:**
+**Historical feature snapshot, not current launch evidence:**
 
 - ✅ Authentication (Email/Password, Google, LinkedIn OAuth)
 - ✅ Dual-persona routing (individual vs org_member)
@@ -1609,36 +1609,36 @@ Participant One sees:          Participant Two sees:
 
 ### 7.1 Authentication & Accounts [MVP]
 
-| Feature             | Schema | API | UI  | Status       |
-| ------------------- | ------ | --- | --- | ------------ |
-| Email/password auth | ✅     | ✅  | ✅  | **Complete** |
-| Google OAuth        | ✅     | ✅  | ✅  | **Complete** |
-| LinkedIn OAuth      | ✅     | ✅  | ✅  | **Complete** |
-| Sign-out            | ✅     | ✅  | ✅  | **Complete** |
-| Password reset      | ✅     | ✅  | ✅  | **Complete** |
-| Session management  | ✅     | ✅  | ✅  | **Complete** |
-| Device recognition  | ✅     | ⚠️  | ❌  | Partial      |
-| Apple OAuth         | ❌     | ❌  | ❌  | Post-MVP     |
-| GitHub OAuth        | ❌     | ❌  | ❌  | Post-MVP     |
-| MFA                 | ❌     | ❌  | ❌  | Post-MVP     |
-| SSO (SAML/OIDC)     | ❌     | ❌  | ❌  | Post-MVP     |
+| Feature             | Schema | API | UI  | Status                                                      |
+| ------------------- | ------ | --- | --- | ----------------------------------------------------------- |
+| Email/password auth | ✅     | ✅  | ✅  | **Complete**                                                |
+| Google OAuth        | ✅     | ✅  | ✅  | Historical; target-scoped launch provider evidence required |
+| LinkedIn OAuth      | ✅     | ✅  | ✅  | Historical/reference only; not launch trust evidence        |
+| Sign-out            | ✅     | ✅  | ✅  | **Complete**                                                |
+| Password reset      | ✅     | ✅  | ✅  | **Complete**                                                |
+| Session management  | ✅     | ✅  | ✅  | **Complete**                                                |
+| Device recognition  | ✅     | ⚠️  | ❌  | Partial                                                     |
+| Apple OAuth         | ❌     | ❌  | ❌  | Post-MVP                                                    |
+| GitHub OAuth        | ❌     | ❌  | ❌  | Post-MVP                                                    |
+| MFA                 | ❌     | ❌  | ❌  | Post-MVP                                                    |
+| SSO (SAML/OIDC)     | ❌     | ❌  | ❌  | Post-MVP                                                    |
 
 ### 7.2 Profiles (Individual) [MVP]
 
-| Feature                   | Schema | API | UI  | Status       |
-| ------------------------- | ------ | --- | --- | ------------ |
-| Basic profile fields      | ✅     | ✅  | ✅  | **Complete** |
-| Mission/Vision/Values     | ✅     | ✅  | ✅  | **Complete** |
-| Causes                    | ✅     | ✅  | ✅  | **Complete** |
-| Expertise Atlas (skills)  | ✅     | ✅  | ✅  | **Complete** |
-| Impact Stories            | ✅     | ✅  | ⚠️  | Partial      |
-| Experiences               | ✅     | ✅  | ⚠️  | Partial      |
-| Education                 | ✅     | ✅  | ⚠️  | Partial      |
-| Volunteering              | ✅     | ✅  | ⚠️  | Partial      |
-| Avatar upload             | ✅     | ✅  | ✅  | **Complete** |
-| Privacy controls          | ✅     | ⚠️  | ⚠️  | Partial      |
-| Profile preview (WYSIWYG) | ❌     | ❌  | ⚠️  | Partial      |
-| Rich portfolios           | ❌     | ❌  | ❌  | Post-MVP     |
+| Feature                   | Schema | API | UI  | Status                               |
+| ------------------------- | ------ | --- | --- | ------------------------------------ |
+| Basic profile fields      | ✅     | ✅  | ✅  | **Complete**                         |
+| Mission/Vision/Values     | ✅     | ✅  | ✅  | Historical/post-MVP for launch scope |
+| Causes                    | ✅     | ✅  | ✅  | Historical/post-MVP for launch scope |
+| Expertise Atlas (skills)  | ✅     | ✅  | ✅  | Archived UI; retained taxonomy only  |
+| Impact Stories            | ✅     | ✅  | ⚠️  | Partial                              |
+| Experiences               | ✅     | ✅  | ⚠️  | Partial                              |
+| Education                 | ✅     | ✅  | ⚠️  | Partial                              |
+| Volunteering              | ✅     | ✅  | ⚠️  | Partial                              |
+| Avatar upload             | ✅     | ✅  | ✅  | **Complete**                         |
+| Privacy controls          | ✅     | ⚠️  | ⚠️  | Partial                              |
+| Profile preview (WYSIWYG) | ❌     | ❌  | ⚠️  | Partial                              |
+| Rich portfolios           | ❌     | ❌  | ❌  | Post-MVP                             |
 
 ### 7.3 Organizations & Assignments [MVP]
 
@@ -1889,7 +1889,7 @@ npx drizzle-kit generate:pg
 **Apply Migration**:
 
 ```bash
-npx drizzle-kit push:pg
+npm run db:migrate
 ```
 
 **Query Example**:
@@ -2156,8 +2156,8 @@ async function handleVerificationResponse({
 npx drizzle-kit generate:pg
 
 # 3. Review generated SQL in src/db/migrations/
-# 4. Apply migration to local database
-npx drizzle-kit push:pg
+# 4. Apply migrations through the repo-owned runner
+npm run db:migrate
 
 # 5. Test locally
 npm run dev
@@ -2174,8 +2174,8 @@ git commit -m "feat: add verification system tables"
 touch src/db/migrations/20250129_add_verification_messaging_moderation.sql
 
 # 2. Write SQL (see existing migration for reference)
-# 3. Apply to Supabase
-# Go to Supabase Dashboard → SQL Editor → Run migration SQL
+# 3. Apply through the repo-owned migration runner; do not use dashboard paste flows for launch evidence
+npm run db:migrate
 ```
 
 **Rollback Strategy**:
@@ -2661,7 +2661,7 @@ Fixes #124
 1. Add table definition to `src/db/schema.ts`
 2. Run `npx drizzle-kit generate:pg`
 3. Review generated migration in `src/db/migrations/`
-4. Apply: `npx drizzle-kit push:pg`
+4. Apply through the repo migration runner: `npm run db:migrate`
 
 **Create a new API endpoint**:
 

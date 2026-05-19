@@ -12,7 +12,7 @@
 
 ## EXECUTIVE SUMMARY
 
-This document transforms the 40 core user flows into **production-ready technical specifications**. Each flow includes:
+This historical reference transforms the broader 40-flow product concept into detailed technical specifications. It is not production-ready MVP launch evidence. Each flow includes:
 
 - ✅ **Screen-by-screen breakdowns** with states (loading, success, error, empty)
 - ✅ **Field-level validation rules** (format, length, required/optional)
@@ -24,7 +24,7 @@ This document transforms the 40 core user flows into **production-ready technica
 
 **Format**: Each flow follows the same detailed template for consistency.
 
-**Completeness**: All 40 flows (20 Individual + 20 Organization) fully specified.
+**Completeness note**: all 40 historical flows were specified for reference, but only the locked MVP corridor and fresh repo evidence define current launch scope.
 
 ---
 
