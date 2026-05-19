@@ -366,6 +366,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Protected individual/org routes failed closed to login while unauthenticated; `/admin/verification` failed closed to `403`.
 - Saved `browser-smoke.json` and viewport screenshots under `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/`.
 
+47. Active Phase 2 backlog docs still described verification canonicalization as only planned even though current code and tests now prove the canonical launch posture.
+
+- Inspected `/api/verify/[token]`, `/api/verify/custom/[token]`, and `src/lib/verification/request-feed.ts`.
+- Confirmed public token responders remain active launch surfaces, but resolve through canonical `verification_records` or canonical verification bundles.
+- Confirmed old `skill_verification_requests` and `impact_story_verification_requests` table names are absent from active `src/app` and `src/lib`.
+- Confirmed remaining `custom_request_id` references are canonical bundle linkage for grouped verification requests, not old skill/impact request-table transport.
+- Updated `docs/backlog/phase-2-trust-review.md`, `docs/backlog/dependency-map.md`, `docs/verification-checklist.md`, and `docs/DOCS_REGISTRY.md` with the 2026-05-19 Phase 2 disposition and focused test evidence.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -737,6 +745,8 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after the archived-test and docs cleanup.
 - `git diff --check` - passed after the archived-test and docs cleanup.
 - Browser plugin smoke saved `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/browser-smoke.json` plus desktop/mobile screenshots for representative public, auth-entry, protected individual/org, and admin/internal surfaces.
+- `rg -n 'skill_verification_requests|impact_story_verification_requests|request_type|custom_request_id' src/app src/lib tests -g '!src/archive/**' -g '!tests/archive/**'` - no active old skill/impact request-table names remain in `src/app` or `src/lib`; remaining `custom_request_id` hits are canonical bundle linkage.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/lib/canonical-verification-request-token-resolution.test.ts tests/api/verify-impact-token-route.test.ts tests/api/custom-verification-routes.test.ts tests/api/verification-status-route.test.ts tests/ui/verification-status-options.test.tsx tests/api/org-match-review-route.test.ts tests/api/conversation-reveal-route.test.ts tests/api/engagement-verifications-route.test.ts tests/lib/authz-policy.test.ts tests/lib/workflow-decision-record.test.ts` - passed, 10 files / 82 tests, after the Phase 2 verification disposition refresh.
 
 Non-fatal test noise:
 

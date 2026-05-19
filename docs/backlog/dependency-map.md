@@ -7,7 +7,7 @@
 
 - `Phase 0`: resolved for route-surface truth in the 2026-05-19 sweep
 - `Phase 1`: resolved for proof-first onboarding, Proof Pack anchor integrity, and export/delete/auditability in the 2026-05-19 sweep; gated narrative-surface disposition remains non-blocking
-- `Phase 2`: planned/watch, with current trust and review checklist rows already `PASS`
+- `Phase 2`: resolved for current canonical verification token transport, launch-client verification dependence, and trust/review rechecks in the 2026-05-19 sweep
 - `Phase 3`: planned/watch, with assignment runtime performance kept as a non-blocking watch item unless fresh evidence proves instability
 - `Phase 4`: planned for production-candidate launch ops evidence
 - `Phase 5`: planned for final packaging and governance cleanup
@@ -27,7 +27,7 @@ flowchart LR
 
 1. `P0-1` -> `P0-2` -> `P0-3`
 2. `P1-1`, `P1-2`, and `P1-3` may run in parallel after Phase 0 passes; `P1-4` waits for them
-3. `P2-1` -> `P2-2` -> `P2-3`
+3. `P2-1`, `P2-2`, and `P2-3` are resolved for the current sweep; reopen Phase 2 only if old request-table transport returns to active launch code
 4. `P3-1` -> `P3-2` -> `P3-3`
 5. `P4-1` -> `P4-2` and `P4-3`
 6. `P5-1` -> `P5-2` -> `P5-3`
