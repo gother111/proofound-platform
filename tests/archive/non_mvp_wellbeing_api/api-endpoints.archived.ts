@@ -1,10 +1,11 @@
 /**
- * API Endpoint Testing Script
+ * Archived API endpoint testing script.
  *
- * Tests all critical API endpoints to verify they work correctly
- * and persist data to the database.
+ * Historical broad PRD-era smoke script. It includes retired wellbeing/Zen API
+ * expectations and is not part of the locked MVP launch signal.
  *
- * Run with: npx tsx tests/api-endpoints-test.ts
+ * If this is needed for archaeology, run it manually with:
+ * npx tsx tests/archive/non_mvp_wellbeing_api/api-endpoints.archived.ts
  */
 
 import { db } from '@/db';

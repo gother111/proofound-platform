@@ -192,6 +192,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Moved it to `tests/archive/non_mvp_legacy_prd/comprehensive-prd.archived.ts` and added an archive README explaining that it is historical context only, not launch evidence.
 - Registered the archive README in `docs/DOCS_REGISTRY.md`.
 
+24. Active test surfaces still treated retired wellbeing APIs as live launch evidence.
+
+- Found `tests/api-endpoints-test.ts`, a manually runnable broad endpoint script that still checked `/api/wellbeing/checkin`.
+- Found `tests/lib/wellbeing-client.test.ts`, an active Vitest suite for retired wellbeing client helpers that call `/api/wellbeing/*` routes.
+- Moved both to `tests/archive/non_mvp_wellbeing_api/` with `.archived` filenames and an archive README.
+- Added launch-gate coverage so the retired broad script, wellbeing client suite, and active-test `/api/wellbeing` references cannot return to the default launch signal.
+- Registered the archive README in `docs/DOCS_REGISTRY.md`.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -418,6 +426,13 @@ Commands run with Node 25 path:
 - `rg` active-test sweep after archiving: active tests no longer import `ExpertiseAtlasClient`, old CV/JD import wizard components, broad Add Skill drawer flows, or archived L4 card/widget tests outside `tests/archive/`.
 - `rg` active-test sweep after admin archiving: active tests outside `src/archive` and `tests/archive` no longer import archived admin users/fairness route modules, `OrganizationsTable`, `generateFairnessNoteResult`, or the retired `calculateFairnessGaps` broad admin helper.
 - Current-doc stale route sweep no longer finds active non-archive assertions that `/app/i/expertise`, `/app/i/projects`, legacy CV wizard routes, contracts/projects modules, or Expertise Atlas UI are launch surfaces in the patched README, retained setup, accessibility, mobile parity, and QA summary docs.
+- Browser plugin reconnection on `http://127.0.0.1:33180/app/i/settings` - passed, current tab rendered meaningful Settings content and no console warnings/errors.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts src/lib/launch/__tests__/surface-policy.test.ts` - passed, 2 files / 19 tests, after archiving retired wellbeing API tests.
+- `rg -n "api-endpoints-test|wellbeing-client\.test|/api/wellbeing" tests -g '!tests/archive/**'` - only launch-gate path-existence assertions remain; no active test exercises retired wellbeing API calls.
+- `git diff --check` - passed after archiving retired wellbeing API tests.
+- `npm run lint` - passed after archiving retired wellbeing API tests.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving retired wellbeing API tests.
+- `npm run docs:freshness` - passed after registering the retired wellbeing API archive README.
 
 Non-fatal test noise:
 

@@ -143,6 +143,31 @@ describe('launch gate package configuration', () => {
     ).toBe(true);
   });
 
+  it('keeps retired wellbeing API tests archived', () => {
+    expect(fs.existsSync(path.join(repoRoot, 'tests/api-endpoints-test.ts'))).toBe(false);
+    expect(fs.existsSync(path.join(repoRoot, 'tests/lib/wellbeing-client.test.ts'))).toBe(false);
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'tests/archive/non_mvp_wellbeing_api/api-endpoints.archived.ts')
+      )
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'tests/archive/non_mvp_wellbeing_api/wellbeing-client.archived.test.ts')
+      )
+    ).toBe(true);
+  });
+
+  it('keeps active tests away from retired wellbeing APIs', () => {
+    const retiredWellbeingApi = '/api/' + 'wellbeing';
+    const activeTestFiles = listTestFiles(path.join(repoRoot, 'tests'));
+    const offenders = activeTestFiles
+      .filter((file) => fs.readFileSync(file, 'utf8').includes(retiredWellbeingApi))
+      .map((file) => path.relative(repoRoot, file));
+
+    expect(offenders).toEqual([]);
+  });
+
   it('keeps active E2E helpers away from the retired Expertise Atlas route', () => {
     const activeHelperFiles = fs
       .readdirSync(path.join(repoRoot, 'e2e/helpers'), { withFileTypes: true })

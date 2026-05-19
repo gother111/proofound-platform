@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { saveSelfAssessment, saveWorkSchedule, setWellbeingOptIn } from '@/lib/wellbeing/client';
 import { apiFetch } from '@/lib/api/fetch';
 
+// Archived with the non-MVP wellbeing/Zen API surface. The launch corridor keeps
+// active coverage on 410 route policy instead of these retired client helpers.
+
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: vi.fn(),
 }));
