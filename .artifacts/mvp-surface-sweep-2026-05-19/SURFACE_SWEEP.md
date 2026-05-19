@@ -839,3 +839,11 @@ Non-fatal test noise:
 ## Continuation - Production Readiness Checklist Refresh
 
 - Updated `docs/production-readiness-checklist.md` so it points at the 2026-05-19 phase-exit checklist and sweep artifact, separates local evidence from production-candidate signoff, names backup checkpoint, isolated restore rehearsal, and final go/no-go as still-open readiness gates, and records the authenticated internal launch-ops posture for perf-status and launch-status.
+
+## Continuation - Release Checklist Refresh
+
+- Found `docs/release-checklist.md` still verified on 2026-03-01 and missing the current production-candidate backup, restore, authenticated launch-ops, assignment-latency, and final go/no-go gates.
+- Updated the checklist so it points to the current production-readiness checklist, phase-exit checklist, and sweep artifact; preserves manual-link interview posture as the locked MVP default; and separates existing local evidence from the still-open production-candidate signoff.
+- Updated `docs/DOCS_REGISTRY.md` so the release checklist freshness reflects the 2026-05-19 refresh.
+- Browser rechecked the user-open `http://localhost:33180/portfolio/demo` route after the release-checklist refresh. The page rendered `Public Page Unavailable | Proofound`, safe unavailable copy, no framework overlay, and `0` console warnings/errors. The check also caught the unavailable public fallback using a section heading without a page-level `h1`; updated the individual and organization unavailable public portfolio fallbacks so their visible card title can render as `h1` while shared public sections still default to `h2`.
+- Browser evidence saved at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/portfolio-demo-release-checklist-refresh-after-h1-2026-05-19.json` and `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-19/portfolio-demo-release-checklist-refresh-after-h1-2026-05-19.png`.

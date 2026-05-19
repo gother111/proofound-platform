@@ -263,6 +263,30 @@ describe('launch gate package configuration', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('keeps the release checklist aligned with current production-candidate gates', () => {
+    const releaseChecklist = fs.readFileSync(
+      path.join(repoRoot, 'docs/release-checklist.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(releaseChecklist).toContain('Last Verified: `2026-05-19`');
+    expect(releaseChecklist).toContain('docs/production-readiness-checklist.md');
+    expect(releaseChecklist).toContain('docs/backlog/phase-exit-checklist.md');
+    expect(releaseChecklist).toContain('mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md');
+    expect(releaseChecklist).toContain('BASE_URL=<production-candidate-url>');
+    expect(releaseChecklist).toContain('npm run monitor:launch');
+    expect(releaseChecklist).toContain('npm run db:backup:checkpoint');
+    expect(releaseChecklist).toContain('npm run db:restore:verify');
+    expect(releaseChecklist).toContain('/api/assignments` latency samples');
+    expect(releaseChecklist).toContain(
+      'manual-link interview posture remains the locked MVP default'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/release-checklist.md`                                                                             | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+    );
+  });
+
   it('keeps retired wellbeing API tests archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'tests/api-endpoints-test.ts'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'tests/lib/wellbeing-client.test.ts'))).toBe(false);

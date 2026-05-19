@@ -44,7 +44,7 @@ function renderUnavailablePage(handle: string) {
         </div>
       }
     >
-      <PublicProfileSection title="Public Page unavailable">
+      <PublicProfileSection title="Public Page unavailable" titleLevel={1}>
         <PublicProfileEmptyState message="This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing." />
       </PublicProfileSection>
     </PublicProfileShell>
