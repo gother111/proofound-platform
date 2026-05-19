@@ -1,5 +1,4 @@
 import { db } from '@/db';
-import { createClient } from '@/lib/supabase/server';
 import { assignments, matches, matchInterest, conversations } from '@/db/schema';
 import { eq, and, sql, isNull } from 'drizzle-orm';
 import { getOrganizationReadinessCached } from '@/lib/readiness/organization';
@@ -10,46 +9,6 @@ import {
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
 import { getCanonicalOrgTeamData } from '@/lib/organizations/team';
-
-export async function getOrgGoalsData(orgId: string) {
-  try {
-    const supabase = await createClient();
-    const { data: goals, error } = await supabase
-      .from('organization_goals')
-      .select('*')
-      .eq('org_id', orgId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching org goals:', error);
-      return [];
-    }
-    return goals || [];
-  } catch (error) {
-    console.error('Error in getOrgGoalsData:', error);
-    return [];
-  }
-}
-
-export async function getOrgProjectsData(orgId: string) {
-  try {
-    const supabase = await createClient();
-    const { data: projects, error } = await supabase
-      .from('organization_projects')
-      .select('*')
-      .eq('org_id', orgId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching org projects:', error);
-      return [];
-    }
-    return projects || [];
-  } catch (error) {
-    console.error('Error in getOrgProjectsData:', error);
-    return [];
-  }
-}
 
 export async function getOrgTeamData(orgId: string) {
   try {

@@ -274,6 +274,14 @@ Interaction thesis: every public or dashboard action should either route to an a
 - Moved stale active UI tests for those orphaned organization components to `tests/archive/non_mvp_org_suite/`.
 - Added launch-gate coverage so the broad org-suite UI stays out of active source/tests while the lean `OrgTrustProfileEditor` remains active.
 
+35. An orphaned organization home dashboard client still carried generic customization and old org-suite fetches.
+
+- Confirmed the active organization home route now renders a fixed trust, assignment, review, and access corridor directly from `src/app/app/o/[slug]/home/page.tsx`.
+- Found the unused `OrgDashboardClient` and `SuspendedOrgDashboardClient` still under the active app route tree with widget customization, quick presets, local saved layout state, and stale goals/projects fetches.
+- Moved the orphaned organization dashboard client files to `src/archive/non_launch_dashboard_ui/app/o/[slug]/home/`.
+- Removed active `getOrgGoalsData` and `getOrgProjectsData` from `src/lib/dashboard/orgDataFetchers.ts` because the active organization home no longer uses broad org goals/projects widgets.
+- Added launch-gate coverage so the old organization home dashboard client stays archived.
+
 ## Browser Evidence
 
 Tool: Codex in-app Browser at `http://localhost:33180`.
@@ -302,6 +310,7 @@ Desktop checks:
 - `Request a pilot` anchors point to `/signup/organization`; direct click landed on `/signup/organization`.
 - `/signup`, `/signup/organization`, and `/signup/individual` loaded with expected signup headings.
 - `/portfolio/demo` was rechecked through the Codex in-app Browser after restarting the local dev server: title `Public Page Unavailable | Proofound`, H1 `Public page unavailable`, Return home link `/`, console warnings/errors `[]`.
+- `/portfolio/demo` was rechecked again through the Codex in-app Browser during the continued sweep: title `Public Page Unavailable | Proofound`, URL `http://localhost:33180/portfolio/demo`, safe unavailable copy rendered, and no obvious private-leak terms were present in the visible body text.
 
 Mobile viewport check:
 
@@ -562,6 +571,15 @@ Commands run with Node 25 path:
 - `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the broad organization suite.
 - `npm run docs:freshness` - passed after archiving the broad organization suite.
 - `git diff --check` - passed after archiving the broad organization suite.
+- Browser plugin rechecked `http://localhost:33180/portfolio/demo` during the continued sweep: `Public Page Unavailable | Proofound`, safe unavailable copy, no obvious private-leak terms in visible body text.
+- `rg -n 'OrgDashboardClient|SuspendedOrgDashboardClient|org-dashboard-layout|Quick presets|Save Layout|Add Widgets' src tests docs -g '!src/archive/**' -g '!tests/archive/**' -g '!docs/archive/**'` - active references are now limited to launch-gate archive assertions.
+- `rg -n 'getOrgGoalsData|getOrgProjectsData|organization_goals|organization_projects' src/lib src/app tests -g '!src/archive/**' -g '!tests/archive/**'` - no active references remain after removing broad org goals/projects dashboard fetchers.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test -- tests/scripts/launch-gate-config.test.ts tests/ui/org-dashboard-archived-nav.test.tsx tests/api/launch-page-inventory.test.ts` - passed, 3 files / 24 tests, after archiving the orphaned organization home dashboard client.
+- `git diff --check` - passed after archiving the orphaned organization home dashboard client.
+- `npm run lint` - passed after archiving the orphaned organization home dashboard client.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run typecheck` - passed after archiving the orphaned organization home dashboard client.
+- `npm run docs:freshness` - passed after archiving the orphaned organization home dashboard client.
+- `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes` - passed, 4 files / 25 tests, after archiving the orphaned organization home dashboard client.
 
 Non-fatal test noise:
 

@@ -203,6 +203,8 @@ describe('launch gate package configuration', () => {
       'src/components/dashboard/DashboardTile.tsx',
       'src/components/dashboard/DraggableDashboard.tsx',
       'src/components/dashboard/DynamicDashboard.tsx',
+      'src/app/app/o/[slug]/home/OrgDashboardClient.tsx',
+      'src/app/app/o/[slug]/home/SuspendedOrgDashboardClient.tsx',
       'tests/ui/draggable-dashboard-while-away-visibility.test.tsx',
     ];
 
@@ -212,6 +214,14 @@ describe('launch gate package configuration', () => {
 
     expect(
       fs.existsSync(path.join(repoRoot, 'src/archive/non_launch_dashboard_ui/README.md'))
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          repoRoot,
+          'src/archive/non_launch_dashboard_ui/app/o/[slug]/home/OrgDashboardClient.tsx'
+        )
+      )
     ).toBe(true);
     expect(fs.existsSync(path.join(repoRoot, 'tests/archive/non_mvp_dashboard_ui/README.md'))).toBe(
       true
