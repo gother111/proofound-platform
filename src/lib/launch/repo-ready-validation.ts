@@ -409,10 +409,28 @@ export async function runRepoReadyValidationBundle(options: RepoReadyValidationO
     );
 
     if (gates.find((gate) => gate.id === 'prod_build')?.status === 'PASS') {
-      const started = await startProductionServer(workspaceRoot, outputDir, now);
-      server = started.child;
-      baseUrl = started.baseUrl;
-      gates.push(started.gate);
+      try {
+        const started = await startProductionServer(workspaceRoot, outputDir, now);
+        server = started.child;
+        baseUrl = started.baseUrl;
+        gates.push(started.gate);
+      } catch (error) {
+        const bootErrorPath = path.join(outputDir, 'repo-ready-prod-boot-error.log');
+        await fs.writeFile(
+          bootErrorPath,
+          `${error instanceof Error ? error.stack || error.message : String(error)}\n`,
+          'utf8'
+        );
+        gates.push({
+          id: 'prod_boot',
+          status: 'FAIL',
+          summary:
+            'Production boot could not start in this environment; review the captured boot error and rerun on a host that can bind localhost.',
+          evidence: [path.relative(workspaceRoot, bootErrorPath).replace(/\\/g, '/')],
+          command: 'npm run start -- -p <dynamic-port> && curl /api/health',
+          observedAt: now.toISOString(),
+        });
+      }
     } else {
       gates.push({
         id: 'prod_boot',

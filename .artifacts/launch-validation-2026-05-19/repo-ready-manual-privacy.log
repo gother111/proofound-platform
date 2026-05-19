@@ -1,0 +1,43 @@
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/api/org-match-review-route.test.ts tests/lib/uploads-privacy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/lib/uploads-privacy.test.ts  (14 tests) 6ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 47ms
+ ✓ tests/api/org-match-review-route.test.ts  (18 tests) 31ms
+
+ Test Files  3 passed (3)
+      Tests  38 passed (38)
+   Start at  21:44:47
+   Duration  1.20s (transform 285ms, setup 350ms, collect 607ms, tests 84ms, environment 666ms, prepare 161ms)
+
+
+WebSocket server error:
+Error: listen EPERM: operation not permitted 0.0.0.0:24678
+    at Server.setupListenHandle [as _listen2] (node:net:1918:21)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
+    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
+    at Array.map (<anonymous>)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
+    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
+(node:59956) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59956) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:59956) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)

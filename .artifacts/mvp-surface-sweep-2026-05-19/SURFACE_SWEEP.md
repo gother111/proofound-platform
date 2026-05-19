@@ -1220,6 +1220,10 @@ Non-fatal test noise:
   table, converted phase-2 notes to explicit post-MVP language, made the unused security-monitoring
   wrapper fail closed when callers request auth/rate-limit enforcement it does not provide, and
   clarified mock RPC fallback copy.
+- Launch checklist hardening follow-up: `npm run launch:checklist` was able to crash before writing a
+  checklist when the local environment could not bind a localhost port. `runRepoReadyValidationBundle`
+  now records that as a failed `prod_boot` gate with a captured boot-error log and continues collecting
+  repo-only evidence, so checklist output remains explicit `NOT_READY` evidence instead of disappearing.
 
 ## Continuation - Phase 4 Local Smoke Refresh
 
