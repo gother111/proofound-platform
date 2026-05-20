@@ -45,7 +45,7 @@ function buildAssignment() {
     hoursMax: 20,
     startEarliest: '2026-06-01T00:00:00.000Z',
     startLatest: '2026-06-15T00:00:00.000Z',
-    verificationGates: ['identity', 'work_email', 'linkedin'],
+    verificationGates: ['identity', 'work_email'],
     createdAt: '2026-05-18T08:00:00.000Z',
   };
 }

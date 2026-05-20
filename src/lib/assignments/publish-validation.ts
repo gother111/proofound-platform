@@ -4,7 +4,6 @@ import { evaluateAssignmentPolicy } from '@/lib/assignments/policy';
 const ALLOWED_VERIFICATION_GATES = new Set([
   'identity',
   'work_email',
-  'linkedin',
   'background_check',
   'education',
 ]);

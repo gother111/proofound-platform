@@ -29,11 +29,6 @@ const VERIFICATION_GATES = [
     description: 'Use only for roles where domain-backed work identity matters.',
   },
   {
-    id: 'linkedin',
-    label: 'LinkedIn profile verification',
-    description: 'Optional profile cross-check when it supports a narrow trust review.',
-  },
-  {
     id: 'background_check',
     label: 'Background check',
     description: 'For roles with clear compliance or safety requirements.',

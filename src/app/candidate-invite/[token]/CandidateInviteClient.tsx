@@ -183,7 +183,7 @@ function verificationGateLabel(gate: string) {
   const labels: Record<string, string> = {
     identity: 'Identity check',
     work_email: 'Work email check',
-    linkedin: 'LinkedIn profile check',
+    linkedin: 'Unsupported LinkedIn employment check',
     background_check: 'Background check',
     education: 'Education check',
   };

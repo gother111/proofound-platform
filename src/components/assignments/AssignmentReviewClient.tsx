@@ -38,7 +38,7 @@ function getSkillDisplayLabel(skill: any) {
 const VERIFICATION_GATE_LABELS: Record<string, string> = {
   identity: 'Identity Verification',
   work_email: 'Work Email Verification',
-  linkedin: 'LinkedIn Profile Verification',
+  linkedin: 'Unsupported LinkedIn employment check',
   background_check: 'Background Check',
   education: 'Education Verification',
 };

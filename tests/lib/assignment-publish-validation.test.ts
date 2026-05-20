@@ -111,6 +111,31 @@ describe('validateAssignmentPublishReadiness', () => {
     );
   });
 
+  it('blocks LinkedIn employment checks as non-launch assignment trust gates', () => {
+    const result = validateAssignmentPublishReadiness({
+      assignment: {
+        ...baseAssignment,
+        verificationGates: ['linkedin'],
+      },
+      outcomesCount: 1,
+      assignmentBasicModeEnabled: true,
+      organization: {
+        trustStatus: 'verified',
+        orgTrustTier: 'trusted',
+        verified: true,
+      } as any,
+    });
+
+    expect(result.blocks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          blockCode: 'invalid_trust_requirements',
+          details: { invalidGates: ['linkedin'] },
+        }),
+      ])
+    );
+  });
+
   it('blocks vague generic assignment language at publish time', () => {
     const result = validateAssignmentPublishReadiness({
       assignment: {
