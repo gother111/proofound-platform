@@ -335,7 +335,7 @@ const fromEmail = process.env.EMAIL_FROM || 'Proofound <no-reply@proofound.io>';
 
 ### LINKEDIN_VERIFICATION_ADMIN_EMAILS
 
-**Purpose**: Comma-separated admin recipients for LinkedIn manual-review notifications.
+**Purpose**: Archived/non-launch compatibility variable for retired LinkedIn verification manual-review notifications.
 
 **Format**:
 
@@ -345,9 +345,10 @@ LINKEDIN_VERIFICATION_ADMIN_EMAILS=admin1@proofound.io,admin2@proofound.io
 
 **Behavior**:
 
-- Used when a LinkedIn verification request remains in manual-review (`pending`) state.
-- If unset or empty, the app falls back to `PLATFORM_ADMIN_EMAILS`.
-- If both are unset, notification emails are skipped (request still succeeds).
+- Not required for launch.
+- Do not add it to new launch environment checklists.
+- LinkedIn social login does not use this variable.
+- Current launch verification uses scoped proof verification requests and work email account checks, not LinkedIn verification.
 
 ---
 
@@ -542,13 +543,14 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 ### Interview and Identity OAuth
 
-**Purpose**: Enable optional connected-provider interview scheduling through Google Meet, plus social provider callbacks. Manual meeting links remain the locked MVP default.
+**Purpose**: Enable optional connected-provider interview scheduling through Google Meet, plus Google and LinkedIn social login through Supabase Auth. Manual meeting links remain the locked MVP default.
 
 **Target-scoped Vars**:
 
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required only when the target intentionally enables Google Meet integration or Google social login through Supabase.
 - `GOOGLE_REDIRECT_URI` — Required only for enabled Google integration flows. Must match the app integration callback (recommended runtime value: `/api/integrations/google/callback`).
-- LinkedIn social login, if intentionally enabled for a target, should be configured through the Supabase provider callback. Custom app-side LinkedIn OAuth helpers, LinkedIn REST verification APIs, and LinkedIn enrichment are archived for launch.
+- Google and LinkedIn login buttons are launch-active auth entry points. Configure both providers in Supabase Auth using the Supabase callback.
+- LinkedIn social login must stay separate from LinkedIn verification. Custom app-side LinkedIn OAuth helpers, LinkedIn REST verification APIs, and LinkedIn enrichment are archived for launch.
 - `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used for OAuth callback construction (`NEXT_PUBLIC_URL` is legacy fallback only).
 - LinkedIn verification tier behavior (no extra env needed):
   - `IDENTITY` label maps to `identity_verified`
@@ -571,9 +573,8 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 - Manual-link interview scheduling must still work.
 - Google OAuth URL generation and Google Meet scheduling can fail closed or show unavailable guidance.
-- LinkedIn integration callback cannot exchange OAuth codes.
 - Users cannot connect optional providers for interviews.
-- Social login through Google and LinkedIn cannot be initiated reliably if those providers are enabled.
+- Social login through Google and LinkedIn cannot redirect reliably if those providers are not configured in Supabase Auth.
 
 **Setup**:
 
@@ -582,7 +583,7 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
    - `http://localhost:3000/api/integrations/google/callback`
    - `<preview-app-url>/api/integrations/google/callback`
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
-2. If LinkedIn social login is intentionally enabled for a target, configure only the Supabase social auth callback:
+2. Configure LinkedIn social login in Supabase Auth with the Supabase callback:
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
      Do not configure the archived app-side LinkedIn callback or request LinkedIn verification scopes for launch.
 3. Set `NEXT_PUBLIC_SITE_URL` to your canonical domain (for example `https://proofound.io`).
@@ -1681,7 +1682,6 @@ Use this checklist when setting up a new environment:
 
 - [ ] `RESEND_API_KEY` - Resend API key
 - [ ] `EMAIL_FROM` - Sender email address
-- [ ] `LINKEDIN_VERIFICATION_ADMIN_EMAILS` or `PLATFORM_ADMIN_EMAILS` - LinkedIn manual-review recipients
 - [ ] Domain verified in Resend
 - [ ] DNS records configured (SPF, DKIM)
 

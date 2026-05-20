@@ -36,4 +36,18 @@ describe('archived LinkedIn integration references', () => {
       readFileSync(path.join(REPO_ROOT, 'src/lib/linkedin-enrichment.ts'), 'utf8')
     ).toThrow();
   });
+
+  it('does not archive LinkedIn social login availability', () => {
+    const socialButtons = readFileSync(
+      path.join(REPO_ROOT, 'src/components/auth/social-sign-in-buttons.tsx'),
+      'utf8'
+    );
+    const authAction = readFileSync(path.join(REPO_ROOT, 'src/actions/auth.ts'), 'utf8');
+
+    expect(socialButtons).toContain('provider="linkedin_oidc"');
+    expect(socialButtons).toContain('label="LinkedIn"');
+    expect(authAction).toContain("z.enum(['google', 'linkedin_oidc'])");
+    expect(authAction).not.toContain('r_verify');
+    expect(authAction).not.toContain('r_profile_basicinfo');
+  });
 });

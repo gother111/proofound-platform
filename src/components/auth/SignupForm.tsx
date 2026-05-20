@@ -449,7 +449,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           </div>
 
           {/* Social Sign In - Using existing configured component */}
-          <SocialSignInButtons />
+          <SocialSignInButtons nextPath={nextPath} />
 
           {/* Sign In Link */}
           <div className="mt-6 text-center">

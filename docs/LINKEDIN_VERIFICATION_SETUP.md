@@ -8,6 +8,8 @@ LinkedIn verification is outside the locked MVP launch corridor. This file is re
 Current launch behavior:
 
 - Work email is the only launch-active account-side check on the individual verification surface.
+- LinkedIn may be available as a Supabase social login provider.
+- LinkedIn login is authentication only; it is not proof, verification, trust lift, public reputation, organization review lift, intro eligibility, reveal readiness, or match/ranking advantage.
 - LinkedIn state is read-only history when present.
 - LinkedIn state never creates proof trust, public reputation, organization review lift, intro eligibility, reveal readiness, or match/ranking advantage by itself.
 - LinkedIn-flavored admin review routes were archived for launch on `2026-03-25`.
@@ -71,17 +73,9 @@ The preserved non-launch implementation reference lives under:
 
 ## Environment Variables
 
-These variables may appear in older environments for compatibility or future/post-MVP investigation, but they are not launch-blocking and active launch code must not depend on them:
-
-```env
-LINKEDIN_CLIENT_ID=
-LINKEDIN_CLIENT_SECRET=
-LINKEDIN_REDIRECT_URI=
-LINKEDIN_API_VERSION=
-LINKEDIN_VERIFICATION_ADMIN_EMAILS=
-```
-
-Do not add them to required MVP launch gates unless the route-surface policy and locked MVP authority stack are explicitly updated.
+LinkedIn social login is configured in Supabase Auth, not through the archived app-side LinkedIn
+verification helpers. Historical environments may still contain old LinkedIn verification variables,
+but active launch code must not depend on them and they must not be added to MVP launch gates.
 
 If a future product decision reactivates LinkedIn verification, it must define:
 
@@ -119,6 +113,6 @@ Expected evidence:
 
 ## Change Control
 
-Before reactivating any LinkedIn flow, record the product decision in the current sweep or launch artifact and update route-surface policy, API docs, tests, privacy docs, and public/app copy together.
+Before reactivating any LinkedIn verification, scraping, enrichment, import, or trust-lift flow, record the product decision in the current sweep or launch artifact and update route-surface policy, API docs, tests, privacy docs, and public/app copy together.
 
-Until then, this document remains reference-only.
+Until then, this document remains reference-only for verification behavior. LinkedIn social login is covered by the active auth docs.

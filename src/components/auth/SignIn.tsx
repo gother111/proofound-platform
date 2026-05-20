@@ -319,7 +319,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           </div>
 
           {/* Social sign-in mirrors the rounded Figma buttons */}
-          <SocialSignInButtons className="space-y-3" />
+          <SocialSignInButtons className="space-y-3" nextPath={nextPath} />
 
           {/* Create account helper */}
           <div className="mt-7 text-center text-sm text-neutral-dark-500">

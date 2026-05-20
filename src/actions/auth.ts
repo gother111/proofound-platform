@@ -739,6 +739,7 @@ export async function signInWithOAuth(
 
     const headersList = await headers();
     const siteUrl = resolveRequestSiteUrl(headersList);
+    const nextPath = sanitizeNextPath((formData.get('next') as string | null) ?? null);
 
     if (!siteUrl) {
       return { error: 'Unable to start the sign-in flow. Please try again later.' };
@@ -749,7 +750,9 @@ export async function signInWithOAuth(
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: result.data,
       options: {
-        redirectTo: `${siteUrl}/auth/callback`,
+        redirectTo: nextPath
+          ? `${siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`
+          : `${siteUrl}/auth/callback`,
       },
     });
 

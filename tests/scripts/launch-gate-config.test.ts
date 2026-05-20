@@ -1567,7 +1567,7 @@ describe('launch gate package configuration', () => {
     expect(linkedInSetup).toContain('/api/admin/internal-ops/queues');
     expect(linkedInSetup).toContain('/api/admin/verification/linkedin/queue');
     expect(compactWhitespace(linkedInSetup)).toContain(
-      'Do not add them to required MVP launch gates'
+      'active launch code must not depend on them and they must not be added to MVP launch gates'
     );
     expect(linkedInSetup).not.toContain('Free automated checking');
     expect(linkedInSetup).not.toContain('Quick approvals');
@@ -1791,11 +1791,18 @@ describe('launch gate package configuration', () => {
     expect(envDocs).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
     expect(envDocs).toContain('Required Vars When `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`');
     expect(envDocs).toContain('Manual-link interview scheduling must still work');
+    expect(envDocs).toContain(
+      'Google and LinkedIn login buttons are launch-active auth entry points'
+    );
     expect(envDocs).toContain('https://proofound.io/api/integrations/google/callback');
     expect(envDocs).toContain('https://<supabase-project>.supabase.co/auth/v1/callback');
     expect(envDocs).toContain('<preview-app-url>/api/integrations/google/callback');
     expect(envDocs).toContain('Do not configure the archived app-side LinkedIn callback');
     expect(envDocs).not.toContain('/api/auth/linkedin/callback');
+    expect(envDocs).toContain(
+      'Archived/non-launch compatibility variable for retired LinkedIn verification manual-review notifications'
+    );
+    expect(envDocs).not.toContain('LinkedIn manual-review recipients');
     expect(envDocs).toContain('/api/match/profile');
     expect(envDocs).not.toContain('/api/core/matching/profile');
     expect(envDocs).toContain('retained near-matches matching handler');

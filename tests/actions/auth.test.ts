@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { requestPasswordReset, signUp, verifyEmail } from '@/actions/auth';
+import { requestPasswordReset, signInWithOAuth, signUp, verifyEmail } from '@/actions/auth';
 import { resolveCanonicalSiteUrl } from '@/lib/env';
 
 // Mock dependencies
@@ -31,6 +31,7 @@ const mockSupabase = {
   auth: {
     signUp: vi.fn(),
     signInWithPassword: vi.fn(),
+    signInWithOAuth: vi.fn(),
     resend: vi.fn(),
     resetPasswordForEmail: vi.fn(),
     verifyOtp: vi.fn(),
@@ -100,6 +101,10 @@ describe('Auth Actions', () => {
     mockSupabase.auth.resend.mockResolvedValue({ error: null });
     mockSupabase.auth.signInWithPassword.mockResolvedValue({
       error: { message: 'Invalid login credentials', status: 400 },
+    });
+    mockSupabase.auth.signInWithOAuth.mockResolvedValue({
+      data: { url: null },
+      error: null,
     });
     generateLinkMock.mockResolvedValue({
       data: {
@@ -267,6 +272,55 @@ describe('Auth Actions', () => {
           text: expect.stringContaining('Verify email:'),
         })
       );
+    });
+  });
+
+  describe('signInWithOAuth', () => {
+    it.each([
+      ['google', 'Google'],
+      ['linkedin_oidc', 'LinkedIn'],
+    ])('starts %s social login through Supabase Auth', async (provider) => {
+      const formData = new FormData();
+      formData.append('provider', provider);
+
+      await signInWithOAuth(undefined, formData);
+
+      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+        provider,
+        options: {
+          redirectTo: 'http://localhost/auth/callback',
+        },
+      });
+    });
+
+    it('preserves safe CTA routing through the Supabase OAuth callback', async () => {
+      const formData = new FormData();
+      formData.append('provider', 'linkedin_oidc');
+      formData.append('next', '/app/i/verifications');
+
+      await signInWithOAuth(undefined, formData);
+
+      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'linkedin_oidc',
+        options: {
+          redirectTo: 'http://localhost/auth/callback?next=%2Fapp%2Fi%2Fverifications',
+        },
+      });
+    });
+
+    it('drops unsafe next paths before starting social login', async () => {
+      const formData = new FormData();
+      formData.append('provider', 'google');
+      formData.append('next', 'https://attacker.example/app/i/home');
+
+      await signInWithOAuth(undefined, formData);
+
+      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'google',
+        options: {
+          redirectTo: 'http://localhost/auth/callback',
+        },
+      });
     });
   });
 

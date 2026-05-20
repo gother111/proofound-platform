@@ -11,22 +11,28 @@ type Provider = 'google' | 'linkedin_oidc';
 
 type SocialSignInButtonsProps = {
   className?: string;
+  nextPath?: string | null;
 };
 
 const initialState: OAuthState = {
   error: null,
 };
 
-export default function SocialSignInButtons({ className }: SocialSignInButtonsProps) {
+export default function SocialSignInButtons({ className, nextPath }: SocialSignInButtonsProps) {
   const [state, formAction, isPending] = useActionState(signInWithOAuth, initialState);
 
   return (
     <div className={cn('space-y-3', className)}>
       <div className="grid grid-cols-1 gap-3">
-        <OAuthProviderForm provider="google" label="Google" action={formAction}>
+        <OAuthProviderForm provider="google" label="Google" action={formAction} nextPath={nextPath}>
           <GoogleIcon className="h-5 w-5" aria-hidden="true" />
         </OAuthProviderForm>
-        <OAuthProviderForm provider="linkedin_oidc" label="LinkedIn" action={formAction}>
+        <OAuthProviderForm
+          provider="linkedin_oidc"
+          label="LinkedIn"
+          action={formAction}
+          nextPath={nextPath}
+        >
           <LinkedInIcon className="h-5 w-5" aria-hidden="true" />
         </OAuthProviderForm>
       </div>
@@ -47,13 +53,21 @@ type OAuthProviderFormProps = {
   provider: Provider;
   label: string;
   action: (payload: FormData) => void;
+  nextPath?: string | null;
   children: ReactNode;
 };
 
-function OAuthProviderForm({ provider, label, action, children }: OAuthProviderFormProps) {
+function OAuthProviderForm({
+  provider,
+  label,
+  action,
+  nextPath,
+  children,
+}: OAuthProviderFormProps) {
   return (
     <form action={action} className="w-full" data-testid={`oauth-${provider}-form`}>
       <input type="hidden" name="provider" value={provider} />
+      {nextPath ? <input type="hidden" name="next" value={nextPath} /> : null}
       <OAuthSubmitButton provider={provider}>
         <span className="mr-2">{children}</span>
         {label}

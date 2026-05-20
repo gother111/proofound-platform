@@ -2089,3 +2089,13 @@ Browser evidence:
 - Codex Browser also checked `/app/i/settings` for the same stale-copy and runtime-error assertions. The authenticated settings mock remained in its loading skeleton during capture, so the stable visual evidence for this slice is the logged-out login route.
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-linkedin-archive/login-linkedin-archive-smoke.json` and `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-linkedin-archive/settings-linkedin-archive-smoke.json`.
 - Browser screenshots were saved at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-linkedin-archive/login-linkedin-archive-smoke.png` and `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-linkedin-archive/settings-linkedin-archive-smoke.png`.
+
+## Continuation - Google and LinkedIn Login Availability Correction
+
+- Corrected the LinkedIn archive boundary after product clarification: Google and LinkedIn login are launch-active Supabase Auth entry points; only LinkedIn verification, scraping, enrichment, custom app-side OAuth helpers, and trust-lift behavior remain archived.
+- Preserved both Google and LinkedIn buttons on login and signup and added OAuth callback routing support so safe `next` destinations survive the provider round trip.
+- Kept LinkedIn verification, scraping, enrichment, custom app-side OAuth helpers, and trust-lift behavior archived because the locked MVP source separates sign-in provider status from trust semantics and does not make LinkedIn verification an MVP trust path.
+- Updated active environment/auth docs and the LinkedIn verification reference to distinguish authentication from verification/trust semantics.
+- Added regression coverage proving Google and LinkedIn OAuth providers remain available, safe callback routing is preserved, unsafe callback routing is dropped, and LinkedIn social login is not accidentally archived with the verification helpers.
+- Codex Browser verified `/login?next=/app/i/verifications` and `/signup/individual?next=/app/i/verifications` at `http://127.0.0.1:33180`: both routes rendered Google and LinkedIn buttons, had no horizontal overflow, no runtime-error text, no stale LinkedIn verification/scraping/enrichment copy, and zero Browser console warnings/errors.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-auth-providers/login-google-linkedin-auth-smoke.json` and `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-auth-providers/signup-google-linkedin-auth-smoke.json`.
