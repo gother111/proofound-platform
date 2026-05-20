@@ -27,6 +27,8 @@ describe('DeferredMatchingClient', () => {
     render(<DeferredMatchingClient loadMatchingView={loadMatchingView} />);
 
     expect(await screen.findByText('Matching could not load')).toBeInTheDocument();
+    expect(screen.getByText(/matching preferences and assignment reviews/i)).toBeInTheDocument();
+    expect(screen.queryByText(/preferences and opportunities/i)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry matching' }));
 

@@ -133,6 +133,7 @@ describe('POST /api/verification/requests/skill', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const originalAppUrl = process.env.NEXT_PUBLIC_APP_URL;
   const originalVercelEnv = process.env.VERCEL_ENV;
+  const originalMockSupabase = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE;
   let authContext: { user: { id: string; email: string }; supabase: any };
 
   beforeEach(() => {
@@ -191,6 +192,7 @@ describe('POST /api/verification/requests/skill', () => {
     process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
     process.env.NEXT_PUBLIC_APP_URL = originalAppUrl;
     process.env.VERCEL_ENV = originalVercelEnv;
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = originalMockSupabase;
   });
 
   it('normalizes verifier email and sends token link using the configured canonical site url', async () => {
@@ -243,6 +245,33 @@ describe('POST /api/verification/requests/skill', () => {
     expect(sentEmailPayload.html).not.toContain('Alice');
     expect(sentEmailPayload.html).not.toContain('system design');
     expect(sentEmailPayload.html).not.toContain('Please verify my artifact history.');
+  });
+
+  it('does not let local mock mode bypass skill ownership validation', async () => {
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.NEXT_PUBLIC_APP_URL = '';
+
+    const { supabase } = createSupabaseMock({
+      skillRow: {
+        id: '33333333-3333-4333-8333-333333333333',
+        profile_id: 'other-user',
+      },
+    });
+    authContext.supabase = supabase;
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        skillId: '33333333-3333-4333-8333-333333333333',
+        verifierSource: 'peer',
+        verifierEmail: 'mentor@example.com',
+      })
+    );
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: 'Skill not found' });
+    expect(createCanonicalSkillVerificationRequest).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
   });
 
   it('fails closed when no canonical site url is configured in a production-like runtime', async () => {

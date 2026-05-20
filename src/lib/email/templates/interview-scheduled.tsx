@@ -149,7 +149,7 @@ export function InterviewScheduledEmail({
       </div>
 
       <p>
-        Your interview with <strong>${organizationName}</strong> has been scheduled${assignmentTitle ? ` for the <strong>${assignmentTitle}</strong> opportunity` : ''}. Open Proofound for the current workflow stage, approved context, and meeting details.
+        Your interview with <strong>${organizationName}</strong> has been scheduled${assignmentTitle ? ` for the <strong>${assignmentTitle}</strong> assignment review` : ''}. Open Proofound for the current workflow stage, approved context, and meeting details.
       </p>
 
       <div class="interview-details">
@@ -240,7 +240,7 @@ Interview Scheduled
 
 Hi ${candidateName},
 
-Your interview with ${organizationName} has been scheduled${assignmentTitle ? ` for the ${assignmentTitle} opportunity` : ''}. Open Proofound for the current workflow stage, approved context, and meeting details.
+Your interview with ${organizationName} has been scheduled${assignmentTitle ? ` for the ${assignmentTitle} assignment review` : ''}. Open Proofound for the current workflow stage, approved context, and meeting details.
 
 Interview Details:
 - Date: ${interviewDate}

@@ -186,4 +186,50 @@ describe('buildHiringCorridorSnapshot', () => {
       })
     );
   });
+
+  it('describes completed engagement verification as assignment-review corridor completion', () => {
+    const snapshot = buildHiringCorridorSnapshot({
+      source: buildSource({
+        introId: 'intro-1',
+        introState: 'interview_handoff',
+        introUpdatedAt: new Date('2026-03-11T10:00:00.000Z'),
+        introLastActivityAt: new Date('2026-03-11T10:15:00.000Z'),
+        conversationId: 'conversation-1',
+        conversationStage: 'revealed',
+        interviewId: 'interview-1',
+        interviewStatus: 'completed',
+        interviewScheduledAt: new Date('2026-03-13T09:00:00.000Z'),
+        interviewCompletedAt: new Date('2026-03-13T09:30:00.000Z'),
+        decisionId: 'decision-1',
+        decisionState: 'hire',
+        decisionUpdatedAt: new Date('2026-03-13T11:00:00.000Z'),
+        engagementVerification: {
+          id: 'engagement-1',
+          decisionId: 'decision-1',
+          status: 'verified',
+          engagementType: 'contract_consulting',
+          createdAt: '2026-03-13T11:00:00.000Z',
+          candidateConfirmedAt: '2026-03-13T11:10:00.000Z',
+          organizationConfirmedAt: '2026-03-13T11:05:00.000Z',
+          uploadedEvidencePresent: false,
+          proofHookStatus: 'not_ready',
+          verifiedAt: '2026-03-13T11:15:00.000Z',
+          workflow: {
+            state: 'verified',
+            displayState: 'Verified',
+            allowedActions: [],
+          },
+        },
+      }),
+      viewerUserId: 'org-user-1',
+      perspective: 'organization',
+    });
+
+    expect(snapshot.nextAction).toEqual(
+      expect.objectContaining({
+        id: 'corridor_complete',
+        description: 'The engagement is verified and the assignment-review corridor is complete.',
+      })
+    );
+  });
 });

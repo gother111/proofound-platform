@@ -1,5 +1,5 @@
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 import {
   listCanonicalBundlesForOwner,
   type CanonicalBundleArtifactType,
@@ -157,7 +157,7 @@ function visualFixturesEnabled() {
   return (
     isMockSupabaseEnabled() &&
     process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-    process.env.VERCEL_ENV !== 'production'
+    visualFixturesRuntimeAllowed()
   );
 }
 
@@ -174,7 +174,7 @@ function buildMockVisualVerificationRequests(): {
       skills_l3: {
         name_i18n: { en: 'Privacy-safe proof review' },
         skills_subcategories: {
-          name_i18n: { en: 'Hiring corridor operations' },
+          name_i18n: { en: 'Assignment review operations' },
           skills_categories: { name_i18n: { en: 'Product leadership' } },
         },
       },
@@ -201,11 +201,11 @@ function buildMockVisualVerificationRequests(): {
         status: 'pending',
         createdAt: '2026-05-16T09:15:00.000Z',
         expiresAt: '2026-05-24T09:15:00.000Z',
-        proofLabel: 'Proof-first hiring corridor readiness review',
+        proofLabel: 'Proof-first assignment review readiness review',
         claimSummary:
-          'Confirm that the proof pack clearly connects private source material, review decisions, and a launch-safe candidate story without exposing sensitive details.',
+          'Confirm that the proof pack clearly connects private source material, review decisions, and a launch-safe submission story without exposing sensitive details.',
         confirmationOutcome:
-          'This confirmation strengthens the candidate review signal while keeping identity and private evidence bounded.',
+          'This confirmation strengthens the proof-review signal while keeping identity and private evidence bounded.',
         message:
           'Please confirm only the parts you directly saw in the launch-readiness work. Do not include private client names.',
         canonicalPackTitle: 'Launch-readiness proof pack',
@@ -234,7 +234,7 @@ function buildMockVisualVerificationRequests(): {
         verifierRelationship: 'External project sponsor',
         status: 'failed',
         createdAt: '2026-05-14T11:00:00.000Z',
-        impactStoryTitle: 'Reduced review uncertainty in a sensitive hiring workflow',
+        impactStoryTitle: 'Reduced review uncertainty in a sensitive assignment-review workflow',
         proofLabel: 'Review uncertainty reduction',
         claimSummary:
           'The reviewer needs a clearer confirmation path before this outcome can be treated as proof-backed.',
@@ -287,7 +287,7 @@ function buildMockVisualVerificationRequests(): {
         responseMessage:
           'Confirmed. The evidence was specific, scoped, and easy to review without extra context.',
         proofLabel: 'Proof review facilitation',
-        claimSummary: 'Confirm the candidate can make proof evidence easier to inspect.',
+        claimSummary: 'Confirm this proof submission makes evidence easier to inspect.',
         confirmationOutcome: 'Adds one accepted signal to the proof pack.',
         skills: baseSkill,
         profiles: requester,
@@ -894,9 +894,6 @@ export async function loadVerificationRequestFeed(params: {
   return {
     incomingRequests,
     sentRequests,
-    composerProofPacks:
-      isMockSupabaseEnabled() && canonicalAggregates.length === 0
-        ? buildMockComposerProofPackOptions()
-        : buildComposerProofPackOptions(canonicalAggregates),
+    composerProofPacks: buildComposerProofPackOptions(canonicalAggregates),
   };
 }

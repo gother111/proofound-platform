@@ -18,7 +18,7 @@
 
 ## Required checks
 
-- Does the assignment say what real value the hire should create?
+- Does the assignment say what real value the engagement should create?
 - Does it name concrete outcomes, not just generic responsibilities?
 - Does it say what proof would count?
 - Does it state real constraints: scope, logistics, engagement type, timing, or must-haves?
@@ -26,13 +26,13 @@
 
 ## Publish decision
 
-- `Ready to publish`: all required checks are clear enough for privacy-safe candidate review.
+- `Ready to publish`: all required checks are clear enough for privacy-safe proof review.
 - `Needs revision`: missing value, outcomes, proof expectations, or practical constraints.
 - `Hold`: assignment quality is too weak to support trustworthy corridor review.
 
 ## Operator steps
 
-1. Read the assignment as if you had to decide candidate fit without back-channel context.
+1. Read the assignment as if you had to decide submission fit without back-channel context.
 2. Confirm the business value, real outcomes, proof expectation, and practical constraints are all present.
 3. If the assignment is weak, write the minimum revision request needed to restore clarity.
 4. If the assignment is corridor-safe, record that it passed the checklist and move on.

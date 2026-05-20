@@ -62,7 +62,7 @@ export const organizationTourSteps: Step[] = [
   {
     target: 'body',
     content:
-      "Welcome to Proofound! Let's take a quick tour to help you get started finding purpose-driven talent.",
+      "Welcome to Proofound! Let's take a quick tour to help you start a proof-first assignment review.",
     placement: 'center',
     disableBeacon: true,
   },
@@ -93,7 +93,7 @@ export const organizationTourSteps: Step[] = [
   {
     target: '[data-tour="team-section"]',
     content:
-      'Manage your team members and their roles. Set up stakeholders who will be involved in hiring decisions.',
+      'Manage your team members and their roles. Set up stakeholders who will be involved in proof-review workflow decisions.',
     placement: 'bottom',
   },
   {
@@ -105,7 +105,7 @@ export const organizationTourSteps: Step[] = [
   {
     target: '[data-tour="messages-section"]',
     content:
-      'Communicate with candidates through our secure messaging system. Messages are initially identity-masked to reduce hiring bias.',
+      'Use secure workflow messages for staged introductions and interview context. Initial messages stay identity-masked to reduce review bias.',
     placement: 'bottom',
   },
 ];

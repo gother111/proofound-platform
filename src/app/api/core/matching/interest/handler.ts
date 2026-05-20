@@ -58,7 +58,7 @@ function buildPendingApprovalCopy(isOrgAction: boolean, mutual: boolean) {
   return isOrgAction
     ? {
         title: 'Interest recorded.',
-        body: 'The candidate will only see the introduction after the review corridor allows it.',
+        body: 'The other side will only see the introduction after the review corridor allows it.',
       }
     : {
         title: 'Interest recorded.',
@@ -184,8 +184,8 @@ function buildIntroBlockedCopy(
 
   if (isOrgAction) {
     return {
-      title: 'This candidate is reviewable, but not yet intro-eligible.',
-      body: 'You can keep reviewing the candidate proof, but Proofound is holding introductions until the candidate has stronger relevant proof and at least one active non-self verification for this assignment.',
+      title: 'This proof submission is reviewable, but not yet intro-eligible.',
+      body: 'You can keep reviewing the proof submission, but Proofound is holding introductions until the profile has stronger relevant proof and at least one active non-self verification for this assignment.',
     };
   }
 

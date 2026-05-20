@@ -92,7 +92,7 @@ vi.mock('@/lib/log', () => ({
 
 import { GET as getAccountStatus } from '@/app/api/user/account/route';
 import { DELETE as deleteAccount } from '@/app/api/user/account/route';
-import { POST as cancelDeletion } from '@/app/api/user/account/cancel-deletion/route';
+import { middleware } from '@/middleware';
 
 function mockProfileLookup(profile: Record<string, unknown> | undefined) {
   const limit = vi.fn().mockResolvedValue(profile ? [profile] : []);
@@ -148,18 +148,15 @@ describe('/api/user/account lifecycle routes', () => {
   });
 
   it('returns 410 for cancel deletion because scheduled deletion is not supported', async () => {
-    mocks.requireApiAuthContext.mockResolvedValue({
-      user: { id: 'user-1' },
-    });
-
-    const response = await cancelDeletion();
+    const response = await middleware(
+      new NextRequest('http://localhost/api/user/account/cancel-deletion', { method: 'POST' })
+    );
     const body = await response.json();
 
     expect(response.status).toBe(410);
-    expect(body).toEqual({
-      error: 'Cancellation unavailable',
-      message:
-        'Account deletion is immediate and irreversible. There is no scheduled deletion state to cancel.',
+    expect(body).toMatchObject({
+      surface: 'User API',
+      launchState: 'non_launch',
     });
   });
 

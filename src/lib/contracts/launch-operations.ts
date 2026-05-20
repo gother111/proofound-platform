@@ -248,7 +248,7 @@ export const FALLBACK_COPY: Record<
       ],
     },
     organization: {
-      title: 'Verification is still in progress for this candidate set.',
+      title: 'Verification is still in progress for this review set.',
       detail:
         'Stronger trust actions stay paused while review can continue with conservative trust labels and blind-profile review.',
       statusLabel: 'Trust pending',

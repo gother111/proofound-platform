@@ -89,7 +89,7 @@ describe('signup mobile clarity', () => {
       name: /I agree to the Privacy Policy and Terms of Service/i,
     });
     const marketing = screen.getByRole('checkbox', {
-      name: /Send me updates about new features/i,
+      name: /Send me updates about new features and proof-review workflow improvements/i,
     });
     const backButton = screen.getByRole('button', { name: 'Back' });
     const privacyLink = screen.getByRole('link', { name: 'Privacy Policy' });
@@ -101,6 +101,7 @@ describe('signup mobile clarity', () => {
     expect(backButton).not.toHaveClass('-mx-2');
     expect(privacyLink).toHaveClass('min-h-11');
     expect(termsLink).toHaveClass('min-h-11');
+    expect(screen.queryByText(/matching opportunities/i)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('signup-submit'));
 

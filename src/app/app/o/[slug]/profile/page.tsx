@@ -125,7 +125,9 @@ export default async function OrganizationProfilePage({
                 <Users className="mt-0.5 h-4 w-4 text-foreground/70" />
                 <div>
                   <p className="font-medium text-foreground">Assignments & matches</p>
-                  <p>One assignment path and one review queue for published work and candidates.</p>
+                  <p>
+                    One assignment path and one review queue for published work and submissions.
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">

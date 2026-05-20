@@ -127,7 +127,6 @@ if (truthy(env.GCP_CV_OCR_ENABLED)) {
   }
 }
 
-const hasLinkedInCreds = Boolean(env.LINKEDIN_CLIENT_ID) && Boolean(env.LINKEDIN_CLIENT_SECRET);
 const hasGoogleCreds = Boolean(env.GOOGLE_CLIENT_ID) && Boolean(env.GOOGLE_CLIENT_SECRET);
 
 const googleRedirectPath = (() => {
@@ -140,12 +139,6 @@ const googleRedirectPath = (() => {
     return null;
   }
 })();
-
-if (hasLinkedInCreds && !env.LINKEDIN_REDIRECT_URI) {
-  warnings.push(
-    'LINKEDIN_REDIRECT_URI is not set. LinkedIn OAuth may fail with redirect_uri mismatch.'
-  );
-}
 
 if (hasGoogleCreds && !env.GOOGLE_REDIRECT_URI) {
   warnings.push(

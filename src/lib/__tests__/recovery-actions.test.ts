@@ -17,6 +17,12 @@ describe('recovery actions', () => {
         'Turn on matchable',
       ])
     );
+    expect(actions.map((action) => action.description).join(' ')).toContain(
+      'better-fit assignment reviews'
+    );
+    expect(actions.map((action) => action.description).join(' ')).not.toContain(
+      'better-fit opportunities'
+    );
     expect(new Set(actions.map((action) => action.actionUrl)).size).toBe(3);
   });
 
@@ -44,19 +50,29 @@ describe('recovery actions', () => {
     expect(actions.map((action) => action.description).join(' ')).not.toMatch(/Expertise Atlas/i);
   });
 
-  it('returns exactly 3 organization actions and includes candidate matching CTA', () => {
+  it('returns exactly 3 organization actions and keeps proof matching copy submission-led', () => {
     const actions = getOrganizationRecoveryActions('org-matching-empty', 'acme');
+    const combinedCopy = actions.map((action) => `${action.title} ${action.description}`).join(' ');
 
     expect(actions).toHaveLength(3);
-    expect(actions.map((action) => action.title)).toContain('Turn on candidate matching');
+    expect(actions.map((action) => action.title)).toContain('Turn on proof matching');
+    expect(combinedCopy).toContain('proof-backed submissions');
+    expect(combinedCopy).toContain('assignment-review recovery actions');
+    expect(combinedCopy).not.toContain('candidate matching');
+    expect(combinedCopy).not.toContain('proof-backed candidates');
+    expect(combinedCopy).not.toContain('candidate pipeline');
     expect(new Set(actions.map((action) => action.actionUrl)).size).toBe(3);
   });
 
   it('uses assignment review routes for assignment-no-matches context', () => {
     const actions = getOrganizationRecoveryActions('assignment-no-matches', 'acme', 'assignment-1');
+    const combinedCopy = actions.map((action) => `${action.title} ${action.description}`).join(' ');
 
     expect(actions).toHaveLength(3);
     expect(actions[0].actionUrl).toContain('/app/o/acme/assignments/assignment-1/review');
     expect(actions[1].actionUrl).toContain('focus=skills');
+    expect(combinedCopy).toContain('proof-submission discovery');
+    expect(combinedCopy).not.toContain('candidate discovery');
+    expect(combinedCopy).not.toContain('Turn on candidate matching');
   });
 });

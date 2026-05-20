@@ -416,7 +416,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 <Checkbox
                   id="signup-marketing-opt-in"
                   data-testid="marketing-opt-in"
-                  aria-label="Send me updates about new features and matching opportunities"
+                  aria-label="Send me updates about new features and proof-review workflow improvements"
                   checked={marketingOptIn}
                   onCheckedChange={(checked) => setMarketingOptIn(checked === true)}
                   className={`mt-0.5 h-6 w-6 cursor-pointer rounded-md border-proofound-stone bg-white ${
@@ -429,7 +429,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   htmlFor="signup-marketing-opt-in"
                   className="cursor-pointer text-sm leading-5 text-muted-foreground"
                 >
-                  Send me updates about new features and matching opportunities
+                  Send me updates about new features and proof-review workflow improvements
                 </label>
               </div>
             </div>

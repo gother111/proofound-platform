@@ -224,6 +224,8 @@ describe('launch gate package configuration', () => {
     expect(gateScript).toContain(
       'Connected provider credentials are required only when STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true.'
     );
+    expect(gateScript).not.toContain("'LINKEDIN_CLIENT_ID'");
+    expect(gateScript).not.toContain("'LINKEDIN_CLIENT_SECRET'");
   });
 
   it('keeps the accessibility go/no-go evidence current and honestly scoped', () => {
@@ -272,6 +274,10 @@ describe('launch gate package configuration', () => {
       expect(content).toContain('admin/internal');
     }
 
+    expect(joined).toContain('matching and assignment-review surfaces when active');
+    expect(joined).toContain('proof-submission review');
+    expect(joined).toContain('proof-submission cards');
+    expect(joined).toContain('private proof submissions');
     expect(joined).toContain('ACCESSIBILITY_AUDIT_REPORT.md');
     expect(joined).toContain('production-candidate gate');
     expect(compactWhitespace(joined.toLowerCase())).toContain(
@@ -284,6 +290,10 @@ describe('launch gate package configuration', () => {
     expect(joined).not.toContain('npx lighthouse https://proofound.io --view');
     expect(joined).not.toContain('/app/i/expertise');
     expect(joined).not.toContain('Zen Hub');
+    expect(joined).not.toContain('matching/opportunities surfaces when active');
+    expect(joined).not.toContain('candidate proof review');
+    expect(joined).not.toContain('candidate proof cards');
+    expect(joined).not.toContain('private candidate proof');
     expect(docsRegistry).toContain(
       '| `docs/ACCESSIBILITY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
     );
@@ -326,14 +336,19 @@ describe('launch gate package configuration', () => {
     expect(ubiquitousLanguage).toContain('Reason code');
     expect(ubiquitousLanguage).toContain('Manual-link interview');
     expect(ubiquitousLanguage).toContain('Privacy stage');
+    expect(ubiquitousLanguage).toContain('proof review, reveal request');
     expect(ubiquitousLanguage).toContain('public directory, profile theater, vanity metric');
+    expect(ubiquitousLanguage).not.toContain('hiring or review-side account');
+    expect(ubiquitousLanguage).not.toContain('candidate review, reveal request');
 
     expect(styleMap).toContain('Last Verified: `2026-05-19`');
     expect(styleMap).toContain('DESIGN.md');
     expect(styleMap).toContain('`--proofound-forest`');
     expect(styleMap).toContain('`#56624F`');
+    expect(styleMap).toContain('proof review, reveal request');
     expect(styleMap).toContain('public directory');
     expect(styleMap).toContain('Dark mode is not an active supported theme');
+    expect(styleMap).not.toContain('candidate review, reveal request');
     expect(styleMap).not.toContain('`#606C5A` | Primary buttons');
     expect(styleMap).not.toContain('Japandi palette above');
 
@@ -373,12 +388,13 @@ describe('launch gate package configuration', () => {
 
     expect(landingStory).toContain('Mission-led team');
     expect(landingStory).toContain('Proof-led review');
-    expect(landingStory).toContain('mission-driven team scaling one hiring program');
+    expect(landingStory).toContain('mission-driven team scaling one assignment path');
     expect(landingStory).not.toContain('B2B SaaS');
     expect(landingStory).not.toContain('Enterprise clients');
     expect(landingStory).not.toContain('B2B platform');
     expect(landingStory).not.toContain('200+ employees');
     expect(landingStory).not.toContain('growth-stage B2B');
+    expect(landingStory).not.toContain('mission-driven team scaling one hiring program');
 
     expect(
       fs.existsSync(path.join(repoRoot, 'src/components/landing/sections/HeroSection.tsx'))
@@ -391,6 +407,101 @@ describe('launch gate package configuration', () => {
         )
       )
     ).toBe(true);
+  });
+
+  it('keeps active public landing and SEO copy proof-review led', () => {
+    const publicLandingCopy = [
+      'src/app/layout.tsx',
+      'src/app/page.tsx',
+      'src/app/terms/page.tsx',
+      'src/components/landing/sections/FinalCTASection.tsx',
+      'src/components/landing/sections/FooterSection.tsx',
+      'src/components/landing/sections/ScrollytellingSection.tsx',
+      'src/components/landing/sections/homepage-story-frames.ts',
+      'src/components/landing/sections/BuiltForSection.tsx',
+      'src/components/landing/sections/DayOneSurfacesSection.tsx',
+      'src/components/landing/sections/EarlyProofSection.tsx',
+      'src/components/landing/sections/HiringTeamsSection.tsx',
+      'src/components/landing/sections/hero-variants/HeroManifesto.tsx',
+      'src/lib/launch/public-org-trust-fixture.ts',
+      'src/lib/matching/visual-fixtures.ts',
+      'src/lib/seo/json-ld.ts',
+      'src/lib/seo/llms.ts',
+    ]
+      .map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'))
+      .join('\n');
+
+    expect(publicLandingCopy).toContain('structured proof review');
+    expect(publicLandingCopy).toContain('weak CV claims');
+    expect(publicLandingCopy).toContain('Run assignment review from validated proof');
+    expect(publicLandingCopy).toContain('Move from proof submissions to approved next steps');
+    expect(publicLandingCopy).toContain('Build proof-first review');
+    expect(publicLandingCopy).toContain('Evidence-based assignment review');
+    expect(publicLandingCopy).toContain('privacy-safe assignment review');
+    expect(publicLandingCopy).toContain('proof-first assignment review corridor');
+    expect(publicLandingCopy).toContain('proof-review workflow');
+    expect(publicLandingCopy).toContain('clear assignment-based workflow');
+    expect(publicLandingCopy).toContain('proof-backed submissions');
+    expect(publicLandingCopy).toContain('clearer-evidence submissions');
+    expect(publicLandingCopy).toContain('organizations review assignment submissions');
+    expect(publicLandingCopy).toContain('Proof-first assignment review should stay calm');
+    expect(publicLandingCopy).toContain('privacy-safe assignment review');
+
+    for (const staleCopy of [
+      'structured hiring signal',
+      'weak CV signal',
+      'Hire and collaborate',
+      'Streamline hiring without sifting through CV noise',
+      'higher-signal candidates',
+      'Build hiring on stronger proof',
+      'Explore evidence-based hiring',
+      'Evidence-based hiring for a world',
+      'proof-first hiring corridor',
+      'privacy-safe candidate review',
+      'inside the hiring corridor',
+      'clear assignment-based hiring',
+      'Review proof-backed candidates',
+      'clearer-evidence candidates',
+      'organizations find talent',
+      'proof-first hiring infrastructure',
+      'privacy-safe hiring corridor',
+    ]) {
+      expect(publicLandingCopy).not.toContain(staleCopy);
+    }
+  });
+
+  it('keeps active operator docs aligned with proof-review corridor wording', () => {
+    const activeOperatorDocs = [
+      'README.md',
+      'docs/internal-ops/index.md',
+      'docs/internal-ops/assignment-quality-checklist.md',
+      'docs/launch-operations-mvp.md',
+      'docs/mvp-launch-master-checklist.md',
+      'docs/STYLEMAP.md',
+      'docs/PROOFOUND_UBIQUITOUS_LANGUAGE.md',
+    ]
+      .map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'))
+      .join('\n');
+
+    expect(activeOperatorDocs).toContain('proof-first assignment review corridor');
+    expect(activeOperatorDocs).toContain('proof-review workflow');
+    expect(activeOperatorDocs).toContain('privacy-safe proof review');
+    expect(activeOperatorDocs).toContain('unordered proof review');
+    expect(activeOperatorDocs).toContain('proof-backed assignment review');
+
+    for (const staleCopy of [
+      'proof-first, privacy-first hiring corridor',
+      'narrow proof-first hiring corridor',
+      'Proofound is a narrow proof-first hiring corridor',
+      'proof-backed hiring credibility',
+      'proof-first hiring for individuals and organizations',
+      'the hiring corridor',
+      'candidate review, reveal request',
+      'privacy-safe candidate review',
+      'unordered candidate review',
+    ]) {
+      expect(activeOperatorDocs).not.toContain(staleCopy);
+    }
   });
 
   it('keeps monitoring launch-ops routes documented as internal, not public', () => {
@@ -487,6 +598,7 @@ describe('launch gate package configuration', () => {
       '- Launch surface counts: `active MVP=108`, `internal launch ops=16`, `archived compatibility=16`'
     );
     expect(routeDocs).toContain('140 compiled API route handlers');
+    expect(verificationChecklist).toContain('proof-review workflow reaches explicit `hire`');
     expect(routeDocs).toContain('51 compiled pages');
     expect(routeDocs).toContain('108 APIs as active MVP');
     expect(routeDocs).toContain('16 APIs as internal-only launch ops');
@@ -505,6 +617,7 @@ describe('launch gate package configuration', () => {
     );
     expect(currentStateArtifact).not.toContain('Route breadth remains the only current blocker');
     expect(phaseFive).toContain('Current as of 2026-05-20');
+    expect(verificationChecklist).not.toContain('hiring corridor reaches explicit `hire`');
     expect(phaseFive).toContain(
       'historical-registry cleanup watch item is no longer treated as open'
     );
@@ -1638,6 +1751,7 @@ describe('launch gate package configuration', () => {
 
   it('keeps active public and outbound contact surfaces on the canonical proofound.io domain', () => {
     const activeSurfaceFiles = [
+      'README.md',
       'emails/SkillVerificationRequest.tsx',
       'emails/DeletionComplete.tsx',
       'emails/DeletionReminder.tsx',
@@ -1876,9 +1990,18 @@ describe('launch gate package configuration', () => {
   });
 
   it('keeps environment docs from making connected providers launch-blocking by default', () => {
+    const envExample = fs.readFileSync(path.join(repoRoot, '.env.example'), 'utf8');
     const envDocs = fs.readFileSync(path.join(repoRoot, 'docs/ENV_VARIABLES.md'), 'utf8');
     const launchMasterChecklist = fs.readFileSync(
       path.join(repoRoot, 'docs/mvp-launch-master-checklist.md'),
+      'utf8'
+    );
+    const deployReadinessScript = fs.readFileSync(
+      path.join(repoRoot, 'scripts/check-deploy-readiness.mjs'),
+      'utf8'
+    );
+    const vercelPreflightScript = fs.readFileSync(
+      path.join(repoRoot, 'scripts/vercel-preflight.mjs'),
       'utf8'
     );
     const veriffConfigScript = fs.readFileSync(
@@ -1887,6 +2010,19 @@ describe('launch gate package configuration', () => {
     );
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
+    expect(envExample).toContain('manual meeting links remain the default launch path');
+    expect(envExample).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
+    expect(envExample).not.toContain('ZOOM_CLIENT_ID');
+    expect(envExample).not.toContain('ZOOM_CLIENT_SECRET');
+    expect(envExample).not.toContain('ZOOM_REDIRECT_URI');
+    expect(envExample).not.toContain('LINKEDIN_CLIENT_ID');
+    expect(envExample).not.toContain('LINKEDIN_CLIENT_SECRET');
+    expect(envExample).not.toContain('LINKEDIN_REDIRECT_URI');
+    expect(envExample).not.toContain('STRICT_PROVIDER_E2E_REQUIRE_BOTH');
+    expect(envExample).not.toContain('must have Zoom + Google connected');
+    expect(deployReadinessScript).not.toContain('LINKEDIN_REDIRECT_URI is not set');
+    expect(vercelPreflightScript).not.toContain("'LINKEDIN_CLIENT_ID'");
+    expect(vercelPreflightScript).not.toContain("'LINKEDIN_CLIENT_SECRET'");
     expect(envDocs).toContain('Last Verified: `2026-05-19`');
     expect(envDocs).toContain('Manual meeting links remain the locked MVP default');
     expect(envDocs).toContain('**Target-scoped Vars**');
@@ -1978,6 +2114,7 @@ describe('launch gate package configuration', () => {
     expect(alertConfig).toContain('/api/cron/send-deletion-reminders');
     expect(alertConfig).toContain('Archived standalone deletion cron routes are not active');
     expect(alertConfig).toContain('manual meeting link default');
+    expect(alertConfig).toContain('Proof Pack, assignment, proof review');
     expect(alertConfig).toContain('private proof content');
     expect(alertConfig).toContain('Do not make these launch-blocking by default');
     expect(alertConfig).not.toContain('TTSC Exceeds Target');
@@ -1986,6 +2123,7 @@ describe('launch gate package configuration', () => {
     expect(alertConfig).not.toContain('/api/test/trigger-error');
     expect(alertConfig).not.toContain('PagerDuty');
     expect(alertConfig).not.toContain('team@proofound.io');
+    expect(alertConfig).not.toContain('Proof Pack, assignment, candidate review');
     expect(docsRegistry).toContain(
       '| `docs/alert-configuration.md`                                                                           | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
     );
@@ -2092,6 +2230,7 @@ describe('launch gate package configuration', () => {
     expect(incidentRunbook).toContain('not legal advice or proof of compliance by itself');
     expect(incidentRunbook).toContain('First 15 Minutes');
     expect(incidentRunbook).toContain('private proof content');
+    expect(incidentRunbook).toContain('org review/proof-submission card checks');
     expect(incidentRunbook).toContain('hidden candidate identity details');
     expect(incidentRunbook).toContain('raw request/response bodies');
     expect(incidentRunbook).toContain('Do not run destructive production');
@@ -2103,6 +2242,7 @@ describe('launch gate package configuration', () => {
     expect(combined).not.toContain('#security-incidents Slack channel');
     expect(combined).not.toContain('Supabase SQL Editor');
     expect(combined).not.toContain('UPDATE auth.refresh_tokens');
+    expect(combined).not.toContain('org review/candidate proof card checks');
     expect(combined).not.toContain('Emergency Phone');
     expect(docsRegistry).toContain(
       '| `.github/SECURITY.md`                                                                                   | `active`         | `github`      | `repo+live`         | `2026-05-19`'
@@ -2367,6 +2507,7 @@ describe('launch gate package configuration', () => {
     expect(deploymentChecklist).toContain('/api/monitoring/launch-status');
     expect(deploymentChecklist).toContain('/api/monitoring/perf-status');
     expect(deploymentChecklist).toContain('/api/assignments');
+    expect(deploymentChecklist).toContain('proof-submission review');
     expect(deploymentChecklist).toContain('Use Browser');
     expect(deploymentChecklist).toContain('Manual interview links remain');
     expect(deploymentChecklist).not.toContain('Run `supabase/storage-setup.sql`');
@@ -2374,6 +2515,7 @@ describe('launch gate package configuration', () => {
     expect(deploymentChecklist).not.toContain('Copy contents of supabase/storage-setup.sql');
     expect(deploymentChecklist).not.toContain('Messaging System');
     expect(deploymentChecklist).not.toContain('Match scores displayed');
+    expect(deploymentChecklist).not.toContain('candidate proof review');
     expect(docsRegistry).toContain(
       '| `docs/DEPLOYMENT_CHECKLIST.md`                                                                          | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
     );
@@ -2623,6 +2765,10 @@ describe('launch gate package configuration', () => {
     expect(index).toContain('/api/admin/internal-ops/queues');
     expect(index).toContain('admin/internal-only');
     expect(index).toContain('public and logged-out users must not see queue content');
+    expect(index).toContain('proof-review workflow');
+    expect(index).toContain('pushing more proof review');
+    expect(index).not.toContain('the hiring corridor');
+    expect(index).not.toContain('pushing more candidate review');
 
     const templates = fs.readFileSync(
       path.join(repoRoot, 'docs/internal-ops/workflow-comms-templates.md'),
@@ -2788,6 +2934,7 @@ describe('launch gate package configuration', () => {
     expect(launchOperations).toContain('authenticated `/api/monitoring/perf-status`');
     expect(launchOperations).toContain('review_overprecision_protected');
     expect(launchOperations).toContain('reason-coded review');
+    expect(launchOperations).toContain('unordered proof review');
     expect(launchOperations).toContain('`verification`: pending or disputed verification reviews.');
     expect(launchOperations).toContain('`correction_revocation`: redaction, risky upload');
     expect(launchOperations).toContain(
@@ -2801,6 +2948,7 @@ describe('launch gate package configuration', () => {
     expect(launchOperations).not.toContain('manual fairness note generation');
     expect(launchOperations).not.toContain('verification_pending_manual');
     expect(launchOperations).not.toContain('rank bands');
+    expect(launchOperations).not.toContain('unordered candidate review');
     expect(launchOperations).not.toContain('PRD_for_a_web_platform_MVP.master-latest.md');
     expect(docsRegistry).toContain(
       '| `docs/launch-operations-mvp.md`                                                                         | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
@@ -2859,6 +3007,7 @@ describe('launch gate package configuration', () => {
       'src/components/matching/MatchResultCard.tsx',
       'src/components/matching/MatchExplainerModal.tsx',
       'src/components/matching/SnoozedMatchesList.tsx',
+      'src/components/matching/VerificationGatesWarning.tsx',
     ];
     const matchExplainRoute = fs.readFileSync(
       path.join(repoRoot, 'src/app/api/match/explain/[matchId]/route.ts'),
@@ -2866,6 +3015,10 @@ describe('launch gate package configuration', () => {
     );
     const assignmentMatchHandler = fs.readFileSync(
       path.join(repoRoot, 'src/app/api/core/matching/assignment/handler.ts'),
+      'utf8'
+    );
+    const interestHandler = fs.readFileSync(
+      path.join(repoRoot, 'src/app/api/core/matching/interest/handler.ts'),
       'utf8'
     );
     const archivedScoreRankFiles = [
@@ -2886,6 +3039,9 @@ describe('launch gate package configuration', () => {
     expect(activeMatchingReviewText).toContain('Constraint fit:');
     expect(activeMatchingReviewText).toContain('Proof freshness:');
     expect(activeMatchingReviewText).toContain('Verification support:');
+    expect(activeMatchingReviewText).toContain('Review proof-backed submissions');
+    expect(activeMatchingReviewText).toContain('This assignment review');
+    expect(activeMatchingReviewText).toContain('assignment review evidence');
     expect(matchExplainRoute).toContain("rankMode: 'band'");
     expect(matchExplainRoute).toContain('exactRankAvailable = false');
     expect(matchExplainRoute).toContain("scoreVisibility: 'internal_ordering_only'");
@@ -2901,6 +3057,13 @@ describe('launch gate package configuration', () => {
     expect(assignmentMatchHandler).toContain('const exactRankLive = false');
     expect(assignmentMatchHandler).not.toContain('rank: showExactRank');
     expect(assignmentMatchHandler).not.toContain('canViewExactRank');
+    expect(interestHandler).toContain('This proof submission is reviewable');
+    expect(interestHandler).toContain('keep reviewing the proof submission');
+    expect(interestHandler).toContain('other side will only see the introduction');
+    expect(interestHandler).not.toContain('The candidate will only see the introduction');
+    expect(interestHandler).not.toContain('This candidate is reviewable');
+    expect(interestHandler).not.toContain('reviewing the candidate proof');
+    expect(interestHandler).not.toContain('candidate has stronger relevant proof');
 
     for (const relativePath of activeMatchingReviewFiles) {
       const content = fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
@@ -2920,6 +3083,10 @@ describe('launch gate package configuration', () => {
       expect(content).not.toContain('Constraints Match');
       expect(content).not.toContain('Proof Freshness (Recency)');
       expect(content).not.toContain('Verification Support');
+      expect(content).not.toContain('Review proof-backed candidates, shortlist fits');
+      expect(content).not.toContain('Candidate added to shortlist.');
+      expect(content).not.toContain('This opportunity');
+      expect(content).not.toContain('candidate authenticity and');
       expect(content).not.toContain('Unlocked');
     }
 
@@ -3094,6 +3261,7 @@ describe('launch gate package configuration', () => {
     expect(activeReadinessCopy).toContain('build matching readiness');
     expect(activeReadinessCopy).toContain('Introductions need stronger proof first');
     expect(activeReadinessCopy).toContain('introductions are available');
+    expect(activeReadinessCopy).toContain('Verification is still in progress for this review set.');
 
     for (const staleCopy of [
       'Day 1 win unlocked',
@@ -3115,6 +3283,7 @@ describe('launch gate package configuration', () => {
       'unlock and improve opportunities',
       'unlock the decision step',
       'unlock personalized browse results',
+      'candidate set',
     ]) {
       expect(activeReadinessCopy).not.toContain(staleCopy);
     }
@@ -3129,11 +3298,26 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'src/components/feedback/FeedbackForm.tsx'),
       'utf8'
     );
+    const feedbackEmail = fs.readFileSync(
+      path.join(repoRoot, 'emails/FeedbackRequest.tsx'),
+      'utf8'
+    );
+    const emailService = fs.readFileSync(path.join(repoRoot, 'src/lib/email.ts'), 'utf8');
 
     expect(feedbackPage).toContain('Rating: {answer.score}');
     expect(feedbackPage).not.toContain('Score: {answer.score}');
     expect(feedbackForm).toContain('Submit feedback');
+    expect(feedbackForm).toContain('Share workflow feedback');
+    expect(feedbackEmail).toContain('Share workflow feedback');
+    expect(feedbackEmail).toContain('structured workflow feedback');
+    expect(feedbackEmail).toContain('keep the review workflow fair');
+    expect(emailService).toContain('Share workflow feedback');
     expect(feedbackForm).not.toContain('Submit score');
+    expect(feedbackForm).not.toContain('Share feedback with the candidate');
+    expect(feedbackEmail).not.toContain('Share feedback with the candidate');
+    expect(feedbackEmail).not.toContain('structured feedback for the candidate');
+    expect(feedbackEmail).not.toContain('keep interviews fair');
+    expect(emailService).not.toContain('Share feedback with the candidate');
   });
 
   it('keeps outbound match email copy proof-led and score-free', () => {
@@ -3141,9 +3325,16 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'emails/NewMatchNotification.tsx'),
       'utf8'
     );
+    const candidateInviteEmail = fs.readFileSync(
+      path.join(repoRoot, 'emails/CandidateInvite.tsx'),
+      'utf8'
+    );
     const emailService = fs.readFileSync(path.join(repoRoot, 'src/lib/email.ts'), 'utf8');
 
     expect(matchEmail).toContain('A Proof Review Is Ready');
+    expect(matchEmail).toContain('A proof-backed assignment review is ready');
+    expect(matchEmail).toContain('Proof-backed assignment review');
+    expect(matchEmail).toContain('current assignment corridor');
     expect(matchEmail).toContain('Review state');
     expect(matchEmail).toContain('Relevant proof signals:');
     expect(matchEmail).toContain('without exposing a numeric match score');
@@ -3151,6 +3342,13 @@ describe('launch gate package configuration', () => {
     expect(matchEmail).not.toContain('scorePercentage');
     expect(matchEmail).not.toContain('You Have a New Match!');
     expect(matchEmail).not.toContain('high-quality matches');
+    expect(matchEmail).not.toContain('proof-backed opportunity');
+    expect(matchEmail).not.toContain('Proof-backed opportunity');
+    expect(matchEmail).not.toContain('Review the opportunity');
+    expect(candidateInviteEmail).toContain('proof-card step in their assignment review');
+    expect(candidateInviteEmail).toContain('structured evidence of your skills, outcomes, and');
+    expect(candidateInviteEmail).not.toContain('join their hiring flow');
+    expect(candidateInviteEmail).not.toContain('traditional CV');
     expect(emailService).toContain('Proof review ready - Proofound');
     expect(emailService).toContain('/app/i/matching?matchId=');
     expect(emailService).not.toContain('matchScore: number');
@@ -3215,6 +3413,7 @@ describe('launch gate package configuration', () => {
 
     expect(combined).toContain('approved context, and meeting details');
     expect(combined).toContain('relevant Proof Packs and portfolio context');
+    expect(legacyInterviewScheduledEmail).toContain('assignment review');
     expect(interviewScheduledEmail).toContain('Privacy and workflow stage');
     expect(legacyInterviewScheduledEmail).toContain('Interview reminders:');
     expect(compactInterviewEmail).toContain(
@@ -3228,6 +3427,7 @@ describe('launch gate package configuration', () => {
     expect(combined).not.toContain('within 7 days of match');
     expect(combined).not.toContain('Be ready to discuss your relevant skills and experience');
     expect(combined).not.toContain('Need to reschedule? Contact');
+    expect(legacyInterviewScheduledEmail).not.toContain('opportunity');
   });
 
   it('keeps decision notification email workflow-led instead of ATS/application-led', () => {
@@ -3266,10 +3466,15 @@ describe('launch gate package configuration', () => {
 
     expect(accountVerificationEmails).toContain('Create one artifact-backed Proof Pack');
     expect(accountVerificationEmails).toContain('organization trust page');
+    expect(accountVerificationEmails).toContain('Review proof-led submission context');
     expect(accountVerificationEmails).toContain('Request staged introductions');
     expect(activeTourCopy).toContain('reason-coded proof context');
+    expect(activeTourCopy).toContain('review proof-led submission context');
+    expect(activeTourCopy).toContain('trust basics participants and reviewers');
     expect(activeTourCopy).toContain('privacy staged');
     expect(activeTourCopy).toContain('Ready to start proof review');
+    expect(activeTourCopy).toContain('start a proof-first assignment review');
+    expect(activeTourCopy).toContain('staged introductions stay inside the proof-first workflow');
 
     for (const staleCopy of [
       'Connect with mission-aligned opportunities',
@@ -3282,8 +3487,150 @@ describe('launch gate package configuration', () => {
       'matching system will find qualified candidates',
       'track the hiring process',
       'Ready to find great talent',
+      'finding purpose-driven talent',
+      'Matching and hiring workflows stay available after this first step',
+      'stakeholders who will be involved in hiring decisions',
+      'reduce hiring bias',
+      'Review proof-led candidate context',
+      'review proof-led candidate context',
+      'trust basics candidates and reviewers',
     ]) {
       expect(combined).not.toContain(staleCopy);
+    }
+  });
+
+  it('keeps active signup and review-entry copy workflow-scoped', () => {
+    const workflowEntryCopy = [
+      'src/components/auth/SignupForm.tsx',
+      'src/app/app/o/[slug]/home/page.tsx',
+      'src/app/app/o/[slug]/assignments/page.tsx',
+      'src/app/app/i/matching/MatchingClient.tsx',
+      'src/app/app/i/matching/loading.tsx',
+      'src/app/app/i/matching/preferences/page.tsx',
+      'src/components/matching/EnhancedMatchFilters.tsx',
+      'src/components/matching/MatchingOrganizationView.tsx',
+      'src/app/api/assignments/[id]/route.ts',
+      'src/app/api/assignments/route.ts',
+      'src/app/api/ai/assignments/clarify/route.ts',
+      'src/components/onboarding/OrganizationSetup.tsx',
+      'src/app/app/o/[slug]/profile/page.tsx',
+    ]
+      .map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'))
+      .join('\n');
+
+    expect(workflowEntryCopy).toContain('proof-review workflow improvements');
+    expect(workflowEntryCopy).toContain('open proof-led assignment review');
+    expect(workflowEntryCopy).toContain('proof-review workflow, staged review context');
+    expect(workflowEntryCopy).toContain('proof-led assignment reviews');
+    expect(workflowEntryCopy).toContain('assignment reviews');
+    expect(workflowEntryCopy).toContain('Preparing privacy-safe assignment reviews');
+    expect(workflowEntryCopy).toContain('new assignment reviews can land cleanly');
+    expect(workflowEntryCopy).toContain('Filter Assignment Reviews');
+    expect(workflowEntryCopy).toContain('Narrow review context by skills');
+    expect(workflowEntryCopy).toContain('to open proof-led assignment review');
+    expect(workflowEntryCopy).toContain('reaches proof review');
+    expect(workflowEntryCopy).toContain('New submissions');
+    expect(workflowEntryCopy).toContain('Review submissions');
+    expect(workflowEntryCopy).toContain('Loading proof-aligned submissions');
+    expect(workflowEntryCopy).toContain(
+      'One assignment path and one review queue for published work and submissions'
+    );
+    expect(workflowEntryCopy).toContain('reviewers need to trust the work context');
+
+    for (const staleCopy of [
+      'matching opportunities',
+      'open candidate matching',
+      'matching corridor, candidate review, and pipeline',
+      'relevant opportunities',
+      'opportunities aligned with your skills',
+      'privacy-safe opportunities',
+      'new opportunities can land cleanly',
+      'Filter Matches',
+      'Narrow down opportunities',
+      'proof-led hiring corridor',
+      'reaches candidate review',
+      'New candidates',
+      'Review candidates',
+      'Loading proof-aligned candidates',
+      'published work and candidates',
+      'candidates need to trust you',
+    ]) {
+      expect(workflowEntryCopy).not.toContain(staleCopy);
+    }
+  });
+
+  it('keeps active recovery, privacy, locale, and verification helper copy proof-review scoped', () => {
+    const supportWorkflowCopy = [
+      'src/lib/ui/recovery-actions.ts',
+      'src/components/settings/PrivacyOverview.tsx',
+      'src/lib/internal-ops/queue.ts',
+      'src/lib/verification/request-feed.ts',
+      'src/lib/verification/visual-link-fixtures.ts',
+      'src/lib/readiness/organization.ts',
+      'src/lib/ai/policy-explainer.ts',
+      'src/lib/portfolio/public-projection.ts',
+      'src/app/app/i/matching/DeferredMatchingClient.tsx',
+      'src/app/page.tsx',
+      'docs/internal-ops/redaction-risky-upload-sop.md',
+      'docs/internal-ops/workflow-comms-templates.md',
+      'src/i18n/messages/en.json',
+      'src/i18n/messages/sv.json',
+    ]
+      .map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'))
+      .join('\n');
+    const compactSupportWorkflowCopy = compactWhitespace(supportWorkflowCopy);
+
+    expect(supportWorkflowCopy).toContain('proof-backed submissions');
+    expect(supportWorkflowCopy).toContain('assignment-review recovery actions');
+    expect(supportWorkflowCopy).toContain('proof-led assignment reviews');
+    expect(supportWorkflowCopy).toContain('assignment-review workflows');
+    expect(supportWorkflowCopy).toContain('assignment-review workflow narrow');
+    expect(supportWorkflowCopy).toContain('Proof-first assignment review readiness review');
+    expect(supportWorkflowCopy).toContain('Assignment review operations');
+    expect(supportWorkflowCopy).toContain(
+      'Reduced review uncertainty in a sensitive assignment-review workflow'
+    );
+    expect(supportWorkflowCopy).toContain(
+      'Confirm this proof submission makes evidence easier to inspect.'
+    );
+    expect(supportWorkflowCopy).toContain('proof-review signal');
+    expect(supportWorkflowCopy).toContain('review proof-backed submissions');
+    expect(supportWorkflowCopy).toContain('better-fit assignment reviews');
+    expect(supportWorkflowCopy).toContain('support proof-led assignment reviews');
+    expect(supportWorkflowCopy).toContain('real proof submissions');
+    expect(supportWorkflowCopy).toContain('Proof packet redesign for proof review');
+    expect(supportWorkflowCopy).toContain('review submissions through concrete work evidence');
+    expect(compactSupportWorkflowCopy).toContain('matching preferences and assignment reviews');
+    expect(supportWorkflowCopy).toContain('proof based submission review');
+    expect(supportWorkflowCopy).toContain('live assignment-review decision');
+    expect(supportWorkflowCopy).toContain('proof submissions through the corridor');
+    expect(supportWorkflowCopy).toContain('bevisbaserade inlämningar');
+
+    for (const staleCopy of [
+      'proof-backed candidates',
+      'candidate pipeline recovery actions',
+      'better-fit opportunities',
+      'relevant opportunities',
+      'match you with opportunities',
+      'Connect you with opportunities',
+      'hiring corridor narrow',
+      'live hiring corridor decision',
+      'Proof-first hiring corridor readiness review',
+      'Hiring corridor operations',
+      'Reduced review uncertainty in a sensitive hiring workflow',
+      'candidate review signal',
+      'Confirm the candidate can make proof evidence easier to inspect.',
+      'launch-safe candidate story',
+      'Proof packet redesign for candidate review',
+      'review candidates through concrete work evidence',
+      'real candidate signals',
+      'preferences and opportunities',
+      'proof based candidate review',
+      'moving candidates through the corridor',
+      'review proof-backed candidates',
+      'granska kandidater',
+    ]) {
+      expect(compactSupportWorkflowCopy).not.toContain(staleCopy);
     }
   });
 
@@ -3360,12 +3707,14 @@ describe('launch gate package configuration', () => {
     expect(decisionDialog).toContain('hiring and verification stay distinct');
     expect(decisionDialog).toContain('Close this assignment workflow');
     expect(decisionDialog).toContain('without a broader profile judgment');
+    expect(decisionDialog).toContain('not sent through workflow notifications');
     expect(decisionDialog).toContain('Confirm Workflow Decision');
     expect(decisionDialog).not.toContain('Make Hiring Decision');
     expect(decisionDialog).not.toContain('Extend an offer to this candidate');
     expect(decisionDialog).not.toContain('Not a fit for this role');
     expect(decisionDialog).not.toContain('Your ${decision} decision has been recorded');
     expect(decisionDialog).not.toContain('will not be shared with the candidate');
+    expect(decisionDialog).not.toContain('candidate-facing workflow notifications');
   });
 
   it('keeps retired wellbeing and Zen implementation modules archived', () => {
@@ -3689,6 +4038,9 @@ describe('launch gate package configuration', () => {
     const activeRetiredComponents = [
       'src/components/matching/AssignmentBuilderV2.tsx',
       'src/components/matching/WeightsFiltersSheet.tsx',
+      'src/components/assignments/AssignmentWizard.tsx',
+      'src/components/support/ChatWidget.tsx',
+      'src/components/settings/VeriffVerification.tsx',
       'src/components/ComingSoon.tsx',
     ];
     const archivedRetiredComponents = [
@@ -3718,6 +4070,20 @@ describe('launch gate package configuration', () => {
       'unfinished TODO/coming-soon behavior'
     );
     expect(genericComponentsReadme).toContain('should not render generic "coming soon"');
+  });
+
+  it('keeps retired in-app chat configuration out of the launch runtime', () => {
+    const envExample = fs.readFileSync(path.join(repoRoot, '.env.example'), 'utf8');
+    const appEnhancements = fs.readFileSync(
+      path.join(repoRoot, 'src/components/root/DeferredAppEnhancements.tsx'),
+      'utf8'
+    );
+
+    expect(fs.existsSync(path.join(repoRoot, 'src/components/support/ChatWidget.tsx'))).toBe(false);
+    expect(envExample).not.toContain('NEXT_PUBLIC_CRISP_WEBSITE_ID');
+    expect(envExample).not.toContain('Crisp');
+    expect(appEnhancements).not.toContain('ChatWidget');
+    expect(appEnhancements).not.toContain('client.crisp.chat');
   });
 
   it('keeps retired fairness settings implementation archived', () => {

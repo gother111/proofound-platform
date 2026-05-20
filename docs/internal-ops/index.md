@@ -15,7 +15,7 @@ artifact at
 
 Scope guard:
 
-- Keep Proofound centered on Proof Packs, privacy-safe review, assignment clarity, and the hiring corridor.
+- Keep Proofound centered on Proof Packs, privacy-safe review, assignment clarity, and the proof-review workflow.
 - Treat the public portfolio as a derived surface, not the product center.
 - Do not use these SOPs to add broader moderation, recruiting, or enterprise workflow behavior.
 
@@ -61,5 +61,5 @@ intended target; the April 27 files are preserved history, not current go/no-go 
 - Every sensitive queue action must leave an audit event in `admin_audit_log`.
 - Resolve, cancel, and reopen actions require an operator note.
 - If privacy, consent, or identity-bearing reveal is in doubt, keep the narrower privacy state in place until the dispute is resolved.
-- If assignment quality is weak, fix assignment clarity before pushing more candidate review.
+- If assignment quality is weak, fix assignment clarity before pushing more proof review.
 - If evidence is not sufficient to support trust or engagement verification, keep the state pending instead of upgrading optimistically.

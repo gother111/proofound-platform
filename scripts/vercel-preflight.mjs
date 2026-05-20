@@ -34,8 +34,6 @@ const requiredEnvByTarget = {
     'GOOGLE_CLIENT_ID',
     'GOOGLE_CLIENT_SECRET',
     'GOOGLE_REDIRECT_URI',
-    'LINKEDIN_CLIENT_ID',
-    'LINKEDIN_CLIENT_SECRET',
   ],
   preview: [
     'NEXT_PUBLIC_SITE_URL',

@@ -44,8 +44,8 @@ export default async function OrgAssignmentsAliasPage({
                   Assignments
                 </h1>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Assignment cards own their matching corridor, candidate review, and pipeline
-                  context.
+                  Assignment cards own their proof-review workflow, staged review context, and next
+                  action state.
                 </p>
               </div>
             </div>

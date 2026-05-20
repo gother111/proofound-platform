@@ -63,6 +63,7 @@ vi.mock('@/db/schema', () => ({
 
 import {
   ensureInternalOpsQueueItem,
+  INTERNAL_OPS_QUEUE_META,
   listInternalOpsQueueItems,
   transitionInternalOpsQueueItem,
 } from '@/lib/internal-ops/queue';
@@ -70,6 +71,13 @@ import {
 describe('internal ops queue compatibility fallback', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('keeps pilot ops queue copy scoped to assignment-review workflow operations', () => {
+    const description = INTERNAL_OPS_QUEUE_META.pilot_ops.description;
+
+    expect(description).toContain('assignment-review workflow');
+    expect(description).not.toContain('hiring corridor');
   });
 
   it('returns a synthetic queue item when the runtime queue table is unavailable', async () => {

@@ -18,7 +18,7 @@
   - `intro corridor failure`: the system cannot produce enough qualified intros inside the intro target window.
 - System-driven fallback:
   - `portfolio_ready` remains independently useful even when browse or intro readiness is not met.
-  - Matching degrades from exact shortlist or intro output to browse-safe review, unordered candidate review, and portfolio or proof guidance.
+  - Matching degrades from exact shortlist or intro output to browse-safe review, unordered proof review, and portfolio or proof guidance.
   - Private browse can stay live before org-visible matching or intro eligibility; the system must not collapse those thresholds together.
   - Verification never upgrades trust labels optimistically. Pending or stale verification keeps stronger trust actions paused.
   - Overprecision protection replaces exact ordering with reason-coded review and may pause new intros for the assignment.

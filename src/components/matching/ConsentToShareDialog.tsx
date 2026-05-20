@@ -81,8 +81,6 @@ export function ConsentToShareDialog({
 
       await onConsent(matchId);
 
-      console.log('Consent given for match:', matchId);
-
       toast({
         title: 'Consent given',
         description: `Your proof-review snapshot will be shared with ${organizationName}`,

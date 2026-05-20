@@ -72,7 +72,8 @@ export const INTERNAL_OPS_QUEUE_META = {
   },
   pilot_ops: {
     label: 'Pilot ops',
-    description: 'Pilot coordination tasks that keep the hiring corridor narrow and moving.',
+    description:
+      'Pilot coordination tasks that keep the assignment-review workflow narrow and moving.',
   },
 } satisfies Record<
   InternalOpsQueueType,

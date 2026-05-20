@@ -145,7 +145,7 @@ Use the production-candidate target, not stale local evidence, for launch signof
 - [ ] Proof Packs, proof upload/import/linking, proof quality, and anchor context are clear.
 - [ ] Verification requests, publishing, privacy settings, export, and delete flows preserve
       no-leak behavior.
-- [ ] Organization onboarding, trust profile, assignments, review queue, candidate proof review,
+- [ ] Organization onboarding, trust profile, assignments, review queue, proof-submission review,
       intro request, reveal consent, interview, decision, and engagement verification surfaces stay in
       the locked MVP corridor.
 - [ ] Admin/internal launch-ops routes are protected and show only role-appropriate queue or

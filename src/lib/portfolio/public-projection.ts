@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { getRows } from '@/lib/db/rows';
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
 import {
@@ -157,6 +157,14 @@ const MOCK_LONG_ORG_ID = '99999999-9999-4999-9999-999999999998';
 const MOCK_LONG_ORG_SLUG = 'long-org';
 const MOCK_PROFILE_ID = '77777777-7777-4777-8777-777777777777';
 const MOCK_PROFILE_HANDLE = 'demo-proofound';
+
+function visualPublicProjectionFixturesEnabled() {
+  return (
+    isMockSupabaseEnabled() &&
+    process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+    visualFixturesRuntimeAllowed()
+  );
+}
 
 export type PublicIndividualPortfolioProjection = {
   profileId: string;
@@ -1509,7 +1517,7 @@ function buildMockPublicIndividualPortfolioProjection(): PublicIndividualPortfol
 export async function getPublicIndividualPortfolioProjectionByHandle(
   handle: string
 ): Promise<PublicIndividualPortfolioProjection | null> {
-  if (isMockSupabaseEnabled() && handle === MOCK_PROFILE_HANDLE) {
+  if (visualPublicProjectionFixturesEnabled() && handle === MOCK_PROFILE_HANDLE) {
     return buildMockPublicIndividualPortfolioProjection();
   }
 
@@ -1749,9 +1757,9 @@ function buildMockPublicOrganizationPortfolioProjection(): PublicOrganizationPor
     operating_region: 'EU',
     verified: true,
     website: 'https://test-org.example',
-    tagline: 'Proof-first hiring practice for focused launch review.',
+    tagline: 'Proof-first assignment review practice for focused launch review.',
     mission:
-      'Help teams review candidates through concrete work evidence instead of polished claims.',
+      'Help teams review submissions through concrete work evidence instead of polished claims.',
     working_context:
       'A launch-safe mock organization used for local corridor and public trust-page testing.',
     type: 'company',
@@ -2003,10 +2011,10 @@ async function loadPublicOrganizationAssignmentSnapshot(
 export async function getPublicOrganizationPortfolioProjectionBySlug(
   slug: string
 ): Promise<PublicOrganizationPortfolioProjection | null> {
-  if (isMockSupabaseEnabled() && slug === MOCK_ORG_SLUG) {
+  if (visualPublicProjectionFixturesEnabled() && slug === MOCK_ORG_SLUG) {
     return buildMockPublicOrganizationPortfolioProjection();
   }
-  if (isMockSupabaseEnabled() && slug === MOCK_LONG_ORG_SLUG) {
+  if (visualPublicProjectionFixturesEnabled() && slug === MOCK_LONG_ORG_SLUG) {
     return buildMockLongPublicOrganizationPortfolioProjection();
   }
 

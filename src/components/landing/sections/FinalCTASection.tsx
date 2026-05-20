@@ -92,7 +92,7 @@ export function FinalCTASection({
                 }
                 className="mt-5 font-display text-[2.35rem] leading-[0.95] text-foreground md:text-6xl"
               >
-                Build hiring on stronger proof
+                Build proof-first review
               </motion.h2>
               <motion.p
                 initial={false}
@@ -150,7 +150,7 @@ export function FinalCTASection({
                   For organizations
                 </p>
                 <p className="mt-4 text-3xl font-display leading-tight">
-                  Explore evidence-based hiring
+                  Explore proof-first review
                 </p>
                 <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
                   Review work through structured proof, clearer verification checks, and a more

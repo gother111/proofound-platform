@@ -168,7 +168,7 @@ export default async function OrganizationHomePage({
                       variant="outline"
                       className="border-proofound-forest text-proofound-forest bg-[#eef3e8]"
                     >
-                      Reviewing candidates
+                      Reviewing submissions
                     </Badge>
                   )}
                   {corridorState === 'draft_assignment' && (
@@ -216,7 +216,7 @@ export default async function OrganizationHomePage({
                       {activeAssignment.role}
                     </h2>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Candidate summaries are organized around proof relevance, verification
+                      Submission summaries are organized around proof relevance, verification
                       readiness, and privacy-safe review context. Review the evidence before opening
                       any identity reveal request.
                     </p>
@@ -236,7 +236,7 @@ export default async function OrganizationHomePage({
                     </h2>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       You have an incomplete assignment corridor. Finish defining the requirements
-                      to open candidate matching.
+                      to open proof-led assignment review.
                     </p>
                   </div>
                 )}
@@ -272,7 +272,7 @@ export default async function OrganizationHomePage({
                       className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
                     >
                       <Link href={`/app/o/${slug}/assignments`}>
-                        Review candidates
+                        Review submissions
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </Link>
                     </Button>

@@ -8,11 +8,11 @@ Scope: shared vocabulary for implementation and maintenance. This document is gu
 ## Core People And Surfaces
 
 - Individual: a person using Proofound to build, verify, control, and share their proof-first profile.
-- Organization: a hiring or review-side account that creates assignments, reviews proof-first matches, and manages team access.
+- Organization: a review-side account that creates assignments, reviews proof-first matches, and manages team access.
 - Profile: private individual workspace data. Profile helpers should not be assumed to be public-safe.
 - Portfolio: a public or shareable projection of selected profile and proof data. Portfolio helpers should preserve visibility, publication, and noindex rules.
 - Public projection: the intentionally exposed shape of profile, organization, proof, and trust data for public or shareable routes.
-- Primary object: the object a surface is about, such as a Proof Pack, assignment, candidate review, reveal request, interview, decision, verification, export, or deletion.
+- Primary object: the object a surface is about, such as a Proof Pack, assignment, proof review, reveal request, interview, decision, verification, export, or deletion.
 - Primary next action: the safest next user action on a surface. It should be visible without implying a broader platform or public directory.
 
 ## Proof And Evidence

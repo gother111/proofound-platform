@@ -18,7 +18,7 @@ const structuredAssignment = {
   status: 'active',
   createdAt: new Date().toISOString(),
   engagementType: 'contract_consulting',
-  businessValue: 'Improve candidate review quality before the first conversation.',
+  businessValue: 'Improve submission review quality before the first conversation.',
   expectedImpact: 'Submit one work artifact that shows ownership, outcomes, and constraints.',
   mustHaveSkills: [{ label: 'Service design', level: 4 }],
   locationMode: 'remote',
@@ -168,7 +168,7 @@ describe('CandidateInviteClient test_match flow', () => {
     });
 
     expect(screen.getByText(/Assignment: Designer/i)).toBeInTheDocument();
-    expect(screen.getByText(/Improve candidate review quality/i)).toBeInTheDocument();
+    expect(screen.getByText(/Improve submission review quality/i)).toBeInTheDocument();
     expect(screen.getByText(/Submit one work artifact/i)).toBeInTheDocument();
     expect(screen.getByText(/Remote \/ Stockholm, Sweden/i)).toBeInTheDocument();
     expect(screen.getByText(/Identity check/i)).toBeInTheDocument();
@@ -328,9 +328,9 @@ describe('CandidateInviteClient test_match flow', () => {
     });
 
     const pageText = document.body.textContent ?? '';
-    expect(pageText.indexOf('Improve candidate review quality')).toBeGreaterThanOrEqual(0);
+    expect(pageText.indexOf('Improve submission review quality')).toBeGreaterThanOrEqual(0);
     expect(pageText.indexOf('Apply to this assignment')).toBeGreaterThan(
-      pageText.indexOf('Improve candidate review quality')
+      pageText.indexOf('Improve submission review quality')
     );
     expect(screen.getByRole('link', { name: /apply to this assignment/i })).toHaveAttribute(
       'href',

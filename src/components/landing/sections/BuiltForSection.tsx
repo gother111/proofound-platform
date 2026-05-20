@@ -41,11 +41,12 @@ export function BuiltForSection({
     {
       id: 'organization',
       title: 'For Organizations',
-      description: 'Hire and collaborate based on validated proof and true mission alignment.',
+      description:
+        'Run assignment review from validated proof, privacy-safe context, and mission alignment.',
       benefits: [
         'Review proof submissions with clearer trust context',
         'Reduce bias with evidence-based review',
-        'Streamline hiring without sifting through CV noise',
+        'Move from proof submissions to approved next steps without CV noise',
       ],
       cta: 'Review proof first',
       onAction: onOrganizationSignup,

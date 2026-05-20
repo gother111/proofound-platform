@@ -1,4 +1,4 @@
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 import type { InterviewCorridorItem } from '@/app/actions/interviews';
 import type { EngagementVerificationSummary } from '@/lib/engagement-verifications/service';
 import type {
@@ -12,7 +12,7 @@ export function interviewVisualFixturesEnabled() {
     isMockSupabaseEnabled() &&
     process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
     process.env.PROOFOUND_INTERVIEWS_VISUAL_STATE === 'filled' &&
-    process.env.VERCEL_ENV !== 'production'
+    visualFixturesRuntimeAllowed()
   );
 }
 

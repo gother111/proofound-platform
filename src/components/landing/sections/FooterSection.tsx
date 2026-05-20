@@ -36,7 +36,8 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
                 </span>
               </Link>
               <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                Evidence-based hiring for a world with too much polish and too little proof.
+                Evidence-based assignment review for a world with too much polish and too little
+                proof.
               </p>
             </div>
 

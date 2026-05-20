@@ -30,6 +30,7 @@ import {
 } from '@/lib/verification/custom-verification-labels';
 import {
   buildVisualSkillVerificationResponse,
+  clientVerificationLinkVisualFixturesEnabled,
   VISUAL_VERIFY_TOKENS,
 } from '@/lib/verification/visual-link-fixtures';
 
@@ -183,10 +184,6 @@ function getRelationshipLabel(relationship?: string | null, source = 'peer') {
     : getSourceLabel(source);
 }
 
-function clientVisualVerificationEnabled() {
-  return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
-}
-
 function verificationLoadError(status: number, error?: string | null) {
   if (status === 410 || /expired/i.test(error ?? '')) {
     return 'This verification request has expired. Ask the requester to send a new link if needed.';
@@ -232,7 +229,7 @@ export default function VerifySkillPage() {
           return;
         }
 
-        if (clientVisualVerificationEnabled()) {
+        if (clientVerificationLinkVisualFixturesEnabled()) {
           const visualResponse = buildVisualSkillVerificationResponse(token);
           if (visualResponse) {
             const verification = visualResponse.verification as VerificationData;
@@ -327,7 +324,10 @@ export default function VerifySkillPage() {
     setAuthRequired(false);
 
     try {
-      if (clientVisualVerificationEnabled() && token === VISUAL_VERIFY_TOKENS.skillObserved) {
+      if (
+        clientVerificationLinkVisualFixturesEnabled() &&
+        token === VISUAL_VERIFY_TOKENS.skillObserved
+      ) {
         setSubmitted(true);
         setSubmittedAction(
           humanObservedVerdict === 'partly'

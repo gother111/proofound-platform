@@ -1,3 +1,5 @@
+import { visualFixturesRuntimeAllowed } from '@/lib/env';
+
 export const VISUAL_VERIFY_TOKENS = {
   skillObserved: 'visual-skill-verification-token-00000001',
   customBundle: 'visual-custom-verification-token-0000001',
@@ -10,7 +12,19 @@ export function verificationLinkVisualFixturesEnabled() {
   return (
     process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true' &&
     process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-    process.env.VERCEL_ENV !== 'production'
+    visualFixturesRuntimeAllowed()
+  );
+}
+
+export function clientVerificationLinkVisualFixturesEnabled() {
+  const visualFixturesEnabled =
+    process.env.NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES === 'true' ||
+    process.env.PROOFOUND_VISUAL_FIXTURES === 'true';
+
+  return (
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true' &&
+    visualFixturesEnabled &&
+    visualFixturesRuntimeAllowed()
   );
 }
 
@@ -109,7 +123,7 @@ export function buildVisualCustomVerificationResponse(token: string) {
           id: 'visual-custom-item-2',
           artifact_type: 'project',
           artifact_id: 'visual-project-1',
-          display_label: 'Proof packet redesign for candidate review',
+          display_label: 'Proof packet redesign for proof review',
           claim_template: 'confirmed_outcome',
           claim_label:
             'The redesign made the review packet easier to inspect without broad profile exposure',

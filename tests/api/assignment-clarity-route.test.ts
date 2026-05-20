@@ -178,6 +178,22 @@ describe('assignment clarity assistant route', () => {
     expect(generateJson).not.toHaveBeenCalled();
   });
 
+  it('does not let local mock mode bypass assignment access checks', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'membership_not_found',
+    });
+
+    const res = await POST(request(baseBody()));
+
+    expect(res.status).toBe(403);
+    expect(verifyExplicitAssignmentMutationAccess).toHaveBeenCalledWith(userId, assignmentId, {
+      orgId,
+      orgSlug: undefined,
+    });
+    expect(generateJson).not.toHaveBeenCalled();
+  });
+
   it('rejects full file payload fields before assignment access or model calls', async () => {
     const res = await POST(request(baseBody({ fullFilePayload: 'raw job attachment bytes' })));
 

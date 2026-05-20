@@ -3,13 +3,13 @@
 const stories = [
   {
     title: 'From scattered links to one proof-backed profile',
-    body: 'A career-switching designer turns work samples, context, and stakeholder-backed proof into one calm Public Page proof snapshot that gives hiring teams stronger evidence than CVs.',
+    body: 'A career-switching designer turns work samples, context, and stakeholder-backed proof into one calm Public Page proof snapshot that gives review teams stronger evidence than CVs.',
     detail:
       'Each claim resolves to visible work, reviewer-backed context, and public-safe evidence that can travel cleanly into a structured assignment corridor.',
   },
   {
     title: 'From resume pile to stronger shortlist',
-    body: 'A lean hiring team publishes a clearer assignment, pairs it with an org trust page, and reviews privacy-safe proof before identity to reach interviews with fewer but clearer-evidence candidates.',
+    body: 'A lean review team publishes a clearer assignment, pairs it with an org trust page, and reviews privacy-safe proof before identity to reach interviews with fewer but clearer-evidence submissions.',
     detail:
       'The shortlist stays explainable, the review stays proof-backed, and reveal only happens after the work clears the bar.',
   },

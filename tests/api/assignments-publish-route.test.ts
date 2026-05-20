@@ -97,7 +97,7 @@ describe('assignment publish route', () => {
       role: 'Product Designer',
       engagementType: 'full_time',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -244,7 +244,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -282,7 +282,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -373,7 +373,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -418,7 +418,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -470,7 +470,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -524,7 +524,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:
@@ -642,7 +642,7 @@ describe('assignment publish route', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
-        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+        'Improve assignment review quality by turning vague goals into proof-backed review choices.',
       description:
         'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
       expectedImpact:

@@ -54,7 +54,7 @@ describe('individual matching mobile clarity', () => {
           score: 0.86,
           assignmentId: 'visual-assignment-proof-ops',
           assignment: {
-            role: 'Proof operations lead for a privacy-safe hiring corridor',
+            role: 'Proof operations lead for a privacy-safe assignment review',
             locationMode: 'remote',
             workMode: 'contract',
             hoursMin: 24,
@@ -97,6 +97,8 @@ describe('individual matching mobile clarity', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Filters, 1 active' }));
 
+    expect(screen.getByRole('dialog')).toHaveTextContent('Filter Assignment Reviews');
+    expect(screen.queryByText(/Narrow down opportunities/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Apply Filters' }).parentElement).toHaveClass(
       'sticky'
     );

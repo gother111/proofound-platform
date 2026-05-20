@@ -63,7 +63,7 @@ Check:
 5. proof quality and anchor context;
 6. verification requests;
 7. public portfolio publishing;
-8. matching/opportunities surfaces when active;
+8. matching and assignment-review surfaces when active;
 9. intros, reveals, interviews, decisions/feedback;
 10. privacy settings, export, and delete.
 
@@ -76,7 +76,7 @@ Check:
 
 1. org onboarding and trust profile;
 2. assignments list/create/edit/review/publish;
-3. review queue, shortlist/matching, and candidate proof cards;
+3. review queue, shortlist/matching, and proof-submission cards;
 4. reason-code explanations;
 5. intro request;
 6. reveal request and candidate consent;
@@ -84,7 +84,7 @@ Check:
 8. decision recording and engagement verification.
 
 Verify keyboard operability, headings, table/list semantics, disabled states, status announcements,
-and no-leak behavior for private candidate proof and identity details.
+and no-leak behavior for private proof submissions and identity details.
 
 ## Admin/Internal Manual Flows
 

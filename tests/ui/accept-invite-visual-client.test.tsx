@@ -26,6 +26,10 @@ describe('AcceptInviteVisualClient', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: "You're invited" })).toBeInTheDocument();
     expect(screen.getByText('Northstar Evidence Studio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Review proof-first assignment submissions for privacy-sensitive pilots/i)
+    ).toBeInTheDocument();
+    expect(document.body.textContent ?? '').not.toMatch(/candidate evidence|hiring pilots/i);
     expect(screen.getByText('org reviewer')).toBeInTheDocument();
     expect(screen.getByText('elena.reviewer@northstar-evidence.example')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /accept invitation/i })).toBeInTheDocument();

@@ -6,7 +6,6 @@ const REPO_ROOT = process.cwd();
 
 const guardedClientFiles = [
   'src/components/profile/forms/ProjectForm.tsx',
-  'src/components/settings/VeriffVerification.tsx',
   'src/components/policy/PolicyAssistant.tsx',
 ] as const;
 

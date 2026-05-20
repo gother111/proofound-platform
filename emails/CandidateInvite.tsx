@@ -26,11 +26,12 @@ export const CandidateInvite = ({ orgName, inviteUrl, expiryDays }: CandidateInv
       <Container style={container}>
         <Heading style={h1}>You are invited to share your Proof Card</Heading>
         <Text style={text}>
-          <strong>{orgName}</strong> invited you to join their hiring flow on Proofound.
+          <strong>{orgName}</strong> invited you to a proof-card step in their assignment review on
+          Proofound.
         </Text>
         <Text style={text}>
-          Create your Proof Card to share structured evidence of your skills and experience instead
-          of sending a traditional CV.
+          Create your Proof Card to share structured evidence of your skills, outcomes, and
+          constraints for this review.
         </Text>
         <Section style={buttonContainer}>
           <Button style={button} href={inviteUrl}>

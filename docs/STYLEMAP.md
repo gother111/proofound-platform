@@ -60,7 +60,7 @@ surfaces and broad migrations, but new UI should not introduce a second palette.
 
 - Public portfolio and organization trust pages should feel selected, credible, and inspectable.
 - App surfaces should make the primary object and next action obvious: Proof Pack, assignment,
-  candidate review, reveal request, interview, decision, or engagement verification.
+  proof review, reveal request, interview, decision, or engagement verification.
 - Admin/internal surfaces should be quiet operational tools, not public dashboards.
 - Privacy, proof, trust, readiness, archived, gated, loading, empty, error, disabled, and success
   states must be visible where relevant.

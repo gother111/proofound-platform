@@ -19,7 +19,7 @@
     "hero": {
       "title": "Proofound",
       "tagline": "Focus on what matters",
-      "subtitle": "Turn real work into Proof Packs and review candidates through privacy-safe proof instead of CV theater.",
+      "subtitle": "Turn real work into Proof Packs and review submissions through privacy-safe proof instead of CV theater.",
       "cta": {
         "join": "Join Proofound",
         "login": "Log in"
@@ -45,7 +45,7 @@
     },
     "organizations": {
       "title": "For Organizations",
-      "description": "Publish a trust page, define clear assignments, and review proof-backed candidates with privacy-safe evidence."
+      "description": "Publish a trust page, define clear assignments, and review proof-backed submissions with privacy-safe evidence."
     },
     "principles": {
       "title": "Guiding Principles",

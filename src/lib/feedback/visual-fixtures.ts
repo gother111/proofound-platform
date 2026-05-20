@@ -1,3 +1,5 @@
+import { visualFixturesRuntimeAllowed } from '@/lib/env';
+
 export const VISUAL_FEEDBACK_TOKENS = {
   pendingCandidateToOrg: 'visual-feedback-token-candidate-0000001',
 } as const;
@@ -6,12 +8,20 @@ export function feedbackVisualFixturesEnabled() {
   return (
     process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true' &&
     process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-    process.env.VERCEL_ENV !== 'production'
+    visualFixturesRuntimeAllowed()
   );
 }
 
 export function clientFeedbackVisualFixturesEnabled() {
-  return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+  const visualFixturesEnabled =
+    process.env.NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES === 'true' ||
+    process.env.PROOFOUND_VISUAL_FIXTURES === 'true';
+
+  return (
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true' &&
+    visualFixturesEnabled &&
+    visualFixturesRuntimeAllowed()
+  );
 }
 
 export function buildVisualFeedbackTokenResponse(token: string) {

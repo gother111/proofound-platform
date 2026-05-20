@@ -29,6 +29,7 @@ import {
 } from '@/lib/verification/custom-verification-labels';
 import {
   buildVisualCustomVerificationResponse,
+  clientVerificationLinkVisualFixturesEnabled,
   VISUAL_VERIFY_TOKENS,
 } from '@/lib/verification/visual-link-fixtures';
 
@@ -102,10 +103,6 @@ function artifactTypeLabel(type: VerifyItem['artifact_type']): string {
   }
 }
 
-function clientVisualVerificationEnabled() {
-  return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
-}
-
 function verificationLoadError(status: number, error?: string | null) {
   if (status === 410 || /expired/i.test(error ?? '')) {
     return 'This verification request has expired. Ask the requester to send a new link if needed.';
@@ -139,7 +136,7 @@ export default function VerifyCustomRequestPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        if (clientVisualVerificationEnabled()) {
+        if (clientVerificationLinkVisualFixturesEnabled()) {
           const visualResponse = buildVisualCustomVerificationResponse(token);
           if (visualResponse) {
             const nextData = visualResponse.request as VerificationData;
@@ -197,7 +194,10 @@ export default function VerifyCustomRequestPage() {
     setError(null);
 
     try {
-      if (clientVisualVerificationEnabled() && token === VISUAL_VERIFY_TOKENS.customBundle) {
+      if (
+        clientVerificationLinkVisualFixturesEnabled() &&
+        token === VISUAL_VERIFY_TOKENS.customBundle
+      ) {
         setSubmitted(true);
         setSubmittedAction(
           humanObservedVerdict === 'partly'

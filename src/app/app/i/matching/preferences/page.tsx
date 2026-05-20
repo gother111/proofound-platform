@@ -12,7 +12,7 @@ import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export const metadata = {
   title: 'Matching Preferences | Proofound',
-  description: 'Set your personal matching preferences',
+  description: 'Set your proof-review preferences',
 };
 
 export default async function MatchingPreferencesPage() {
@@ -31,7 +31,8 @@ export default async function MatchingPreferencesPage() {
         <div className="space-y-2 mb-8">
           <h1 className="text-3xl font-bold font-display">Matching Preferences</h1>
           <p className="text-muted-foreground">
-            Set your personal job preferences so we can match you with relevant opportunities.
+            Set your work preferences so proof-led assignment reviews can stay relevant and
+            privacy-safe.
           </p>
         </div>
 

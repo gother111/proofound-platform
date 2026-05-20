@@ -430,8 +430,7 @@ export function getRateLimitProfileForPathname(
     pathname.startsWith('/api/auth/') ||
     pathname === '/api/user/email' ||
     pathname === '/api/user/password' ||
-    pathname === '/api/user/account' ||
-    pathname === '/api/user/account/cancel-deletion'
+    pathname === '/api/user/account'
   ) {
     return RATE_LIMITS.auth;
   }

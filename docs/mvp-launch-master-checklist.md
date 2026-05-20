@@ -38,8 +38,8 @@ Use this checklist for the final launch review. Do not treat older partial check
 
 - [ ] The shipped product still matches the locked MVP corridor and has not widened into a broader platform.
 - [ ] Proof Packs remain the product center, with the public portfolio treated as a derived surface rather than the whole product.
-- [ ] The core promise still reads as proof-backed hiring credibility, not generic recruiting, ATS replacement, or social profile theater.
-- [ ] The first corridor is still proof-first hiring for individuals and organizations, not a broadened marketplace or enterprise suite.
+- [ ] The core promise still reads as proof-backed assignment review, not generic recruiting, ATS replacement, or social profile theater.
+- [ ] The first corridor is still proof-first assignment review for individuals and organizations, not a broadened marketplace or enterprise suite.
 - [ ] No excluded ATS, HRIS, payroll, contract-signing, marketplace, public directory, social feed, or enterprise admin scope is active in the launch UI or API surface.
 - [ ] No vanity counters, fake density, or misleading popularity surfaces are active anywhere in the launch-visible experience.
 - [ ] The route surface is reduced to the launch allowlist, with non-MVP routes archived, removed, or hard-gated.
@@ -73,7 +73,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] Assignment edit works.
 - [ ] Assignment publish works.
 - [ ] The assignment builder enforces why, work, proof, and constraints before publish.
-- [ ] The organization can review privacy-safe proof-backed candidates.
+- [ ] The organization can review privacy-safe proof-backed submissions.
 - [ ] Blind-by-default review stays active during early review stages.
 - [ ] Intro request works.
 - [ ] Reveal request works.

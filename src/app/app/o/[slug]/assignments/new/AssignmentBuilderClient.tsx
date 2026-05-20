@@ -694,7 +694,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
                     htmlFor="job-description-import"
                     className="text-sm font-medium text-foreground"
                   >
-                    Existing job description
+                    Existing assignment brief
                   </label>
                   <p className="text-xs text-muted-foreground">
                     Paste the source text. It will be split into draft fields for review.
@@ -705,7 +705,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
                   value={jobDescriptionSource}
                   onChange={(event) => setJobDescriptionSource(event.target.value)}
                   className="min-h-[220px]"
-                  placeholder="Paste the existing job description here..."
+                  placeholder="Paste the existing assignment brief here..."
                 />
                 {jobDescriptionImportError ? (
                   <div className="flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">

@@ -33,7 +33,11 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
       icon: MessageSquare,
     };
   if (path.includes('/matching'))
-    return { title: 'Matching', description: 'Browse aligned introductions', icon: Users };
+    return {
+      title: 'Matching',
+      description: 'Review proof-aligned assignment introductions',
+      icon: Users,
+    };
   if (path.includes('/interviews'))
     return { title: 'Interviews', description: 'Interview and feedback status', icon: Calendar };
   if (path.includes('/messages'))
@@ -43,7 +47,7 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
   if (path.includes('/opportunities'))
     return {
       title: 'Launch note',
-      description: 'Opportunity browsing stays inside matching for the MVP corridor',
+      description: 'Assignment discovery stays inside matching for the MVP corridor',
       icon: Briefcase,
     };
   if (path.includes('/app/o/') && path.includes('/profile'))
@@ -53,11 +57,11 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
       icon: User,
     };
   if (path.includes('/profile'))
-    return { title: 'Profile', description: 'Your core identity', icon: User };
+    return { title: 'Profile', description: 'Public-safe proof context', icon: User };
   if (path.includes('/settings'))
     return {
       title: 'Settings',
-      description: 'Account and application preferences',
+      description: 'Account, privacy, and workflow preferences',
       icon: Settings,
     };
   if (path.includes('/verifications'))
@@ -79,13 +83,21 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
       icon: Briefcase,
     };
   if (path.includes('/portfolio'))
-    return { title: 'Portfolio', description: 'Your work showcase', icon: Briefcase };
+    return { title: 'Portfolio', description: 'Proof-backed work context', icon: Briefcase };
   if (path.includes('/assignments'))
-    return { title: 'Assignments', description: 'Manage tasks and roles', icon: Briefcase };
+    return {
+      title: 'Assignments',
+      description: 'Manage proof-review assignments',
+      icon: Briefcase,
+    };
   if (path.includes('/shortlist'))
-    return { title: 'Shortlist', description: 'Saved candidates and matches', icon: Users };
+    return {
+      title: 'Shortlist',
+      description: 'Saved proof submissions for review',
+      icon: Users,
+    };
   if (path.includes('/candidates'))
-    return { title: 'Candidates', description: 'Applicant tracking', icon: Users };
+    return { title: 'Submissions', description: 'Assignment review tracking', icon: Users };
   if (path.includes('/members'))
     return { title: 'Members', description: 'Organization members', icon: Users };
   if (path.includes('/team')) return { title: 'Team', description: 'Team management', icon: Users };

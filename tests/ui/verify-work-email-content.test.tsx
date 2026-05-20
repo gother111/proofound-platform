@@ -23,6 +23,9 @@ describe('VerifyWorkEmailContent', () => {
     searchParamsGet.mockReturnValue(null);
     vi.stubGlobal('fetch', vi.fn());
     vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('VERCEL_ENV', 'development');
   });
 
   it('gives missing-token users clear recovery actions', async () => {
@@ -72,5 +75,30 @@ describe('VerifyWorkEmailContent', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /go to verification center/i }));
     expect(routerPush).toHaveBeenCalledWith('/app/i/verifications');
+  });
+
+  it('keeps visual work-email tokens on the guarded verification API path in plain mock mode', async () => {
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    searchParamsGet.mockImplementation((key: string) =>
+      key === 'token' ? VISUAL_VERIFY_TOKENS.workEmailSuccess : null
+    );
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        message: 'Work email verified successfully!',
+        workEmail: 'real-check@example.com',
+      }),
+    } as Response);
+
+    render(<VerifyWorkEmailContent />);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        `/api/verification/work-email/verify?token=${VISUAL_VERIFY_TOKENS.workEmailSuccess}`
+      );
+    });
+
+    expect(screen.getByText('real-check@example.com')).toBeInTheDocument();
   });
 });

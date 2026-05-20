@@ -49,7 +49,7 @@ export function DeferredMatchingClient({
           </h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             Your profile and proof records are still safe. Retry this section to load matching
-            preferences and opportunities.
+            preferences and assignment reviews.
           </p>
           <Button className="mt-5" variant="outline" onClick={() => setRetryKey((key) => key + 1)}>
             Retry matching

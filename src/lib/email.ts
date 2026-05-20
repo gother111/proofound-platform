@@ -477,7 +477,7 @@ export async function sendFeedbackRequestEmail(params: {
       subject:
         direction === 'candidate_to_org'
           ? 'Share your interview experience'
-          : 'Share feedback with the candidate',
+          : 'Share workflow feedback',
       react: FeedbackRequest({ direction, feedbackUrl, expiresAt, interviewTime }),
     });
   } catch (error) {

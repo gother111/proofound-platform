@@ -307,7 +307,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
               <strong>Includes:</strong> Name, email, location, bio, avatar
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Purpose:</strong> Create your profile and match you with opportunities
+              <strong>Purpose:</strong> Create your profile and support assignment-review matching
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
               <strong>Visibility:</strong> Controlled by your profile settings
@@ -342,7 +342,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
               <strong>Includes:</strong> Skills, experience, education, proof, verifications
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Purpose:</strong> Help match you with relevant opportunities
+              <strong>Purpose:</strong> Help match you with proof-led assignment reviews
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
               <strong>Visibility:</strong> Visible to matched organizations
@@ -410,7 +410,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
               <strong>Includes:</strong> Matches, applications, conversations
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Purpose:</strong> Connect you with opportunities
+              <strong>Purpose:</strong> Connect you with assignment-review workflows
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
               <strong>Retention:</strong> Immediate deletion request handling with required legal

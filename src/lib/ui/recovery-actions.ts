@@ -38,7 +38,7 @@ const INDIVIDUAL_BASE_ACTIONS: RecoveryAction[] = [
   {
     id: 'turn-on-matchable',
     title: 'Turn on matchable',
-    description: 'Complete matching preferences to make better-fit opportunities available.',
+    description: 'Complete matching preferences to make better-fit assignment reviews available.',
     actionUrl: '/app/i/matching/preferences',
   },
 ];
@@ -160,19 +160,20 @@ export function getOrganizationRecoveryActions(
       {
         id: 'publish-assignment',
         title: 'Publish assignment',
-        description: 'Create and publish an assignment to start attracting candidate signals.',
+        description:
+          'Create and publish an assignment to start receiving proof-backed submissions.',
         actionUrl: `${basePath}/assignments/new`,
       },
       {
         id: 'add-skill-requirements',
         title: 'Add skill requirements',
-        description: 'Define required skills so matching can surface proof-backed candidates.',
+        description: 'Define required skills so matching can surface proof-backed submissions.',
         actionUrl: `${basePath}/assignments/new?focus=skills`,
       },
       {
         id: 'turn-on-candidate-matching',
-        title: 'Turn on candidate matching',
-        description: 'Open matching and activate candidate pipeline recovery actions.',
+        title: 'Turn on proof matching',
+        description: 'Open matching and activate assignment-review recovery actions.',
         actionUrl: `${basePath}/assignments?focus=matchable`,
       },
     ],
@@ -180,19 +181,19 @@ export function getOrganizationRecoveryActions(
       {
         id: 'publish-assignment',
         title: 'Publish assignment updates',
-        description: 'Update and publish this assignment so new candidates can be evaluated.',
+        description: 'Update and publish this assignment so new submissions can be reviewed.',
         actionUrl: assignmentReviewPath,
       },
       {
         id: 'add-skill-requirements',
         title: 'Add skill requirements',
-        description: 'Adjust required skills and levels to improve candidate discovery.',
+        description: 'Adjust required skills and levels to improve proof-submission discovery.',
         actionUrl: `${assignmentReviewPath}?focus=skills`,
       },
       {
         id: 'turn-on-candidate-matching',
-        title: 'Turn on candidate matching',
-        description: 'Re-open matching and re-run candidate discovery for this assignment.',
+        title: 'Turn on proof matching',
+        description: 'Re-open matching and re-run proof-submission discovery for this assignment.',
         actionUrl: assignmentId
           ? `${basePath}/assignments?matching=${encodeURIComponent(assignmentId)}`
           : `${basePath}/assignments?focus=matchable`,

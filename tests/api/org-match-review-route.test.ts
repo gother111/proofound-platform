@@ -275,7 +275,7 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     }
   );
 
-  it('allows active org reviewers to update candidate review state', async () => {
+  it('allows active org reviewers to update match review state', async () => {
     mocks.getOrgMembershipRole.mockResolvedValue('org_reviewer');
     mocks.select.mockReset();
 

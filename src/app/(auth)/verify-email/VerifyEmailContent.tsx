@@ -6,12 +6,11 @@ import Link from 'next/link';
 import { Card, CardHeader, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { verifyEmail } from '@/actions/auth';
-import { isVisualEmailVerificationToken } from '@/lib/verification/visual-link-fixtures';
+import {
+  clientVerificationLinkVisualFixturesEnabled,
+  isVisualEmailVerificationToken,
+} from '@/lib/verification/visual-link-fixtures';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
-
-function clientVisualVerificationEnabled() {
-  return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
-}
 
 export function VerifyEmailContent() {
   const router = useRouter();
@@ -30,7 +29,7 @@ export function VerifyEmailContent() {
       return;
     }
 
-    if (clientVisualVerificationEnabled() && isVisualEmailVerificationToken(token)) {
+    if (clientVerificationLinkVisualFixturesEnabled() && isVisualEmailVerificationToken(token)) {
       setAutoRedirectEnabled(false);
       setStatus('success');
       return;

@@ -139,14 +139,14 @@ export const individualTourSteps: Step[] = [
         <h2 className="text-lg font-semibold text-foreground">You're all set! 🎉</h2>
         <p className="text-sm text-muted-foreground">
           Start with your <strong>Proof Packs</strong> in Profile, then publish only the public-safe
-          signals you choose. Matching comes after proof and privacy are ready.
+          evidence you choose. Assignment review comes after proof and privacy are ready.
         </p>
         <div className="pt-3 border-t border-proofound-stone">
           <p className="text-xs text-muted-foreground">
             <strong>Next steps:</strong>
           </p>
           <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1 mt-1">
-            <li>Publish one public-safe proof signal</li>
+            <li>Publish one public-safe proof item</li>
             <li>Add one proof item you want to show publicly</li>
             <li>Add one proof-linked skill and one matching preference</li>
             <li>Complete stronger proof and constraints for qualified introductions</li>
@@ -183,7 +183,7 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Organization Navigation</h3>
         <p className="text-sm text-muted-foreground">
-          Your sidebar helps you manage assignments, review proof-led candidate context, and track
+          Your sidebar helps you manage assignments, review proof-led submission context, and track
           the narrow launch workflow.
         </p>
       </div>
@@ -197,8 +197,8 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Public Portfolio</h3>
         <p className="text-sm text-muted-foreground">
-          Publish your organization proof portfolio and share it externally right away. Matching and
-          hiring workflows stay available after this first step.
+          Publish your organization proof portfolio and share it externally right away. Assignment
+          review and staged introductions stay inside the proof-first workflow.
         </p>
       </div>
     ),
@@ -223,7 +223,7 @@ export const organizationTourSteps: Step[] = [
     target: '[data-tour="candidates"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Candidates</h3>
+        <h3 className="text-base font-semibold text-foreground">Proof Review</h3>
         <p className="text-sm text-muted-foreground">
           Review reason-coded proof context, request introductions when appropriate, and keep each
           workflow stage privacy-aware.
@@ -239,7 +239,7 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Organization Trust Page</h3>
         <p className="text-sm text-muted-foreground">
-          Share the narrow trust basics candidates and reviewers need before one assignment path:
+          Share the narrow trust basics participants and reviewers need before one assignment path:
           mission, why the work matters, operating context, and domain evidence.
         </p>
       </div>

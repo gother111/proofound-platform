@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { requireApiAuthContext } from '@/lib/auth';
 import { buildBlindSafeVerificationRequestEmail } from '@/lib/email/privacy';
 import { sendEmail } from '@/lib/email/sender';
-import { isMockSupabaseEnabled, resolveCanonicalSiteUrl } from '@/lib/env';
+import { resolveCanonicalSiteUrl } from '@/lib/env';
 import {
   VERIFICATION_INTEGRITY_REASONS,
   assessVerificationRequestIntegrity,
@@ -33,8 +33,6 @@ const CreateVerificationRequestSchema = z.object({
   verifierEmail: z.string().trim().email('Valid email is required'),
   message: z.string().optional(),
 });
-
-const MOCK_COMPOSER_SKILL_ID = '33333333-3333-4333-8333-333333333333';
 
 function fallbackRelationshipForSource(
   verifierSource: 'peer' | 'manager' | 'external'
@@ -132,25 +130,6 @@ export async function POST(request: NextRequest) {
     const normalizedVerifierEmail = normalizeEmail(validated.verifierEmail);
     if (!normalizedVerifierEmail) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
-    }
-
-    if (isMockSupabaseEnabled() && skillId === MOCK_COMPOSER_SKILL_ID) {
-      return NextResponse.json(
-        {
-          request: {
-            id: '44444444-4444-4444-8444-444444444444',
-            skill_id: skillId,
-            verifier_email: normalizedVerifierEmail,
-            verifier_relationship: verifierRelationship,
-            verifier_source: verifierSource,
-            status: 'pending',
-          },
-          email_sent: true,
-          integrity_status: 'clear',
-          requires_authenticated_verifier: false,
-        },
-        { status: 201 }
-      );
     }
 
     const { data: skill, error: skillError } = await supabase

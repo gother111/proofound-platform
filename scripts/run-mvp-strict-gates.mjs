@@ -318,8 +318,6 @@ const providerRequiredEnv = providerConnectedRequired
       'GOOGLE_CLIENT_ID',
       'GOOGLE_CLIENT_SECRET',
       'GOOGLE_REDIRECT_URI',
-      'LINKEDIN_CLIENT_ID',
-      'LINKEDIN_CLIENT_SECRET',
       'E2E_PROVIDER_USER_ID',
       'E2E_PROVIDER_USER_EMAIL',
       'E2E_PROVIDER_USER_PASSWORD',

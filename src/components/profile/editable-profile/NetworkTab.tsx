@@ -44,8 +44,8 @@ export function NetworkTab() {
             Visualize Network Graph
           </Button>
           <p className="text-xs text-muted-foreground mt-3">
-            See how your connections relate to each other and discover new collaboration
-            opportunities
+            See how your connections relate to each other and discover new proof-review
+            conversations
           </p>
         </div>
       </Card>

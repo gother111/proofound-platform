@@ -238,13 +238,13 @@ function sanitizeBlindReviewCardForResponse(
   };
 }
 
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 import { buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
 
 const visualAssignmentFixturesEnabled = () =>
   isMockSupabaseEnabled() &&
   process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-  process.env.VERCEL_ENV !== 'production';
+  visualFixturesRuntimeAllowed();
 
 export async function POST(
   request: NextRequest,

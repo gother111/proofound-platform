@@ -8,6 +8,8 @@ const ACTIVE_PROFILE_COPY_FILES = [
   'src/components/profile/EditableProfileView.tsx',
   'src/components/profile/DeferredEditableProfileView.tsx',
   'src/components/profile/GuidedProfileSetupView.tsx',
+  'src/components/profile/ProfileView.tsx',
+  'src/components/profile/editable-profile/NetworkTab.tsx',
   'src/components/profile/editable-profile/ProfileReadinessBanner.tsx',
   'src/components/tour/FirstRunTour.tsx',
   'src/components/tour/tourSteps.tsx',
@@ -24,6 +26,7 @@ describe('active profile copy guardrails', () => {
     expect(activeCopy).not.toMatch(/broad profile/i);
     expect(activeCopy).not.toMatch(/return to your dashboard|back to dashboard/i);
     expect(activeCopy).not.toMatch(/profile page did not load/i);
+    expect(activeCopy).not.toMatch(/collaboration\s+opportunities/i);
     expect(activeCopy).toMatch(/Start with proof, then choose what to share/);
   });
 });

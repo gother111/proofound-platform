@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { visualFixturesRuntimeAllowed } from '@/lib/env';
 
 const MOCK_USER_ID = '88888888-8888-4888-8888-888888888888';
 const ORG_ID = '99999999-9999-4999-9999-999999999999';
@@ -22,7 +23,7 @@ const isMockAdminTestContext = () =>
 const visualFixturesEnabled = () =>
   process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true' &&
   process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-  process.env.VERCEL_ENV !== 'production';
+  visualFixturesRuntimeAllowed();
 const getMockPlatformRole = (): 'platform_admin' | 'super_admin' | null => {
   if (!isMockAdminTestContext()) return null;
 
@@ -311,7 +312,6 @@ const mockSupabaseClient = {
       }
 
       if (table === 'skills_taxonomy') {
-        console.log('Mock Supabase: Hit skills_taxonomy table');
         const mockSkills = [
           {
             code: 'python',
@@ -377,7 +377,6 @@ const mockSupabaseClient = {
           }),
         };
 
-        console.log('Mock Supabase: select called for skills_taxonomy');
         return chain;
       }
 

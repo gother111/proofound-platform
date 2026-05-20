@@ -18,6 +18,8 @@ describe('active organization readiness copy guardrails', () => {
 
     expect(activeCopy).not.toMatch(/low match quality|matching quality|weight matrix/i);
     expect(activeCopy).not.toMatch(/adjust weights/i);
+    expect(activeCopy).not.toMatch(/candidate signals/i);
+    expect(activeCopy).toMatch(/real proof submissions/i);
     expect(activeCopy).toMatch(/proof-alignment signals/i);
     expect(activeCopy).toMatch(/proof gates/i);
   });

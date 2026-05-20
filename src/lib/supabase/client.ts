@@ -222,14 +222,7 @@ const mockSupabaseClient = {
 export function createClient() {
   assertMockDatabaseAllowed('Supabase browser client');
 
-  // Only log in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('createClient called, env:', process.env.NODE_ENV);
-  }
   if (isMockSupabaseEnabled()) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Returning mock Supabase client (ORG MODE)');
-    }
     return mockSupabaseClient;
   }
   // Client-side doesn't need DATABASE_URL, so use non-strict mode

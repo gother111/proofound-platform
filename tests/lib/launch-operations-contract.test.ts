@@ -24,6 +24,15 @@ describe('launch operations contract', () => {
     expect(serialized).not.toMatch(/profile remains/i);
   });
 
+  it('keeps organization fallback copy review-scoped instead of candidate-set scoped', () => {
+    const serialized = JSON.stringify(FALLBACK_COPY);
+
+    expect(FALLBACK_COPY.trust_pending_verification.organization.title).toBe(
+      'Verification is still in progress for this review set.'
+    );
+    expect(serialized).not.toMatch(/candidate set/i);
+  });
+
   it('keeps the canonical feature-flag taxonomy stable', () => {
     expect(FEATURE_FLAG_TAXONOMY_VALUES).toEqual([
       'default_on',

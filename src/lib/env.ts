@@ -111,7 +111,17 @@ export function isProductionDeployRuntime(env: EnvSource = process.env): boolean
   const vercelEnv = env.VERCEL_ENV?.trim().toLowerCase();
   const appEnv = (env.NEXT_PUBLIC_APP_ENV || env.APP_ENV)?.trim().toLowerCase();
 
-  return nodeEnv === 'production' || vercelEnv === 'production' || appEnv === 'production';
+  return (
+    nodeEnv === 'production' ||
+    vercelEnv === 'production' ||
+    vercelEnv === 'preview' ||
+    appEnv === 'production' ||
+    appEnv === 'staging'
+  );
+}
+
+export function visualFixturesRuntimeAllowed(env: EnvSource = process.env): boolean {
+  return !isProductionDeployRuntime(env);
 }
 
 export function isMockSupabaseEnabled(env: EnvSource = process.env): boolean {

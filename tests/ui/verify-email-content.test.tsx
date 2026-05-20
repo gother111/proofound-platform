@@ -34,6 +34,9 @@ describe('VerifyEmailContent', () => {
 
   it('renders the local visual success state without calling the guarded auth action', async () => {
     vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('VERCEL_ENV', 'development');
     searchParamsGet.mockImplementation((key: string) => {
       if (key === 'token') return VISUAL_VERIFY_TOKENS.emailSuccess;
       if (key === 'type') return 'signup';
@@ -51,6 +54,28 @@ describe('VerifyEmailContent', () => {
     expect(screen.queryByText(/Redirecting to login/i)).not.toBeInTheDocument();
     expect(verifyEmailMock).not.toHaveBeenCalled();
     expect(routerPush).not.toHaveBeenCalled();
+  });
+
+  it('keeps visual email tokens on the guarded auth action path in plain mock mode', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('VERCEL_ENV', 'development');
+    searchParamsGet.mockImplementation((key: string) => {
+      if (key === 'token') return VISUAL_VERIFY_TOKENS.emailSuccess;
+      if (key === 'type') return 'signup';
+      return null;
+    });
+
+    render(<VerifyEmailContent />);
+
+    await waitFor(() => {
+      expect(verifyEmailMock).toHaveBeenCalled();
+    });
+
+    expect(verifyEmailMock.mock.calls[0][0].get('token')).toBe(VISUAL_VERIFY_TOKENS.emailSuccess);
+    expect(verifyEmailMock.mock.calls[0][0].get('type')).toBe('signup');
+    expect(screen.getByText('Redirecting to login in a few seconds.')).toBeInTheDocument();
   });
 
   it('keeps the real success state truthful while preserving auto-redirect behavior', async () => {

@@ -17,7 +17,7 @@ Accessibility launch checks cover active MVP and internal launch-ops surfaces:
   active assignment/share surfaces;
 - individual onboarding, Proof Packs, proof upload/import/linking, verification requests, public
   portfolio publishing, privacy settings, export, and delete;
-- organization onboarding, trust profile, assignments, review queue, candidate proof review, intro,
+- organization onboarding, trust profile, assignments, review queue, proof-submission review, intro,
   reveal consent, interview, decision, and engagement verification;
 - protected admin/internal verification, audit, queue, monitoring, and launch-ops surfaces.
 

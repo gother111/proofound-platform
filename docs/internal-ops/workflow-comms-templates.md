@@ -89,9 +89,9 @@ Body:
 
 Hi {{name}},
 
-We reviewed the assignment and it is not yet clear enough for strong proof-first review. Before we keep moving candidates through the corridor, we need the assignment to answer these points more directly:
+We reviewed the assignment and it is not yet clear enough for strong proof-first review. Before we keep moving proof submissions through the corridor, we need the assignment to answer these points more directly:
 
-- what real value the hire should create
+- what real value the engagement should create
 - what outcomes matter most
 - what proof would count
 - what practical constraints are real

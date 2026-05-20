@@ -17,7 +17,7 @@ import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher'
 import { getPreset, normalizeWeights } from '@/lib/core/matching/presets';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { resolveFeatureFlags } from '@/lib/feature-flags/server';
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 import { log } from '@/lib/log';
 import {
@@ -47,7 +47,7 @@ const VISUAL_ASSIGNMENT_FIXTURE_IDS = new Set([
 const visualAssignmentFixturesEnabled = () =>
   isMockSupabaseEnabled() &&
   process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-  process.env.VERCEL_ENV !== 'production';
+  visualFixturesRuntimeAllowed();
 
 function toVisibilitySafeAssignmentMatchItem<T extends Record<string, unknown>>(item: T) {
   const {

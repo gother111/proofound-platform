@@ -187,10 +187,10 @@ export function EnhancedMatchFilters({
       <SheetContent className="flex h-dvh w-full flex-col overflow-hidden bg-white p-0 text-foreground sm:max-w-lg">
         <SheetHeader className="px-6 pt-6">
           <SheetTitle className="text-xl font-['Crimson_Pro'] text-foreground">
-            Filter Matches
+            Filter Assignment Reviews
           </SheetTitle>
           <SheetDescription className="text-[#4A4A4A]">
-            Narrow down opportunities by skills, location, work mode, and compensation
+            Narrow review context by skills, location, work mode, and compensation
           </SheetDescription>
         </SheetHeader>
 

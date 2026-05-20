@@ -54,21 +54,21 @@ Relevant current classifications:
 
 - Active API surfaces include `/api/upload/*`, `/api/expertise/taxonomy`, `/api/expertise/user-skills/*`, `/api/ai/proof-pack/suggest`, verification routes, portfolio routes, assignment routes, and the narrow matching/review corridor.
 - Broad `/api/expertise/*` routes are archived unless they are `/api/expertise/jd-to-l4`, `/api/expertise/taxonomy`, or `/api/expertise/user-skills/*`.
-- The compiled archived allowlist in `tests/api/launch-surface-inventory.test.ts` includes the CV import wizard route files while requiring their classification to remain `archived`.
+- `tests/api/launch-surface-inventory.test.ts` no longer allows compiled CV import wizard route files; the URLs remain archived at the launch surface policy and middleware boundary.
 - `/app/i/expertise` is classified as an archived page path, and there is no active `src/app/app/i/expertise` implementation in the app tree. The old Expertise Atlas UI island now lives under `src/archive/non_launch_pages/app/i/expertise/implementation/` as historical context only.
 
 ## CV Import Wizard Status
 
 The CV import wizard routes remain archived and must not be reactivated in this pass.
 
-Archived route files:
+Archived route URLs:
 
-- `src/app/api/expertise/cv-import/wizard-extract/route.ts`
-- `src/app/api/expertise/cv-import/wizard-extract/status/route.ts`
-- `src/app/api/expertise/cv-import/wizard-suggest/route.ts`
-- `src/app/api/expertise/cv-import/wizard-apply/route.ts`
+- `/api/expertise/cv-import/wizard-extract`
+- `/api/expertise/cv-import/wizard-extract/status`
+- `/api/expertise/cv-import/wizard-suggest`
+- `/api/expertise/cv-import/wizard-apply`
 
-These handlers return `410` legacy/non-launch responses through `legacySurfaceJsonResponse(...)`.
+These URLs return `410` non-launch responses through `src/lib/launch/surface-policy.ts` and middleware before any route handler runs.
 
 Regression coverage:
 

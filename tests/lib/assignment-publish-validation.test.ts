@@ -6,7 +6,7 @@ const baseAssignment = {
   builderMode: 'basic',
   role: 'Product Designer',
   businessValue:
-    'Improve candidate quality by turning vague hiring goals into specific proof-backed review decisions.',
+    'Improve assignment review quality by turning vague goals into specific proof-backed review decisions.',
   description:
     'Own the end-to-end assignment review loop, clarify what work is expected, and keep the team aligned on what delivery actually matters.',
   expectedImpact:

@@ -181,11 +181,6 @@ export function ShareProfileDialog({
             ? 'Your Organization Trust Page link is ready to share'
             : 'Your Public Page link is ready to share',
       });
-
-      console.log('profile.snippet.generated', {
-        format,
-        theme,
-      });
     } catch (error) {
       console.error('profile.snippet.generate.failed', {
         error: error instanceof Error ? error.message : 'Unknown error',

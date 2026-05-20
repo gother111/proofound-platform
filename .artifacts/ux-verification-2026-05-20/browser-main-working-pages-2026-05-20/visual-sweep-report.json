@@ -1,0 +1,2689 @@
+{
+  "generatedAt": "2026-05-20T20:56:40.793Z",
+  "artifactDir": "<repo>/.artifacts/ux-verification-2026-05-20/browser-main-working-pages-2026-05-20",
+  "routeCount": 13,
+  "viewportCount": 2,
+  "resultCount": 26,
+  "failures": [
+    {
+      "role": "individual",
+      "label": "individual-home",
+      "url": "http://localhost:33123/app/i/home",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:46:47.972Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/home",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Build your proof-first profile"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 449,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U",
+          "Guided setup"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:47:08.767Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-profile-proof-packs",
+      "url": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:47:08.767Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Start with proof, then choose what to share"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 587,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:47:35.920Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-verifications",
+      "url": "http://localhost:33123/app/i/verifications",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:47:35.920Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/verifications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Proof verification requests"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 535,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U",
+          "Incoming",
+          "Sent2",
+          "0Attention",
+          "0Pending",
+          "0Active",
+          "Show all",
+          "All",
+          "Active",
+          "Pending",
+          "Needs attention"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:47:58.925Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-matching",
+      "url": "http://localhost:33123/app/i/matching",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:47:58.925Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/matching",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": ["Preparing matching workspace"]
+        },
+        "h1Count": 2,
+        "h1s": ["Matching workspace", "Matching workspace"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 237,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:48:21.977Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-communications",
+      "url": "http://localhost:33123/app/i/communications",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:48:21.977Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/communications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": true,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 0,
+        "h1s": [],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 359,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U",
+          "MessagesThreads, intros, and reveal requests.",
+          "InterviewsScheduling, feedback, and handoff."
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:48:47.775Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-settings-privacy",
+      "url": "http://localhost:33123/app/i/settings/privacy",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:48:47.775Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/settings/privacy",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Privacy settings"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 210,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:49:09.563Z"
+    },
+    {
+      "role": "individual",
+      "label": "onboarding",
+      "url": "http://localhost:33123/onboarding",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:49:09.563Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/onboarding",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Start with one Proof Pack"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 333,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "← Back to persona choice",
+          "Continue to proof artifact"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:49:32.841Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-home",
+      "url": "http://localhost:33122/app/o/test-org/home",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:49:32.841Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/home",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Nordic Field Systems"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 119,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:49:53.849Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-assignments",
+      "url": "http://localhost:33122/app/o/test-org/assignments",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:49:53.849Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Assignments"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 314,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF",
+          "Organization"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:50:16.786Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-communications",
+      "url": "http://localhost:33122/app/o/test-org/communications",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:50:16.786Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": true,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": ["Preparing organization messages"]
+        },
+        "h1Count": 0,
+        "h1s": [],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 473,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF",
+          "MessagesThreads, intros, and reveal requests.",
+          "InterviewsScheduling, feedback, and handoff."
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:50:46.023Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-interviews",
+      "url": "http://localhost:33122/app/o/test-org/interviews",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:50:46.023Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/interviews",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Interview workflow is loading"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 312,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:51:09.265Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-profile",
+      "url": "http://localhost:33122/app/o/test-org/profile",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:51:09.265Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/profile",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Organization Trust Page"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 134,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:51:32.515Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-shortlist",
+      "url": "http://localhost:33122/app/o/test-org/shortlist",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:51:32.515Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Assignments"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 314,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF",
+          "Organization"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:51:55.348Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-home",
+      "url": "http://localhost:33123/app/i/home",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:51:55.354Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/home",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Build your proof-first profile"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 419,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U",
+          "Guided setup"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:52:17.491Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-profile-proof-packs",
+      "url": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:52:17.491Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Start with proof, then choose what to share"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 558,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:52:43.768Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-verifications",
+      "url": "http://localhost:33123/app/i/verifications",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:52:43.768Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/verifications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Proof verification requests"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 500,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U",
+          "Incoming",
+          "Sent2",
+          "0Attention",
+          "0Pending",
+          "0Active",
+          "Show all",
+          "All",
+          "Active",
+          "Pending",
+          "Needs attention",
+          "Declined"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:53:06.802Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-matching",
+      "url": "http://localhost:33123/app/i/matching",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:53:06.802Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/matching",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": ["Preparing matching workspace"]
+        },
+        "h1Count": 2,
+        "h1s": ["Matching workspace", "Matching workspace"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 207,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:53:27.816Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-communications",
+      "url": "http://localhost:33123/app/i/communications",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:53:27.816Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/communications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": true,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 0,
+        "h1s": [],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 227,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U",
+          "MessagesThreads, intros, and reveal requests.",
+          "InterviewsScheduling, feedback, and handoff."
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:53:51.152Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-settings-privacy",
+      "url": "http://localhost:33123/app/i/settings/privacy",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:53:51.152Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/settings/privacy",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Privacy settings"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 180,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:54:12.209Z"
+    },
+    {
+      "role": "individual",
+      "label": "onboarding",
+      "url": "http://localhost:33123/onboarding",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:54:12.209Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/onboarding",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Start with one Proof Pack"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 861,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 333,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "← Back to persona choice",
+          "Continue to proof artifact"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:54:35.924Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-home",
+      "url": "http://localhost:33122/app/o/test-org/home",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:54:35.924Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/home",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": true,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Nordic Field Systems"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 298,
+          "scrollWidth": 688
+        },
+        "textLength": 59,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:54:56.717Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-assignments",
+      "url": "http://localhost:33122/app/o/test-org/assignments",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:54:56.717Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Assignments"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 251,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF",
+          "Organization"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:55:17.234Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-communications",
+      "url": "http://localhost:33122/app/o/test-org/communications",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:55:17.234Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": true,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": ["Preparing organization messages"]
+        },
+        "h1Count": 0,
+        "h1s": [],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 311,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF",
+          "MessagesThreads, intros, and reveal requests.",
+          "InterviewsScheduling, feedback, and handoff."
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:55:38.016Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-interviews",
+      "url": "http://localhost:33122/app/o/test-org/interviews",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:55:38.016Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/interviews",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Interview workflow is loading"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 250,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:55:58.703Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-profile",
+      "url": "http://localhost:33122/app/o/test-org/profile",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:55:58.703Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/profile",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Organization Trust Page"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 59,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:56:19.257Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-shortlist",
+      "url": "http://localhost:33122/app/o/test-org/shortlist",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:56:19.257Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Assignments"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 251,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF",
+          "Organization"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:56:40.788Z"
+    }
+  ],
+  "results": [
+    {
+      "role": "individual",
+      "label": "individual-home",
+      "url": "http://localhost:33123/app/i/home",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:46:47.972Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/home",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Build your proof-first profile"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 449,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U",
+          "Guided setup"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:47:08.767Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-profile-proof-packs",
+      "url": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:47:08.767Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Start with proof, then choose what to share"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 587,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:47:35.920Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-verifications",
+      "url": "http://localhost:33123/app/i/verifications",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:47:35.920Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/verifications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Proof verification requests"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 535,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U",
+          "Incoming",
+          "Sent2",
+          "0Attention",
+          "0Pending",
+          "0Active",
+          "Show all",
+          "All",
+          "Active",
+          "Pending",
+          "Needs attention"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:47:58.925Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-matching",
+      "url": "http://localhost:33123/app/i/matching",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:47:58.925Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/matching",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": ["Preparing matching workspace"]
+        },
+        "h1Count": 2,
+        "h1s": ["Matching workspace", "Matching workspace"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 237,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:48:21.977Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-communications",
+      "url": "http://localhost:33123/app/i/communications",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:48:21.977Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/communications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": true,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 0,
+        "h1s": [],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 359,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U",
+          "MessagesThreads, intros, and reveal requests.",
+          "InterviewsScheduling, feedback, and handoff."
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:48:47.775Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-settings-privacy",
+      "url": "http://localhost:33123/app/i/settings/privacy",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:48:47.775Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/settings/privacy",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Privacy settings"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 210,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Communications",
+          "Matching",
+          "Settings",
+          "Collapse sidebar",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:49:09.563Z"
+    },
+    {
+      "role": "individual",
+      "label": "onboarding",
+      "url": "http://localhost:33123/onboarding",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:49:09.563Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/onboarding",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Start with one Proof Pack"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 333,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "← Back to persona choice",
+          "Continue to proof artifact"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:49:32.841Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-home",
+      "url": "http://localhost:33122/app/o/test-org/home",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:49:32.841Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/home",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Nordic Field Systems"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 119,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:49:53.849Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-assignments",
+      "url": "http://localhost:33122/app/o/test-org/assignments",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:49:53.849Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Assignments"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 314,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF",
+          "Organization"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:50:16.786Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-communications",
+      "url": "http://localhost:33122/app/o/test-org/communications",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:50:16.786Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": true,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": ["Preparing organization messages"]
+        },
+        "h1Count": 0,
+        "h1s": [],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 473,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF",
+          "MessagesThreads, intros, and reveal requests.",
+          "InterviewsScheduling, feedback, and handoff."
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:50:46.023Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-interviews",
+      "url": "http://localhost:33122/app/o/test-org/interviews",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:50:46.023Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/interviews",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Interview workflow is loading"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 312,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:51:09.265Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-profile",
+      "url": "http://localhost:33122/app/o/test-org/profile",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:51:09.265Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/profile",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Organization Trust Page"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 134,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:51:32.515Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-shortlist",
+      "url": "http://localhost:33122/app/o/test-org/shortlist",
+      "viewport": "desktop",
+      "viewportSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "startedAt": "2026-05-20T20:51:32.515Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Assignments"],
+        "scroll": {
+          "clientWidth": 1280,
+          "documentHeight": 900,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 1280
+        },
+        "textLength": 314,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 900,
+          "width": 1280
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Assignments",
+          "Communications",
+          "Organization Trust Page",
+          "Public Preview",
+          "Collapse sidebar",
+          "NF",
+          "Organization"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:51:55.348Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-home",
+      "url": "http://localhost:33123/app/i/home",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:51:55.354Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/home",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Build your proof-first profile"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 419,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U",
+          "Guided setup"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:52:17.491Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-profile-proof-packs",
+      "url": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:52:17.491Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/profile?profileView=full&tab=proof_packs",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Start with proof, then choose what to share"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 558,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:52:43.768Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-verifications",
+      "url": "http://localhost:33123/app/i/verifications",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:52:43.768Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/verifications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Proof verification requests"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 500,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U",
+          "Incoming",
+          "Sent2",
+          "0Attention",
+          "0Pending",
+          "0Active",
+          "Show all",
+          "All",
+          "Active",
+          "Pending",
+          "Needs attention",
+          "Declined"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:53:06.802Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-matching",
+      "url": "http://localhost:33123/app/i/matching",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:53:06.802Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/matching",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": ["Preparing matching workspace"]
+        },
+        "h1Count": 2,
+        "h1s": ["Matching workspace", "Matching workspace"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 207,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:53:27.816Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-communications",
+      "url": "http://localhost:33123/app/i/communications",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:53:27.816Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/communications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": true,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 0,
+        "h1s": [],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 227,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U",
+          "MessagesThreads, intros, and reveal requests.",
+          "InterviewsScheduling, feedback, and handoff."
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:53:51.152Z"
+    },
+    {
+      "role": "individual",
+      "label": "individual-settings-privacy",
+      "url": "http://localhost:33123/app/i/settings/privacy",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:53:51.152Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/app/i/settings/privacy",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Privacy settings"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 180,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Profile",
+          "Inbox",
+          "Matching",
+          "Settings",
+          "U"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:54:12.209Z"
+    },
+    {
+      "role": "individual",
+      "label": "onboarding",
+      "url": "http://localhost:33123/onboarding",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:54:12.209Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33123/onboarding",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Start with one Proof Pack"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 861,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 333,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "← Back to persona choice",
+          "Continue to proof artifact"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:54:35.924Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-home",
+      "url": "http://localhost:33122/app/o/test-org/home",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:54:35.924Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/home",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": true,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Nordic Field Systems"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 298,
+          "scrollWidth": 688
+        },
+        "textLength": 59,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:54:56.717Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-assignments",
+      "url": "http://localhost:33122/app/o/test-org/assignments",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:54:56.717Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Assignments"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 251,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF",
+          "Organization"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:55:17.234Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-communications",
+      "url": "http://localhost:33122/app/o/test-org/communications",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:55:17.234Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": true,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": ["Preparing organization messages"]
+        },
+        "h1Count": 0,
+        "h1s": [],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 311,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF",
+          "MessagesThreads, intros, and reveal requests.",
+          "InterviewsScheduling, feedback, and handoff."
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:55:38.016Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-interviews",
+      "url": "http://localhost:33122/app/o/test-org/interviews",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:55:38.016Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/interviews",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Interview workflow is loading"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 250,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:55:58.703Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-profile",
+      "url": "http://localhost:33122/app/o/test-org/profile",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:55:58.703Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/profile",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Organization Trust Page"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 59,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:56:19.257Z"
+    },
+    {
+      "role": "organization",
+      "label": "org-shortlist",
+      "url": "http://localhost:33122/app/o/test-org/shortlist",
+      "viewport": "mobile",
+      "viewportSize": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-05-20T20:56:19.257Z",
+      "inspect": {
+        "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+        "flags": {
+          "cookieOverlay": [],
+          "horizontalOverflow": false,
+          "missingH1": false,
+          "obviousError": false,
+          "percentMatchMatches": [],
+          "redirectedToLogin": false,
+          "staleMatches": [],
+          "stuckMatches": []
+        },
+        "h1Count": 1,
+        "h1s": ["Assignments"],
+        "scroll": {
+          "clientWidth": 390,
+          "documentHeight": 844,
+          "horizontalOverflowPx": 0,
+          "scrollWidth": 390
+        },
+        "textLength": 251,
+        "title": "Proofound - Focus on what matters",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        },
+        "visibleButtons": [
+          "Skip to main content",
+          "Overview",
+          "Work",
+          "Inbox",
+          "Profile",
+          "Preview",
+          "NF",
+          "Organization"
+        ]
+      },
+      "consoleErrors": [],
+      "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1",
+      "finishedAt": "2026-05-20T20:56:40.788Z"
+    }
+  ]
+}

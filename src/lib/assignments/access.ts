@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { assignments, organizationMembers, organizations } from '@/db/schema';
 import { CANONICAL_ORG_ROLE_VALUES, normalizeAuthorizedOrgRole, type OrgRole } from '@/lib/authz';
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 
 export const ASSIGNMENT_MUTATION_ROLES = ['org_manager', 'org_owner'] as const;
 export type AssignmentMutationRole = (typeof ASSIGNMENT_MUTATION_ROLES)[number];
@@ -11,6 +11,14 @@ export type AssignmentMutationRole = (typeof ASSIGNMENT_MUTATION_ROLES)[number];
 const MOCK_USER_ID = '88888888-8888-4888-8888-888888888888';
 const MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
 const MOCK_ORG_SLUG = 'test-org';
+
+function visualAssignmentAccessFixturesEnabled() {
+  return (
+    isMockSupabaseEnabled() &&
+    process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+    visualFixturesRuntimeAllowed()
+  );
+}
 
 type MembershipContext = {
   orgId?: string | null;
@@ -195,7 +203,7 @@ export async function resolveExplicitUserOrgContext(
   }
 
   if (
-    isMockSupabaseEnabled() &&
+    visualAssignmentAccessFixturesEnabled() &&
     userId === MOCK_USER_ID &&
     (context.orgId === MOCK_ORG_ID || context.orgSlug === MOCK_ORG_SLUG) &&
     hasRequiredRole('org_manager', requiredRoles)

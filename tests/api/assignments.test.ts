@@ -354,6 +354,27 @@ describe('Assignment API', () => {
       expect(res.status).toBe(403);
     });
 
+    it('does not let mock mode bypass organization membership for assignment creation', async () => {
+      vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue(null);
+
+      const req = new NextRequest('http://localhost/api/assignments', {
+        method: 'POST',
+        body: JSON.stringify({
+          orgId: TEST_ORG_ID,
+          role: 'Software Engineer',
+          status: 'draft',
+        }),
+      });
+
+      const res = await POST(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(403);
+      expect(data.error).toBe('Organization not found or access denied');
+      expect(db.transaction).not.toHaveBeenCalled();
+    });
+
     it('should return 400 for invalid input', async () => {
       // Mock org membership
       (db.query.organizationMembers.findFirst as any).mockResolvedValue({

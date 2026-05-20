@@ -213,24 +213,7 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/organizations/[orgId]/test-matches',
 ] as const;
 
-const ALLOWED_ARCHIVED_COMPILED_ROUTES = [
-  '/api/analytics/events',
-  '/api/analytics/tour-event',
-  '/api/analytics/track',
-  '/api/analytics/web-vitals',
-  '/api/cron/account-deletion-workflow',
-  '/api/cron/process-deletions',
-  '/api/cron/send-deletion-reminders',
-  '/api/expertise/cv-import/wizard-apply',
-  '/api/expertise/cv-import/wizard-extract',
-  '/api/expertise/cv-import/wizard-extract/status',
-  '/api/expertise/cv-import/wizard-suggest',
-  '/api/match/test',
-  '/api/performance/track',
-  '/api/profile/completeness',
-  '/api/user/account/cancel-deletion',
-  '/api/user/audit-log/purpose',
-] as const;
+const ALLOWED_ARCHIVED_COMPILED_ROUTES = [] as const;
 
 async function collectRoutePaths(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });

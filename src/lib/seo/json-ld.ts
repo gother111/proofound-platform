@@ -51,7 +51,7 @@ export function buildProofoundOrganizationJsonLd(description?: string): JsonLd {
     sameAs: [],
     description:
       description ||
-      'Proofound is a proof-first hiring corridor centered on Proof Packs, privacy-safe review, and public trust surfaces derived from real work.',
+      'Proofound is a proof-first assignment review corridor centered on Proof Packs, privacy-safe review, and public trust surfaces derived from real work.',
   };
 }
 
@@ -65,7 +65,7 @@ export function buildProofoundWebsiteJsonLd(description?: string): JsonLd {
     url: siteUrl,
     description:
       description ||
-      'Proof Packs, privacy-safe candidate review, direct-link Public Pages, and organization trust pages for stronger evidence than CVs.',
+      'Proof Packs, privacy-safe assignment review, direct-link Public Pages, and organization trust pages for stronger evidence than CVs.',
   };
 }
 

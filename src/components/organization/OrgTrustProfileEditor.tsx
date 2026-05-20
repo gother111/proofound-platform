@@ -183,7 +183,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
                 onChange={(event) => setOperatingContext(event.target.value)}
                 disabled={!canEdit || isPending}
                 rows={8}
-                placeholder="Describe the real operating environment candidates should understand."
+                placeholder="Describe the real operating environment proof submitters should understand."
               />
             </div>
 

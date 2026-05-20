@@ -77,7 +77,7 @@ export function Step3WeightMatrix({ form, onNext, onBack, isSubmitting = false }
           <span className="text-sm text-muted-foreground">Step 3 of 5</span>
         </div>
         <p className="text-muted-foreground">
-          Define what evidence, skills, or signals would make the candidate credible for this
+          Define what evidence, skills, or signals would make a proof submission credible for this
           assignment.
         </p>
         <Progress value={60} className="mt-4" />
@@ -98,7 +98,7 @@ export function Step3WeightMatrix({ form, onNext, onBack, isSubmitting = false }
           }
           className="min-h-[160px]"
           maxLength={1200}
-          placeholder="Describe the proof, evidence, or practical signal that would make the org confident this candidate can do the work."
+          placeholder="Describe the proof, evidence, or practical signal that would make the org confident the submitter can do the work."
         />
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">

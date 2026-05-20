@@ -34,7 +34,7 @@ vi.mock('@/components/matching/ConsentToShareDialog', () => ({
 }));
 
 describe('MatchResultCard', () => {
-  it('uses human match breakdown labels for individual opportunity cards', () => {
+  it('uses human match breakdown labels for individual assignment review cards', () => {
     render(
       <MatchResultCard
         result={{

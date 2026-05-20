@@ -83,6 +83,23 @@ describe('FeedbackForm', () => {
     expect(await screen.findByText(/Please complete the required questions/i)).toBeInTheDocument();
   });
 
+  it('keeps organization feedback prompts workflow-scoped instead of candidate-led', () => {
+    render(
+      <FeedbackForm
+        template={{
+          ...template,
+          id: '22222222-2222-4222-8222-222222222222',
+          name: 'Org → Other Side Default',
+          direction: 'org_to_candidate',
+        }}
+        interviewId="interview-1"
+      />
+    );
+
+    expect(screen.getByText('Share workflow feedback')).toBeInTheDocument();
+    expect(screen.queryByText('Share feedback with the candidate')).not.toBeInTheDocument();
+  });
+
   it('submits when required fields are provided', async () => {
     render(<FeedbackForm template={template} interviewId="interview-1" token="token-1" />);
 
@@ -103,6 +120,9 @@ describe('FeedbackForm', () => {
 
   it('records visual fixture feedback locally without calling the guarded submit API', async () => {
     vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('VERCEL_ENV', 'development');
 
     render(
       <FeedbackForm
@@ -118,5 +138,37 @@ describe('FeedbackForm', () => {
 
     expect(await screen.findByRole('status')).toHaveTextContent(/Feedback submitted/i);
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('keeps visual fixture tokens on the guarded submit API path in plain mock mode', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('VERCEL_ENV', 'development');
+
+    render(
+      <FeedbackForm
+        template={template}
+        interviewId="visual-feedback-interview-1"
+        token={VISUAL_FEEDBACK_TOKENS.pendingCandidateToOrg}
+        surface="embedded"
+      />
+    );
+
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '4' } });
+    fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/feedback/submit',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    const payload = JSON.parse((global.fetch as any).mock.calls[0][1].body);
+    expect(payload.token).toBe(VISUAL_FEEDBACK_TOKENS.pendingCandidateToOrg);
+    expect(await screen.findByRole('status')).toHaveTextContent(/Feedback submitted/i);
   });
 });

@@ -102,7 +102,7 @@ Containment:
 Verification:
 
 - reveal route tests
-- org review/candidate proof card checks
+- org review/proof-submission card checks
 - internal queue state
 - manual Browser check only with safe test data
 

@@ -10,11 +10,10 @@ import { Label } from '@/components/ui/label';
 import { confirmPasswordReset } from '@/actions/auth';
 import { Eye, EyeOff, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { isVisualResetPasswordToken } from '@/lib/verification/visual-link-fixtures';
-
-function clientVisualVerificationEnabled() {
-  return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
-}
+import {
+  clientVerificationLinkVisualFixturesEnabled,
+  isVisualResetPasswordToken,
+} from '@/lib/verification/visual-link-fixtures';
 
 export function ConfirmResetPasswordForm() {
   const router = useRouter();
@@ -73,7 +72,7 @@ export function ConfirmResetPasswordForm() {
 
     if (
       tokenHashParam &&
-      clientVisualVerificationEnabled() &&
+      clientVerificationLinkVisualFixturesEnabled() &&
       isVisualResetPasswordToken(tokenHashParam)
     ) {
       setVisualResetMode(true);

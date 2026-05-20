@@ -335,8 +335,8 @@ export function MatchingClient() {
             <p className="mt-1 text-sm leading-6 text-muted-foreground dark:text-[#8A8174]">
               {blockedState
                 ? 'Browsing stays open. Add recent proof and one preference before introductions.'
-                : `${filteredMatches.length} opportunit${
-                    filteredMatches.length === 1 ? 'y' : 'ies'
+                : `${filteredMatches.length} assignment review${
+                    filteredMatches.length === 1 ? '' : 's'
                   } aligned with your skills, proof, and constraints`}
             </p>
           </div>
@@ -408,7 +408,7 @@ export function MatchingClient() {
           </h2>
           <p className="mb-6 mx-auto max-w-md text-sm leading-6 text-muted-foreground">
             {matches.length === 0
-              ? 'Nothing needs your attention right now. Keep your proof and preferences current so new opportunities can land cleanly.'
+              ? 'Nothing needs your attention right now. Keep your proof and preferences current so new assignment reviews can land cleanly.'
               : 'No matches fit the current filters. Loosen one filter to widen the corridor.'}
           </p>
           {ensureThreeActions(readinessActions).length > 0 ? (

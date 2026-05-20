@@ -48,8 +48,8 @@ export default function NewMatchNotification({
             <Text style={paragraph}>Hi {recipientName},</Text>
 
             <Text style={paragraph}>
-              A proof-backed opportunity is ready for review. Proofound keeps the next step
-              reason-coded and privacy staged, without exposing a numeric match score.
+              A proof-backed assignment review is ready. Proofound keeps the next step reason-coded
+              and privacy staged, without exposing a numeric match score.
             </Text>
 
             {matchType === 'organization' && roleTitle && organizationName && (
@@ -80,7 +80,7 @@ export default function NewMatchNotification({
 
             {matchType === 'individual' && (
               <Section style={matchBox}>
-                <Text style={matchTitle}>Proof-backed opportunity</Text>
+                <Text style={matchTitle}>Proof-backed assignment review</Text>
                 <Section style={reviewContainer}>
                   <Text style={reviewLabel}>Review state</Text>
                   <Text style={reviewValue}>{proofFitLabel}</Text>
@@ -89,7 +89,7 @@ export default function NewMatchNotification({
             )}
 
             <Text style={paragraph}>
-              Review the opportunity through the current proof corridor:
+              Review the proof context through the current assignment corridor:
               <br />
               • Skills and proof relevance
               <br />

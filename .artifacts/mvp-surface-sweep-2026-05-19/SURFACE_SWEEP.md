@@ -3007,3 +3007,472 @@ Browser evidence:
 - Reframed success and note copy around workflow decisions and candidate-facing workflow notifications.
 - Added launch-gate coverage so the dialog cannot quietly reintroduce broad hiring-decision, offer, not-a-fit, or candidate-note leakage wording.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/ui/organization-interviews-page-actions.test.tsx --reporter=verbose` (2 files / 123 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale decision-dialog copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Public Landing Proof-Review Copy Alignment
+
+- Timestamp: 2026-05-20 22:36 CEST.
+- Continued the public-surface sweep into active landing and homepage metadata copy.
+- Found the organization card in `BuiltForSection` still promised `Hire and collaborate...` and `Streamline hiring...`, and homepage metadata still used vague `weak CV signal` / `structured hiring signal` phrasing.
+- Reframed the organization card around assignment review from validated proof, privacy-safe context, mission alignment, and approved next workflow steps without CV noise.
+- Reframed homepage keywords, Open Graph description, and JSON-LD page description toward structured proof review, weak CV claims, proof artifacts, verification, and privacy-safe assignment review.
+- Extended landing-copy and launch-gate coverage so active public landing/SEO copy cannot quietly reintroduce `Hire and collaborate`, `Streamline hiring without sifting through CV noise`, `weak CV signal`, `structured hiring signal`, or `higher-signal candidates`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/landing-copy-guardrails.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 122 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale public-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported two non-failing pre-existing orphan-artifact warnings.
+
+## Continuation - Active Landing CTA And SEO Corridor Tightening
+
+- Timestamp: 2026-05-20 22:40 CEST.
+- Rechecked the currently rendered landing stack (`ProofoundLanding`, `ScrollytellingSection`, `FinalCTASection`, `FooterSection`, homepage story frames, page metadata, and JSON-LD defaults), not just the broader section inventory.
+- Found active rendered copy still used broad public phrasing: `Build hiring on stronger proof`, `Explore evidence-based hiring`, `Evidence-based hiring for a world...`, `proof-first hiring corridor`, `privacy-safe candidate review`, and `Modern hiring pressure`.
+- Reframed the final CTA, footer, story-frame body, progress label, assignment card challenge title, homepage metadata keywords/alt/Twitter copy, and JSON-LD defaults around proof-first review, evidence-based assignment review, privacy-safe assignment review, and proof-review corridors.
+- Updated landing and launch-gate guards to cover the actual rendered public stack and to block the stale broad hiring/candidate-review phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/landing-copy-guardrails.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 122 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale public-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Authenticated Signup And Review Entry Copy Alignment
+
+- Timestamp: 2026-05-20 22:45 CEST.
+- Continued from public landing into active authenticated entry points: signup consent, guided tours, organization home, organization matching review, and individual matching filters.
+- Found active user-facing copy still used broad or stale phrases: `matching opportunities`, `finding purpose-driven talent`, `Matching and hiring workflows stay available after this first step`, `open candidate matching`, `Filter Matches`, `Narrow down opportunities`, `Review proof-backed candidates, shortlist fits`, and `Candidate added to shortlist.`
+- Reframed signup marketing consent around proof-review workflow updates instead of matching opportunities.
+- Reframed individual and organization tours around proof-first assignment review, public-safe evidence, staged introductions, proof-review workflow decisions, and review-bias reduction instead of talent discovery or hiring decisions.
+- Reframed organization home and matching review entry copy around proof-led assignment review and workflow-stage updates, and reframed individual matching filters as assignment-review filters rather than opportunity filters.
+- Extended focused UI and launch-gate coverage for the touched signup, tour, matching, and review-entry surfaces.
+- Verification passed after one brittle JSX-string assertion was adjusted: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/ui/signup-form-mobile-clarity.test.tsx tests/ui/matching-organization-view-beta.test.tsx tests/ui/individual-matching-mobile-clarity.test.tsx --reporter=verbose` (4 files / 130 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale authenticated-entry copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning; the signup test still prints an existing mocked form-action warning; docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - LLM Crawl Copy Corridor Alignment
+
+- Timestamp: 2026-05-20 22:47 CEST.
+- Continued the public discovery sweep into active LLM crawl surfaces: `/llms.txt`, `/llms-full.txt`, and `/llms`.
+- Found `src/lib/seo/llms.ts` still described Proofound as a `proof-first hiring corridor` and said assignment reveal happens inside the `hiring corridor`, even though the rendered landing and metadata now use proof-first assignment review.
+- Reframed LLM crawl descriptions around the proof-first assignment review corridor and proof-review workflow while preserving the same public page/legal/technical surface inventory.
+- Updated `llms` route tests, public JSON-LD fixture wording, and launch-gate public-copy coverage so active crawl copy cannot reintroduce `proof-first hiring corridor`, `inside the hiring corridor`, or `privacy-safe candidate review`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/app/llms-routes.test.ts tests/lib/public-json-ld.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 129 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale LLM/SEO copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Root Metadata, Legal, Matching, And Assignment Fallback Copy Alignment
+
+- Timestamp: 2026-05-20 22:50 CEST.
+- Continued the public discovery and authenticated-entry sweep into root metadata, Terms service-scope copy, organization assignment entry copy, individual matching preference/loading/empty states, and assignment/AI mock fallback text.
+- Found active copy still used broader or stale phrases: `clear assignment-based hiring`, `proof-first hiring corridor`, `matching corridor, candidate review, and pipeline context`, `relevant opportunities`, `privacy-safe opportunities`, `new opportunities can land cleanly`, `proof-led hiring corridor`, and `reaches candidate review`.
+- Reframed root metadata and Terms around a proof-first assignment review corridor and clear assignment-based workflow.
+- Reframed organization assignment entry copy around proof-review workflow, staged review context, and next action state.
+- Reframed individual matching preference/loading/empty copy around proof-led assignment reviews, privacy-safe assignment reviews, readiness context, and new assignment reviews rather than generic opportunities.
+- Reframed assignment and assignment-clarifier fallback text around proof-led assignment review paths and proof review rather than hiring corridors or candidate review.
+- Extended matching-preferences UI coverage and launch-gate copy coverage over the touched root/legal/matching/assignment/API fallback surfaces.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/ui/matching-preferences-page.test.tsx tests/app/llms-routes.test.ts tests/lib/public-json-ld.test.ts --reporter=verbose` (4 files / 131 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale root/legal/matching/API fallback copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Active Operator Docs Proof-Review Wording Alignment
+
+- Timestamp: 2026-05-20 22:54 CEST.
+- Continued from runtime and public discovery copy into active operator docs: `README.md`, internal-ops SOP index, assignment-quality checklist, STYLEMAP, ubiquitous language, launch operations, and the MVP launch master checklist.
+- Preserved the locked March authority documents and reference-only historical docs, but aligned active day-to-day guidance with the current proof-review/assignment-review wording.
+- Reframed README launch positioning from `proof-first, privacy-first hiring corridor` / `narrow proof-first hiring corridor` to proof-first assignment review corridor.
+- Reframed internal ops from `the hiring corridor` and `candidate review` to proof-review workflow and proof review.
+- Reframed STYLEMAP and ubiquitous language primary-object examples from candidate review to proof review, and narrowed organization wording from hiring/review-side to review-side.
+- Reframed launch operations fallback from unordered candidate review to unordered proof review.
+- Reframed the MVP launch master checklist core-promise checks from proof-backed hiring credibility and proof-first hiring to proof-backed assignment review and proof-first assignment review.
+- Added launch-gate doc coverage so active operator docs cannot quietly reintroduce the old hiring-corridor/candidate-review phrasing.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 122 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale active-docs copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Launch Support And Accessibility Docs Proof-Review Alignment
+
+- Timestamp: 2026-05-20 22:57 CEST.
+- Continued the docs sweep from operator guidance into active launch support, alerting, accessibility, and verification checklist surfaces.
+- Found remaining active docs that still used stale or broad wording: `matching/opportunities surfaces when active`, `Proof Pack, assignment, candidate review`, `hiring corridor reaches explicit hire`, and `privacy-safe proof-backed candidates`.
+- Reframed accessibility guidance around matching and assignment-review surfaces rather than matching/opportunities.
+- Reframed alerting primary-object language around proof review rather than candidate review.
+- Reframed launch verification evidence around the proof-review workflow reaching explicit `hire` and distinct engagement verification.
+- Reframed the MVP launch master checklist organization review step around privacy-safe proof-backed submissions rather than candidates.
+- Extended launch-gate coverage so these support docs cannot quietly reintroduce the stale matching/opportunities, candidate-review, or hiring-corridor evidence phrasing.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 122 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale support-docs copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Organization Review Submission Copy Alignment
+
+- Timestamp: 2026-05-20 23:01 CEST.
+- Continued from docs into active organization review surfaces that still showed candidate-led wording despite the surrounding proof-review corridor.
+- Reframed the organization matching console badge, loading, empty states, detail prompt, section label, fallback anonymized label, pass toast, and shortlist empty copy from candidates to proof submissions/submissions where the user is reviewing assignment evidence.
+- Reframed the organization home active-assignment badge and CTA from reviewing candidates to reviewing submissions, while keeping the underlying workflow behavior and reveal/intro states unchanged.
+- Reframed organization onboarding and profile launch-corridor copy around reviewers, work context, published work, and submissions.
+- Updated UI and launch-gate coverage so active organization review-entry surfaces cannot quietly reintroduce `New candidates`, `Review candidates`, `Loading proof-aligned candidates`, `published work and candidates`, or `candidates need to trust you`.
+- Verification passed after updating two stale expectations: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/ui/matching-organization-view-beta.test.tsx --reporter=verbose` (2 files / 126 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale organization-review copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Support, Recovery, Privacy, And Locale Copy Alignment
+
+- Timestamp: 2026-05-20 23:06 CEST.
+- Continued from organization review UI into active support helpers and secondary launch-facing copy.
+- Found stale scope wording in organization recovery actions, privacy overview purpose text, internal ops queue metadata, verification request feed visual fixture copy, and locale message bundles.
+- Reframed organization recovery actions from candidate matching, candidate discovery, and proof-backed candidates to proof matching, proof-submission discovery, proof-backed submissions, and assignment-review recovery actions.
+- Reframed privacy overview purposes from matching/connecting with opportunities to proof-led assignment reviews and assignment-review workflows.
+- Reframed internal pilot ops queue metadata from keeping the hiring corridor narrow to keeping the assignment-review workflow narrow.
+- Reframed verification feed visual fixture language from proof-first hiring corridor readiness and candidate review signal to proof-first assignment review readiness and proof-review signal.
+- Reframed English and Swedish locale organization descriptions from proof-backed candidates / candidates to proof-backed submissions / bevisbaserade inlämningar.
+- Added focused guards across recovery actions, privacy overview copy, internal ops queue metadata, localized copy, and launch-gate coverage.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run src/lib/__tests__/recovery-actions.test.ts tests/ui/privacy-overview-copy.test.tsx tests/lib/internal-ops-queue.test.ts tests/lib/localized-copy-guardrails.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (5 files / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale support/recovery/privacy copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Retained Landing And Fixture Copy Alignment
+
+- Timestamp: 2026-05-20 23:10 CEST.
+- Continued the public-copy sweep into retained landing sections and visual/runtime fixtures that are still active source and covered by guard tests, even when not all are rendered by the current homepage shell.
+- Reframed retained landing copy from proof-backed candidates, clearer-evidence candidates, candidates through privacy-safe shortlist, and organizations finding talent to proof-backed submissions, clearer-evidence submissions, privacy-safe proof submissions, and organizations reviewing assignment submissions.
+- Reframed the retained hiring-team section contrast from `not another talent feed` to `not another sourcing feed`.
+- Reframed the public org trust fixture from proof-first hiring infrastructure to proof-first assignment review / review infrastructure.
+- Reframed matching visual fixture and its mobile clarity test fixture from privacy-safe hiring corridor to privacy-safe assignment review.
+- Extended landing and launch-gate guards over the retained sections, hero variant, org trust fixture, and matching visual fixture.
+- Verification passed after one whitespace-sensitive JSX assertion was fixed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/landing-copy-guardrails.test.tsx tests/ui/pilot-packaging-guardrails.test.tsx tests/ui/individual-matching-mobile-clarity.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 130 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale retained-public-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Individual Support, Readiness, And Public Projection Copy Alignment
+
+- Timestamp: 2026-05-20 23:15 CEST.
+- Continued into individual-facing support/error copy, policy helper text, readiness actions, public projection fixtures, visual verification fixtures, and active internal comms/SOP docs.
+- Reframed individual recovery copy from better-fit opportunities to better-fit assignment reviews.
+- Reframed policy explainer data-use text from matching users with opportunities to supporting proof-led assignment reviews.
+- Reframed organization readiness action copy from candidate signals to real proof submissions.
+- Reframed visual verification fixture display copy from candidate review to proof review.
+- Reframed mock public organization projection copy from proof-first hiring / reviewing candidates to proof-first assignment review / reviewing submissions.
+- Reframed individual matching chunk error copy from loading matching preferences and opportunities to loading matching preferences and assignment reviews.
+- Reframed homepage keyword copy from proof-based candidate review to proof-based submission review.
+- Reframed active internal redaction and workflow comms docs from live hiring/candidate corridor language to assignment-review/proof-submission language.
+- Extended focused guard coverage across recovery actions, privacy overview, org readiness, deferred matching error copy, visual verification fixtures, public projection, and launch-gate coverage.
+- Verification passed after compacting the launch-gate text check for JSX line breaks: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run src/lib/__tests__/recovery-actions.test.ts tests/ui/privacy-overview-copy.test.tsx tests/lib/org-readiness-copy-guardrails.test.ts tests/ui/deferred-matching-client.test.tsx tests/ui/verify-link-visual-fixtures.test.tsx tests/lib/public-portfolio-projection.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (7 files / 153 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale individual/support copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Profile, Candidate Invite, AI Addendum, And Corridor Completion Copy Alignment
+
+- Timestamp: 2026-05-20 23:20 CEST.
+- Continued the active-surface stale-language pass into profile network copy, candidate-invite assignment fixtures, the AI assistive-layer positioning addendum, SLA comments, and the completed engagement snapshot.
+- Reframed profile network helper copy from discovering collaboration opportunities to discovering proof-review conversations.
+- Reframed candidate invite assignment business value from candidate review quality to submission review quality, preserving the assignment-specific proof-card behavior.
+- Reframed the AI addendum public positioning line from reviewing candidates through proof to reviewing proof submissions through structured assignment review, while leaving the explicit banned phrase `AI candidate matching` in the do-not-use list.
+- Reframed completed engagement snapshot copy from `the hiring corridor is complete` to `the assignment-review corridor is complete`.
+- Reframed the SLA comment for the 72-hour matching window around reviewing proof submissions.
+- Updated the current landing reference metadata note from candidate review to submission review.
+- Extended focused guard coverage for active profile copy and completed engagement snapshot wording.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/org-match-review-route.test.ts tests/lib/profile-copy-guardrails.test.ts tests/lib/hiring-corridor-snapshot.test.ts tests/ui/candidate-invite-client.test.tsx --reporter=verbose` (4 files / 31 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale active-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Active Landing Variants, Route Metadata, Assignment Builder, And Invite Fixture Wording
+
+- Timestamp: 2026-05-20 23:23 CEST.
+- Continued the stale-positioning pass into active visible variants and fixtures that were not covered by the previous targeted scan.
+- Reframed the README footer line from proof-first privacy-safe hiring to proof-first privacy-safe assignment review.
+- Reframed retained landing variant copy from hiring teams / organizations hiring / interview fewer people to review teams, reviewing assignment submissions, and bringing fewer better-prepared submissions into interviews.
+- Reframed route metadata for the archived opportunities/candidates paths around assignment discovery, saved submissions, and assignment-review tracking.
+- Reframed organization trust and assignment-review helper text from candidates to proof submitters/submitters where the UI is about assignment publication clarity.
+- Reframed assignment builder Step 3 helper/placeholder text around credible proof submissions and submitters rather than candidate credibility.
+- Reframed visual invite fixture text from candidate evidence, hiring pilots, and candidate screening to assignment submissions, assignment-review pilots, and submission review.
+- Reframed active assignment-quality and workflow comms checklist copy from hire/candidate fit to engagement/submission fit.
+- Reframed launch surface-policy detail from opportunity browsing to assignment discovery while preserving the hard-gated MVP policy.
+- Added route metadata copy coverage and strengthened focused UI guards for assignment builder, assignment review, and visual org invites.
+- Browser check: existing `localhost:3000` listener was wedged (`curl` timed out), so a temporary dev server was started on `http://localhost:3001`; Playwright opened `/` and `/candidate-invite/visual-proof-card-pending` successfully. `/accept-invite?token=visual-org-member-invite-000000001` redirected to `/login` in this runtime, so only the component test is counted for that visual fixture copy.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/landing-copy-guardrails.test.tsx tests/ui/assignment-review-client.test.tsx tests/ui/assignment-weight-matrix-gates.test.tsx tests/ui/accept-invite-visual-client.test.tsx tests/ui/candidate-invite-client.test.tsx tests/lib/route-meta-copy.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (7 files / 139 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 123 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale active-copy scan, Playwright browser navigation on the reachable local surfaces, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Assignment Builder Import Copy, Support README, And Legacy Wizard Cleanup
+
+- Timestamp: 2026-05-20 23:30 CEST.
+- Continued from stale wording into active assignment creation and support surfaces.
+- Reframed the reachable assignment builder import panel from `Existing job description` / `Paste the existing job description here...` to `Existing assignment brief` / `Paste the existing assignment brief here...`, while keeping the current import parser behavior unchanged.
+- Removed the unimported legacy `src/components/assignments/AssignmentWizard.tsx` active component, which still carried broad role/values/social-impact wizard copy and a stale implementation comment despite not being part of the launch assignment corridor.
+- Reframed README support guidance away from unavailable in-app chat and `proofound.io/help` coming-soon promises, leaving email, support window, and the active support guide.
+- Extended launch-gate coverage so the retired legacy assignment wizard stays out of active source and README is included in the active public/contact surface check for `proofound.io/help`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/assignment-builder-mode-entry.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 135 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale assignment/support copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Retired In-App Chat Runtime And CSP Cleanup
+
+- Timestamp: 2026-05-20 23:34 CEST.
+- Followed the support-surface cleanup into runtime and security headers after finding that the app still lazy-loaded a Crisp chat widget on `/app` routes when `NEXT_PUBLIC_CRISP_WEBSITE_ID` was configured.
+- Removed the active `src/components/support/ChatWidget.tsx` runtime and simplified `DeferredAppEnhancements` to fail closed for launch instead of mounting a retired in-app chat surface.
+- Removed `NEXT_PUBLIC_CRISP_WEBSITE_ID` from `.env.example`.
+- Removed Crisp script/style/image/connect allowances from the production CSP in `src/middleware.ts`.
+- Updated security-header expectations and deferred-app-enhancement coverage so the launch runtime no longer permits or mounts the retired chat path.
+- Extended launch-gate coverage so the retired chat component, env variable, and CSP allowances stay out of active launch source.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run src/lib/__tests__/security-headers.test.ts tests/ui/deferred-app-enhancements.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 131 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted Crisp/chat residue scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Provider Env And Preflight Launch-Gate Cleanup
+
+- Timestamp: 2026-05-20 23:40 CEST.
+- Continued the external-provider/config sweep after finding active launch config still advertised retired Zoom OAuth variables and a `Zoom + Google connected` strict-provider posture even though the launch corridor is manual-link-first and Zoom-native scheduling is archived.
+- Removed `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_REDIRECT_URI`, and `STRICT_PROVIDER_E2E_REQUIRE_BOTH` from `.env.example`, and set `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` as the documented default.
+- Removed stale app-side LinkedIn OAuth variables from `.env.example`, `scripts/run-mvp-strict-gates.mjs`, `scripts/check-deploy-readiness.mjs`, and `scripts/vercel-preflight.mjs`, preserving Supabase social login while keeping the archived app-side LinkedIn callback out of release gates.
+- Extended launch-gate coverage so retired Zoom variables, stale connected-provider defaults, and retired app-side LinkedIn variables stay out of active env/preflight surfaces.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 124 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted retired-provider env/preflight residue scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Retired Veriff Settings Placeholder Cleanup
+
+- Timestamp: 2026-05-20 23:42 CEST.
+- Continued the retired third-party verification sweep after finding `src/components/settings/VeriffVerification.tsx` remained in active source as an unimported disabled placeholder for archived Veriff ID verification.
+- Deleted the active Veriff settings placeholder and narrowed the archived client API guard to retained active compatibility components that still exist.
+- Extended the launch-gate retired-component guard so the Veriff placeholder stays out of active source alongside other removed unfinished/archived UI components.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/archived-client-api-references.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 125 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted Veriff residue scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Archived Telemetry And Legacy Handler Route Cleanup
+
+- Timestamp: 2026-05-20 23:46 CEST.
+- Continued the active route-surface reduction after finding several compiled API route files existed only to return archived/non-launch responses that middleware already returns before handlers run.
+- Removed duplicate active route handlers for archived client analytics telemetry, client performance telemetry, `/api/match/test`, and `/api/profile/completeness`.
+- Removed direct handler tests for the deleted route files and moved coverage to the launch surface inventory plus middleware archive boundary, including representative analytics, performance, match-test, and profile-completeness URLs.
+- Kept the archived policy entries intact so external requests still receive launch-safe 410 responses from middleware while the app no longer compiles these duplicate non-launch route files.
+- Verification passed after clearing stale generated Next type caches from previous dev-server runs: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/archived-api-handlers-route.test.ts tests/api/launch-surface-inventory.test.ts src/lib/__tests__/middleware-launch-archive.test.ts --reporter=verbose` (3 files / 14 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted deleted-route import/filesystem scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Retired Cron And User Compatibility Handler Cleanup
+
+- Timestamp: 2026-05-20 23:48 CEST.
+- Continued the compiled archived-route reduction into retired scheduled-deletion cron routes and retired user compatibility routes.
+- Removed duplicate active route handlers for `/api/cron/account-deletion-workflow`, `/api/cron/process-deletions`, `/api/cron/send-deletion-reminders`, `/api/user/account/cancel-deletion`, and `/api/user/audit-log/purpose`.
+- Removed direct handler tests for the deleted cron/user compatibility files and moved cancellation/archive coverage to middleware plus the account lifecycle test.
+- Removed the obsolete rate-limit profile match for `/api/user/account/cancel-deletion`, since middleware now short-circuits the archived path before rate limiting.
+- Kept the archived policy entries intact so these URLs still receive launch-safe 410 responses from middleware while the app no longer compiles the duplicate non-launch handlers.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/launch-surface-inventory.test.ts src/lib/__tests__/middleware-launch-archive.test.ts tests/api/user-account-lifecycle-routes.test.ts src/lib/__tests__/rate-limit.test.ts src/lib/launch/__tests__/surface-policy.test.ts --reporter=verbose` (5 files / 57 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted deleted-route import/filesystem scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Retired CV Import Wizard Handler Cleanup
+
+- Timestamp: 2026-05-20 23:50 CEST.
+- Continued the compiled archived-route reduction into the legacy CV import wizard route family.
+- Removed duplicate active route handlers for `/api/expertise/cv-import/wizard-apply`, `/api/expertise/cv-import/wizard-extract`, `/api/expertise/cv-import/wizard-extract/status`, and `/api/expertise/cv-import/wizard-suggest`.
+- Shifted direct handler coverage to `classifyLaunchApiPath`, `getArchivedApiPolicy`, launch surface inventory, and middleware archive responses so the central launch policy is the single active boundary for these retired routes.
+- Kept the archived policy entries intact so these URLs still receive launch-safe 410 responses from middleware while the app no longer compiles the duplicate non-launch handlers.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/archived-api-handlers-route.test.ts tests/api/launch-surface-inventory.test.ts src/lib/__tests__/middleware-launch-archive.test.ts src/lib/launch/__tests__/surface-policy.test.ts --reporter=verbose` (4 files / 24 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted deleted-route import/filesystem scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - API Reference Route-Policy Source Sync
+
+- Timestamp: 2026-05-20 23:55 CEST.
+- Followed the archived-handler deletions into active docs so future agents do not chase route files that no longer exist.
+- Updated `docs/API_REFERENCE.md` to list deleted archived analytics, cron, CV import wizard, match-test, performance, profile-completeness, cancel-deletion, and purpose-audit URLs as middleware/surface-policy archived compatibility surfaces rather than source-backed route handlers.
+- Updated `docs/backlog/phase-exit-checklist.md` so cancel-deletion compatibility points to middleware archive coverage plus the account lifecycle test instead of the removed route file.
+- Updated the GCP CV OCR proposal to state that CV import wizard URLs are archived at the surface-policy/middleware boundary and no longer allowed as compiled archived route files.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/api/launch-surface-inventory.test.ts tests/api/archived-api-handlers-route.test.ts src/lib/__tests__/middleware-launch-archive.test.ts --reporter=verbose` (4 files / 138 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted deleted-route reference scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Account History Device Label Privacy Cleanup
+
+- Timestamp: 2026-05-20 23:57 CEST.
+- Continued the unfinished/placeholder-language sweep into the active account-history API.
+- Replaced stale `simplified - in production` user-agent parsing language in `src/app/api/user/audit-log/route.ts` with a launch-current `resolveAuditDeviceLabel` helper.
+- Reframed user-visible device output as a coarse device label when present or a protected device reference derived from the stored hash, avoiding any claim that the app parses raw user agents for production.
+- Extended `tests/lib/user-audit-log-copy-guardrails.test.ts` so account-history copy stays privacy-safe and does not reintroduce production-placeholder language or raw `Device (...)` hash framing.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/user-audit-log-copy-guardrails.test.ts --reporter=verbose` (1 file / 2 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Runtime Debug Output Cleanup
+
+- Timestamp: 2026-05-21 00:03 CEST.
+- Continued the active launch-surface sweep into routine debug output after a source scan found success-path console logging in user-flow components and routine taxonomy API request/completion logging.
+- Removed success-path debug output from `DecisionDialog`, `ShareProfileDialog`, and `ConsentToShareDialog`, preserving failure-path console errors for actionable diagnostics.
+- Removed routine request/completion `console.log` output from the active taxonomy API while keeping existing warning/error telemetry for unavailable search and failure paths.
+- Removed a success-path identity reveal console log that included a conversation identifier.
+- Removed the exported inline `testPIIDetection` console harness from the runtime PII detection module so privacy detection remains a launch utility rather than carrying embedded debugging output.
+- Added `tests/lib/runtime-debug-output-guardrails.test.ts` to keep those exact debug strings and the PII console harness out of active launch source.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (1 file / 4 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted debug-string scans, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Supabase Mock Client Debug Output Cleanup
+
+- Timestamp: 2026-05-21 00:06 CEST.
+- Continued the runtime debug-output sweep into Supabase client creation paths after finding raw console output in browser, admin, and mock server clients.
+- Removed routine mock/client selection `console.log` output from `src/lib/supabase/client.ts`, `src/lib/supabase/admin.ts`, and `src/lib/supabase/mock-server-client.ts`.
+- Preserved the existing production mock-database guards; mock mode still fails closed through `assertMockDatabaseAllowed` rather than relying on console output.
+- Extended `tests/lib/runtime-debug-output-guardrails.test.ts` so the Supabase mock/client debug strings stay out of active source.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/runtime-debug-output-guardrails.test.ts tests/lib/env.test.ts tests/lib/mock-server-client-oauth.test.ts --reporter=verbose` (3 files / 16 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted Supabase debug-string scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Assignment Clarity Mock Bypass Cleanup
+
+- Timestamp: 2026-05-21 00:10 CEST.
+- Continued the active AI/assignment surface sweep after finding `POST /api/ai/assignments/clarify` had a mock-Supabase shortcut before the normal assignment access and sanitized deterministic fallback path.
+- Removed the route-level mock shortcut and `mock-assignment-clarity-*` response id so every assignment clarity request now flows through `suggestAssignmentClarityForUser`.
+- Preserved the allowed deterministic fallback behavior for AI-provider unavailability while keeping auth, org-role authorization, sanitized assignment context, redaction, and no-mutation guarantees in force.
+- Added route coverage proving local mock mode cannot bypass assignment access checks, and extended the runtime guardrail test so the shortcut does not return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/assignment-clarity-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts tests/lib/ai-launch-guardrails.test.ts --reporter=verbose` (3 files / 26 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted mock-shortcut scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Verification Composer Mock Bypass Cleanup
+
+- Timestamp: 2026-05-21 00:14 CEST.
+- Continued the active AI verification surface sweep after finding `POST /api/ai/verifications/compose` had a mock-Supabase canned draft branch before the normal Proof Pack or claim ownership path.
+- Removed the route-level `MOCK_COMPOSER_PROOF_PACK_ID` shortcut so every verification composer request now flows through `composeVerificationRequestForUser`.
+- Preserved deterministic fallback behavior inside the composer service, where ownership, public-safe context selection, privacy redaction, and no-scoring/no-ranking output sanitization are already enforced.
+- Added route coverage proving local mock mode cannot bypass Proof Pack or claim ownership validation, and extended the runtime guardrail test so the canned route fallback does not return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/verification-composer-route.test.ts tests/lib/verification-composer.test.ts tests/lib/runtime-debug-output-guardrails.test.ts tests/lib/ai-launch-guardrails.test.ts --reporter=verbose` (4 files / 30 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted mock-shortcut scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Skill Verification Request Mock Bypass Cleanup
+
+- Timestamp: 2026-05-21 00:17 CEST.
+- Continued the verification surface sweep after finding `POST /api/verification/requests/skill` had a mock-Supabase canned response for one fixed skill id before the normal skill ownership, canonical request, integrity, and email-link path.
+- Removed the route-level `MOCK_COMPOSER_SKILL_ID` shortcut so skill verification requests always validate the requester-owned skill and use the canonical verification request transport.
+- Added route coverage proving local mock mode cannot bypass skill ownership validation, and fixed the test cleanup so the mock-mode env does not leak into later cases.
+- Extended `tests/lib/runtime-debug-output-guardrails.test.ts` so the canned skill-verification shortcut does not return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/expertise-skill-verification-request-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts tests/lib/canonical-verification-request-token-resolution.test.ts --reporter=verbose` (3 files / 32 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted mock-shortcut scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, the focused route suite still prints existing Supabase multi-client and deliberate email-failure diagnostics, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Assignment Route Mock Bypass Cleanup
+
+- Timestamp: 2026-05-21 00:21 CEST.
+- Continued the organization assignment corridor sweep after finding active assignment detail and create routes had mock-Supabase shortcuts before the normal explicit organization access path.
+- Removed the mock assignment detail/read-update shortcut from `GET` and `PUT /api/assignments/[id]` so assignment detail access always goes through explicit assignment access or mutation authorization.
+- Removed the mock assignment creation shortcut from `POST /api/assignments` so creation always resolves active organization manager/owner membership before persistence.
+- Preserved the separately gated assignment list visual fixtures because they run after auth and explicit organization-context resolution and remain limited to local/non-production visual evidence mode.
+- Added route coverage proving mock mode cannot bypass assignment detail access, assignment mutation access, or assignment creation membership checks.
+- Extended `tests/lib/runtime-debug-output-guardrails.test.ts` so the removed assignment shortcuts do not return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/assignments-id-route.test.ts tests/api/assignments.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (3 files / 40 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted mock-shortcut scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Verification Feed Mock Composer Cleanup
+
+- Timestamp: 2026-05-21 00:24 CEST.
+- Continued the verification composer sweep into the authenticated verification request feed after finding non-visual mock mode could still inject a fake composer Proof Pack option when the user had no canonical Proof Packs.
+- Removed the non-visual mock fallback from `loadVerificationRequestFeed`, so composer options now come only from canonical Proof Pack aggregates unless the request is in the explicitly gated local visual-fixture mode.
+- Preserved the visual fixture branch because it requires mock Supabase, `PROOFOUND_VISUAL_FIXTURES=true`, and a non-production Vercel environment, and is used for browser visual evidence rather than live user data.
+- Added UI coverage proving non-visual mock mode returns no composer Proof Pack options when there are no canonical packs.
+- Extended `tests/lib/runtime-debug-output-guardrails.test.ts` so the removed non-visual fallback does not return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/verifications-page.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (2 files / 18 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted non-visual fallback scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Skill Proof Canonical Write Cleanup
+
+- Timestamp: 2026-05-21 00:26 CEST.
+- Continued the Proof Pack creation sweep after finding `POST /api/expertise/user-skills/[id]/proofs` returned a mock proof, mock artifact id, and mock Proof Pack id in local mock mode before the normal anchor validation and canonical Proof Pack write path.
+- Removed the mock proof response branch so skill proof creation now always validates the owned primary anchor, verifies skill ownership, checks the per-skill proof limit, and writes through `upsertCanonicalSkillProof`.
+- Preserved upload quarantine/privacy-review behavior, server-controlled metadata sanitization, public projection revalidation, and readiness/analytics side effects on the canonical write path.
+- Updated route coverage so local mock Supabase mode still writes through the canonical anchored proof path instead of returning fake canonical ids.
+- Extended `tests/lib/runtime-debug-output-guardrails.test.ts` so the removed mock proof, mock artifact, and mock pack shortcut does not return.
+- Verification passed after adjusting the test to assert the canonical write payload rather than the mocked repository return title: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/expertise-user-skill-proofs-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (2 files / 19 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted mock-proof scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Public Portfolio Visual Fixture Gate Cleanup
+
+- Timestamp: 2026-05-21 00:30 CEST.
+- Continued the public projection sweep after finding individual and organization public portfolio demo projections were served by plain mock Supabase mode instead of the explicit visual-fixture gate used by other local browser evidence surfaces.
+- Added a `visualPublicProjectionFixturesEnabled` guard so demo individual and organization projections require mock Supabase, `PROOFOUND_VISUAL_FIXTURES=true`, and a non-production Vercel environment.
+- Preserved the existing demo portfolio projections for visual evidence mode while forcing plain mock mode to exercise the real public projection lookup path.
+- Updated public projection coverage to prove visual fixture mode still serves the demo pages and plain mock mode no longer bypasses the database-backed projection lookup.
+- Extended `tests/lib/runtime-debug-output-guardrails.test.ts` so public demo portfolio projections do not return to broad mock-mode gating.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/public-portfolio-projection.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (2 files / 30 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted visual-fixture gate scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Assignment Access Visual Fixture Gate Cleanup
+
+- Timestamp: 2026-05-21 00:33 CEST.
+- Continued the assignment authorization sweep after finding `resolveExplicitUserOrgContext` granted the fixed mock user access to the fixed mock organization in plain mock Supabase mode.
+- Added a `visualAssignmentAccessFixturesEnabled` guard so fixed mock organization resolution requires mock Supabase, `PROOFOUND_VISUAL_FIXTURES=true`, and a non-production Vercel environment.
+- Preserved the fixed mock organization bridge for explicit browser visual evidence mode while forcing plain mock mode and production visual mode through the real organization and membership lookup path.
+- Added helper-level coverage proving plain mock mode does not grant the fixed org, explicit visual fixture mode still does, and production visual mode does not.
+- Extended `tests/lib/runtime-debug-output-guardrails.test.ts` so the fixed assignment mock organization access bridge does not return to broad mock-mode gating.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/assignment-access-visual-fixtures.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (2 files / 17 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted assignment-access gate scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Individual Dashboard Metrics Canonical Evidence Cleanup
+
+- Timestamp: 2026-05-21 00:35 CEST.
+- Continued the individual surface sweep after finding `getDashboardMetrics` returned a canned all-zero dashboard in plain mock Supabase mode instead of using the canonical Proof Pack, verification, and match evidence paths.
+- Removed the mock-mode zero shortcut so individual home metrics always derive from canonical Proof Pack aggregates, verification records, and match rows.
+- Preserved the page-level safe fallback in `IndividualHomePage` for real metric load failures, while avoiding a mock-mode false empty state that can hide broken canonical metrics wiring.
+- Added focused dashboard metric coverage proving metrics are derived from canonical proof, verification, and match evidence, and that plain mock Supabase mode does not return the canned zero dashboard.
+- Extended `tests/lib/runtime-debug-output-guardrails.test.ts` so the all-zero mock dashboard shortcut does not return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/dashboard-metrics.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (2 files / 17 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted dashboard metrics scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Feedback Client Visual Fixture Gate Cleanup
+
+- Timestamp: 2026-05-21 00:40 CEST.
+- Continued the feedback token sweep after finding the server token fixture was correctly gated by explicit visual-fixture mode, but the client-side visual feedback submit bypass still activated in plain mock Supabase mode.
+- Tightened `clientFeedbackVisualFixturesEnabled` so the local no-API feedback submit path now requires mock Supabase, explicit visual fixture mode, and a non-production Vercel environment.
+- Added a client-public visual fixture flag for browser-side local visual QA while keeping the existing server-side `PROOFOUND_VISUAL_FIXTURES` gate as the canonical route/data fixture switch.
+- Updated feedback form coverage proving explicit visual fixture mode can still submit locally for browser evidence, while plain mock mode sends the visual token through the guarded `/api/feedback/submit` path.
+- Extended `tests/lib/runtime-debug-output-guardrails.test.ts` so the feedback client submit bypass cannot return to broad mock-mode gating.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/feedback-form.test.tsx tests/api/feedback-token-visual-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (3 files / 21 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Verification Link Client Visual Fixture Gate Cleanup
+
+- Timestamp: 2026-05-21 00:42 CEST.
+- Continued the public verification-link sweep after finding skill/custom verifier pages, work-email verification, email verification, and reset confirmation all used plain mock Supabase mode as the client-side local-success switch.
+- Added `clientVerificationLinkVisualFixturesEnabled` alongside the existing server verification fixture gate, requiring mock Supabase, explicit visual fixture mode, and a non-production Vercel environment for browser-side verifier fixtures.
+- Rewired the active client verification pages and reset confirmation form to use the shared gate instead of local `clientVisualVerificationEnabled` helpers.
+- Updated focused UI coverage proving explicit visual fixture mode still supports filled local browser evidence, while plain mock mode sends visual tokens through the guarded API/action paths for work-email, email, and skill verification.
+- Extended `tests/lib/runtime-debug-output-guardrails.test.ts` so verification-link client fixtures cannot return to broad mock-mode gating or per-page local helper drift.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/verify-work-email-content.test.tsx tests/ui/verify-email-content.test.tsx tests/ui/verify-link-visual-fixtures.test.tsx tests/ui/confirm-reset-password-form.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (5 files / 32 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Preview Deploy Mock-Mode Guard Alignment
+
+- Timestamp: 2026-05-21 00:45 CEST.
+- Continued the launch-ops safety sweep after finding deploy-readiness scripts already fail Vercel preview and staging targets when mock modes are enabled, but the shared runtime `assertMockDatabaseAllowed` guard only treated production/app-production as deploy-sensitive.
+- Updated `isProductionDeployRuntime` so mock database/admin/auth modes now fail closed for `VERCEL_ENV=preview` and explicit staging app environments as well as production.
+- Preserved local development and test mock mode ergonomics when no deploy-sensitive environment is present.
+- Added focused env guard coverage proving `NEXT_PUBLIC_USE_MOCK_SUPABASE`, `MOBILE_MOCK_AUTH`, and `MOCK_ADMIN_MODE` are rejected in preview/staging deploy contexts.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/env.test.ts tests/scripts/check-deploy-readiness.test.ts --reporter=verbose` (2 files / 15 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Individual Matching Assignment-Review Header Copy
+
+- Timestamp: 2026-05-21 00:48 CEST.
+- Continued the authenticated individual matching copy sweep after finding the active `MatchingClient` header still described matches as `opportunities aligned with your skills, proof, and constraints`.
+- Reframed the count line to `assignment review(s) aligned with your skills, proof, and constraints`, keeping the matching behavior unchanged while aligning the user-visible label with the proof-led assignment review corridor.
+- Extended the launch-gate workflow copy guard so the stale `opportunities aligned with your skills` phrasing cannot return, and refreshed one stale positive assertion to match the current active organization-home copy.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 124 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Matching Review Fallback And Verification Gate Copy
+
+- Timestamp: 2026-05-21 00:51 CEST.
+- Continued the active matching/review copy sweep after finding `MatchResultCard` still fell back to `This opportunity` for snooze dialog assignment titles, and `VerificationGatesWarning` still described verification requirements as ensuring `candidate authenticity and quality`.
+- Reframed the snooze fallback to `This assignment review` and the verification-gates explainer around keeping assignment review evidence trustworthy.
+- Extended the active matching review launch guard to cover `VerificationGatesWarning` and block the stale opportunity/candidate-authenticity phrases from returning to matching review UI.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 124 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Interview Scheduled Email Assignment-Review Copy
+
+- Timestamp: 2026-05-21 00:54 CEST.
+- Continued the outbound workflow-email copy sweep after finding the legacy interview scheduled template still interpolated assignment titles as an `opportunity`.
+- Reframed both the HTML and text variants to say the interview is scheduled for the assignment review, preserving the existing current-stage, approved-context, and authenticated-workflow privacy framing.
+- Extended the interview scheduled launch guard so the legacy template must contain `assignment review` and must not reintroduce `opportunity`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 124 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted email-template copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - New Match Email Assignment-Review Copy
+
+- Timestamp: 2026-05-21 00:55 CEST.
+- Continued the outbound match-email copy sweep after finding the active `NewMatchNotification` email still framed the review as a proof-backed `opportunity`.
+- Reframed the body, individual title, and review prompt around proof-backed assignment review and the current assignment corridor, while preserving the existing reason-coded, privacy-staged, score-free framing.
+- Extended the outbound match email launch guard so it requires the assignment-review wording and blocks the stale proof-backed opportunity and `Review the opportunity` phrases from returning.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 124 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted match-email copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - App Shell Route Metadata Proof-Review Copy
+
+- Timestamp: 2026-05-21 00:58 CEST.
+- Continued the authenticated app-shell copy sweep after finding active route metadata still used generic descriptions such as `Browse aligned introductions`, `Your core identity`, `Your work showcase`, `Manage tasks and roles`, and `Saved submissions and matches`.
+- Reframed matching, profile, settings, portfolio, assignments, and shortlist route metadata around proof-aligned assignment introductions, public-safe proof context, workflow preferences, proof-backed work context, proof-review assignments, and saved proof submissions for review.
+- Expanded route metadata coverage so these active app-shell descriptions must stay proof-review aligned and cannot return to the generic app-shell wording.
+- Cleaned up a stale `MatchResultCard` test title from `individual opportunity cards` to `individual assignment review cards`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/route-meta-copy.test.ts tests/ui/match-result-card.test.tsx --reporter=verbose` (2 files / 7 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale route-meta copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Candidate Invite Email Assignment-Review Copy
+
+- Timestamp: 2026-05-21 00:59 CEST.
+- Continued the outbound invite email sweep after finding `CandidateInvite` still said the invitee was joining a `hiring flow` and contrasted Proof Cards with sending a `traditional CV`.
+- Reframed the invite around a proof-card step in the organization's assignment review and structured evidence of skills, outcomes, and constraints for that review.
+- Extended the outbound email launch guard so candidate invites must keep the assignment-review framing and cannot reintroduce the stale hiring-flow or traditional-CV phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 124 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted candidate-invite copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Organization Verification, Tour, And Intro Copy Alignment
+
+- Timestamp: 2026-05-21 01:02 CEST.
+- Continued the active account/email/tour/API copy sweep after finding organization verification email copy, organization tour copy, and intro-interest API messages still used candidate-led wording where the surrounding corridor is proof-review led.
+- Reframed organization verification from `proof-led candidate context` to `proof-led submission context`.
+- Reframed organization tour sidebar and trust-page helper copy around proof-led submission context and participants/reviewers instead of candidate context.
+- Reframed intro-interest API copy so org-side blocked/pending messages describe the other side, proof submissions, assignment-fit review, and profile readiness instead of candidate-proof evaluation language.
+- Extended launch-gate coverage across account verification/tour copy and matching-interest API copy so the stale candidate-context and candidate-proof phrases cannot return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 124 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Proof-Submission Docs And Assignment Fixture Copy
+
+- Timestamp: 2026-05-21 01:05 CEST.
+- Continued the active docs/test-fixture sweep after finding launch docs still referred to `candidate proof review/cards` and canonical assignment publish fixtures still promised to `Improve candidate quality` through vague hiring decisions/goals.
+- Reframed accessibility, deployment, and incident-response guidance around proof-submission review/cards and private proof submissions while preserving the same active smoke and no-leak checklist scope.
+- Reframed canonical assignment publish fixtures around improving assignment review quality through proof-backed review choices/decisions, avoiding candidate-quality or hiring-goal promises while keeping the publish-readiness requirements intact.
+- Extended launch-gate coverage so active accessibility/deployment/security docs require the proof-submission wording and reject the stale candidate-proof phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/api/assignments-publish-route.test.ts tests/lib/assignment-publish-validation.test.ts tests/lib/launch-assignment-publish-smoke.test.ts --reporter=verbose` (4 files / 147 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Visual Fixture Runtime Deploy Guard
+
+- Timestamp: 2026-05-21 01:09 CEST.
+- Continued the runtime fixture hardening sweep after finding active visual fixture gates still used one-off `VERCEL_ENV !== 'production'` checks, which did not explicitly share the preview/staging fail-closed deploy rule used by mock database guards.
+- Added `visualFixturesRuntimeAllowed()` in `src/lib/env.ts`, backed by `isProductionDeployRuntime`, so visual fixtures are allowed only in local development/test contexts and fail closed for production, Vercel preview, and explicit staging app environments.
+- Rewired active visual fixture gates for org invites, candidate invites, feedback, verification links/feed, messaging, interviews, matching, assignment access, public projections, mock server persona fixtures, assignment APIs, match explanation, and org match review to use the shared runtime guard.
+- Extended env and runtime guardrail tests to prove visual fixtures are blocked in preview/staging and that active visual fixture paths no longer rely on `process.env.VERCEL_ENV !== 'production'`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/env.test.ts tests/lib/runtime-debug-output-guardrails.test.ts tests/lib/assignment-access-visual-fixtures.test.ts tests/lib/public-portfolio-projection.test.ts tests/ui/feedback-form.test.tsx tests/ui/verify-link-visual-fixtures.test.tsx --reporter=verbose` (6 files / 59 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted visual-fixture runtime scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Verification Fixture And Cron Workflow Copy
+
+- Timestamp: 2026-05-21 01:13 CEST.
+- Continued the active verification-feed and launch-ops copy sweep after finding visual verification request fixtures still used `Hiring corridor operations`, a sensitive `hiring workflow`, and candidate-centered proof-inspection wording.
+- Reframed the verification fixture taxonomy, impact title, and accepted-request claim around assignment-review operations and proof submissions while keeping the mock-only fixture behavior unchanged.
+- Aligned the active cron setup guide and canonical cron classification registry so SLA enforcement is described as maintaining the assignment-review workflow rather than a generic hiring workflow.
+- Extended launch-gate and cron-scheduling coverage so the assignment-review wording is required and the stale verification/cron phrases cannot return to active source or docs.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/scripts/cron-scheduling.test.ts tests/ui/verifications-page.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (4 files / 154 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted active-source stale-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Interview Feedback Workflow Copy
+
+- Timestamp: 2026-05-21 01:16 CEST.
+- Continued the active feedback and outbound email sweep after finding organization-side interview feedback prompts still said `Share feedback with the candidate` and `structured feedback for the candidate`.
+- Reframed the feedback email subject, email headline/preview/footer, and embedded feedback form title around workflow feedback and the review workflow while preserving the existing feedback direction, token, and submission behavior.
+- Extended focused UI and launch-gate coverage so organization-side feedback prompts must stay workflow-scoped and the stale candidate-led feedback phrases cannot return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/feedback-form.test.tsx tests/scripts/launch-gate-config.test.ts tests/lib/feedback-invite-issuance.test.ts --reporter=verbose` (3 files / 130 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted active-source stale-feedback scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.

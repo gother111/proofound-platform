@@ -133,7 +133,7 @@ export function FeedbackForm({
   const directionCopy =
     template.direction === 'candidate_to_org'
       ? 'Share feedback with the organization'
-      : 'Share feedback with the candidate';
+      : 'Share workflow feedback';
 
   const frameClassName =
     surface === 'card'

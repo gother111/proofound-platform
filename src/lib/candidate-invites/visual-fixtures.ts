@@ -1,4 +1,5 @@
 import { CANDIDATE_INVITE_FLOW_TYPE, CANDIDATE_INVITE_STATUS } from '@/lib/candidate-invites';
+import { visualFixturesRuntimeAllowed } from '@/lib/env';
 
 export const VISUAL_CANDIDATE_INVITE_TOKENS = {
   proofCardClaimed: 'visual-proof-card-claimed',
@@ -11,7 +12,7 @@ export function candidateInviteVisualFixturesEnabled() {
   return (
     process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true' &&
     process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-    process.env.VERCEL_ENV !== 'production'
+    visualFixturesRuntimeAllowed()
   );
 }
 
@@ -20,12 +21,12 @@ function buildAssignment() {
     id: 'visual-assignment-candidate-proof',
     role: 'Evidence Operations Lead for a proof-first pilot corridor',
     description:
-      'Lead a compact proof review lane for a privacy-sensitive hiring pilot, turning raw project evidence, reviewer notes, and operational constraints into a calm assignment packet the organization can inspect without seeing identity-bearing details too early.',
+      'Lead a compact proof review lane for a privacy-sensitive assignment-review pilot, turning raw project evidence, reviewer notes, and operational constraints into a calm assignment packet the organization can inspect without seeing identity-bearing details too early.',
     status: 'active',
     creationStatus: 'published',
     engagementType: 'contract_consulting',
     businessValue:
-      'Reduce noisy candidate screening by reviewing one role-specific proof pack before any identity reveal or broad portfolio exposure.',
+      'Reduce noisy submission review by reviewing one role-specific proof pack before any identity reveal or broad portfolio exposure.',
     expectedImpact:
       'Submit one owner-only proof pack showing real work, your part in the outcome, constraints, and what can be checked without contacting third parties.',
     mustHaveSkills: [
@@ -34,7 +35,7 @@ function buildAssignment() {
       { label: 'Stakeholder synthesis', level: 3 },
       { label: 'Workflow design', level: 3 },
     ],
-    niceToHaveSkills: [{ label: 'Hiring operations', level: 3 }],
+    niceToHaveSkills: [{ label: 'Review operations', level: 3 }],
     locationMode: 'hybrid',
     country: 'Sweden',
     city: 'Stockholm',

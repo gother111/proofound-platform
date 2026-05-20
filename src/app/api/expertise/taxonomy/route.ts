@@ -349,15 +349,6 @@ export async function GET(request: Request) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    console.log('[Taxonomy API] Request params:', {
-      l1,
-      l2,
-      l3Id,
-      hasSearch: Boolean(search),
-      searchHash,
-      searchClass,
-    });
-
     // If no filters, return full L1 list (cached)
     if (!l1 && !l2 && !l3Id && !search) {
       const cacheKey = `${CACHE_KEYS.TAXONOMY}l1`;
@@ -624,13 +615,6 @@ export async function GET(request: Request) {
         console.error('Error fetching L4 skills:', error);
         return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
       }
-
-      console.log('[Taxonomy API] Skills request completed', {
-        mode: search ? 'search' : 'query',
-        searchHash,
-        searchClass,
-        resultCount: skills?.length || 0,
-      });
 
       // Map skills with parent context
       const mappedSkills =

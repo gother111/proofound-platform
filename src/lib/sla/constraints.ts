@@ -4,7 +4,7 @@
  * Enforces all time-based constraints from the PRD:
  * - I-21: Interview scheduling (30 min max, within 7 days)
  * - I-22: Decision window (48 hours after interview)
- * - I-23: Matching window (72 hours to review candidates)
+ * - I-23: Matching window (72 hours to review proof submissions)
  */
 
 /**
@@ -77,9 +77,7 @@ export function validateInterviewSchedule(
   }
 
   // Check if interview is too far in future (beyond 30 days)
-  const daysInFuture = Math.floor(
-    (proposedStart.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-  );
+  const daysInFuture = Math.floor((proposedStart.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
   if (daysInFuture > 30) {
     warnings.push('Interview is scheduled more than 30 days in advance');
@@ -115,8 +113,7 @@ export function canReschedule(rescheduleCount: number): SLAValidation {
  * Validates decision timing (PRD I-22)
  */
 export function validateDecisionWindow(interviewCompletedAt: Date): SLAValidation {
-  const hoursSinceInterview =
-    (Date.now() - interviewCompletedAt.getTime()) / (1000 * 60 * 60);
+  const hoursSinceInterview = (Date.now() - interviewCompletedAt.getTime()) / (1000 * 60 * 60);
 
   if (hoursSinceInterview > DECISION_CONSTRAINTS.WINDOW_HOURS) {
     return {
@@ -131,9 +128,7 @@ export function validateDecisionWindow(interviewCompletedAt: Date): SLAValidatio
   const hoursRemaining = DECISION_CONSTRAINTS.WINDOW_HOURS - hoursSinceInterview;
 
   if (hoursRemaining <= 6) {
-    warnings.push(
-      `Decision window expires in ${Math.round(hoursRemaining)} hours`
-    );
+    warnings.push(`Decision window expires in ${Math.round(hoursRemaining)} hours`);
   }
 
   return {
@@ -162,9 +157,7 @@ export function validateMatchReviewWindow(matchCreatedAt: Date): SLAValidation {
   const hoursRemaining = MATCHING_CONSTRAINTS.REVIEW_WINDOW_HOURS - hoursSinceMatch;
 
   if (hoursRemaining <= 12) {
-    warnings.push(
-      `Match review window expires in ${Math.round(hoursRemaining)} hours`
-    );
+    warnings.push(`Match review window expires in ${Math.round(hoursRemaining)} hours`);
   }
 
   return {
@@ -266,11 +259,11 @@ export function formatSLAErrors(validation: SLAValidation): string {
   const messages: string[] = [];
 
   if (validation.errors.length > 0) {
-    messages.push('Errors:', ...validation.errors.map(e => `  - ${e}`));
+    messages.push('Errors:', ...validation.errors.map((e) => `  - ${e}`));
   }
 
   if (validation.warnings && validation.warnings.length > 0) {
-    messages.push('Warnings:', ...validation.warnings.map(w => `  - ${w}`));
+    messages.push('Warnings:', ...validation.warnings.map((w) => `  - ${w}`));
   }
 
   return messages.join('\n');

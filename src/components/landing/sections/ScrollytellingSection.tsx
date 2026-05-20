@@ -1450,7 +1450,7 @@ function AssignmentCard({ state, compact = false }: { state: StoryState; compact
               Organization-side challenge
             </div>
             <p className={cn('font-display text-foreground', compact ? 'text-xl' : 'text-[2rem]')}>
-              Modern hiring pressure
+              Modern assignment pressure
             </p>
           </div>
 
@@ -1520,7 +1520,7 @@ function AssignmentCard({ state, compact = false }: { state: StoryState; compact
                 compact ? 'line-clamp-2 text-[0.62rem] leading-4' : 'text-[0.72rem] leading-4'
               )}
             >
-              Build clearer operating rhythms for a mission-driven team scaling one hiring program.
+              Build clearer operating rhythms for a mission-driven team scaling one assignment path.
             </p>
           </div>
         </div>
@@ -3829,7 +3829,7 @@ function StoryProgressIndicator({ activeIndex }: { activeIndex: number }) {
       </div>
 
       <span className="max-w-[13rem] truncate text-[0.72rem] font-medium text-foreground/80">
-        {clampedIndex < totalFrames - 1 ? nextFrame.title : 'Build hiring on stronger proof'}
+        {clampedIndex < totalFrames - 1 ? nextFrame.title : 'Build proof-first review'}
       </span>
     </div>
   );

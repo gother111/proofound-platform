@@ -8,7 +8,6 @@ import { attachUploadedFile } from '@/lib/uploads/lifecycle';
 import { resolveArtifactDisplayName } from '@/lib/uploads/privacy';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { listCanonicalSkillProofRowsForOwnerSkill } from '@/lib/proofs/canonical-pack';
-import { isMockSupabaseEnabled } from '@/lib/env';
 
 type ApiAuthContext = NonNullable<Awaited<ReturnType<typeof requireApiAuthContext>>>;
 
@@ -135,33 +134,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Validate input
     const validated = CreateProofSchema.parse(body);
-
-    if (isMockSupabaseEnabled()) {
-      const proofTitle =
-        validated.title?.trim() ||
-        (validated.url ? deriveProofTitleFromUrl(validated.url) : '') ||
-        (validated.uploadedFileId ? UPLOADED_PROOF_FALLBACK_TITLE : '') ||
-        'Proof Link';
-
-      return NextResponse.json(
-        {
-          proof: {
-            id: `mock-proof-${skillId}`,
-            title: proofTitle,
-            description: validated.description?.trim() || null,
-            proof_type: validated.proofType,
-            url: validated.url || null,
-            skill_id: skillId,
-            profile_id: user.id,
-            canonicalArtifactId: `mock-artifact-${skillId}`,
-            canonicalPackId: `mock-pack-${skillId}`,
-            canonicalPackTitle: proofTitle,
-            primaryAnchor: validated.primaryAnchor,
-          },
-        },
-        { status: 201 }
-      );
-    }
 
     const hasValidPrimaryAnchor = await validateOwnedPrimaryAnchor(
       supabase as any,

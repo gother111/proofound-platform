@@ -44,41 +44,24 @@ function buildContentSecurityPolicy(nonce?: string): string {
   // unsafe-eval in development, the app may never hydrate, breaking interactive flows.
   const scriptSrc = isDev
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:"
-    : [
-        "script-src 'self'",
-        nonce ? `'nonce-${nonce}'` : null,
-        nonce ? "'strict-dynamic'" : null,
-        'https://client.crisp.chat',
-      ]
+    : ["script-src 'self'", nonce ? `'nonce-${nonce}'` : null, nonce ? "'strict-dynamic'" : null]
         .filter(Boolean)
         .join(' ');
 
   const connectSrc = isDev
     ? "connect-src 'self' https: wss: ws:"
-    : [
-        "connect-src 'self'",
-        supabaseOrigin,
-        'https://*.supabase.co',
-        'wss://*.supabase.co',
-        'https://client.crisp.chat',
-        'https://image.crisp.chat',
-        'https://storage.crisp.chat',
-        'wss://client.relay.crisp.chat',
-      ]
+    : ["connect-src 'self'", supabaseOrigin, 'https://*.supabase.co', 'wss://*.supabase.co']
         .filter(Boolean)
         .join(' ');
 
   return [
     "default-src 'self'",
     scriptSrc,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://client.crisp.chat",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     [
       "img-src 'self' data: blob:",
       supabaseOrigin,
       'https://*.supabase.co',
-      'https://client.crisp.chat',
-      'https://image.crisp.chat',
-      'https://storage.crisp.chat',
       'https://images.unsplash.com',
     ]
       .filter(Boolean)

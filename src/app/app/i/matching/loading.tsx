@@ -11,7 +11,7 @@ export default function LoadingIndividualMatching() {
           Matching workspace
         </h1>
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-          Preparing privacy-safe opportunities, readiness signals, and next actions.
+          Preparing privacy-safe assignment reviews, readiness context, and next actions.
         </p>
         <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
           Preparing matching workspace...

@@ -3,11 +3,11 @@
 > Doc Class: `active`
 > Last Verified: `2026-05-19`
 
-Launch-candidate scaffold for a proof-first, privacy-first hiring corridor centered on Proof Packs, with one individual side and one organization side. Final launch readiness still depends on the target-specific gates below.
+Launch-candidate scaffold for a proof-first, privacy-first assignment review corridor centered on Proof Packs, with one individual side and one organization side. Final launch readiness still depends on the target-specific gates below.
 
 ## Overview
 
-Proofound is a narrow proof-first hiring corridor. It centers the product on Proof Packs and keeps the public portfolio as a derived trust surface. Core launch scope:
+Proofound is a narrow proof-first assignment review corridor. It centers the product on Proof Packs and keeps the public portfolio as a derived trust surface. Core launch scope:
 
 - **Two MVP Corridors**: One clean Individual corridor and one clean Organization corridor
 - **Proof Packs First**: Structured proof of real work, selected public portfolio output, and clear trust anchors
@@ -633,8 +633,7 @@ MIT License - see LICENSE file for details
 ### For Platform Users
 
 - **Email:** hello@proofound.io (Response within 24 hours, Monday-Friday)
-- **In-App Chat:** Available Monday-Friday, 9 AM - 6 PM UTC
-- **Help Center:** [proofound.io/help](https://proofound.io/help) (coming soon)
+- **Support window:** Monday-Friday, 9 AM - 6 PM UTC
 - **User Support Guide:** See [`SUPPORT.md`](SUPPORT.md) for FAQs and troubleshooting
 
 ### For Development Issues
@@ -654,7 +653,7 @@ MIT License - see LICENSE file for details
 
 ---
 
-Built for proof-first, privacy-safe hiring.
+Built for proof-first, privacy-safe assignment review.
 
 ### Lint in restricted CI
 

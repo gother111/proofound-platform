@@ -344,7 +344,7 @@ Allowed plain-language phrasing:
 
 Public positioning remains:
 
-> Proofound helps people turn real work into structured Proof Packs, and helps organizations review candidates through proof instead of profile theater.
+> Proofound helps people turn real work into structured Proof Packs, and helps organizations review proof submissions through structured assignment review instead of profile theater.
 
 ---
 

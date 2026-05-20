@@ -93,9 +93,9 @@ export function CommunicationsHub({
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-proofound-forest">
               Hiring Corridor
             </p>
-            <p className="font-display text-xl font-semibold text-proofound-charcoal">
+            <h1 className="font-display text-xl font-semibold text-proofound-charcoal">
               Communications
-            </p>
+            </h1>
           </div>
 
           <nav

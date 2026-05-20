@@ -33,6 +33,10 @@ describe('Step3WeightMatrix verification gates', () => {
     expect(screen.getByText('Work email verification')).toBeInTheDocument();
     expect(screen.getByText('Background check')).toBeInTheDocument();
     expect(screen.getByText('Education verification')).toBeInTheDocument();
+    expect(
+      screen.getByText(/make a proof submission credible for this assignment/i)
+    ).toBeInTheDocument();
+    expect(document.body.textContent ?? '').not.toMatch(/make the candidate credible/i);
     expect(screen.queryByText(/LinkedIn profile verification/i)).not.toBeInTheDocument();
   });
 });

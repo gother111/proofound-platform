@@ -132,12 +132,6 @@ export function DecisionDialog({
         }`,
       });
 
-      console.log('decision.submitted', {
-        interviewId,
-        decision,
-        withinSLA: data.decision.withinSLA,
-      });
-
       // Close dialog and notify parent
       onClose();
       if (onDecisionMade) {
@@ -320,8 +314,7 @@ export function DecisionDialog({
             className="resize-none"
           />
           <p className="text-xs text-gray-500">
-            These notes stay with your team and are not sent through candidate-facing workflow
-            notifications.
+            These notes stay with your team and are not sent through workflow notifications.
           </p>
         </div>
 

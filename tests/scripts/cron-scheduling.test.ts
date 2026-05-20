@@ -87,8 +87,12 @@ describe('cron scheduling ownership', () => {
     const docsRegistry = fs.readFileSync(docsRegistryPath, 'utf8');
 
     expect(cronSetup).toContain('Doc Class: `active`');
-    expect(cronSetup).toContain('Last Verified: `2026-05-19`');
+    expect(cronSetup).toContain('Last Verified: `2026-05-21`');
     expect(cronSetup).toContain('npm run cron:sync');
+    expect(cronSetup).toContain(
+      'Maintains launch-critical SLA state for the assignment-review workflow.'
+    );
+    expect(cronSetup).not.toContain('Maintains launch-critical SLA state for the hiring workflow.');
     expect(cronSetup).toContain('/api/cron/health-check');
     expect(cronSetup).toContain('/api/cron/performance-check');
     expect(cronSetup).toContain('/api/cron/weekly-digest');

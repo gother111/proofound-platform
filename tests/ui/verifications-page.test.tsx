@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { requireAuthMock, createClientMock, createAdminClientMock, verificationsClientSpy } =
   vi.hoisted(() => ({
@@ -117,6 +117,10 @@ function createSupabaseClientMock(options: {
 }
 
 describe('VerificationsPage', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     createAdminClientMock.mockReset();
@@ -299,6 +303,29 @@ describe('VerificationsPage', () => {
       subjectType: 'skill',
     });
     expect(props.sentRequests).toHaveLength(0);
+  });
+
+  it('does not inject composer proof packs in non-visual mock mode', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    createClientMock.mockResolvedValue(
+      createSupabaseClientMock({
+        userEmail: 'user@example.com',
+      })
+    );
+
+    const element = await VerificationsPage();
+    render(element);
+
+    const props = await waitForVerificationsClientProps<{
+      incomingRequests: unknown[];
+      sentRequests: unknown[];
+      composerProofPacks: unknown[];
+    }>();
+
+    expect(props.incomingRequests).toHaveLength(0);
+    expect(props.sentRequests).toHaveLength(0);
+    expect(props.composerProofPacks).toEqual([]);
   });
 
   it('enriches verification requests with canonical proof-pack context when available', async () => {

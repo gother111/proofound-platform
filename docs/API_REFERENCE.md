@@ -64,12 +64,12 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### analytics
 
-| Methods     | Path                        | Auth Tier | Launch Surface           | Notes                           | Source                                      |
-| ----------- | --------------------------- | --------- | ------------------------ | ------------------------------- | ------------------------------------------- |
-| `POST`      | `/api/analytics/events`     | `public`  | `archived compatibility` | legacy/compat markers in source | `src/app/api/analytics/events/route.ts`     |
-| `POST`      | `/api/analytics/tour-event` | `public`  | `archived compatibility` | legacy/compat markers in source | `src/app/api/analytics/tour-event/route.ts` |
-| `POST`      | `/api/analytics/track`      | `public`  | `archived compatibility` | legacy/compat markers in source | `src/app/api/analytics/track/route.ts`      |
-| `GET\|POST` | `/api/analytics/web-vitals` | `public`  | `archived compatibility` | legacy/compat markers in source | `src/app/api/analytics/web-vitals/route.ts` |
+| Methods     | Path                        | Auth Tier | Launch Surface           | Notes                             | Source                             |
+| ----------- | --------------------------- | --------- | ------------------------ | --------------------------------- | ---------------------------------- |
+| `POST`      | `/api/analytics/events`     | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts` |
+| `POST`      | `/api/analytics/tour-event` | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts` |
+| `POST`      | `/api/analytics/track`      | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts` |
+| `GET\|POST` | `/api/analytics/web-vitals` | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts` |
 
 ### assignments
 
@@ -102,18 +102,18 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### cron
 
-| Methods | Path                                  | Auth Tier | Launch Surface           | Notes                           | Source                                                |
-| ------- | ------------------------------------- | --------- | ------------------------ | ------------------------------- | ----------------------------------------------------- |
-| `GET`   | `/api/cron/account-deletion-workflow` | `cron`    | `archived compatibility` | legacy/compat markers in source | `src/app/api/cron/account-deletion-workflow/route.ts` |
-| `GET`   | `/api/cron/decision-reminders`        | `cron`    | `internal launch ops`    | -                               | `src/app/api/cron/decision-reminders/route.ts`        |
-| `GET`   | `/api/cron/health-check`              | `cron`    | `internal launch ops`    | -                               | `src/app/api/cron/health-check/route.ts`              |
-| `GET`   | `/api/cron/launch-synthetic-checks`   | `cron`    | `internal launch ops`    | -                               | `src/app/api/cron/launch-synthetic-checks/route.ts`   |
-| `GET`   | `/api/cron/performance-check`         | `cron`    | `internal launch ops`    | -                               | `src/app/api/cron/performance-check/route.ts`         |
-| `GET`   | `/api/cron/process-deletions`         | `cron`    | `archived compatibility` | legacy/compat markers in source | `src/app/api/cron/process-deletions/route.ts`         |
-| `GET`   | `/api/cron/refresh-matches`           | `cron`    | `internal launch ops`    | -                               | `src/app/api/cron/refresh-matches/route.ts`           |
-| `GET`   | `/api/cron/refresh-matches-worker`    | `cron`    | `internal launch ops`    | -                               | `src/app/api/cron/refresh-matches-worker/route.ts`    |
-| `GET`   | `/api/cron/send-deletion-reminders`   | `cron`    | `archived compatibility` | legacy/compat markers in source | `src/app/api/cron/send-deletion-reminders/route.ts`   |
-| `GET`   | `/api/cron/sla-enforcement`           | `cron`    | `internal launch ops`    | -                               | `src/app/api/cron/sla-enforcement/route.ts`           |
+| Methods | Path                                  | Auth Tier | Launch Surface           | Notes                             | Source                                              |
+| ------- | ------------------------------------- | --------- | ------------------------ | --------------------------------- | --------------------------------------------------- |
+| `GET`   | `/api/cron/account-deletion-workflow` | `cron`    | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts`                  |
+| `GET`   | `/api/cron/decision-reminders`        | `cron`    | `internal launch ops`    | -                                 | `src/app/api/cron/decision-reminders/route.ts`      |
+| `GET`   | `/api/cron/health-check`              | `cron`    | `internal launch ops`    | -                                 | `src/app/api/cron/health-check/route.ts`            |
+| `GET`   | `/api/cron/launch-synthetic-checks`   | `cron`    | `internal launch ops`    | -                                 | `src/app/api/cron/launch-synthetic-checks/route.ts` |
+| `GET`   | `/api/cron/performance-check`         | `cron`    | `internal launch ops`    | -                                 | `src/app/api/cron/performance-check/route.ts`       |
+| `GET`   | `/api/cron/process-deletions`         | `cron`    | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts`                  |
+| `GET`   | `/api/cron/refresh-matches`           | `cron`    | `internal launch ops`    | -                                 | `src/app/api/cron/refresh-matches/route.ts`         |
+| `GET`   | `/api/cron/refresh-matches-worker`    | `cron`    | `internal launch ops`    | -                                 | `src/app/api/cron/refresh-matches-worker/route.ts`  |
+| `GET`   | `/api/cron/send-deletion-reminders`   | `cron`    | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts`                  |
+| `GET`   | `/api/cron/sla-enforcement`           | `cron`    | `internal launch ops`    | -                                 | `src/app/api/cron/sla-enforcement/route.ts`         |
 
 ### csrf-token
 
@@ -136,18 +136,18 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### expertise
 
-| Methods         | Path                                               | Auth Tier | Launch Surface           | Notes                            | Source                                                             |
-| --------------- | -------------------------------------------------- | --------- | ------------------------ | -------------------------------- | ------------------------------------------------------------------ |
-| `POST`          | `/api/expertise/cv-import/wizard-apply`            | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/expertise/cv-import/wizard-apply/route.ts`            |
-| `POST`          | `/api/expertise/cv-import/wizard-extract`          | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/expertise/cv-import/wizard-extract/route.ts`          |
-| `GET`           | `/api/expertise/cv-import/wizard-extract/status`   | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/expertise/cv-import/wizard-extract/status/route.ts`   |
-| `POST`          | `/api/expertise/cv-import/wizard-suggest`          | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/expertise/cv-import/wizard-suggest/route.ts`          |
-| `POST`          | `/api/expertise/jd-to-l4`                          | `session` | `active MVP`             | -                                | `src/app/api/expertise/jd-to-l4/route.ts`                          |
-| `GET`           | `/api/expertise/taxonomy`                          | `service` | `active MVP`             | compatibility handling in source | `src/app/api/expertise/taxonomy/route.ts`                          |
-| `GET\|POST`     | `/api/expertise/user-skills`                       | `session` | `active MVP`             | compatibility handling in source | `src/app/api/expertise/user-skills/route.ts`                       |
-| `PATCH\|DELETE` | `/api/expertise/user-skills/[id]`                  | `session` | `active MVP`             | -                                | `src/app/api/expertise/user-skills/[id]/route.ts`                  |
-| `GET\|POST`     | `/api/expertise/user-skills/[id]/proofs`           | `session` | `active MVP`             | compatibility handling in source | `src/app/api/expertise/user-skills/[id]/proofs/route.ts`           |
-| `DELETE`        | `/api/expertise/user-skills/[id]/proofs/[proofId]` | `session` | `active MVP`             | compatibility handling in source | `src/app/api/expertise/user-skills/[id]/proofs/[proofId]/route.ts` |
+| Methods         | Path                                               | Auth Tier | Launch Surface           | Notes                             | Source                                                             |
+| --------------- | -------------------------------------------------- | --------- | ------------------------ | --------------------------------- | ------------------------------------------------------------------ |
+| `POST`          | `/api/expertise/cv-import/wizard-apply`            | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts`                                 |
+| `POST`          | `/api/expertise/cv-import/wizard-extract`          | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts`                                 |
+| `GET`           | `/api/expertise/cv-import/wizard-extract/status`   | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts`                                 |
+| `POST`          | `/api/expertise/cv-import/wizard-suggest`          | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts`                                 |
+| `POST`          | `/api/expertise/jd-to-l4`                          | `session` | `active MVP`             | -                                 | `src/app/api/expertise/jd-to-l4/route.ts`                          |
+| `GET`           | `/api/expertise/taxonomy`                          | `service` | `active MVP`             | compatibility handling in source  | `src/app/api/expertise/taxonomy/route.ts`                          |
+| `GET\|POST`     | `/api/expertise/user-skills`                       | `session` | `active MVP`             | compatibility handling in source  | `src/app/api/expertise/user-skills/route.ts`                       |
+| `PATCH\|DELETE` | `/api/expertise/user-skills/[id]`                  | `session` | `active MVP`             | -                                 | `src/app/api/expertise/user-skills/[id]/route.ts`                  |
+| `GET\|POST`     | `/api/expertise/user-skills/[id]/proofs`           | `session` | `active MVP`             | compatibility handling in source  | `src/app/api/expertise/user-skills/[id]/proofs/route.ts`           |
+| `DELETE`        | `/api/expertise/user-skills/[id]/proofs/[proofId]` | `session` | `active MVP`             | compatibility handling in source  | `src/app/api/expertise/user-skills/[id]/proofs/[proofId]/route.ts` |
 
 ### feature-flags
 
@@ -194,17 +194,17 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### match
 
-| Methods             | Path                                  | Auth Tier | Launch Surface           | Notes                            | Source                                                |
-| ------------------- | ------------------------------------- | --------- | ------------------------ | -------------------------------- | ----------------------------------------------------- |
-| `POST`              | `/api/match/assignment`               | `public`  | `active MVP`             | -                                | `src/app/api/match/assignment/route.ts`               |
-| `GET`               | `/api/match/explain/[matchId]`        | `session` | `active MVP`             | -                                | `src/app/api/match/explain/[matchId]/route.ts`        |
-| `POST`              | `/api/match/gates`                    | `session` | `active MVP`             | -                                | `src/app/api/match/gates/route.ts`                    |
-| `GET\|POST\|DELETE` | `/api/match/hide`                     | `session` | `active MVP`             | compatibility handling in source | `src/app/api/match/hide/route.ts`                     |
-| `GET\|POST`         | `/api/match/interest`                 | `public`  | `active MVP`             | -                                | `src/app/api/match/interest/route.ts`                 |
-| `POST`              | `/api/match/profile`                  | `public`  | `active MVP`             | -                                | `src/app/api/match/profile/route.ts`                  |
-| `GET`               | `/api/match/snoozed`                  | `session` | `active MVP`             | -                                | `src/app/api/match/snoozed/route.ts`                  |
-| `GET`               | `/api/match/test`                     | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/match/test/route.ts`                     |
-| `GET`               | `/api/match/visible-fields/[matchId]` | `session` | `active MVP`             | -                                | `src/app/api/match/visible-fields/[matchId]/route.ts` |
+| Methods             | Path                                  | Auth Tier | Launch Surface           | Notes                             | Source                                                |
+| ------------------- | ------------------------------------- | --------- | ------------------------ | --------------------------------- | ----------------------------------------------------- |
+| `POST`              | `/api/match/assignment`               | `public`  | `active MVP`             | -                                 | `src/app/api/match/assignment/route.ts`               |
+| `GET`               | `/api/match/explain/[matchId]`        | `session` | `active MVP`             | -                                 | `src/app/api/match/explain/[matchId]/route.ts`        |
+| `POST`              | `/api/match/gates`                    | `session` | `active MVP`             | -                                 | `src/app/api/match/gates/route.ts`                    |
+| `GET\|POST\|DELETE` | `/api/match/hide`                     | `session` | `active MVP`             | compatibility handling in source  | `src/app/api/match/hide/route.ts`                     |
+| `GET\|POST`         | `/api/match/interest`                 | `public`  | `active MVP`             | -                                 | `src/app/api/match/interest/route.ts`                 |
+| `POST`              | `/api/match/profile`                  | `public`  | `active MVP`             | -                                 | `src/app/api/match/profile/route.ts`                  |
+| `GET`               | `/api/match/snoozed`                  | `session` | `active MVP`             | -                                 | `src/app/api/match/snoozed/route.ts`                  |
+| `GET`               | `/api/match/test`                     | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts`                    |
+| `GET`               | `/api/match/visible-fields/[matchId]` | `session` | `active MVP`             | -                                 | `src/app/api/match/visible-fields/[matchId]/route.ts` |
 
 ### matches
 
@@ -249,9 +249,9 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### performance
 
-| Methods | Path                     | Auth Tier | Launch Surface           | Notes                           | Source                                   |
-| ------- | ------------------------ | --------- | ------------------------ | ------------------------------- | ---------------------------------------- |
-| `POST`  | `/api/performance/track` | `public`  | `archived compatibility` | legacy/compat markers in source | `src/app/api/performance/track/route.ts` |
+| Methods | Path                     | Auth Tier | Launch Surface           | Notes                             | Source                             |
+| ------- | ------------------------ | --------- | ------------------------ | --------------------------------- | ---------------------------------- |
+| `POST`  | `/api/performance/track` | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts` |
 
 ### portfolio
 
@@ -266,12 +266,12 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### profile
 
-| Methods     | Path                            | Auth Tier | Launch Surface           | Notes                           | Source                                          |
-| ----------- | ------------------------------- | --------- | ------------------------ | ------------------------------- | ----------------------------------------------- |
-| `GET`       | `/api/profile`                  | `session` | `active MVP`             | -                               | `src/app/api/profile/route.ts`                  |
-| `GET`       | `/api/profile/completeness`     | `public`  | `archived compatibility` | legacy/compat markers in source | `src/app/api/profile/completeness/route.ts`     |
-| `GET\|POST` | `/api/profile/privacy-settings` | `session` | `active MVP`             | -                               | `src/app/api/profile/privacy-settings/route.ts` |
-| `GET\|POST` | `/api/profile/visibility`       | `session` | `active MVP`             | -                               | `src/app/api/profile/visibility/route.ts`       |
+| Methods     | Path                            | Auth Tier | Launch Surface           | Notes                             | Source                                          |
+| ----------- | ------------------------------- | --------- | ------------------------ | --------------------------------- | ----------------------------------------------- |
+| `GET`       | `/api/profile`                  | `session` | `active MVP`             | -                                 | `src/app/api/profile/route.ts`                  |
+| `GET`       | `/api/profile/completeness`     | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts`              |
+| `GET\|POST` | `/api/profile/privacy-settings` | `session` | `active MVP`             | -                                 | `src/app/api/profile/privacy-settings/route.ts` |
+| `GET\|POST` | `/api/profile/visibility`       | `session` | `active MVP`             | -                                 | `src/app/api/profile/visibility/route.ts`       |
 
 ### proof-artifacts
 
@@ -292,20 +292,20 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### user
 
-| Methods       | Path                                | Auth Tier | Launch Surface           | Notes                            | Source                                              |
-| ------------- | ----------------------------------- | --------- | ------------------------ | -------------------------------- | --------------------------------------------------- |
-| `GET\|DELETE` | `/api/user/account`                 | `session` | `active MVP`             | -                                | `src/app/api/user/account/route.ts`                 |
-| `POST`        | `/api/user/account/cancel-deletion` | `session` | `archived compatibility` | legacy/compat markers in source  | `src/app/api/user/account/cancel-deletion/route.ts` |
-| `GET`         | `/api/user/audit-log`               | `session` | `active MVP`             | compatibility handling in source | `src/app/api/user/audit-log/route.ts`               |
-| `GET`         | `/api/user/audit-log/purpose`       | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/user/audit-log/purpose/route.ts`       |
-| `GET\|POST`   | `/api/user/consent`                 | `session` | `active MVP`             | compatibility handling in source | `src/app/api/user/consent/route.ts`                 |
-| `GET`         | `/api/user/consent/check`           | `session` | `active MVP`             | -                                | `src/app/api/user/consent/check/route.ts`           |
-| `GET`         | `/api/user/data-inventory`          | `session` | `active MVP`             | -                                | `src/app/api/user/data-inventory/route.ts`          |
-| `GET\|PUT`    | `/api/user/email`                   | `session` | `active MVP`             | -                                | `src/app/api/user/email/route.ts`                   |
-| `GET`         | `/api/user/export`                  | `session` | `active MVP`             | compatibility handling in source | `src/app/api/user/export/route.ts`                  |
-| `GET`         | `/api/user/me`                      | `session` | `active MVP`             | -                                | `src/app/api/user/me/route.ts`                      |
-| `PUT`         | `/api/user/password`                | `session` | `active MVP`             | -                                | `src/app/api/user/password/route.ts`                |
-| `GET\|POST`   | `/api/user/privacy-settings`        | `session` | `active MVP`             | -                                | `src/app/api/user/privacy-settings/route.ts`        |
+| Methods       | Path                                | Auth Tier | Launch Surface           | Notes                             | Source                                       |
+| ------------- | ----------------------------------- | --------- | ------------------------ | --------------------------------- | -------------------------------------------- |
+| `GET\|DELETE` | `/api/user/account`                 | `session` | `active MVP`             | -                                 | `src/app/api/user/account/route.ts`          |
+| `POST`        | `/api/user/account/cancel-deletion` | `session` | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts`           |
+| `GET`         | `/api/user/audit-log`               | `session` | `active MVP`             | compatibility handling in source  | `src/app/api/user/audit-log/route.ts`        |
+| `GET`         | `/api/user/audit-log/purpose`       | `public`  | `archived compatibility` | archived by launch surface policy | `src/lib/launch/surface-policy.ts`           |
+| `GET\|POST`   | `/api/user/consent`                 | `session` | `active MVP`             | compatibility handling in source  | `src/app/api/user/consent/route.ts`          |
+| `GET`         | `/api/user/consent/check`           | `session` | `active MVP`             | -                                 | `src/app/api/user/consent/check/route.ts`    |
+| `GET`         | `/api/user/data-inventory`          | `session` | `active MVP`             | -                                 | `src/app/api/user/data-inventory/route.ts`   |
+| `GET\|PUT`    | `/api/user/email`                   | `session` | `active MVP`             | -                                 | `src/app/api/user/email/route.ts`            |
+| `GET`         | `/api/user/export`                  | `session` | `active MVP`             | compatibility handling in source  | `src/app/api/user/export/route.ts`           |
+| `GET`         | `/api/user/me`                      | `session` | `active MVP`             | -                                 | `src/app/api/user/me/route.ts`               |
+| `PUT`         | `/api/user/password`                | `session` | `active MVP`             | -                                 | `src/app/api/user/password/route.ts`         |
+| `GET\|POST`   | `/api/user/privacy-settings`        | `session` | `active MVP`             | -                                 | `src/app/api/user/privacy-settings/route.ts` |
 
 ### verification
 
@@ -333,26 +333,26 @@ Canonical API documentation generated from the current App Router route handlers
 
 ## Compatibility / Deprecated Surface
 
-Routes with source-level `legacy`/`deprecated` markers should be treated as compatibility surfaces and reviewed before removal.
+Routes archived by launch surface policy are blocked by middleware before route handlers run.
 
-| Path                                             | Source                                                           | Marker                            |
-| ------------------------------------------------ | ---------------------------------------------------------------- | --------------------------------- |
-| `/api/analytics/events`                          | `src/app/api/analytics/events/route.ts`                          | archived by launch surface policy |
-| `/api/analytics/tour-event`                      | `src/app/api/analytics/tour-event/route.ts`                      | archived by launch surface policy |
-| `/api/analytics/track`                           | `src/app/api/analytics/track/route.ts`                           | archived by launch surface policy |
-| `/api/analytics/web-vitals`                      | `src/app/api/analytics/web-vitals/route.ts`                      | archived by launch surface policy |
-| `/api/cron/account-deletion-workflow`            | `src/app/api/cron/account-deletion-workflow/route.ts`            | archived by launch surface policy |
-| `/api/cron/process-deletions`                    | `src/app/api/cron/process-deletions/route.ts`                    | archived by launch surface policy |
-| `/api/cron/send-deletion-reminders`              | `src/app/api/cron/send-deletion-reminders/route.ts`              | archived by launch surface policy |
-| `/api/expertise/cv-import/wizard-apply`          | `src/app/api/expertise/cv-import/wizard-apply/route.ts`          | archived by launch surface policy |
-| `/api/expertise/cv-import/wizard-extract`        | `src/app/api/expertise/cv-import/wizard-extract/route.ts`        | archived by launch surface policy |
-| `/api/expertise/cv-import/wizard-extract/status` | `src/app/api/expertise/cv-import/wizard-extract/status/route.ts` | archived by launch surface policy |
-| `/api/expertise/cv-import/wizard-suggest`        | `src/app/api/expertise/cv-import/wizard-suggest/route.ts`        | archived by launch surface policy |
-| `/api/match/test`                                | `src/app/api/match/test/route.ts`                                | archived by launch surface policy |
-| `/api/performance/track`                         | `src/app/api/performance/track/route.ts`                         | archived by launch surface policy |
-| `/api/profile/completeness`                      | `src/app/api/profile/completeness/route.ts`                      | archived by launch surface policy |
-| `/api/user/account/cancel-deletion`              | `src/app/api/user/account/cancel-deletion/route.ts`              | archived by launch surface policy |
-| `/api/user/audit-log/purpose`                    | `src/app/api/user/audit-log/purpose/route.ts`                    | archived by launch surface policy |
+| Path                                             | Source                             | Marker                            |
+| ------------------------------------------------ | ---------------------------------- | --------------------------------- |
+| `/api/analytics/events`                          | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/analytics/tour-event`                      | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/analytics/track`                           | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/analytics/web-vitals`                      | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/cron/account-deletion-workflow`            | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/cron/process-deletions`                    | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/cron/send-deletion-reminders`              | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/expertise/cv-import/wizard-apply`          | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/expertise/cv-import/wizard-extract`        | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/expertise/cv-import/wizard-extract/status` | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/expertise/cv-import/wizard-suggest`        | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/match/test`                                | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/performance/track`                         | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/profile/completeness`                      | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/user/account/cancel-deletion`              | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
+| `/api/user/audit-log/purpose`                    | `src/lib/launch/surface-policy.ts` | archived by launch surface policy |
 
 ## Verification Checklist
 

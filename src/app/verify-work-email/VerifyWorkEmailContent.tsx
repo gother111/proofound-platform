@@ -6,11 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Loader2, Mail } from 'lucide-react';
-import { buildVisualWorkEmailVerificationResponse } from '@/lib/verification/visual-link-fixtures';
-
-function clientVisualVerificationEnabled() {
-  return process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
-}
+import {
+  buildVisualWorkEmailVerificationResponse,
+  clientVerificationLinkVisualFixturesEnabled,
+} from '@/lib/verification/visual-link-fixtures';
 
 export function VerifyWorkEmailContent() {
   const searchParams = useSearchParams();
@@ -23,7 +22,7 @@ export function VerifyWorkEmailContent() {
   const verifyToken = useCallback(
     async (token: string) => {
       try {
-        if (clientVisualVerificationEnabled()) {
+        if (clientVerificationLinkVisualFixturesEnabled()) {
           const visualResponse = buildVisualWorkEmailVerificationResponse(token);
           if (visualResponse) {
             setStatus('success');

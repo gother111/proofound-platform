@@ -59,13 +59,13 @@ describe('MatchingOrganizationView launch corridor', () => {
     expect(screen.getByText('Assignment review queue')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Review proof-backed candidates, shortlist fits, and request intros when ready.'
+        'Review proof-backed submissions, keep workflow stages clear, and request intros when ready.'
       )
     ).toBeInTheDocument();
     expect(screen.getByText('Active Assignments')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText('No candidate matches yet')).toBeInTheDocument();
+      expect(screen.getByText('No proof submissions yet')).toBeInTheDocument();
     });
 
     expect(screen.queryByRole('button', { name: /initiate test/i })).not.toBeInTheDocument();
@@ -73,6 +73,7 @@ describe('MatchingOrganizationView launch corridor', () => {
     expect(screen.queryByText(/skills-first/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/balanced/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /weights & filters/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/shortlist fits/i)).not.toBeInTheDocument();
   });
 
   it('stays on the assignment match API and never calls archived test-match endpoints', async () => {
@@ -179,13 +180,13 @@ describe('MatchingOrganizationView launch corridor', () => {
       />
     );
 
-    expect(screen.getByText('New candidates')).toBeInTheDocument();
+    expect(screen.getByText('New submissions')).toBeInTheDocument();
     expect(screen.getAllByText('2 matches').length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole('button', { name: /designer/i }));
 
     await waitFor(() => {
-      expect(screen.queryByText('New candidates')).not.toBeInTheDocument();
+      expect(screen.queryByText('New submissions')).not.toBeInTheDocument();
     });
   });
 });

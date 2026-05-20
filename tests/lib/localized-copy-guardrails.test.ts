@@ -13,7 +13,11 @@ describe('localized copy guardrails', () => {
     ).join('\n');
 
     expect(localizedCopy).toContain('privacy-safe evidence');
+    expect(localizedCopy).toContain('review proof-backed submissions');
+    expect(localizedCopy).toContain('bevisbaserade inlämningar');
     expect(localizedCopy).toContain('starkare bevis');
+    expect(localizedCopy).not.toMatch(/review proof-backed candidates/i);
+    expect(localizedCopy).not.toMatch(/granska kandidater/i);
     expect(localizedCopy).not.toMatch(/trust anchors?/i);
     expect(localizedCopy).not.toMatch(/trust signals?/i);
     expect(localizedCopy).not.toMatch(/compatibility signals?/i);

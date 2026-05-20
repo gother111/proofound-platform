@@ -28,7 +28,7 @@ import {
 } from '@/lib/assignments/expertise-matrix';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
@@ -150,7 +150,7 @@ const AssignmentCreateSchema = AssignmentBaseSchema.extend({
 const visualAssignmentFixturesEnabled = () =>
   isMockSupabaseEnabled() &&
   process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-  process.env.VERCEL_ENV !== 'production';
+  visualFixturesRuntimeAllowed();
 
 function buildVisualAssignmentFixtures(orgId: string) {
   const now = Date.now();
@@ -197,7 +197,7 @@ function buildVisualAssignmentFixtures(orgId: string) {
       creationStatus: 'assignment_ready',
       builderMode: 'basic',
       businessValue:
-        'Clarify readiness evidence before partner expansion work reaches candidate review.',
+        'Clarify readiness evidence before partner expansion work reaches proof review.',
       expectedImpact: null,
       mustHaveSkills: [
         { id: 'process-mapping', label: 'Process mapping', level: 3 },
@@ -509,38 +509,6 @@ export async function POST(request: NextRequest) {
 
       // Validate input
       const validatedData = AssignmentCreateSchema.parse(body);
-
-      if (isMockSupabaseEnabled()) {
-        const resolvedRole = validatedData.title ?? validatedData.role ?? 'Mock assignment';
-        const mockOrgId =
-          validatedData.orgId ||
-          validatedData.principalContext?.orgId ||
-          '99999999-9999-4999-9999-999999999999';
-        const now = new Date().toISOString();
-
-        return NextResponse.json(
-          {
-            assignment: {
-              id: '22222222-2222-4222-8222-222222222222',
-              orgId: mockOrgId,
-              role: resolvedRole,
-              title: resolvedRole,
-              engagementType: validatedData.engagementType ?? 'full_time',
-              businessValue: validatedData.rolePurpose ?? validatedData.businessValue ?? null,
-              expectedImpact:
-                validatedData.proofExpectations ?? validatedData.expectedImpact ?? null,
-              status: validatedData.status ?? 'draft',
-              creationStatus: validatedData.creationStatus ?? 'draft',
-              builderMode: validatedData.builderMode ?? 'basic',
-              mustHaveSkills: validatedData.mustHaveSkills ?? [],
-              niceToHaveSkills: validatedData.niceToHaveSkills ?? [],
-              createdAt: now,
-              updatedAt: now,
-            },
-          },
-          { status: 201 }
-        );
-      }
 
       const principal = validatedData.principalContext
         ? ensureOrganizationPrincipal(validatedData.principalContext)

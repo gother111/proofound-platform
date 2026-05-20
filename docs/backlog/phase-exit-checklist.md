@@ -18,8 +18,8 @@ Use this checklist together with [`../verification-checklist.md`](../verificatio
 
 - [x] `npm run test -- tests/ui/individual-setup-proof-first.test.tsx`
 - [x] `npm run test -- tests/lib/proof-pack-anchor.test.ts tests/lib/canonical-proof-pack-projection.test.ts`
-- [x] `npm run test -- tests/api/public-portfolio-summary-route.test.ts tests/api/public-portfolio-export-route.test.ts tests/api/portfolio-export-route.test.ts tests/api/portfolio-org-export-route.test.ts tests/api/org-audit-export-routes.test.ts tests/api/cron-account-deletion-workflow-route.test.ts`
-- [x] Run any focused test needed for `src/app/api/user/account/cancel-deletion/route.ts` if it changes during this phase. No route edit was made in the current sweep; cancel-deletion behavior is covered by the 2026-05-19 export/delete/auditability evidence.
+- [x] `npm run test -- tests/api/public-portfolio-summary-route.test.ts tests/api/public-portfolio-export-route.test.ts tests/api/portfolio-export-route.test.ts tests/api/portfolio-org-export-route.test.ts tests/api/org-audit-export-routes.test.ts`
+- [x] Cancel-deletion compatibility is covered at the middleware archive boundary and by `tests/api/user-account-lifecycle-routes.test.ts`; there is no compiled cancel-deletion route in the launch surface.
 - [x] [`../verification-checklist.md`](../verification-checklist.md) rows `proof-first onboarding`, `Proof Pack anchor integrity`, and `export / delete and auditability` are all `PASS`.
 
 ## Phase 2 exit

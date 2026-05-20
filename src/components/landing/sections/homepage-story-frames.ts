@@ -20,7 +20,7 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   {
     id: 'hero',
     title: 'Proof behind the claim',
-    body: 'Proofound turns real work into structured Proof Packs for privacy-safe hiring review before identity takes over.',
+    body: 'Proofound turns real work into structured Proof Packs for privacy-safe assignment review before identity takes over.',
     microcopy: 'Proof portfolios for individuals. Evidence-based review for teams.',
   },
   {
@@ -68,7 +68,7 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   {
     id: 'challenges',
     title: 'To modern challenges',
-    body: 'Organizations waste time reviewing weak applications. Candidates flatten real ability into bullets or overshare to compensate. Proofound gives both sides a more modern starting point.',
+    body: 'Organizations waste time reviewing weak submissions. Candidates flatten real ability into bullets or overshare to compensate. Proofound gives both sides a more modern starting point.',
     microcopy: 'Stronger proof solves real problems on both sides.',
   },
 ];

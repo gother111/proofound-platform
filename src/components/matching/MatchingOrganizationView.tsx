@@ -178,7 +178,7 @@ export function MatchingOrganizationView({
 
     return Number.isFinite(lastReviewChangeAt) && lastReviewChangeAt > lastViewedAt
       ? 'Review updates'
-      : 'New candidates';
+      : 'New submissions';
   };
 
   // Fetch matches when the selected assignment changes
@@ -317,9 +317,9 @@ export function MatchingOrganizationView({
 
       if (action === 'pass') {
         setMatches((current) => current.filter((match: any) => match.id !== matchId));
-        toast.success('Candidate passed for now.');
+        toast.success('Submission passed for now.');
       } else {
-        // Update local state for shortlists / request_intro updates
+        // Update local state for review-stage and request_intro updates
         setMatches((current) =>
           current.map((match: any) =>
             match.id === matchId
@@ -338,7 +338,7 @@ export function MatchingOrganizationView({
           )
         );
         toast.success(
-          action === 'request_intro' ? 'Intro request recorded.' : 'Candidate added to shortlist.'
+          action === 'request_intro' ? 'Intro request recorded.' : 'Proof review stage updated.'
         );
       }
 
@@ -368,7 +368,8 @@ export function MatchingOrganizationView({
             Assignment review queue
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Review proof-backed candidates, shortlist fits, and request intros when ready.
+            Review proof-backed submissions, keep workflow stages clear, and request intros when
+            ready.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -461,7 +462,7 @@ export function MatchingOrganizationView({
           {isLoading ? (
             <div className="flex-1 flex flex-col justify-center items-center py-12">
               <p className="text-sm text-muted-foreground mb-4">
-                Loading proof-aligned candidates...
+                Loading proof-aligned submissions...
               </p>
               <CardGridSkeleton
                 count={3}
@@ -476,17 +477,17 @@ export function MatchingOrganizationView({
                 Select an assignment corridor
               </h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                Choose one assignment in the left sidebar to start reviewing matched candidates.
+                Choose one assignment in the left sidebar to start reviewing matched submissions.
               </p>
             </div>
           ) : matches.length === 0 ? (
             <div className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-white/70 border border-proofound-stone/60 rounded-xl">
               <Sparkles className="h-8 w-8 text-proofound-forest mb-3" />
               <h3 className="text-base font-semibold text-proofound-charcoal">
-                No candidate matches yet
+                No proof submissions yet
               </h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-md">
-                We are actively processing candidates against your assignment's proof requirements.
+                We are actively processing submissions against your assignment's proof requirements.
                 Keep this corridor open.
               </p>
               {recoveryActions[0] && (
@@ -543,12 +544,12 @@ export function MatchingOrganizationView({
                   <h4 className="text-sm font-semibold text-proofound-charcoal">
                     {activeSegment === 'queue'
                       ? 'Review queue is empty'
-                      : 'No candidates shortlisted yet'}
+                      : 'No submissions shortlisted yet'}
                   </h4>
                   <p className="text-xs text-muted-foreground mt-1 max-w-xs">
                     {activeSegment === 'queue'
-                      ? 'All matching candidates for this assignment have been reviewed.'
-                      : 'Shortlist qualified candidates to request introductions and reveal identities.'}
+                      ? 'All matching submissions for this assignment have been reviewed.'
+                      : 'Shortlist qualified submissions to request introductions and reveal identities.'}
                   </p>
                 </div>
               ) : (
@@ -614,7 +615,7 @@ export function MatchingOrganizationView({
                     {!activeMatch ? (
                       <div className="flex-1 flex flex-col justify-center items-center text-center py-12">
                         <p className="text-sm text-muted-foreground">
-                          Select a candidate to review details.
+                          Select a submission to review details.
                         </p>
                       </div>
                     ) : (
@@ -622,10 +623,10 @@ export function MatchingOrganizationView({
                         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-proofound-stone/40 pb-4">
                           <div>
                             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                              Candidate review
+                              Proof review
                             </span>
                             <h3 className="text-xl font-bold text-proofound-charcoal mt-0.5">
-                              {activeMatch.reviewCard?.candidateLabel || 'Anonymous Candidate'}
+                              {activeMatch.reviewCard?.candidateLabel || 'Anonymous submission'}
                             </h3>
                             <div className="flex flex-wrap items-center gap-2 mt-2">
                               <Badge variant="outline" className="text-[10px] uppercase font-mono">
@@ -682,7 +683,7 @@ export function MatchingOrganizationView({
                                       Intro requested
                                     </Badge>
                                     <p className="text-[10px] text-muted-foreground mt-1">
-                                      Waiting for candidate response.
+                                      Waiting for reviewer response.
                                     </p>
                                   </div>
                                 ) : (

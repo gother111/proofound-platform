@@ -234,7 +234,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
       ? 'Closed assignments stay visible for context, but publishing actions are disabled.'
       : isReviewReady
         ? 'Everything needed for the narrow publish path is present. Publish when your team is ready to start matching.'
-        : 'Finish the missing items before publishing so candidates see a specific, proof-led assignment.';
+        : 'Finish the missing items before publishing so submitters see a specific, proof-led assignment.';
 
   return (
     <div className="min-h-screen bg-japandi-bg p-4 sm:p-6">

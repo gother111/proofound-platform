@@ -56,6 +56,16 @@ describe('PrivacyOverview copy', () => {
     expect(screen.getAllByText('Sensitive').length).toBeGreaterThan(0);
     expect(screen.getByText('Operational')).toBeInTheDocument();
     expect(screen.queryByText('Operational (Pseudonymized)')).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Create your profile and support assignment-review matching/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Help match you with proof-led assignment reviews/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Connect you with assignment-review workflows/i)).toBeInTheDocument();
+    expect(screen.queryByText(/relevant opportunities/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/match you with opportunities/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Connect you with opportunities/i)).not.toBeInTheDocument();
 
     expect(screen.queryByText(/Tier 1/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tier 2/i)).not.toBeInTheDocument();

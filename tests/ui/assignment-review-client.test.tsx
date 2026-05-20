@@ -87,7 +87,7 @@ describe('AssignmentReviewClient', () => {
     expect(screen.getByText('4 items need review.')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Finish the missing items before publishing so candidates see a specific, proof-led assignment.'
+        'Finish the missing items before publishing so submitters see a specific, proof-led assignment.'
       )
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Publish Assignment/i })).toBeDisabled();

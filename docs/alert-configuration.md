@@ -105,7 +105,7 @@ Alert or manually review when these active workflows fail or stall:
 - export/delete
 - internal verification, privacy/reveal dispute, risky-upload, assignment-quality, and engagement-verification queues
 
-Alerts should name the primary object and next action: Proof Pack, assignment, candidate review, reveal request, interview, decision, engagement verification, or queue item.
+Alerts should name the primary object and next action: Proof Pack, assignment, proof review, reveal request, interview, decision, engagement verification, or queue item.
 
 ## What Not To Alert On As Launch-Critical
 

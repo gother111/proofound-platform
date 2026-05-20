@@ -229,9 +229,9 @@ describe('expertise user-skill proofs route', () => {
     expect(payload?.metadata).not.toHaveProperty('importedFrom');
   });
 
-  it('returns a mock proof in local mock Supabase mode without touching canonical storage', async () => {
+  it('keeps local mock Supabase mode on the canonical anchored proof path', async () => {
     process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
-    authContext.supabase = createSupabaseMock({ anchorExists: false });
+    authContext.supabase = createSupabaseMock();
 
     const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
       method: 'POST',
@@ -251,10 +251,19 @@ describe('expertise user-skill proofs route', () => {
     const payload = await response.json();
 
     expect(response.status).toBe(201);
-    expect(payload.proof.canonicalPackId).toBe('mock-pack-skill-1');
-    expect(payload.proof.title).toBe('Mock proof');
-    expect(vi.mocked(upsertCanonicalSkillProof)).not.toHaveBeenCalled();
-    expect(revalidatePublicPortfolioByProfileId).not.toHaveBeenCalled();
+    expect(payload.proof.canonicalPackId).toBe('pack-1');
+    expect(vi.mocked(upsertCanonicalSkillProof)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skillId: 'skill-1',
+        profileId: 'user-1',
+        title: 'Mock proof',
+        primaryAnchor: {
+          type: 'experience',
+          id: '11111111-1111-4111-8111-111111111111',
+        },
+      })
+    );
+    expect(revalidatePublicPortfolioByProfileId).toHaveBeenCalledWith('user-1');
   });
 
   it('uses a neutral fallback title for uploaded files and surfaces privacy-review holds', async () => {

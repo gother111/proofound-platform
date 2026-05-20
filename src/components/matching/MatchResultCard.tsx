@@ -708,7 +708,7 @@ export function MatchResultCard({
             open={isSnoozeDialogOpen}
             onOpenChange={setIsSnoozeDialogOpen}
             matchId={result.id}
-            assignmentTitle={result.assignment?.role || 'This opportunity'}
+            assignmentTitle={result.assignment?.role || 'This assignment review'}
             onSnoozed={() => {
               // Refresh matches list or remove from current view
               if (onHide) onHide();

@@ -1,4 +1,4 @@
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 
 export const VISUAL_CONVERSATION_IDS = {
   masked: 'visual-masked-conversation',
@@ -9,7 +9,7 @@ export function visualMessagingFixturesEnabled() {
   return (
     isMockSupabaseEnabled() &&
     process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-    process.env.VERCEL_ENV !== 'production'
+    visualFixturesRuntimeAllowed()
   );
 }
 

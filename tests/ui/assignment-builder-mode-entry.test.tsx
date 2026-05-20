@@ -179,6 +179,9 @@ describe('Assignment builder lean corridor', () => {
     expect(
       screen.getByRole('button', { name: /import existing job description/i })
     ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /import existing job description/i }));
+    expect(screen.getByLabelText(/existing assignment brief/i)).toBeInTheDocument();
+    expect(document.body.textContent ?? '').not.toContain('Existing job description');
     expect(screen.getAllByText('Why this role exists').length).toBeGreaterThan(0);
     expect(screen.getByText('What work will actually be done')).toBeInTheDocument();
     expect(screen.getByText('What proof would count')).toBeInTheDocument();
@@ -227,7 +230,7 @@ Full-time
     fireEvent.click(
       await screen.findByRole('button', { name: /import existing job description/i })
     );
-    fireEvent.change(screen.getByLabelText(/existing job description/i), {
+    fireEvent.change(screen.getByLabelText(/existing assignment brief/i), {
       target: { value: pastedJobDescription },
     });
     fireEvent.click(screen.getByRole('button', { name: /convert to structured draft/i }));
@@ -272,7 +275,7 @@ Full-time
     fireEvent.click(
       await screen.findByRole('button', { name: /import existing job description/i })
     );
-    fireEvent.change(screen.getByLabelText(/existing job description/i), {
+    fireEvent.change(screen.getByLabelText(/existing assignment brief/i), {
       target: { value: 'Need a strong operator.' },
     });
     fireEvent.click(screen.getByRole('button', { name: /convert to structured draft/i }));

@@ -547,7 +547,7 @@ export function buildHiringCorridorSnapshot(params: {
     nextAction = {
       id: 'corridor_complete',
       label: 'Corridor complete',
-      description: 'The engagement is verified and the hiring corridor is complete.',
+      description: 'The engagement is verified and the assignment-review corridor is complete.',
     };
     summary = 'The engagement has been verified.';
   }

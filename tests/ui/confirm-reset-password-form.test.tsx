@@ -38,6 +38,9 @@ describe('ConfirmResetPasswordForm', () => {
 
   it('renders the local visual reset form without validating a guarded recovery session', async () => {
     vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('VERCEL_ENV', 'development');
 
     render(<ConfirmResetPasswordForm />);
 
@@ -52,6 +55,9 @@ describe('ConfirmResetPasswordForm', () => {
 
   it('shows inline validation before accepting the visual reset submit', async () => {
     vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('VERCEL_ENV', 'development');
 
     render(<ConfirmResetPasswordForm />);
 
@@ -72,6 +78,9 @@ describe('ConfirmResetPasswordForm', () => {
 
   it('records visual reset success locally without auto-redirecting', async () => {
     vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('VERCEL_ENV', 'development');
 
     render(<ConfirmResetPasswordForm />);
 

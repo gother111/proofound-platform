@@ -28,6 +28,9 @@ describe('verification link visual fixtures', () => {
     vi.clearAllMocks();
     routeParams = {};
     vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'true');
+    vi.stubEnv('VERCEL_ENV', 'development');
     vi.stubGlobal('fetch', vi.fn());
   });
 
@@ -138,5 +141,29 @@ describe('verification link visual fixtures', () => {
       screen.getByText(/This verification link is invalid, expired, or no longer available/i)
     ).toBeInTheDocument();
     expect(screen.queryByText(/Service temporarily unavailable/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps visual skill tokens on the guarded public API path in plain mock mode', async () => {
+    routeParams = { token: VISUAL_VERIFY_TOKENS.skillObserved };
+    vi.stubEnv('NEXT_PUBLIC_PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubEnv('PROOFOUND_VISUAL_FIXTURES', 'false');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 404,
+        json: async () => ({ error: 'Invalid token' }),
+      }))
+    );
+
+    render(<VerifySkillPage />);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        `/api/verify/${VISUAL_VERIFY_TOKENS.skillObserved}`
+      );
+    });
+
+    expect(screen.getByRole('heading', { name: /unable to load request/i })).toBeInTheDocument();
   });
 });

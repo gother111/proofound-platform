@@ -152,6 +152,30 @@ describe('Verification Request Composer route', () => {
     expect(response.status).toBe(404);
   });
 
+  it('does not let local mock mode bypass Proof Pack or claim ownership validation', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    mocks.composeVerificationRequestForUser.mockRejectedValueOnce(
+      new Error('PROOF_PACK_NOT_FOUND')
+    );
+
+    const response = await POST(
+      request({
+        proofPackId: '11111111-1111-4111-8111-111111111111',
+        verifierRelationshipType: 'Peer',
+        verificationScope: 'observed_behavior',
+        selectedPublicSafeProofFields: ['claim_statement'],
+      })
+    );
+
+    expect(response.status).toBe(404);
+    expect(mocks.composeVerificationRequestForUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        proofPackId: '11111111-1111-4111-8111-111111111111',
+        userId: 'user-1',
+      })
+    );
+  });
+
   it('rejects full file payload fields before composer service access', async () => {
     const response = await POST(
       request({

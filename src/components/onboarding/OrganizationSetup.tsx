@@ -172,7 +172,7 @@ export function OrganizationSetup() {
           Create your organization
         </CardTitle>
         <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-          Add the basics candidates need to trust you, then create one assignment.
+          Add the basics reviewers need to trust the work context, then create one assignment.
         </CardDescription>
       </CardHeader>
       <CardContent>

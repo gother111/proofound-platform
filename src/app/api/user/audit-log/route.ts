@@ -16,6 +16,17 @@ const AuditLogQuerySchema = z.object({
 
 const USER_VISIBLE_AUDIT_EVENT_EXCLUSIONS = ['performance_metric', 'web_vital'];
 
+function resolveAuditDeviceLabel(properties: unknown, userAgentHash: string | null): string {
+  if (properties && typeof properties === 'object' && 'device' in properties) {
+    const device = String((properties as Record<string, unknown>).device || '').trim();
+    if (device) return device;
+  }
+
+  return userAgentHash
+    ? `Protected device reference (${userAgentHash.substring(0, 8)}...)`
+    : 'Unknown';
+}
+
 /**
  * GET /api/user/audit-log
  *
@@ -32,7 +43,7 @@ const USER_VISIBLE_AUDIT_EVENT_EXCLUSIONS = ['performance_metric', 'web_vital'];
  * - timestamp: When the action occurred
  * - action: Type of event (e.g., "profile_updated", "match_accepted")
  * - ipHash: Abbreviated hashed IP (first 8 chars + "...")
- * - device: Parsed device info from user agent hash
+ * - device: Privacy-preserving device label or protected device reference
  * - metadata: Additional event details
  */
 export async function GET(request: NextRequest) {
@@ -126,14 +137,7 @@ export async function GET(request: NextRequest) {
       // Abbreviate IP hash for display (first 8 chars + "...")
       const abbreviatedIpHash = event.ipHash ? `${event.ipHash.substring(0, 8)}...` : 'N/A';
 
-      // Parse device from user agent hash (simplified - in production, use a proper UA parser)
-      // For now, we'll extract from properties if available, or show hash
-      const device =
-        event.properties && typeof event.properties === 'object' && 'device' in event.properties
-          ? String(event.properties.device)
-          : event.userAgentHash
-            ? `Device (${event.userAgentHash.substring(0, 8)}...)`
-            : 'Unknown';
+      const device = resolveAuditDeviceLabel(event.properties, event.userAgentHash);
 
       // Convert event type to human-readable action
       const humanReadableAction = convertEventTypeToHumanReadable(event.action);

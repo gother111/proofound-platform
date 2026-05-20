@@ -668,7 +668,7 @@ const GATED_NON_MVP_PAGE_POLICIES = [
     classification: 'gated_non_mvp',
     surfaceLabel: 'Individual Pages',
     detail:
-      'Opportunity browsing is named in the MVP, but it stays hard-gated until the launch-safe matching corridor is ready.',
+      'Assignment discovery is named in the MVP, but it stays hard-gated until the launch-safe matching corridor is ready.',
     matches: (pathname: string) => pathname.startsWith('/app/i/opportunities'),
   },
   {

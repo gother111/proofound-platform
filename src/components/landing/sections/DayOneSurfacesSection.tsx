@@ -158,7 +158,7 @@ export function DayOneSurfacesSection() {
               </h3>
               <p className="mt-4 text-[1.04rem] leading-7 text-[var(--landing-text)]">
                 Publish a credible team surface, define the work clearly, and review proof-backed
-                candidates through a privacy-safe shortlist before interview time is wasted.
+                submissions through a privacy-safe shortlist before interview time is wasted.
               </p>
             </div>
 

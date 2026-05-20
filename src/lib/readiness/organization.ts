@@ -199,7 +199,7 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
     topActions.push({
       id: 'create-first-assignment',
       title: 'Create your first active assignment',
-      description: 'Publish one assignment to start receiving real candidate signals.',
+      description: 'Publish one assignment to start receiving real proof submissions.',
       priority: 'high',
       category: 'assignment',
       actionUrl: '/app/o',

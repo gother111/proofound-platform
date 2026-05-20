@@ -9,6 +9,7 @@ import { EarlyProofSection } from '@/components/landing/sections/EarlyProofSecti
 const REPO_ROOT = process.cwd();
 
 const ACTIVE_LANDING_COPY_FILES = [
+  'src/app/page.tsx',
   'src/components/landing/sections/BuiltForSection.tsx',
   'src/components/landing/sections/ComparisonSection.tsx',
   'src/components/landing/sections/DayOneSurfacesSection.tsx',
@@ -19,6 +20,7 @@ const ACTIVE_LANDING_COPY_FILES = [
   'src/components/landing/sections/PrivacySafeReviewSection.tsx',
   'src/components/landing/sections/ScrollytellingSection.tsx',
   'src/components/landing/sections/ThreeStepCorridorSection.tsx',
+  'src/components/landing/sections/hero-variants/HeroManifesto.tsx',
   'src/components/landing/sections/homepage-story-frames.ts',
   'src/lib/seo/json-ld.ts',
 ];
@@ -48,12 +50,30 @@ describe('landing copy guardrails', () => {
 
     expect(landingCopy).toMatch(/stronger evidence than CVs/i);
     expect(landingCopy).toMatch(/privacy-safe evidence/i);
+    expect(landingCopy).toMatch(/Run assignment review from validated proof/i);
+    expect(landingCopy).toMatch(/structured proof review/i);
+    expect(landingCopy).toMatch(/Build proof-first review/i);
+    expect(landingCopy).toMatch(/Evidence-based assignment review/i);
+    expect(landingCopy).toMatch(/proof-backed\s+submissions/i);
+    expect(landingCopy).toMatch(/clearer-evidence submissions/i);
+    expect(landingCopy).toMatch(/organizations review assignment submissions/i);
     expect(landingCopy).not.toMatch(/privacy-safe signal/i);
     expect(landingCopy).not.toMatch(/stronger signal than CVs/i);
+    expect(landingCopy).not.toMatch(/weak CV signal/i);
+    expect(landingCopy).not.toMatch(/structured hiring signal/i);
     expect(landingCopy).not.toMatch(/higher-signal candidates/i);
     expect(landingCopy).not.toMatch(/Weak signal/i);
     expect(landingCopy).not.toMatch(/Review-fit signal/i);
     expect(landingCopy).not.toMatch(/Verified signal|Outcome signal/i);
     expect(landingCopy).not.toMatch(/trust anchors?|trust signals?|compatibility signals?/i);
+    expect(landingCopy).not.toMatch(/Hire and collaborate/i);
+    expect(landingCopy).not.toMatch(/Streamline hiring without sifting through CV noise/i);
+    expect(landingCopy).not.toMatch(/Build hiring on stronger proof/i);
+    expect(landingCopy).not.toMatch(/Explore evidence-based hiring/i);
+    expect(landingCopy).not.toMatch(/Evidence-based hiring for a world/i);
+    expect(landingCopy).not.toMatch(/Review proof-backed candidates/i);
+    expect(landingCopy).not.toMatch(/clearer-evidence candidates/i);
+    expect(landingCopy).not.toMatch(/organizations find talent/i);
+    expect(landingCopy).not.toMatch(/talent feed/i);
   });
 });

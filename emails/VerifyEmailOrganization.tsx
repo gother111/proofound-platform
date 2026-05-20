@@ -31,7 +31,7 @@ export const VerifyEmailOrganization = ({ verifyUrl }: VerifyEmailOrganizationPr
         <ul style={list}>
           <li>Publish a narrow organization trust page</li>
           <li>Create assignment paths with outcomes, constraints, and proof needs</li>
-          <li>Review proof-led candidate context without public directory browsing</li>
+          <li>Review proof-led submission context without public directory browsing</li>
           <li>Request staged introductions when the workflow is ready</li>
         </ul>
         <Section style={buttonContainer}>

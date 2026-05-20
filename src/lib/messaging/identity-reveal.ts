@@ -126,8 +126,6 @@ export async function triggerIdentityReveal(conversationId: string): Promise<voi
     }
 
     // Post-MVP: emit a dedicated identity_revealed analytics event.
-
-    console.log(`Identity revealed for conversation ${conversationId}`);
   } catch (error) {
     console.error('Identity reveal error:', error);
     throw new Error('Failed to trigger identity reveal');

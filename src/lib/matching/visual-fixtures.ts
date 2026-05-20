@@ -1,4 +1,4 @@
-import { isMockSupabaseEnabled } from '@/lib/env';
+import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 
 export type MatchingVisualState = 'filled' | 'empty';
 
@@ -6,7 +6,7 @@ export function matchingVisualFixturesEnabled() {
   return (
     isMockSupabaseEnabled() &&
     process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-    process.env.VERCEL_ENV !== 'production'
+    visualFixturesRuntimeAllowed()
   );
 }
 
@@ -130,7 +130,7 @@ export function buildVisualIndividualMatches() {
       gaps: [],
       missing: [],
       assignment: {
-        role: 'Proof operations lead for a privacy-safe hiring corridor',
+        role: 'Proof operations lead for a privacy-safe assignment review',
         locationMode: 'remote',
         workMode: 'contract',
         country: 'SE',

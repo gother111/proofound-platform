@@ -14,7 +14,7 @@ This SOP covers only privacy-safe evidence handling for MVP.
 ## Owner and escalation
 
 - Owner: `Support / verification lead`
-- Escalate to `Product / ops lead` if the evidence is central to a live hiring corridor decision
+- Escalate to `Product / ops lead` if the evidence is central to a live assignment-review decision
 - Escalate immediately to `Engineering on-call` for any active privacy leak, wrong reveal state, or ingest malfunction
 - Pilot SLA target: first triage within `1 business day`; immediate escalation for active leaks
 
