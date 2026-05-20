@@ -294,6 +294,20 @@ Verification after this sweep:
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 
+## Continuation: Eighth Local Malformed-JSON Sweep
+
+An eighth local sweep applied the same malformed-JSON boundary to the organization candidate invite action route:
+
+- `src/app/api/organizations/[orgId]/candidate-invites/[inviteId]/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication, membership, stale-expiry cleanup, and organization existence checks, but before invite lookup, resend/revoke mutation, capability-token changes, email sending, or analytics work continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/org-candidate-invites-route.test.ts`: passed, `1` file and `14` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.

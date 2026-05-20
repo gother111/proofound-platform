@@ -53,6 +53,7 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { sendCandidateInviteEmail } from '@/lib/email';
 import { POST } from '@/app/api/organizations/[orgId]/candidate-invites/route';
+import { PATCH } from '@/app/api/organizations/[orgId]/candidate-invites/[inviteId]/route';
 import { resolveCandidateInvitePolicyContext } from '@/lib/candidate-invite-policy';
 
 function mockAuthenticatedUser(
@@ -96,6 +97,13 @@ function mockSelectWithWhere(result: any[]) {
   const where = vi.fn().mockResolvedValue(result);
   const from = vi.fn().mockReturnValue({ where });
   (db.select as any).mockReturnValueOnce({ from });
+}
+
+function mockUpdateWithWhere() {
+  const where = vi.fn().mockResolvedValue(undefined);
+  const set = vi.fn().mockReturnValue({ where });
+  (db.update as any).mockReturnValueOnce({ set });
+  return { set, where };
 }
 
 describe('POST /api/organizations/[orgId]/candidate-invites', () => {
@@ -355,5 +363,42 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
     expect(response.status).toBe(403);
     expect(payload.error).toBe('CANDIDATE_INVITE_BLOCKED');
     expect(payload.details.reasons).toContain('sponsor_commercial_path_required');
+  });
+});
+
+describe('PATCH /api/organizations/[orgId]/candidate-invites/[inviteId]', () => {
+  const orgId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  const inviteId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuthenticatedUser({ role: 'org_manager', state: 'active', status: null });
+  });
+
+  it('returns 400 for malformed JSON before invite lookup or mutation', async () => {
+    mockUpdateWithWhere(); // expire stale invites
+    mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
+
+    const request = new NextRequest(
+      'http://localhost/api/organizations/org/candidate-invites/invite',
+      {
+        method: 'PATCH',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: '{"action":',
+      }
+    );
+
+    const response = await PATCH(request, {
+      params: Promise.resolve({ orgId, inviteId }),
+    });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
+    expect(db.select).toHaveBeenCalledTimes(1);
+    expect(db.update).toHaveBeenCalledTimes(1);
+    expect(sendCandidateInviteEmail).not.toHaveBeenCalled();
   });
 });
