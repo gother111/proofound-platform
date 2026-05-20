@@ -4,7 +4,7 @@
 
 Goal: sweep, polish, improve, and fix launch-relevant MVP surfaces against the locked proof-first hiring corridor.
 
-Current evidence note: this is a chronological sweep artifact. Earlier May 20 entries include superseded sandbox failures for production boot, Supabase DNS, and strict org E2E. The latest approved reruns cleared those repo blockers: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md` reports repo scope `READY`, and `.artifacts/launch-validation-2026-05-20/launch-gate-status.md` reports final engineering verdict `GO`. Treat the latest continuation entries and generated launch artifacts as current truth.
+Current evidence note: this is a chronological sweep artifact. Earlier May 20 entries include superseded sandbox failures for production boot, Supabase DNS, strict org E2E, and older route-count snapshots. The latest approved reruns cleared those repo blockers: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md` reports repo scope `READY`, and `.artifacts/launch-validation-2026-05-20/launch-gate-status.md` reports final engineering verdict `GO`. Current generated route truth is `140` API handlers, `51` pages, `108` active MVP APIs, `16` internal launch-ops APIs, and `16` archived compatibility API handlers. Treat the latest continuation entries and generated launch artifacts as current truth.
 
 Authority read:
 
@@ -22,7 +22,7 @@ Visual thesis: preserve Proofound's calm, credible proof-first identity while ma
 
 Content plan: keep language close to MVP objects and actions: proof portfolio, Proof Packs, assignments, verification, trust, consent, and review. Avoid old project, expertise atlas, analytics, and broad dashboard language.
 
-Interaction thesis: every public or dashboard action should either route to an active MVP surface, stay gated, or fail closed. Stale links to archived routes are launch risk.
+Interaction thesis: every public or app-home action should either route to an active MVP surface, stay gated, or fail closed. Stale links to archived routes are launch risk.
 
 ## Surface Matrix
 
@@ -30,7 +30,7 @@ Interaction thesis: every public or dashboard action should either route to an a
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Public/logged-out  | `/`, `/signup`, `/signup/individual`, `/signup/organization`, `/login`, `/portfolio/demo`                                           | Active MVP or launch-safe unavailable | Landing CTAs now route as links. Demo portfolio remains launch-safe unavailable.                                                                                         |
 | Individual app     | `/onboarding`, `/app/i/portfolio`, `/app/i/verifications`, `/app/i/communications`, `/app/i/settings/privacy`                       | Active MVP, auth-gated                | Stale unauthenticated tests now target active protected routes. Proof-first onboarding and Proof Pack anchor integrity reruns passed focused tests and Browser evidence. |
-| Organization app   | `/app/o/[slug]/assignments` and assignment-oriented dashboard entry                                                                 | Active MVP, auth/org-gated            | ProjectsCard no longer fetches archived project APIs and links orgs to assignments.                                                                                      |
+| Organization app   | `/app/o/[slug]/assignments` and assignment-oriented home entry                                                                      | Active MVP, auth/org-gated            | ProjectsCard no longer fetches archived project APIs and links orgs to assignments.                                                                                      |
 | Internal/admin/ops | `/admin`, `/admin/verification`, `/admin/audit`, launch route inventories, archived API handlers, middleware archive policy         | Internal launch ops                   | Route inventory and admin UI tests pass. Broader admin users/fairness/analytics tests were removed from the active launch signal. No public diagnostics expanded.        |
 | Archived/post-MVP  | Expertise Atlas, fairness note, team coverage analytics, legacy integration edge flows, broad admin users/fairness/metrics surfaces | Archive/post-MVP                      | Active E2E/unit discovery no longer runs these as launch expectations. Archive READMEs explain why.                                                                      |
 | Cross-cutting      | CTA routing, route-surface policy tests, stale docs/tests, Browser desktop/mobile smoke                                             | Active launch readiness               | Focused tests and Browser checks completed. Docs freshness now passes with no findings after registering the remaining artifact/audit docs.                              |
@@ -99,7 +99,7 @@ Interaction thesis: every public or dashboard action should either route to an a
 
 - Reran `npm run test:launch:routes`: launch API inventory, launch page inventory, archived API handler, and middleware archive tests all passed.
 - Fresh route counts: 140 compiled API handlers and 51 compiled pages.
-- Current launch-surface policy explicitly classifies 110 APIs and 48 pages as active launch paths, 16 APIs and 3 pages as internal-only launch ops, and 14 compiled API handlers as archived compatibility responses.
+- Current launch-surface policy explicitly classifies 108 APIs and 48 pages as active launch paths, 16 APIs and 3 pages as internal-only launch ops, and 16 compiled API handlers as archived compatibility responses.
 - Required hard-gated pages are absent from the compiled launch surface, and representative archived API/page families remain classified archived at the route-surface policy boundary.
 - Updated `docs/verification-checklist.md` so the no-non-MVP-launch-surface row records the fresh 2026-05-19 evidence and status `PASS`.
 
@@ -592,13 +592,13 @@ CV import documentation and E2E hard-gate follow-up on 2026-05-19:
 Current truth route-count refresh on 2026-05-19:
 
 - Finding: active `docs/CURRENT_TRUTH.md` still carried May 14 route counts and stale docs-freshness warning text.
-- Fix: refreshed the active route-count section to the current route policy evidence: 140 API handlers, 51 pages, 110 active APIs, 16 internal-only APIs, 14 archived API compatibility handlers, 48 active pages, and 3 internal-only pages.
+- Fix: refreshed the active route-count section to the route policy evidence then current: 140 API handlers, 51 pages, 110 active APIs, 16 internal-only APIs, 14 archived API compatibility handlers, 48 active pages, and 3 internal-only pages. This count is now superseded by the current evidence note at the top of this artifact.
 - Evidence: direct route-count script using `classifyLaunchApiPath` / `classifyLaunchPagePath` produced those counts, and `npm run test:launch:routes` passed, 4 files / 25 tests.
 
 Verification checklist route-count refresh on 2026-05-19:
 
 - Finding: active `docs/verification-checklist.md` still carried the previous `139` compiled API handler / `109` active API count in the no-non-MVP-launch-surface row, while `docs/CURRENT_TRUTH.md` and the direct route-policy evidence had advanced to `140` / `110`.
-- Fix: refreshed the checklist row and this sweep artifact's running route note to the current route-policy counts: 140 API handlers, 51 pages, 110 active APIs, 16 internal-only APIs, 14 archived API compatibility handlers, 48 active pages, and 3 internal-only pages.
+- Fix: refreshed the checklist row and this sweep artifact's running route note to the route-policy counts then current: 140 API handlers, 51 pages, 110 active APIs, 16 internal-only APIs, 14 archived API compatibility handlers, 48 active pages, and 3 internal-only pages. This count is now superseded by the current evidence note at the top of this artifact.
 - Browser evidence: reconnected the Codex in-app Browser on the existing `127.0.0.1:33180/portfolio/demo` tab. Browser is functional; the page currently renders the intentional launch-safe `Public page unavailable` state with Return home and cookie controls, matching prior public unavailable evidence for this route.
 - Test evidence: `npm run docs:freshness`, `PATH=/Users/yuriibakurov/.nvm/versions/node/v25.4.0/bin:$PATH npm run test:launch:routes`, and `git diff --check` passed.
 
@@ -2591,3 +2591,12 @@ Browser evidence:
 - Added `/api/profile/completeness` to the `Profiles API` archived policy, added direct policy test coverage, and added it to the representative archived compatibility inventory list.
 - Browser was not rerun for this slice because no rendered UI changed; route-policy, middleware, and compiled-inventory tests are the relevant evidence.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts --reporter=verbose` (4 files / 26 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Sweep Artifact Route Count Alignment
+
+- Timestamp: 2026-05-20 14:09:25 CEST.
+- Inspected `docs/API_REFERENCE.md`, route-count guardrails, and current docs references after making `/api/profile/completeness` explicit in the archived profile policy.
+- Confirmed active generated route truth is 140 API handlers, 51 pages, 108 active MVP APIs, 16 internal launch-ops APIs, and 16 archived compatibility API handlers.
+- Updated this chronological sweep artifact's current evidence note so future continuation agents do not inherit older `110 active / 14 archived` route-count snapshots as current truth.
+- Reframed the artifact's current-facing interaction thesis and organization matrix wording from dashboard language to app-home/home-entry language.
+- Browser was not rerun for this slice because only the saved sweep artifact changed; docs/source inspection and `git diff --check` are the direct evidence.
