@@ -59,8 +59,10 @@ npm run test:a11y:strict
 npm run test:e2e:individual:strict
 npm run test:e2e:org:strict
 npm run test:e2e:privacy:strict
-npm run test:e2e:providers:strict
 ```
+
+Run `npm run test:e2e:providers:advisory` only if connected-provider scheduling is intentionally
+in scope for the target.
 
 If a check cannot run, record the exact blocker and the manual verification path in the launch
 evidence.

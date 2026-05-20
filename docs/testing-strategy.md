@@ -59,14 +59,14 @@ This document defines the current testing architecture for Proofound and the com
   - `e2e/strict/individual.strict.spec.ts`
   - `e2e/strict/organization.strict.spec.ts`
   - `e2e/strict/privacy.strict.spec.ts`
-  - `e2e/strict/providers.strict.spec.ts`
 - Commands:
   - `npm run test:e2e:individual:strict`
   - `npm run test:e2e:org:strict`
   - `npm run test:e2e:privacy:strict`
-  - `npm run test:e2e:providers:strict`
   - `npm run test:e2e:strict:all`
   - `npm run test:strict:quality`
+- Provider-connected advisory:
+  - `npm run test:e2e:providers:advisory`
 
 ### 6) Accessibility Contracts (Playwright + axe)
 
@@ -121,7 +121,7 @@ This document defines the current testing architecture for Proofound and the com
 | Strict individual flow  | `npm run test:e2e:individual:strict`                                                                |
 | Strict org flow         | `npm run test:e2e:org:strict`                                                                       |
 | Strict privacy flow     | `npm run test:e2e:privacy:strict`                                                                   |
-| Strict providers flow   | `npm run test:e2e:providers:strict`                                                                 |
+| Provider advisory flow  | `npm run test:e2e:providers:advisory`                                                               |
 | Privacy/RLS baseline    | `npm run test:privacy`                                                                              |
 | Privacy/RLS extended    | `npm run test:privacy:extended`                                                                     |
 | Launch smoke contract   | `npm run test:launch:smoke`                                                                         |
@@ -186,16 +186,18 @@ fresh backup/restore evidence from `docs/production-readiness-checklist.md`.
 14. `npm run test:e2e:individual:strict`
 15. `npm run test:e2e:org:strict`
 16. `npm run test:e2e:privacy:strict`
-17. `npm run test:e2e:providers:strict`
-18. `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
-19. `BASE_URL=<production-candidate-url> npm run perf:budgets`
-20. `npm run db:backup:checkpoint`
-21. `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
-22. `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+17. `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
+18. `BASE_URL=<production-candidate-url> npm run perf:budgets`
+19. `npm run db:backup:checkpoint`
+20. `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
+21. `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+
+Run `npm run test:e2e:providers:advisory` only when connected-provider scheduling is intentionally
+in scope for the target.
 
 ## Environment Requirements for Strict Flows
 
-Strict flows require real env values. The provider strict command defaults to
+Strict flows require real env values. The provider advisory command defaults to
 `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false`, which still checks provider connect fail-closed
 behavior and manual-link fallback posture. Provider-connected runs require
 `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true` plus deterministic provider credentials only for the
@@ -211,7 +213,7 @@ provider flows intentionally in scope for the target; manual-link interview post
 - Individual strict: `e2e/strict/individual.strict.spec.ts`
 - Organization strict: `e2e/strict/organization.strict.spec.ts`
 - Privacy strict: `e2e/strict/privacy.strict.spec.ts`
-- Provider strict: `e2e/strict/providers.strict.spec.ts`
+- Provider advisory: `e2e/strict/providers.strict.spec.ts`
 - Strict anti-placeholder guard: `scripts/check-strict-e2e-quality.mjs`
 
 ## Notes on Legacy Paths

@@ -27,7 +27,6 @@ restore rehearsal, and final go/no-go evidence.
 - [ ] `npm run test:e2e:individual:strict`
 - [ ] `npm run test:e2e:org:strict`
 - [ ] `npm run test:e2e:privacy:strict`
-- [ ] `npm run test:e2e:providers:strict`
 
 ## Privacy and Security
 
@@ -60,7 +59,8 @@ restore rehearsal, and final go/no-go evidence.
 
 - [ ] Required strict E2E env vars set for the intended target.
 - [ ] `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` unless connected-provider scheduling is intentionally launch-blocking for the target.
-- [ ] Provider strict credentials are set only for provider flows that are intentionally in scope for the run; manual-link interview posture remains the locked MVP default.
+- [ ] Provider advisory credentials are set only for provider flows that are intentionally in scope for the run; manual-link interview posture remains the locked MVP default.
+- [ ] `npm run test:e2e:providers:advisory` has run only if connected-provider scheduling is intentionally in scope for the target.
 - [ ] `PII_HASH_SALT` configured for auth/signup test paths.
 - [ ] Sentry configured for runtime and build/source maps.
 - [ ] `CRON_SECRET` or `INTERNAL_API_SECRET` set for internal launch-ops routes.

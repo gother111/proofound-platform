@@ -29,7 +29,8 @@ This summary tracks the currently enforced QA automation surface and launch-gate
   - `npm run test:e2e:individual:strict`
   - `npm run test:e2e:org:strict`
   - `npm run test:e2e:privacy:strict`
-  - `npm run test:e2e:providers:strict`
+- Provider advisory:
+  - `npm run test:e2e:providers:advisory`
 - Ops gates:
   - `npm run docs:freshness`
   - `npm run lint`
@@ -50,13 +51,13 @@ This summary tracks the currently enforced QA automation surface and launch-gate
 - Individual strict: `e2e/strict/individual.strict.spec.ts`
 - Organization strict: `e2e/strict/organization.strict.spec.ts`
 - Privacy strict: `e2e/strict/privacy.strict.spec.ts`
-- Providers strict: `e2e/strict/providers.strict.spec.ts`
+- Providers advisory: `e2e/strict/providers.strict.spec.ts`
 - A11y: `tests/a11y/*.spec.ts`
 - Route inventory/archive policy: `tests/api/launch-surface-inventory.test.ts`, `tests/api/launch-page-inventory.test.ts`, `src/lib/__tests__/middleware-launch-archive.test.ts`
 
 ## Current Known Risks
 
-- Provider strict flows require deterministic connected provider credentials only when `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`; the locked MVP interview posture remains manual-link first.
+- Provider advisory flows require deterministic connected provider credentials only when `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`; the locked MVP interview posture remains manual-link first.
 - Launch strict runs can fail due to missing env vars, provider account readiness, stale smoke evidence, or stale monitor rows rather than functional regressions. Treat the failed gate as truthful until refreshed evidence proves otherwise.
 - `npm run db:push` remains dev-only and is not a production migration path.
 - Current launch readiness still requires target-specific production-candidate backup checkpoint, isolated restore rehearsal, authenticated launch-status/perf-status, `/api/assignments` latency evidence, and final go/no-go evidence for the intended target.

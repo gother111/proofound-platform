@@ -95,6 +95,8 @@ describe('launch gate package configuration', () => {
     expect(scripts['test:e2e:providers:strict']).toContain(
       'STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=${STRICT_PROVIDER_E2E_REQUIRE_CONNECTED:-false}'
     );
+    expect(scripts['test:e2e:providers:advisory']).toBe('npm run test:e2e:providers:strict');
+    expect(scripts['test:e2e:strict:all']).not.toContain('test:e2e:providers:strict');
     expect(scripts['test:a11y']).toBe(
       'node ./scripts/playwright-node24.mjs test --config playwright.a11y.config.ts --project=chromium'
     );
@@ -1686,9 +1688,7 @@ describe('launch gate package configuration', () => {
     expect(launchMasterChecklist).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
     expect(launchMasterChecklist).toContain('BASE_URL=<production-candidate-url>');
     expect(launchMasterChecklist).not.toContain('BASE_URL=http://localhost:3000');
-    expect(launchMasterChecklist).toContain(
-      'valid only for connected-provider strict launch-gate runs'
-    );
+    expect(launchMasterChecklist).toContain('valid only for connected-provider advisory runs');
     expect(docsRegistry).toContain(
       '| `docs/mvp-launch-master-checklist.md`                                                                   | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
     );

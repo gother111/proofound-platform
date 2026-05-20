@@ -125,7 +125,6 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] `npm run test:e2e:individual:strict`
 - [ ] `npm run test:e2e:org:strict`
 - [ ] `npm run test:e2e:privacy:strict`
-- [ ] `npm run test:e2e:providers:strict`
 - [ ] `npm run test:privacy`
 - [ ] `npm run test:privacy:extended`
 - [ ] `BASE_URL=<production-candidate-url> npm run perf:budgets`
@@ -163,7 +162,8 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] Required strict E2E environment variables are set.
 - [ ] `PII_HASH_SALT` is configured for auth and signup test paths.
 - [ ] `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` unless connected-provider scheduling is intentionally launch-blocking for this target.
-- [ ] Provider OAuth credentials and deterministic provider user credentials are valid only for connected-provider strict launch-gate runs.
+- [ ] Provider OAuth credentials and deterministic provider user credentials are valid only for connected-provider advisory runs.
+- [ ] `npm run test:e2e:providers:advisory` has run only if connected-provider scheduling is intentionally in scope for this target.
 - [ ] `CRON_SECRET` is configured and cron endpoints are protected.
 - [ ] Sentry is configured for runtime and release visibility.
 - [ ] `npm run vercel:preflight`
@@ -269,7 +269,6 @@ npm run test:strict:quality
 npm run test:e2e:individual:strict
 npm run test:e2e:org:strict
 npm run test:e2e:privacy:strict
-npm run test:e2e:providers:strict
 npm run test:privacy
 npm run test:privacy:extended
 npm run db:drift-check

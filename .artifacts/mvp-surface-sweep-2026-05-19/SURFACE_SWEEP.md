@@ -1634,3 +1634,13 @@ Non-fatal test noise:
 - Replaced the custom-dashboard implementation guidance with existing provider views and protected launch-status routes: `/api/monitoring/launch-status`, `/api/monitoring/perf-status`, and `/api/monitoring/health-diagnostics`.
 - Tightened the overview from broad `comprehensive monitoring` to launch-safe monitoring evidence, so the guide supports alerting, perf, logs, protected diagnostics, and incident response without adding new broad admin-dashboard scope.
 - Added launch-gate coverage preventing the monitoring guide from reintroducing the custom admin dashboard snippet, broad user-growth widgets, or comprehensive-monitoring phrasing.
+
+## Continuation - Provider E2E Advisory Scope Cleanup
+
+- Found connected-provider E2E still bundled into `npm run test:e2e:strict:all` and several required launch checklists, even though the locked MVP interview posture remains manual-link first and connected Google/LinkedIn provider scheduling is target-scoped.
+- Kept the existing `npm run test:e2e:providers:strict` command for compatibility, added `npm run test:e2e:providers:advisory`, and removed provider-connected coverage from the all-strict launch command.
+- Updated launch, release, deployment, production-readiness, testing-strategy, and QA docs so required strict gates cover individual, org, and privacy corridor flows, while provider-connected checks run only when intentionally in scope for the target.
+- Renamed the provider Playwright suite title to `Advisory Provider Flows` so test output no longer implies connected-provider scheduling is a locked MVP launch blocker.
+- Added launch-gate coverage preventing `test:e2e:strict:all` from pulling provider-connected checks back into the required strict corridor.
+- Reconnected the Codex `@Browser` plugin before this cleanup; baseline Browser state initially reported the local Proofound app title at `http://localhost:3000/`.
+- Follow-up Browser reload/navigation to `http://localhost:3000/` was blocked by Browser URL policy, and the selected tab then showed a Chrome `localhost refused to connect` error page. No workaround was attempted; this provider-scope cleanup changed docs/scripts/test metadata only, so visual UI evidence remains unchanged from the prior landing and route-smoke passes.

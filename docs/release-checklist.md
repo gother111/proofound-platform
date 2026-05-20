@@ -33,7 +33,6 @@ go/no-go evidence.
 - [ ] `npm run test:e2e:individual:strict`
 - [ ] `npm run test:e2e:org:strict`
 - [ ] `npm run test:e2e:privacy:strict`
-- [ ] `npm run test:e2e:providers:strict`
 - [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
 - [ ] `BASE_URL=<production-candidate-url> npm run perf:budgets`
 - [ ] `npm run db:backup:checkpoint` against the production-candidate target.
@@ -78,6 +77,7 @@ go/no-go evidence.
 - [ ] Authenticated `/api/monitoring/perf-status` is healthy and includes `/api/assignments` latency samples.
 - [ ] `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false` unless connected-provider scheduling is intentionally launch-blocking for the target.
 - [ ] Provider credentials and strict E2E env vars validated only for provider flows intentionally in scope for the run; manual-link interview posture remains the locked MVP default.
+- [ ] `npm run test:e2e:providers:advisory` has run only if connected-provider scheduling is intentionally in scope for the target.
 - [ ] `CRON_SECRET` or `INTERNAL_API_SECRET` protects internal launch-ops routes.
 
 ## 5) Post-Deploy Checks

@@ -30,7 +30,7 @@ async function expectProviderUnavailableResponse(response: APIResponse) {
   }
 }
 
-test.describe('Strict MVP Provider Flows (Google Meet, manual links, LinkedIn)', () => {
+test.describe('Advisory Provider Flows (Google Meet, manual links, LinkedIn)', () => {
   test.describe.configure({ mode: 'serial' });
 
   let fixture: StrictFixtureState;
