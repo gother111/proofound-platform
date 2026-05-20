@@ -4,6 +4,8 @@
 
 Goal: sweep, polish, improve, and fix launch-relevant MVP surfaces against the locked proof-first hiring corridor.
 
+Current evidence note: this is a chronological sweep artifact. Earlier May 20 entries that recorded a repo-scope `READY` checklist were superseded by the later May 20 checklist regeneration at `2026-05-20T01:26:55.137Z`, which reports repo scope `NOT_READY` in this sandbox because production boot/smoke could not bind localhost. Treat the latest continuation entries and `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md` as the current generated launch evidence.
+
 Authority read:
 
 - `AGENTS.md`
@@ -1778,3 +1780,4 @@ Browser evidence:
 
 - Found `src/lib/launch/final-launch-checklist-definitions.ts` still declaring `.artifacts/proofound-master-audit-2026-03-22.md` as an evidence source for the `engineering_next_start_stable` gate, but the file does not exist. The historical master audit lives at `docs/proofound-master-audit-2026-03-22.md`, and the current `next start` gate is evaluated from the launch-validation bundle instead.
 - Removed the nonexistent `.artifacts/proofound-master-audit-2026-03-22.md` source so generated checklist JSON no longer points operators at a missing stale-evidence path.
+- Corrected `.artifacts/launch-readiness-summary.md` after the regenerated checklist: it no longer claims repo scope is `READY` while `.artifacts/launch-validation-2026-05-20/repo-ready-validation.json` and the final checklist report say `NOT_READY` because production boot/smoke could not run in this sandbox.
