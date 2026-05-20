@@ -2469,3 +2469,12 @@ Browser evidence:
 - Added a source-level guardrail test so the active audit-log route keeps those labels in legacy Public Page link language.
 - Browser was not rerun for this slice because this is API response label copy for historical events; focused route-source coverage is the stronger direct evidence.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/user-audit-log-copy-guardrails.test.ts tests/ui/settings-audit-log-page.test.tsx tests/ui/privacy-audit-log-mobile-clarity.test.tsx tests/ui/settings-account-history-mobile-clarity.test.tsx --reporter=verbose` (4 files / 4 tests), a focused active-source scan for retired public-snippet labels, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Archived Public Snippet Component Placement
+
+- Inspected remaining active-source hits for the legacy public snippet UI after the account-history label cleanup.
+- Confirmed `src/components/profile/PublicSnippetView.tsx` had no active imports, while route policy and page tests already keep `/p/[token]`, `/p/[token]/embed`, and `/api/profile/snippet` archived outside the locked launch MVP corridor.
+- Moved the unused legacy component to `src/archive/non_launch_components/profile/PublicSnippetView.archived.tsx` and added an archive README explaining that the launch public surface is the Public Page / organization trust-page corridor.
+- This reduces false active-surface hits without changing runtime behavior or reviving archived routes.
+- Browser was not rerun for this slice because no active rendered route changed; route classification and absence from active imports are the relevant evidence.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/public-snippet-page.test.tsx tests/ui/public-snippet-embed-page.test.tsx src/lib/launch/__tests__/surface-policy.test.ts --reporter=verbose` (3 files / 12 tests) and an active-source scan for `PublicSnippetView|Public profile status|Profile narrative|proofound Public Profile template`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
