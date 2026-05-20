@@ -119,7 +119,7 @@ Run or cite the strongest available automated checks:
 - `npm run test:launch:org-corridor`
 - `npm run test:launch:privacy`
 - `npm run test:launch:portfolio`
-- `npm run test:e2e:providers:strict`
+- `npm run test:e2e:providers:advisory` only if connected-provider scheduling is intentionally in scope for the target
 - `npm run test:a11y:strict`
 - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
 - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`

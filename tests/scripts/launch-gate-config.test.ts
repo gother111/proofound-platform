@@ -203,6 +203,13 @@ describe('launch gate package configuration', () => {
     expect(gateScript).toContain(
       "STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: providerConnectedRequired ? 'true' : 'false'"
     );
+    expect(gateScript).toContain("id: 'providers-advisory-e2e'");
+    expect(gateScript).toContain("commandArgs: ['run', 'test:e2e:providers:advisory']");
+    expect(gateScript).toContain(
+      'Connected-provider scheduling is not part of the default locked MVP launch corridor.'
+    );
+    expect(gateScript).not.toContain("id: 'providers-strict-e2e'");
+    expect(gateScript).not.toContain("commandArgs: ['run', 'test:e2e:providers:strict']");
     expect(gateScript).toContain(
       'Connected provider credentials are required only when STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true.'
     );

@@ -89,7 +89,7 @@ const commandTimeouts = {
   'individual-strict-e2e': 20 * 60 * 1000,
   'org-strict-e2e': 25 * 60 * 1000,
   'privacy-strict-e2e': 20 * 60 * 1000,
-  'providers-strict-e2e': 20 * 60 * 1000,
+  'providers-advisory-e2e': 20 * 60 * 1000,
   'launch-smoke': 25 * 60 * 1000,
   'start-app': 3 * 60 * 1000,
   'wait-for-health': 2 * 60 * 1000,
@@ -138,6 +138,30 @@ function finishResult(result, updates) {
   result.durationMs = finishedAt.getTime() - new Date(result.startedAt).getTime();
   Object.assign(result, updates);
   writeStatusFiles();
+}
+
+function recordSkippedGate({ id, label, reason, command = 'not run' }) {
+  const logPath = path.join(
+    logDir,
+    `${String(commandResults.length + 1).padStart(2, '0')}-${id}.log`
+  );
+  const result = createResult({
+    id,
+    label,
+    command,
+    timeoutMs: 0,
+    logPath,
+  });
+  commandResults.push(result);
+  fs.writeFileSync(logPath, `${reason}\n`, 'utf8');
+  finishResult(result, {
+    status: 'skipped',
+    exitCode: 0,
+    reason,
+  });
+  console.log(`\n==> ${label}`);
+  console.log(`Skipped: ${reason}`);
+  return result;
 }
 
 function quoteCommand([command, ...commandArgs]) {
@@ -632,12 +656,22 @@ async function main() {
       command: 'npm',
       commandArgs: ['run', 'test:e2e:privacy:strict'],
     });
-    await runGateCommand({
-      id: 'providers-strict-e2e',
-      label: 'Providers strict E2E',
-      command: 'npm',
-      commandArgs: ['run', 'test:e2e:providers:strict'],
-    });
+    if (providerConnectedRequired) {
+      await runGateCommand({
+        id: 'providers-advisory-e2e',
+        label: 'Providers advisory E2E',
+        command: 'npm',
+        commandArgs: ['run', 'test:e2e:providers:advisory'],
+      });
+    } else {
+      recordSkippedGate({
+        id: 'providers-advisory-e2e',
+        label: 'Providers advisory E2E',
+        command: 'npm run test:e2e:providers:advisory',
+        reason:
+          'Connected-provider scheduling is not part of the default locked MVP launch corridor. Set STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true only for targets that intentionally launch this provider path.',
+      });
+    }
     await runGateCommand({
       id: 'launch-smoke',
       label: 'Launch smoke',

@@ -155,7 +155,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `npm run test:e2e:individual:strict`
   - `npm run test:e2e:org:strict`
   - `npm run test:e2e:privacy:strict`
-  - `npm run test:e2e:providers:strict`
+  - `npm run test:e2e:providers:advisory` only if connected-provider scheduling is intentionally in scope for the target
   - `BASE_URL=http://localhost:3000 npm run perf:budgets`
   - `BASE_URL=http://localhost:3000 npm run monitor:launch`
   - `BASE_URL=http://localhost:3000 npm run launch:status`
@@ -192,13 +192,13 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Individual strict flow contract: `npm run test:e2e:individual:strict` (source: package.json)
 - Organization strict flow contract: `npm run test:e2e:org:strict` (source: package.json)
 - Privacy strict flow contract: `npm run test:e2e:privacy:strict` (source: package.json)
-- Provider strict flow contract: `npm run test:e2e:providers:strict` (source: package.json)
+- Provider advisory flow contract: `npm run test:e2e:providers:advisory` (source: package.json)
 - Playwright env hygiene (practical):
   - Strict suites load `.env.local` by default (override with `STRICT_ENV_FILE=<path>` when needed).
   - Set `PII_HASH_SALT` when running auth/signup flows to avoid GDPR hashing runtime failures.
   - Run Playwright suites sequentially when they share the same `webServer` port to avoid `EADDRINUSE` startup failures.
   - Strict launch-gate runs must keep `NEXT_PUBLIC_USE_MOCK_SUPABASE=false`.
-  - Provider strict gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false`.
+  - Provider advisory gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false`.
   - Deterministic provider user env vars (`E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`) are required only when `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`.
   - Connected-provider runs should use only provider flows intentionally in scope for the target; manual-link interview posture remains the locked MVP default.
 - For credential-gated E2E smokes, document required env vars in `project/changes/entries/*.md` and mark command outcome as PASS/SKIPPED with reason.

@@ -1644,3 +1644,10 @@ Non-fatal test noise:
 - Added launch-gate coverage preventing `test:e2e:strict:all` from pulling provider-connected checks back into the required strict corridor.
 - Reconnected the Codex `@Browser` plugin before this cleanup; baseline Browser state initially reported the local Proofound app title at `http://localhost:3000/`.
 - Follow-up Browser reload/navigation to `http://localhost:3000/` was blocked by Browser URL policy, and the selected tab then showed a Chrome `localhost refused to connect` error page. No workaround was attempted; this provider-scope cleanup changed docs/scripts/test metadata only, so visual UI evidence remains unchanged from the prior landing and route-smoke passes.
+
+## Continuation - Strict Gate Provider Advisory Follow-Through
+
+- Found `scripts/run-mvp-strict-gates.mjs`, `MANUAL_TESTING_CHECKLIST.md`, `MANUAL_TESTING_GUIDE.md`, root `verification.md`, and `agent/checklists/verification.md` still treated provider E2E as a required/default launch gate.
+- Updated the strict gate runner so provider-connected E2E is recorded as a skipped advisory gate by default and runs `npm run test:e2e:providers:advisory` only when `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`.
+- Updated manual and governance verification checklists so required launch evidence centers individual, organization, and privacy strict flows, with provider advisory evidence only for targets that intentionally launch connected-provider scheduling.
+- Added launch-gate coverage preventing the strict gate runner from reintroducing `providers-strict-e2e` or direct `test:e2e:providers:strict` execution in the default strict corridor.

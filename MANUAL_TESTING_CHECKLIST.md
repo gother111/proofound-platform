@@ -69,5 +69,5 @@ Use this as the quick human smoke checklist for the locked MVP corridor. It comp
 - [ ] `npm run test:launch:workflow`
 - [ ] `npm run test:launch:org-corridor`
 - [ ] `npm run test:launch:privacy`
-- [ ] `npm run test:e2e:providers:strict`
+- [ ] `npm run test:e2e:providers:advisory` only if connected-provider scheduling is intentionally in scope for the target
 - [ ] `npm run test:a11y:strict`
