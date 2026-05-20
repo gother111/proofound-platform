@@ -340,14 +340,14 @@ export function EditableProfileView({
       <div className={`min-h-[calc(100vh-3.5rem)] ${bgClass}`}>
         <div className="max-w-2xl mx-auto px-6 py-16">
           <Card className="p-8 text-center space-y-4" data-testid="profile-load-error">
-            <h1 className="text-2xl font-display">Unable to load your profile</h1>
+            <h1 className="text-2xl font-display">Unable to load your proof workspace</h1>
             <p className="text-sm text-muted-foreground">
-              The profile page did not load successfully. Try again or return to your dashboard.
+              Your proof workspace did not load. Try again or return to individual home.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Button onClick={retryLoad}>Try again</Button>
               <Button variant="outline" onClick={() => router.push('/app/i/home')}>
-                Back to dashboard
+                Back to home
               </Button>
             </div>
           </Card>

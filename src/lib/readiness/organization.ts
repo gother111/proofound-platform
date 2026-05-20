@@ -121,7 +121,7 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
         totalActiveAssignments === 0
           ? false
           : assignmentWithVerificationGates / totalActiveAssignments >= 0.5,
-      notes: 'Verification gates reduce low-quality candidate flow.',
+      notes: 'Verification gates reduce unanchored candidate flow.',
     },
     {
       key: 'scope_quality',
@@ -210,7 +210,7 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
     topActions.push({
       id: 'complete-requirements-matrix',
       title: 'Complete required skills for active assignments',
-      description: 'Assignments without required skills underperform in matching quality.',
+      description: 'Assignments without required skills make proof review less precise.',
       priority: 'high',
       category: 'assignment',
       actionUrl: '/app/o',

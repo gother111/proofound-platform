@@ -58,7 +58,7 @@ export async function calculateNextActions(organizationId: string): Promise<Next
     }
   }
 
-  // 2. Check for low match quality (average score <0.5)
+  // 2. Check for weak assignment fit signals (average score <0.5)
   const lowQualityAssignments = await db.execute(sql`
     SELECT 
       a.id as assignment_id,
@@ -80,9 +80,9 @@ export async function calculateNextActions(organizationId: string): Promise<Next
       id: `low-quality-${row.assignment_id}`,
       priority: 'medium',
       category: 'matching',
-      title: 'Low match quality detected',
-      description: `"${row.role || 'Untitled'}" has an average match score of ${avgScore}%. Consider adjusting weight matrix.`,
-      actionLabel: 'Adjust Weights',
+      title: 'Assignment fit signals need review',
+      description: `"${row.role || 'Untitled'}" is producing weak proof-alignment signals (${avgScore}% average). Tighten required skills, proof gates, or assignment scope.`,
+      actionLabel: 'Review assignment',
       actionUrl: `/o/${organizationId}/assignments/${row.assignment_id}/edit?tab=weights`,
       metadata: { assignmentId: row.assignment_id, avgScore },
     });

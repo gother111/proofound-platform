@@ -33,8 +33,8 @@ export async function getMomentumSummaryForIndividual(userId: string): Promise<M
     persona: 'individual',
     marketActivityLow: readiness.marketActivityLow,
     summary: readiness.marketActivityLow
-      ? 'Market activity is currently low. Focus on readiness actions to improve match quality as volume grows.'
-      : 'You have healthy market activity. Keep progressing your readiness actions to convert opportunities faster.',
+      ? 'Opportunity activity is currently low. Strengthen proof readiness and trust signals for the next intro.'
+      : 'Opportunity activity is healthy. Keep strengthening proof readiness to move intros forward faster.',
     topActions: readiness.topActions,
     updates,
     metrics: {
@@ -117,7 +117,7 @@ export async function getMomentumSummaryForOrganization(
     persona: 'organization',
     marketActivityLow: readiness.marketActivityLow,
     summary: readiness.marketActivityLow
-      ? 'Candidate volume is currently low. Assignment readiness and talent-availability tuning will improve pipeline quality.'
+      ? 'Candidate volume is currently low. Tighten assignment readiness and proof gates before requesting more intros.'
       : 'Pipeline activity is healthy. Focus on readiness actions to accelerate shortlist and interview conversion.',
     topActions: readiness.topActions,
     updates,
