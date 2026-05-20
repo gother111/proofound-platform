@@ -1672,3 +1672,13 @@ Non-fatal test noise:
 - Found the unused active component `src/components/feedback/WhyNotShortlisted.tsx` still calling the archived endpoint.
 - Moved the component into `src/archive/non_launch_feedback/preserved/components/feedback/WhyNotShortlisted.tsx` and documented the archive boundary.
 - Added launch-gate coverage so active `src/` files cannot call `/api/feedback/why-not-shortlisted` except through the route-surface policy declaration.
+
+## Continuation - Profile Link Capability Token Evidence
+
+- Found historical audit text still described `validateProfileLinkToken()` as placeholder logic, while current code validates profile snippet share links through capability tokens and live `profile_snippets` state.
+- Added focused tests proving empty tokens are rejected before inspection, valid profile-link access requires a `PROFILE_SNIPPET_SHARE` capability token plus an unrevoked/unexpired matching snippet row, invalid capability tokens are rejected, and missing snippet rows do not grant access.
+
+Browser evidence:
+
+- Codex Browser loaded `http://localhost:3000/login`: title `Sign In | Proofound`; visible form included email, password, remember-me, reset-password, signup, terms, and privacy links; browser console error log was empty.
+- Codex Browser loaded `http://localhost:3000/portfolio/demo`: title `Public Page Unavailable | Proofound`; route showed the launch-safe unavailable state for the demo public page; browser console error log was empty.
