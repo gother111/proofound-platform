@@ -92,7 +92,7 @@ describe('org audit access routes', () => {
         action: 'member.invited',
         orgId: 'org-1',
         targetType: 'organization_member',
-        targetId: 'member-1',
+        targetId: 'candidate@example.com',
         meta: {
           invitedEmail: 'candidate@example.com',
           privateNote: 'Raw incident detail',
@@ -124,7 +124,7 @@ describe('org audit access routes', () => {
       expect.objectContaining({
         action: 'member.invited',
         targetType: 'organization_member',
-        targetId: 'member-1',
+        targetId: '[protected target]',
         riskLabels: expect.arrayContaining(['Protected metadata withheld']),
       })
     );

@@ -51,7 +51,42 @@ function getCronSecret() {
   return cronSecret;
 }
 
+function trustedLaunchOrigins() {
+  return [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.SITE_URL,
+    process.env.LAUNCH_TRUSTED_BASE_URLS,
+  ]
+    .flatMap((value) => (value ? value.split(',') : []))
+    .flatMap((value) => {
+      try {
+        return [normalizeLaunchBaseUrl(value.trim())];
+      } catch {
+        return [];
+      }
+    });
+}
+
+function assertBaseUrlMayReceiveInternalSecret() {
+  let parsed: URL;
+  try {
+    parsed = new URL(BASE_URL);
+  } catch {
+    fail('BASE_URL must be an absolute URL before internal launch secrets are sent');
+  }
+
+  const isLocal = ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname.toLowerCase());
+  if (isLocal || trustedLaunchOrigins().includes(BASE_URL)) {
+    return;
+  }
+
+  fail(
+    'Refusing to send internal launch secrets to untrusted BASE_URL. Add the exact origin to LAUNCH_TRUSTED_BASE_URLS for approved launch checks.'
+  );
+}
+
 function internalOpsHeaders() {
+  assertBaseUrlMayReceiveInternalSecret();
   return {
     authorization: `Bearer ${getCronSecret()}`,
   };

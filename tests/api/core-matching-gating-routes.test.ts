@@ -146,6 +146,20 @@ describe('core matching gating routes', () => {
     expect(Array.isArray(payload.topActions)).toBe(true);
   });
 
+  it('/api/core/matching/near-matches rejects malformed JSON before matchability checks', async () => {
+    const req = new NextRequest('http://localhost/api/core/matching/near-matches', {
+      method: 'POST',
+      body: '{"k":',
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await postNearMatches(req);
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(evaluateIndividualMatchability).not.toHaveBeenCalled();
+  });
+
   it('/api/core/matching/near-matches does not expose backend error details', async () => {
     (evaluateIndividualMatchability as any).mockRejectedValueOnce(
       new Error('relation "matching_profiles" does not exist for verifier@example.com')

@@ -308,20 +308,23 @@ describe('Auth Actions', () => {
       });
     });
 
-    it('drops unsafe next paths before starting social login', async () => {
-      const formData = new FormData();
-      formData.append('provider', 'google');
-      formData.append('next', 'https://attacker.example/app/i/home');
+    it.each(['https://attacker.example/app/i/home', '/\\\\attacker.example/phish'])(
+      'drops unsafe next path %s before starting social login',
+      async (nextPath) => {
+        const formData = new FormData();
+        formData.append('provider', 'google');
+        formData.append('next', nextPath);
 
-      await signInWithOAuth(undefined, formData);
+        await signInWithOAuth(undefined, formData);
 
-      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: 'google',
-        options: {
-          redirectTo: 'http://localhost/auth/callback',
-        },
-      });
-    });
+        expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+          provider: 'google',
+          options: {
+            redirectTo: 'http://localhost/auth/callback',
+          },
+        });
+      }
+    );
   });
 
   describe('requestPasswordReset', () => {

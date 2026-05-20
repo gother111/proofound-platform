@@ -359,7 +359,7 @@ describe('matching review contract', () => {
     expect(why.summary).toContain('Review band: High-priority proof review');
   });
 
-  it('uses plain proof-review copy for verification fallback labels', () => {
+  it('does not present self-reported compatibility flags as verification records', () => {
     const reviewCard = buildProofFirstReviewCard({
       profileId: 'profile-1',
       reasonCodes: ['skills_strong'],
@@ -368,9 +368,11 @@ describe('matching review contract', () => {
     });
     const serialized = JSON.stringify(reviewCard);
 
-    expect(reviewCard.verification.summaryLabel).toBe('2 scoped verification records present');
-    expect(reviewCard.trustLabels).toContain('Scoped verification records present');
-    expect(serialized).not.toMatch(/compatibility signal/i);
+    expect(reviewCard.verification.summaryLabel).toBe(
+      '2 self-reported compatibility flags present'
+    );
+    expect(reviewCard.trustLabels).toContain('Self-reported compatibility flags present');
+    expect(serialized).not.toMatch(/scoped verification records present/i);
   });
 
   it('redacts upload-derived filenames from early review cards', () => {

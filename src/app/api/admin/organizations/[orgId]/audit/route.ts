@@ -9,6 +9,19 @@ export const dynamic = 'force-dynamic';
 
 type OrgAuditLogRow = typeof auditLogs.$inferSelect;
 
+function toPreviewTargetId(log: OrgAuditLogRow, hasProtectedMetadata: boolean) {
+  const targetId = log.targetId?.trim();
+  if (!targetId) {
+    return null;
+  }
+
+  if (hasProtectedMetadata || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetId)) {
+    return '[protected target]';
+  }
+
+  return targetId;
+}
+
 function toOrgAuditPreviewEntry(log: OrgAuditLogRow) {
   const hasProtectedMetadata = Boolean(
     log.meta &&
@@ -20,7 +33,7 @@ function toOrgAuditPreviewEntry(log: OrgAuditLogRow) {
     id: log.id,
     action: log.action,
     targetType: log.targetType,
-    targetId: log.targetId,
+    targetId: toPreviewTargetId(log, hasProtectedMetadata),
     createdAt: log.createdAt,
     riskLabels: hasProtectedMetadata
       ? ['Protected metadata withheld', 'Use raw export only for incident review']

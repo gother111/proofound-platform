@@ -146,7 +146,7 @@ describe('AuditLogTable', () => {
             id: 7,
             action: 'member.invited',
             targetType: 'organization_member',
-            targetId: 'member-1',
+            targetId: '[protected target]',
             createdAt: '2026-05-20T10:00:00.000Z',
             riskLabels: ['Protected metadata withheld'],
           },

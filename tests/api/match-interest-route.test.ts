@@ -140,6 +140,23 @@ describe('match interest route', () => {
     });
   });
 
+  it('rejects malformed JSON before assignment lookup or gate checks', async () => {
+    (requireAuth as any).mockResolvedValue({ id: candidateId });
+
+    const req = new NextRequest('http://localhost/api/match/interest', {
+      method: 'POST',
+      body: '{"assignmentId":',
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await POST(req);
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(db.query.assignments.findFirst).not.toHaveBeenCalled();
+    expect(checkVerificationGates).not.toHaveBeenCalled();
+  });
+
   it('rejects org-side interest when actor is not an active org member', async () => {
     (requireAuth as any).mockResolvedValue({ id: orgRepId });
     (db.query.assignments.findFirst as any).mockResolvedValue({ id: assignmentId, orgId });

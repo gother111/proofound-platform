@@ -87,7 +87,17 @@ export async function POST(request: NextRequest) {
     const { user } = authContext;
     trace.actorId = user.id;
     trace.actorType = 'organization_member';
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'shortlist_validation_failed',
+        failureClass: 'invalid_json_body',
+      });
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     const validatedData = MatchRequestSchema.parse(body);
     const { assignmentId, k = 20, annLimit = 500 } = validatedData;

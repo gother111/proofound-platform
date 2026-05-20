@@ -64,6 +64,7 @@ import { db } from '@/db';
 import { requireApiAuthContext } from '@/lib/auth';
 import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher';
 import { resolveFeatureFlags } from '@/lib/feature-flags/server';
+import { emitLaunchTrace } from '@/lib/launch/trace';
 
 describe('/api/core/matching/assignment', () => {
   beforeEach(() => {
@@ -81,6 +82,28 @@ describe('/api/core/matching/assignment', () => {
       role: 'org_owner',
       status: 'active',
     });
+  });
+
+  it('rejects malformed JSON before assignment lookup or matching work', async () => {
+    const response = await POST(
+      new NextRequest('http://localhost/api/core/matching/assignment', {
+        method: 'POST',
+        body: '{"assignmentId":',
+        headers: { 'content-type': 'application/json' },
+      })
+    );
+
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(response.status).toBe(400);
+    expect(db.query.assignments.findFirst).not.toHaveBeenCalled();
+    expect(computeAssignmentMatches).not.toHaveBeenCalled();
+    expect(emitLaunchTrace).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        outcome: 'rejected',
+        failureClass: 'invalid_json_body',
+      })
+    );
   });
 
   it('returns a named fallback state when shortlist output is suppressed', async () => {

@@ -561,7 +561,10 @@ Target: < 50 connections (90% of Supabase pooler limit).
 - **Type:** HTTP(s)
 - **URL:** production-candidate `/api/monitoring/launch-status`
 - **Interval:** 10 minutes
-- **Custom Headers:** Use the protected internal launch-ops secret
+- **Custom Headers:** Do not store `INTERNAL_API_SECRET`, `CRON_SECRET`, or preview cron
+  secrets in third-party monitors. Use only a dedicated read-only monitoring token after the
+  endpoint supports one; until then, monitor `/api/health` externally and run authenticated
+  launch-status checks from protected first-party operations tooling.
 
 4. Configure alerts:
    - Notify the monitored launch operator channel

@@ -18,7 +18,13 @@ function sanitizeNextPath(value: string | string[] | undefined): string | null {
   if (!raw) return null;
 
   const trimmed = raw.trim();
-  if (!trimmed || !trimmed.startsWith('/') || trimmed.startsWith('//')) {
+  if (
+    !trimmed ||
+    !trimmed.startsWith('/') ||
+    trimmed.startsWith('//') ||
+    trimmed.includes('\\') ||
+    /^[a-z][a-z\d+\-.]*:/i.test(trimmed)
+  ) {
     return null;
   }
 

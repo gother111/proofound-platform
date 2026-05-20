@@ -63,7 +63,12 @@ function sanitizeNextPath(value: string | null | undefined): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
 
-  if (!trimmed.startsWith('/') || trimmed.startsWith('//')) {
+  if (
+    !trimmed.startsWith('/') ||
+    trimmed.startsWith('//') ||
+    trimmed.includes('\\') ||
+    /^[a-z][a-z\d+\-.]*:/i.test(trimmed)
+  ) {
     return null;
   }
 
