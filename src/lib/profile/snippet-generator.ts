@@ -1,7 +1,7 @@
 /**
- * Public Profile Snippet Generator
+ * Public Page share helpers
  *
- * Generates shareable profile snippets with privacy controls
+ * Generates launch-safe Public Page URLs, embeds, and outreach copy
  * PRD Reference: Part 2 F2 - Data Portability & Public Sharing
  */
 
@@ -114,19 +114,17 @@ export function generateEmbedCodeFromUrl(
 }
 
 /**
- * Generate social media share text
+ * Generate plain outreach copy for a Proofound public page.
  */
 export function generateShareText(profile: { name: string; headline?: string }): {
-  twitter: string;
-  linkedin: string;
+  outreach: string;
   generic: string;
 } {
-  const genericText = `Check out ${profile.name}'s professional profile on Proofound`;
+  const genericText = `Review ${profile.name}'s proof-backed Public Page on Proofound`;
   const withHeadline = profile.headline ? `${genericText} - ${profile.headline}` : genericText;
 
   return {
-    twitter: withHeadline.slice(0, 280), // Twitter character limit
-    linkedin: withHeadline,
+    outreach: withHeadline,
     generic: withHeadline,
   };
 }

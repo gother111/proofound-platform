@@ -159,6 +159,11 @@ export function ProfileDialogs({
         onClose={() => setIsShareDialogOpen(false)}
         userName={profile.basicInfo.name}
         userHeadline={profile.basicInfo.tagline || undefined}
+        publicPagePath={
+          profile.guidedSetup.handle
+            ? `/portfolio/${encodeURIComponent(profile.guidedSetup.handle)}`
+            : undefined
+        }
       />
     </>
   );

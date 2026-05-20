@@ -1989,3 +1989,13 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-matching-policy-language/matching-policy-language-browser-evidence.json`.
 - Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, console, overflow, and stale-copy evidence was captured instead.
 - Verification passed: `npm run test -- tests/ui/match-explainer-modal.test.tsx tests/ui/match-result-card.test.tsx tests/lib/matching-review-contract.test.ts` (20 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.
+
+## Continuation - Public Page Share Dialog Launch Wiring
+
+- Inspected the active individual profile `Share` workflow and found it still opened the legacy profile-snippet dialog. In Browser, clicking `Generate Shareable Link` called the archived `/api/profile/snippet` surface and showed `Profiles API is unavailable in the launch MVP corridor.`
+- Rewired the share dialog away from the archived snippet API. It now builds share links and embed code from the launch Public Page / Organization Trust Page path supplied by the caller, and shows `Public Page Not Ready` instead of offering a broken create action when a launch-safe public handle is missing.
+- Reframed visible sharing copy away from branded social distribution and generic professional-profile language: `Social`, `Twitter`, and `LinkedIn` share copy became `Outreach` / `Proof-safe outreach copy`; `professional profile`, `profile snippet`, and generic snippet wording became Public Page / proof-page language.
+- Added focused regression coverage proving the dialog does not call `/api/profile/snippet`, disables sharing when no Public Page path is ready, and does not render LinkedIn/Twitter/social/professional-profile copy.
+- Codex Browser verified `/app/i/profile?profileView=full&tab=visibility` at `http://127.0.0.1:33180` with visual fixtures enabled: the active `Share` button opened `Share Your Public Page`, rendered `Public Page Not Ready` for the mock no-handle state, had one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, and no `Profiles API is unavailable`, `Failed to create snippet`, `LinkedIn`, `Twitter`, `Social`, `professional profile`, or `profile snippet` copy.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-public-page-share-dialog/public-page-share-dialog-browser-evidence.json`.
+- Verification passed: `npm run test -- tests/ui/share-profile-dialog.test.tsx` (4 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.

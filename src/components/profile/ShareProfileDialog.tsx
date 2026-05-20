@@ -1,7 +1,7 @@
 /**
  * Share Profile Dialog
  *
- * Allows users to create shareable profile snippets
+ * Allows users to share the launch Public Page or Organization Trust Page
  */
 
 'use client';
@@ -36,11 +36,10 @@ import {
   Code,
   ExternalLink,
   Link as LinkIcon,
-  Twitter,
+  MessageSquareText,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateEmbedCodeFromUrl, generateShareText } from '@/lib/profile/snippet-generator';
-import { apiFetch } from '@/lib/api/fetch';
 import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 
 type ProfileType = 'individual' | 'organization';
@@ -53,7 +52,7 @@ const INDIVIDUAL_FIELD_LABELS: Record<string, string> = {
   experience: 'Experience',
   education: 'Education',
   location: 'Location',
-  profileImage: 'Profile Image',
+  profileImage: 'Photo',
 };
 
 const ORGANIZATION_FIELD_LABELS: Record<string, string> = {
@@ -111,6 +110,7 @@ interface ShareProfileDialogProps {
   userHeadline?: string;
   profileType?: ProfileType;
   orgId?: string;
+  publicPagePath?: string | null;
 }
 
 export function ShareProfileDialog({
@@ -119,7 +119,7 @@ export function ShareProfileDialog({
   userName,
   userHeadline,
   profileType = 'individual',
-  orgId,
+  publicPagePath,
 }: ShareProfileDialogProps) {
   const isDesktop = useResponsiveModalMode(isOpen);
   const [fields, setFields] = useState<Record<string, boolean | number>>(
@@ -155,40 +155,31 @@ export function ShareProfileDialog({
     try {
       setIsGenerating(true);
 
-      if (profileType === 'organization' && !orgId) {
-        throw new Error('Organization context is required to generate a share link');
+      if (!publicPagePath) {
+        toast({
+          title:
+            profileType === 'organization'
+              ? 'Organization Trust Page not ready'
+              : 'Public Page not ready',
+          description: 'Complete the required proof and visibility steps before sharing.',
+          variant: 'destructive',
+        });
+        return;
       }
 
-      const response = await apiFetch('/api/profile/snippet', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fields,
-          theme,
-          format,
-          expiresInDays,
-          profileType,
-          orgId: profileType === 'organization' ? orgId : undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create snippet');
-      }
-
-      const data = await response.json();
+      const publicUrl = new URL(publicPagePath, window.location.origin).toString();
 
       setGeneratedSnippet({
-        url: data.snippet.url,
-        shareToken: data.snippet.shareToken,
+        url: publicUrl,
+        shareToken: publicPagePath,
       });
 
       toast({
         title: 'Shareable link created',
-        description: 'Your profile snippet is ready to share',
+        description:
+          profileType === 'organization'
+            ? 'Your Organization Trust Page link is ready to share'
+            : 'Your Public Page link is ready to share',
       });
 
       console.log('profile.snippet.generated', {
@@ -258,13 +249,13 @@ export function ShareProfileDialog({
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="card" id="card" />
                 <Label htmlFor="card" className="cursor-pointer">
-                  Card (Standard profile card)
+                  Card (Standard Public Page card)
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="full" id="full" />
                 <Label htmlFor="full" className="cursor-pointer">
-                  Full (Complete profile view)
+                  Full (Complete proof view)
                 </Label>
               </div>
             </RadioGroup>
@@ -273,7 +264,7 @@ export function ShareProfileDialog({
           <div className="rounded-xl border border-border bg-card p-4">
             <Label className="mb-1 block text-base font-semibold">Theme</Label>
             <p className="text-sm text-muted-foreground">
-              Public snippets now use the global Japandi light theme by default.
+              Public Page embeds use the global Japandi light theme by default.
             </p>
           </div>
 
@@ -301,9 +292,9 @@ export function ShareProfileDialog({
               <Code className="h-4 w-4 mr-2" />
               Embed
             </TabsTrigger>
-            <TabsTrigger value="social">
-              <Twitter className="h-4 w-4 mr-2" />
-              Social
+            <TabsTrigger value="outreach">
+              <MessageSquareText className="h-4 w-4 mr-2" />
+              Outreach
             </TabsTrigger>
           </TabsList>
 
@@ -361,36 +352,18 @@ export function ShareProfileDialog({
             </div>
           </TabsContent>
 
-          <TabsContent value="social" className="space-y-3 mt-4">
+          <TabsContent value="outreach" className="space-y-3 mt-4">
             <div className="space-y-3">
               <div>
-                <Label>Twitter</Label>
+                <Label>Proof-safe outreach copy</Label>
                 <div className="flex gap-2 mt-2">
-                  <Input value={shareTexts.twitter} readOnly />
+                  <Input value={shareTexts.outreach} readOnly />
                   <Button
                     size="icon"
                     variant="outline"
-                    onClick={() => handleCopy(shareTexts.twitter, 'Twitter text')}
+                    onClick={() => handleCopy(shareTexts.outreach, 'Outreach copy')}
                   >
-                    {copied === 'Twitter text' ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <Label>LinkedIn</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input value={shareTexts.linkedin} readOnly />
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => handleCopy(shareTexts.linkedin, 'LinkedIn text')}
-                  >
-                    {copied === 'LinkedIn text' ? (
+                    {copied === 'Outreach copy' ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <Copy className="h-4 w-4" />
@@ -410,12 +383,12 @@ export function ShareProfileDialog({
       <div className="flex items-center gap-2">
         <Share2 className="h-5 w-5" />
         <span className="font-semibold text-lg">
-          Share Your {profileType === 'organization' ? 'Organization' : 'Profile'}
+          Share Your {profileType === 'organization' ? 'Organization Trust Page' : 'Public Page'}
         </span>
       </div>
       <p className="text-sm text-muted-foreground mt-2">
-        Create a shareable link or embed code for your{' '}
-        {profileType === 'organization' ? 'organization profile' : 'profile'}
+        Create a shareable link, embed code, or proof-safe outreach copy for your{' '}
+        {profileType === 'organization' ? 'organization trust page' : 'public page'}
       </p>
     </>
   );
@@ -428,12 +401,13 @@ export function ShareProfileDialog({
             <DialogTitle asChild>
               <div className="flex items-center gap-2">
                 <Share2 className="h-5 w-5" />
-                Share Your {profileType === 'organization' ? 'Organization' : 'Profile'}
+                Share Your{' '}
+                {profileType === 'organization' ? 'Organization Trust Page' : 'Public Page'}
               </div>
             </DialogTitle>
             <DialogDescription>
-              Create a shareable link or embed code for your{' '}
-              {profileType === 'organization' ? 'organization profile' : 'profile'}
+              Create a shareable link, embed code, or proof-safe outreach copy for your{' '}
+              {profileType === 'organization' ? 'organization trust page' : 'public page'}
             </DialogDescription>
           </DialogHeader>
 
@@ -445,8 +419,12 @@ export function ShareProfileDialog({
                 <Button variant="outline" onClick={onClose} disabled={isGenerating}>
                   Cancel
                 </Button>
-                <Button onClick={handleGenerate} disabled={isGenerating}>
-                  {isGenerating ? 'Generating...' : 'Generate Shareable Link'}
+                <Button onClick={handleGenerate} disabled={isGenerating || !publicPagePath}>
+                  {isGenerating
+                    ? 'Generating...'
+                    : publicPagePath
+                      ? 'Generate Shareable Link'
+                      : 'Public Page Not Ready'}
                 </Button>
               </>
             ) : (
@@ -468,8 +446,12 @@ export function ShareProfileDialog({
         <DrawerFooter className="pt-2">
           {!generatedSnippet ? (
             <>
-              <Button onClick={handleGenerate} disabled={isGenerating}>
-                {isGenerating ? 'Generating...' : 'Generate Shareable Link'}
+              <Button onClick={handleGenerate} disabled={isGenerating || !publicPagePath}>
+                {isGenerating
+                  ? 'Generating...'
+                  : publicPagePath
+                    ? 'Generate Shareable Link'
+                    : 'Public Page Not Ready'}
               </Button>
               <Button variant="outline" onClick={onClose} disabled={isGenerating}>
                 Cancel

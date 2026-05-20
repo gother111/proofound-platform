@@ -37,6 +37,7 @@ export function OrganizationShareControl({
         userHeadline={organizationTagline || undefined}
         profileType="organization"
         orgId={orgId}
+        publicPagePath={`/portfolio/org/${encodeURIComponent(orgId)}`}
       />
     </>
   );
