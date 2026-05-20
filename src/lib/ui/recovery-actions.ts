@@ -54,7 +54,7 @@ const INDIVIDUAL_DESCRIPTION_OVERRIDES: Record<
     'add-proof': 'Strengthen verification by attaching proof to one of your strongest skills.',
   },
   'dashboard-empty': {
-    'add-skill': 'Add a skill so your dashboard can generate better next actions.',
+    'add-skill': 'Add a skill so your Proof home can suggest the next useful action.',
   },
   'expertise-empty': {
     'add-skill': 'Start with a skill you can connect to real proof.',

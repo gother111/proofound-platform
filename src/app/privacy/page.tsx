@@ -12,7 +12,7 @@ import { buildPublicMetadata } from '@/lib/seo/public-metadata';
 export const metadata: Metadata = buildPublicMetadata({
   title: 'Privacy Policy | Proofound privacy and consent controls',
   description:
-    'Read how Proofound collects and processes personal information, applies consent controls, secures platform records, and supports user rights requests.',
+    'Read how Proofound collects and processes personal information, applies consent controls, secures account and proof records, and supports user rights requests.',
   path: '/privacy',
 });
 
@@ -25,7 +25,7 @@ export default function PrivacyPolicyPage() {
     path: '/privacy',
     title: 'Privacy Policy | Proofound privacy and consent controls',
     description:
-      'Read how Proofound collects and processes personal information, applies consent controls, secures platform records, and supports user rights requests.',
+      'Read how Proofound collects and processes personal information, applies consent controls, secures account and proof records, and supports user rights requests.',
   });
 
   return (

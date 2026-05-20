@@ -92,7 +92,7 @@ export default function TermsOfServicePage() {
                 <ul className="mt-3 list-disc space-y-2 pl-6 leading-7">
                   <li>No fraud, impersonation, or misleading submissions.</li>
                   <li>No harassment, abusive content, or unlawful activity.</li>
-                  <li>No automated abuse, scraping, or interference with platform security.</li>
+                  <li>No automated abuse, scraping, or interference with service security.</li>
                   <li>Respect confidentiality and rights of other users.</li>
                 </ul>
               </section>
@@ -102,7 +102,7 @@ export default function TermsOfServicePage() {
                   4. Moderation and Enforcement
                 </h2>
                 <p className="mt-3 leading-7">
-                  We may review content and apply moderation actions under platform rules. Where
+                  We may review content and apply moderation actions under service rules. Where
                   required, we provide a statement of reasons and an appeal pathway.
                 </p>
               </section>
@@ -180,7 +180,7 @@ export default function TermsOfServicePage() {
                 <p className="mt-3 leading-7">
                   We maintain operational safeguards to keep availability and integrity within
                   reasonable expectations. During incidents, we may temporarily limit selected
-                  features to protect platform stability or user safety. Material disruptions are
+                  features to protect service stability or user safety. Material disruptions are
                   communicated through our published legal and privacy contact channels whenever
                   practical.
                 </p>
