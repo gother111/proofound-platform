@@ -398,10 +398,7 @@ export function buildFinalLaunchChecklistDefinitions({
       section: 'Product',
       label: 'Hire and engagement verification remain distinct',
       authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
-      evidenceSources: [
-        '.artifacts/proofound-current-state-reality-check.md',
-        'docs/proofound-hard-verification-rerun-final.md',
-      ],
+      evidenceSources: ['.artifacts/proofound-current-state-reality-check.md'],
       evaluateDirect: (context) => {
         const corridor = checklistRowObservation(
           realityRow(

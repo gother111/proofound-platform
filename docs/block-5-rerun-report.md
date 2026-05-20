@@ -9,7 +9,7 @@ Run a fresh hard verification rerun against the current locked-MVP launch candid
 - `date -u +"%Y-%m-%dT%H:%M:%SZ"`
 - `sed -n '1,80p' docs/codex-progress.md`
 - `tail -n 20 docs/codex-progress.md`
-- `sed -n '1,40p' docs/proofound-hard-verification-rerun-final.md`
+- `sed -n '1,40p' docs/archive/status-reports/docs-historical/proofound-hard-verification-rerun-final.md`
 - `git status --short`
 - `git diff --stat`
 - `git diff --name-only`
@@ -43,7 +43,7 @@ Run a fresh hard verification rerun against the current locked-MVP launch candid
 - `.artifacts/launch-smoke-report.json`
 - `docs/codex-progress.md`
 - `docs/block-5-rerun-report.md`
-- `docs/proofound-hard-verification-rerun-final.md`
+- `docs/archive/status-reports/docs-historical/proofound-hard-verification-rerun-final.md`
 
 ## tests run
 

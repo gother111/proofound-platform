@@ -105,7 +105,7 @@ Interpretation:
 The following existing docs contained stale conclusions relative to current workspace truth and were updated in this block:
 
 - [docs/verification-checklist.md](/Users/yuriibakurov/proofound/docs/verification-checklist.md)
-- [docs/proofound-hard-verification-rerun-final.md](/Users/yuriibakurov/proofound/docs/proofound-hard-verification-rerun-final.md)
+- [docs/archive/status-reports/docs-historical/proofound-hard-verification-rerun-final.md](/Users/yuriibakurov/proofound/docs/archive/status-reports/docs-historical/proofound-hard-verification-rerun-final.md)
 - [docs/codex-progress.md](/Users/yuriibakurov/proofound/docs/codex-progress.md)
 - [docs/proofound-hard-audit-2026-03-16-rerun.md](/Users/yuriibakurov/proofound/docs/proofound-hard-audit-2026-03-16-rerun.md)
 

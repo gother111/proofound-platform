@@ -8,16 +8,30 @@ stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
 
- ✓ tests/ui/profile-dialogs-edit-routing.test.tsx  (1 test) 52ms
+ ✓ tests/ui/profile-dialogs-edit-routing.test.tsx  (1 test) 51ms
  ✓ tests/ui/education-form-skill-picker.test.tsx  (2 tests) 102ms
- ✓ tests/actions/onboarding-private-context-scaffolding.test.ts  (3 tests) 6ms
+ ✓ tests/actions/onboarding-private-context-scaffolding.test.ts  (3 tests) 5ms
 
  Test Files  3 passed (3)
       Tests  6 passed (6)
-   Start at  01:01:26
-   Duration  1.14s (transform 245ms, setup 318ms, collect 656ms, tests 160ms, environment 598ms, prepare 125ms)
+   Start at  03:19:45
+   Duration  1.14s (transform 254ms, setup 315ms, collect 641ms, tests 158ms, environment 610ms, prepare 127ms)
+
+
+WebSocket server error:
+Error: listen EPERM: operation not permitted 0.0.0.0:24678
+    at Server.setupListenHandle [as _listen2] (node:net:1986:21)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
+    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
+    at Array.map (<anonymous>)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
+    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)

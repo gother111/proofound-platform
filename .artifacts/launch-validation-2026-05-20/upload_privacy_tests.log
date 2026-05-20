@@ -1,0 +1,57 @@
+> proofound@0.1.0 test:launch:upload
+> npm run test -- tests/lib/uploads-privacy.test.ts tests/lib/upload-validate-file.test.ts tests/lib/uploads-lifecycle-queue.test.ts tests/api/upload-document-route.test.ts tests/api/upload-cover-route.test.ts tests/api/upload-status-route.test.ts
+
+
+> proofound@0.1.0 test
+> node ./scripts/run-vitest-with-timeout.mjs tests/lib/uploads-privacy.test.ts tests/lib/upload-validate-file.test.ts tests/lib/uploads-lifecycle-queue.test.ts tests/api/upload-document-route.test.ts tests/api/upload-cover-route.test.ts tests/api/upload-status-route.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+WebSocket server error:
+Error: listen EPERM: operation not permitted 0.0.0.0:24678
+    at Server.setupListenHandle [as _listen2] (node:net:1986:21)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
+    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
+    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
+    at Array.map (<anonymous>)
+    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
+    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/lib/uploads-privacy.test.ts  (14 tests) 7ms
+ ✓ tests/lib/upload-validate-file.test.ts  (4 tests) 8ms
+ ✓ tests/api/upload-status-route.test.ts  (2 tests) 8ms
+stderr | tests/api/upload-cover-route.test.ts > POST /api/upload/cover > cleans up uploaded files when the organization update fails after ingest
+{"level":"error","event":"upload.cover_organization_update.failed","timestamp":"2026-05-20T01:15:11.767Z","orgId":"123e4567-e89b-42d3-a456-426614174000","status":500,"error":{"category":"unknown","message":"Unknown error"}}
+
+ ✓ tests/api/upload-cover-route.test.ts  (3 tests) 8ms
+stderr | tests/api/upload-document-route.test.ts > POST /api/upload/document > returns a generic production response for storage failures without exposing path or filename
+{"level":"error","event":"upload.document.failed","timestamp":"2026-05-20T01:15:11.769Z","status":500,"error":{"category":"storage","name":"Error","message":"[REDACTED_STORAGE_ERROR]"}}
+
+ ✓ tests/api/upload-document-route.test.ts  (7 tests) 17ms
+ ✓ tests/lib/uploads-lifecycle-queue.test.ts  (13 tests) 13ms
+
+ Test Files  6 passed (6)
+      Tests  43 passed (43)
+   Start at  03:15:10
+   Duration  1.16s (transform 374ms, setup 752ms, collect 836ms, tests 61ms, environment 1.39s, prepare 325ms)

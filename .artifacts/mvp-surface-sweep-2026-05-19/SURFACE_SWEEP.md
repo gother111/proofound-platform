@@ -1754,3 +1754,22 @@ Browser evidence:
 Browser evidence:
 
 - Codex Browser loaded `http://localhost:3000/`: title `Proofound | Proof Behind the Claim`; the active homepage rendered the current scrollytelling landing, did not render `Match Score` or `98% Fit`, and reported no browser console errors.
+
+## Continuation - Historical Launch Report Retirement
+
+- Found `docs/proofound-hard-verification-rerun-final.md` still living in root `docs/` with a stale March `NO-GO`, `FAIL`, and `UNVERIFIED` evidence pack. The registry marked it historical, but current launch-checklist definitions still named it as an evidence source for the hire/engagement verification gate.
+- Moved the report to `docs/archive/status-reports/docs-historical/proofound-hard-verification-rerun-final.md` and updated historical references that pointed at the old root path.
+- Removed the archived report from `product_hire_and_engagement_distinct` evidence sources so the current checklist relies on `.artifacts/proofound-current-state-reality-check.md` instead of a stale March launch verdict.
+- Updated `docs/DOCS_REGISTRY.md` to map the old root path to its archive target and register the archived file.
+- Regenerated `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md` and `.json`; the archived root report is no longer named as a current checklist evidence source. The regenerated repo-scope checklist is `NOT_READY` in this sandbox because production boot/smoke could not bind localhost, while local Browser checks against the dev server still loaded the representative public entry routes below.
+- Also ran `npm run launch:validate`; lint, typecheck, production build, route inventory, upload privacy, org workflow, and export/delete gates passed, while Supabase-backed privacy gates and `npm audit --omit=dev` were blocked by DNS/network restrictions and strict org E2E could not bind `0.0.0.0:33100` in this environment.
+
+Browser evidence:
+
+- Codex Browser initially showed `connection refused` for `http://localhost:3000/portfolio/demo`; restarted the local dev server and rechecked in a fresh in-app Browser tab.
+- Codex Browser loaded `http://localhost:3000/`: title `Proofound | Proof Behind the Claim`, H1 `Proof behind the claim`, no `Match Score` or `98% Fit`, no visible application error.
+- Codex Browser loaded `http://localhost:3000/portfolio/demo`: title `Public Page Unavailable | Proofound`, H1 `PUBLIC PAGE UNAVAILABLE`, explicit unavailable-state copy, no visible application error or score-first copy.
+- Codex Browser loaded `http://localhost:3000/portfolio/org/demo`: title `Public Page Unavailable | Proofound`, H1 `ORGANIZATION PORTFOLIO UNAVAILABLE`, explicit unavailable-state copy, no visible application error or score-first copy.
+- Codex Browser loaded `http://localhost:3000/login`: title `Sign In | Proofound`, H1 `Welcome back`, clear email/password and social sign-in entry, no visible application error or score-first copy.
+- Codex Browser loaded `http://localhost:3000/signup`: title `Sign Up | Proofound`, H1 `Join Proofound`, individual and organization choices visible with legal links, no visible application error or score-first copy.
+- Browser screenshot capture timed out twice through the in-app Browser capture path, so this pass records DOM/visible-text evidence and route/server status instead of an image artifact.
