@@ -288,7 +288,7 @@ export function GuidedProfileSetupView({
             </h1>
             <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
               Build only the parts that make the first proof credible: safe shell, one real context,
-              one structured Proof Pack, then decide what trust signal comes next.
+              one structured Proof Pack, then decide what verification check comes next.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">

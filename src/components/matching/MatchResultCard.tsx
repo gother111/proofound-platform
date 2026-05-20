@@ -612,7 +612,7 @@ export function MatchResultCard({
           {variant === 'blind' && (
             <div className="flex min-w-0 items-start gap-2">
               <Shield className="mt-0.5 h-3 w-3 shrink-0" />
-              <span>Trust signal visible only within this review stage</span>
+              <span>Verification check visible only within this review stage</span>
             </div>
           )}
         </div>

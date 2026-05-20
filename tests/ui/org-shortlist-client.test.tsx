@@ -34,7 +34,7 @@ const shortlistItem: ShortlistItem = {
       freshnessLabel: 'Recent',
     },
     verification: {
-      summaryLabel: 'Two trust signals',
+      summaryLabel: 'Two verification checks',
       count: 2,
     },
     trustLabels: ['Verified work email'],

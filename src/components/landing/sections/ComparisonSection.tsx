@@ -23,8 +23,8 @@ export function ComparisonSection({ shouldReduceMotion }: ComparisonSectionProps
 
   const newWayItems = [
     'One direct-link Public Page',
-    'Portable trust signals and verification',
-    'Better matching based on evidence and alignment, not posture',
+    'Portable verification attached to proof',
+    'Assignment-fit review based on evidence and alignment, not posture',
   ];
 
   return (

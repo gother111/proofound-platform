@@ -52,7 +52,7 @@ const INDIVIDUAL_DESCRIPTION_OVERRIDES: Record<
     'turn-on-matchable': 'Complete work mode, availability, and compensation to become matchable.',
   },
   'matching-empty': {
-    'add-proof': 'Boost trust signals by attaching proof to one of your strongest skills.',
+    'add-proof': 'Strengthen verification by attaching proof to one of your strongest skills.',
   },
   'dashboard-empty': {
     'add-skill': 'Add a skill so your dashboard can generate better next actions.',

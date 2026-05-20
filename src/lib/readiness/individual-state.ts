@@ -243,7 +243,7 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
   },
   add_verified_signal: {
     id: 'add-verified-signal',
-    title: 'Add one non-self trust signal',
+    title: 'Add one non-self verification',
     description:
       'Introductions require at least one active peer, manager, or external attestation tied to anchored proof.',
     priority: 'medium',

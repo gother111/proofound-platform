@@ -295,7 +295,7 @@ export function buildInternalOpsQueueDetail(
     case 'verification_request':
     case 'verification_bundle': {
       operatorSummary =
-        'Inspect claim-scoped verification progress, corrections, or stale trust signals.';
+        'Inspect claim-scoped verification progress, corrections, or stale verification checks.';
       pushField(
         fields,
         'Claim',

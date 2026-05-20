@@ -44,7 +44,7 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   {
     id: 'verification',
     title: 'Verification trust layer',
-    body: 'Artifacts alone are not enough. Proofound adds verification states, method markers, and trust signals so reviewers can see why a proof item deserves confidence.',
+    body: 'Artifacts alone are not enough. Proofound adds verification states, method markers, and reviewer checks so reviewers can see why a proof item deserves confidence.',
     microcopy: 'Evidence becomes auditable, not merely present.',
   },
   {

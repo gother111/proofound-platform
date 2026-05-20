@@ -76,7 +76,8 @@ export function MatchingClient() {
       {
         id: 'update-public-portfolio-default',
         title: 'Strengthen Public Page proof',
-        description: 'Refresh proof-backed work examples and trust signals on your Public Page.',
+        description:
+          'Refresh proof-backed work examples and verification checks on your Public Page.',
         actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
       },
       {
@@ -378,7 +379,7 @@ export function MatchingClient() {
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground">
-            Qualified introductions stay locked until stronger proof, a verified trust signal, and
+            Qualified introductions stay locked until stronger proof, one accepted verification, and
             full intro constraints are complete.
           </p>
 

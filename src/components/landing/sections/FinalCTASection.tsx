@@ -153,7 +153,7 @@ export function FinalCTASection({
                   Explore evidence-based hiring
                 </p>
                 <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-                  Review work through structured proof, clearer trust signals, and a more
+                  Review work through structured proof, clearer verification checks, and a more
                   explainable assignment-fit review.
                 </p>
                 <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-proofound-forest">

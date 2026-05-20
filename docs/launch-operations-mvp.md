@@ -13,7 +13,7 @@
   - `low candidate supply`: active assignments exist, but not enough candidates clear readiness, proof, trust, or logistics gates.
   - `low assignment supply`: candidate portfolios are ready, but active assignment demand is too thin to sustain qualified intros.
   - `weak proof coverage`: portfolio exists, but proof coverage is too thin or too concentrated to support qualified intros.
-  - `incomplete verification`: trust signals are pending, expired, disputed, contradicted, or absent.
+  - `incomplete verification`: verification checks are pending, expired, disputed, contradicted, or absent.
   - `review overprecision risk`: exact ranking or confidence language would overstate what the proof, trust, or supply state supports.
   - `intro corridor failure`: the system cannot produce enough qualified intros inside the intro target window.
 - System-driven fallback:
@@ -65,7 +65,7 @@
   - why stronger actions are paused
   - exactly three next actions:
     - improve portfolio or proof
-    - complete trust signals or constraints
+    - complete verification checks or constraints
     - keep browsing or share portfolio
 - Org users see:
   - whether the blocker is supply, proof, trust, privacy, or readiness confidence
@@ -319,7 +319,7 @@
 
 - Approved language:
   - “There are not enough qualified introductions yet. Your portfolio is still doing useful work while we protect quality.”
-  - “Your Public Page remains shareable with proof context. Add proof or trust signals to strengthen intro readiness.”
+  - “Your Public Page remains shareable with proof context. Add proof or verification checks to strengthen intro readiness.”
   - “Verification is still in progress. We will keep trust labels conservative until it completes.”
   - “Shortlist quality is protected right now, so exact ranking is not shown.”
   - “Best next step”

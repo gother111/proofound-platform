@@ -26,7 +26,7 @@ function loadBuildTrustSignals() {
 }
 
 describe('buildTrustSignals', () => {
-  it('keeps public trust signals narrow and count-based', () => {
+  it('keeps public verification checks narrow and count-based', () => {
     const buildTrustSignals = loadBuildTrustSignals();
     expect(typeof buildTrustSignals).toBe('function');
 

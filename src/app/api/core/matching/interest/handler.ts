@@ -178,7 +178,7 @@ function buildIntroBlockedCopy(
   if (reasonCodes.includes('trust_regressed')) {
     return {
       title: 'Trust changed since this proof set last qualified.',
-      body: 'Assignment-fit review can continue, but new introductions are paused until proof or trust signals are refreshed.',
+      body: 'Assignment-fit review can continue, but new introductions are paused until proof or verification checks are refreshed.',
     };
   }
 

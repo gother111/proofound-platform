@@ -24,21 +24,21 @@ export function VerificationTab({ acceptedVerificationCount }: VerificationTabPr
               <h3 className="text-lg font-semibold text-foreground">Verification</h3>
               <p className="text-sm text-muted-foreground">
                 Verification is scoped, not global. Public readiness requires at least one accepted
-                non-self trust signal tied to anchored proof.
+                non-self verification tied to anchored proof.
               </p>
             </div>
 
             <div className="rounded-lg border border-proofound-stone/60 bg-white p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                Accepted trust signals
+                Accepted verifications
               </p>
               <p className="mt-2 text-2xl font-semibold text-foreground">
                 {acceptedVerificationCount}
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
                 {acceptedVerificationCount > 0
-                  ? 'Your profile already has non-self trust attached to it.'
-                  : 'No trust signals are attached yet. Request verification before publishing a public-ready portfolio.'}
+                  ? 'Your proof already has non-self verification attached to it.'
+                  : 'No non-self verification is attached yet. Request verification before publishing a public-ready portfolio.'}
               </p>
             </div>
 

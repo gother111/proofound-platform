@@ -33,7 +33,7 @@ export async function getMomentumSummaryForIndividual(userId: string): Promise<M
     persona: 'individual',
     marketActivityLow: readiness.marketActivityLow,
     summary: readiness.marketActivityLow
-      ? 'Opportunity activity is currently low. Strengthen proof readiness and trust signals for the next intro.'
+      ? 'Opportunity activity is currently low. Strengthen proof readiness and verification checks for the next intro.'
       : 'Opportunity activity is healthy. Keep strengthening proof readiness to move intros forward faster.',
     topActions: readiness.topActions,
     updates,

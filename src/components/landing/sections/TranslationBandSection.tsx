@@ -7,7 +7,7 @@ const columns = [
   },
   {
     title: 'More evidence',
-    body: 'Outcomes, artifacts, context, and scoped trust signals become the center of review.',
+    body: 'Outcomes, artifacts, context, and scoped verification checks become the center of review.',
   },
   {
     title: 'Safer early review',

@@ -79,7 +79,7 @@ describe('MatchingPage soft-gated state', () => {
         {
           id: 'update-public-portfolio',
           title: 'Strengthen Public Page proof',
-          description: 'Refresh proof-backed work examples and trust signals.',
+          description: 'Refresh proof-backed work examples and verification checks.',
           actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
         },
       ],

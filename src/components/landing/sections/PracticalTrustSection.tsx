@@ -23,7 +23,7 @@ export function PracticalTrustSection({ shouldReduceMotion }: PracticalTrustSect
     {
       icon: ShieldCheck,
       title: 'Verification & credibility',
-      desc: 'Trust signals are cryptographically verified and checked against the source, creating a high-signal environment.',
+      desc: 'Verification checks stay tied to a source, method, and proof item so reviewers can see what was actually confirmed.',
     },
     {
       icon: Fingerprint,

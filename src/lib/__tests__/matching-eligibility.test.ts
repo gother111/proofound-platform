@@ -68,8 +68,8 @@ function createReadinessSnapshot(
       qualified_intro_ready: [
         {
           id: 'trusted_signal',
-          label: 'Verified trust signal',
-          detail: 'Add a verified trust signal.',
+          label: 'Verified proof check',
+          detail: 'Add one accepted verification tied to anchored proof.',
           met: false,
           actionUrl: '/app/i/verifications',
         },

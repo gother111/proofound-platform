@@ -91,7 +91,7 @@ export default async function IndividualHomePage() {
       title: 'Trust anchors',
       detail:
         metrics.verifiedSkills > 0
-          ? `${metrics.verifiedSkills} accepted trust signal${metrics.verifiedSkills === 1 ? '' : 's'}`
+          ? `${metrics.verifiedSkills} accepted verification${metrics.verifiedSkills === 1 ? '' : 's'}`
           : metrics.pendingVerifications > 0
             ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
             : 'No trust anchor yet. You can add this after the first proof.',
@@ -143,7 +143,7 @@ export default async function IndividualHomePage() {
             : 'Trust anchor missing',
       detail:
         metrics.verifiedSkills > 0
-          ? `${metrics.verifiedSkills} accepted trust signal${metrics.verifiedSkills === 1 ? '' : 's'} attached to your proof.`
+          ? `${metrics.verifiedSkills} accepted verification${metrics.verifiedSkills === 1 ? '' : 's'} attached to your proof.`
           : metrics.pendingVerifications > 0
             ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
             : 'Nothing is exposed yet. Add one trusted source when you are ready.',
@@ -203,7 +203,7 @@ export default async function IndividualHomePage() {
 
   const scoreItems = [
     {
-      label: `${metrics.verifiedSkills} accepted trust signal${metrics.verifiedSkills === 1 ? '' : 's'}`,
+      label: `${metrics.verifiedSkills} accepted verification${metrics.verifiedSkills === 1 ? '' : 's'}`,
       state: hasTrustAnchor ? 'ok' : 'warn',
     },
     {

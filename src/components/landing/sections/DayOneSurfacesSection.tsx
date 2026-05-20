@@ -133,7 +133,7 @@ export function DayOneSurfacesSection() {
               </h3>
               <p className="mt-4 text-[1.04rem] leading-7 text-[var(--landing-text)]">
                 Turn real work, volunteering, or learning into a calm Public Page with 1 to 3 proof
-                items, role context, outcomes, and scoped trust signals.
+                items, role context, outcomes, and scoped verification checks.
               </p>
             </div>
 

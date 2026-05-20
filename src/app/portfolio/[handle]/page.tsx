@@ -325,7 +325,7 @@ export default async function PortfolioPage({
                 </div>
               ) : (
                 <p className="mt-3 text-sm text-muted-foreground">
-                  Trust signals stay narrow and proof-scoped on this public surface.
+                  Verification checks stay narrow and proof-scoped on this public surface.
                 </p>
               )}
             </PublicProfileSection>

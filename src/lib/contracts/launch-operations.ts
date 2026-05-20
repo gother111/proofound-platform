@@ -171,7 +171,7 @@ export const FALLBACK_COPY: Record<
       statusLabel: 'Qualified intros paused',
       nextActions: [
         'Improve your portfolio or proof',
-        'Complete trust signals or constraints',
+        'Complete verification checks or constraints',
         'Keep browsing and share your portfolio',
       ],
     },
@@ -195,7 +195,7 @@ export const FALLBACK_COPY: Record<
       statusLabel: 'Assignment supply thin',
       nextActions: [
         'Improve your Public Page or proof',
-        'Complete trust signals or constraints',
+        'Complete verification checks or constraints',
         'Keep browsing and share your Public Page',
       ],
     },
@@ -215,11 +215,11 @@ export const FALLBACK_COPY: Record<
     individual: {
       title: 'Your Public Page remains shareable with proof context.',
       detail:
-        'Add proof or trust signals to strengthen intro readiness. Proof value comes first even before stronger assignment-fit corridors unlock.',
+        'Add proof or verification checks to strengthen intro readiness. Proof value comes first even before stronger assignment-fit corridors unlock.',
       statusLabel: 'Proof coverage in progress',
       nextActions: [
         'Improve your Public Page or proof',
-        'Complete trust signals or constraints',
+        'Complete verification checks or constraints',
         'Keep browsing and share your Public Page',
       ],
     },
@@ -243,7 +243,7 @@ export const FALLBACK_COPY: Record<
       statusLabel: 'Verification pending',
       nextActions: [
         'Improve your portfolio or proof',
-        'Complete trust signals or constraints',
+        'Complete verification checks or constraints',
         'Keep browsing and share your portfolio',
       ],
     },
@@ -267,7 +267,7 @@ export const FALLBACK_COPY: Record<
       statusLabel: 'Review-band mode',
       nextActions: [
         'Improve your portfolio or proof',
-        'Complete trust signals or constraints',
+        'Complete verification checks or constraints',
         'Keep browsing and share your portfolio',
       ],
     },
@@ -291,7 +291,7 @@ export const FALLBACK_COPY: Record<
       statusLabel: 'Intro hold',
       nextActions: [
         'Improve your portfolio or proof',
-        'Complete trust signals or constraints',
+        'Complete verification checks or constraints',
         'Keep browsing and share your portfolio',
       ],
     },
