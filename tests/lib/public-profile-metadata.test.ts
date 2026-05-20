@@ -4,7 +4,7 @@ import {
   buildUnavailablePublicProfileMetadata,
 } from '@/lib/seo/public-profile-metadata';
 
-describe('public profile metadata helpers', () => {
+describe('Public Page metadata helpers', () => {
   it('builds canonical metadata for Public Page paths', () => {
     const metadata = buildPublicProfileMetadata({
       title: 'Proofound Public Page',

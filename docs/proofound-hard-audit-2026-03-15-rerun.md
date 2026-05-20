@@ -289,7 +289,7 @@ Fully implemented and aligned:
 - Narrowest-wins and review-contract logic remain present:
   - `src/lib/privacy/effective-visibility.ts`
   - `src/lib/matching/review-contract.ts`
-- Hidden public profiles still return `404` on summary/export routes.
+- Hidden Public Pages still return `404` on summary/export routes.
 
 Behavior evidence:
 

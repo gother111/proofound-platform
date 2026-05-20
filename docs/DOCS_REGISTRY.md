@@ -398,8 +398,10 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `services/gcp-cv-ocr/DEPLOYMENT.md` | `runbook` | `services` | `repo` | `2026-05-04` | `-` | `false` |
 | `services/gcp-cv-ocr/README.md` | `reference-spec` | `services` | `repo` | `2026-05-04` | `-` | `false` |
 | `src/archive/non_launch_integrations/README.md` | `historical` | `archive` | `repo` | `2026-03-25` | `-` | `false` |
+| `src/archive/non_launch_components/profile/README.md` | `historical` | `archive` | `repo` | `2026-05-20` | `-` | `false` |
 | `src/archive/non_launch_landing_variants/README.md` | `historical` | `archive` | `repo` | `2026-05-20` | `-` | `false` |
 | `src/archive/non_launch_matching_ui/README.md` | `historical` | `archive` | `repo` | `2026-05-20` | `-` | `false` |
+| `tests/archive/non_mvp_public_snippet/README.md` | `historical` | `tests` | `repo` | `2026-05-20` | `-` | `false` |
 | `docs/mobile/IOS_PARITY_MATRIX.md` | `reference-spec` | `docs` | `repo` | `2026-05-19` | `-` | `false` |
 | `audit/automation-and-flows-audit.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/admin-dashboard-mvp-ops-review-2026-05-03.md` | `reference-spec` | `audit` | `repo` | `2026-05-20` | `-` | `false` |

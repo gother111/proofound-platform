@@ -170,7 +170,7 @@ describe('POST /api/candidate-invites/[token]/proof-card', () => {
     expect(upsertCanonicalProofCardSubmission).not.toHaveBeenCalled();
   });
 
-  it('submits an owner-only Proof Pack without requiring a public snippet', async () => {
+  it('submits an owner-only Proof Pack without requiring a legacy public snippet', async () => {
     mockSelectWithLimit([
       {
         id: 'invite-1',

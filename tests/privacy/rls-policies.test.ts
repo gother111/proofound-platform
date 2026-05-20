@@ -1,9 +1,9 @@
 /**
  * 🔐 RLS Privacy Policies Test Suite
- * 
+ *
  * This test suite verifies that Row-Level Security (RLS) policies correctly
  * protect user data according to CROSS_DOCUMENT_PRIVACY_AUDIT.md Section 7.1.
- * 
+ *
  * Five Core Privacy Scenarios:
  * 1. Profile Privacy - User A cannot read User B's profile
  * 2. Verifier Email Protection - Verifier emails hidden from public queries
@@ -40,7 +40,7 @@ import {
 
 /**
  * 🧪 Test Users
- * 
+ *
  * We create 3 test users to simulate different privacy scenarios:
  * - Alice: Main test user
  * - Bob: Secondary user (should not access Alice's data)
@@ -163,10 +163,14 @@ describe('RLS Privacy Policies', () => {
         .single();
 
       // Should be blocked by RLS or filtered based on visibility
-      expectUnauthorized(data, error, 'Anonymous users should not access individual profiles without public visibility');
+      expectUnauthorized(
+        data,
+        error,
+        'Anonymous users should not access individual profiles without public visibility'
+      );
     });
 
-    test('✅ Users can read public profiles list (but with RLS filtering)', async () => {
+    test('✅ Authenticated users can query profile shell rows with RLS filtering', async () => {
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
 
       // This should work but return filtered results based on RLS
@@ -233,7 +237,7 @@ describe('RLS Privacy Policies', () => {
     test('✅ Verifier can access via token (without authentication)', async () => {
       // This test verifies that verifiers can access verification requests via token
       // without needing a full account
-      
+
       // Get the verification request token
       const serviceClient = createServiceRoleClient();
       const { data: verificationRequest } = await serviceClient
@@ -270,11 +274,7 @@ describe('RLS Privacy Policies', () => {
       testResourceIds.conversationId = conversation.id;
 
       // Create a message from Bob to Alice
-      const message = await createTestMessage(
-        conversation.id,
-        bob.id,
-        'Hello Alice, this is Bob!'
-      );
+      const message = await createTestMessage(conversation.id, bob.id, 'Hello Alice, this is Bob!');
 
       // Alice should be able to read this message
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
@@ -294,11 +294,7 @@ describe('RLS Privacy Policies', () => {
       const { conversation: bcConversation } = await createTestConversation(bob.id, carol.id, 1);
 
       // Create a message in Bob-Carol conversation
-      await createTestMessage(
-        bcConversation.id,
-        bob.id,
-        'Hey Carol, Alice should not see this!'
-      );
+      await createTestMessage(bcConversation.id, bob.id, 'Hey Carol, Alice should not see this!');
 
       // Alice tries to read this conversation
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
@@ -325,7 +321,11 @@ describe('RLS Privacy Policies', () => {
         .select()
         .single();
 
-      expectAuthorized(bobMessage, bobError, 'Bob should be able to send messages in his conversation');
+      expectAuthorized(
+        bobMessage,
+        bobError,
+        'Bob should be able to send messages in his conversation'
+      );
     });
 
     test('❌ Users cannot send messages to conversations they do not participate in', async () => {
@@ -345,7 +345,11 @@ describe('RLS Privacy Policies', () => {
         .select()
         .single();
 
-      expectUnauthorized(data, error, "Alice should not be able to send messages to Bob & Carol's conversation");
+      expectUnauthorized(
+        data,
+        error,
+        "Alice should not be able to send messages to Bob & Carol's conversation"
+      );
     });
   });
 
@@ -389,13 +393,10 @@ describe('RLS Privacy Policies', () => {
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
 
       // Alice queries all analytics (without filtering by user_id)
-      const { data, error } = await aliceClient
-        .from('analytics_events')
-        .select('*')
-        .limit(100);
+      const { data, error } = await aliceClient.from('analytics_events').select('*').limit(100);
 
       expectAuthorized(data, error, 'Query should succeed');
-      
+
       // All returned data should belong to Alice (RLS should filter)
       if (data && data.length > 0) {
         expectOnlyUserData(data, alice.id, 'user_id', "RLS should filter to only Alice's events");
@@ -405,9 +406,7 @@ describe('RLS Privacy Policies', () => {
     test('❌ Anonymous users cannot access analytics events', async () => {
       const anonClient = createAnonClient();
 
-      const { data, error } = await anonClient
-        .from('analytics_events')
-        .select('*');
+      const { data, error } = await anonClient.from('analytics_events').select('*');
 
       expectUnauthorized(data, error, 'Anonymous users should not access analytics events');
     });
@@ -459,13 +458,17 @@ describe('RLS Privacy Policies', () => {
         .eq('profile_id', alice.id)
         .single();
 
-      expectUnauthorized(data, error, "Bob should not see Alice's compensation data without a match");
+      expectUnauthorized(
+        data,
+        error,
+        "Bob should not see Alice's compensation data without a match"
+      );
     });
 
     test("✅ Matched users can see each other's compensation after match", async () => {
       // This test verifies that once users are matched, they can see each other's compensation
       // Note: This requires a more complex RLS policy that checks for match status
-      
+
       // Create matching profiles
       await createTestMatchingProfile(alice.id, {
         compMin: 50000,
@@ -481,10 +484,7 @@ describe('RLS Privacy Policies', () => {
 
       // Update match status to 'accepted'
       const serviceClient = createServiceRoleClient();
-      await serviceClient
-        .from('matches')
-        .update({ status: 'accepted' })
-        .eq('id', match.id);
+      await serviceClient.from('matches').update({ status: 'accepted' }).eq('id', match.id);
 
       // Now Alice should be able to see Carol's compensation (via the match)
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
@@ -511,4 +511,3 @@ describe('RLS Privacy Policies', () => {
     });
   });
 });
-

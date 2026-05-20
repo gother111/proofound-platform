@@ -2498,3 +2498,17 @@ Browser evidence:
 - Preserved lifecycle/reconciliation handling for `profile_snippets` because account deletion and canonical cleanup still need to revoke legacy public projections safely.
 - Browser was not rerun for this slice because no rendered route changed; focused privacy/lifecycle/API tests and typecheck cover the behavior.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/profile-fetcher.test.ts tests/lib/lifecycle-reconciliation.test.ts tests/api/candidate-invite-proof-card-route.test.ts --reporter=verbose` (3 files / 9 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`, focused active-source scans for `validateProfileLinkToken|PROFILE_SNIPPET_SHARE|profile_snippet_share|profile_snippets`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Active Test and Policy Wording Cleanup
+
+- Inspected remaining non-archived scan hits for public-profile, public-snippet, and match-quality language after the legacy link-token cleanup.
+- Left already-historical CV import and hard-audit material alone where the document itself is explicitly marked historical/non-launch, but corrected active comments, policy details, and test names that still described current behavior with stale terms.
+- Updated the public rate-limit comment from public-profile views to Public Page and trust-page views.
+- Updated matching scorer documentation from `Level match quality` to required-level alignment.
+- Updated launch surface policy detail to describe archived legacy profile lookup/snippet surfaces rather than public-profile surfaces.
+- Reworded privacy RLS test/docs output from a public profiles list to profile shell rows with RLS filtering.
+- Reworded the candidate invite proof-card test title to refer to a legacy public snippet.
+- Reworded Public Page metadata test suite naming and a stale hard-audit line from hidden public profiles to hidden Public Pages.
+- Registered the new archive README files in `docs/DOCS_REGISTRY.md` so docs freshness no longer reports orphan archive documentation.
+- Browser was not rerun for this slice because no rendered UI changed; this is test/comment/docs/policy terminology alignment.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/public-profile-metadata.test.ts tests/api/candidate-invite-proof-card-route.test.ts src/lib/launch/__tests__/surface-policy.test.ts --reporter=verbose` (3 files / 19 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.

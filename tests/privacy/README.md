@@ -90,7 +90,7 @@ npm run test:privacy:extended
     ✓ User can read their own profile
     ✓ User A cannot read User B's private profile data
     ✓ Unauthenticated users cannot read profiles directly
-    ✓ Users can read public profiles list (but with RLS filtering)
+    ✓ Authenticated users can query profile shell rows with RLS filtering
   ✓ 2. Verifier Email Protection (4)
     ✓ Requester can see their own verification request with verifier email
     ✓ User B cannot see User A's verifier emails

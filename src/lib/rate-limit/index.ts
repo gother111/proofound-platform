@@ -367,7 +367,7 @@ export const RATE_LIMITS = {
     allowLocalFallback: true,
   },
 
-  /** Public profile views: 80 req/min (read-heavy but public) */
+  /** Public Page and trust page views: 80 req/min (read-heavy but public) */
   public: { limit: 80, windowSeconds: 60, identifier: 'public' },
 
   /** Wellbeing check-ins: 5 req/min */
