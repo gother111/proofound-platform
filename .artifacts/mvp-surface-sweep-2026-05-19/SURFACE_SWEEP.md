@@ -1716,3 +1716,10 @@ Browser evidence:
 - Found `docs/DOCS_REGISTRY.md` still had `Last Verified: 2026-05-19`, a self-row dated `2026-05-14`, and the sweep artifact row dated `2026-05-19` after the route-count and Browser evidence refresh.
 - Updated the registry header, registry self-row, and surface-sweep artifact row to `2026-05-20` so the active docs index matches the current route-count and Browser evidence.
 - Added launch-gate coverage so the route-count evidence test also guards the registry header, registry self-row, and sweep artifact row against stale verification dates.
+
+## Continuation - Current-State Artifact Route Truth Refresh
+
+- Found `.artifacts/proofound-current-state-reality-check.md` still contained the March route-breadth `FAIL` row and `138` API / `50` page counts even though active docs now cite it alongside the May sweep evidence.
+- Refreshed the current evidence banner and matrix rows for proof-first onboarding, Proof Pack anchor integrity, route-surface scope, and export/delete/auditability so the artifact no longer outranks `docs/verification-checklist.md` with stale `UNVERIFIED` or `FAIL` statuses.
+- Updated the retired stale-claim text to point at the 2026-05-20 route inventory: `140` compiled API route handlers, `51` compiled pages, `108` active MVP APIs, `16` internal launch-ops APIs, and `16` archived compatibility handlers.
+- Updated `docs/backlog/phase-5-launch-packaging.md` and `docs/DOCS_REGISTRY.md` so Phase 5 and the registry no longer treat historical-registry cleanup as an open watch item after this refresh.

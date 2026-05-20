@@ -447,8 +447,28 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'docs/backlog/phase-0-scope-lock.md'),
       'utf8'
     );
+    const currentStateArtifact = fs.readFileSync(
+      path.join(repoRoot, '.artifacts/proofound-current-state-reality-check.md'),
+      'utf8'
+    );
+    const launchReadinessSummary = fs.readFileSync(
+      path.join(repoRoot, '.artifacts/launch-readiness-summary.md'),
+      'utf8'
+    );
+    const phaseFive = fs.readFileSync(
+      path.join(repoRoot, 'docs/backlog/phase-5-launch-packaging.md'),
+      'utf8'
+    );
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
-    const routeDocs = [currentTruth, verificationChecklist, backlogReadme, phaseZero].join('\n');
+    const routeDocs = [
+      currentTruth,
+      verificationChecklist,
+      backlogReadme,
+      phaseZero,
+      currentStateArtifact,
+      launchReadinessSummary,
+      phaseFive,
+    ].join('\n');
 
     expect(apiReference).toContain('- Total route handlers: **140**');
     expect(apiReference).toContain(
@@ -462,6 +482,27 @@ describe('launch gate package configuration', () => {
     expect(routeDocs).toContain('/dev/resolve-home');
     expect(routeDocs).not.toContain('110 APIs');
     expect(routeDocs).not.toContain('14 API handlers as archived compatibility responses');
+    expect(currentStateArtifact).toContain(
+      '| no non-MVP launch surface                                                             | `PASS`'
+    );
+    expect(currentStateArtifact).toContain(
+      'Fresh current-state counts are `140` compiled API route handlers and `51` compiled pages.'
+    );
+    expect(currentStateArtifact).not.toContain(
+      'Fresh current-state counts are `138` APIs and `50` pages.'
+    );
+    expect(currentStateArtifact).not.toContain('Route breadth remains the only current blocker');
+    expect(phaseFive).toContain('Current as of 2026-05-20');
+    expect(phaseFive).toContain(
+      'historical-registry cleanup watch item is no longer treated as open'
+    );
+    expect(launchReadinessSummary).toContain(
+      'Current repo-ready checklist evidence is `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`, generated `2026-05-20'
+    );
+    expect(launchReadinessSummary).not.toContain('generated `2026-05-19T22:13:02.762Z`');
+    expect(launchReadinessSummary).not.toContain(
+      'Historical registry cleanup and earlier route-surface findings should stay archived'
+    );
     expect(docsRegistry).toContain(
       '| `docs/API_REFERENCE.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-20`'
     );
@@ -471,6 +512,18 @@ describe('launch gate package configuration', () => {
     );
     expect(docsRegistry).toContain(
       '| `docs/DOCS_REGISTRY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-20`'
+    );
+    expect(docsRegistry).toContain(
+      '| `.artifacts/proofound-current-state-reality-check.md`                                                   | `reference-spec` | `artifacts`   | `repo`              | `2026-05-20`'
+    );
+    expect(docsRegistry).toContain(
+      '| `.artifacts/launch-readiness-summary.md`                                                                | `reference-spec` | `artifacts`   | `repo`              | `2026-05-20`'
+    );
+    expect(docsRegistry).toContain(
+      '| `.artifacts/proofound-priority-file-map.md`                                                             | `reference-spec` | `artifacts`   | `repo`              | `2026-05-20`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/backlog/phase-5-launch-packaging.md`                                                              | `active`         | `docs`        | `repo+live`         | `2026-05-20`'
     );
     expect(docsRegistry).toContain(
       '| `docs/verification-checklist.md`                                                                        | `active`         | `docs`        | `repo+live`         | `2026-05-20`'

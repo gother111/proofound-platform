@@ -14,11 +14,11 @@ Historical Verdict: `NOT READY`
 > Current evidence index added 2026-05-19 and refreshed 2026-05-20:
 >
 > - Treat this March memo as historical evidence only. The current MVP sweep artifact is `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`.
-> - Current route-surface truth is no longer the March `18` disallowed-route blocker. The 2026-05-19 route inventory passed and classifies active MVP, internal launch-ops, and archived compatibility routes explicitly.
+> - Current route-surface truth is no longer the March `18` disallowed-route blocker. The 2026-05-20 route inventory passed and classifies active MVP, internal launch-ops, and archived compatibility routes explicitly.
 > - Current local launch smoke evidence is `.artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke-full.json`; the local monitor rerun against that artifact passed `10/10` with persistence disabled.
-> - Current repo-ready checklist evidence is `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`, generated `2026-05-19T22:13:02.762Z` with repo scope `READY`, `36` pass, `0` fail, `0` blocked, and `4` external prerequisites unverified.
+> - Current repo-ready checklist evidence is `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`, generated `2026-05-20T00:46:24.206Z` with repo scope `READY`, `36` pass, `0` fail, `0` blocked, and `4` external prerequisites unverified.
 > - Current launch blockers are narrower than this March memo: incident/support owner assignment, critical alert proof, backup/restore verification, and final founder go/no-go evidence remain external production-candidate prerequisites. The May 20 smoke and monitor proof is local/repo evidence, not production-candidate sign-off.
-> - Non-blocking watch items should be read separately from launch gates: assignment publish/list latency still needs live or staging budget proof, and historical registry cleanup should not reopen retired March route blockers unless fresh evidence reproduces them.
+> - Non-blocking watch items should be read separately from launch gates: assignment publish/list latency still needs live or staging budget proof, and historical registry cleanup should not reopen retired March route blockers unless fresh evidence reproduces them. The current registry/current-state artifact refresh is recorded in the May 20 sweep continuation.
 
 ## Current Conclusion
 
@@ -59,7 +59,7 @@ Full launch still has external prerequisites:
 ## Non-Blocking Watch Items
 
 - Assignment publish/list latency still needs live or staging budget proof before broad traffic.
-- Historical registry cleanup and earlier route-surface findings should stay archived unless a fresh run reproduces them.
+- Earlier route-surface findings should stay archived unless a fresh run reproduces them.
 - The final launch decision should continue to distinguish repo-ready evidence from production-candidate operational sign-off.
 
 ## Evidence Index
@@ -82,5 +82,5 @@ The full-launch recommendation remains `NO-GO` until production-candidate operat
 
 - Latest operational checklist: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`
 - Latest machine-readable bundle: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.json`
-- Generated at: `2026-05-19T23:01:59.055Z`
+- Generated at: `2026-05-20T00:46:24.206Z`
 <!-- final-launch-checklist:end -->
