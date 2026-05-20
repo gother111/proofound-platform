@@ -2415,3 +2415,17 @@ Browser evidence:
 - Browser verified `http://localhost:33180/app/o/mock-org/profile`: the page heading and save state use organization trust-page wording and stale `Organization Profile` / `Save organization profile` copy is absent.
 - Added/updated focused test expectations for org trust-page page copy, navigation labels, organization update errors, public org export errors, and Start-from-CV naming.
 - Verification passed: `npm run test -- tests/ui/organization-trust-profile-page.test.tsx tests/ui/left-nav-portfolio-gating.test.tsx tests/api/organizations-route.test.ts tests/api/portfolio-org-export-route.test.ts tests/lib/start-from-cv.test.ts src/lib/__tests__/middleware-launch-archive.test.ts tests/api/launch-surface-inventory.test.ts` (7 files / 53 tests), `npm run typecheck`, active-source scan for retired org-profile wording, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and portfolio export failure tests intentionally logged simulated failures, but all commands exited successfully.
+
+## Continuation - Codex Browser OAuth Redirect Stability
+
+- Corrected the browser tooling path after user feedback: this slice used the bundled Codex in-app Browser runtime (`iab`) rather than the separate Playwright MCP browser path.
+- Browser initially showed `http://localhost:3001/login` rendering the app not-found page and Google OAuth bouncing back to `https://proofound.io/login#error=...`.
+- Fixed local OAuth redirect resolution so the social sign-in server action can use a sanitized local browser origin for localhost/127.0.0.1 testing while non-local origins still fall back to the configured canonical production URL.
+- Added a hidden `requestOrigin` field to the Google/LinkedIn social sign-in forms. The server only trusts it for local origins, preserving production canonical behavior.
+- Moved the active login route from `src/app/(auth)/login/page.tsx` to explicit `src/app/login/page.tsx` after the in-app Browser exposed unstable grouped-route rendering for the MVP login entry. Updated active tests/docs that referenced the old path.
+- Fixed the local dev verification setup by restarting Next with an explicit `-p 3001`; otherwise the wrapper used `.next-dev-3000` while Next auto-selected port 3001, which caused missing manifest/server-action 500s during Browser clicks.
+- Codex in-app Browser evidence after fixes:
+  - `/login`: `Welcome back`, Google, and LinkedIn shown; `Page not found` absent.
+  - Google click reached `accounts.google.com` with `redirect_to=http://localhost:3001/auth/callback`; no `proofound.io/login#error` bounce.
+  - LinkedIn click reached `linkedin.com` OAuth/login; no `proofound.io/login#error` bounce.
+- Verification passed: focused `signInWithOAuth` auth-action tests (6 passed), `tests/lib/env.test.ts`, `tests/routes/login-next-sanitizer.test.tsx`, `tests/ui/social-sign-in-buttons.test.tsx` (11 passed), and `npm run typecheck`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the commands exited successfully.
