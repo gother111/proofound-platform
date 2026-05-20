@@ -309,4 +309,38 @@ describe('/api/portfolio/export', () => {
     expect(await response.text()).toContain('Selected proof packs:');
     expect(generateTrustPdf).not.toHaveBeenCalled();
   });
+
+  it('returns a format-neutral error when text export generation fails', async () => {
+    mockSupabaseUser({ id: 'user-1' });
+    (fetchTrustExportData as any).mockResolvedValue({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_owner',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/jane',
+      profile: {
+        id: 'user-1',
+        handle: 'jane',
+        displayName: 'Jane Doe',
+        headline: 'Builder',
+      },
+      signals: {
+        identity: { verified: true },
+        workEmail: { verified: false },
+        linkedin: { verificationStatus: 'verified' },
+        proofs: { count: 1 },
+        verifications: { count: 1 },
+        badges: [],
+        activeIssues: [],
+      },
+      skills: [],
+      proofPacks: [],
+      visibility: undefined,
+    });
+
+    const response = await GET(new Request('http://localhost/api/portfolio/export?format=text'));
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Failed to generate export' });
+    expect(generateTrustPdf).not.toHaveBeenCalled();
+  });
 });

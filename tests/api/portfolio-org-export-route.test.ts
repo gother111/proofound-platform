@@ -222,6 +222,41 @@ describe('/api/portfolio/org/[slug]/export', () => {
     expect(generateOrganizationProfilePdf).not.toHaveBeenCalled();
   });
 
+  it('returns a format-neutral error when text export generation fails', async () => {
+    mockSupabase({ user: { id: 'user-1' } });
+    (fetchOrganizationTrustExportData as any).mockResolvedValue({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'organization_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/org/acme',
+      organization: {
+        id: 'org-1',
+        slug: 'acme',
+        displayName: 'Acme',
+        verifiedDomainPath: 'acme.org',
+        mission: 'Ship impact',
+        whyWorkMatters: 'Build trust',
+        operatingContext: 'Small distributed team with tight review loops.',
+        website: 'https://acme.org',
+        verified: true,
+      },
+      assignmentSnapshot: {
+        role: 'Proof-first product designer',
+      },
+    });
+
+    const response = await GET(
+      new Request('http://localhost/api/portfolio/org/acme/export?format=text'),
+      {
+        params: Promise.resolve({ slug: 'acme' }),
+      }
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Failed to generate export' });
+    expect(generateOrganizationProfilePdf).not.toHaveBeenCalled();
+  });
+
   it('returns 403 for canonical reviewer membership', async () => {
     mockSupabase({
       user: { id: 'user-1' },

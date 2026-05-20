@@ -125,6 +125,6 @@ export async function GET(request: Request) {
       state: 'portfolio_export_failed',
       failureClass: error instanceof Error ? error.message : 'portfolio_export_failed',
     });
-    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to generate export' }, { status: 500 });
   }
 }

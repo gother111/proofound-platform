@@ -148,6 +148,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       state: 'org_export_failed',
       failureClass: error instanceof Error ? error.message : 'organization_export_failed',
     });
-    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to generate export' }, { status: 500 });
   }
 }
