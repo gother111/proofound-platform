@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-20`
 > Reference note: current integration-test orientation only. Archived/post-MVP suites are not launch evidence unless the locked MVP authority stack reactivates them.
 
 # Integration Test Plan
@@ -7,6 +7,7 @@
 ## Purpose
 
 Define integration-level verification paths aligned with the current test suite and route contracts.
+Current active integration tests are deterministic contract tests, not live-database smoke tests.
 
 ## Canonical Integration Test Locations
 
@@ -21,6 +22,8 @@ Define integration-level verification paths aligned with the current test suite 
 
 ## Execution Commands
 
+- Active integration contract slice:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:integration -- --reporter=verbose`
 - Full baseline:
   - `npm run test`
 - Privacy integration depth:
@@ -36,7 +39,8 @@ Define integration-level verification paths aligned with the current test suite 
 
 ### 2) Matching and Assignment Contracts
 
-- Matching feed and gating routes produce deterministic/valid responses.
+- Matching score artifacts enforce hard gates, deterministic ordering, proof-first reason codes, and no retired purpose-fit scoring.
+- Matching feed and gating routes produce deterministic/valid responses through supporting API coverage.
 - Assignment creation, publish, and match-interest flows behave correctly.
 
 ### 3) Verification and Proofs Contracts

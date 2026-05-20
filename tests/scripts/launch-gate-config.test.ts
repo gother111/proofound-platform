@@ -1503,6 +1503,7 @@ describe('launch gate package configuration', () => {
   });
 
   it('keeps the integration test plan aligned with active test files', () => {
+    const packageJson = readJson<{ scripts: Record<string, string> }>('package.json');
     const integrationPlan = fs.readFileSync(
       path.join(repoRoot, 'INTEGRATION_TEST_PLAN.md'),
       'utf8'
@@ -1510,9 +1511,16 @@ describe('launch gate package configuration', () => {
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
     expect(integrationPlan).toContain('Doc Class: `reference-spec`');
-    expect(integrationPlan).toContain('Last Verified: `2026-05-19`');
+    expect(integrationPlan).toContain('Last Verified: `2026-05-20`');
     expect(integrationPlan).toContain('tests/integration/matching.test.ts');
     expect(integrationPlan).toContain('tests/integration/data-portability.test.ts');
+    expect(integrationPlan).toContain(
+      'Current active integration tests are deterministic contract tests'
+    );
+    expect(integrationPlan).toContain('npm run test:integration -- --reporter=verbose');
+    expect(packageJson.scripts['test:integration']).toBe(
+      'vitest run --config vitest.integration.config.ts'
+    );
     expect(integrationPlan).not.toContain('tests/integration/evidence-pack.test.ts');
     expect(integrationPlan).toContain(
       'Historical `critical-gaps`, CV import wizard, and donor/investor evidence-pack tests'
@@ -1531,8 +1539,15 @@ describe('launch gate package configuration', () => {
       'tests/integration/matching.test.ts',
       'tests/integration/data-portability.test.ts',
     ]) {
-      expect(fs.existsSync(path.join(repoRoot, activeIntegrationPath))).toBe(true);
+      const activeIntegrationSource = fs.readFileSync(
+        path.join(repoRoot, activeIntegrationPath),
+        'utf8'
+      );
+
+      expect(activeIntegrationSource).not.toContain('expect(true).toBe(true)');
+      expect(activeIntegrationSource).not.toContain('Placeholder for actual test');
     }
+    expect(fs.existsSync(path.join(repoRoot, 'tests/integration/setup.ts'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'tests/integration/evidence-pack.test.ts'))).toBe(
       false
     );
@@ -1542,7 +1557,7 @@ describe('launch gate package configuration', () => {
       )
     ).toBe(true);
     expect(docsRegistry).toContain(
-      '| `INTEGRATION_TEST_PLAN.md`                                                                              | `reference-spec` | `root`        | `repo`              | `2026-05-19`'
+      '| `INTEGRATION_TEST_PLAN.md`                                                                              | `reference-spec` | `root`        | `repo`              | `2026-05-20`'
     );
     expect(docsRegistry).toContain('`src/archive/non_launch_evidence_pack/README.md`');
   });

@@ -34,6 +34,7 @@
     "email:auth:templates:sync": "tsx scripts/sync-supabase-auth-templates.ts --apply",
     "test": "node ./scripts/run-vitest-with-timeout.mjs",
     "test:api:focused": "npm run test -- tests/api src/app/api/monitoring/__tests__/launch-status-route.test.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:archived:non-launch": "vitest run --config vitest.archived.config.ts",
     "test:ai:archived-admin": "vitest run --config vitest.archived.config.ts tests/archive/non_mvp_admin_suite/admin-ai-spend-page.archived.test.tsx",
     "test:slow:non-launch": "vitest run tests/lib/cv-import-suggest-1000-benchmark.test.ts tests/lib/cv-import-suggest-quality.test.ts tests/archive/non_mvp_cv_import_wizard/cv-import-wizard-quality.archived.test.ts",
