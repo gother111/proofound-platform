@@ -60,7 +60,7 @@ export function DeferredSettingsContent({
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
             Your account settings are still safe. Retry this section to load account, privacy, and
-            notification controls.
+            data controls.
           </p>
           <Button className="mt-4" variant="outline" onClick={() => setRetryKey((key) => key + 1)}>
             Retry settings

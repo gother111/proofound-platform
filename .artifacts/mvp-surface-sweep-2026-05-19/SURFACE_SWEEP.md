@@ -2033,3 +2033,15 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-verify-skill-archive/verify-skill-archive-smoke.json`.
 - Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, console, overflow, and stale-form evidence was captured instead.
 - Verification passed: `npm run test -- tests/ui/archived-mvp-routes.test.ts tests/lib/skill-verification-email-links.test.ts` (4 tests) and `npm run test:launch:routes` (27 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but both commands exited successfully.
+
+## Continuation - In-App Notification UI Archive Boundary
+
+- Inspected active references to notification surfaces and found the top bar no longer mounts notifications, but the old notification bell/dropdown components still lived in active `src/components/notifications` and retained calls to archived `/api/notifications*` endpoints plus archived notification/settings routes.
+- Moved the orphaned notification bell/dropdown implementation to `src/archive/non_launch_components/notifications/` with a README explaining that broad in-app notifications are outside the locked launch MVP corridor.
+- Tightened active settings/tour copy so settings no longer claims notification controls are part of the launch surface.
+- Added archive-boundary regression coverage proving the notification components stay out of active `src/components`.
+- Registered the new archive README in `docs/DOCS_REGISTRY.md`.
+- Codex Browser verified `/app/i/settings` at `http://127.0.0.1:33180`: the route rendered `Settings`, `Account`, and `Privacy & Data`, had one `<main>` landmark, no horizontal overflow, no runtime-error text, no actionable notification button/link, no notification-settings copy, and zero Browser console warnings/errors. Toast live regions still use generic notification aria labels, so the Browser check scoped the archived-surface assertion to actionable controls.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-notification-archive/settings-notification-archive-smoke.json`.
+- Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, console, overflow, and actionable-control evidence was captured instead.
+- Verification passed: `npm run test -- tests/ui/launch-discoverability.test.tsx tests/ui/topbar-customize-visibility.test.tsx tests/ui/archived-mvp-routes.test.ts` (10 tests) and `npm run test:launch:routes` (27 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but both commands exited successfully.

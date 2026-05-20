@@ -158,6 +158,8 @@ const ARCHIVED_PAGE_CASES = [
 
 const REMOVED_ARCHIVED_PAGE_IMPLEMENTATIONS = [
   'src/app/verify-skill/VerifySkillContent.tsx',
+  'src/components/notifications/NotificationBell.tsx',
+  'src/components/notifications/NotificationDropdown.tsx',
 ] as const;
 
 describe('archived non-MVP routes', () => {

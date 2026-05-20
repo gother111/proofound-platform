@@ -105,7 +105,7 @@ const individualTourSteps: TourStep[] = [
     id: 'settings',
     title: 'Settings & Privacy',
     description:
-      'Control your privacy, visibility, notifications, and data. Export your data anytime, delete your account instantly—your data, your control.',
+      'Control your privacy, visibility, account access, and data. Export your data anytime, delete your account instantly—your data, your control.',
     icon: Settings,
     target: '[data-tour="settings-link"]',
     placement: 'right',

@@ -9,10 +9,6 @@ vi.mock('next/navigation', () => ({
   usePathname: () => mockPathname,
 }));
 
-vi.mock('@/components/notifications/NotificationBell', () => ({
-  NotificationBell: () => <div data-testid="notification-bell" />,
-}));
-
 vi.mock('@/components/brand/Logo', () => ({
   Logo: () => <div data-testid="logo" />,
 }));
