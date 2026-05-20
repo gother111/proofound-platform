@@ -2626,3 +2626,13 @@ Browser evidence:
   - `/signup` itself remains the account-type chooser and does not directly render social buttons until an account type is selected.
 - Browser friction: the first Browser attempt had a stale tab handle from an earlier session; resetting the Browser runtime and opening a fresh `iab` tab resolved it. A sandboxed dev-server start failed with `EPERM` on port `3001`, then an approved local dev-server run succeeded. The dev server was stopped after verification and generated `tsconfig.json` churn was restored.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/social-sign-in-buttons.test.tsx tests/actions/auth.test.ts tests/lib/archived-linkedin-integration-references.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 122 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Verification Bundle Fallback Copy Cleanup
+
+- Timestamp: 2026-05-20 14:24:05 CEST.
+- Inspected active source/test hits for `TODO`, `coming soon`, `UNVERIFIED`, broad dashboard/profile-theater/public-directory language, and legacy wording outside archive trees.
+- Found an active user-facing fallback in `loadVerificationRequestFeed`: grouped verification bundles with no item display labels could surface as `Legacy grouped request` on the individual verification requests page.
+- Replaced the fallback with `Grouped proof request`, keeping the primary object understandable without exposing migration/internal compatibility language.
+- Added feed-boundary coverage for an empty canonical bundle so active verification data cannot regress to legacy wording when bundle item labels are absent.
+- Browser was not rerun for this slice because no layout or mounted UI structure changed; the focused feed/UI tests verify the rendered text source.
+- Verification passed: active-source scan for `Legacy grouped request|legacy grouped request|Grouped proof request`, and `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/verifications-page.test.tsx tests/ui/verifications-client.test.tsx tests/ui/verification-status-options.test.tsx tests/lib/verification-tier.test.ts --reporter=verbose` (4 files / 27 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, and one existing jsdom warning appeared when the real verifications client tried to fetch `/api/feature-flags`, but the suite exited successfully.

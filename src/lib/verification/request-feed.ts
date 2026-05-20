@@ -642,7 +642,7 @@ function mapBundleRequestToView(
     respondedAt: bundle.responded_at || null,
     responseMessage: bundle.response_message || null,
     expiresAt: bundle.expires_at || null,
-    proofLabel: bundle.items[0]?.display_label || 'Legacy grouped request',
+    proofLabel: bundle.items[0]?.display_label || 'Grouped proof request',
     claimSummary: buildBundleClaimSummary(bundle),
     confirmationOutcome: buildConfirmationOutcome({
       subjectType: 'custom_bundle',

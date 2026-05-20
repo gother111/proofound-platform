@@ -500,6 +500,28 @@ describe('VerificationsPage', () => {
           },
         ],
       },
+      {
+        id: 'bundle-empty',
+        requester_profile_id: 'user-1',
+        requester_name: 'Bundle Owner',
+        verifier_email: 'empty-bundle@example.com',
+        verifier_profile_id: null,
+        verifier_relationship: 'peer',
+        verifier_source: 'peer',
+        request_kind: 'generic_verification',
+        attestation_request: null,
+        attestation_response: null,
+        message: 'Please review this bundle.',
+        status: 'pending',
+        created_at: '2026-02-26T10:00:00.000Z',
+        expires_at: '2026-03-12T10:00:00.000Z',
+        responded_at: null,
+        response_message: null,
+        capability_token_id: 'cap-bundle-empty',
+        email_sent: true,
+        email_error: null,
+        items: [],
+      },
     ] as any);
     vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([
       {
@@ -524,15 +546,22 @@ describe('VerificationsPage', () => {
         subjectType: string;
         bundleItemCount?: number;
         bundlePreviewLabels?: string[];
+        proofLabel?: string | null;
       }>;
     }>();
 
-    expect(props.sentRequests).toHaveLength(1);
-    expect(props.sentRequests[0]).toMatchObject({
+    expect(props.sentRequests).toHaveLength(2);
+    expect(props.sentRequests.find((request) => request.id === 'bundle-1')).toMatchObject({
       id: 'bundle-1',
       subjectType: 'custom_bundle',
       bundleItemCount: 2,
       bundlePreviewLabels: ['TypeScript', 'Migration launch'],
+    });
+    expect(props.sentRequests.find((request) => request.id === 'bundle-empty')).toMatchObject({
+      id: 'bundle-empty',
+      subjectType: 'custom_bundle',
+      bundleItemCount: 0,
+      proofLabel: 'Grouped proof request',
     });
   });
 
