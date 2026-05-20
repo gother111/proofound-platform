@@ -204,7 +204,7 @@ This creates feature flags. Demo users should be created via the signup flow.
 3. Configure DNS records (SPF, DKIM, DMARC):
    - **SPF**: Add TXT record: `v=spf1 include:_spf.resend.com ~all`
    - **DKIM**: Add CNAME records provided by Resend
-   - **DMARC**: Add TXT record: `v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com`
+   - **DMARC**: Add TXT record: `v=DMARC1; p=none; rua=mailto:dmarc@proofound.io`
 4. Get your API key from the dashboard
 5. Update `RESEND_API_KEY` and `EMAIL_FROM` in `.env.local`
 

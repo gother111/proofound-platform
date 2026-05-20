@@ -2026,8 +2026,25 @@ describe('launch gate package configuration', () => {
   it('keeps migration runbooks aligned with checkpoint and restore discipline', () => {
     const applyManual = fs.readFileSync(path.join(repoRoot, 'APPLY_MIGRATIONS_MANUAL.md'), 'utf8');
     const runGuide = fs.readFileSync(path.join(repoRoot, 'RUN_MIGRATIONS_GUIDE.md'), 'utf8');
+    const deploymentGuide = fs.readFileSync(
+      path.join(repoRoot, 'docs/deployment-guide.md'),
+      'utf8'
+    );
+    const applyNewMigrations = fs.readFileSync(
+      path.join(repoRoot, 'scripts/apply-new-migrations.mjs'),
+      'utf8'
+    );
+    const applyTriggerFix = fs.readFileSync(
+      path.join(repoRoot, 'scripts/apply-trigger-fix.mjs'),
+      'utf8'
+    );
+    const seedDemoOrganizations = fs.readFileSync(
+      path.join(repoRoot, 'scripts/seed-demo-organizations.mjs'),
+      'utf8'
+    );
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
-    const migrationDocs = `${applyManual}\n${runGuide}`;
+    const migrationDocs = `${applyManual}\n${runGuide}\n${deploymentGuide}\n${applyNewMigrations}\n${applyTriggerFix}\n${seedDemoOrganizations}`;
+    const unsafeMigrationHelpers = `${applyNewMigrations}\n${applyTriggerFix}\n${seedDemoOrganizations}`;
 
     for (const content of [applyManual, runGuide]) {
       expect(content).toContain('Last Verified: `2026-05-19`');
@@ -2047,6 +2064,10 @@ describe('launch gate package configuration', () => {
     expect(migrationDocs).toContain('production-candidate');
     expect(migrationDocs).not.toContain('Supabase Dashboard method');
     expect(migrationDocs).not.toContain('copy it into Supabase SQL Editor');
+    expect(migrationDocs).not.toContain('Supabase Dashboard → SQL Editor');
+    expect(migrationDocs).not.toContain('dashboard → SQL Editor');
+    expect(unsafeMigrationHelpers).not.toContain('npm run db:push');
+    expect(migrationDocs).toContain('npm run db:migrate');
     expect(docsRegistry).toContain(
       '| `APPLY_MIGRATIONS_MANUAL.md`                                                                            | `active`         | `root`        | `repo+live`         | `2026-05-19`'
     );

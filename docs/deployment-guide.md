@@ -165,12 +165,9 @@ Proofound uses canonical SQL migrations under `src/db/migrations/` and a migrati
 PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run db:migrate
 ```
 
-**Alternative: SQL Editor in Supabase:**
-
-1. Go to Supabase dashboard → SQL Editor
-2. Copy your schema from `src/db/schema.ts`
-3. Convert to SQL and run manually
-4. Verify all tables, indexes, RLS policies created
+Do not use dashboard paste flows as production launch evidence. If migration application fails,
+record the exact error, keep the backup checkpoint, and fix the canonical SQL migration path before
+rerunning `npm run db:migrate`.
 
 ### 4. Seed Essential Data
 

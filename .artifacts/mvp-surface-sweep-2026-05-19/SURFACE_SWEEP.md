@@ -1651,3 +1651,11 @@ Non-fatal test noise:
 - Updated the strict gate runner so provider-connected E2E is recorded as a skipped advisory gate by default and runs `npm run test:e2e:providers:advisory` only when `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`.
 - Updated manual and governance verification checklists so required launch evidence centers individual, organization, and privacy strict flows, with provider advisory evidence only for targets that intentionally launch connected-provider scheduling.
 - Added launch-gate coverage preventing the strict gate runner from reintroducing `providers-strict-e2e` or direct `test:e2e:providers:strict` execution in the default strict corridor.
+
+## Continuation - Migration Runbook And Email Placeholder Cleanup
+
+- Found active setup/deployment surfaces still had a generic `yourdomain.com` DMARC example and a Supabase SQL Editor fallback path that conflicted with canonical migration-runner launch evidence.
+- Updated `README.md` to use the Proofound-controlled DMARC reporting address in the Resend DNS example.
+- Removed dashboard paste-flow guidance from `docs/deployment-guide.md` and replaced it with migration-runner-first failure handling.
+- Updated migration/demo helper scripts so failure text points operators back to canonical `src/db/migrations/*.sql` plus `npm run db:migrate`, and no longer suggests Supabase SQL Editor paste flows or `npm run db:push`.
+- Added launch-gate coverage preventing active migration docs/helper scripts from reintroducing SQL Editor paste flow language or helper-script `db:push` guidance.
