@@ -121,7 +121,7 @@ export default async function OrganizationPortfolioPage({
       ? `Verified domain path: ${data.verifiedDomainPath}`
       : 'Direct-link trust page only',
     data.organization.trust_status === 'platform_reviewed'
-      ? 'Organization trust has been platform reviewed.'
+      ? 'Organization trust has been reviewed by Proofound.'
       : data.organization.verified
         ? 'Organization trust is verified.'
         : 'Organization trust is still in direct-link mode.',

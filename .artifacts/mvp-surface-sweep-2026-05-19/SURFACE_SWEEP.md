@@ -2512,3 +2512,20 @@ Browser evidence:
 - Registered the new archive README files in `docs/DOCS_REGISTRY.md` so docs freshness no longer reports orphan archive documentation.
 - Browser was not rerun for this slice because no rendered UI changed; this is test/comment/docs/policy terminology alignment.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/public-profile-metadata.test.ts tests/api/candidate-invite-proof-card-route.test.ts src/lib/launch/__tests__/surface-policy.test.ts --reporter=verbose` (3 files / 19 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Public Legal, Settings, and Org Trust Copy Polish
+
+- Timestamp: 2026-05-20 13:34:46 CEST.
+- Inspected active-source hits for broad platform/profile-theater/trust-signal language after the active test and policy wording cleanup.
+- Classified `src/app/(marketing)/cookies/page.tsx` as active public/legal surface, `src/components/settings/SettingsContent.tsx` as active individual account/settings surface, `src/components/profile/editable-profile/ContextTab.tsx` as active individual private context surface, and `src/app/portfolio/org/[slug]/page.tsx` as active public organization trust-page surface.
+- Reframed cookie policy copy from broad platform phrasing to account/service language: `core account functionality`, `service needs`, and `account safety`.
+- Reframed settings help copy from platform-tour language to Proofound/product-tour language.
+- Reframed the settings identity verification description from generic `trust signals` to identity/workplace account checks with precise badge meanings.
+- Reframed the volunteering private-context empty state from avoiding `profile theater` to avoiding padding, which is clearer for first-time users and keeps the active UI out of internal guardrail jargon.
+- Reframed the organization trust-page reviewed copy from `platform reviewed` to `reviewed by Proofound` while preserving the underlying `platform_reviewed` state value.
+- Used the bundled Codex in-app Browser runtime (`iab`) against `http://localhost:3001` with visual fixtures enabled. Browser verified:
+  - `/cookies` rendered readable styled content with loaded CSS, `core account functionality`, `service needs`, and `account safety`, and no stale `core platform functionality`, `platform needs`, or `platform safety` copy.
+  - `/portfolio/org/test-org` rendered the organization trust page with trust state and assignment clarity, and no stale `Organization trust has been platform reviewed.` copy in the fixture state.
+  - `/app/i/settings` rendered after loading with `Get help and learn about key Proofound features` and `Product tour`, and no stale `Get help and learn about platform features`, `Platform Tour`, or loading state.
+- A first Browser navigation hit `ERR_CONNECTION_REFUSED` because the local dev server had stopped accepting connections; restarting the preview restored CSS and route rendering. This is recorded as environment friction, not product behavior.
+- Verification passed: active-source scan for the replaced strings and `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/verification-status-options.test.tsx tests/ui/cookie-preferences-copy.test.tsx tests/ui/public-org-portfolio-page.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 110 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.

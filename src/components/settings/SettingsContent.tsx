@@ -159,7 +159,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                   Identity Verification
                 </CardTitle>
                 <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                  Add identity and workplace trust signals with precise badge meanings
+                  Manage identity and workplace account checks with precise badge meanings
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -207,13 +207,13 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                   Help & Support
                 </CardTitle>
                 <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                  Get help and learn about platform features
+                  Get help and learn about key Proofound features
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground mb-2">
-                    Platform Tour
+                    Product tour
                   </p>
                   <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
                     Want a refresher? Restart the guided tour to learn about key features again.

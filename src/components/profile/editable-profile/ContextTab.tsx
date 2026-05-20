@@ -546,8 +546,7 @@ export function ContextTab({
         title: 'Volunteering',
         description: 'Community or unpaid contribution context that can still anchor real proof.',
         emptyTitle: 'Add volunteering context when contribution is the clearest anchor.',
-        emptyDescription:
-          'Capture contribution, skills used, and the result without profile theater.',
+        emptyDescription: 'Capture contribution, skills used, and the result without padding.',
         count: volunteering.length,
         addLabel: 'Add volunteering',
         onAdd: onAddVolunteering,
