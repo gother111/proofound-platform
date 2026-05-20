@@ -1,7 +1,8 @@
 /**
  * Project Form Component
  *
- * Create or edit projects (work, volunteer, education, side projects)
+ * Historical project editor retained for compatibility.
+ * Project records are archived outside the locked MVP corridor.
  */
 
 'use client';
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -20,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2 } from 'lucide-react';
+import { Archive } from 'lucide-react';
 
 interface ProjectFormData {
   title: string;
@@ -42,7 +44,6 @@ interface ProjectFormProps {
 }
 
 export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: ProjectFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOngoing, setIsOngoing] = useState(initialData?.isOngoing ?? false);
 
   const {
@@ -68,38 +69,22 @@ export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: Pro
   const projectType = watch('type');
   const projectStatus = watch('status');
 
-  const onSubmit = async (data: ProjectFormData) => {
-    setIsSubmitting(true);
-    try {
-      const endpoint = projectId ? `/api/projects/${projectId}` : '/api/projects';
-      const method = projectId ? 'PATCH' : 'POST';
-
-      const response = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          endDate: isOngoing ? null : data.endDate,
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        onSuccess(result.project);
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Failed to save project');
-      }
-    } catch (error) {
-      console.error('Failed to save project:', error);
-      alert('Failed to save project. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const onSubmit = async () => {
+    onSuccess({
+      archived: true,
+      message: 'Project records are archived for launch. Use Proof Packs for current evidence.',
+    });
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <Alert>
+        <Archive className="h-4 w-4" />
+        <AlertDescription>
+          Project records are archived for launch. Add current evidence through Proof Packs instead.
+        </AlertDescription>
+      </Alert>
+
       {/* Title */}
       <div className="space-y-2">
         <Label htmlFor="title">
@@ -215,16 +200,11 @@ export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: Pro
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-3 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+        <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-proofound-forest hover:bg-proofound-forest/90"
-        >
-          {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          {projectId ? 'Update Project' : 'Create Project'}
+        <Button type="submit" disabled className="bg-proofound-forest hover:bg-proofound-forest/90">
+          {projectId ? 'Project Editing Archived' : 'Project Creation Archived'}
         </Button>
       </div>
     </form>

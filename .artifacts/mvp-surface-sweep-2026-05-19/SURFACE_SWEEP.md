@@ -2010,3 +2010,15 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-performance-telemetry/public-portfolio-browser-evidence.json`.
 - Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, console, overflow, and stale-copy evidence was captured instead.
 - Verification passed: `npm run test -- tests/lib/client-performance-tracker.test.ts` (1 test). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.
+
+## Continuation - Retained Client Archived API Cleanup
+
+- Inspected retained active-source compatibility components and found direct client calls or SDK loads for archived/post-MVP surfaces: `/api/projects`, `/api/verification/veriff/session`, `/api/policy/explain`, and the Veriff CDN SDK.
+- Changed the historical project form to fail closed with launch copy that routes current evidence work to Proof Packs instead of calling the archived Projects API.
+- Changed the Veriff settings component to a disabled launch-safe notice: third-party ID verification is archived; current launch checks are work email, Proof Pack verification requests, and organization review consent. The component no longer loads the Veriff SDK or creates Veriff sessions.
+- Changed the policy assistant from an API-backed chatbot into a local plain-language helper for Public Page visibility, reveal consent, export/delete, and launch privacy basics. It no longer calls the archived policy explanation API or claims AI-backed precision.
+- Added a client-source guard test so these retained components cannot reintroduce direct calls to the archived Projects, Veriff, or policy-explain surfaces.
+- Codex Browser verified `/login` at `http://127.0.0.1:33180`: the route rendered `Welcome back`, one `<main>` landmark, no horizontal overflow, no runtime-error text, no archived API unavailable messages, and zero Browser console warnings/errors.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-client-archive-calls/login-client-archive-smoke.json`.
+- Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, console, overflow, and stale-copy evidence was captured instead.
+- Verification passed: `npm run test -- tests/lib/archived-client-api-references.test.ts tests/lib/client-performance-tracker.test.ts` (2 tests), `npm run test:launch:routes` (27 tests), `npm run lint`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
