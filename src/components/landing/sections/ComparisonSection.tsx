@@ -17,7 +17,7 @@ export function ComparisonSection({ shouldReduceMotion }: ComparisonSectionProps
 
   const oldWayItems = [
     'CVs and profiles are easy to fake',
-    'Hiring and networking rely on weak signals',
+    'Hiring and networking rely on weak evidence',
     'People repeatedly have to prove credibility from scratch',
   ];
 

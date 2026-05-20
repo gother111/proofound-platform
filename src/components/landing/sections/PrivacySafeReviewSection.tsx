@@ -11,7 +11,7 @@ const points = [
   },
   {
     title: 'Explainable review',
-    body: 'Reason-coded signals matter more than opaque ranking or generic scoring.',
+    body: 'Reason codes matter more than opaque ranking or generic scoring.',
   },
 ];
 

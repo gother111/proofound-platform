@@ -1377,7 +1377,7 @@ export function buildFinalLaunchChecklistDefinitions({
       id: 'founder_public_story_signal_over_cvs',
       section: 'Founder / GTM',
       blocksVerdictIn: 'full',
-      label: 'Public story sells stronger signal than CVs, not broad platform vision',
+      label: 'Public story sells stronger evidence than CVs, not broad platform vision',
       authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
       evidenceSources: [
         'README.md',

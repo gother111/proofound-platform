@@ -58,7 +58,7 @@ export function PracticalTrustSection({ shouldReduceMotion }: PracticalTrustSect
             Trust built on reality
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground font-sans leading-relaxed">
-            We replace empty signals with structured evidence. You control your privacy, own your
+            We replace empty claims with structured evidence. You control your privacy, own your
             portable proof, and always know how matches are made.
           </p>
         </motion.div>

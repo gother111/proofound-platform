@@ -29,7 +29,7 @@ export function BuiltForSection({
       description: 'Own your professional narrative and let your evidence speak for itself.',
       benefits: [
         'Build a verified Public Page in minutes',
-        'Aggregate evidence, signals, and outcomes',
+        'Collect evidence, outcomes, and verification context',
         'Enter assignment review through proven capability, not resume keywords',
       ],
       cta: 'Create your portfolio',

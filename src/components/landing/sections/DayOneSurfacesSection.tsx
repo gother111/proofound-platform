@@ -55,7 +55,7 @@ function PortfolioSurface() {
             </div>
             <div className="mt-3 text-base font-medium">Peer reviewed</div>
             <div className="mt-3 text-sm leading-7 text-[var(--landing-action)]">
-              One visible proof item, one outcome, one scoped signal.
+              One visible proof item, one outcome, one scoped verification.
             </div>
           </div>
         </div>

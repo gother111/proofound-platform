@@ -27,7 +27,7 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
     id: 'blind',
     title: 'Blind by default',
     body: 'Photo, name, contact details, prestige markers, and other identity signals are removed first. The goal is not anonymity for its own sake. It is capability before bias.',
-    microcopy: 'Weak signal should leave before judgment begins.',
+    microcopy: 'Weak evidence should not lead the first review.',
   },
   {
     id: 'outcomes',
@@ -39,7 +39,7 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
     id: 'artifacts',
     title: 'Backed with proof artifacts',
     body: 'Each outcome can carry links, files, visuals, repositories, certificates, and case fragments. The Public Page stops asking for belief and starts pointing to proof.',
-    microcopy: 'Claims gain artifacts. Signal gains weight.',
+    microcopy: 'Claims gain artifacts. Review gets clearer.',
   },
   {
     id: 'verification',
@@ -63,13 +63,13 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
     id: 'precision',
     title: 'For precise solutions',
     body: 'Once requirements and proof are both structured, fit can be explained with reason codes, readiness states, and gaps that still need human review.',
-    microcopy: 'Signal sharpens. The next review step becomes visible.',
+    microcopy: 'Evidence sharpens. The next review step becomes visible.',
   },
   {
     id: 'challenges',
     title: 'To modern challenges',
     body: 'Organizations waste time reviewing weak applications. Candidates flatten real ability into bullets or overshare to compensate. Proofound gives both sides a more modern starting point.',
-    microcopy: 'A stronger hiring signal solves real problems on both sides.',
+    microcopy: 'Stronger proof solves real problems on both sides.',
   },
 ];
 

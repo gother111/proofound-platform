@@ -36,8 +36,7 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
                 </span>
               </Link>
               <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                Evidence-based hiring for a world with too much polished signal and too little
-                proof.
+                Evidence-based hiring for a world with too much polish and too little proof.
               </p>
             </div>
 
@@ -77,7 +76,7 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
 
           <div className="mt-6 border-t border-border/70 pt-4 text-sm text-foreground/48 md:flex md:items-center md:justify-between">
             <p>&copy; {currentYear} Proofound. Privacy-first by design.</p>
-            <p className="mt-2 md:mt-0">Calm signal. Clearer proof. Better fit.</p>
+            <p className="mt-2 md:mt-0">Calm review. Clearer proof. Better fit.</p>
           </div>
         </div>
       </div>

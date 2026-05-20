@@ -14,7 +14,7 @@ const steps = [
   {
     number: '03',
     title: 'Review safely',
-    body: 'Organizations review stronger signal first, then move through intro, reveal, interview, and decision with explanation and consent built in.',
+    body: 'Organizations review stronger proof first, then move through intro, reveal, interview, and decision with explanation and consent built in.',
   },
 ];
 

@@ -130,7 +130,7 @@ export function FinalCTASection({
                 </p>
                 <p className="mt-4 max-w-md text-sm leading-6 text-white/85">
                   Start with a cleaner proof portfolio, then add proof, verification, and
-                  privacy-safe signal over time.
+                  privacy-safe evidence over time.
                 </p>
                 <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium">
                   Start building

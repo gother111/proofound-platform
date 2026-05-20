@@ -186,7 +186,7 @@ const preciseMatchReasons = ['Process design', 'Onboarding gains', 'Regional sco
 
 const organizationChallenges = [
   'Too much time reviewing weak applications',
-  'Low signal in early screening',
+  'Low evidence in early screening',
   'Vague job definitions create inconsistent review',
   'Interview time gets spent finding basic evidence',
 ];
@@ -1604,7 +1604,7 @@ function AssignmentCard({ state, compact = false }: { state: StoryState; compact
         {!compact ? (
           <div className="mt-3 border-t border-border/45 pt-3">
             <p className="text-[0.58rem] font-medium uppercase tracking-[0.28em] text-proofound-forest/82">
-              Review-fit signal
+              Review-fit evidence
             </p>
             <div className="mt-2.5 grid grid-cols-4 divide-x divide-border/45">
               {assignmentBestFitSignals.map(({ label, chips, icon: Icon }) => (
@@ -3471,7 +3471,7 @@ function MobileProofSignalVisual({ frame }: { frame: HomepageStoryFrame }) {
             Senior Operations Professional
           </p>
           <p className="mt-1 text-[0.6rem] uppercase tracking-[0.18em] text-foreground/45">
-            {isVerified ? 'Verified signal' : 'Outcome signal'}
+            {isVerified ? 'Verified proof' : 'Outcome proof'}
           </p>
         </div>
       </div>
