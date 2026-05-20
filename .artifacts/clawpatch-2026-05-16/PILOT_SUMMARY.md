@@ -580,6 +580,22 @@ Verification after this audit:
 - `npm run lint`: passed.
 - `npm run docs:freshness`: passed.
 
+## Continuation: Medium-Risk Finding Evidence Audit
+
+A medium-risk fixed-finding audit rechecked two route families against the current implementation:
+
+- `src/app/api/assignments/[id]/publish/route.ts`: verified publish now rejects non-publishable workflow states before updating and uses a guarded final update predicate for assignment id, `creationStatus='review_ready'`, and allowed workflow statuses.
+- `tests/api/assignments-publish-route.test.ts`: verified coverage for closed assignments returning `409` without update and stale final updates returning `ASSIGNMENT_PUBLISH_STATE_CHANGED`.
+- `src/app/api/candidate-invites/[token]/route.ts`: verified unauthenticated preview responses expose derived booleans/URLs instead of raw profile/match/conversation ids; expired-preview writes are guarded by pending, unclaimed, no-proof predicates; preview redeem-session creation receives the existing redeem-session nonce from the cookie.
+- `tests/api/candidate-invites-token-route.test.ts`: added a focused regression test proving the preview route passes `existingRedeemSessionNonce` into `beginCapabilityTokenRedeemSession`.
+
+Verification after this audit:
+
+- `npm run test -- tests/api/candidate-invites-token-route.test.ts tests/api/assignments-publish-route.test.ts`: passed, `2` files and `19` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+- `npm run docs:freshness`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.

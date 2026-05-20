@@ -111,6 +111,47 @@ describe('GET /api/candidate-invites/[token]', () => {
     expect(payload.invite).not.toHaveProperty('conversationId');
   });
 
+  it('reuses an existing preview redeem-session nonce instead of rotating blindly', async () => {
+    mockAuthUser(null);
+    mockInviteSelect([
+      {
+        id: 'invite-1',
+        orgId: 'org-1',
+        inviteeEmail: 'candidate@example.com',
+        status: 'pending',
+        flowType: 'test_match',
+        assignmentId: 'assignment-1',
+        expiresAt: new Date(Date.now() + 60_000),
+        claimedByProfileId: null,
+        claimedAt: null,
+        acceptedByProfileId: null,
+        acceptedAt: null,
+        matchId: null,
+        conversationId: null,
+        proofSubmittedAt: null,
+      },
+    ]);
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/candidate-invites/token', {
+        headers: {
+          cookie: 'pf_rsn_candidate_invite_claim=existing-nonce',
+        },
+      }),
+      {
+        params: Promise.resolve({ token: 'token-value' }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect(beginCapabilityTokenRedeemSession).toHaveBeenCalledWith(
+      'token-value',
+      expect.objectContaining({
+        existingRedeemSessionNonce: 'existing-nonce',
+      })
+    );
+  });
+
   it('does not overwrite a claimed invite with expired during preview', async () => {
     mockAuthUser({ id: '11111111-1111-1111-1111-111111111111', email: 'candidate@example.com' });
     mockInviteSelect([
