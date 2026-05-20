@@ -20,20 +20,9 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
-vi.mock('@/lib/security/capability-tokens', () => ({
-  CAPABILITY_TOKEN_CLASSES: {
-    PROFILE_SNIPPET_SHARE: 'profile_snippet_share',
-  },
-  inspectCapabilityToken: vi.fn(),
-}));
-
 import { db } from '@/db';
 import { getRows } from '@/lib/db/rows';
-import { inspectCapabilityToken } from '@/lib/security/capability-tokens';
-import {
-  isViewerMatchedWithProfile,
-  validateProfileLinkToken,
-} from '@/lib/privacy/profile-fetcher';
+import { isViewerMatchedWithProfile } from '@/lib/privacy/profile-fetcher';
 
 function sqlToQuery(query: unknown) {
   if (query && typeof (query as { toQuery?: unknown }).toQuery === 'function') {
@@ -56,53 +45,6 @@ describe('profile-fetcher privacy helpers', () => {
     vi.clearAllMocks();
     mocks.execute.mockResolvedValue({ rows: [{ exists: 1 }] });
     mocks.getRows.mockReturnValue([{ exists: 1 }]);
-    vi.mocked(inspectCapabilityToken).mockResolvedValue({
-      ok: true,
-      token: { id: 'token-1' },
-    } as any);
-  });
-
-  it('rejects empty public profile link tokens before capability inspection', async () => {
-    await expect(validateProfileLinkToken('profile-1', '   ')).resolves.toBe(false);
-
-    expect(inspectCapabilityToken).not.toHaveBeenCalled();
-    expect(db.execute).not.toHaveBeenCalled();
-  });
-
-  it('requires a valid profile snippet capability token for profile links', async () => {
-    await expect(validateProfileLinkToken('profile-1', 'share-token')).resolves.toBe(true);
-
-    expect(inspectCapabilityToken).toHaveBeenCalledWith('share-token', {
-      tokenClass: 'profile_snippet_share',
-      metadata: { surface: 'profile_fetcher.validateProfileLinkToken' },
-    });
-
-    const { sql, params } = sqlToQuery(mocks.execute.mock.calls[0][0]);
-    expect(sql).toContain('FROM profile_snippets');
-    expect(sql).toContain('capability_token_id = $1::uuid');
-    expect(sql).toContain('user_id = $2::uuid');
-    expect(sql).toContain('deleted_at IS NULL');
-    expect(sql).toContain('revoked_at IS NULL');
-    expect(sql).toContain('public_surface_disabled_at IS NULL');
-    expect(sql).toContain('expires_at IS NULL OR expires_at > NOW()');
-    expect(params).toEqual(['token-1', 'profile-1']);
-  });
-
-  it('rejects inspected tokens that are not valid share capabilities', async () => {
-    vi.mocked(inspectCapabilityToken).mockResolvedValueOnce({
-      ok: false,
-      error: 'invalid',
-    } as any);
-
-    await expect(validateProfileLinkToken('profile-1', 'bad-token')).resolves.toBe(false);
-
-    expect(db.execute).not.toHaveBeenCalled();
-  });
-
-  it('rejects capability tokens without a live matching profile snippet', async () => {
-    mocks.getRows.mockReturnValueOnce([]);
-
-    await expect(validateProfileLinkToken('profile-1', 'share-token')).resolves.toBe(false);
   });
 
   it('scopes matched-profile access to the viewer organization membership', async () => {

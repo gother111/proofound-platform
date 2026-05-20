@@ -2489,3 +2489,12 @@ Browser evidence:
 - Moved the unused landing hero artifact variant with the legacy `proofound.co/p/sample` mock link into `src/archive/non_launch_landing_variants/hero-variants/`.
 - Browser was not rerun for this slice because no active rendered route changed; active import scans, route-policy tests, and focused helper/UI tests cover the behavior.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/public-page-share-helpers.test.ts tests/lib/public-profile-metadata.test.ts tests/ui/share-profile-dialog.test.tsx tests/ui/public-snippet-page.test.tsx tests/ui/public-snippet-embed-page.test.tsx src/lib/launch/__tests__/surface-policy.test.ts --reporter=verbose` (6 files / 23 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`, active-source scans for retired snippet helper exports, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Profile Fetcher Legacy Link Token Removal
+
+- Inspected the remaining active `profile_snippets` hits after the Public Page share-helper cleanup.
+- Removed the unused `validateProfileLinkToken` helper from `src/lib/privacy/profile-fetcher.ts`. It was the only active runtime code path still validating `profile_snippet_share` capability tokens for legacy profile links, and no active app route imported it.
+- Trimmed `tests/lib/profile-fetcher.test.ts` to the matched-profile privacy behavior that still belongs to the launch corridor.
+- Preserved lifecycle/reconciliation handling for `profile_snippets` because account deletion and canonical cleanup still need to revoke legacy public projections safely.
+- Browser was not rerun for this slice because no rendered route changed; focused privacy/lifecycle/API tests and typecheck cover the behavior.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/profile-fetcher.test.ts tests/lib/lifecycle-reconciliation.test.ts tests/api/candidate-invite-proof-card-route.test.ts --reporter=verbose` (3 files / 9 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`, focused active-source scans for `validateProfileLinkToken|PROFILE_SNIPPET_SHARE|profile_snippet_share|profile_snippets`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
