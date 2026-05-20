@@ -1869,3 +1869,17 @@ Browser evidence:
 - Codex Browser verified `/admin/verification` in mock-admin mode at `http://127.0.0.1:33184/admin/verification`: desktop and mobile both rendered `Operations Queues`, status/priority filters, age visibility, minimum-necessary risky-upload context, explicit approve/reject actions, one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, and no sampled private leak terms.
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-admin-verification-controls/admin-verification-controls-smoke.json`.
 - Verification passed: `npm run test -- tests/ui/admin-verification-dashboard.test.tsx tests/api/admin-internal-ops-queue-route.test.ts tests/lib/internal-ops-queue.test.ts` (19 tests), `npm run lint`, and `npm run typecheck`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.
+
+## Continuation - Admin Verification SOP Links
+
+- Added direct SOP links to `/admin/verification` queue headers without adding any new public route or broad admin surface.
+- Queue-to-SOP mapping now follows the current `docs/internal-ops/index.md` source:
+  - `verification` -> `docs/internal-ops/verification-review-sop.md`
+  - `privacy_reveal_exception` -> `docs/internal-ops/reveal-privacy-dispute-sop.md`
+  - `correction_revocation` -> `docs/internal-ops/redaction-risky-upload-sop.md`
+  - `pilot_ops` -> `docs/internal-ops/assignment-quality-checklist.md`
+- The links open the current repo docs on GitHub in a new tab and keep the admin page focused on queue review/action rather than embedding long SOP text.
+- Added UI test coverage for all four queue-to-SOP mappings.
+- Codex Browser verified `/admin/verification` at `http://127.0.0.1:33185/admin/verification`: desktop and mobile rendered the redaction/risky-upload SOP link, status/priority filters, one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, and no sampled private leak terms.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-admin-sop-links/admin-sop-links-smoke.json`.
+- Verification passed: `npm run test -- tests/ui/admin-verification-dashboard.test.tsx tests/api/admin-internal-ops-queue-route.test.ts tests/lib/internal-ops-queue.test.ts` (22 tests), `npm run lint`, and `npm run typecheck`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.

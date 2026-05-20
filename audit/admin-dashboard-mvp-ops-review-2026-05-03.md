@@ -16,8 +16,7 @@ Scope: current active Proofound admin dashboard, admin APIs, internal ops queues
 > a compact launch-health card backed by the generated launch checklist. The
 > default admin audit API now returns a minimum-necessary list DTO, and unexpected
 > admin queue errors no longer return raw backend messages. Remaining follow-up
-> risks are internal ops table RLS proof, direct SOP links, and a narrow pilot
-> workflow drilldown.
+> risks are internal ops table RLS proof and a narrow pilot workflow drilldown.
 
 ## A. Executive Verdict
 
@@ -45,7 +44,7 @@ The main remaining gap is operational depth beyond the first launch-ops console:
 
 ## C. What Is Missing
 
-- No direct link from queue item to the relevant SOP or safe operator checklist.
+- Direct queue-header SOP links now point to the current internal-ops runbooks for each active queue.
 - Status, priority, and age controls now exist on the active queue view; entity/operator filtering is still deferred until real pilot volume requires it.
 - No narrow pilot organization/workflow drilldown for inspecting stuck assignment, shortlist/review, intro, reveal, interview, decision, or engagement state in one place.
 - Default admin audit list projection is minimum-necessary, but there is still no richer break-glass preview UI for sensitive full-detail audit review.
@@ -141,12 +140,12 @@ Current guardrail: `tests/lib/admin-audit-list.test.ts`, `tests/ui/admin-audit-l
 
 ### P2: Add Operator Usability Controls
 
-Disposition: partially resolved on 2026-05-20 for scoped filters, age visibility, and sensitive-action confirmations.
-Remaining problem: The queue UI still lacks direct SOP links and richer entity/operator filters.
-Evidence: `AdminVerificationDashboard` now has status/priority filters, age badges, and confirmation prompts for resolve/cancel/reopen.
+Disposition: resolved for current MVP operator controls on 2026-05-20.
+Remaining problem: Richer entity/operator filters are deferred until pilot volume requires them.
+Evidence: `AdminVerificationDashboard` now has status/priority filters, age badges, confirmation prompts for resolve/cancel/reopen, and direct queue-header SOP links to the current internal-ops runbooks.
 File/route: `/admin/verification`.
-Recommended next fix: Add per-queue SOP links or an internal SOP drawer, then consider entity/operator filters only if pilot volume needs them.
-Current guardrail: `tests/ui/admin-verification-dashboard.test.tsx` covers status/priority filtering, age visibility, confirmation before resolve, uploaded-file approve/reject actions, and privacy-safe queue rendering.
+Recommended next fix: Consider entity/operator filters only if pilot volume proves they are needed; do not add broad admin analytics.
+Current guardrail: `tests/ui/admin-verification-dashboard.test.tsx` covers queue-to-SOP links, status/priority filtering, age visibility, confirmation before resolve, uploaded-file approve/reject actions, and privacy-safe queue rendering.
 
 ### P2: Add Pilot Organization And Workflow Read-Only View
 

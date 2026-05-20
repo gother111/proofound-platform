@@ -1,7 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, CheckCircle2, Clock3, Loader2, ShieldCheck, XCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock3,
+  ExternalLink,
+  Loader2,
+  ShieldCheck,
+  XCircle,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
@@ -99,6 +107,27 @@ const PRIORITY_FILTER_OPTIONS: Array<{ value: PriorityFilter; label: string }> =
   { value: 'normal', label: 'Normal' },
   { value: 'low', label: 'Low' },
 ];
+
+const REPO_DOC_BASE_URL = 'https://github.com/gother111/proofound-platform/blob/master';
+
+const QUEUE_SOP_LINKS = {
+  verification: {
+    label: 'Verification review SOP',
+    path: 'docs/internal-ops/verification-review-sop.md',
+  },
+  privacy_reveal_exception: {
+    label: 'Reveal privacy dispute SOP',
+    path: 'docs/internal-ops/reveal-privacy-dispute-sop.md',
+  },
+  correction_revocation: {
+    label: 'Redaction and risky upload SOP',
+    path: 'docs/internal-ops/redaction-risky-upload-sop.md',
+  },
+  pilot_ops: {
+    label: 'Pilot assignment quality checklist',
+    path: 'docs/internal-ops/assignment-quality-checklist.md',
+  },
+} satisfies Record<QueueId, { label: string; path: string }>;
 
 async function fetchQueueData() {
   const response = await apiFetch('/api/admin/internal-ops/queues');
@@ -467,11 +496,25 @@ export function AdminVerificationDashboard() {
           <TabsContent key={queue.id} value={queue.id} className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <ShieldCheck className="h-5 w-5 text-proofound-forest" />
-                  {queue.label}
-                </CardTitle>
-                <CardDescription>{queue.description}</CardDescription>
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-xl">
+                      <ShieldCheck className="h-5 w-5 text-proofound-forest" />
+                      {queue.label}
+                    </CardTitle>
+                    <CardDescription className="mt-1">{queue.description}</CardDescription>
+                  </div>
+                  <a
+                    href={`${REPO_DOC_BASE_URL}/${QUEUE_SOP_LINKS[queue.id].path}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-10 items-center gap-2 rounded-md border border-proofound-stone bg-white px-3 py-2 text-sm font-medium text-proofound-forest hover:bg-[#F3F8F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    aria-label={`${QUEUE_SOP_LINKS[queue.id].label} (${QUEUE_SOP_LINKS[queue.id].path})`}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span>{QUEUE_SOP_LINKS[queue.id].label}</span>
+                  </a>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="mb-4 grid gap-3 rounded-lg border border-proofound-stone/70 bg-[#FBFAF6] p-3 sm:grid-cols-2">

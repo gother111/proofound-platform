@@ -119,6 +119,49 @@ describe('AdminVerificationDashboard', () => {
     expect(apiFetchMock).toHaveBeenCalledWith('/api/admin/internal-ops/queues');
     expect(screen.getByText('Privacy / reveal disputes')).toBeInTheDocument();
     expect(screen.getByText('Pilot ops')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /verification review sop/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/docs/internal-ops/verification-review-sop.md')
+    );
+  });
+
+  it.each([
+    [
+      'privacy_reveal_exception',
+      /reveal privacy dispute sop/i,
+      '/docs/internal-ops/reveal-privacy-dispute-sop.md',
+    ],
+    [
+      'correction_revocation',
+      /redaction and risky upload sop/i,
+      '/docs/internal-ops/redaction-risky-upload-sop.md',
+    ],
+    [
+      'pilot_ops',
+      /pilot assignment quality checklist/i,
+      '/docs/internal-ops/assignment-quality-checklist.md',
+    ],
+  ])('renders the current SOP link for %s queues', async (queueId, linkName, expectedPath) => {
+    const queue = queuePayload.queues.find((entry) => entry.id === queueId);
+    expect(queue).toBeDefined();
+    apiFetchMock.mockResolvedValue(
+      buildJsonResponse({
+        queues: [queue],
+        stats: {
+          total: queue?.items.length ?? 0,
+          open: queue?.openCount ?? 0,
+        },
+      })
+    );
+
+    render(<AdminVerificationDashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: linkName })).toHaveAttribute(
+        'href',
+        expect.stringContaining(expectedPath)
+      );
+    });
   });
 
   it('requires a note for resolve actions and patches the generic queue endpoint once provided', async () => {
