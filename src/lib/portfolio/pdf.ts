@@ -322,9 +322,9 @@ export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
       });
     }
 
-    drawCard(doc, leftX, sectionTop + 236, leftWidth, 74, 'Profile narrative');
+    drawCard(doc, leftX, sectionTop + 236, leftWidth, 74, 'Proof context');
     const narrative = input.visibility.bio
-      ? input.profile.bio || 'Add your profile narrative to strengthen this export.'
+      ? input.profile.bio || 'Add proof context to strengthen this export.'
       : 'Narrative is hidden by current visibility settings.';
     doc
       .fillColor(COLORS.narrative)

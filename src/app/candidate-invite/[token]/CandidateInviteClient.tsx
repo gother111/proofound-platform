@@ -837,8 +837,8 @@ export function CandidateInviteClient({
                         placeholder="00000000-0000-0000-0000-000000000000"
                       />
                       <p className="text-xs leading-5 text-proofound-charcoal/60">
-                        Public profile snippets and share URLs are not accepted in this assignment
-                        flow.
+                        Public Page links and legacy snippet URLs are not accepted in this
+                        assignment flow.
                       </p>
                     </div>
                   )}
@@ -894,8 +894,8 @@ export function CandidateInviteClient({
                           Employer visibility
                         </p>
                         <p className="mt-1 leading-6 text-proofound-charcoal/75">
-                          Owner-only application packet. It does not publish your account, make you
-                          searchable, expose a share URL, or reveal contact details.
+                          Owner-only application packet. It does not publish your Public Page,
+                          broaden visibility, expose a share link, or reveal contact details.
                         </p>
                       </div>
                       <div className="rounded-md border border-proofound-stone bg-proofound-parchment/50 p-3">

@@ -178,10 +178,10 @@ describe('CandidateInviteClient test_match flow', () => {
       screen.getByText(/does not publish a public page or broaden the application/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Public profile snippets and share URLs are not accepted/i)
+      screen.getByText(/Public Page links and legacy snippet URLs are not accepted/i)
     ).toBeInTheDocument();
     const visibleText = document.body.textContent ?? '';
-    expect(visibleText).not.toMatch(/cv import|resume|public directory|people search/i);
+    expect(visibleText).not.toMatch(/cv import|resume|public directory|people search|searchable/i);
     expect(visibleText).not.toMatch(/values|causes|mission-first|purpose-fit/i);
     expect(screen.queryByRole('button', { name: /score|rank|shortlist/i })).not.toBeInTheDocument();
     expect(

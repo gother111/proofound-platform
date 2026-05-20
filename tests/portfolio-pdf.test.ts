@@ -84,6 +84,10 @@ describe('generateTrustPdf', () => {
     });
 
     expect(buffer.length).toBeGreaterThan(500);
+
+    const source = fs.readFileSync(path.resolve(__dirname, '../src/lib/portfolio/pdf.ts'), 'utf8');
+    expect(source).toContain('Proof context');
+    expect(source).not.toContain('Profile narrative');
   });
 });
 
