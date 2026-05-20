@@ -36,8 +36,14 @@ vi.mock('@/components/messaging/RealtimeMessageThread', () => ({
   ),
 }));
 
+vi.mock('@/lib/auth', () => ({
+  requirePersona: vi.fn(),
+}));
+
+import OrganizationMessagesPage from '@/app/app/o/[slug]/messages/page';
 import { OrgMessagesClient } from '@/app/app/o/[slug]/messages/OrgMessagesClient';
 import { LoadingOrganizationMessages } from '@/app/app/o/[slug]/messages/DeferredOrgMessagesClient';
+import { requirePersona } from '@/lib/auth';
 
 describe('organization messages page', () => {
   beforeEach(() => {
@@ -90,6 +96,17 @@ describe('organization messages page', () => {
     });
 
     expect(screen.queryByText(/^loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  it('uses the server org-member persona as the current user source', async () => {
+    vi.mocked(requirePersona).mockResolvedValue({ id: 'org-user-1' } as any);
+
+    const element = (await OrganizationMessagesPage()) as React.ReactElement<{
+      currentUserId: string;
+    }>;
+
+    expect(requirePersona).toHaveBeenCalledWith('org_member');
+    expect(element.props.currentUserId).toBe('org-user-1');
   });
 
   it('uses a contextual loading state for organization messages', () => {
