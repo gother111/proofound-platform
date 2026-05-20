@@ -288,14 +288,14 @@ const REASON_DICTIONARY: Record<MatchReasonCode, ReasonDictionaryEntry> = {
   },
   fairness_warning_active: {
     category: 'fairness',
-    orgCopy: 'Fairness checks are elevated, so comparative detail is limited.',
-    candidateCopy: 'Comparative detail is limited while fairness checks are reviewed.',
+    orgCopy: 'Policy checks are elevated, so comparative detail is limited.',
+    candidateCopy: 'Comparative detail is limited while policy checks are reviewed.',
     importance: 88,
   },
   fairness_ranking_suppressed: {
     category: 'fairness',
-    orgCopy: 'Exact ranking detail is suppressed while fairness remediation is active.',
-    candidateCopy: 'Exact ranking detail is suppressed while fairness remediation is active.',
+    orgCopy: 'Exact ordering detail is suppressed while policy review is active.',
+    candidateCopy: 'Exact ordering detail is suppressed while policy review is active.',
     importance: 92,
   },
   reveal_shortlist_identity: {
@@ -411,7 +411,7 @@ function buildTrustLabels(input: {
   }
 
   if (input.fairnessStatus !== 'pass') {
-    labels.push('Fairness protected');
+    labels.push('Policy protected');
   }
 
   return Array.from(new Set(labels.filter(Boolean)));
@@ -1872,7 +1872,7 @@ export function buildFairnessUiContract(status: FairnessStatus) {
       showWarning: true,
       suppressExactRank: true,
       warning:
-        'Fairness checks are elevated. Rank detail is limited while this snapshot is reviewed.',
+        'Policy checks are elevated. Ordering detail is limited while this snapshot is reviewed.',
     };
   }
 
@@ -1881,7 +1881,7 @@ export function buildFairnessUiContract(status: FairnessStatus) {
       showWarning: true,
       suppressExactRank: true,
       warning:
-        'Fairness remediation is active. Exact ranking detail is temporarily suppressed for this snapshot.',
+        'Policy review is active. Exact ordering detail is temporarily suppressed for this snapshot.',
     };
   }
 
@@ -1889,7 +1889,7 @@ export function buildFairnessUiContract(status: FairnessStatus) {
     showWarning: true,
     suppressExactRank: true,
     warning:
-      'Exact ranking detail is unavailable because fairness evidence is not strong enough yet.',
+      'Exact ordering detail is unavailable because policy evidence is not strong enough yet.',
   };
 }
 

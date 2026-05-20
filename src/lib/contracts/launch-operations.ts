@@ -263,8 +263,8 @@ export const FALLBACK_COPY: Record<
     individual: {
       title: 'Shortlist quality is protected right now.',
       detail:
-        'Exact ranking is temporarily hidden to protect shortlist quality. Review can continue without exposing brittle comparative detail.',
-      statusLabel: 'Rank-band mode',
+        'Exact ordering is temporarily hidden to protect shortlist quality. Review can continue without exposing brittle comparative detail.',
+      statusLabel: 'Review-band mode',
       nextActions: [
         'Improve your portfolio or proof',
         'Complete trust signals or constraints',
@@ -274,8 +274,8 @@ export const FALLBACK_COPY: Record<
     organization: {
       title: 'Shortlist quality is protected right now.',
       detail:
-        'Exact ranking is temporarily hidden to protect shortlist quality. Review history stays visible while fairness remediation is active.',
-      statusLabel: 'Fairness suppression active',
+        'Exact ordering is temporarily hidden to protect shortlist quality. Review history stays visible while policy review is active.',
+      statusLabel: 'Policy protection active',
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',

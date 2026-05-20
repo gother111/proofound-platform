@@ -326,7 +326,7 @@ export function MatchResultCard({
                   <Badge variant="outline">{reviewBandLabel(orgReviewCard?.fitBand)}</Badge>
                 ) : null}
                 {result.fairness?.status && result.fairness.status !== 'pass' ? (
-                  <Badge variant="outline">Fairness protected</Badge>
+                  <Badge variant="outline">Policy protected</Badge>
                 ) : null}
               </div>
             </div>

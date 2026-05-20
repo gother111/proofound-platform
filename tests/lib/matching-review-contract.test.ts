@@ -280,10 +280,10 @@ describe('matching review contract', () => {
     expect(rendered.sections.manual_override).toContain(
       'Reviewer note: Strong proof quality in recent work sample.'
     );
-    expect(rendered.sections.fairness[0]).toContain('Fairness checks are elevated');
+    expect(rendered.sections.fairness[0]).toContain('Policy checks are elevated');
   });
 
-  it('suppresses exact rank unless fairness passes and reviewer role allows it', () => {
+  it('suppresses exact order unless policy checks pass and reviewer role allows it', () => {
     expect(canRevealExactRank('org_reviewer', 'pass')).toBe(false);
     expect(canRevealExactRank('org_manager', 'unavailable')).toBe(false);
     expect(canRevealExactRank('org_manager', 'pass')).toBe(true);

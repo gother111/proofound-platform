@@ -82,7 +82,7 @@
   - “Your portfolio is still live and shareable.”
   - “Private browse stays open while org-visible matching and introductions are protected.”
   - “Verification is still in progress, so stronger trust actions stay paused.”
-  - “Exact ranking is not shown while we protect shortlist quality.”
+  - “Exact ordering is not shown while we protect shortlist quality.”
   - “There are not enough qualified introductions yet for this assignment.”
 - Product behavior:
   - public portfolio, browse-safe review, exports, and deletion remain available in fallback

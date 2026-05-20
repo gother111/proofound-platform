@@ -122,7 +122,12 @@ function fitBandLabel(label?: string | null, fallbackScore?: number): string {
 
 function privacySafeWarning(message?: string | null): string | null {
   if (!message) return null;
-  return message.replace(/\branking\b/gi, 'ordering').replace(/\brank\b/gi, 'order');
+  return message
+    .replace(/\bfairness\b/gi, 'policy')
+    .replace(/\bpolicy remediation\b/gi, 'policy review')
+    .replace(/\bremediation\b/gi, 'review')
+    .replace(/\branking\b/gi, 'ordering')
+    .replace(/\brank\b/gi, 'order');
 }
 
 export function MatchExplainerModal({
@@ -308,7 +313,7 @@ export function MatchExplainerModal({
                 </div>
                 {rankMode === 'band' && exactRankAvailable ? (
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Exact ordering is hidden while privacy or fairness limits apply.
+                    Exact ordering is hidden while privacy or policy limits apply.
                   </p>
                 ) : null}
               </div>

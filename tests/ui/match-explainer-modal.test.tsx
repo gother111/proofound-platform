@@ -83,7 +83,7 @@ vi.mock('@/components/ui/drawer', () => ({
 }));
 
 describe('MatchExplainerModal', () => {
-  it('renders privacy-safe explanation summary and fairness warning', () => {
+  it('renders privacy-safe explanation summary and policy warning', () => {
     render(
       <MatchExplainerModal
         matchId="match-1"
@@ -91,7 +91,7 @@ describe('MatchExplainerModal', () => {
         rankBand="High-priority proof review"
         rankMode="band"
         exactRankAvailable
-        fairnessWarning="Exact ranking detail is suppressed while fairness remediation is active."
+        fairnessWarning="Exact ordering detail is suppressed while policy review is active."
         reasonSummary={[
           'Evidence points to a strong skills fit for this assignment.',
           'The organization has requested reveal. Identity-bearing fields stay hidden until you approve.',
@@ -166,10 +166,10 @@ describe('MatchExplainerModal', () => {
     expect(screen.getByText('Auditable verification history')).toBeInTheDocument();
     expect(screen.queryByText('Comparative score detail')).not.toBeInTheDocument();
     expect(
-      screen.getByText('Exact ordering detail is suppressed while fairness remediation is active.')
+      screen.getByText('Exact ordering detail is suppressed while policy review is active.')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Exact ordering is hidden while privacy or fairness limits apply.')
+      screen.getByText('Exact ordering is hidden while privacy or policy limits apply.')
     ).toBeInTheDocument();
     expect(screen.getByText('Supporting fit signal')).toBeInTheDocument();
     expect(screen.getByText('Review signals by area')).toBeInTheDocument();
@@ -185,5 +185,7 @@ describe('MatchExplainerModal', () => {
         'This fit signal summarizes proof strength, fit rationale, and practical constraints after the privacy-safe review context above.'
       )
     ).toBeInTheDocument();
+    expect(screen.queryByText(/fairness/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ranking/i)).not.toBeInTheDocument();
   });
 });

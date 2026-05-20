@@ -141,6 +141,51 @@ describe('MatchResultCard', () => {
     expect(screen.queryByRole('button', { name: /snooze/i })).not.toBeInTheDocument();
   });
 
+  it('uses policy language when a protected org review cannot expose matching detail', () => {
+    render(
+      <MatchResultCard
+        result={{
+          id: 'match-policy-protected',
+          score: 0.82,
+          profileId: 'candidate-1',
+          reviewStage: 'blind_review',
+          revealScope: 'blind',
+          profile: {
+            workMode: 'Remote',
+          },
+          fairness: {
+            status: 'suppressed',
+          },
+          reviewCard: {
+            candidateLabel: 'Candidate A7F2',
+            strongestProof: {
+              summary: 'Led a privacy-safe launch proof for a complex hiring workflow.',
+              outcome: 'Reduced review time while keeping candidate identity masked.',
+              ownership: 'Owned the end-to-end review corridor changes.',
+              anchorContext: 'Anchored in prior project work',
+              freshnessLabel: 'Fresh',
+            },
+            verification: {
+              summaryLabel: 'Verified proof signal present',
+              count: 2,
+            },
+            trustLabels: ['Verified proof signal present'],
+            fitBand: 'High-priority proof review',
+            fitSummary: {
+              headline: 'Proof signals align with the assignment needs.',
+              bullets: ['Required proof and verification signals are in place.'],
+              reasonCodes: ['verification_ready'],
+            },
+          },
+        }}
+        variant="blind"
+      />
+    );
+
+    expect(screen.getByText('Policy protected')).toBeInTheDocument();
+    expect(screen.queryByText(/fairness/i)).not.toBeInTheDocument();
+  });
+
   it('keeps individual cards qualitative instead of score or rank led', () => {
     render(
       <MatchResultCard

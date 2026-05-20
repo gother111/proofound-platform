@@ -1974,3 +1974,18 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-linkedin-visibility-cleanup/linkedin-visibility-cleanup.json`.
 - Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, viewport, console, overflow, sampled-link, and stale-copy evidence was captured instead.
 - Verification passed: `npm run test -- tests/lib/portfolio-visibility.test.ts tests/ui/portfolio-visibility-card-ai.test.tsx tests/api/portfolio-visibility-route.test.ts tests/api/match-visible-fields-route.test.ts tests/ui/visibility-settings-modal.test.tsx` (16 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Matching Policy Language Cleanup
+
+- Inspected active matching review UI and contract surfaces after the public visibility cleanup and found retained broad-era language in the launch matching path: `Fairness protected`, `fairness remediation`, `Rank-band mode`, and `Exact ranking` could still surface through review cards, explainers, or launch-ops fallback copy.
+- Reframed the active surface copy to corridor language:
+  - Matching cards now render `Policy protected` instead of `Fairness protected`.
+  - The match explainer sanitizes legacy warning payloads into `policy review`, `policy`, and `ordering` language before display.
+  - The matching review contract now generates policy/order copy for suppressed comparative detail and protected trust labels.
+  - Launch-ops fallback copy now says exact ordering/review-band/policy protection rather than ranking/fairness suppression.
+- Updated `docs/launch-operations-mvp.md` so the canonical fallback copy matches the current UI contract.
+- Added focused regression coverage proving active matching cards and explainers stay policy/privacy/proof-led and do not render visible fairness/ranking language.
+- Codex Browser verified `/app/i/matching?visualState=filled` at `http://127.0.0.1:33180` with visual fixtures enabled: the route rendered `Matching`, two opportunity cards, `Why This Proof Match?`, one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, and no `Fairness protected`, `fairness remediation`, `ranking detail`, `rank band`, or exact percent badges. The org matching route redirected to the individual mock persona in this local session, so org protected-badge rendering is covered by focused component and contract tests.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-matching-policy-language/matching-policy-language-browser-evidence.json`.
+- Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, console, overflow, and stale-copy evidence was captured instead.
+- Verification passed: `npm run test -- tests/ui/match-explainer-modal.test.tsx tests/ui/match-result-card.test.tsx tests/lib/matching-review-contract.test.ts` (20 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.
