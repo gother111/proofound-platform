@@ -17,15 +17,17 @@ Scope: current active Proofound admin dashboard, admin APIs, internal ops queues
 > default admin audit API now returns a minimum-necessary list DTO, and unexpected
 > admin queue errors no longer return raw backend messages. `/admin/verification`
 > now includes a narrow read-only pilot corridor drilldown inside pilot queue
-> cards. Remaining follow-up risk is explicit internal ops table RLS proof.
+> cards. The repo now includes an explicit internal-ops queue RLS hardening
+> migration; live target application remains unverified until the migration is
+> applied and the migration ledger is clean.
 
 ## A. Executive Verdict
 
-Verdict: repo-ready with remaining operational follow-up risks.
+Verdict: repo-ready with remaining live migration follow-up.
 
 The admin dashboard is narrow, protected, and aligned away from broad enterprise/admin-suite sprawl. It is useful for seeing four internal ops queues, reviewing minimum-necessary queue detail, handling risky-upload approve/reject decisions, checking latest repo launch evidence, and reviewing audit trails.
 
-The main remaining gap is database-level privacy proof: the admin console is narrow and privacy-projected, but `internal_ops_queue_items` still needs explicit RLS proof or a documented deployment/database contract. Richer entity/operator filters remain deferred until pilot volume proves they are needed.
+The main remaining gap is live-target proof: the admin console is narrow and privacy-projected, and the repo now has an explicit `internal_ops_queue_items` RLS/service-role contract, but the migration has not been applied to the checked Supabase target in this sweep. Richer entity/operator filters remain deferred until pilot volume proves they are needed.
 
 ## B. What Works
 
@@ -52,7 +54,7 @@ The main remaining gap is database-level privacy proof: the admin console is nar
 
 ## D. Security And Privacy Risks
 
-- P1: `internal_ops_queue_items` creation migration does not explicitly enable RLS or define direct table policies. The table may rely on server-side route protection and deployment/database defaults rather than an explicit table-level privacy contract. Evidence: `src/db/migrations/20260320195000_add_internal_ops_queue_items.sql`.
+- P1 repo-side resolved 2026-05-20: `internal_ops_queue_items` now has a forward migration that enables and forces RLS, revokes direct `anon`/`authenticated` table grants, grants server/service-role access, and defines service-role-only CRUD policies. Live target application is still unverified; `npm run db:audit:migrations` reports this migration as present locally but not applied. Evidence: `src/db/migrations/20260520065000_harden_internal_ops_queue_rls.sql`, `tests/db/internal-ops-queue-rls.test.ts`.
 - P1 resolved 2026-05-20: `GET /api/admin/audit` now returns an explicit list DTO and omits raw `changes`, `metadata`, IP address, and user agent fields. Evidence: `src/lib/audit/admin-audit-list.ts`, `src/app/api/admin/audit/route.ts`, `tests/lib/admin-audit-list.test.ts`.
 - P2 resolved 2026-05-20: unexpected admin queue 500 responses no longer include raw error message details, and server logs record only a sanitized error class/name for those paths. Evidence: `src/app/api/admin/internal-ops/queues/route.ts`, `src/app/api/admin/internal-ops/queues/[id]/route.ts`, `tests/api/admin-internal-ops-queue-route.test.ts`.
 - P2: The break-glass organization audit export returns full org audit logs through API after reason check, but there is no dashboard UI showing minimum necessary preview, risk labels, or access confirmation.

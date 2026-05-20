@@ -1895,3 +1895,11 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-admin-pilot-drilldown/admin-pilot-drilldown-smoke.json`.
 - Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, interaction, viewport, overflow, console, and leak-term evidence was captured instead.
 - Verification passed: `npm run test -- tests/ui/admin-verification-dashboard.test.tsx tests/api/admin-internal-ops-queue-route.test.ts tests/lib/internal-ops-queue.test.ts` (23 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Internal Ops Queue RLS Contract
+
+- Added a forward migration for `internal_ops_queue_items` that makes the repo-side privacy contract explicit: enable RLS, force RLS, revoke direct `anon` and `authenticated` table grants, grant CRUD only to `service_role`, and define service-role-only CRUD policies.
+- Added static migration regression coverage so the internal ops queue cannot drift back to direct client-role policies or missing RLS/force-RLS statements.
+- Updated `audit/admin-dashboard-mvp-ops-review-2026-05-03.md` so the admin RLS gap is no longer described as missing repo proof. The remaining caveat is live target application: this sweep did not apply the production permission migration.
+- Verification passed: `npm run test -- tests/db/internal-ops-queue-rls.test.ts tests/api/admin-internal-ops-queue-route.test.ts tests/lib/internal-ops-queue.test.ts` (16 tests), `npm run lint`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.
+- `npm run db:audit:migrations` failed inside the default sandbox with DNS `ENOTFOUND`. The approved rerun reached Supabase and reported `file_not_applied` for `20260520065000_harden_internal_ops_queue_rls.sql` plus the pre-existing `20260520103000_align_interview_platform_launch_values.sql`, and `applied_missing_file` for `20260317224741_canonicalize_org_role_constraints`. No live DB migration was applied in this step.
