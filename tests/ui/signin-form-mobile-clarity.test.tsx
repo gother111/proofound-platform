@@ -62,11 +62,12 @@ HTMLElement.prototype.scrollIntoView = vi.fn();
 
 describe('signin mobile clarity', () => {
   it('keeps the login shell stable and the remember control touch-friendly', () => {
-    render(<SignIn />);
+    const { container } = render(<SignIn />);
 
     const termsLink = screen.getByRole('link', { name: 'Terms of Service' });
     const privacyLink = screen.getByRole('link', { name: 'Privacy Policy' });
 
+    expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(screen.getByTestId('login-form-shell')).toHaveClass('px-0');
     expect(screen.getByRole('checkbox', { name: /Remember me/i })).toHaveClass('h-6');
     expect(termsLink).toHaveClass('min-h-11');

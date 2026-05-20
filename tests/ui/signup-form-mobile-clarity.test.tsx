@@ -63,7 +63,7 @@ HTMLElement.prototype.scrollIntoView = vi.fn();
 
 describe('signup mobile clarity', () => {
   it('keeps the account choice cards full-width and free of motion offsets', () => {
-    render(<SignupContent />);
+    const { container } = render(<SignupContent />);
 
     const individual = screen.getByTestId('signup-choice-individual');
     const organization = screen.getByTestId('signup-choice-organization');
@@ -71,6 +71,7 @@ describe('signup mobile clarity', () => {
     const termsLink = screen.getByRole('link', { name: 'Terms of Service' });
     const privacyLink = screen.getByRole('link', { name: 'Privacy Policy' });
 
+    expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(individual).toHaveClass('w-full');
     expect(organization).toHaveClass('w-full');
     expect(individual.parentElement).toHaveClass('min-w-0');

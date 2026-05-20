@@ -36,7 +36,7 @@ export function SignupContent() {
 
   // Account type selection screen
   return (
-    <div
+    <main
       className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-4 py-10 text-foreground sm:px-6 sm:py-16"
       data-testid="signup-choice-screen"
     >
@@ -181,6 +181,6 @@ export function SignupContent() {
           </a>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

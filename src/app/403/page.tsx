@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export default function ForbiddenPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-japandi-bg">
+    <main className="flex min-h-screen items-center justify-center bg-japandi-bg">
       <div className="max-w-md w-full mx-auto px-4 text-center">
         <div className="mb-6 flex justify-center">
           <div className="p-4 bg-red-100 rounded-full">
@@ -37,6 +37,6 @@ export default function ForbiddenPage() {
           If you believe you should have access to this page, please contact your administrator.
         </p>
       </div>
-    </div>
+    </main>
   );
 }

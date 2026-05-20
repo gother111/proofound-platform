@@ -47,6 +47,11 @@ function renderUnavailablePage(slug: string) {
     >
       <PublicProfileSection title="Organization portfolio unavailable" titleLevel={1}>
         <PublicProfileEmptyState message="This organization link is unavailable. It may be hidden, retired, or not yet ready for public sharing." />
+        <div className="mt-4">
+          <Button asChild>
+            <Link href="/">Return home</Link>
+          </Button>
+        </div>
       </PublicProfileSection>
     </PublicProfileShell>
   );

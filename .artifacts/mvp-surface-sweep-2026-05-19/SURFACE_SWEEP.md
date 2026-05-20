@@ -1782,3 +1782,19 @@ Browser evidence:
 - Removed the nonexistent `.artifacts/proofound-master-audit-2026-03-22.md` source so generated checklist JSON no longer points operators at a missing stale-evidence path.
 - Corrected `.artifacts/launch-readiness-summary.md` after the regenerated checklist: it no longer claims repo scope is `READY` while `.artifacts/launch-validation-2026-05-20/repo-ready-validation.json` and the final checklist report say `NOT_READY` because production boot/smoke could not run in this sandbox.
 - Tightened the final checklist generator so current `.artifacts/launch-validation-2026-05-20/commands.json` gates can override older PASS rows. This prevents the strict org E2E and real-DB privacy/RLS checklist rows from staying green when the latest final validation run records sandbox DNS/bind failures for those gates.
+
+## Continuation - Codex Browser Landmark And Unavailable-State Sweep
+
+- Used Codex Browser in-app browser against the local app at `http://localhost:3000` with the browser made visible for the user-requested Browser pass.
+- Browser route sweep covered `/`, `/signup`, `/login`, `/portfolio/demo`, `/portfolio/org/proofound-labs`, and `/admin` at desktop `1280x900` and mobile `390x844`.
+- Initial Browser evidence found the pages loaded with no horizontal overflow and no console errors, but `/signup`, `/login`, public portfolio unavailable, org trust, and admin-forbidden shells exposed the global skip link without a page-level `<main>` landmark.
+- Fixed the active auth/public/forbidden shells so the Browser-checked surfaces now expose exactly one `<main>` landmark while preserving the existing skip-link target.
+- Browser also found unavailable public portfolio states had clear gated/unavailable copy but no primary next action. Added `Return home` CTAs to unavailable individual and organization public portfolio states.
+- Saved Browser evidence under `.artifacts/mvp-surface-sweep-2026-05-19/browser-evidence-2026-05-20/`:
+  - `browser-route-sweep.json`
+  - `browser-landmark-verification.json`
+  - `browser-unavailable-cta-verification.json`
+- Follow-up Browser verification confirmed, on desktop and mobile, that the representative active public/internal surfaces have `mainCount: 1`, skip link and skip target present, no horizontal overflow, and zero console errors. `/portfolio/demo` and a missing org portfolio route now expose `Return home`.
+- Browser screenshot capture was attempted through the in-app Browser path, but `Page.captureScreenshot` timed out in this environment. DOM, route title, heading, action, console, and viewport evidence were captured instead.
+- Regression coverage added for login/signup main landmarks, public individual unavailable state main landmark and return CTA, and public org unavailable state main landmark and return CTA.
+- Verification passed: `npm run test -- tests/ui/signin-form-mobile-clarity.test.tsx tests/ui/signup-form-mobile-clarity.test.tsx tests/ui/public-portfolio-access-consistency.test.tsx tests/ui/public-org-portfolio-page.test.tsx tests/lib/public-portfolio-projection.test.ts`, `npm run lint`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still prints the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.

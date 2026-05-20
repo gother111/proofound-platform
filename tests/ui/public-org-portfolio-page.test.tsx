@@ -335,12 +335,14 @@ describe('Organization public portfolio page', () => {
       searchParams: Promise.resolve({}),
     });
 
-    render(element);
+    const { container } = render(element);
 
+    expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(
       screen.getByRole('heading', { name: 'Organization portfolio unavailable' })
     ).toBeInTheDocument();
     expect(screen.getByText(/this organization link is unavailable/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
     expect(notFoundMock).not.toHaveBeenCalled();
   });
 });

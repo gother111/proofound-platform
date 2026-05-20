@@ -127,7 +127,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   // Layout container with Figma background tokens and animated accents
   // Responsive: Adapts padding and card size for mobile/tablet/desktop
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-4 sm:px-6 py-8 sm:py-16 text-foreground">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-4 py-8 text-foreground sm:px-6 sm:py-16">
       {/* Network background from design system */}
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <NetworkBackground />
@@ -357,6 +357,6 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           </a>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

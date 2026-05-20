@@ -40,12 +40,17 @@ function renderUnavailablePage(handle: string) {
       footer={
         <div className="flex items-center justify-between gap-2">
           <span>proofound.io/portfolio/{handle}</span>
-          <span>Public Page unavailable</span>
+          <span>Public page unavailable</span>
         </div>
       }
     >
-      <PublicProfileSection title="Public Page unavailable" titleLevel={1}>
+      <PublicProfileSection title="Public page unavailable" titleLevel={1}>
         <PublicProfileEmptyState message="This Public Page link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing." />
+        <div className="mt-4">
+          <Button asChild>
+            <Link href="/">Return home</Link>
+          </Button>
+        </div>
       </PublicProfileSection>
     </PublicProfileShell>
   );

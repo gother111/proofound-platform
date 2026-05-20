@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/
 
 export default function PortfolioNotFound() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10">
+    <main className="flex min-h-screen items-center justify-center bg-proofound-parchment px-4 py-10">
       <Card className="w-full max-w-md rounded-[24px] border-proofound-stone bg-white/95 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
@@ -29,6 +29,6 @@ export default function PortfolioNotFound() {
           </Button>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }
