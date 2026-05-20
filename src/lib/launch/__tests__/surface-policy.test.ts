@@ -219,6 +219,7 @@ describe('launch surface policy', () => {
     expect(classifyLaunchPagePath('/p/token')).toBe('archived');
     expect(classifyLaunchPagePath('/assign/token')).toBe('archived');
     expect(classifyLaunchPagePath('/admin/users')).toBe('archived');
+    expect(classifyLaunchPagePath('/dev/resolve-home')).toBe('archived');
   });
 
   it('returns archived metadata for representative page surfaces', () => {
@@ -248,6 +249,9 @@ describe('launch surface policy', () => {
     });
     expect(getArchivedPagePolicy('/admin/users')).toMatchObject({
       surfaceLabel: 'Internal Ops Pages',
+    });
+    expect(getArchivedPagePolicy('/dev/resolve-home')).toMatchObject({
+      surfaceLabel: 'Development Route Handler',
     });
     expect(getArchivedPagePolicy('/auth/callback')).toBeNull();
     expect(getArchivedPagePolicy('/app/i/home')).toBeNull();

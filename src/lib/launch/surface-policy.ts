@@ -700,6 +700,13 @@ const INTERNAL_ONLY_PAGE_POLICIES = [
 const ARCHIVED_PAGE_POLICIES = [
   {
     classification: 'archived',
+    surfaceLabel: 'Development Route Handler',
+    detail:
+      'Development-only route helpers are archived outside the locked launch MVP and must not be reachable in production.',
+    matches: (pathname: string) => pathname === '/dev/resolve-home',
+  },
+  {
+    classification: 'archived',
     surfaceLabel: 'Internal Ops Pages',
     detail: 'Non-critical admin pages are archived outside the locked launch MVP corridor.',
     matches: (pathname: string) =>

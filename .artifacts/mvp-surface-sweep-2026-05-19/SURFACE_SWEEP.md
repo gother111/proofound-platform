@@ -1690,3 +1690,9 @@ Browser evidence:
 - Found `tests/api/performance-track-route.test.ts` still asserting the old `/api/performance/track` persistence behavior even though the route is archived by launch surface policy and directly covered as `410 Gone` in `tests/api/archived-api-handlers-route.test.ts`.
 - Moved the stale pre-archive performance route test into `tests/archive/non_mvp_analytics_suite/performance-track-route.archived.test.ts` and documented `/api/performance/track` in that archive README.
 - Removed obsolete per-file Vitest excludes for old analytics/performance test paths; the active test runner now relies on the archive-directory exclude instead of hiding stale test files in active `tests/api`.
+
+## Continuation - Development Resolve-Home Route Explicit Archive
+
+- Found `src/app/dev/resolve-home/route.ts` was safely development-gated but depended on fallback archived page classification in the route-surface policy.
+- Added an explicit archived page policy for `/dev/resolve-home` and focused coverage proving it stays archived in route classification.
+- Added a direct route test proving non-development `GET /dev/resolve-home` returns 404 before creating a Supabase client or resolving auth home state.
