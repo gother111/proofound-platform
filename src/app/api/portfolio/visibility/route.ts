@@ -105,7 +105,7 @@ export async function POST(request: Request) {
       header: parsed.header ?? merged.header,
       proofBar: parsed.proofBar ?? merged.proofBar,
       workEmail: parsed.workEmail ?? merged.workEmail,
-      linkedin: parsed.linkedin ?? merged.linkedin,
+      linkedin: false,
       identity: parsed.identity ?? merged.identity,
       skills: parsed.skills ?? merged.skills,
       bio: parsed.bio ?? merged.bio,

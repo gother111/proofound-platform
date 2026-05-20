@@ -1960,3 +1960,17 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-candidate-invite-gate-cleanup/candidate-invite-gate-cleanup.json`.
 - Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, viewport, console, overflow, and stale-copy evidence was captured instead.
 - Verification passed: `npm run test -- tests/ui/candidate-invite-client.test.tsx tests/ui/assignment-review-client.test.tsx tests/ui/assignment-weight-matrix-gates.test.tsx tests/lib/assignment-publish-validation.test.ts` (17 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Public Visibility and Reveal Link Cleanup
+
+- Inspected active privacy/public visibility and match reveal-preview surfaces after the assignment-gate cleanup and found two remaining LinkedIn public-surface leaks:
+  - `PortfolioVisibilityCard` still rendered a `LinkedIn confidence` switch for Public Page visibility.
+  - `/api/match/visible-fields/[matchId]` still selected and returned a `linkedin_url` field labeled `LinkedIn`.
+- Removed the `LinkedIn confidence` Public Page visibility control and forced the legacy `linkedin` visibility flag off in both merge logic and the portfolio visibility POST path, so stored or client-submitted legacy flags cannot create public LinkedIn visibility.
+- Removed the legacy `LinkedIn URL` row from the privacy visibility modal to match the newer full privacy-settings page, which already has no LinkedIn field row.
+- Removed `linkedin_profile_url` from the match visible-fields query and removed `linkedin_url` from the returned reveal-preview field list.
+- Added focused regression coverage for forced-off legacy LinkedIn visibility, absence of the Public Page LinkedIn switch, and absence of `linkedin_url` from match visible fields.
+- Codex Browser verified `/app/i/profile?profileView=full&tab=visibility` at `http://127.0.0.1:33180`: the route rendered `Public Page visibility`, one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, and no `LinkedIn`, `LinkedIn confidence`, or `LinkedIn URL` copy.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-linkedin-visibility-cleanup/linkedin-visibility-cleanup.json`.
+- Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, viewport, console, overflow, sampled-link, and stale-copy evidence was captured instead.
+- Verification passed: `npm run test -- tests/lib/portfolio-visibility.test.ts tests/ui/portfolio-visibility-card-ai.test.tsx tests/api/portfolio-visibility-route.test.ts tests/api/match-visible-fields-route.test.ts tests/ui/visibility-settings-modal.test.tsx` (16 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.

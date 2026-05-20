@@ -31,7 +31,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
               header: true,
               proofBar: true,
               workEmail: false,
-              linkedin: true,
+              linkedin: false,
               identity: true,
               skills: false,
               bio: false,
@@ -91,7 +91,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
           header: true,
           proofBar: true,
           workEmail: false,
-          linkedin: true,
+          linkedin: false,
           identity: true,
           skills: false,
           bio: false,
@@ -145,7 +145,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
               header: true,
               proofBar: true,
               workEmail: false,
-              linkedin: true,
+              linkedin: false,
               identity: true,
               skills: false,
               bio: false,
@@ -173,6 +173,7 @@ describe('PortfolioVisibilityCard AI privacy preflight', () => {
     expect(await screen.findByRole('switch', { name: /public page enabled/i })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: /proof bar block/i })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: /contact section/i })).toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: /LinkedIn/i })).not.toBeInTheDocument();
   });
 
   it('reports precise high-risk privacy concerns without claiming safety', async () => {

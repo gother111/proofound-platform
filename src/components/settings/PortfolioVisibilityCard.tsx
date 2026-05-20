@@ -35,7 +35,7 @@ const defaults: VisibilityFlags = {
   header: true,
   proofBar: true,
   workEmail: false,
-  linkedin: true,
+  linkedin: false,
   identity: true,
   skills: false,
   bio: false,
@@ -192,11 +192,6 @@ export function PortfolioVisibilityCard() {
               label="Work email"
               checked={flags.workEmail}
               onCheckedChange={() => toggle('workEmail')}
-            />
-            <VisibilityRow
-              label="LinkedIn confidence"
-              checked={flags.linkedin}
-              onCheckedChange={() => toggle('linkedin')}
             />
             <VisibilityRow
               label="Skills snapshot"

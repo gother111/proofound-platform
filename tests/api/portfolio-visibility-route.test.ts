@@ -51,7 +51,7 @@ function buildSupabase({
       workEmail: false,
       identity: false,
       proofBar: true,
-      linkedin: true,
+      linkedin: false,
       skills: false,
     },
     headline: 'Proof-first launch work',
@@ -137,7 +137,7 @@ describe('POST /api/portfolio/visibility privacy preflight', () => {
           workEmail: false,
           identity: false,
           proofBar: true,
-          linkedin: true,
+          linkedin: false,
           skills: false,
         },
         headline: 'Launch proof for Jane Doe',
@@ -189,6 +189,45 @@ describe('POST /api/portfolio/visibility privacy preflight', () => {
     expect(response.status).toBe(200);
     expect(supabase.__mocks.individualUpdate).toHaveBeenCalled();
     expect(supabase.__mocks.profileUpdate).toHaveBeenCalled();
+  });
+
+  it('forces legacy LinkedIn visibility off even when clients request it', async () => {
+    const supabase = buildSupabase({
+      individual: {
+        field_visibility: {
+          header: true,
+          bio: false,
+          contact: false,
+          workEmail: false,
+          identity: true,
+          proofBar: true,
+          linkedin: true,
+          skills: false,
+        },
+        headline: 'Proof-first launch work',
+        bio: '',
+        tagline: null,
+        work_email: 'jane@example.com',
+      },
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const response = await POST(
+      request({
+        publicPageEnabled: true,
+        searchIndexingEnabled: false,
+        linkedin: true,
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(supabase.__mocks.individualUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        field_visibility: expect.objectContaining({
+          linkedin: false,
+        }),
+      })
+    );
   });
 
   it('hard-disables individual search indexing even when requested', async () => {

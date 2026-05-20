@@ -1,0 +1,88 @@
+{
+  "bodyExcerpt": "Skip to main content\nOverview\nProfile\nCommunications\nMatching\nSettings\nProofound\n\nProfile\n\nBM\nBrowser MVP Candidate\nVisible\nShare\nAdd location\nJoined April 2026\n\nAdd a tagline\n\nA brief statement that captures who you are and what you care about\n\nProof readiness\n\nSafe shell\n\nReady\n\nContext\n\n2 context items\n\nProof\n\n2 anchored proof packs\n\nVerification\n\n1 accepted verification\n\nProfile emphasis\n\nIndividual profiles are built from proof, context, skills, freshness, and scoped verification.\n\nContext\nProof Packs\nVerification\nVisibility / Portfolio\nPublic Page visibility\n\nPublic Page publication is an explicit direct-link proof snapshot. It never weakens blind review or bypasses consent-based reveal.\n\nCURRENT STATE\n\nYour Public Page is published and accessible by direct link.\n\nManage visibility\nPrivacy controls\nExport or delete\nAudit log\nPrivacy choices\n\nEssential cookies keep Proofound working. Optional analytics help us improve the product. We never sell your data.\n\nPrivacy Policy\nCookie Policy\nCookie Settings\nAccept All\nEssential Only",
+  "checkedAt": "2026-05-20T04:54:41.662Z",
+  "hasLinkedInCopy": false,
+  "hasPublicPageVisibility": true,
+  "hasRuntimeError": false,
+  "horizontalOverflow": false,
+  "mainCount": 1,
+  "sampledLinks": [
+    {
+      "href": "#main-content",
+      "text": "Skip to main content"
+    },
+    {
+      "href": "/app/i/home",
+      "text": "Overview"
+    },
+    {
+      "href": "/app/i/profile",
+      "text": "Profile"
+    },
+    {
+      "href": "/app/i/communications",
+      "text": "Communications"
+    },
+    {
+      "href": "/app/i/matching",
+      "text": "Matching"
+    },
+    {
+      "href": "/app/i/settings",
+      "text": "Settings"
+    },
+    {
+      "href": "/app/i/home",
+      "text": "Overview"
+    },
+    {
+      "href": "/app/i/profile",
+      "text": "Profile"
+    },
+    {
+      "href": "/app/i/communications",
+      "text": "Inbox"
+    },
+    {
+      "href": "/app/i/matching",
+      "text": "Matching"
+    },
+    {
+      "href": "/app/i/settings",
+      "text": "Settings"
+    },
+    {
+      "href": "/app/i/profile?profileView=full&tab=visibility",
+      "text": "Manage visibility"
+    },
+    {
+      "href": "/app/i/settings/privacy",
+      "text": "Privacy controls"
+    },
+    {
+      "href": "/app/i/settings?tab=privacy",
+      "text": "Export or delete"
+    },
+    {
+      "href": "/app/i/settings/audit-log",
+      "text": "Audit log"
+    },
+    {
+      "href": "/privacy",
+      "text": "Privacy Policy"
+    },
+    {
+      "href": "/cookies",
+      "text": "Cookie Policy"
+    },
+    {
+      "href": "/cookies/settings?returnTo=%2Fapp%2Fi%2Fprofile",
+      "text": "Cookie Settings"
+    }
+  ],
+  "title": "Proofound - Focus on what matters",
+  "url": "http://127.0.0.1:33180/app/i/profile?profileView=full&tab=visibility",
+  "console": [],
+  "note": "Codex Browser verified the active individual profile visibility tab on port 33180 after removing LinkedIn public visibility controls. The rendered surface showed Public Page visibility, no LinkedIn/LinkedIn confidence/LinkedIn URL copy, one main landmark, no overflow, no runtime error, and no console warnings/errors.",
+  "screenshotError": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1"
+}

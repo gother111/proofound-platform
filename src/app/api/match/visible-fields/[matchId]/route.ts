@@ -43,7 +43,6 @@ const SENSITIVE_FIELDS = new Set([
   'headline',
   'bio',
   'skills',
-  'linkedin_url',
   'compensation',
 ]);
 
@@ -97,7 +96,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
 
     // Get individual's profile (extended info)
     const profile = await db.execute(sql`
-      SELECT headline, bio, skills, location, linkedin_profile_url
+      SELECT headline, bio, skills, location
       FROM individual_profiles
       WHERE user_id = ${user.id}
     `);
@@ -147,11 +146,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
       },
       { field: 'bio', label: 'Biography', value: profileData.bio },
       { field: 'skills', label: 'Skills', value: profileData.skills || [] },
-      {
-        field: 'linkedin_url',
-        label: 'LinkedIn',
-        value: profileData.linkedin_profile_url || 'Not provided',
-      },
       {
         field: 'compensation',
         label: 'Compensation',

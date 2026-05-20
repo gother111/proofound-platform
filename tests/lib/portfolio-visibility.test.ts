@@ -37,7 +37,16 @@ describe('portfolio visibility flags', () => {
     expect(visibility.bio).toBe(true);
     expect(visibility.contact).toBe(true);
     expect(visibility.workEmail).toBe(false);
+    expect(visibility.linkedin).toBe(false);
     expect(visibility.header).toBe(true);
     expect(visibility.skills).toBe(false);
+  });
+
+  it('keeps legacy LinkedIn visibility forced off for public launch surfaces', () => {
+    const visibility = mergeVisibilityFlags({
+      linkedin: true,
+    });
+
+    expect(visibility.linkedin).toBe(false);
   });
 });

@@ -84,13 +84,6 @@ const PROFILE_FIELDS: FieldConfig[] = [
     defaultVisibility: 'private',
     sensitive: true,
   },
-  {
-    name: 'linkedinProfileUrl',
-    label: 'LinkedIn URL',
-    description: 'Your LinkedIn profile',
-    category: 'contact',
-    defaultVisibility: 'network',
-  },
 
   // Professional
   {
