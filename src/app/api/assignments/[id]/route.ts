@@ -335,7 +335,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const validatedData = AssignmentUpdateSchema.parse(body);
 
     if (isMockSupabaseEnabled() && assignmentId === MOCK_ASSIGNMENT_ID) {

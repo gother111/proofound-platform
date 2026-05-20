@@ -392,6 +392,20 @@ Verification after this sweep:
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 
+## Continuation: Fifteenth Local Malformed-JSON Sweep
+
+A fifteenth local sweep applied the same malformed-JSON boundary to the assignment detail update route:
+
+- `src/app/api/assignments/[id]/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication and route parameter resolution, but before assignment update schema validation, organization principal validation, mutation access checks, assignment writes, matrix synchronization, activation checks, or assignment update logging continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/assignments-id-route.test.ts`: passed, `1` file and `12` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.

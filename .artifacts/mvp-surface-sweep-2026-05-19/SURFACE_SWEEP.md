@@ -2153,10 +2153,10 @@ Browser evidence:
 ## Continuation - Active Workflow API JSON Boundary Hardening
 
 - Inspected current uncommitted launch-corridor API changes and confirmed they are scoped to retained active surfaces: assignment publishing and interview scheduling.
-- Added controlled malformed JSON responses for `POST /api/assignments/[id]/publish`, `POST /api/interviews/schedule`, `POST /api/match/gates`, and `PUT /api/organizations/[orgId]/visibility` so bad request bodies return `400` before assignment access checks, assignment lookup, match lookup, verification gate checks, visibility writes, interview insert work, or Google Meet side effects.
+- Added controlled malformed JSON responses for `PUT /api/assignments/[id]`, `POST /api/assignments/[id]/publish`, `POST /api/interviews/schedule`, `POST /api/match/gates`, and `PUT /api/organizations/[orgId]/visibility` so bad request bodies return `400` before assignment access checks, assignment lookup/update work, match lookup, verification gate checks, visibility writes, interview insert work, or Google Meet side effects.
 - Added focused regression coverage proving those malformed-body paths stop before downstream reads/writes or provider calls.
 - Browser was not rerun for this slice because no rendered UI changed; this is API error-boundary hardening for retained organization workflow endpoints.
-- Verification passed: `npm run test -- tests/api/assignments-publish-route.test.ts tests/api/interviews-schedule-route.test.ts tests/api/jd-to-l4-route.test.ts tests/api/match-gates-route.test.ts tests/api/organization-visibility-route.test.ts tests/api/org-match-review-route.test.ts`, `npm run test:launch:routes`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+- Verification passed: `npm run test -- tests/api/assignments-id-route.test.ts tests/api/assignments-publish-route.test.ts tests/api/interviews-schedule-route.test.ts tests/api/jd-to-l4-route.test.ts tests/api/match-gates-route.test.ts tests/api/organization-visibility-route.test.ts tests/api/org-match-review-route.test.ts`, `npm run test:launch:routes`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
 
 ## Continuation - Matching Review Proof Visibility and Day-One Privacy Defaults
 

@@ -60,6 +60,14 @@ vi.mock('@/lib/log', () => ({
 const params = { params: Promise.resolve({ id: 'assignment-1' }) };
 const principalOrgId = '11111111-1111-4111-8111-111111111111';
 
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/assignments/assignment-1', {
+    method: 'PUT',
+    body,
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
 describe('assignment [id] mutation routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -162,6 +170,16 @@ describe('assignment [id] mutation routes', () => {
 
     const res = await PUT(req, params);
     expect(res.status).toBe(404);
+  });
+
+  it('PUT rejects malformed JSON before assignment mutation access checks', async () => {
+    const res = await PUT(rawRequest('{"role":'), params);
+    const payload = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(payload.error).toBe('Invalid JSON body');
+    expect(verifyExplicitAssignmentMutationAccess).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
   });
 
   it('PUT updates assignment for org owner', async () => {
