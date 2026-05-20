@@ -2141,3 +2141,11 @@ Browser evidence:
 - Added regression coverage for all three malformed JSON paths, including assertions that database calls and proof creation do not run after parse failure.
 - Browser was not rerun for this slice because no rendered web UI changed; the change is API error-boundary hardening for retained proof/skill endpoints.
 - Verification passed: `npm run test -- tests/api/expertise-user-skill-route.test.ts tests/api/expertise-user-skill-proofs-route.test.ts` (2 files / 12 tests), `npm run test:launch:routes` (4 files / 27 tests), `npm run typecheck`, and scoped `git diff --check` for the touched user-skill route/test files. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - Candidate Invite Action JSON Boundary Hardening
+
+- Inspected the active organization candidate-invite action route under `/api/organizations/[orgId]/candidate-invites/[inviteId]`, which supports the assignment/public-share corridor without broad public directory behavior.
+- Added a malformed JSON guard to the invite action PATCH handler so bad request bodies return a controlled `400` before invite lookup, email side effects, or invite mutation.
+- Added regression coverage proving malformed JSON does not send candidate invite email and does not proceed beyond the expected stale-invite cleanup plus organization lookup.
+- Browser was not rerun for this slice because no rendered web UI changed; the change is API error-boundary hardening for a retained organization invite endpoint.
+- Verification passed: `npm run test -- tests/api/org-candidate-invites-route.test.ts` (1 file / 14 tests), `npm run test:launch:routes` (4 files / 27 tests), `npm run typecheck`, and scoped `git diff --check` for the touched candidate-invite route/test files. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
