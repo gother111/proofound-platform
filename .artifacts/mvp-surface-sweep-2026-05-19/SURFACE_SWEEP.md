@@ -2429,3 +2429,13 @@ Browser evidence:
   - Google click reached `accounts.google.com` with `redirect_to=http://localhost:3001/auth/callback`; no `proofound.io/login#error` bounce.
   - LinkedIn click reached `linkedin.com` OAuth/login; no `proofound.io/login#error` bounce.
 - Verification passed: focused `signInWithOAuth` auth-action tests (6 passed), `tests/lib/env.test.ts`, `tests/routes/login-next-sanitizer.test.tsx`, `tests/ui/social-sign-in-buttons.test.tsx` (11 passed), and `npm run typecheck`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the commands exited successfully.
+
+## Continuation - Organization PDF Export Trust-Page Copy
+
+- Inspected active source hits for stale public-profile wording after the Codex Browser OAuth fix.
+- Classified `src/lib/portfolio/pdf.ts` as an active organization export surface because `/api/portfolio/org/[slug]/export` calls `generateOrganizationProfilePdf`.
+- Replaced the user-facing PDF title `Organization Public Profile PDF` with `Organization Trust Page PDF`, matching the current public organization trust-page corridor.
+- Left internal function/type names untouched because they are implementation contract names rather than visible launch copy.
+- Left `PublicSnippetView` untouched in this slice because active tests keep the legacy public snippet routes archived and out of the compiled app tree; editing that component could blur archived behavior without improving an active MVP surface.
+- Browser was not rerun for this slice because the changed surface is generated PDF copy, not rendered UI. Focused PDF generation coverage and active-source scan are the stronger evidence.
+- Verification passed: `npx vitest run tests/portfolio-pdf.test.ts --reporter=verbose`, active-source scan for `Organization Public Profile PDF|Organization Trust Page PDF`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.

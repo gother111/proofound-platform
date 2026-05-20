@@ -398,7 +398,7 @@ export async function generateOrganizationProfilePdf(
       .fillColor(COLORS.charcoal)
       .font('Times-Bold')
       .fontSize(20)
-      .text('Organization Public Profile PDF', layout.contentX, layout.contentY, {
+      .text('Organization Trust Page PDF', layout.contentX, layout.contentY, {
         width: layout.contentWidth,
       });
 
