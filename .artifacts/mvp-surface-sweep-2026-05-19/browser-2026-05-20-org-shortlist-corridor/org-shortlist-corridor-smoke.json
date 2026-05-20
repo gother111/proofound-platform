@@ -1,0 +1,27 @@
+{
+  "route": "/app/o/demo/shortlist",
+  "url": "http://127.0.0.1:33189/app/o/demo/shortlist",
+  "tool": "Codex in-app Browser",
+  "capturedAt": "2026-05-20T06:30:00+02:00",
+  "environment": {
+    "mockSupabase": true,
+    "playwright": true,
+    "devServer": "npm run dev -- --port 33189 --hostname 127.0.0.1"
+  },
+  "observed": {
+    "finalUrl": "http://127.0.0.1:33189/app/i/home",
+    "title": "Proofound - Focus on what matters",
+    "h1": "Add your first proof record",
+    "mainLandmarks": 1,
+    "horizontalOverflow": false,
+    "consoleWarningsOrErrors": [],
+    "visibleRuntimeError": false,
+    "rankBandCopyVisible": false,
+    "fairnessLabelVisible": false
+  },
+  "notes": [
+    "The in-app Browser mock session resolved the org shortcut through the auth/persona fallback to individual home before rendering an org page.",
+    "No stale shortlist UI was exposed in Browser. Route-level behavior is covered by tests/ui/org-shortlist-page-redirect.test.tsx, which proves /app/o/[slug]/shortlist redirects to /app/o/[slug]/assignments.",
+    "Component-level copy is covered by tests/ui/org-shortlist-client.test.tsx."
+  ]
+}

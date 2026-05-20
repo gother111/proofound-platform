@@ -161,7 +161,7 @@ export function OrgShortlistClient({ items }: Props) {
               className="h-9 rounded-md border border-neutral-300 bg-white px-2 text-sm"
             >
               <option value="recent">Most recent</option>
-              <option value="rankBand">Rank band</option>
+              <option value="rankBand">Review priority</option>
             </select>
           </div>
 
@@ -173,7 +173,7 @@ export function OrgShortlistClient({ items }: Props) {
               id="shortlist-search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Name, role focus, value"
+              placeholder="Candidate label, role focus, reason"
               className="h-9 w-56"
             />
           </div>
@@ -286,7 +286,7 @@ export function OrgShortlistClient({ items }: Props) {
                     : 'Just now'}
                 </span>
                 <span>Reveal scope: {item.revealScope}</span>
-                <span>Fairness: {item.fairness.status}</span>
+                <span>Policy check: {item.fairness.status}</span>
               </div>
             </Card>
           ))}

@@ -1926,3 +1926,13 @@ Browser evidence:
 - Codex Browser verified `/app/i/matching?visualState=filled` at `http://127.0.0.1:33188`: the route rendered `Matching`, one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, no sampled private leak terms, no invalid `/app/i/matching/{id}` hrefs, and no exact percent badges. The available visual fixture rendered browse-readiness, so manager-specific rendering is covered by component tests.
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-individual-matching-manager/individual-matching-manager-smoke.json`.
 - Verification passed: `npm run test -- tests/ui/matching-paused-hidden-manager.test.tsx tests/ui/matching-page-gated.test.tsx tests/ui/individual-matching-mobile-clarity.test.tsx` (6 tests), `npm run lint`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.
+
+## Continuation - Organization Shortlist Corridor Copy
+
+- Inspected active organization routes and found the retained shortlist component still used UI terms from the broader matching era: `Rank band`, `Fairness:`, and a search placeholder that implied real names rather than privacy-stage candidate labels.
+- Updated the shortlist component to use launch-corridor copy: `Review priority`, `Policy check`, and `Candidate label, role focus, reason`.
+- Added route-level coverage proving `/app/o/[slug]/shortlist` stays a shortcut into `/app/o/[slug]/assignments`, rather than reviving a separate shortlist page.
+- Added component coverage proving the retained shortlist component does not render rank/fairness/public-directory language.
+- Codex Browser checked `/app/o/demo/shortlist` at `http://127.0.0.1:33189`. The mock Browser session resolved through the auth/persona fallback to `/app/i/home` before rendering an org page, but it did not expose the stale shortlist UI, had one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, and no `Rank band` or `Fairness:` text.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-org-shortlist-corridor/org-shortlist-corridor-smoke.json`.
+- Verification passed: `npm run test -- tests/ui/org-shortlist-client.test.tsx tests/ui/org-shortlist-page-redirect.test.tsx tests/ui/matching-organization-view-beta.test.tsx tests/ui/deferred-org-matching-client.test.tsx` (8 tests), `npm run lint`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.
