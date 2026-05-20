@@ -143,9 +143,9 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
     return (
       <Card variant="bento" className="p-12 text-center">
         <Clock className="h-16 w-16 mx-auto mb-4 text-[#A8B69D]" />
-        <h3 className="text-lg font-semibold text-foreground mb-2">No Snoozed Matches</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">No Paused Matches</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Matches you snooze will appear here until they're unsnoozed or the snooze period ends.
+          Matches you pause will appear here until they are restored or the pause period ends.
         </p>
         <Button
           variant="outline"
@@ -223,15 +223,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
                 className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
               >
                 <Bell className="w-3.5 h-3.5 mr-1.5" />
-                {unsnoozing === match.id ? 'Unsnoozing...' : 'Unsnooze'}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => (window.location.href = `/app/i/matching/${match.assignment.id}`)}
-                className="border-border text-muted-foreground"
-              >
-                View Details
+                {unsnoozing === match.id ? 'Restoring...' : 'Restore'}
               </Button>
             </div>
           </div>

@@ -513,8 +513,8 @@ export function MatchingClient() {
             className="text-sm text-proofound-forest underline flex items-center gap-2"
           >
             {showManageHiddenSnoozed
-              ? 'Hide snoozed/hidden manager'
-              : 'Manage snoozed or hidden matches'}
+              ? 'Hide paused/hidden manager'
+              : 'Manage paused or hidden matches'}
           </button>
 
           {showManageHiddenSnoozed && (

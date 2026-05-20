@@ -10,14 +10,12 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, Loader2, Undo2 } from 'lucide-react';
+import { EyeOff, Loader2, Undo2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
 import { toast } from 'sonner';
 
 interface HiddenMatch {
   id: string;
-  assignmentId: string;
-  score: number;
   assignment: {
     title?: string;
     locationMode?: string;
@@ -181,7 +179,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
                 </p>
               </div>
               <Badge variant="outline" className="text-xs">
-                {Math.round(match.score * 100)}%
+                Hidden
               </Badge>
             </div>
 
@@ -204,13 +202,6 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
                   </>
                 )}
               </Button>
-              <a
-                href={`/app/i/matching/${match.assignmentId}`}
-                className="text-xs text-proofound-forest hover:underline flex items-center gap-1"
-              >
-                <Eye className="w-3 h-3" />
-                View
-              </a>
             </div>
           </div>
         ))}

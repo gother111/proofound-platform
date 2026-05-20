@@ -155,7 +155,7 @@ export function SnoozeDialog({
         <div className="bg-japandi-bg rounded-lg p-3 border border-proofound-stone mb-4">
           <p className="text-xs leading-relaxed text-foreground">
             <strong className="font-semibold">Note:</strong> You can view and manage snoozed matches
-            from your Matching preferences. Snoozed matches won't affect your overall match score.
+            from this matching page. Paused matches do not change your proof readiness.
           </p>
         </div>
 

@@ -1915,3 +1915,14 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-admin-break-glass-preview/admin-break-glass-preview-smoke.json`.
 - Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, viewport, overflow, console, and leak-term evidence was captured instead. The native confirm-dialog submit path could not be completed by Browser; it is covered by focused UI/API tests.
 - Verification passed: `npm run test -- tests/api/org-audit-export-routes.test.ts tests/ui/admin-audit-log-table.test.tsx tests/lib/admin-break-glass.test.ts tests/lib/admin-audit-list.test.ts` (12 tests), `npm run lint`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.
+
+## Continuation - Individual Matching Manager Launch Safety
+
+- Inspected the active individual matching surface against route-surface policy and found the inline hidden/snoozed manager linked to `/app/i/matching/{assignmentId}`, but no such launch page exists and `/app/i/matching/snoozed` is explicitly archived.
+- Removed dead detail links from hidden and paused match lists so users stay inside the active `/app/i/matching` route until a supported detail surface exists.
+- Removed exact hidden-match percentage badges and replaced them with a plain `Hidden` state label, keeping the surface away from score-first or vanity matching language.
+- Updated pause/snooze copy from `overall match score` and `snoozed/hidden manager` toward proof-readiness and `paused/hidden` language.
+- Added focused UI regression coverage proving hidden/paused manager cards do not render invalid `/app/i/matching/{id}` links and do not show exact percentage badges.
+- Codex Browser verified `/app/i/matching?visualState=filled` at `http://127.0.0.1:33188`: the route rendered `Matching`, one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, no sampled private leak terms, no invalid `/app/i/matching/{id}` hrefs, and no exact percent badges. The available visual fixture rendered browse-readiness, so manager-specific rendering is covered by component tests.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-individual-matching-manager/individual-matching-manager-smoke.json`.
+- Verification passed: `npm run test -- tests/ui/matching-paused-hidden-manager.test.tsx tests/ui/matching-page-gated.test.tsx tests/ui/individual-matching-mobile-clarity.test.tsx` (6 tests), `npm run lint`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.
