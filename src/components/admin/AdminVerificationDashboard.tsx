@@ -56,6 +56,8 @@ type QueueResponse = {
 
 type QueueId = QueueGroup['id'];
 type QueueStatus = QueueItem['status'];
+type StatusFilter = 'active' | 'all' | QueueStatus;
+type PriorityFilter = 'all' | 'high_urgent' | QueueItem['priority'];
 type QueueAction = {
   id: string;
   label: string;
@@ -80,6 +82,24 @@ const STATUS_BADGE_CLASS: Record<QueueItem['status'], string> = {
   cancelled: 'border-slate-300 text-slate-700 bg-slate-100',
 };
 
+const STATUS_FILTER_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
+  { value: 'active', label: 'Active only' },
+  { value: 'all', label: 'All statuses' },
+  { value: 'open', label: 'Open' },
+  { value: 'in_progress', label: 'In progress' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'cancelled', label: 'Cancelled' },
+];
+
+const PRIORITY_FILTER_OPTIONS: Array<{ value: PriorityFilter; label: string }> = [
+  { value: 'all', label: 'All priorities' },
+  { value: 'high_urgent', label: 'High or urgent' },
+  { value: 'urgent', label: 'Urgent' },
+  { value: 'high', label: 'High' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'low', label: 'Low' },
+];
+
 async function fetchQueueData() {
   const response = await apiFetch('/api/admin/internal-ops/queues');
 
@@ -93,6 +113,22 @@ async function fetchQueueData() {
 
 function formatQueueStatus(status: QueueItem['status']) {
   return internalValueLabel(status);
+}
+
+function formatQueueAge(createdAt: string) {
+  const created = new Date(createdAt).getTime();
+  if (!Number.isFinite(created)) {
+    return 'Age unknown';
+  }
+
+  const ageMs = Date.now() - created;
+  const ageHours = Math.max(0, Math.floor(ageMs / (1000 * 60 * 60)));
+  if (ageHours < 24) {
+    return ageHours <= 1 ? 'Age under 1 hour' : `Age ${ageHours} hours`;
+  }
+
+  const ageDays = Math.floor(ageHours / 24);
+  return ageDays === 1 ? 'Age 1 day' : `Age ${ageDays} days`;
 }
 
 function formatMetadataValue(value: unknown) {
@@ -117,6 +153,25 @@ function requiresOperatorNote(currentStatus: QueueStatus, nextStatus: QueueStatu
     nextStatus === 'cancelled' ||
     (nextStatus === 'open' && (currentStatus === 'resolved' || currentStatus === 'cancelled'))
   );
+}
+
+function shouldShowQueueItem(
+  item: QueueItem,
+  statusFilter: StatusFilter,
+  priorityFilter: PriorityFilter
+) {
+  const statusMatches =
+    statusFilter === 'all' ||
+    (statusFilter === 'active'
+      ? item.status === 'open' || item.status === 'in_progress'
+      : item.status === statusFilter);
+  const priorityMatches =
+    priorityFilter === 'all' ||
+    (priorityFilter === 'high_urgent'
+      ? item.priority === 'high' || item.priority === 'urgent'
+      : item.priority === priorityFilter);
+
+  return statusMatches && priorityMatches;
 }
 
 function getQueueActions(item: QueueItem) {
@@ -160,7 +215,14 @@ function getQueueActions(item: QueueItem) {
       case 'resolved':
       case 'cancelled':
         return [
-          { id: 'reopen', label: 'Reopen', nextStatus: 'open', variant: 'outline' },
+          {
+            id: 'reopen',
+            label: 'Reopen',
+            nextStatus: 'open',
+            variant: 'outline',
+            confirmationMessage:
+              'Reopen this upload review item? Keep the operator note factual and free of raw file details.',
+          },
         ] satisfies QueueAction[];
       default:
         return [];
@@ -176,18 +238,53 @@ function getQueueActions(item: QueueItem) {
           nextStatus: 'in_progress',
           variant: 'outline',
         },
-        { id: 'resolve', label: 'Resolve', nextStatus: 'resolved', variant: 'default' },
-        { id: 'cancel', label: 'Cancel', nextStatus: 'cancelled', variant: 'ghost' },
+        {
+          id: 'resolve',
+          label: 'Resolve',
+          nextStatus: 'resolved',
+          variant: 'default',
+          confirmationMessage:
+            'Resolve this queue item? Confirm the note captures only minimum necessary operational context.',
+        },
+        {
+          id: 'cancel',
+          label: 'Cancel',
+          nextStatus: 'cancelled',
+          variant: 'ghost',
+          confirmationMessage:
+            'Cancel this queue item? Confirm the note explains why it no longer belongs in active launch handling.',
+        },
       ] satisfies QueueAction[];
     case 'in_progress':
       return [
-        { id: 'resolve', label: 'Resolve', nextStatus: 'resolved', variant: 'default' },
-        { id: 'cancel', label: 'Cancel', nextStatus: 'cancelled', variant: 'ghost' },
+        {
+          id: 'resolve',
+          label: 'Resolve',
+          nextStatus: 'resolved',
+          variant: 'default',
+          confirmationMessage:
+            'Resolve this queue item? Confirm the note captures only minimum necessary operational context.',
+        },
+        {
+          id: 'cancel',
+          label: 'Cancel',
+          nextStatus: 'cancelled',
+          variant: 'ghost',
+          confirmationMessage:
+            'Cancel this queue item? Confirm the note explains why it no longer belongs in active launch handling.',
+        },
       ] satisfies QueueAction[];
     case 'resolved':
     case 'cancelled':
       return [
-        { id: 'reopen', label: 'Reopen', nextStatus: 'open', variant: 'outline' },
+        {
+          id: 'reopen',
+          label: 'Reopen',
+          nextStatus: 'open',
+          variant: 'outline',
+          confirmationMessage:
+            'Reopen this queue item? Confirm the note explains the launch-safe reason for renewed review.',
+        },
       ] satisfies QueueAction[];
     default:
       return [];
@@ -198,6 +295,8 @@ export function AdminVerificationDashboard() {
   const [data, setData] = useState<QueueResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<QueueId>('verification');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
@@ -212,7 +311,9 @@ export function AdminVerificationDashboard() {
           setData(nextData);
         }
       } catch (error) {
-        console.error('Failed to load operations queues:', error);
+        console.error('Failed to load operations queues', {
+          errorName: error instanceof Error ? error.name : typeof error,
+        });
         if (mounted) {
           toast.error(error instanceof Error ? error.message : 'Failed to load operations queues');
         }
@@ -294,7 +395,9 @@ export function AdminVerificationDashboard() {
         action.successMessage ?? `Queue item moved to ${formatQueueStatus(nextStatus)}.`
       );
     } catch (error) {
-      console.error('Failed to update operations queue item:', error);
+      console.error('Failed to update operations queue item', {
+        errorName: error instanceof Error ? error.name : typeof error,
+      });
       toast.error(error instanceof Error ? error.message : 'Failed to update queue item');
     } finally {
       setPendingAction(null);
@@ -371,174 +474,216 @@ export function AdminVerificationDashboard() {
                 <CardDescription>{queue.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                {queue.items.length === 0 ? (
+                <div className="mb-4 grid gap-3 rounded-lg border border-proofound-stone/70 bg-[#FBFAF6] p-3 sm:grid-cols-2">
+                  <label className="space-y-1 text-sm">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Status
+                    </span>
+                    <select
+                      value={statusFilter}
+                      onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+                      className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      {STATUS_FILTER_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-1 text-sm">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Priority
+                    </span>
+                    <select
+                      value={priorityFilter}
+                      onChange={(event) => setPriorityFilter(event.target.value as PriorityFilter)}
+                      className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      {PRIORITY_FILTER_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                {queue.items.filter((item) =>
+                  shouldShowQueueItem(item, statusFilter, priorityFilter)
+                ).length === 0 ? (
                   <div className="rounded-lg border border-dashed border-proofound-stone/80 bg-japandi-bg px-4 py-8 text-center text-sm text-muted-foreground">
-                    No items are currently in this queue.
+                    No items match the current filters.
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {queue.items.map((item) => {
-                      const actions = getQueueActions(item);
-                      const requiresNote = actions.some((action) =>
-                        requiresOperatorNote(item.status, action.nextStatus)
-                      );
-                      const detail = item.detail;
+                    {queue.items
+                      .filter((item) => shouldShowQueueItem(item, statusFilter, priorityFilter))
+                      .map((item) => {
+                        const actions = getQueueActions(item);
+                        const requiresNote = actions.some((action) =>
+                          requiresOperatorNote(item.status, action.nextStatus)
+                        );
+                        const detail = item.detail;
 
-                      return (
-                        <div
-                          key={item.id}
-                          className="overflow-hidden rounded-xl border border-proofound-stone/80 bg-white p-4 shadow-sm"
-                        >
-                          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                            <div className="min-w-0 space-y-2">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <Badge className={PRIORITY_BADGE_CLASS[item.priority]}>
-                                  {internalValueLabel(item.priority)}
-                                </Badge>
-                                <Badge className={STATUS_BADGE_CLASS[item.status]}>
-                                  {formatQueueStatus(item.status)}
-                                </Badge>
-                                <Badge variant="outline">
-                                  {internalValueLabel(item.linkedEntityType)}
-                                </Badge>
-                              </div>
-                              <p className="break-words text-sm font-medium text-foreground">
-                                {item.summary}
-                              </p>
-                              <p className="break-all text-xs text-muted-foreground">
-                                Related record: {item.linkedEntityId}
-                              </p>
-                              {item.resolvedAt && (
-                                <p className="text-xs text-muted-foreground">
-                                  Last closed {new Date(item.resolvedAt).toLocaleString()}
+                        return (
+                          <div
+                            key={item.id}
+                            className="overflow-hidden rounded-xl border border-proofound-stone/80 bg-white p-4 shadow-sm"
+                          >
+                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                              <div className="min-w-0 space-y-2">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Badge className={PRIORITY_BADGE_CLASS[item.priority]}>
+                                    {internalValueLabel(item.priority)}
+                                  </Badge>
+                                  <Badge className={STATUS_BADGE_CLASS[item.status]}>
+                                    {formatQueueStatus(item.status)}
+                                  </Badge>
+                                  <Badge variant="outline">
+                                    {internalValueLabel(item.linkedEntityType)}
+                                  </Badge>
+                                  <Badge variant="outline">{formatQueueAge(item.createdAt)}</Badge>
+                                </div>
+                                <p className="break-words text-sm font-medium text-foreground">
+                                  {item.summary}
                                 </p>
-                              )}
+                                <p className="break-all text-xs text-muted-foreground">
+                                  Related record: {item.linkedEntityId}
+                                </p>
+                                {item.resolvedAt && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Last closed {new Date(item.resolvedAt).toLocaleString()}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                                <Clock3 className="h-4 w-4" />
+                                Updated {new Date(item.updatedAt).toLocaleString()}
+                              </div>
                             </div>
-                            <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                              <Clock3 className="h-4 w-4" />
-                              Updated {new Date(item.updatedAt).toLocaleString()}
-                            </div>
-                          </div>
 
-                          {detail && (
-                            <div className="mt-4 rounded-lg border border-proofound-stone/70 bg-[#FBFAF6] p-3">
+                            {detail && (
+                              <div className="mt-4 rounded-lg border border-proofound-stone/70 bg-[#FBFAF6] p-3">
+                                <div className="space-y-2">
+                                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Minimum necessary context
+                                  </p>
+                                  <p className="text-sm text-foreground">
+                                    {detail.operatorSummary}
+                                  </p>
+                                </div>
+
+                                {detail.fields.length > 0 && (
+                                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                                    {detail.fields.map((field) => (
+                                      <div
+                                        key={`${item.id}:${field.label}`}
+                                        className="min-w-0 text-sm"
+                                      >
+                                        <span className="font-medium text-foreground">
+                                          {field.label}:
+                                        </span>{' '}
+                                        <span className="break-words text-muted-foreground">
+                                          {field.value}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {detail.flags.length > 0 && (
+                                  <div className="mt-3 flex flex-wrap gap-2">
+                                    {detail.flags.map((flag) => (
+                                      <Badge key={`${item.id}:flag:${flag}`} variant="outline">
+                                        {internalValueLabel(flag)}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {detail.checklist.length > 0 && (
+                                  <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                                    {detail.checklist.map((entry) => (
+                                      <li key={`${item.id}:checklist:${entry}`}>{entry}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            )}
+
+                            <div className="mt-4 space-y-3 rounded-lg border border-proofound-stone/70 bg-[#FBFAF6] p-3">
                               <div className="space-y-2">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                  Minimum necessary context
-                                </p>
-                                <p className="text-sm text-foreground">{detail.operatorSummary}</p>
+                                <label
+                                  htmlFor={`operator-note-${item.id}`}
+                                  className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                                >
+                                  Operator note
+                                </label>
+                                <Textarea
+                                  id={`operator-note-${item.id}`}
+                                  value={notes[item.id] ?? ''}
+                                  onChange={(event) =>
+                                    setNotes((current) => ({
+                                      ...current,
+                                      [item.id]: event.target.value,
+                                    }))
+                                  }
+                                  placeholder={
+                                    requiresNote
+                                      ? 'Required before resolve, cancel, or reopen.'
+                                      : 'Optional note for manual handling context.'
+                                  }
+                                  className="min-h-[96px] text-sm"
+                                />
                               </div>
 
-                              {detail.fields.length > 0 && (
-                                <div className="mt-3 grid gap-2 md:grid-cols-2">
-                                  {detail.fields.map((field) => (
-                                    <div
-                                      key={`${item.id}:${field.label}`}
-                                      className="min-w-0 text-sm"
-                                    >
+                              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                {actions.map((action) => (
+                                  <Button
+                                    key={action.id}
+                                    type="button"
+                                    variant={action.variant}
+                                    size="sm"
+                                    leftIcon={
+                                      action.uploadReviewAction === 'approve' ? (
+                                        <CheckCircle2 className="h-4 w-4" />
+                                      ) : action.uploadReviewAction === 'reject' ? (
+                                        <XCircle className="h-4 w-4" />
+                                      ) : undefined
+                                    }
+                                    loading={pendingAction === `${item.id}:${action.id}`}
+                                    onClick={() => handleQueueAction(item, action)}
+                                    className="w-full sm:w-auto"
+                                  >
+                                    {action.label}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {Object.keys(item.metadata).length > 0 && (
+                              <div className="mt-4 rounded-lg bg-[#F7F6F1] p-3">
+                                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                  Audit context
+                                </p>
+                                <div className="grid gap-2 md:grid-cols-2">
+                                  {Object.entries(item.metadata).map(([key, value]) => (
+                                    <div key={key} className="min-w-0 text-sm">
                                       <span className="font-medium text-foreground">
-                                        {field.label}:
+                                        {formatMetadataKey(key)}:
                                       </span>{' '}
                                       <span className="break-words text-muted-foreground">
-                                        {field.value}
+                                        {formatMetadataValue(value)}
                                       </span>
                                     </div>
                                   ))}
                                 </div>
-                              )}
-
-                              {detail.flags.length > 0 && (
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                  {detail.flags.map((flag) => (
-                                    <Badge key={`${item.id}:flag:${flag}`} variant="outline">
-                                      {internalValueLabel(flag)}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-
-                              {detail.checklist.length > 0 && (
-                                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                                  {detail.checklist.map((entry) => (
-                                    <li key={`${item.id}:checklist:${entry}`}>{entry}</li>
-                                  ))}
-                                </ul>
-                              )}
-                            </div>
-                          )}
-
-                          <div className="mt-4 space-y-3 rounded-lg border border-proofound-stone/70 bg-[#FBFAF6] p-3">
-                            <div className="space-y-2">
-                              <label
-                                htmlFor={`operator-note-${item.id}`}
-                                className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                              >
-                                Operator note
-                              </label>
-                              <Textarea
-                                id={`operator-note-${item.id}`}
-                                value={notes[item.id] ?? ''}
-                                onChange={(event) =>
-                                  setNotes((current) => ({
-                                    ...current,
-                                    [item.id]: event.target.value,
-                                  }))
-                                }
-                                placeholder={
-                                  requiresNote
-                                    ? 'Required before resolve, cancel, or reopen.'
-                                    : 'Optional note for manual handling context.'
-                                }
-                                className="min-h-[96px] text-sm"
-                              />
-                            </div>
-
-                            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                              {actions.map((action) => (
-                                <Button
-                                  key={action.id}
-                                  type="button"
-                                  variant={action.variant}
-                                  size="sm"
-                                  leftIcon={
-                                    action.uploadReviewAction === 'approve' ? (
-                                      <CheckCircle2 className="h-4 w-4" />
-                                    ) : action.uploadReviewAction === 'reject' ? (
-                                      <XCircle className="h-4 w-4" />
-                                    ) : undefined
-                                  }
-                                  loading={pendingAction === `${item.id}:${action.id}`}
-                                  onClick={() => handleQueueAction(item, action)}
-                                  className="w-full sm:w-auto"
-                                >
-                                  {action.label}
-                                </Button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {Object.keys(item.metadata).length > 0 && (
-                            <div className="mt-4 rounded-lg bg-[#F7F6F1] p-3">
-                              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                Audit context
-                              </p>
-                              <div className="grid gap-2 md:grid-cols-2">
-                                {Object.entries(item.metadata).map(([key, value]) => (
-                                  <div key={key} className="min-w-0 text-sm">
-                                    <span className="font-medium text-foreground">
-                                      {formatMetadataKey(key)}:
-                                    </span>{' '}
-                                    <span className="break-words text-muted-foreground">
-                                      {formatMetadataValue(value)}
-                                    </span>
-                                  </div>
-                                ))}
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
                 )}
               </CardContent>

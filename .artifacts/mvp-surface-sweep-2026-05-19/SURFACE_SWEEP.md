@@ -1857,3 +1857,15 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-admin-audit-dto/admin-audit-dto-smoke.json`.
 - Verification passed: `npm run test -- tests/lib/admin-audit-list.test.ts tests/ui/admin-audit-log-table.test.tsx tests/api/admin-internal-ops-queue-route.test.ts` (14 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
 - Updated the admin ops audit note to remove the default admin audit DTO and queue 500 detail findings from the remaining-risk list. Remaining admin follow-ups are now internal ops table RLS proof, richer operator filters/SOP links, and a narrow pilot workflow drilldown.
+
+## Continuation - Admin Verification Queue Operator Controls
+
+- Improved `/admin/verification` operator usability without broadening the admin corridor or changing schema/permissions.
+- Added status and priority filters to each queue view. Default status filter is active-only (`open`/`in_progress`) so launch operators start on unresolved work but can intentionally inspect all, resolved, or cancelled items.
+- Added age badges to queue items so stale review work is visible without turning the page into a metrics dashboard.
+- Added confirmation prompts for sensitive non-upload queue transitions: resolve, cancel, and reopen. Uploaded-file approve/reject confirmations remain in place.
+- Sanitized client-side console logging for admin verification load/update failures so thrown raw error objects are not printed by the component.
+- Added regression coverage in `tests/ui/admin-verification-dashboard.test.tsx` for filters, age visibility, resolve confirmation, and existing approve/reject behavior.
+- Codex Browser verified `/admin/verification` in mock-admin mode at `http://127.0.0.1:33184/admin/verification`: desktop and mobile both rendered `Operations Queues`, status/priority filters, age visibility, minimum-necessary risky-upload context, explicit approve/reject actions, one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, and no sampled private leak terms.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-admin-verification-controls/admin-verification-controls-smoke.json`.
+- Verification passed: `npm run test -- tests/ui/admin-verification-dashboard.test.tsx tests/api/admin-internal-ops-queue-route.test.ts tests/lib/internal-ops-queue.test.ts` (19 tests), `npm run lint`, and `npm run typecheck`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.

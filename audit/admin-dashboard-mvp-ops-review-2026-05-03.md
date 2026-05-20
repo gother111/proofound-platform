@@ -16,8 +16,8 @@ Scope: current active Proofound admin dashboard, admin APIs, internal ops queues
 > a compact launch-health card backed by the generated launch checklist. The
 > default admin audit API now returns a minimum-necessary list DTO, and unexpected
 > admin queue errors no longer return raw backend messages. Remaining follow-up
-> risks are internal ops table RLS proof, richer operator filters/SOP links, and a
-> narrow pilot workflow drilldown.
+> risks are internal ops table RLS proof, direct SOP links, and a narrow pilot
+> workflow drilldown.
 
 ## A. Executive Verdict
 
@@ -46,7 +46,7 @@ The main remaining gap is operational depth beyond the first launch-ops console:
 ## C. What Is Missing
 
 - No direct link from queue item to the relevant SOP or safe operator checklist.
-- No priority/status/entity/age filters beyond the four queue tabs.
+- Status, priority, and age controls now exist on the active queue view; entity/operator filtering is still deferred until real pilot volume requires it.
 - No narrow pilot organization/workflow drilldown for inspecting stuck assignment, shortlist/review, intro, reveal, interview, decision, or engagement state in one place.
 - Default admin audit list projection is minimum-necessary, but there is still no richer break-glass preview UI for sensitive full-detail audit review.
 
@@ -69,9 +69,8 @@ The main remaining gap is operational depth beyond the first launch-ops console:
 
 ## F. UX And Usability Issues
 
-- Operators cannot distinguish urgent privacy leaks from ordinary stale/manual-review items beyond priority badges.
-- No filters by priority/status/entity/age/operator, beyond queue tabs.
-- No confirmation for sensitive queue actions like cancel/reopen/resolve.
+- Operators can now distinguish status, priority, and age in the active queue view; entity/operator filtering remains deferred.
+- Sensitive queue actions like cancel, reopen, and resolve now require confirmation prompts in addition to operator notes where required.
 - Empty states are calm but not operationally helpful; they do not explain owner, SLA, or where evidence comes from.
 - Audit page search is basic and lacks filters by target type, admin, time range UI, sensitive action type, or break-glass-only view.
 - Dashboard is calm and uncluttered, but still sparse for a real launch operator once pilot volume rises.
@@ -142,11 +141,12 @@ Current guardrail: `tests/lib/admin-audit-list.test.ts`, `tests/ui/admin-audit-l
 
 ### P2: Add Operator Usability Controls
 
-Problem: The queue UI lacks filters, confirmations, SLA/age indicators, and SOP links.
-Evidence: `AdminVerificationDashboard` has only tabs and basic action buttons.
+Disposition: partially resolved on 2026-05-20 for scoped filters, age visibility, and sensitive-action confirmations.
+Remaining problem: The queue UI still lacks direct SOP links and richer entity/operator filters.
+Evidence: `AdminVerificationDashboard` now has status/priority filters, age badges, and confirmation prompts for resolve/cancel/reopen.
 File/route: `/admin/verification`.
-Recommended fix: Add priority/status/entity filters, age/SLA badges, per-queue SOP links, and confirmation dialogs for resolve/cancel/reopen.
-Success criteria: UI tests cover filtering, confirmation before sensitive actions, and empty/error states.
+Recommended next fix: Add per-queue SOP links or an internal SOP drawer, then consider entity/operator filters only if pilot volume needs them.
+Current guardrail: `tests/ui/admin-verification-dashboard.test.tsx` covers status/priority filtering, age visibility, confirmation before resolve, uploaded-file approve/reject actions, and privacy-safe queue rendering.
 
 ### P2: Add Pilot Organization And Workflow Read-Only View
 

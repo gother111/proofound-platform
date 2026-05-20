@@ -122,6 +122,7 @@ describe('AdminVerificationDashboard', () => {
   });
 
   it('requires a note for resolve actions and patches the generic queue endpoint once provided', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     apiFetchMock
       .mockResolvedValueOnce(buildJsonResponse(actionableQueuePayload))
       .mockResolvedValueOnce(
@@ -185,6 +186,52 @@ describe('AdminVerificationDashboard', () => {
     await waitFor(() => {
       expect(toastSuccessMock).toHaveBeenCalledWith('Queue item moved to Resolved.');
     });
+    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Resolve this queue item'));
+
+    confirmSpy.mockRestore();
+  });
+
+  it('lets operators filter queue items by active status and priority', async () => {
+    apiFetchMock.mockResolvedValue(
+      buildJsonResponse({
+        queues: [
+          {
+            ...actionableQueuePayload.queues[0],
+            items: [
+              actionableQueuePayload.queues[0].items[0],
+              {
+                ...actionableQueuePayload.queues[0].items[0],
+                id: '44444444-4444-4444-8444-444444444444',
+                status: 'resolved',
+                priority: 'low',
+                summary: 'Resolved pilot evidence check.',
+                resolvedAt: '2026-03-21T12:00:00.000Z',
+              },
+            ],
+          },
+        ],
+        stats: {
+          total: 2,
+          open: 1,
+        },
+      })
+    );
+
+    render(<AdminVerificationDashboard />);
+
+    await screen.findByText('Risky evidence upload held for privacy-safe review.');
+
+    expect(screen.getByText(/Age /)).toBeInTheDocument();
+    expect(screen.queryByText('Resolved pilot evidence check.')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'all' } });
+    expect(await screen.findByText('Resolved pilot evidence check.')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Priority'), { target: { value: 'high_urgent' } });
+    expect(screen.queryByText('Resolved pilot evidence check.')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Risky evidence upload held for privacy-safe review.')
+    ).toBeInTheDocument();
   });
 
   it('uses explicit approve and reject actions for uploaded-file queue items', async () => {
