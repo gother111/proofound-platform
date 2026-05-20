@@ -31,7 +31,7 @@ export default function SocialSignInButtons({ className, nextPath }: SocialSignI
       <div className="grid grid-cols-1 gap-3">
         <OAuthProviderForm
           provider="google"
-          label="Google"
+          label="Continue with Google"
           action={formAction}
           nextPath={nextPath}
           origin={origin}
@@ -40,7 +40,7 @@ export default function SocialSignInButtons({ className, nextPath }: SocialSignI
         </OAuthProviderForm>
         <OAuthProviderForm
           provider="linkedin_oidc"
-          label="LinkedIn"
+          label="Continue with LinkedIn"
           action={formAction}
           nextPath={nextPath}
           origin={origin}

@@ -28,8 +28,8 @@ describe('SocialSignInButtons', () => {
   it('keeps Google and LinkedIn social login available', async () => {
     const { container } = render(<SocialSignInButtons nextPath="/app/i/verifications" />);
 
-    expect(screen.getByRole('button', { name: /Google/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /LinkedIn/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue with LinkedIn' })).toBeInTheDocument();
     expect(screen.getByTestId('oauth-google-submit')).toBeInTheDocument();
     expect(screen.getByTestId('oauth-linkedin-submit')).toBeInTheDocument();
     expect(container.querySelector('input[name="provider"][value="google"]')).not.toBeNull();

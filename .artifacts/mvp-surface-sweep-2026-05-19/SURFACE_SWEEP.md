@@ -2610,3 +2610,19 @@ Browser evidence:
 - Added focused API coverage proving masked responses do not contain the other participant id, display name, or private avatar URL, and proving revealed responses still include the expected identity fields.
 - Browser was not rerun for this slice because the rendered UI did not change; the relevant launch evidence is the API response contract and no-leak assertions.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/conversations-route.test.ts tests/api/conversation-detail-routes.test.ts tests/api/conversation-reveal-route.test.ts tests/ui/conversation-list.test.tsx tests/ui/communications-hub-mobile-targets.test.tsx --reporter=verbose` (5 files / 21 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Auth Entry Social Button Clarity
+
+- Timestamp: 2026-05-20 14:21:16 CEST.
+- Inspected the locked MVP and active auth docs around Google, LinkedIn, login, signup, and verification behavior.
+- Confirmed current authority keeps LinkedIn verification outside the launch corridor while allowing LinkedIn as Supabase social login; Google and LinkedIn login buttons are active auth entry points, not proof or verification signals.
+- Found the social buttons rendered as bare provider names under an `Or continue with` divider. That preserved functionality, but made the primary action less explicit on the logged-out entry and signup form surfaces.
+- Updated the shared social auth buttons to read `Continue with Google` and `Continue with LinkedIn`, preserving the Supabase providers `google` and `linkedin_oidc`.
+- Updated focused UI and LinkedIn-archive guardrail tests so they prove Google/LinkedIn sign-in remains available while LinkedIn verification stays archived.
+- Used the bundled Codex in-app Browser runtime (`iab`) against `http://localhost:3001` with visual fixtures enabled. Browser verified:
+  - `/login` rendered `Continue with Google` and `Continue with LinkedIn`.
+  - `/signup/individual` rendered `Continue with Google` and `Continue with LinkedIn`.
+  - `/signup/organization` rendered `Continue with Google` and `Continue with LinkedIn`.
+  - `/signup` itself remains the account-type chooser and does not directly render social buttons until an account type is selected.
+- Browser friction: the first Browser attempt had a stale tab handle from an earlier session; resetting the Browser runtime and opening a fresh `iab` tab resolved it. A sandboxed dev-server start failed with `EPERM` on port `3001`, then an approved local dev-server run succeeded. The dev server was stopped after verification and generated `tsconfig.json` churn was restored.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/social-sign-in-buttons.test.tsx tests/actions/auth.test.ts tests/lib/archived-linkedin-integration-references.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 122 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.

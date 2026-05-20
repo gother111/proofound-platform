@@ -45,7 +45,7 @@ describe('archived LinkedIn integration references', () => {
     const authAction = readFileSync(path.join(REPO_ROOT, 'src/actions/auth.ts'), 'utf8');
 
     expect(socialButtons).toContain('provider="linkedin_oidc"');
-    expect(socialButtons).toContain('label="LinkedIn"');
+    expect(socialButtons).toContain('label="Continue with LinkedIn"');
     expect(authAction).toContain("z.enum(['google', 'linkedin_oidc'])");
     expect(authAction).not.toContain('r_verify');
     expect(authAction).not.toContain('r_profile_basicinfo');
