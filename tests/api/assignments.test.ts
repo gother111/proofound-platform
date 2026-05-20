@@ -105,10 +105,6 @@ vi.mock('@/lib/notifications', () => ({
   notifyAssignmentPublished: vi.fn(),
 }));
 
-vi.mock('@/lib/surveys/sus-triggers', () => ({
-  triggerFirstAssignmentSurvey: vi.fn(),
-}));
-
 describe('Assignment API', () => {
   afterEach(() => {
     vi.unstubAllEnvs();

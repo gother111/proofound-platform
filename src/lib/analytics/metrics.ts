@@ -6,7 +6,6 @@
  * - TTV: Time to Video Interview
  * - TTSC: Time to Signed Contract
  * - Proof Fit Lift
- * - SUS: System Usability Scale
  */
 
 import { db } from '@/db';
@@ -61,13 +60,6 @@ export interface PACLiftResult {
   onTrack: boolean;
   sampleSize: { withPAC: number; withoutPAC: number };
   calculatedAt: Date;
-}
-
-export interface SUSResult extends MetricResult {
-  metric: 'SUS';
-  unit: 'score';
-  target: 75; // PRD: ≥75
-  responses: number;
 }
 
 export interface FirstTenMinuteActivationRate {
@@ -422,90 +414,6 @@ export async function calculatePACLift(startDate?: Date, endDate?: Date): Promis
     });
     throw error;
   }
-}
-
-// ============================================================================
-// SYSTEM USABILITY SCALE (SUS)
-// ============================================================================
-
-/**
- * Calculate SUS: System usability score from surveys
- * PRD Target: ≥75 (above average)
- */
-export async function calculateSUS(startDate?: Date, endDate?: Date): Promise<SUSResult> {
-  try {
-    const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-    const end = endDate || new Date();
-
-    const result = await db.execute(sql`
-      SELECT
-        AVG((properties->>'total_score')::float) as avg_score,
-        COUNT(*) as responses
-      FROM analytics_events
-      WHERE event_type = 'sus_survey_completed'
-        AND occurred_at >= ${start.toISOString()}
-        AND occurred_at <= ${end.toISOString()}
-    `);
-
-    const row = (getRows(result)[0] ?? {}) as any;
-    const avgScore = parseFloat(row.avg_score || '0');
-    const responses = parseInt(row.responses || '0');
-
-    log.info('metrics.sus.calculated', {
-      avgScore,
-      responses,
-    });
-
-    return {
-      metric: 'SUS',
-      value: avgScore,
-      unit: 'score',
-      target: 75,
-      onTrack: avgScore >= 75,
-      responses,
-      sampleSize: responses,
-      calculatedAt: new Date(),
-    };
-  } catch (error) {
-    log.error('metrics.sus.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    throw error;
-  }
-}
-
-// ============================================================================
-// CONSOLIDATED METRICS
-// ============================================================================
-
-/**
- * Calculate all key metrics at once
- */
-export async function calculateAllMetrics(
-  startDate?: Date,
-  endDate?: Date
-): Promise<{
-  ttfqi: TTFQIResult;
-  ttv: TTVResult;
-  ttsc: TTSCResult;
-  pacLift: PACLiftResult;
-  sus: SUSResult;
-}> {
-  const [ttfqi, ttv, ttsc, pacLift, sus] = await Promise.all([
-    calculateTTFQI(undefined, startDate, endDate),
-    calculateTTV(undefined, startDate, endDate),
-    calculateTTSC(undefined, startDate, endDate),
-    calculatePACLift(startDate, endDate),
-    calculateSUS(startDate, endDate),
-  ]);
-
-  return {
-    ttfqi,
-    ttv,
-    ttsc,
-    pacLift,
-    sus,
-  };
 }
 
 function toRate(numerator: number, denominator: number): number {

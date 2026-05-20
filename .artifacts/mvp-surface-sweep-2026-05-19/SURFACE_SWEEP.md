@@ -2057,3 +2057,15 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-data-import-archive/settings-data-import-archive-smoke.json`.
 - Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, viewport, console, overflow, selected-tab, and stale-copy evidence was captured instead.
 - Focused verification passed: `npm run test -- tests/ui/privacy-overview-copy.test.tsx tests/ui/archived-mvp-routes.test.ts tests/ui/launch-discoverability.test.tsx` (8 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - SUS Survey Archive Boundary
+
+- Inspected active runtime references to the archived `/api/surveys/sus*` route family and found retained launch code could still create survey prompt state after profile activation, first assignment creation, and match views. Orphaned SUS UI components and `useSUSSurvey` also remained in active source.
+- Removed SUS prompt side effects from profile updates, assignment creation side effects, and match-view analytics. Active launch flows now keep readiness, activation, assignment, and match telemetry without writing retired survey prompts.
+- Removed active SUS completion emitters, the SUS event constant, and the unused consolidated SUS metric calculation from launch analytics. The lightweight launch health metrics path remains centered on TTFQI, TTV, TTSC, PAC lift, and first-ten-minute activation.
+- Moved retired SUS dialog/prompt/questionnaire components, the survey hook, trigger helpers, calculator helper, and calculator test into archive folders with README notes explaining the archive boundary.
+- Updated the older feedback-SUS archive README and scope-compliance note so docs no longer present `/api/surveys/sus` as the active replacement path.
+- Added source-guard regression coverage proving active runtime source cannot reintroduce `/api/surveys/sus`, SUS analytics events, or SUS trigger imports.
+- Codex Browser verified `/app/i/home` at `http://127.0.0.1:33180`: the route rendered the proof-first home surface, had one `<main>` landmark, no horizontal overflow, no runtime-error text, no SUS/usability-survey copy, no `/api/surveys/sus` visible text, and zero Browser console errors. Browser screenshot capture succeeded in this pass.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-sus-archive/sus-archive-browser-smoke.json`.
+- Focused verification passed: `npm run test -- tests/lib/archived-survey-surface-references.test.ts tests/ui/archived-mvp-routes.test.ts tests/api/assignments.test.ts tests/api/assignments-list-route.test.ts` (19 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.

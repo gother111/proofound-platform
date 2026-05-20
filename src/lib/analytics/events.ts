@@ -417,37 +417,6 @@ export async function emitVerificationProvided(
 }
 
 // ============================================================================
-// SUS / FEEDBACK EVENTS
-// ============================================================================
-
-export function emitSUSSurveyCompletedAsync(
-  userId: string,
-  scoreOrProperties:
-    | number
-    | {
-        total_score: number;
-        individual_scores?: number[];
-        trigger_point?: string;
-      }
-): void {
-  const properties =
-    typeof scoreOrProperties === 'number'
-      ? { score: scoreOrProperties }
-      : {
-          score: scoreOrProperties.total_score,
-          ...scoreOrProperties,
-        };
-
-  emitAnalyticsEventAsync({
-    eventType: 'sus_survey_completed',
-    userId,
-    entityType: 'profile',
-    entityId: userId,
-    properties,
-  });
-}
-
-// ============================================================================
 // PRIVACY EVENTS
 // ============================================================================
 
@@ -737,15 +706,6 @@ export async function emitMatchViewed(userId: string, matchId: string) {
     entityType: 'match',
     entityId: matchId,
   });
-
-  // Check if user has reached 10 matches milestone and trigger SUS survey
-  try {
-    const { checkTenMatchesMilestone } = await import('@/lib/surveys/sus-triggers');
-    await checkTenMatchesMilestone(userId);
-  } catch (error) {
-    // Don't let survey trigger failure break match viewing
-    console.error('Failed to check 10 matches milestone:', error);
-  }
 }
 
 export async function emitMatchIntroduced(
@@ -847,25 +807,6 @@ export async function emitDecisionMade(
     userId,
     entityType: 'interview',
     entityId: interviewId,
-    properties,
-  });
-}
-
-// ============================================================================
-// SURVEY EVENTS
-// ============================================================================
-
-export async function emitSUSCompleted(
-  userId: string,
-  properties: {
-    total_score: number;
-    individual_scores: number[];
-    trigger_point: string; // When/why survey was shown
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'sus_survey_completed',
-    userId,
     properties,
   });
 }

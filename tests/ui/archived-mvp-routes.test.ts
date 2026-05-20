@@ -163,6 +163,12 @@ const REMOVED_ARCHIVED_PAGE_IMPLEMENTATIONS = [
   'src/components/settings/DataImportButton.tsx',
   'src/components/settings/EnhancedDataImportDialog.tsx',
   'src/components/settings/ConflictResolutionDialog.tsx',
+  'src/components/surveys/SUSDialog.tsx',
+  'src/components/surveys/SUSPromptHost.tsx',
+  'src/components/surveys/SUSQuestionnaire.tsx',
+  'src/hooks/useSUSurvey.ts',
+  'src/lib/surveys/sus-triggers.ts',
+  'src/lib/surveys/sus-calculator.ts',
 ] as const;
 
 describe('archived non-MVP routes', () => {

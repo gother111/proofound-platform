@@ -104,10 +104,6 @@ vi.mock('@/lib/assignments/expertise-matrix', () => ({
   deriveRequirementsFromMatrix: vi.fn(() => ({ mustHaveSkills: [], niceToHaveSkills: [] })),
 }));
 
-vi.mock('@/lib/surveys/sus-triggers', () => ({
-  triggerFirstAssignmentSurvey: vi.fn(),
-}));
-
 vi.mock('@/lib/featureFlags', () => ({
   FEATURE_FLAG_KEYS: {
     ASSIGNMENT_BASIC_MODE: 'assignment_basic_mode',

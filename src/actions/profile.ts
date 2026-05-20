@@ -20,7 +20,6 @@ import {
 } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { triggerProfileActivationSurvey } from '@/lib/surveys/sus-triggers';
 import { sendEmail } from '@/lib/email/sender';
 import { resolveCanonicalSiteUrl } from '@/lib/env';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
@@ -118,7 +117,6 @@ function coerceDateOnlyString(value: unknown): string | null {
 async function checkAndEmitProfileActivation(userId: string): Promise<void> {
   try {
     await syncReadinessMilestones(userId, { source: 'profile_updated' });
-    await triggerProfileActivationSurvey(userId);
   } catch (error) {
     console.error('Profile activation check failed:', error);
     // Don't throw - activation tracking shouldn't break profile updates

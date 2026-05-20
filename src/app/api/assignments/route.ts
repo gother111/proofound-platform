@@ -26,7 +26,6 @@ import {
   buildMatrixRowsFromRequirements,
   deriveRequirementsFromMatrix,
 } from '@/lib/assignments/expertise-matrix';
-import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
 import { isMockSupabaseEnabled } from '@/lib/env';
@@ -230,25 +229,6 @@ async function runAssignmentCreationSideEffects({
   orgId: string;
   assignment: any;
 }) {
-  try {
-    const existingAssignments = await db
-      .select({ id: assignments.id })
-      .from(assignments)
-      .where(eq(assignments.orgId, orgId))
-      .limit(2);
-
-    if (existingAssignments.length === 1) {
-      await triggerFirstAssignmentSurvey(userId);
-    }
-  } catch (error) {
-    log.error('sus_survey.first_assignment_check_failed', {
-      requestId,
-      error: sanitizeErrorForLog(error),
-      userId,
-      orgId,
-    });
-  }
-
   try {
     if (assignment.status === 'active') {
       const evaluation = evaluateAssignmentActivationCriteria(assignment);

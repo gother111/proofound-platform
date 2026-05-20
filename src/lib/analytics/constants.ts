@@ -125,8 +125,6 @@ export const EventType = {
   OPERATOR_OVERRIDE_LOGGED: 'operator_override_logged',
   SYNTHETIC_CHECK_FAILED: 'synthetic_check_failed',
 
-  // Usability
-  SUS_SURVEY_COMPLETED: 'sus_survey_completed',
   TOUR_STARTED: 'tour_started',
   TOUR_COMPLETED: 'tour_completed',
   TOUR_SKIPPED: 'tour_skipped',
@@ -175,12 +173,6 @@ export const TTFQI_TARGET_HOURS = 72;
  * Target: Median ≤7 days (activation → interview)
  */
 export const TTV_TARGET_DAYS = 7;
-
-/**
- * SUS (System Usability Scale)
- * Target: ≥75
- */
-export const SUS_TARGET_SCORE = 75;
 
 /**
  * Proof Fit Lift
@@ -388,7 +380,6 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.ASSIGNMENT_PUBLISH_SUCCEEDED]: 'Assignment Publish Succeeded',
     [EventType.ASSIGNMENT_TEMPLATE_APPLIED]: 'Assignment Template Applied',
     [EventType.TTFQI_WARNING_EMITTED]: 'TTFQI Warning Emitted',
-    [EventType.SUS_SURVEY_COMPLETED]: 'SUS Survey Completed',
     [EventType.TOUR_STARTED]: 'Tour Started',
     [EventType.TOUR_COMPLETED]: 'Tour Completed',
     [EventType.TOUR_SKIPPED]: 'Tour Skipped',
