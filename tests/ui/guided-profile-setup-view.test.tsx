@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { GuidedProfileSetupView } from '@/components/profile/GuidedProfileSetupView';
@@ -67,6 +67,8 @@ describe('GuidedProfileSetupView', () => {
       'Optional trust checkpoint',
       'Publish Public Page',
     ];
+
+    fireEvent.click(screen.getByRole('button', { name: /show all setup steps/i }));
 
     labels.forEach((label) => {
       expect(screen.queryAllByText(label).length).toBeGreaterThan(0);

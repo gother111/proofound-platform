@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 const { notFoundMock } = vi.hoisted(() => ({
@@ -334,6 +334,8 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
+    fireEvent.click(screen.getByRole('button', { name: /show details/i }));
+
     expect(screen.getByRole('link', { name: /open launch memo/i })).toHaveAttribute(
       'href',
       'https://example.com/launch-memo'
@@ -424,6 +426,8 @@ describe('Public individual portfolio page', () => {
     });
 
     render(element);
+
+    fireEvent.click(screen.getByRole('button', { name: /show details/i }));
 
     expect(screen.getAllByText('Hidden asset proof').length).toBeGreaterThan(0);
     expect(screen.queryByRole('link', { name: /open evidence/i })).not.toBeInTheDocument();
