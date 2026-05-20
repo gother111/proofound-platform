@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { google } from 'googleapis';
 
 import { InMemoryNonceStore, type NonceStore, verifyHmacRequest } from './auth';
 import { createOcrProvider, OcrProviderError, type OcrProvider } from './provider';
@@ -11,6 +12,7 @@ export type GcpCvOcrHandlerOptions = {
   nowMs?: () => number;
   nonceStore?: NonceStore;
   dailyLimitStore?: DailyLimitStore;
+  oidcVerifier?: OidcVerifier;
   provider?: OcrProvider;
   providerTimeoutMs?: number;
   requestIdFactory?: () => string;
@@ -43,6 +45,16 @@ export type DailyLimitStore = {
     globalDailyLimit: number;
   }): 'ok' | 'daily_limit_exceeded' | 'global_limit_exceeded';
 };
+
+type OidcVerificationResult =
+  | { ok: true; email: string | null }
+  | { ok: false; code: 'missing_token' | 'auth_misconfigured' | 'unauthorized' };
+
+type OidcVerifier = (params: {
+  token: string;
+  audience: string;
+  serviceAccountEmail: string;
+}) => Promise<OidcVerificationResult>;
 
 export class InMemoryDailyLimitStore implements DailyLimitStore {
   private dayKey: string | null = null;
@@ -82,6 +94,7 @@ export function createGcpCvOcrHandler(options: GcpCvOcrHandlerOptions = {}) {
   const env = options.env ?? process.env;
   const nonceStore = options.nonceStore ?? sharedNonceStore;
   const dailyLimitStore = options.dailyLimitStore ?? sharedDailyLimitStore;
+  const oidcVerifier = options.oidcVerifier ?? verifyGoogleOidcToken;
   const provider = options.provider ?? createOcrProvider(env);
   const nowMs = options.nowMs ?? Date.now;
   const providerTimeoutMs = options.providerTimeoutMs ?? DEFAULT_PROVIDER_TIMEOUT_MS;
@@ -132,6 +145,20 @@ export function createGcpCvOcrHandler(options: GcpCvOcrHandlerOptions = {}) {
           401,
           requestId,
           auth.code === 'stale_timestamp' ? 'stale_timestamp' : 'unauthorized'
+        );
+      }
+    } else {
+      const auth = await verifyOidcRequest({
+        headers: request.headers,
+        env,
+        verifier: oidcVerifier,
+      });
+
+      if (!auth.ok) {
+        return safeErrorResponse(
+          auth.code === 'auth_misconfigured' ? 503 : 401,
+          requestId,
+          auth.code
         );
       }
     }
@@ -214,6 +241,58 @@ function resolveAuthMode(env: Env): 'hmac' | 'oidc' {
   return env.GCP_CV_OCR_AUTH_MODE?.trim().toLowerCase() === 'oidc' ? 'oidc' : 'hmac';
 }
 
+async function verifyOidcRequest(params: {
+  headers: Headers;
+  env: Env;
+  verifier: OidcVerifier;
+}): Promise<OidcVerificationResult> {
+  const token = extractBearerToken(params.headers);
+  if (!token) {
+    return { ok: false, code: 'missing_token' };
+  }
+
+  const audience =
+    params.env.GCP_CV_OCR_OIDC_AUDIENCE?.trim() || params.env.GCP_CV_OCR_BASE_URL?.trim() || '';
+  const serviceAccountEmail = params.env.GCP_CV_OCR_OIDC_SERVICE_ACCOUNT_EMAIL?.trim() || '';
+  if (!audience || !serviceAccountEmail) {
+    return { ok: false, code: 'auth_misconfigured' };
+  }
+
+  return params.verifier({ token, audience, serviceAccountEmail });
+}
+
+function extractBearerToken(headers: Headers): string | null {
+  const value =
+    headers.get('authorization')?.trim() || headers.get('x-serverless-authorization')?.trim() || '';
+  const match = /^Bearer\s+(.+)$/i.exec(value);
+  return match?.[1]?.trim() || null;
+}
+
+async function verifyGoogleOidcToken(params: {
+  token: string;
+  audience: string;
+  serviceAccountEmail: string;
+}): Promise<OidcVerificationResult> {
+  try {
+    const client = new google.auth.OAuth2();
+    const ticket = await client.verifyIdToken({
+      idToken: params.token,
+      audience: params.audience,
+    });
+    const payload = ticket.getPayload();
+    const email = typeof payload?.email === 'string' ? payload.email : null;
+    const emailVerified = payload?.email_verified !== false;
+
+    if (email !== params.serviceAccountEmail || !emailVerified) {
+      return { ok: false, code: 'unauthorized' };
+    }
+
+    return { ok: true, email };
+  } catch {
+    return { ok: false, code: 'unauthorized' };
+  }
+}
+
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -259,6 +338,10 @@ function safeErrorMessage(code: string): string {
       return 'Global OCR request limit exceeded.';
     case 'hmac_not_allowed':
       return 'OCR service auth mode is not available in this environment.';
+    case 'auth_misconfigured':
+      return 'OCR service authentication is not configured safely.';
+    case 'missing_token':
+      return 'OCR service authentication token is required.';
     case 'provider_timeout':
       return 'OCR provider timed out.';
     case 'provider_error':
