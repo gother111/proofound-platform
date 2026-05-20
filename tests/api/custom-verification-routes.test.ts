@@ -484,6 +484,22 @@ describe('canonical custom verification routes', () => {
     await expect(unknown.json()).resolves.toEqual({ error: 'Verification request not found' });
   });
 
+  it('rejects malformed custom verification response JSON before token redemption', async () => {
+    const response = await postVerifyCustom(
+      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', {
+        method: 'POST',
+        body: '{"action":',
+        headers: { 'content-type': 'application/json' },
+      }),
+      { params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }) }
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(respondCanonicalBundle).not.toHaveBeenCalled();
+    expect(getCanonicalBundleById).not.toHaveBeenCalled();
+  });
+
   it('records partial custom attestation responses and queues them for manual review', async () => {
     vi.mocked(getCanonicalBundleById).mockResolvedValue(
       makeCanonicalBundle({

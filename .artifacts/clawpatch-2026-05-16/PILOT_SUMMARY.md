@@ -490,6 +490,20 @@ Verification after this sweep:
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 
+## Continuation: Twenty-Second Local Malformed-JSON Sweep
+
+A twenty-second local sweep applied the same malformed-JSON boundary to the custom verification token response route:
+
+- `src/app/api/verify/custom/[token]/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after admin client setup and route parameter resolution, but before custom response validation, visual-fixture handling, token shape checks, capability-token redemption, bundle loading, canonical bundle response writes, artifact effects, or custom verification response logging continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/custom-verification-routes.test.ts`: passed, `1` file and `11` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.

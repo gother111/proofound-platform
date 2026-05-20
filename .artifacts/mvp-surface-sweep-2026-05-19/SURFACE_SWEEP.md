@@ -2214,3 +2214,11 @@ Browser evidence:
 - Confirmed the existing focused route test covers the malformed JSON path and asserts matching profile writes and matchability evaluation do not run after parse failure.
 - Browser was not rerun for this slice because this is API error-boundary hardening with no rendered UI change.
 - Verification passed: `npm run test -- tests/api/core-matching-profile-route.test.ts` (1 file / 4 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Custom Verification Response JSON Boundary Hardening
+
+- Inspected the active public verifier response route `POST /api/verify/custom/[token]`, which is part of the custom verification / proof trust corridor.
+- Added a controlled malformed JSON response so bad verifier response bodies return `400` before schema validation, capability-token redemption, canonical bundle lookup, attestation parsing, proof trust lift, internal-ops queueing, or artifact verification side effects.
+- Added focused regression coverage proving malformed response JSON does not call `respondCanonicalBundle` or `getCanonicalBundleById`.
+- Browser was not rerun for this slice because this is public API verifier-response hardening with no rendered UI change.
+- Verification passed: `npm run test -- tests/api/custom-verification-routes.test.ts` (1 file / 11 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
