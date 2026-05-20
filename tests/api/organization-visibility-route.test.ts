@@ -38,6 +38,14 @@ function buildPutRequest(body: Record<string, unknown>) {
   });
 }
 
+function buildRawPutRequest(body: string) {
+  return new NextRequest('http://localhost/api/organizations/org-1/visibility', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body,
+  });
+}
+
 function buildSupabase({
   membershipRole = 'org_owner',
   visibilityRow = null,
@@ -189,6 +197,21 @@ describe('organization visibility route', () => {
 
     expect(response.status).toBe(400);
     expect(body.error).toBe('Invalid visibility level for displayName');
+  });
+
+  it('PUT rejects malformed JSON before visibility reads or writes', async () => {
+    const supabase = buildSupabase();
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const response = await PUT(buildRawPutRequest('{"displayName":'), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'Invalid JSON body' });
+    expect(supabase.__mocks.visibilityWrite.update).not.toHaveBeenCalled();
+    expect(supabase.__mocks.visibilityWrite.insert).not.toHaveBeenCalled();
+    expect(db.query.portfolioPublicationStates.findFirst).not.toHaveBeenCalled();
+    expect(computePortfolioPublicationState).not.toHaveBeenCalled();
   });
 
   it('PUT rejects manager updates because publication controls are owner-only', async () => {

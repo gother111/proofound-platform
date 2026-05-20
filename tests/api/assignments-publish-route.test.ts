@@ -153,6 +153,23 @@ describe('assignment publish route', () => {
     }
   );
 
+  it('returns 400 for malformed JSON before assignment access or lookup', async () => {
+    const req = new NextRequest(`http://localhost/api/assignments/${assignmentId}/publish`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{"principalContext":',
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: assignmentId }) });
+    const payload = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
+    expect(verifyExplicitAssignmentMutationAccess).not.toHaveBeenCalled();
+    expect(db.query.assignments.findFirst).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
   it('returns explicit block reasons for missing launch requirements', async () => {
     (db.query.assignments.findFirst as any).mockResolvedValue({
       id: assignmentId,

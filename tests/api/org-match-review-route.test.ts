@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   buildProofFirstReviewCard: vi.fn(),
   buildVisibilitySafeWhy: vi.fn(),
   getReviewCardProofPackMap: vi.fn(),
+  getReviewCardProofPackMapForMatchedOrg: vi.fn(),
   getVisibleIdentityFields: vi.fn(),
   normalizeFairnessStatus: vi.fn(),
   persistFairnessEvaluationForAssignment: vi.fn(),
@@ -56,6 +57,7 @@ vi.mock('@/lib/matching/review-contract', () => ({
   buildProofFirstReviewCard: mocks.buildProofFirstReviewCard,
   buildVisibilitySafeWhy: mocks.buildVisibilitySafeWhy,
   getReviewCardProofPackMap: mocks.getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg: mocks.getReviewCardProofPackMapForMatchedOrg,
   getOrgMembershipRole: mocks.getOrgMembershipRole,
   getVisibleIdentityFields: mocks.getVisibleIdentityFields,
   normalizeFairnessStatus: mocks.normalizeFairnessStatus,
@@ -100,6 +102,7 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     });
     mocks.getOrgMembershipRole.mockResolvedValue('org_manager');
     mocks.getReviewCardProofPackMap.mockResolvedValue(new Map());
+    mocks.getReviewCardProofPackMapForMatchedOrg.mockResolvedValue(new Map());
     mocks.buildProofFirstReviewCard.mockReturnValue({
       candidateLabel: 'Candidate A7F2',
       strongestProof: {

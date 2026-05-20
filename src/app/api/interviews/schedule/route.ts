@@ -318,7 +318,12 @@ export async function POST(request: NextRequest) {
     }
     scheduleFailureContext.userId = user.id;
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const data = ScheduleInterviewSchema.parse(body);
     scheduleFailureContext.matchId = data.matchId;
     const normalizedPlatform = normalizeInterviewPlatform(data.platform);

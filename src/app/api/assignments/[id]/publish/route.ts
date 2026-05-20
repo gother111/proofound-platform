@@ -31,14 +31,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const resolved = await params;
     assignmentId = resolved.id;
 
-    let body: Record<string, unknown> = {};
+    let body: unknown;
     try {
       body = await request.json();
     } catch {
-      body = {};
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    const principal = ensureOrganizationPrincipal(body.principalContext);
+    const principal =
+      body && typeof body === 'object'
+        ? ensureOrganizationPrincipal((body as Record<string, unknown>).principalContext)
+        : ensureOrganizationPrincipal(undefined);
     if (!principal.ok) {
       return NextResponse.json({ error: principal.error }, { status: 403 });
     }

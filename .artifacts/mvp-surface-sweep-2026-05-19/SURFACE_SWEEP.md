@@ -2149,3 +2149,32 @@ Browser evidence:
 - Added regression coverage proving malformed JSON does not send candidate invite email and does not proceed beyond the expected stale-invite cleanup plus organization lookup.
 - Browser was not rerun for this slice because no rendered web UI changed; the change is API error-boundary hardening for a retained organization invite endpoint.
 - Verification passed: `npm run test -- tests/api/org-candidate-invites-route.test.ts` (1 file / 14 tests), `npm run test:launch:routes` (4 files / 27 tests), `npm run typecheck`, and scoped `git diff --check` for the touched candidate-invite route/test files. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - Active Workflow API JSON Boundary Hardening
+
+- Inspected current uncommitted launch-corridor API changes and confirmed they are scoped to retained active surfaces: assignment publishing and interview scheduling.
+- Added controlled malformed JSON responses for `POST /api/assignments/[id]/publish`, `POST /api/interviews/schedule`, `POST /api/match/gates`, and `PUT /api/organizations/[orgId]/visibility` so bad request bodies return `400` before assignment access checks, assignment lookup, match lookup, verification gate checks, visibility writes, interview insert work, or Google Meet side effects.
+- Added focused regression coverage proving those malformed-body paths stop before downstream reads/writes or provider calls.
+- Browser was not rerun for this slice because no rendered UI changed; this is API error-boundary hardening for retained organization workflow endpoints.
+- Verification passed: `npm run test -- tests/api/assignments-publish-route.test.ts tests/api/interviews-schedule-route.test.ts tests/api/jd-to-l4-route.test.ts tests/api/match-gates-route.test.ts tests/api/organization-visibility-route.test.ts tests/api/org-match-review-route.test.ts`, `npm run test:launch:routes`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - Matching Review Proof Visibility and Day-One Privacy Defaults
+
+- Inspected concurrent privacy-corridor changes to matching review-card proof retrieval, onboarding profile defaults, and profile/taxonomy policies.
+- Split review-card proof pack retrieval into owner and matched-organization paths. Candidate/owner views may use anchored verification bundles, while organization review/shortlist/matching APIs now only consider published verification bundles whose visibility and reveal gate permit matched-org access.
+- Kept compatibility wrapper behavior for owner-side callers while routing organization assignment matching, shortlist, and review APIs through the matched-org filter.
+- Changed individual day-one onboarding to seed profile visibility as `network` rather than public, preserving the public portfolio URL response while avoiding accidental public-profile defaults.
+- Tightened profile SELECT policy language toward own-or-public visibility, and scoped taxonomy service-role policies to `service_role` with explicit `FOR ALL` / `WITH CHECK` semantics.
+- Updated focused mocks/tests so route tests cover the new owner-versus-matched-org proof retrieval split instead of failing on stale helper names.
+- Browser was not rerun for this slice because no rendered page changed in this turn; the change is backend privacy and route projection behavior. Existing Browser evidence for public/login/settings surfaces remains valid for rendered UI.
+- Verification passed: `npm run test -- tests/actions/onboarding.test.ts tests/lib/matching-review-contract.test.ts tests/api/core-matching-assignment-route.test.ts tests/api/match-explain-route.test.ts tests/api/org-match-review-route.test.ts` (5 files / 42 tests), plus the same launch-route/typecheck/docs/diff hygiene checks listed in this continuation.
+
+## Continuation - JD Skill Parser JSON Boundary and RLS Migration Hardening
+
+- Inspected the retained `POST /api/expertise/jd-to-l4` endpoint, which is still active as a narrow assignment-clarity / skill-suggestion helper rather than broad Expertise Atlas UI.
+- Added a malformed JSON guard so bad request bodies return `400` before parser or validation work runs.
+- Added focused regression coverage proving malformed JSON does not call the job-description parser or suggestion validator.
+- Added a forward migration for the high-risk policy hardening: base `profiles` rows are no longer globally enumerable, and taxonomy write access is explicitly scoped to `service_role` with `FOR ALL` and `WITH CHECK`.
+- Browser was not rerun for this slice because the changes are API and database policy hardening, with no rendered UI change.
+- Verification passed for code/tests: `npm run test -- tests/api/jd-to-l4-route.test.ts` as part of the 58-test focused API suite, `npm run test:launch:routes`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`.
+- Migration audit was run with network access and did not pass because the target database has pending/mismatched migration ledger state: local files not applied were `20260520065000_harden_internal_ops_queue_rls.sql`, `20260520083000_harden_high_risk_security_findings.sql`, and `20260520103000_align_interview_platform_launch_values.sql`; DB-applied but missing local file was `20260317224741_canonicalize_org_role_constraints`. No database changes were applied in this sweep.

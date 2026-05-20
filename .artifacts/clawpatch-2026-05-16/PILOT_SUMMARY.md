@@ -322,6 +322,76 @@ Verification after this sweep:
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 
+## Continuation: Tenth Local Malformed-JSON Sweep
+
+A tenth local sweep applied the same malformed-JSON boundary to the interview scheduling route:
+
+- `src/app/api/interviews/schedule/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication, but before schedule schema validation, match lookup, org access checks, Google Meet work, interview persistence, workflow registration, messaging, or analytics work continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/interviews-schedule-route.test.ts`: passed, `1` file and `12` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Eleventh Local Malformed-JSON Sweep
+
+An eleventh local sweep applied the same malformed-JSON boundary to the assignment publish route:
+
+- `src/app/api/assignments/[id]/publish/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication and route parameter resolution, but before principal validation, assignment access checks, assignment/org readiness reads, guarded publish update, activation workflow, analytics, or logging work continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/assignments-publish-route.test.ts`: passed, `1` file and `16` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Twelfth Local Malformed-JSON Sweep
+
+A twelfth local sweep applied the same malformed-JSON boundary to the organization visibility settings route:
+
+- `src/app/api/organizations/[orgId]/visibility/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication and owner/manager authorization, but before organization visibility reads or writes, publication state lookup, publication recomputation, organization update, or public portfolio invalidation continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/organization-visibility-route.test.ts`: passed, `1` file and `6` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Thirteenth Local Malformed-JSON Sweep
+
+A thirteenth local sweep applied the same malformed-JSON boundary to the JD-to-L4 parser route:
+
+- `src/app/api/expertise/jd-to-l4/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication, but before job-description validation, JD parser access, taxonomy validation, or parser metadata logging continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/jd-to-l4-route.test.ts`: passed, `1` file and `6` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Fourteenth Local Malformed-JSON Sweep
+
+A fourteenth local sweep applied the same malformed-JSON boundary to the match verification-gates route:
+
+- `src/app/api/match/gates/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication, but before assignment ID validation, verification-gate reads, or match-gate logging continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/match-gates-route.test.ts`: passed, `1` file and `2` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.
