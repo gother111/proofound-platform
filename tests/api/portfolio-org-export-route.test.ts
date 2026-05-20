@@ -14,10 +14,23 @@ vi.mock('@/lib/portfolio/pdf', () => ({
   generateOrganizationProfilePdf: vi.fn(),
 }));
 
+vi.mock('@/lib/launch/trace', () => ({
+  startLaunchTrace: vi.fn(() => ({
+    flow: 'export',
+    requestId: 'trace-1',
+    actorId: null,
+    actorType: 'anonymous',
+    objectRefs: {},
+    startedAtMs: 0,
+  })),
+  emitLaunchTrace: vi.fn(),
+}));
+
 import { GET } from '@/app/api/portfolio/org/[slug]/export/route';
 import { createClient } from '@/lib/supabase/server';
 import { fetchOrganizationTrustExportData } from '@/lib/portfolio/export-data';
 import { generateOrganizationProfilePdf } from '@/lib/portfolio/pdf';
+import { emitLaunchTrace } from '@/lib/launch/trace';
 
 function mockSupabase({
   user,
@@ -255,6 +268,20 @@ describe('/api/portfolio/org/[slug]/export', () => {
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ error: 'Failed to generate export' });
     expect(generateOrganizationProfilePdf).not.toHaveBeenCalled();
+    expect(emitLaunchTrace).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        outcome: 'success',
+        state: 'organization_export_ready',
+      })
+    );
+    expect(emitLaunchTrace).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        outcome: 'failure',
+        state: 'org_export_failed',
+      })
+    );
   });
 
   it('returns 403 for canonical reviewer membership', async () => {

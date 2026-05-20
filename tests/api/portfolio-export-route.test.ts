@@ -18,11 +18,24 @@ vi.mock('@/lib/analytics/events', () => ({
   emitPortfolioPdfExportSucceeded: vi.fn(),
 }));
 
+vi.mock('@/lib/launch/trace', () => ({
+  startLaunchTrace: vi.fn(() => ({
+    flow: 'export',
+    requestId: 'trace-1',
+    actorId: null,
+    actorType: 'anonymous',
+    objectRefs: {},
+    startedAtMs: 0,
+  })),
+  emitLaunchTrace: vi.fn(),
+}));
+
 import { GET } from '@/app/api/portfolio/export/route';
 import { createClient } from '@/lib/supabase/server';
 import { fetchTrustExportData } from '@/lib/portfolio/export-data';
 import { generateTrustPdf } from '@/lib/portfolio/pdf';
 import { emitPortfolioPdfExportSucceeded } from '@/lib/analytics/events';
+import { emitLaunchTrace } from '@/lib/launch/trace';
 
 function mockSupabaseUser(user: { id: string } | null) {
   (createClient as any).mockResolvedValue({
@@ -342,5 +355,19 @@ describe('/api/portfolio/export', () => {
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ error: 'Failed to generate export' });
     expect(generateTrustPdf).not.toHaveBeenCalled();
+    expect(emitLaunchTrace).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        outcome: 'success',
+        state: 'portfolio_export_ready',
+      })
+    );
+    expect(emitLaunchTrace).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        outcome: 'failure',
+        state: 'portfolio_export_failed',
+      })
+    );
   });
 });

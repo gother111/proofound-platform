@@ -64,6 +64,7 @@ export async function GET(request: Request) {
     }
 
     if (format === 'text') {
+      const text = buildTextPack(data);
       emitLaunchTrace(trace, {
         outcome: 'success',
         state: 'portfolio_export_ready',
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
           format,
         },
       });
-      return respondWithText(buildTextPack(data), `proofound-${data.profile.handle}-trust.txt`);
+      return respondWithText(text, `proofound-${data.profile.handle}-trust.txt`);
     }
 
     const buffer = await generateTrustPdf({

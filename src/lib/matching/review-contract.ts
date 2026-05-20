@@ -405,7 +405,7 @@ function buildTrustLabels(input: {
   } else if (input.proofPack?.verificationStatus === 'partially_verified') {
     labels.push('Verification partially complete');
   } else if ((input.verificationCount ?? 0) > 0) {
-    labels.push('Self-reported compatibility flags present');
+    labels.push('Account-side checks recorded');
   } else {
     labels.push('Verification still narrow');
   }
@@ -2048,7 +2048,7 @@ export function buildProofFirstReviewCard(input: {
       : proofPack?.verificationStatus === 'partially_verified'
         ? 'Partial Proof Pack review present'
         : verificationCount && verificationCount > 0
-          ? `${verificationCount} self-reported compatibility flag${verificationCount === 1 ? '' : 's'} present`
+          ? `${verificationCount} account-side check${verificationCount === 1 ? '' : 's'} recorded`
           : 'No verification signal recorded yet');
   const trustLabels = buildTrustLabels({
     fairnessStatus: input.fairnessStatus,

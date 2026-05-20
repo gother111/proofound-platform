@@ -99,6 +99,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     }
 
     if (format === 'text') {
+      const text = buildOrganizationTextPack(data);
       emitLaunchTrace(trace, {
         outcome: 'success',
         state: 'organization_export_ready',
@@ -107,10 +108,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
           format,
         },
       });
-      return respondWithText(
-        buildOrganizationTextPack(data),
-        `proofound-org-${data.organization.slug}.txt`
-      );
+      return respondWithText(text, `proofound-org-${data.organization.slug}.txt`);
     }
 
     const buffer = await generateOrganizationProfilePdf({

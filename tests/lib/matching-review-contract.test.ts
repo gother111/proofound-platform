@@ -359,7 +359,7 @@ describe('matching review contract', () => {
     expect(why.summary).toContain('Review band: High-priority proof review');
   });
 
-  it('does not present self-reported compatibility flags as verification records', () => {
+  it('does not present account-side checks as proof verification records or internal flags', () => {
     const reviewCard = buildProofFirstReviewCard({
       profileId: 'profile-1',
       reasonCodes: ['skills_strong'],
@@ -368,11 +368,11 @@ describe('matching review contract', () => {
     });
     const serialized = JSON.stringify(reviewCard);
 
-    expect(reviewCard.verification.summaryLabel).toBe(
-      '2 self-reported compatibility flags present'
-    );
-    expect(reviewCard.trustLabels).toContain('Self-reported compatibility flags present');
+    expect(reviewCard.verification.summaryLabel).toBe('2 account-side checks recorded');
+    expect(reviewCard.trustLabels).toContain('Account-side checks recorded');
     expect(serialized).not.toMatch(/scoped verification records present/i);
+    expect(serialized).not.toMatch(/compatibility flag/i);
+    expect(serialized).not.toMatch(/compatibility signal/i);
   });
 
   it('redacts upload-derived filenames from early review cards', () => {

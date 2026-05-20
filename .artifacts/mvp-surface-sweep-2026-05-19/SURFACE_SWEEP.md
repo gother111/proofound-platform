@@ -2245,6 +2245,21 @@ Browser evidence:
 - Browser was not rerun for this slice because the changes are server action/API/monitoring behavior with no rendered UI change.
 - Verification passed: `npm run test -- tests/api/start-from-cv-route.test.ts tests/ui/verifications-client.test.tsx tests/actions/onboarding.test.ts src/app/api/monitoring/__tests__/perf-status-route.test.ts` (4 files / 40 tests), `npm run typecheck`, `npm run lint`, `npm run test:launch:routes` (4 files / 27 tests), `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
 
+## Continuation - Matching Review Account-Side Copy Cleanup
+
+- Re-inspected the active organization review-card contract after the previous matching copy cleanup and found one remaining active fallback label still exposed internal product-era language: `self-reported compatibility flags`.
+- Replaced that fallback with plain account-side language: `account-side checks recorded`. This preserves the same non-proof trust semantics while avoiding compatibility/debug wording on the candidate review / why-this-match surface.
+- Updated focused review-contract coverage so serialized review cards fail if `compatibility flag` or `compatibility signal` returns in this fallback path.
+- Browser was not rerun for this slice because no mounted component layout changed; this is backend review-card copy contract cleanup for organization review payloads.
+
+## Continuation - Owner and Organization Export Failure Telemetry Cleanup
+
+- Inspected owner and organization text export failure behavior after the public export failure regression was covered.
+- Made owner and organization export failures return the same neutral `Failed to generate export` response across PDF/text paths.
+- Moved owner and organization text-export success traces to run only after the text pack is successfully built, preventing contradictory success + failure launch telemetry when text export generation fails.
+- Added focused export-route coverage proving the failure path does not emit `portfolio_export_ready` or `organization_export_ready` before returning the neutral error.
+- Browser was not rerun for this slice because no rendered UI changed; this is export API response and launch-trace correctness.
+
 ## Continuation - Google and LinkedIn Auth Entry Current Recheck
 
 - Rechecked the current local app with the Codex in-app Browser after the latest clarification that Google and LinkedIn should both be available as sign-in options.
