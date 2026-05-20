@@ -143,7 +143,6 @@ export function VerifySkillContent() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Action Selection */}
             {!action && (
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Your Response</Label>
@@ -172,7 +171,6 @@ export function VerifySkillContent() {
 
             {responseAction === 'approve' && (
               <>
-                {/* Verifier Information */}
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -220,7 +218,6 @@ export function VerifySkillContent() {
                   )}
                 </div>
 
-                {/* Comment */}
                 <div className="space-y-2">
                   <Label htmlFor="comment">Additional Comments (Optional)</Label>
                   <Textarea
@@ -245,7 +242,6 @@ export function VerifySkillContent() {
               </div>
             )}
 
-            {/* Submit Button */}
             <div className="flex gap-4">
               {!action && responseAction && (
                 <Button

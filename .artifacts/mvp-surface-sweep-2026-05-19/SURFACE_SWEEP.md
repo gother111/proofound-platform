@@ -2022,3 +2022,14 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-client-archive-calls/login-client-archive-smoke.json`.
 - Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, console, overflow, and stale-copy evidence was captured instead.
 - Verification passed: `npm run test -- tests/lib/archived-client-api-references.test.ts tests/lib/client-performance-tracker.test.ts` (2 tests), `npm run test:launch:routes` (27 tests), `npm run lint`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - Verify Skill Page Archive Boundary
+
+- Inspected active source references to archived verification APIs and found the `/verify-skill` page handler was already removed and classified archived, but its old client implementation still lived under `src/app/verify-skill/VerifySkillContent.tsx`.
+- Moved the orphaned `/verify-skill` implementation to `src/archive/non_launch_pages/verify-skill/VerifySkillContent.archived.tsx` with a README explaining that current verifier links use `/verify/[token]` or `/verify/custom/[token]`.
+- Added route-boundary regression coverage proving the archived implementation island stays out of active `src/app`.
+- Registered the new archive README in `docs/DOCS_REGISTRY.md`.
+- Codex Browser verified `/verify-skill?token=demo` at `http://127.0.0.1:33180`: the route rendered the launch-safe `Not found` archived-public page, one `<main>` landmark, no horizontal overflow, no old `Skill Verification Request` form, no archived API unavailable text, no runtime-error text, and zero Browser console warnings/errors.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-verify-skill-archive/verify-skill-archive-smoke.json`.
+- Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, console, overflow, and stale-form evidence was captured instead.
+- Verification passed: `npm run test -- tests/ui/archived-mvp-routes.test.ts tests/lib/skill-verification-email-links.test.ts` (4 tests) and `npm run test:launch:routes` (27 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but both commands exited successfully.

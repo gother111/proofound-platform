@@ -156,6 +156,10 @@ const ARCHIVED_PAGE_CASES = [
   },
 ] as const;
 
+const REMOVED_ARCHIVED_PAGE_IMPLEMENTATIONS = [
+  'src/app/verify-skill/VerifySkillContent.tsx',
+] as const;
+
 describe('archived non-MVP routes', () => {
   it('classifies hard-gated routes explicitly and removes their page handlers from src/app', async () => {
     for (const route of HARD_GATED_PAGE_CASES) {
@@ -178,6 +182,14 @@ describe('archived non-MVP routes', () => {
       });
 
       await expect(access(path.join(process.cwd(), route.file))).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+    }
+  });
+
+  it('keeps archived page implementation islands out of active src/app', async () => {
+    for (const file of REMOVED_ARCHIVED_PAGE_IMPLEMENTATIONS) {
+      await expect(access(path.join(process.cwd(), file))).rejects.toMatchObject({
         code: 'ENOENT',
       });
     }
