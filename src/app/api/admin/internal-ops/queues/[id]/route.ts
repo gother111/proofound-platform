@@ -47,6 +47,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return jsonError('Invalid queue update payload', 400, payload.error.flatten());
     }
 
+    if (payload.data.uploadReviewAction && adminUser.adminLevel !== 'super_admin') {
+      return jsonError('Upload review requires super admin access', 403);
+    }
+
     const transition = payload.data.uploadReviewAction
       ? await reviewUploadedFileQueueItem({
           queueItemId: parsedParams.data.id,

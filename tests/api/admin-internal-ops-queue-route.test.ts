@@ -277,12 +277,43 @@ describe('internal ops queue admin routes', () => {
     expect(mocks.logAdminActionMock).not.toHaveBeenCalled();
   });
 
-  it('approves uploaded-file queue items through the explicit upload review action', async () => {
+  it('rejects uploaded-file review actions from platform admins', async () => {
     mocks.requirePlatformAdminJsonMock.mockResolvedValue({
       adminLevel: 'platform_admin',
       userId: 'admin-1',
       email: 'ops@proofound.io',
       platformRole: 'platform_admin',
+    });
+
+    const response = await PATCH(
+      new NextRequest(
+        'https://proofound.io/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            status: 'resolved',
+            uploadReviewAction: 'approve',
+            note: 'Audited internally and safe for private evidence attachment.',
+          }),
+        }
+      ),
+      { params: Promise.resolve({ id: '33333333-3333-4333-8333-333333333333' }) }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error).toBe('Upload review requires super admin access');
+    expect(mocks.reviewUploadedFileQueueItemMock).not.toHaveBeenCalled();
+    expect(mocks.transitionInternalOpsQueueItemMock).not.toHaveBeenCalled();
+    expect(mocks.logAdminActionMock).not.toHaveBeenCalled();
+  });
+
+  it('approves uploaded-file queue items through the explicit super-admin upload review action', async () => {
+    mocks.requirePlatformAdminJsonMock.mockResolvedValue({
+      adminLevel: 'super_admin',
+      userId: 'admin-1',
+      email: 'ops@proofound.io',
+      platformRole: 'super_admin',
     });
     mocks.reviewUploadedFileQueueItemMock.mockResolvedValue({
       previous: {
