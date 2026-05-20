@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
           assignmentId: conv.assignmentId,
           assignmentRole: assignment[0]?.role || null,
           otherParty: {
-            id: otherPartyId,
+            id: conv.stage === 'revealed' ? otherPartyId : null,
             displayName,
             displayAvatar,
             persona: otherPartyProfile[0]?.persona || 'individual',

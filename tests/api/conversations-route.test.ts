@@ -1,8 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
+const dbSelectMock = vi.hoisted(() => vi.fn());
+
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
+}));
+
+vi.mock('@/db', () => ({
+  db: {
+    select: dbSelectMock,
+  },
 }));
 
 vi.mock('@/lib/messaging/conversation-access', () => ({
@@ -20,11 +28,25 @@ vi.mock('@/lib/messaging/conversation-access', () => ({
 }));
 
 import { createClient } from '@/lib/supabase/server';
-import { POST } from '@/app/api/conversations/route';
+import { GET, POST } from '@/app/api/conversations/route';
 import {
   ensureConversationForMatch,
   resolveConversationParticipantsForMatch,
 } from '@/lib/messaging/conversation-access';
+
+function buildSelectChain<T>(result: T, options: { limitNeedsOffset?: boolean } = {}) {
+  const chain: any = {
+    from: vi.fn(() => chain),
+    where: vi.fn(() => chain),
+    orderBy: vi.fn(() => chain),
+    limit: vi.fn(() => (options.limitNeedsOffset ? chain : Promise.resolve(result))),
+    offset: vi.fn(() => Promise.resolve(result)),
+    then: (resolve: (value: T) => unknown, reject: (reason: unknown) => unknown) =>
+      Promise.resolve(result).then(resolve, reject),
+  };
+
+  return chain;
+}
 
 function makeRequest(body: Record<string, unknown>) {
   return new NextRequest('https://proofound.io/api/conversations', {
@@ -45,6 +67,123 @@ function makeMalformedRequest() {
     body: '{',
   });
 }
+
+function mockAuthenticatedUser(userId = 'candidate-user') {
+  vi.mocked(createClient).mockResolvedValue({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: userId } },
+        error: null,
+      }),
+    },
+  } as any);
+}
+
+describe('GET /api/conversations', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('keeps other participant identifiers hidden while the conversation is masked', async () => {
+    mockAuthenticatedUser('candidate-user');
+    dbSelectMock
+      .mockReturnValueOnce(
+        buildSelectChain(
+          [
+            {
+              id: 'conversation-1',
+              matchId: 'match-1',
+              assignmentId: 'assignment-1',
+              participantOneId: 'candidate-user',
+              participantTwoId: 'org-user-secret',
+              stage: 'masked',
+              lastMessageAt: '2026-03-12T10:00:00.000Z',
+              createdAt: '2026-03-12T09:00:00.000Z',
+            },
+          ],
+          { limitNeedsOffset: true }
+        )
+      )
+      .mockReturnValueOnce(
+        buildSelectChain([
+          {
+            id: 'org-user-secret',
+            displayName: 'Acme Hiring Lead',
+            persona: 'organization',
+            avatarUrl: 'https://example.com/private-avatar.png',
+          },
+        ])
+      )
+      .mockReturnValueOnce(buildSelectChain([]))
+      .mockReturnValueOnce(buildSelectChain([{ count: 0 }]))
+      .mockReturnValueOnce(buildSelectChain([{ role: 'Operations Lead' }]));
+
+    const response = await GET(new NextRequest('https://proofound.io/api/conversations'));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.conversations[0]).toMatchObject({
+      id: 'conversation-1',
+      otherParty: {
+        id: null,
+        displayName: 'Organization',
+        displayAvatar: null,
+      },
+      stage: 'masked',
+    });
+    expect(JSON.stringify(body)).not.toContain('org-user-secret');
+    expect(JSON.stringify(body)).not.toContain('Acme Hiring Lead');
+    expect(JSON.stringify(body)).not.toContain('private-avatar');
+  });
+
+  it('returns the other participant identifier only after reveal', async () => {
+    mockAuthenticatedUser('candidate-user');
+    dbSelectMock
+      .mockReturnValueOnce(
+        buildSelectChain(
+          [
+            {
+              id: 'conversation-1',
+              matchId: 'match-1',
+              assignmentId: 'assignment-1',
+              participantOneId: 'candidate-user',
+              participantTwoId: 'org-user-revealed',
+              stage: 'revealed',
+              lastMessageAt: '2026-03-12T10:00:00.000Z',
+              createdAt: '2026-03-12T09:00:00.000Z',
+            },
+          ],
+          { limitNeedsOffset: true }
+        )
+      )
+      .mockReturnValueOnce(
+        buildSelectChain([
+          {
+            id: 'org-user-revealed',
+            displayName: 'Acme Hiring Lead',
+            persona: 'organization',
+            avatarUrl: 'https://example.com/revealed-avatar.png',
+          },
+        ])
+      )
+      .mockReturnValueOnce(buildSelectChain([]))
+      .mockReturnValueOnce(buildSelectChain([{ count: 0 }]))
+      .mockReturnValueOnce(buildSelectChain([{ role: 'Operations Lead' }]));
+
+    const response = await GET(new NextRequest('https://proofound.io/api/conversations'));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.conversations[0]).toMatchObject({
+      otherParty: {
+        id: 'org-user-revealed',
+        displayName: 'Acme Hiring Lead',
+        displayAvatar: 'https://example.com/revealed-avatar.png',
+      },
+      stage: 'revealed',
+    });
+  });
+});
 
 describe('POST /api/conversations', () => {
   beforeEach(() => {

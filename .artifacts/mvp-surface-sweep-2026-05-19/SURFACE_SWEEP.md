@@ -2600,3 +2600,13 @@ Browser evidence:
 - Updated this chronological sweep artifact's current evidence note so future continuation agents do not inherit older `110 active / 14 archived` route-count snapshots as current truth.
 - Reframed the artifact's current-facing interaction thesis and organization matrix wording from dashboard language to app-home/home-entry language.
 - Browser was not rerun for this slice because only the saved sweep artifact changed; docs/source inspection and `git diff --check` are the direct evidence.
+
+## Continuation - Masked Conversation Identifier No-Leak
+
+- Timestamp: 2026-05-20 14:14:05 CEST.
+- Inspected the active conversations list API for privacy/no-leak behavior around masked intro and reveal stages.
+- Found that masked conversations already hid the other participant's display name and avatar, but still returned the raw `otherParty.id`; that created an unnecessary identity handle before the conversation reached the revealed stage.
+- Updated `GET /api/conversations` so `otherParty.id` is `null` until `stage === 'revealed'`, while preserving the revealed-stage identifier for the active messaging UI.
+- Added focused API coverage proving masked responses do not contain the other participant id, display name, or private avatar URL, and proving revealed responses still include the expected identity fields.
+- Browser was not rerun for this slice because the rendered UI did not change; the relevant launch evidence is the API response contract and no-leak assertions.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/conversations-route.test.ts tests/api/conversation-detail-routes.test.ts tests/api/conversation-reveal-route.test.ts tests/ui/conversation-list.test.tsx tests/ui/communications-hub-mobile-targets.test.tsx --reporter=verbose` (5 files / 21 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
