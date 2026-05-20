@@ -23,6 +23,7 @@ jobs:
       NODE_OPTIONS: --max-old-space-size=6144
       FORCE_LINT: 'true'
       FORCE_STRICT_DEPLOY_CHECK: 'true'
+      PROOFOUND_VITEST_TIMEOUT_MS: '300000'
       npm_config_engine_strict: 'true'
       PLAYWRIGHT_SERVER_MODE: prod
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
