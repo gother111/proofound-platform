@@ -99,6 +99,7 @@ async function trackApiMetric(
       pageRoute: null,
       deviceType: null,
       userAgent: null,
+      responseStatus: statusCode,
       periodStart: null,
       periodEnd: null,
     };

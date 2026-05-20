@@ -14,6 +14,7 @@ const REQUIRED_API_LATENCY_ROUTES = ['/api/assignments'];
 type PerfDurationRow = {
   route: string;
   duration: number | null;
+  responseStatus: number | null;
 };
 
 async function probeHealthDurations(origin: string, sampleCount = 10): Promise<number[]> {
@@ -74,9 +75,18 @@ function buildPerfPayload(
   const p95 = calculatePercentile(durations, 95);
   const status = getPerformanceStatus(p95);
   const routeBreakdown = buildRouteBreakdown(rows);
-  const routesWithSamples = new Set(routeBreakdown.map((row) => row.route));
+  const routesWithSuccessfulSamples = new Set(
+    rows
+      .filter(
+        (row) =>
+          typeof row.responseStatus === 'number' &&
+          row.responseStatus >= 200 &&
+          row.responseStatus < 400
+      )
+      .map((row) => normalizeRoute(row.route))
+  );
   const missingRequiredRoutes = REQUIRED_API_LATENCY_ROUTES.filter(
-    (route) => !routesWithSamples.has(route)
+    (route) => !routesWithSuccessfulSamples.has(route)
   );
   const baseMessage =
     source === 'probe' && fallbackReason
@@ -139,6 +149,7 @@ export async function GET(request: Request) {
               ${performanceMetrics.valueMs}::float
             )
           `,
+          responseStatus: performanceMetrics.responseStatus,
         })
         .from(performanceMetrics)
         .where(
@@ -152,6 +163,7 @@ export async function GET(request: Request) {
       rows = performanceRows.map((row) => ({
         route: normalizeRoute(row.route),
         duration: row.duration,
+        responseStatus: row.responseStatus,
       }));
     } catch (error) {
       performanceMetricsError =
@@ -180,6 +192,9 @@ export async function GET(request: Request) {
               NULLIF(properties ->> 'duration', '')::float
             )
           `,
+          responseStatus: sql<number>`
+            NULLIF(properties ->> 'response_status', '')::integer
+          `,
         })
         .from(analyticsEvents)
         .where(
@@ -196,6 +211,7 @@ export async function GET(request: Request) {
       rows = analyticsRows.map((row) => ({
         route: normalizeRoute(row.route),
         duration: row.duration,
+        responseStatus: row.responseStatus,
       }));
     } catch (error) {
       analyticsError = error instanceof Error ? error.message : 'unknown analytics error';
@@ -222,7 +238,11 @@ export async function GET(request: Request) {
 
       return NextResponse.json(
         buildPerfPayload(
-          probeDurations.map((duration) => ({ route: '/api/health', duration })),
+          probeDurations.map((duration) => ({
+            route: '/api/health',
+            duration,
+            responseStatus: 200,
+          })),
           'probe',
           noDataReason
         )

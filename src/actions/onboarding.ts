@@ -385,18 +385,11 @@ export async function completeIndividualOnboarding(formData: FormData) {
   const proofUrl = String(formData.get('proofUrl') || '').trim();
   const proofTitle = String(formData.get('proofTitle') || '').trim();
   const proofSummary = String(formData.get('proofSummary') || '').trim();
-  const contextTitle = String(
-    formData.get('contextTitle') || `First proof: ${proofTitle || proofFileName || 'artifact'}`
-  ).trim();
-  const contextOrganizationName = String(
-    formData.get('contextOrganizationName') || location || 'Self-directed proof context'
-  ).trim();
-  const contextSummary = String(
-    formData.get('contextSummary') ||
-      `Starter proof context for ${displayName || 'this individual'} in ${location}.`
-  ).trim();
-  const contextDuration = String(formData.get('contextDuration') || 'First proof setup').trim();
-  const contextOutcome = String(formData.get('contextOutcome') || proofSummary).trim();
+  const contextTitle = String(formData.get('contextTitle') || '').trim();
+  const contextOrganizationName = String(formData.get('contextOrganizationName') || '').trim();
+  const contextSummary = String(formData.get('contextSummary') || '').trim();
+  const contextDuration = String(formData.get('contextDuration') || '').trim();
+  const contextOutcome = String(formData.get('contextOutcome') || '').trim();
   const proofPackClaim = String(formData.get('proofPackClaim') || '').trim();
   const proofPackOwnership = String(formData.get('proofPackOwnership') || '').trim();
   const proofPackOutcome = String(formData.get('proofPackOutcome') || '').trim();
@@ -469,7 +462,13 @@ export async function completeIndividualOnboarding(formData: FormData) {
     return { error: 'Finish the basic identity shell before saving your first Proof Pack.' };
   }
 
-  if (!contextTitle || !contextOrganizationName || !contextSummary || !contextDuration) {
+  if (
+    !contextTitle ||
+    !contextOrganizationName ||
+    !contextSummary ||
+    !contextDuration ||
+    !contextOutcome
+  ) {
     emitLaunchTrace(trace, {
       outcome: 'rejected',
       state: 'portfolio_publish_validation_failed',
@@ -490,7 +489,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
     return { error: 'Add your first proof before saving your first Proof Pack.' };
   }
 
-  if (!proofPackClaim || !proofPackOwnership) {
+  if (!proofPackClaim || !proofPackOwnership || !effectiveProofPackOutcome) {
     emitLaunchTrace(trace, {
       outcome: 'rejected',
       state: 'portfolio_publish_validation_failed',

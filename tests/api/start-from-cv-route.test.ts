@@ -234,6 +234,18 @@ describe('Start from CV API routes', () => {
     expect(payload.error).toContain('PDF, PNG, and JPG/JPEG');
   });
 
+  it('rejects malformed extraction JSON before extraction starts', async () => {
+    const response = await extractSession(
+      malformedJsonRequest(`http://localhost/api/ai/start-from-cv/sessions/${sessionId}/extract`),
+      params()
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toBe('Invalid JSON body.');
+    expect(mocks.extractStartFromCvSession).not.toHaveBeenCalled();
+  });
+
   it('passes supported PDF uploads into the extraction boundary', async () => {
     const pdfBytes = Buffer.from('%PDF-1.7 /Type /Page (Proofound launch corridor)');
 

@@ -2231,3 +2231,16 @@ Browser evidence:
 - Added focused regression coverage for both paths.
 - Browser was not rerun for this slice because this is API error-boundary hardening with no rendered UI change.
 - Verification passed: `npm run test -- tests/api/decisions-route.test.ts tests/api/verify-impact-token-route.test.ts` (2 files / 23 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - First Proof Anchor and Performance Gate Hardening
+
+- Inspected the active individual onboarding first-proof action and removed synthetic fallback context anchors. First Proof setup now requires the user-supplied context title, organization/source, summary, duration, outcome, Proof Pack ownership statement, and Proof Pack outcome before canonical proof-pack seed work can run.
+- Added regression coverage for tampered first-proof submissions that omit real context anchors, proving the action returns the plain MVP error and does not create a Supabase client or write profile/proof rows.
+- Inspected the retained Start-from-CV private scaffolding helper and added a controlled malformed JSON response path for JSON upload bodies before file parsing continues.
+- Capped local embedded-PDF extraction to the configured page limit, maximum extracted text size, and bounded Flate stream inflation so oversized compressed streams cannot expand unbounded during private first-proof scaffolding.
+- Inspected the verification request composer fallback and removed Proof Pack-specific claim/title reuse when AI drafting is unavailable. The fallback now uses generic Proofound claim wording until server-side redaction returns, preventing private client names or evidence titles from leaking into fallback draft copy.
+- Inspected the internal launch performance status endpoint and added response-status awareness to API latency samples. Required route latency evidence now counts only successful `2xx`/`3xx` samples, so unauthenticated `401` probes no longer make `/api/assignments` look launch-ready.
+- Added `response_status` to performance metric storage and added the migration `src/db/migrations/20260520095500_add_performance_metric_response_status.sql` with an indexed API-latency status lookup path.
+- Added focused regression coverage proving the performance gate stays closed when required-route samples are only unauthenticated failures.
+- Browser was not rerun for this slice because the changes are server action/API/monitoring behavior with no rendered UI change.
+- Verification passed: `npm run test -- tests/api/start-from-cv-route.test.ts tests/ui/verifications-client.test.tsx tests/actions/onboarding.test.ts src/app/api/monitoring/__tests__/perf-status-route.test.ts` (4 files / 40 tests), `npm run typecheck`, `npm run lint`, `npm run test:launch:routes` (4 files / 27 tests), `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.

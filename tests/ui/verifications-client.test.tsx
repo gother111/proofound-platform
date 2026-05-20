@@ -444,6 +444,51 @@ describe('VerificationsClient', () => {
     );
   });
 
+  it('keeps verification composer fallback generic when AI drafting is unavailable', async () => {
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/ai/verifications/compose') {
+        return {
+          ok: false,
+          json: async () => ({ fallbackAvailable: true }),
+        };
+      }
+
+      throw new Error(`Unexpected API call: ${url}`);
+    });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={[]}
+        userEmail="me@proofound.io"
+        composerProofPacks={[
+          {
+            proofPackId: '11111111-1111-4111-8111-111111111111',
+            claimId: '22222222-2222-4222-8222-222222222222',
+            title: 'Private client launch for Hidden Corp',
+            claimStatement: 'I worked with Hidden Corp executive Nina Secret.',
+            ownershipStatement: 'Private ownership details.',
+            outcomeSummary: 'Private outcome details.',
+            timeframe: '2026 Q1',
+            evidenceTitles: ['Nina Secret original file.pdf'],
+            primarySubjectType: 'skill',
+            primarySubjectId: '22222222-2222-4222-8222-222222222222',
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Draft scoped request$/i }));
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Draft scoped request$/i }));
+
+    const fallbackDraft = await screen.findByDisplayValue(/one scoped Proofound claim/i);
+    expect(fallbackDraft).toBeInTheDocument();
+    expect((fallbackDraft as HTMLTextAreaElement).value).not.toContain('Hidden Corp');
+    expect((fallbackDraft as HTMLTextAreaElement).value).not.toContain('Nina Secret');
+  });
+
   it('hides the scoped request composer when assistive AI UI is disabled', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,

@@ -522,6 +522,21 @@ Verification after this sweep:
 - `npm run lint`: passed.
 - `npm run docs:freshness`: passed.
 
+## Continuation: Twenty-Fourth Local Malformed-JSON Sweep
+
+A twenty-fourth local sweep checked the remaining helper-level `request.json()` parse expression found by the direct API parse audit:
+
+- `src/app/api/ai/start-from-cv/_route-helpers.ts`
+
+Malformed JSON uploads to the Start-from-CV extraction endpoint now return `400` with `Invalid JSON body.` after the route resolves authentication, access, size, and session parameters, but before upload schema validation or extraction work starts.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/start-from-cv-route.test.ts`: passed, `1` file and `14` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+- `npm run docs:freshness`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.

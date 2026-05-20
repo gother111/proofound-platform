@@ -32,6 +32,7 @@ playwright-run.log
 /scratch/
 /.artifacts/stale-build-state/
 /.artifacts/launch-validation-test-*/
+/.artifacts/prod-supabase-backend-readiness-*/
 
 # local env files
 .env*.local

@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { deflateSync } from 'node:zlib';
 
 const dbMocks = vi.hoisted(() => ({
   select: vi.fn(),
@@ -24,6 +25,7 @@ import {
   buildDeterministicDrafts,
   countStartFromCvPages,
   enforceStartFromCvDailyLimits,
+  extractTextFromPdfStreams,
   getStartFromCvLaunchSummary,
   resolveStartFromCvConfig,
   START_FROM_CV_QUOTA_COUNTED_STATUSES,
@@ -167,6 +169,17 @@ describe('Start from CV guardrails', () => {
 
     expect(countStartFromCvPages('application/pdf', new Uint8Array(pdf))).toBe(2);
     expect(countStartFromCvPages('image/png', new Uint8Array([1, 2, 3]))).toBe(1);
+  });
+
+  it('does not inflate oversized PDF streams during local extraction fallback', () => {
+    const compressed = deflateSync(Buffer.from(`(${`A`.repeat(250_000)})`, 'utf8'));
+    const pdf = Buffer.concat([
+      Buffer.from('%PDF-1.7\n1 0 obj\n<< /Filter /FlateDecode >>\nstream\n', 'latin1'),
+      compressed,
+      Buffer.from('\nendstream\nendobj\n', 'latin1'),
+    ]);
+
+    expect(extractTextFromPdfStreams(new Uint8Array(pdf))).toBe('');
   });
 
   it('keeps unsupported skill drafts explicitly unsupported with no trust or matching lift', () => {

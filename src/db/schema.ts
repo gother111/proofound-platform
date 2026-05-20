@@ -5944,6 +5944,7 @@ export const performanceMetrics = pgTable('performance_metrics', {
   p99: numeric('p99'),
   // Sample metadata
   userAgent: text('user_agent'),
+  responseStatus: integer('response_status'),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
   // Aggregation period (for rolled-up metrics)
   periodStart: timestamp('period_start'),

@@ -100,7 +100,14 @@ export async function parseStartFromCvFile(request: NextRequest): Promise<StartF
     };
   }
 
-  const parsed = JsonFileSchema.parse((await request.json()).file);
+  let rawBody: unknown;
+  try {
+    rawBody = await request.json();
+  } catch {
+    throw new StartFromCvError('INVALID_JSON_BODY', 400);
+  }
+
+  const parsed = JsonFileSchema.parse((rawBody as { file?: unknown }).file);
   const bytes = new Uint8Array(Buffer.from(parsed.base64, 'base64'));
   return {
     name: parsed.name ?? null,
@@ -139,6 +146,8 @@ export function safeStartFromCvMessage(code: string) {
       return 'Start from CV is temporarily rate limited.';
     case 'FILE_REQUIRED':
       return 'Upload a CV file before extraction.';
+    case 'INVALID_JSON_BODY':
+      return 'Invalid JSON body.';
     default:
       return 'Start from CV is not available.';
   }

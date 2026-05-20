@@ -8,7 +8,9 @@ vi.mock('@/db', () => ({
   },
 }));
 
-function selectResult(rows: Array<{ route?: string | null; duration: number | null }>) {
+function selectResult(
+  rows: Array<{ route?: string | null; duration: number | null; responseStatus?: number | null }>
+) {
   return {
     from: vi.fn().mockReturnValue({
       where: vi.fn().mockResolvedValue(rows),
@@ -17,7 +19,9 @@ function selectResult(rows: Array<{ route?: string | null; duration: number | nu
 }
 
 function mockSelectRows(
-  ...rowSets: Array<Array<{ route?: string | null; duration: number | null }>>
+  ...rowSets: Array<
+    Array<{ route?: string | null; duration: number | null; responseStatus?: number | null }>
+  >
 ) {
   (db.select as any).mockImplementation(() => selectResult(rowSets.shift() ?? []));
 }
@@ -53,9 +57,9 @@ describe('/api/monitoring/perf-status', () => {
 
   it('returns performance-metrics payload when api latency samples exist', async () => {
     mockSelectRows([
-      { route: '/api/assignments', duration: 100 },
-      { route: '/api/assignments', duration: 400 },
-      { route: '/api/assignments', duration: 900 },
+      { route: '/api/assignments', duration: 100, responseStatus: 200 },
+      { route: '/api/assignments', duration: 400, responseStatus: 200 },
+      { route: '/api/assignments', duration: 900, responseStatus: 200 },
     ]);
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
@@ -77,9 +81,9 @@ describe('/api/monitoring/perf-status', () => {
 
   it('filters null performance durations before percentile calculation', async () => {
     mockSelectRows([
-      { route: '/api/assignments', duration: null },
-      { route: '/api/assignments', duration: 200 },
-      { route: '/api/assignments', duration: 800 },
+      { route: '/api/assignments', duration: null, responseStatus: 200 },
+      { route: '/api/assignments', duration: 200, responseStatus: 200 },
+      { route: '/api/assignments', duration: 800, responseStatus: 200 },
     ]);
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
@@ -91,6 +95,22 @@ describe('/api/monitoring/perf-status', () => {
     expect(body.sampleCount).toBe(2);
     expect(body.p95).toBeCloseTo(770, 10);
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps the gate closed when assignment samples are only unauthenticated failures', async () => {
+    mockSelectRows([
+      { route: '/api/assignments', duration: 40, responseStatus: 401 },
+      { route: '/api/assignments', duration: 50, responseStatus: 401 },
+    ]);
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.source).toBe('performance_metrics');
+    expect(body.ok).toBe(false);
+    expect(body.missingRequiredRoutes).toEqual(['/api/assignments']);
+    expect(body.message).toContain('Missing required route latency samples: /api/assignments');
   });
 
   it('keeps the gate closed when required route latency samples are missing', async () => {
@@ -110,8 +130,8 @@ describe('/api/monitoring/perf-status', () => {
     mockSelectRows(
       [],
       [
-        { route: '/api/assignments', duration: 100 },
-        { route: '/api/assignments', duration: 300 },
+        { route: '/api/assignments', duration: 100, responseStatus: 200 },
+        { route: '/api/assignments', duration: 300, responseStatus: 200 },
       ]
     );
     const fetchSpy = vi.spyOn(globalThis, 'fetch');

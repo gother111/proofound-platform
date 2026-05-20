@@ -446,17 +446,44 @@ describe('onboarding actions', () => {
     formData.set('contextOrganizationName', 'Proofound');
     formData.set('contextSummary', 'Starter proof context.');
     formData.set('contextDuration', '2026');
+    formData.set('contextOutcome', 'Built a proof-first onboarding prototype.');
     formData.set('proofUrl', 'https://example.com/proof');
     formData.set('proofTitle', 'Launch proof');
     formData.set('proofSummary', 'Shows one proof artifact.');
     formData.set('proofPackClaim', 'Launch proof');
     formData.set('proofPackOwnership', 'Created as solo work. I created the artifact.');
+    formData.set('proofPackOutcome', 'Built a proof-first onboarding prototype.');
     formData.set('proofPackSkills', 'Documentation, onboarding design');
     setFirstProofOwnershipFields(formData);
 
     const result = await completeIndividualOnboarding(formData);
 
     expect(result).toEqual({ error: 'Add 3 to 5 skills this proof actually supports.' });
+    expect(createClient).not.toHaveBeenCalled();
+  });
+
+  it('rejects tampered first-proof submissions with synthetic context anchors', async () => {
+    const formData = new FormData();
+    formData.set('firstName', 'Jane');
+    formData.set('lastName', 'Founder');
+    formData.set('displayName', 'Jane Founder');
+    formData.set('handle', 'jane_founder');
+    formData.set('location', 'Stockholm');
+    formData.set('contextType', 'experience');
+    formData.set('proofUrl', 'https://example.com/proof');
+    formData.set('proofTitle', 'Launch proof');
+    formData.set('proofSummary', 'Shows one proof artifact.');
+    formData.set('proofPackClaim', 'Launch proof');
+    formData.set('proofPackOwnership', 'Created as solo work. I created the artifact.');
+    formData.set('proofPackOutcome', 'Built a proof-first onboarding prototype.');
+    formData.set('proofPackSkills', 'Product strategy, proof systems, onboarding design');
+    setFirstProofOwnershipFields(formData);
+
+    const result = await completeIndividualOnboarding(formData);
+
+    expect(result).toEqual({
+      error: 'Add one real context with a short anchor before saving your first Proof Pack.',
+    });
     expect(createClient).not.toHaveBeenCalled();
   });
 
@@ -605,6 +632,7 @@ describe('onboarding actions', () => {
     formData.set('contextOrganizationName', 'Stockholm');
     formData.set('contextSummary', 'A first proof onboarding artifact.');
     formData.set('contextDuration', '2026');
+    formData.set('contextOutcome', 'Shows the first proof artifact.');
     formData.set('proofInputType', 'file');
     formData.set('proofArtifactType', 'document');
     formData.set('uploadedFileId', '00000000-0000-4000-8000-000000000001');

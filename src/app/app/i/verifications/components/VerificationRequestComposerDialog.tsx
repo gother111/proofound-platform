@@ -76,7 +76,8 @@ function buildManualComposerDraft(params: {
   relationship: string;
   scope: VerificationScope;
 }): ComposerDraft {
-  const claim = params.proofPack.claimStatement || params.proofPack.title || 'one scoped claim';
+  void params.proofPack;
+  const claim = 'one scoped Proofound claim';
   const relationship = params.relationship || 'someone familiar with the work';
 
   return {
@@ -93,7 +94,7 @@ function buildManualComposerDraft(params: {
       'Which parts can you confirm from direct knowledge or observation?',
       'Is there anything in this request that you cannot verify?',
     ],
-    privacyNotes: ['Draft uses selected public-safe Proof Pack fields only.'],
+    privacyNotes: ['Fallback draft uses generic claim text until server-side redaction returns.'],
     tooBroadWarnings: [
       'AI suggestions are temporarily unavailable; manual editing still works.',
       `Keep this request limited to the ${params.scope.replace(/_/g, ' ')} scope.`,
