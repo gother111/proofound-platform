@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { jsonError, requirePlatformAdminJson } from '@/lib/api/route-helpers';
+import { adminListGuard } from '@/app/api/admin/_utils';
 import {
+  getInternalOpsQueueItem,
   InternalOpsQueueMutationError,
   transitionInternalOpsQueueItem,
 } from '@/lib/internal-ops/queue';
@@ -23,6 +25,42 @@ const patchBodySchema = z
     message: 'Upload review actions must resolve the queue item.',
     path: ['uploadReviewAction'],
   });
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const guardResult = await adminListGuard(request);
+    if (guardResult instanceof NextResponse) {
+      return guardResult;
+    }
+
+    const parsedParams = paramsSchema.safeParse(await params);
+    if (!parsedParams.success) {
+      return jsonError('Invalid queue id', 400, parsedParams.error.flatten());
+    }
+
+    const item = await getInternalOpsQueueItem(parsedParams.data.id);
+    if (!item) {
+      return jsonError('Queue item not found', 404);
+    }
+
+    return NextResponse.json({
+      success: true,
+      item,
+    });
+  } catch (error) {
+    if (
+      error instanceof InternalOpsQueueMutationError &&
+      error.code === 'compatibility_fallback_unavailable'
+    ) {
+      return jsonError(error.message, 503);
+    }
+
+    console.error('Error fetching operations queue item', {
+      errorName: error instanceof Error ? error.name : typeof error,
+    });
+    return jsonError('Failed to fetch operations queue item', 500);
+  }
+}
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

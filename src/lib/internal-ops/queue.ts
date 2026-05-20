@@ -594,6 +594,25 @@ export async function listInternalOpsQueueItems(): Promise<InternalOpsQueueGroup
   }
 }
 
+export async function getInternalOpsQueueItem(id: string): Promise<InternalOpsQueueSummary | null> {
+  try {
+    const row = await db.query.internalOpsQueueItems.findFirst({
+      where: eq(internalOpsQueueItems.id, id),
+    });
+
+    return row ? toSummary(row) : null;
+  } catch (error) {
+    if (!isInternalOpsQueueCompatibilityError(error)) {
+      throw error;
+    }
+
+    throw new InternalOpsQueueMutationError(
+      'compatibility_fallback_unavailable',
+      'Queue detail requires the internal ops queue table to be available.'
+    );
+  }
+}
+
 const INTERNAL_OPS_QUEUE_ALLOWED_TRANSITIONS: Record<
   InternalOpsQueueStatus,
   InternalOpsQueueStatus[]

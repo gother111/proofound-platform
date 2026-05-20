@@ -486,4 +486,67 @@ describe('/api/user/account lifecycle routes', () => {
       summaryCode: 'anonymize_failed',
     });
   });
+
+  it('marks manual review when auth revocation fails after data deletion succeeds', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+    mockProfileLookup({
+      id: 'user-1',
+      lifecycleState: 'active',
+      deletionRequestedAt: null,
+      deleted: false,
+    });
+    mocks.adminDeleteUser.mockResolvedValueOnce({
+      error: { message: 'auth service unavailable' },
+    });
+
+    const response = await deleteAccount(
+      new NextRequest('http://localhost/api/user/account', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          password: 'TestPassword123!',
+          confirmPhrase: 'DELETE MY ACCOUNT',
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({
+      error: 'Failed to delete account',
+      message: 'Could not revoke account access. Please try again shortly.',
+    });
+    expect(mocks.execute).toHaveBeenCalled();
+    expect(mocks.executeAccountDeletionLifecycle).toHaveBeenCalledWith({
+      userId: 'user-1',
+      reason: null,
+      operationId: 'operation-1',
+    });
+    expect(mocks.execute.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.adminDeleteUser.mock.invocationCallOrder[0]
+    );
+    expect(mocks.executeAccountDeletionLifecycle.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.adminDeleteUser.mock.invocationCallOrder[0]
+    );
+    expect(mocks.updateProfileDeletionRequestState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        deletionRequestId: 'deletion-1',
+        toState: 'failed_requires_manual_review',
+        failureCode: 'auth_delete_failed',
+        metadata: expect.objectContaining({
+          message: 'auth service unavailable',
+          dataDeletionCompletedBeforeAuthFailure: true,
+        }),
+      })
+    );
+    expect(mocks.finalizeLifecycleOperation).toHaveBeenCalledWith('operation-1', {
+      status: 'failed_requires_manual_review',
+      visibleStatus: 'failed',
+      summaryCode: 'auth_delete_failed',
+    });
+  });
 });
