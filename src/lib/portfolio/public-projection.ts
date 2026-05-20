@@ -1807,13 +1807,13 @@ function buildMockPublicOrganizationPortfolioProjection(): PublicOrganizationPor
         ? 'Proofound organization portfolio'
         : `${organization.display_name} | Proofound`,
       description: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization profile on Proofound.'
+        ? 'Shareable organization trust page on Proofound.'
         : publicSummary,
       ogTitle: shouldUseGenericSharePreview(effectiveState)
         ? 'Proofound organization portfolio'
         : `${organization.display_name} on Proofound`,
       ogDescription: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization profile on Proofound.'
+        ? 'Shareable organization trust page on Proofound.'
         : publicSummary,
       useGenericPreview: shouldUseGenericSharePreview(effectiveState),
     },
@@ -1899,13 +1899,13 @@ function buildMockLongPublicOrganizationPortfolioProjection(): PublicOrganizatio
     metadata: {
       path: `/portfolio/org/${encodeURIComponent(organization.slug)}`,
       title: 'Proofound organization portfolio',
-      description: 'Shareable organization profile on Proofound.',
+      description: 'Shareable organization trust page on Proofound.',
       ogTitle: 'Proofound organization portfolio',
-      ogDescription: 'Shareable organization profile on Proofound.',
+      ogDescription: 'Shareable organization trust page on Proofound.',
       useGenericPreview: true,
     },
     jsonLd: {
-      description: 'Shareable organization profile on Proofound.',
+      description: 'Shareable organization trust page on Proofound.',
     },
     exportData: {
       schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
@@ -2053,7 +2053,7 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
       ? organization.mission?.trim()
       : organization.tagline?.trim()) || organization.tagline?.trim();
   const publicSummary =
-    explicitPublicSummary || verifiedDomainPath || 'Public organization profile on Proofound.';
+    explicitPublicSummary || verifiedDomainPath || 'Public organization trust page on Proofound.';
   const hasVerifiedTrustSignal = Boolean(
     organization.verified ||
       organization.trust_status === 'domain_verified' ||
@@ -2094,13 +2094,13 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
         ? 'Proofound organization portfolio'
         : `${publicDisplayName} | Proofound`,
       description: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization profile on Proofound.'
+        ? 'Shareable organization trust page on Proofound.'
         : publicSummary,
       ogTitle: shouldUseGenericSharePreview(effectiveState)
         ? 'Proofound organization portfolio'
         : `${publicDisplayName} on Proofound`,
       ogDescription: shouldUseGenericSharePreview(effectiveState)
-        ? 'Shareable organization profile on Proofound.'
+        ? 'Shareable organization trust page on Proofound.'
         : publicSummary,
       useGenericPreview: shouldUseGenericSharePreview(effectiveState),
     },

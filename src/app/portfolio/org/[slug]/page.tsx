@@ -119,7 +119,7 @@ export default async function OrganizationPortfolioPage({
   const reviewSignals = [
     data.verifiedDomainPath
       ? `Verified domain path: ${data.verifiedDomainPath}`
-      : 'Public profile only',
+      : 'Direct-link trust page only',
     data.organization.trust_status === 'platform_reviewed'
       ? 'Organization trust has been platform reviewed.'
       : data.organization.verified
@@ -183,16 +183,16 @@ export default async function OrganizationPortfolioPage({
                       className="shrink-0 border-[#D9D5CC] text-muted-foreground"
                     >
                       {data.effectiveState === 'public_indexable'
-                        ? 'Searchable'
+                        ? 'Indexing allowed'
                         : 'Shareable by direct link'}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">Public organization profile</p>
+                  <p className="text-sm text-muted-foreground">Public organization trust page</p>
                 </div>
               </div>
               <p className="text-sm text-foreground">
                 {data.publicSummary ||
-                  'Profile basics only. Rich company profile sections stay out of the launch path.'}
+                  'Trust basics only. Broad company profile sections stay out of the launch path.'}
               </p>
             </div>
 
@@ -230,7 +230,7 @@ export default async function OrganizationPortfolioPage({
       footer={
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="min-w-0 break-words">proofound.io/portfolio/org/{slug}</span>
-          <span>Minimal public profile</span>
+          <span>Minimal trust page</span>
         </div>
       }
     >
@@ -332,7 +332,7 @@ export default async function OrganizationPortfolioPage({
               <SummaryRow label="Website" value={data.organization.website || 'Not published'} />
               <SummaryRow
                 label="Trust mode"
-                value={data.organization.verified ? 'Verified' : 'Public profile'}
+                value={data.organization.verified ? 'Verified' : 'Direct-link trust page'}
               />
             </div>
           </PublicProfileSection>

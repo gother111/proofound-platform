@@ -150,6 +150,28 @@ const mockSupabaseClient = {
         error: null,
       };
     },
+    signInWithOAuth: async (payload: {
+      provider?: string;
+      options?: { redirectTo?: string | undefined };
+    }) => {
+      const provider = (payload?.provider ?? '').trim();
+      if (provider !== 'google' && provider !== 'linkedin_oidc') {
+        return {
+          data: { provider, url: null },
+          error: { message: 'Unsupported OAuth provider', status: 400 },
+        };
+      }
+
+      const redirectTo = payload?.options?.redirectTo || 'http://localhost/auth/callback';
+      const authorizeUrl = new URL('/auth/v1/authorize', redirectTo);
+      authorizeUrl.searchParams.set('provider', provider);
+      authorizeUrl.searchParams.set('redirect_to', redirectTo);
+
+      return {
+        data: { provider, url: authorizeUrl.toString() },
+        error: null,
+      };
+    },
     signOut: async () => ({ error: null }),
     signUp: async (payload: { email?: string; password?: string }) => {
       const email = (payload?.email ?? '').trim().toLowerCase();

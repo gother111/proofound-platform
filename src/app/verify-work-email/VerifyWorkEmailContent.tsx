@@ -99,8 +99,8 @@ export function VerifyWorkEmailContent() {
             {status === 'error' && 'Verification failed'}
           </h1>
           <CardDescription className="leading-6 text-proofound-charcoal/70">
-            {status === 'loading' && 'Please wait while we verify the workplace signal.'}
-            {status === 'success' && 'Your workplace signal is now active while it stays fresh.'}
+            {status === 'loading' && 'Please wait while we verify the workplace check.'}
+            {status === 'success' && 'Your workplace check is now active while it stays fresh.'}
             {status === 'error' &&
               'The link could not be verified. Request a fresh work-email link from settings.'}
           </CardDescription>
@@ -130,31 +130,29 @@ export function VerifyWorkEmailContent() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="h-4 w-4 text-proofound-forest" />
-                  <span>Your profile now shows an active workplace signal</span>
+                  <span>Your account now has an active workplace check</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="h-4 w-4 text-proofound-forest" />
-                  <span>
-                    Organizations can see your workplace-verified status while it stays fresh
-                  </span>
+                  <span>Organizations can see the workplace check while it stays fresh</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="h-4 w-4 text-proofound-forest" />
-                  <span>Your match quality is improved</span>
+                  <span>Intro readiness can use this account-side check where relevant</span>
                 </div>
               </div>
 
               <p className="pt-4 text-center text-sm text-muted-foreground">
                 {autoRedirectEnabled
-                  ? 'Redirecting to your profile in a few seconds.'
-                  : 'You can return to your profile when ready.'}
+                  ? 'Redirecting to your verification center in a few seconds.'
+                  : 'You can return to your verification center when ready.'}
               </p>
 
               <Button
-                onClick={() => router.push('/app/i/profile')}
+                onClick={() => router.push('/app/i/verifications')}
                 className="w-full bg-proofound-forest hover:bg-proofound-forest/90"
               >
-                Go to profile now
+                Go to verification center
               </Button>
             </div>
           )}
@@ -187,7 +185,7 @@ export function VerifyWorkEmailContent() {
                   variant="outline"
                   className="w-full"
                 >
-                  Return to profile
+                  Return to Public Page
                 </Button>
               </div>
             </div>

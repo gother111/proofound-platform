@@ -220,7 +220,7 @@ export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
 
     drawHeaderSubtitle(
       doc,
-      'Reusable template for individual and organization profile exports',
+      'Reusable template for individual Public Page and organization trust page exports',
       layout.contentX,
       layout.contentY + 30,
       layout.contentWidth
@@ -429,7 +429,7 @@ export async function generateOrganizationProfilePdf(
       });
     const orgNarrative =
       input.organization.whyWorkMatters ||
-      'Public organization profile with only the minimum credible launch fields.';
+      'Public organization trust page with only the minimum credible launch fields.';
     doc
       .fillColor('#4D5A55')
       .fontSize(8)

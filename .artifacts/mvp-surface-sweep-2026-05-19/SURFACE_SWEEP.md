@@ -2389,3 +2389,19 @@ Browser evidence:
 - Added crawl-route coverage so `llms.txt` does not reintroduce `searchable` or public-directory language.
 - Browser was not rerun for this slice because the edited surface is deterministic plaintext plus an active doc; route tests and docs freshness cover the changed behavior.
 - Verification passed: `npm run test -- tests/app/llms-routes.test.ts tests/lib/launch-operations-contract.test.ts` (2 files / 7 tests), `npm run docs:freshness`, and a focused source/doc scan for the retired crawl/fallback wording. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.
+
+## Continuation - Browser-Verified Auth and Trust Page Copy
+
+- Used the Codex in-app Browser on the local app at `http://localhost:33180` after the user explicitly asked for Browser-backed testing.
+- Browser found a real local fixture-mode auth bug: clicking Google showed `supabase.auth.signInWithOAuth is not a function` because the mock Supabase server client did not implement the OAuth contract.
+- Added mock Supabase OAuth support for Google and LinkedIn so local/mock auth surfaces now return deterministic `/auth/v1/authorize?provider=...` redirects instead of a broken provider error.
+- Browser rechecked `/login`, the `/signup` individual step, `/verify-work-email` with the visual work-email token, and `/portfolio/org/test-org`.
+- Browser evidence after the fix:
+  - `/login`: Google and LinkedIn buttons present.
+  - `/signup` after selecting Individual: Google and LinkedIn buttons present.
+  - `/verify-work-email`: success state reached, workplace-check copy shown, verification-center CTA shown, no stale `workplace signal`, `match quality`, or `profile now shows` copy.
+  - `/portfolio/org/test-org`: `Public organization trust page` and `Minimal trust page` shown; stale public-organization-profile/searchable wording absent.
+- Reframed work-email verification success around an account-side workplace check and the verification center, not profile theater or match-quality promises.
+- Reframed public organization portfolio/trust-page copy, metadata fallbacks, route metadata, export/PDF copy, and org onboarding helper copy around the organization trust page.
+- Added focused mock OAuth coverage and updated UI/projection tests to guard the new wording and provider availability.
+- Verification passed: `npm run test -- tests/lib/mock-server-client-oauth.test.ts tests/ui/social-sign-in-buttons.test.tsx tests/actions/auth.test.ts tests/ui/verify-work-email-content.test.tsx tests/ui/public-org-portfolio-page.test.tsx tests/lib/public-portfolio-projection.test.ts` (6 files / 44 tests) and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.

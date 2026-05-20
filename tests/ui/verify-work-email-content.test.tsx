@@ -42,7 +42,7 @@ describe('VerifyWorkEmailContent', () => {
     fireEvent.click(screen.getByRole('button', { name: /open work-email settings/i }));
     expect(routerPush).toHaveBeenCalledWith('/app/i/settings');
 
-    fireEvent.click(screen.getByRole('button', { name: /return to profile/i }));
+    fireEvent.click(screen.getByRole('button', { name: /return to public page/i }));
     expect(routerPush).toHaveBeenCalledWith('/app/i/profile');
   });
 
@@ -60,12 +60,17 @@ describe('VerifyWorkEmailContent', () => {
     });
 
     expect(screen.getByText('elena.reviewer@northstar-evidence.example')).toBeInTheDocument();
-    expect(screen.getByText(/Your workplace signal is now active/i)).toBeInTheDocument();
-    expect(screen.getByText('You can return to your profile when ready.')).toBeInTheDocument();
+    expect(screen.getByText(/Your workplace check is now active/i)).toBeInTheDocument();
+    expect(
+      screen.getByText('You can return to your verification center when ready.')
+    ).toBeInTheDocument();
     expect(screen.queryByText(/Redirecting to your profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/workplace signal/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/match quality/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/profile now shows/i)).not.toBeInTheDocument();
     expect(global.fetch).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: /go to profile now/i }));
-    expect(routerPush).toHaveBeenCalledWith('/app/i/profile');
+    fireEvent.click(screen.getByRole('button', { name: /go to verification center/i }));
+    expect(routerPush).toHaveBeenCalledWith('/app/i/verifications');
   });
 });

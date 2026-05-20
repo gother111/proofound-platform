@@ -190,7 +190,7 @@ export function OrganizationSetup() {
               className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
             />
             <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              This appears on your public organization profile.
+              This appears on your public organization trust page.
             </p>
           </div>
 

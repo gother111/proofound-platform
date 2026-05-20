@@ -36,7 +36,7 @@ export function DownloadOrganizationPdfButton({
       return 'Only active organization members can download this PDF.';
     }
     if (res.status === 404) {
-      return 'Organization profile is not ready for PDF export yet.';
+      return 'Organization trust page is not ready for PDF export yet.';
     }
 
     return payloadMessage || 'Could not download PDF. Please try again.';
@@ -93,7 +93,7 @@ export function DownloadOrganizationPdfButton({
       className={cn('inline-flex items-center gap-1.5', className)}
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-      {loading ? 'Preparing...' : 'Download profile PDF'}
+      {loading ? 'Preparing...' : 'Download organization PDF'}
     </Button>
   );
 }

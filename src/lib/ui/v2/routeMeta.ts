@@ -75,7 +75,7 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
   if (path.includes('/app/o/') && path.includes('/portfolio'))
     return {
       title: 'Public Preview',
-      description: 'Preview the public organization profile',
+      description: 'Preview the public organization trust page',
       icon: Briefcase,
     };
   if (path.includes('/portfolio'))

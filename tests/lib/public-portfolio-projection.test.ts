@@ -467,7 +467,7 @@ describe('public portfolio projection', () => {
     const projection = await getPublicOrganizationPortfolioProjectionBySlug('thin-org');
 
     expect(projection).not.toBeNull();
-    expect(projection?.publicSummary).toBe('Public organization profile on Proofound.');
+    expect(projection?.publicSummary).toBe('Public organization trust page on Proofound.');
     expect(projection?.minimumContentMet).toBe(false);
     expect(projection?.effectiveState).toBe('unavailable');
   });

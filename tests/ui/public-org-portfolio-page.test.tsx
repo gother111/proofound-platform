@@ -79,9 +79,9 @@ function buildProjection(overrides: Partial<any> = {}) {
     metadata: {
       path: '/portfolio/org/acme',
       title: 'Proofound organization portfolio',
-      description: 'Shareable organization profile on Proofound.',
+      description: 'Shareable organization trust page on Proofound.',
       ogTitle: 'Proofound organization portfolio',
-      ogDescription: 'Shareable organization profile on Proofound.',
+      ogDescription: 'Shareable organization trust page on Proofound.',
       useGenericPreview: true,
     },
     jsonLd: {
@@ -158,8 +158,9 @@ describe('Organization public portfolio page', () => {
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Acme' })).toBeInTheDocument();
-    expect(screen.getByText(/public organization profile/i)).toBeInTheDocument();
+    expect(screen.getByText(/public organization trust page/i)).toBeInTheDocument();
     expect(screen.getByText('Shareable by direct link')).toBeInTheDocument();
+    expect(screen.getByText('Minimal trust page')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /mission \/ purpose/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /what work is offered/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /assignment clarity/i })).toBeInTheDocument();
@@ -180,6 +181,9 @@ describe('Organization public portfolio page', () => {
     expect(screen.queryByRole('heading', { name: /goals/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/team members/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/owner@|reviewer@|member@/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/public organization profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/minimal public profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Searchable')).not.toBeInTheDocument();
   });
 
   it('falls back to return-home link when returnTo is unsafe', async () => {
