@@ -3476,3 +3476,12 @@ Browser evidence:
 - Reframed the feedback email subject, email headline/preview/footer, and embedded feedback form title around workflow feedback and the review workflow while preserving the existing feedback direction, token, and submission behavior.
 - Extended focused UI and launch-gate coverage so organization-side feedback prompts must stay workflow-scoped and the stale candidate-led feedback phrases cannot return.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/feedback-form.test.tsx tests/scripts/launch-gate-config.test.ts tests/lib/feedback-invite-issuance.test.ts --reporter=verbose` (3 files / 130 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted active-source stale-feedback scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and docs freshness still reported the same two non-failing orphan-artifact warnings.
+
+## Continuation - Launch Fallback And Decision Note Copy
+
+- Timestamp: 2026-05-21 01:19 CEST.
+- Continued the active launch-ops and workflow-decision copy sweep after finding launch fallback copy still said verification was pending for a `candidate set`, and decision private-note helper copy still referenced `candidate-facing workflow notifications`.
+- Reframed the launch fallback title to `review set`, preserving the conservative trust-action behavior while aligning organization fallback copy with assignment-review language.
+- Reframed the decision note helper so private team notes are simply not sent through workflow notifications, avoiding a candidate-facing channel promise in the dialog copy.
+- Extended launch-operations contract and launch-gate coverage so `candidate set` and `candidate-facing workflow notifications` cannot return to these active surfaces.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/launch-operations-contract.test.ts tests/scripts/launch-gate-config.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (3 files / 147 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted active-source stale-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
