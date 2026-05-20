@@ -779,6 +779,13 @@ export function buildFinalLaunchChecklistDefinitions({
         );
         if (stateful) observations.push(stateful);
 
+        const commandGate = gateObservation(
+          context.latestLaunchBundle,
+          'strict_org_corridor_e2e',
+          'Latest final validation strict org corridor E2E'
+        );
+        if (commandGate) observations.push(commandGate);
+
         const reality = checklistRowObservation(
           realityRow(
             context,
@@ -825,20 +832,40 @@ export function buildFinalLaunchChecklistDefinitions({
       authorityRefs: ['agent/checklists/verification.md'],
       evidenceSources: [
         '.artifacts/launch-validation-*/24_gate_summary.json',
+        '.artifacts/launch-validation-*/commands.json',
         '.artifacts/proofound-current-state-reality-check.md',
       ],
-      evaluateDirect: (context) =>
-        compactObservations([
-          gateObservation(
-            context.latestLaunchBundle,
-            'privacy_rls_live_db',
-            'Latest launch bundle privacy/RLS gate'
-          ),
-          checklistRowObservation(
-            realityRow(context, 'canonical role and RLS truth'),
-            'current_state_reality_check'
-          ),
-        ]),
+      evaluateDirect: (context) => {
+        const observations: FinalLaunchChecklistObservation[] = [];
+        const baseline = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_baseline_tests',
+          'Latest final validation privacy/RLS baseline gate'
+        );
+        if (baseline) observations.push(baseline);
+
+        const extended = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_extended_tests',
+          'Latest final validation privacy/RLS extended gate'
+        );
+        if (extended) observations.push(extended);
+
+        const liveDb = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_live_db',
+          'Latest launch bundle privacy/RLS gate'
+        );
+        if (liveDb) observations.push(liveDb);
+
+        const reality = checklistRowObservation(
+          realityRow(context, 'canonical role and RLS truth'),
+          'current_state_reality_check'
+        );
+        if (reality) observations.push(reality);
+
+        return observations;
+      },
     },
     {
       id: 'qa_manual_privacy_sweep',

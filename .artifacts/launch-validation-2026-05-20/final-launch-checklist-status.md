@@ -1,17 +1,17 @@
 # Proofound Final Launch Checklist Status
 
-Generated: 2026-05-20T01:26:55.137Z
+Generated: 2026-05-20T01:34:00.276Z
 Scope: `repo`
 Workspace: `/Users/yuriibakurov/proofound`
-Git: `master` @ `5d96369275b1178bc2cd104a35d70d03a43b76b2`
+Git: `master` @ `653d0ae7936b2f05e9eae9640ec8a1f59250feaf`
 Verdict: `NOT_READY`
 Live base URL: not configured
 Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 
 ## Summary
 
-- PASS: 32
-- FAIL: 4
+- PASS: 30
+- FAIL: 6
 - BLOCKED: 1
 - UNVERIFIED: 3
 
@@ -20,7 +20,9 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - Product — Org trust page is minimal and live: Skipped public org trust smoke because production boot was unavailable.
 - Engineering — `next start` is stable: Production boot could not start in this environment; review the captured boot error and rerun on a host that can bind localhost.
 - Engineering — Launch-status and smoke-artifact logic run on fresh evidence: Repo-ready launch-status route logic or smoke refresh did not pass on fresh local evidence.
+- QA — Fresh strict org corridor passes in prod mode: Strict org corridor E2E: Command exited with 1.
 - QA — Public-org trust smoke passes: Skipped public org trust smoke because production boot was unavailable.
+- QA — RLS/privacy tests pass against actual DB state: Privacy/RLS baseline tests: Command exited with 1.
 
 ## External Prerequisites
 
@@ -91,15 +93,17 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 
 ## QA
 
-- [PASS] Fresh strict org corridor passes in prod mode
-  - Summary: Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario.
-  - Evidence: Current-state reality check: review -> intro -> reveal -> interview -> decision -> hire -> engagement verification: `.artifacts/proofound-current-state-reality-check.md` (Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario.)
+- [FAIL] Fresh strict org corridor passes in prod mode
+  - Summary: Strict org corridor E2E: Command exited with 1.
+  - Evidence: Latest final validation strict org corridor E2E evidence: `.artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log`
+  - Retired stale claims: Current-state reality check disagrees with the selected FAIL status for this checklist line.
 - [FAIL] Public-org trust smoke passes
   - Summary: Skipped public org trust smoke because production boot was unavailable.
   - Evidence: Latest launch bundle public org trust smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-build.log`
-- [PASS] RLS/privacy tests pass against actual DB state
-  - Summary: tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.
-  - Evidence: Current-state reality check: canonical role and RLS truth: `.artifacts/proofound-current-state-reality-check.md` (tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.)
+- [FAIL] RLS/privacy tests pass against actual DB state
+  - Summary: Privacy/RLS baseline tests: Command exited with 1.
+  - Evidence: Latest final validation privacy/RLS baseline gate evidence: `.artifacts/launch-validation-2026-05-20/privacy_rls_baseline_tests.log`
+  - Retired stale claims: Current-state reality check disagrees with the selected FAIL status for this checklist line.
 - [PASS] Manual privacy leak sweep passes
   - Summary: Privacy-sensitive review, uploads, and launch archive protection tests passed.
   - Evidence: Repo-ready manual privacy validation evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-manual-privacy.log`
@@ -179,3 +183,4 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - `The org settings surface remains a live gate page.`
 - `The contracts API remains a live launch surface.`
 - `Google, LinkedIn, and video integrations remain live launch compatibility flows.`
+- Current-state reality check disagrees with the selected FAIL status for this checklist line.

@@ -1,17 +1,17 @@
 {
   "scope": "repo",
-  "generatedAt": "2026-05-20T01:26:55.137Z",
+  "generatedAt": "2026-05-20T01:34:00.276Z",
   "currentDate": "2026-05-20",
   "workspaceRoot": "/Users/yuriibakurov/proofound",
-  "gitHead": "5d96369275b1178bc2cd104a35d70d03a43b76b2",
+  "gitHead": "653d0ae7936b2f05e9eae9640ec8a1f59250feaf",
   "gitBranch": "master",
   "verdict": "NOT_READY",
   "includeStateful": false,
   "liveBaseUrl": null,
   "latestLaunchBundleDir": ".artifacts/launch-validation-2026-05-20",
   "statusCounts": {
-    "PASS": 32,
-    "FAIL": 4,
+    "PASS": 30,
+    "FAIL": 6,
     "BLOCKED": 1,
     "UNVERIFIED": 3
   },
@@ -430,18 +430,19 @@
         "docs/verification-checklist.md",
         ".artifacts/launch-validation-*/24_gate_summary.json"
       ],
-      "status": "PASS",
-      "summary": "Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario.",
+      "status": "FAIL",
+      "summary": "Strict org corridor E2E: Command exited with 1.",
       "evidence": [
         {
-          "label": "Current-state reality check: review -> intro -> reveal -> interview -> decision -> hire -> engagement verification",
-          "path": ".artifacts/proofound-current-state-reality-check.md",
-          "note": "Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario."
+          "label": "Latest final validation strict org corridor E2E evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log"
         }
       ],
       "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "Current-state reality check",
+      "retiredStaleClaims": [
+        "Current-state reality check disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation strict org corridor E2E",
       "blocksVerdict": true,
       "blockingScope": "both"
     },
@@ -475,20 +476,22 @@
       "authorityRefs": ["agent/checklists/verification.md"],
       "evidenceSources": [
         ".artifacts/launch-validation-*/24_gate_summary.json",
+        ".artifacts/launch-validation-*/commands.json",
         ".artifacts/proofound-current-state-reality-check.md"
       ],
-      "status": "PASS",
-      "summary": "tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.",
+      "status": "FAIL",
+      "summary": "Privacy/RLS baseline tests: Command exited with 1.",
       "evidence": [
         {
-          "label": "Current-state reality check: canonical role and RLS truth",
-          "path": ".artifacts/proofound-current-state-reality-check.md",
-          "note": "tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target."
+          "label": "Latest final validation privacy/RLS baseline gate evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/privacy_rls_baseline_tests.log"
         }
       ],
       "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "Current-state reality check",
+      "retiredStaleClaims": [
+        "Current-state reality check disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation privacy/RLS baseline gate",
       "blocksVerdict": true,
       "blockingScope": "both"
     },
@@ -1069,6 +1072,32 @@
       "blockingScope": "both"
     },
     {
+      "id": "qa_strict_org_corridor_fresh",
+      "section": "QA",
+      "label": "Fresh strict org corridor passes in prod mode",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/proofound-current-state-reality-check.md",
+        "docs/verification-checklist.md",
+        ".artifacts/launch-validation-*/24_gate_summary.json"
+      ],
+      "status": "FAIL",
+      "summary": "Strict org corridor E2E: Command exited with 1.",
+      "evidence": [
+        {
+          "label": "Latest final validation strict org corridor E2E evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [
+        "Current-state reality check disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation strict org corridor E2E",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
       "id": "qa_public_org_trust_smoke",
       "section": "QA",
       "label": "Public-org trust smoke passes",
@@ -1088,6 +1117,32 @@
       "blockerIds": [],
       "retiredStaleClaims": [],
       "sourceLabel": "Latest launch bundle public org trust smoke",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "qa_privacy_rls_actual_db",
+      "section": "QA",
+      "label": "RLS/privacy tests pass against actual DB state",
+      "authorityRefs": ["agent/checklists/verification.md"],
+      "evidenceSources": [
+        ".artifacts/launch-validation-*/24_gate_summary.json",
+        ".artifacts/launch-validation-*/commands.json",
+        ".artifacts/proofound-current-state-reality-check.md"
+      ],
+      "status": "FAIL",
+      "summary": "Privacy/RLS baseline tests: Command exited with 1.",
+      "evidence": [
+        {
+          "label": "Latest final validation privacy/RLS baseline gate evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/privacy_rls_baseline_tests.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [
+        "Current-state reality check disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation privacy/RLS baseline gate",
       "blocksVerdict": true,
       "blockingScope": "both"
     }
@@ -1286,7 +1341,8 @@
     "`The active route surface is still 187 APIs and 91 pages.`",
     "`The org settings surface remains a live gate page.`",
     "`The contracts API remains a live launch surface.`",
-    "`Google, LinkedIn, and video integrations remain live launch compatibility flows.`"
+    "`Google, LinkedIn, and video integrations remain live launch compatibility flows.`",
+    "Current-state reality check disagrees with the selected FAIL status for this checklist line."
   ],
   "outputs": {
     "markdownPath": ".artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md",

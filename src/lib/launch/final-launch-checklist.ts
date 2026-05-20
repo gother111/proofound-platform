@@ -445,10 +445,21 @@ function parseBundleGates(payload: Record<string, unknown>) {
     gates.set(id, {
       id,
       status,
-      summary: typeof gate.summary === 'string' ? gate.summary : id,
-      evidence: Array.isArray(gate.evidence)
-        ? gate.evidence.filter((value): value is string => typeof value === 'string')
-        : [],
+      summary:
+        typeof gate.summary === 'string'
+          ? gate.summary
+          : [
+              typeof gate.label === 'string' ? gate.label : id,
+              typeof gate.reason === 'string' ? gate.reason : null,
+            ]
+              .filter(Boolean)
+              .join(': '),
+      evidence: [
+        ...(Array.isArray(gate.evidence)
+          ? gate.evidence.filter((value): value is string => typeof value === 'string')
+          : []),
+        ...(typeof gate.logPath === 'string' ? [gate.logPath] : []),
+      ],
       raw: gate,
     });
   }
@@ -466,6 +477,14 @@ async function parseLaunchBundleFromDir(
   const bundleResult = await readOptionalJson(bundlePath);
   if (!bundleResult?.payload) {
     return null;
+  }
+
+  const gates = parseBundleGates(bundleResult.payload);
+  const commandResult = await readOptionalJson(path.join(bundleDir, 'commands.json'));
+  if (commandResult?.payload?.kind === 'final_launch_validation') {
+    for (const [id, gate] of parseBundleGates(commandResult.payload)) {
+      gates.set(id, gate);
+    }
   }
 
   const fileEntries = await fs.readdir(bundleDir, 'utf8').catch((): string[] => []);
@@ -495,7 +514,7 @@ async function parseLaunchBundleFromDir(
       typeof bundleResult.payload.recommendation === 'string'
         ? bundleResult.payload.recommendation
         : null,
-    gates: parseBundleGates(bundleResult.payload),
+    gates,
     liveLaunchStatusExtractPath:
       liveLaunchStatusName == null
         ? null
