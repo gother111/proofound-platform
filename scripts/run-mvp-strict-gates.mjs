@@ -735,7 +735,6 @@ async function main() {
       env: {
         ...commandEnv,
         BASE_URL: baseUrl,
-        SUS_STUDY_COMPLETE: 'true',
         LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
       },
     });

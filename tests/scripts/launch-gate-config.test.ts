@@ -850,7 +850,7 @@ describe('launch gate package configuration', () => {
     expectTextBefore(
       releaseChecklist,
       'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json',
-      'BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go'
+      'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go'
     );
     expect(releaseChecklist).toContain('/api/assignments` latency samples');
     expect(releaseChecklist).toContain(
@@ -901,6 +901,7 @@ describe('launch gate package configuration', () => {
     expect(goNoGoScript).toContain('restore verification report is stale');
     expect(goNoGoScript).toContain('summary.json');
     expect(goNoGoScript).toContain('row-fingerprint.json');
+    expect(goNoGoScript).not.toContain('SUS_STUDY_COMPLETE');
 
     expect(restoreDrill).toContain(
       'Production-candidate `npm run go:no-go` additionally requires a fresh passing restore verification report'
@@ -926,7 +927,7 @@ describe('launch gate package configuration', () => {
       expectTextBefore(
         content,
         'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json',
-        'BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go'
+        'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go'
       );
     }
   });
@@ -1682,7 +1683,7 @@ describe('launch gate package configuration', () => {
     expect(releaseBatchFlow).toContain('authenticated `/api/monitoring/launch-status`');
     expect(releaseBatchFlow).toContain('authenticated `/api/monitoring/perf-status`');
     expect(releaseBatchFlow).toContain(
-      'BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go'
+      'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go'
     );
     expect(verificationChecklist).toContain(
       'Confirm launch readiness separately with the current release and production-readiness checklists'

@@ -41,7 +41,7 @@ restore rehearsal, and final go/no-go evidence.
 - [ ] `BASE_URL=<production-candidate-url> npm run perf:budgets`
 - [ ] `npm run db:backup:checkpoint` against the production-candidate target.
 - [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json` against an isolated recovery target.
-- [ ] `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+- [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 - [ ] `/api/health` returns minimal `status:"ok"`.
 - [ ] Authenticated `/api/monitoring/perf-status` is healthy and includes `/api/assignments` latency samples.
 - [ ] Authenticated `/api/monitoring/launch-status` reports the full launch monitor contract as ready.

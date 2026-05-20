@@ -22,12 +22,11 @@ What it checks (`scripts/perf-budgets.mjs`):
 
 ### Go / No-Go Gate (required)
 
-- `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+- `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 
 What it checks (`scripts/go-no-go-check.ts`):
 
 - `/api/monitoring/perf-status` returns `ok`, including the required `/api/assignments` latency sample gate.
-- `SUS_STUDY_COMPLETE=true`
 - Evidence files exist:
   - `RLS_DEPLOYMENT_SUMMARY.md`
   - `ACCESSIBILITY_AUDIT_REPORT.md`
@@ -46,7 +45,7 @@ What it checks (`scripts/go-no-go-check.ts`):
    - `npm run db:backup:checkpoint`
    - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 4. Run go/no-go:
-   - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+   - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 
 ## Optional Deeper Analysis
 

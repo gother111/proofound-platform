@@ -51,7 +51,7 @@ or `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`.
   - isolated restore report at `.artifacts/launch-restore-report.json`
   - authenticated `/api/monitoring/launch-status`
   - authenticated `/api/monitoring/perf-status`
-  - final `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+  - final `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 - Note:
   - If Vercel Git auto-deploys are still enabled for production, Vercel can still create cloud-build deployments until that setting is intentionally disabled.
 

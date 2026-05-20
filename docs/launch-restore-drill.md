@@ -100,7 +100,7 @@ npm run db:restore:verify -- --checkpoint /tmp/proofound-db-checkpoints/2026-03-
 7. Run final go/no-go against the production-candidate target from an environment that can still read the checkpoint directory referenced by the restore report.
 
 ```bash
-BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go
+BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go
 ```
 
 ## Pass Criteria

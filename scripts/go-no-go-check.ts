@@ -89,12 +89,6 @@ function checkFiles() {
   }
 }
 
-function checkSUSFlag() {
-  if (process.env.SUS_STUDY_COMPLETE !== 'true') {
-    fail('SUS_STUDY_COMPLETE env not set to true');
-  }
-}
-
 function checkSafeModeFlags() {
   const routeFlags = new Set(Object.values(CLIENT_FEATURE_FLAG_RESPONSE_MAP));
   for (const flag of REQUIRED_SAFE_MODE_FLAGS) {
@@ -344,7 +338,6 @@ async function main() {
 
   console.log(`Running Go/No-Go gates against ${BASE_URL}`);
   checkFiles();
-  checkSUSFlag();
   checkSafeModeFlags();
   checkAiLaunchNoGoGuards();
   ensureLaunchSmokeArtifact();

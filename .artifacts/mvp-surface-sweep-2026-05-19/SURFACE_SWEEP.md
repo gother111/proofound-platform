@@ -2069,3 +2069,12 @@ Browser evidence:
 - Codex Browser verified `/app/i/home` at `http://127.0.0.1:33180`: the route rendered the proof-first home surface, had one `<main>` landmark, no horizontal overflow, no runtime-error text, no SUS/usability-survey copy, no `/api/surveys/sus` visible text, and zero Browser console errors. Browser screenshot capture succeeded in this pass.
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-sus-archive/sus-archive-browser-smoke.json`.
 - Focused verification passed: `npm run test -- tests/lib/archived-survey-surface-references.test.ts tests/ui/archived-mvp-routes.test.ts tests/api/assignments.test.ts tests/api/assignments-list-route.test.ts` (19 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Go/No-Go SUS Gate Retirement
+
+- Inspected launch-ops scripts and active launch docs after archiving the SUS survey surface and found `scripts/go-no-go-check.ts` still required `SUS_STUDY_COMPLETE=true`, while active release/checklist docs and the strict-gate runner still instructed operators to set the retired flag.
+- Removed the SUS environment gate from `npm run go:no-go`; launch go/no-go remains bound to evidence files, safe-mode flags, AI no-go guards, fresh launch smoke, restore readiness, authenticated perf status, synthetics, and launch-status readiness.
+- Removed the retired `SUS_STUDY_COMPLETE=true` env from `scripts/run-mvp-strict-gates.mjs` so strict MVP gates use the current go/no-go contract.
+- Updated active launch docs and runbooks to use `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`, and removed the stale SUS bullet from performance-testing docs. Historical block reports and scratchpad logs were left unchanged as historical evidence.
+- Added launch-gate coverage proving the active go/no-go script no longer contains `SUS_STUDY_COMPLETE`.
+- Browser was not used for this slice because the change is launch-ops/docs only; the previous SUS archive Browser smoke remains the UI evidence for absence of SUS prompts in the active app shell.

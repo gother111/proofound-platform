@@ -159,14 +159,14 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `BASE_URL=http://localhost:3000 npm run perf:budgets`
   - `BASE_URL=http://localhost:3000 npm run monitor:launch`
   - `BASE_URL=http://localhost:3000 npm run launch:status`
-  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+  - `BASE_URL=http://localhost:3000 npm run go:no-go`
 - The strict gate writes per-command logs and status JSON under `.artifacts/mvp-strict-gates/`.
 - Any timeout is a failed gate and must not be treated as launch-ready.
 - CI also runs perf budgets and go/no-go gates after starting the app. (source: .github/workflows/ci.yml)
 - Perf budgets: `BASE_URL=http://localhost:3000 npm run perf:budgets` (source: scripts/perf-budgets.mjs)
 - Launch smoke artifact: `BASE_URL=http://localhost:3000 npm run test:launch:smoke` (source: package.json, scripts/launch-smoke-runner.ts)
 - Launch synthetic monitors: `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch` (source: package.json, scripts/run-launch-synthetic-monitors.ts)
-- Go/no-go: `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go` (source: scripts/go-no-go-check.ts)
+- Go/no-go: `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run go:no-go` (source: scripts/go-no-go-check.ts)
   - Localhost runs prove local parity only: they require a fresh launch smoke artifact, healthy `/api/monitoring/perf-status`, healthy `/api/monitoring/launch-status`, required evidence files, required safe-mode flags, and restore-drill tooling. (source: scripts/go-no-go-check.ts)
   - Production-candidate runs additionally require a fresh passing restore verification report, defaulting to `.artifacts/launch-restore-report.json`, with readable `summary.json` and `row-fingerprint.json` checkpoint evidence. (source: scripts/go-no-go-check.ts, docs/launch-restore-drill.md)
 

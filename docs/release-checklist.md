@@ -37,7 +37,7 @@ go/no-go evidence.
 - [ ] `BASE_URL=<production-candidate-url> npm run perf:budgets`
 - [ ] `npm run db:backup:checkpoint` against the production-candidate target.
 - [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json` against an isolated recovery target.
-- [ ] `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+- [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 
 ### Optional Consolidated Runner
 
