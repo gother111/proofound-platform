@@ -361,6 +361,54 @@ describe('Rate Limiting', () => {
 
       expect(activeEntry?.resetAt).toBeGreaterThan(now);
     });
+
+    it('bounds assistive AI local fallback keys and prunes expired entries before enforcing the cap', async () => {
+      const now = Date.now();
+      const { RATE_LIMITS, checkRateLimit } = await import('@/lib/rate-limit/index');
+      const globalStore = globalThis as typeof globalThis & {
+        __PROFOUND_RATE_LIMIT_STORE__?: Map<string, { count: number; reset: number }>;
+      };
+      const store = globalStore.__PROFOUND_RATE_LIMIT_STORE__;
+
+      expect(store).toBeDefined();
+
+      for (let index = 0; index < 1024; index += 1) {
+        store?.set(`ratelimit:ai-assistive:198.51.100.${index}`, {
+          count: 1,
+          reset: now + 60_000,
+        });
+      }
+
+      const capped = await checkRateLimit(
+        new NextRequest('http://localhost/api/ai/privacy-preflight/check', {
+          method: 'POST',
+          headers: { 'x-forwarded-for': '203.0.113.250' },
+        }),
+        RATE_LIMITS.aiAssistive
+      );
+
+      expect(capped.allowed).toBe(false);
+      expect(capped.result.remaining).toBe(0);
+      expect(store?.size).toBe(1024);
+
+      store?.set('ratelimit:ai-assistive:198.51.100.0', {
+        count: 1,
+        reset: now - 1,
+      });
+
+      const afterPrune = await checkRateLimit(
+        new NextRequest('http://localhost/api/ai/privacy-preflight/check', {
+          method: 'POST',
+          headers: { 'x-forwarded-for': '203.0.113.251' },
+        }),
+        RATE_LIMITS.aiAssistive
+      );
+
+      expect(afterPrune.allowed).toBe(true);
+      expect(store?.has('ratelimit:ai-assistive:198.51.100.0')).toBe(false);
+      expect(store?.has('ratelimit:ai-assistive:203.0.113.251')).toBe(true);
+      expect(store?.size).toBe(1024);
+    });
   });
 
   describe('Rate limit bypass for health checks', () => {

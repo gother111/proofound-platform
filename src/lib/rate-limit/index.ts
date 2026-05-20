@@ -60,6 +60,7 @@ const DEFAULT_CONFIG: RateLimitConfig = {
 };
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const LOCAL_RATE_LIMIT_MAX_ENTRIES = 1024;
 
 const RATE_LIMIT_ENV_KEYS = ['KV_REST_API_URL', 'KV_REST_API_TOKEN'] as const;
 const LOCAL_SMOKE_RATE_LIMIT_FALLBACK_ENV_KEY = 'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK';
@@ -163,6 +164,22 @@ function localRateLimit(key: string, config: RateLimitConfig): RateLimitResult {
   const windowMs = config.windowSeconds * 1000;
   const store = getLocalRateLimitStore();
   const existing = store.get(key);
+
+  for (const [entryKey, entry] of store) {
+    if (entry.reset <= now) {
+      store.delete(entryKey);
+    }
+  }
+
+  if (!existing && store.size >= LOCAL_RATE_LIMIT_MAX_ENTRIES) {
+    return {
+      success: false,
+      limit: config.limit,
+      remaining: 0,
+      reset: now + windowMs,
+    };
+  }
+
   const current =
     existing && existing.reset > now
       ? { count: existing.count + 1, reset: existing.reset }

@@ -2270,3 +2270,11 @@ Browser evidence:
 - Added a Start-from-CV replay guard so extraction can only run while a session is still `created` with `extractionStatus: not_started`; completed or fallback sessions now return a controlled `409` instead of reprocessing the uploaded file.
 - Browser was not rerun for this slice because these are API/transaction/replay hardening changes with no rendered UI change.
 - Verification passed: `npm run test -- tests/api/admin-organizations-verify-route.test.ts tests/api/start-from-cv-route.test.ts tests/lib/start-from-cv.test.ts tests/api/upload-avatar-route.test.ts tests/api/upload-cover-route.test.ts tests/api/upload-document-route.test.ts` (6 files / 51 tests). The broader checks from the multipart slice had already passed against this worktree: `npm run test:launch:routes`, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`.
+
+## Continuation - Local Rate Limit Fallback Bound
+
+- Inspected the launch rate-limit fallback after the API body-boundary work. The local fallback is used only when explicitly allowed outside launch-required environments, but it still needed bounded memory behavior during Browser/local smoke runs.
+- Added a hard cap of 1024 local fallback entries and expired-entry cleanup before applying that cap, so unique local smoke clients cannot grow the in-memory limiter without bound.
+- Added focused regression coverage in the existing rate-limit test suite proving the local fallback denies a new distinct key after 1024 live entries and admits a new key after expired entries are evicted.
+- Browser was not rerun for this slice because the change is rate-limit library behavior with no rendered UI change.
+- Verification passed: `npm run test -- src/lib/__tests__/rate-limit.test.ts` (1 file / 25 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.
