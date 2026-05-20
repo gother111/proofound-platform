@@ -2244,3 +2244,29 @@ Browser evidence:
 - Added focused regression coverage proving the performance gate stays closed when required-route samples are only unauthenticated failures.
 - Browser was not rerun for this slice because the changes are server action/API/monitoring behavior with no rendered UI change.
 - Verification passed: `npm run test -- tests/api/start-from-cv-route.test.ts tests/ui/verifications-client.test.tsx tests/actions/onboarding.test.ts src/app/api/monitoring/__tests__/perf-status-route.test.ts` (4 files / 40 tests), `npm run typecheck`, `npm run lint`, `npm run test:launch:routes` (4 files / 27 tests), `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - Google and LinkedIn Auth Entry Current Recheck
+
+- Rechecked the current local app with the Codex in-app Browser after the latest clarification that Google and LinkedIn should both be available as sign-in options.
+- Verified `http://localhost:3000/login`: title `Sign In | Proofound`, Google sign-in present, LinkedIn sign-in present.
+- Verified `http://localhost:3000/signup/individual`: title `Individual Sign Up | Proofound`, Google sign-in present, LinkedIn sign-in present.
+- Saved fresh Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-auth-providers-current/auth-provider-current-smoke.json`, `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-auth-providers-current/login-google-linkedin-current.png`, and `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-auth-providers-current/signup-google-linkedin-current.png`.
+- Verification passed: `npm run test -- tests/actions/auth.test.ts` (1 file / 17 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+- No LinkedIn verification or trust lift was added from sign-in; this remains Supabase Auth entry only, consistent with the locked MVP corridor.
+
+## Continuation - Multipart Upload Body Boundary Hardening
+
+- Inspected the active upload and private Start-from-CV multipart body parsers: avatar upload, cover upload, document upload, and Start-from-CV extraction.
+- Added controlled malformed form-data handling so invalid multipart bodies return `400` before storage ingest, profile/organization update work, document attachability handling, or CV extraction starts.
+- Added a pre-parse request-size gate to avatar upload, matching the lifecycle `avatar` cap of 5 MB plus multipart overhead. Avatar uploads now reject oversized requests before `request.formData()` can allocate the body.
+- Browser was not rerun for this slice because these are API/body-boundary hardening changes with no rendered UI change.
+- Verification passed: `npm run test -- tests/api/upload-avatar-route.test.ts tests/api/upload-cover-route.test.ts tests/api/upload-document-route.test.ts tests/api/start-from-cv-route.test.ts` (4 files / 29 tests), `npm run test:launch:routes` (4 files / 27 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - Admin Trust Audit and Start-from-CV Replay Hardening
+
+- Inspected active admin organization verification and Start-from-CV extraction changes in the current worktree.
+- Moved the admin organization trust-tier audit insert into the same transaction as the organization trust update and trust-tier transition insert, so the break-glass trust change and its audit trail succeed or fail together.
+- Added regression coverage proving the admin organization verification route uses the transaction writer for the audit insert and preserves update, transition insert, audit insert ordering.
+- Added a Start-from-CV replay guard so extraction can only run while a session is still `created` with `extractionStatus: not_started`; completed or fallback sessions now return a controlled `409` instead of reprocessing the uploaded file.
+- Browser was not rerun for this slice because these are API/transaction/replay hardening changes with no rendered UI change.
+- Verification passed: `npm run test -- tests/api/admin-organizations-verify-route.test.ts tests/api/start-from-cv-route.test.ts tests/lib/start-from-cv.test.ts tests/api/upload-avatar-route.test.ts tests/api/upload-cover-route.test.ts tests/api/upload-document-route.test.ts` (6 files / 51 tests). The broader checks from the multipart slice had already passed against this worktree: `npm run test:launch:routes`, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`.

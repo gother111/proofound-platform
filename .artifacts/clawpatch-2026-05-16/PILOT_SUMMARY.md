@@ -537,6 +537,49 @@ Verification after this sweep:
 - `npm run lint`: passed.
 - `npm run docs:freshness`: passed.
 
+## Continuation: Twenty-Fifth Local Body-Parsing Sweep
+
+A twenty-fifth local sweep checked the non-JSON multipart upload parsers found by the active API body-parser audit:
+
+- `src/app/api/upload/avatar/route.ts`
+- `src/app/api/upload/cover/route.ts`
+- `src/app/api/upload/document/route.ts`
+- `src/app/api/ai/start-from-cv/_route-helpers.ts`
+
+Malformed multipart form data now returns `400` before storage ingest, profile or organization update work, document attachability handling, or Start-from-CV extraction starts. Avatar upload also rejects requests above its 5 MB lifecycle cap before multipart parsing begins.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/upload-avatar-route.test.ts tests/api/upload-cover-route.test.ts tests/api/upload-document-route.test.ts tests/api/start-from-cv-route.test.ts`: passed, `4` files and `29` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+- `npm run docs:freshness`: passed.
+
+## Continuation: Current Clawpatch State Audit
+
+A follow-up state audit checked Clawpatch's own local state and the next-finding queue without invoking provider-backed review:
+
+- `clawpatch doctor --state-dir .artifacts/clawpatch-2026-05-16`: state `ok`, provider `codex`, secrets redacted.
+- `clawpatch doctor --root /Users/yuriibakurov/proofound/src --state-dir /Users/yuriibakurov/proofound/.artifacts/clawpatch-2026-05-16-src`: state `ok`, provider `codex`, secrets redacted.
+- `clawpatch next --root /Users/yuriibakurov/proofound/src --state-dir /Users/yuriibakurov/proofound/.artifacts/clawpatch-2026-05-16-src --json`: returned no open finding and pointed to `clawpatch report --status open`.
+
+The validation-error and route-parameter spot audit did not produce a new scoped defect with stronger evidence than the existing fixed findings and body-parser sweeps.
+
+## Continuation: High-Risk Finding Evidence Audit
+
+A high-risk fixed-finding audit rechecked the persisted high-severity Clawpatch findings against the current implementation:
+
+- `src/app/api/user/account/route.ts`: verified account anonymization and lifecycle execution now complete before auth deletion, and anonymize/auth deletion failures mark the deletion request plus lifecycle operation as `failed_requires_manual_review`.
+- `src/app/api/admin/organizations/[orgId]/verify/route.ts`: found and closed a residual audit-boundary gap. The organization trust-tier update, trust-tier transition insert, and admin audit log insert now run inside the same database transaction through `logAdminActionInTransaction`.
+- `src/lib/audit/admin-logger.ts`: added the transaction-aware audit insert helper while preserving the existing non-blocking logger behavior for other admin surfaces.
+
+Verification after this audit:
+
+- `npm run test -- tests/api/admin-organizations-verify-route.test.ts`: passed, `1` file and `4` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+- `npm run docs:freshness`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.
