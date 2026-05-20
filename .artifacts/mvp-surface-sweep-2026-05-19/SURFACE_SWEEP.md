@@ -2178,3 +2178,39 @@ Browser evidence:
 - Browser was not rerun for this slice because the changes are API and database policy hardening, with no rendered UI change.
 - Verification passed for code/tests: `npm run test -- tests/api/jd-to-l4-route.test.ts` as part of the 58-test focused API suite, `npm run test:launch:routes`, `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`.
 - Migration audit was run with network access and did not pass because the target database has pending/mismatched migration ledger state: local files not applied were `20260520065000_harden_internal_ops_queue_rls.sql`, `20260520083000_harden_high_risk_security_findings.sql`, and `20260520103000_align_interview_platform_launch_values.sql`; DB-applied but missing local file was `20260317224741_canonicalize_org_role_constraints`. No database changes were applied in this sweep.
+
+## Continuation - Consent API JSON Boundary Hardening
+
+- Inspected the active `POST /api/user/consent` privacy endpoint, which stores Terms, Privacy, marketing, analytics, and matching consent records and syncs consent obligations.
+- Added a controlled malformed JSON response so bad request bodies return `400` before consent validation, consent writes, consent-obligation workflow sync, or consent-check reads.
+- Added focused regression coverage proving malformed JSON does not insert consent rows or sync workflow obligations.
+- Browser was not rerun for this slice because the change is API/privacy error-boundary hardening with no rendered UI change.
+- Verification passed: `npm run test -- tests/api/user-consent-route.test.ts` (1 file / 1 test), `npm run test:launch:routes` (4 files / 27 tests), `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - OAuth Next-Path Redirect Hardening
+
+- Inspected active Google/LinkedIn Supabase Auth callback routing after the login availability correction.
+- Hardened OAuth `next` path handling before provider redirect and after callback exchange so absolute external URLs, protocol-looking values, double-slash network paths, and backslash network-path tricks are dropped instead of becoming redirect targets.
+- Preserved safe same-origin relative callback routing for intended CTAs.
+- Added regression coverage proving unsafe social-login `next` values are removed before starting OAuth and unsafe callback `next` values fall back to the authenticated home path after exchange.
+- Browser was not rerun for this slice because it is auth redirect safety logic and does not alter the visible login/signup buttons already verified in Browser.
+- Verification passed: `npm run test -- tests/actions/auth.test.ts tests/api/auth-callback-route.test.ts tests/api/user-consent-route.test.ts` (3 files / 23 tests), `npm run test:launch:routes` (4 files / 27 tests), `npm run typecheck`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - Google and LinkedIn Auth Entry Browser Evidence
+
+- Rechecked the locked technical requirements before treating provider login as MVP behavior. The aligned technical requirements allow optional OAuth sign-in providers, while also stating provider choice is implementation detail, sign-in provider is not trust semantics, and LinkedIn import or employment-verification logic is not MVP trust logic.
+- Verified in Codex Browser that `/login` renders one Google sign-in button and one LinkedIn sign-in button, both backed by the expected OAuth submit test IDs.
+- Verified in Codex Browser that `/signup` intentionally starts with Individual / Organization account-type choice; after choosing Individual, the account creation form renders the same Google and LinkedIn sign-in buttons.
+- Saved Browser screenshots:
+  - `.artifacts/mvp-surface-sweep-2026-05-19/browser/login-google-linkedin-2026-05-20.png`
+  - `.artifacts/mvp-surface-sweep-2026-05-19/browser/signup-individual-google-linkedin-2026-05-20.png`
+- Verification passed: `npm run test -- tests/ui/social-sign-in-buttons.test.tsx tests/actions/auth.test.ts tests/routes/login-next-sanitizer.test.tsx` (3 files / 20 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.
+- No LinkedIn verification or trust lift was added from sign-in, preserving the locked MVP corridor.
+
+## Continuation - Matching Profile API JSON Boundary Hardening
+
+- Inspected the active `PUT /api/matching-profile` compatibility route backed by `src/app/api/core/matching/matching-profile/handler.ts`; this supports individual matching preferences in the MVP corridor.
+- Added a controlled malformed JSON response so bad request bodies return `400` after authentication, but before matching-profile validation, profile upsert writes, skill side effects, readiness sync, eligibility evaluation, or analytics continue.
+- Confirmed the existing focused route test covers the malformed JSON path and asserts matching profile writes and matchability evaluation do not run after parse failure.
+- Browser was not rerun for this slice because this is API error-boundary hardening with no rendered UI change.
+- Verification passed: `npm run test -- tests/api/core-matching-profile-route.test.ts` (1 file / 4 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.

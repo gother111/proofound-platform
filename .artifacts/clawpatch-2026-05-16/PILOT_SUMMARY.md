@@ -420,6 +420,76 @@ Verification after this sweep:
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 
+## Continuation: Seventeenth Local Malformed-JSON Sweep
+
+A seventeenth local sweep applied the same malformed-JSON boundary to the user consent storage route:
+
+- `src/app/api/user/consent/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication, but before consent request validation, consent audit writes, workflow obligation sync, consent-check reads, or consent storage logging continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/user-consent-route.test.ts`: passed, `1` file and `1` test.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Eighteenth Local Malformed-JSON Sweep
+
+An eighteenth local sweep applied the same malformed-JSON boundary to the core assignment matching route:
+
+- `src/app/api/core/matching/assignment/handler.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication and launch-trace actor setup, but before assignment request schema validation, assignment lookup, membership checks, cache reads, match computation, match persistence, fairness evaluation, or feature-flag reads continue. The route also emits a rejected launch trace with `invalid_json_body`.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/core-matching-assignment-route.test.ts`: passed, `1` file and `2` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Nineteenth Local Malformed-JSON Sweep
+
+A nineteenth local sweep applied the same malformed-JSON boundary to the core near-matches route:
+
+- `src/app/api/core/matching/near-matches/handler.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication, but before near-match request schema validation, individual matchability checks, analytics, profile or skill reads, assignment scan reads, near-match scoring, or near-match logging continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/core-matching-gating-routes.test.ts`: passed, `1` file and `4` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Twentieth Local Malformed-JSON Sweep
+
+A twentieth local sweep applied the same malformed-JSON boundary to the core match interest route:
+
+- `src/app/api/core/matching/interest/handler.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication, but before interest request schema validation, assignment lookup, org access checks, verification-gate checks, readiness checks, policy checks, interest writes, workflow sync, analytics, or match interest logging continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/match-interest-route.test.ts`: passed, `1` file and `7` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Twenty-First Local Malformed-JSON Sweep
+
+A twenty-first local sweep applied the same malformed-JSON boundary to the matching profile update route:
+
+- `src/app/api/core/matching/matching-profile/handler.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication, but before matching profile validation, upsert writes, skill side effects, readiness sync, matchability evaluation, analytics, or matching-profile logging continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/core-matching-profile-route.test.ts`: passed, `1` file and `4` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.
