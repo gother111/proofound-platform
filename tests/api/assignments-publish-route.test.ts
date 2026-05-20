@@ -6,6 +6,7 @@ import { db } from '@/db';
 import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 import { verifyExplicitAssignmentMutationAccess } from '@/lib/assignments/access';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import { inArray } from 'drizzle-orm';
 
 vi.mock('@/lib/auth', () => ({
   requireApiAuthContext: vi.fn(),
@@ -22,6 +23,16 @@ vi.mock('@/db', () => ({
     update: vi.fn(),
   },
 }));
+
+vi.mock('drizzle-orm', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('drizzle-orm')>();
+  return {
+    ...actual,
+    and: vi.fn((...args) => ({ op: 'and', args })),
+    eq: vi.fn((left, right) => ({ op: 'eq', left, right })),
+    inArray: vi.fn((left, values) => ({ op: 'inArray', left, values })),
+  };
+});
 
 vi.mock('@/lib/assignments/access', () => ({
   verifyExplicitAssignmentMutationAccess: vi.fn(),
@@ -302,6 +313,7 @@ describe('assignment publish route', () => {
     expect(res.status).toBe(409);
     expect(payload.error).toBe('ASSIGNMENT_PUBLISH_STATE_CHANGED');
     expect(updateReturning).toHaveBeenCalled();
+    expect(inArray).toHaveBeenCalledWith(expect.anything(), ['draft', 'active']);
   });
 
   it('blocks vague generic copy at publish time', async () => {
