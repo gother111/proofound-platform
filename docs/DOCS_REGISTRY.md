@@ -1,7 +1,7 @@
 # Documentation Registry
 
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-20`
 > Generated for documentation freshness governance.
 > Last Generated: `2026-04-15`
 > Latest Active Docs Sync: [Proofound 0-5 execution backlog pack](../project/changes/entries/2026-03-25T21-04-06Z__master__de2cde6d.md)
@@ -16,7 +16,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `.artifacts/broader-codebase-improvement-assessment.md`                                                 | `reference-spec` | `artifacts`   | `repo`              | `2026-05-06`  | `-`                                                                                                     | `false`   |
 | `.artifacts/codebase-structure-audit.md`                                                                | `reference-spec` | `artifacts`   | `repo`              | `2026-05-06`  | `-`                                                                                                     | `false`   |
 | `.artifacts/launch-readiness-summary.md`                                                                | `reference-spec` | `artifacts`   | `repo`              | `2026-05-19`  | `-`                                                                                                     | `false`   |
-| `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`                                              | `reference-spec` | `artifacts`   | `repo+browser`      | `2026-05-19`  | `-`                                                                                                     | `false`   |
+| `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`                                              | `reference-spec` | `artifacts`   | `repo+browser`      | `2026-05-20`  | `-`                                                                                                     | `false`   |
 | `.artifacts/mvp-surface-sweep-2026-05-19/browser-evidence/README.md`                                    | `reference-spec` | `artifacts`   | `browser`           | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `.artifacts/polish-audit-screenshots/README.md`                                                         | `reference-spec` | `artifacts`   | `repo`              | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `.artifacts/proofound-current-state-reality-check.md`                                                   | `reference-spec` | `artifacts`   | `repo`              | `2026-05-19`  | `-`                                                                                                     | `false`   |
@@ -114,7 +114,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `docs/CRON_SETUP.md`                                                                                    | `active`         | `docs`        | `repo+live`         | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `docs/DATA_PROCESSING_AGREEMENTS.md`                                                                    | `active`         | `docs`        | `repo+live`         | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `docs/DEPLOYMENT_CHECKLIST.md`                                                                          | `active`         | `docs`        | `repo+live`         | `2026-05-19`  | `-`                                                                                                     | `false`   |
-| `docs/DOCS_REGISTRY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-14`  | `-`                                                                                                     | `false`   |
+| `docs/DOCS_REGISTRY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-20`  | `-`                                                                                                     | `false`   |
 | `docs/ENV_VARIABLES.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `docs/EXPERTISE_ATLAS_SETUP.md`                                                                         | `active`         | `docs`        | `repo+live`         | `2026-05-19`  | `-`                                                                                                     | `false`   |
 | `e2e/archive/non_mvp_expertise_atlas/README.md`                                                         | `historical`     | `e2e`         | `archive`           | `2026-05-19`  | `-`                                                                                                     | `false`   |

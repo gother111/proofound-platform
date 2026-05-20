@@ -1710,3 +1710,9 @@ Browser evidence:
 - Codex Browser desktop pass loaded `http://localhost:3000/signup`: title `Sign Up | Proofound`; visible signup entry separated Individual and Organization choices, included sign-in plus terms/privacy links, and browser console warning/error log was empty.
 - Codex Browser mobile-width pass at 390x844 repeated `/signup` and `/portfolio/demo`; DOM evidence stayed equivalent, with no browser console warnings/errors.
 - Codex Browser screenshot capture was attempted after reconnecting and again after the dev server was live, but `Page.captureScreenshot` timed out both times. DOM, title, route, and console evidence were gathered through Browser; image evidence remains unavailable for this slice.
+
+## Continuation - Documentation Registry Freshness Self-Check
+
+- Found `docs/DOCS_REGISTRY.md` still had `Last Verified: 2026-05-19`, a self-row dated `2026-05-14`, and the sweep artifact row dated `2026-05-19` after the route-count and Browser evidence refresh.
+- Updated the registry header, registry self-row, and surface-sweep artifact row to `2026-05-20` so the active docs index matches the current route-count and Browser evidence.
+- Added launch-gate coverage so the route-count evidence test also guards the registry header, registry self-row, and sweep artifact row against stale verification dates.

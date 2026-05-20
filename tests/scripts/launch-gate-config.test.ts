@@ -465,8 +465,18 @@ describe('launch gate package configuration', () => {
     expect(docsRegistry).toContain(
       '| `docs/API_REFERENCE.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-20`'
     );
+    expect(docsRegistry).toContain('> Last Verified: `2026-05-20`');
+    expect(docsRegistry).toContain(
+      '| `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`                                              | `reference-spec` | `artifacts`   | `repo+browser`      | `2026-05-20`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/DOCS_REGISTRY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-20`'
+    );
     expect(docsRegistry).toContain(
       '| `docs/verification-checklist.md`                                                                        | `active`         | `docs`        | `repo+live`         | `2026-05-20`'
+    );
+    expect(docsRegistry).not.toContain(
+      '| `docs/DOCS_REGISTRY.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-14`'
     );
   });
 
