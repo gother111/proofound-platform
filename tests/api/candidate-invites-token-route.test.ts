@@ -64,6 +64,13 @@ function mockInviteSelect(result: any[]) {
   (db.select as any).mockReturnValueOnce({ from });
 }
 
+function mockInviteUpdate() {
+  const where = vi.fn().mockResolvedValue(undefined);
+  const set = vi.fn().mockReturnValue({ where });
+  (db.update as any).mockReturnValueOnce({ set });
+  return { set, where };
+}
+
 describe('GET /api/candidate-invites/[token]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -217,5 +224,41 @@ describe('GET /api/candidate-invites/[token]', () => {
 
     expect(response.status).toBe(404);
     expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('marks only pending unclaimed preview invites as expired', async () => {
+    mockAuthUser(null);
+    mockInviteSelect([
+      {
+        id: 'invite-1',
+        orgId: 'org-1',
+        inviteeEmail: 'candidate@example.com',
+        status: 'pending',
+        flowType: 'test_match',
+        assignmentId: 'assignment-1',
+        expiresAt: new Date(Date.now() - 60_000),
+        claimedByProfileId: null,
+        claimedAt: null,
+        acceptedByProfileId: null,
+        acceptedAt: null,
+        matchId: null,
+        conversationId: null,
+        proofSubmittedAt: null,
+      },
+    ]);
+    const update = mockInviteUpdate();
+
+    const response = await GET(new NextRequest('http://localhost/api/candidate-invites/token'), {
+      params: Promise.resolve({ token: 'token-value' }),
+    });
+    const payload = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(payload).toEqual({ error: 'Invite not found' });
+    expect(update.set).toHaveBeenCalledWith({
+      status: 'expired',
+      updatedAt: expect.any(Date),
+    });
+    expect(update.where).toHaveBeenCalledWith(expect.anything());
   });
 });
