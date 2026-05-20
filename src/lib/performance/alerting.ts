@@ -12,6 +12,7 @@ import { performanceMetrics, performanceAlerts } from '@/db/schema';
 import type { InsertPerformanceAlert } from '@/db/schema';
 import { and, gte, desc, isNotNull, sql } from 'drizzle-orm';
 import { EMAIL_CONFIG } from '@/lib/email/config';
+import { resolveCanonicalSiteUrl } from '@/lib/env';
 import { INTERNAL_OPS_HREF } from '@/lib/launch/surface-policy';
 
 // SLA thresholds in milliseconds
@@ -19,7 +20,7 @@ export const SLA_THRESHOLDS = {
   desktop_page_tti_p95: 2500, // 2.5s
   mobile_page_tti_p95: 3500, // 3.5s
   api_p95: 1500, // 1.5s
-  dashboard_p75: 2000, // 2.0s
+  app_route_p75: 2000, // 2.0s
 };
 
 export interface AlertResult {
@@ -124,16 +125,16 @@ function checkMetricSLA(metric: any): AlertResult['violations'][0] | null {
       metricName = 'desktop_page_tti';
     }
 
-    // Check if this is a dashboard route
+    // Check app routes separately because they are the primary launch operator surface.
     if (route.includes('/app/') || route.includes('/dashboard')) {
-      // Use P75 threshold for dashboards
-      if (p75 > SLA_THRESHOLDS.dashboard_p75) {
+      // Use P75 threshold for app route responsiveness.
+      if (p75 > SLA_THRESHOLDS.app_route_p75) {
         return {
-          metric: 'dashboard_load',
+          metric: 'app_route_load',
           route,
-          threshold: SLA_THRESHOLDS.dashboard_p75,
+          threshold: SLA_THRESHOLDS.app_route_p75,
           actual: p75,
-          severity: determineSeverity(p75, SLA_THRESHOLDS.dashboard_p75),
+          severity: determineSeverity(p75, SLA_THRESHOLDS.app_route_p75),
         };
       }
     }
@@ -193,6 +194,11 @@ function determineSeverity(
   return 'low';
 }
 
+function resolveInternalOpsUrl(): string {
+  const baseUrl = resolveCanonicalSiteUrl();
+  return baseUrl ? `${baseUrl}${INTERNAL_OPS_HREF}` : INTERNAL_OPS_HREF;
+}
+
 /**
  * Send alert notifications via email and/or Slack
  */
@@ -229,6 +235,7 @@ async function sendEmailAlert(violations: AlertResult['violations']): Promise<vo
 
   const criticalViolations = violations.filter((v) => v.severity === 'critical');
   const highViolations = violations.filter((v) => v.severity === 'high');
+  const internalOpsUrl = resolveInternalOpsUrl();
 
   const emailContent = `
     <!DOCTYPE html>
@@ -321,7 +328,7 @@ async function sendEmailAlert(violations: AlertResult['violations']): Promise<vo
         }
         
         <p style="margin-top: 30px;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}${INTERNAL_OPS_HREF}"
+          <a href="${internalOpsUrl}"
              style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
             Open Internal Ops
           </a>
@@ -345,6 +352,7 @@ async function sendEmailAlert(violations: AlertResult['violations']): Promise<vo
 async function sendSlackAlert(violations: AlertResult['violations']): Promise<void> {
   const criticalCount = violations.filter((v) => v.severity === 'critical').length;
   const highCount = violations.filter((v) => v.severity === 'high').length;
+  const internalOpsUrl = resolveInternalOpsUrl();
 
   const topViolations = violations
     .sort((a, b) => b.actual / b.threshold - a.actual / a.threshold)
@@ -377,9 +385,9 @@ async function sendSlackAlert(violations: AlertResult['violations']): Promise<vo
               type: 'button',
               text: {
                 type: 'plain_text',
-                text: 'View Dashboard',
+                text: 'Open Internal Ops',
               },
-              url: `${process.env.NEXT_PUBLIC_APP_URL}${INTERNAL_OPS_HREF}`,
+              url: internalOpsUrl,
             },
           ],
         },

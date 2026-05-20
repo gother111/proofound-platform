@@ -49,7 +49,12 @@ export async function POST(
     }
 
     const { user, supabase } = authContext;
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const { requestId } = await params;
     const validated = RespondSchema.parse(body);
 

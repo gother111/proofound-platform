@@ -421,8 +421,10 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `.artifacts/clawpatch-2026-05-16-src/reports/20260516T164325-52e1d0.md` | `reference-spec` | `artifacts` | `repo` | `2026-05-16` | `-` | `false` |
 | `.artifacts/clawpatch-2026-05-16-src/src-open-report.md` | `reference-spec` | `artifacts` | `repo` | `2026-05-16` | `-` | `false` |
 | `.artifacts/clawpatch-2026-05-16-src/src-report-after-local-fixes.md` | `reference-spec` | `artifacts` | `repo` | `2026-05-16` | `-` | `false` |
+| `.artifacts/clawpatch-2026-05-16-src/src-report-latest.md` | `reference-spec` | `artifacts` | `repo` | `2026-05-20` | `-` | `false` |
 | `.artifacts/clawpatch-2026-05-16-src/src-report.md` | `reference-spec` | `artifacts` | `repo` | `2026-05-16` | `-` | `false` |
 | `.artifacts/clawpatch-2026-05-16/PILOT_SUMMARY.md` | `reference-spec` | `artifacts` | `repo` | `2026-05-16` | `-` | `false` |
+| `.artifacts/clawpatch-2026-05-16/root-report-latest.md` | `reference-spec` | `artifacts` | `repo` | `2026-05-20` | `-` | `false` |
 | `.artifacts/clawpatch-2026-05-16/root-report.md` | `reference-spec` | `artifacts` | `repo` | `2026-05-16` | `-` | `false` |
 | `.artifacts/complexity-optimizer-proofound-2026-05-16.md` | `reference-spec` | `artifacts` | `repo` | `2026-05-16` | `-` | `false` |
 | `.artifacts/end-user-ui-terminology-sweep-2026-05-17.md` | `reference-spec` | `artifacts` | `repo` | `2026-05-17` | `-` | `false` |

@@ -44,6 +44,16 @@ function createRequest(origin: string, body: Record<string, unknown>) {
   });
 }
 
+function createRawRequest(origin: string, body: string) {
+  return new NextRequest(`${origin}/api/verification/requests/skill`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body,
+  });
+}
+
 function createSupabaseMock(options?: {
   requesterEmail?: string | null;
   skillRow?: Record<string, unknown>;
@@ -254,6 +264,19 @@ describe('POST /api/verification/requests/skill', () => {
     await expect(response.json()).resolves.toMatchObject({
       error: 'Verification request email configuration is unavailable.',
     });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before skill lookup or request creation', async () => {
+    const { supabase } = createSupabaseMock();
+    authContext.supabase = supabase;
+
+    const response = await POST(createRawRequest('https://proofound.io', '{"skillId":'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(supabase.from).not.toHaveBeenCalled();
+    expect(createCanonicalSkillVerificationRequest).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
   });
 

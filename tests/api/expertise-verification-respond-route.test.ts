@@ -193,6 +193,30 @@ describe('POST /api/verification/requests/skill/[requestId]/respond', () => {
     });
   });
 
+  it('rejects malformed JSON before loading the verification request', async () => {
+    const requestId = '11111111-1111-4111-8111-111111111111';
+
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: '44444444-4444-4444-8444-444444444444' },
+      supabase: {},
+    });
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verification/requests/skill/${requestId}/respond`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{"action":',
+      }),
+      { params: Promise.resolve({ requestId }) }
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(getCanonicalSkillVerificationRequestById).not.toHaveBeenCalled();
+    expect(updateCanonicalSkillVerificationRequest).not.toHaveBeenCalled();
+    expect(notifyVerificationCompleted).not.toHaveBeenCalled();
+  });
+
   it('records structured no verdicts for human-observed declines', async () => {
     const requestId = '11111111-1111-4111-8111-111111111111';
     const verificationRequest = {

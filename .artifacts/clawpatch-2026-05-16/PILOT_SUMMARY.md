@@ -262,6 +262,22 @@ Verification after this sweep:
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 
+## Continuation: Sixth Local Malformed-JSON Sweep
+
+A sixth local sweep applied the same malformed-JSON boundary to verification request mutation routes:
+
+- `src/app/api/verification/requests/skill/route.ts`
+- `src/app/api/verification/requests/skill/[requestId]/respond/route.ts`
+- `src/app/api/verification/requests/custom/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication, but before skill lookup, canonical request lookup, canonical bundle creation, response persistence, notification, or verification email work continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/expertise-skill-verification-request-route.test.ts tests/api/expertise-verification-respond-route.test.ts tests/api/custom-verification-routes.test.ts`: passed, `3` files and `30` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.

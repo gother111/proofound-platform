@@ -197,6 +197,27 @@ describe('canonical custom verification routes', () => {
     });
   });
 
+  it('rejects malformed custom verification request JSON before bundle creation', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      from: vi.fn(() => {
+        throw new Error('artifact lookup should not run for malformed JSON');
+      }),
+    } as any);
+
+    const response = await postCustomRequest(
+      new NextRequest('http://localhost/api/verification/requests/custom', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{"verifierEmail":',
+      })
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(createCanonicalVerificationBundle).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
   it('creates a canonical verification bundle and sends the public verify/custom link', async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {

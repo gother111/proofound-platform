@@ -241,7 +241,12 @@ export async function POST(request: NextRequest) {
     const user = await requireAuth();
     const supabase = await createClient();
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const parsed = CreateCustomVerificationRequestSchema.safeParse(body);
 
     if (!parsed.success) {
