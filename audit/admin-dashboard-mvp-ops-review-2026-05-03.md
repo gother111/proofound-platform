@@ -13,10 +13,11 @@ Scope: current active Proofound admin dashboard, admin APIs, internal ops queues
 > organizations, fairness, metrics, or LinkedIn queue pages. The operations queue
 > UI now exposes minimum-necessary queue details, explicit risky-upload
 > approve/reject actions, and sanitized queue metadata. The admin home now shows
-> a compact launch-health card backed by the generated launch checklist. Remaining
-> follow-up risks are internal ops table RLS proof, default admin audit DTO
-> minimization, richer operator filters/SOP links, and a narrow pilot workflow
-> drilldown.
+> a compact launch-health card backed by the generated launch checklist. The
+> default admin audit API now returns a minimum-necessary list DTO, and unexpected
+> admin queue errors no longer return raw backend messages. Remaining follow-up
+> risks are internal ops table RLS proof, richer operator filters/SOP links, and a
+> narrow pilot workflow drilldown.
 
 ## A. Executive Verdict
 
@@ -24,7 +25,7 @@ Verdict: repo-ready with remaining operational follow-up risks.
 
 The admin dashboard is narrow, protected, and aligned away from broad enterprise/admin-suite sprawl. It is useful for seeing four internal ops queues, reviewing minimum-necessary queue detail, handling risky-upload approve/reject decisions, checking latest repo launch evidence, and reviewing audit trails.
 
-The main remaining gap is operational depth beyond the first launch-ops console: admins still lack richer filters, direct SOP links, and a narrow pilot workflow drilldown for stuck org/candidate corridor issues. The default audit API also still deserves a minimum-necessary DTO pass separate from existing break-glass org audit export behavior.
+The main remaining gap is operational depth beyond the first launch-ops console: admins still lack richer filters, direct SOP links, and a narrow pilot workflow drilldown for stuck org/candidate corridor issues.
 
 ## B. What Works
 
@@ -47,13 +48,13 @@ The main remaining gap is operational depth beyond the first launch-ops console:
 - No direct link from queue item to the relevant SOP or safe operator checklist.
 - No priority/status/entity/age filters beyond the four queue tabs.
 - No narrow pilot organization/workflow drilldown for inspecting stuck assignment, shortlist/review, intro, reveal, interview, decision, or engagement state in one place.
-- No default minimum-necessary admin audit DTO; audit log API still returns more than the table renders.
+- Default admin audit list projection is minimum-necessary, but there is still no richer break-glass preview UI for sensitive full-detail audit review.
 
 ## D. Security And Privacy Risks
 
 - P1: `internal_ops_queue_items` creation migration does not explicitly enable RLS or define direct table policies. The table may rely on server-side route protection and deployment/database defaults rather than an explicit table-level privacy contract. Evidence: `src/db/migrations/20260320195000_add_internal_ops_queue_items.sql`.
-- P1: `GET /api/admin/audit` returns full `admin_audit_log` rows, including `changes`, `metadata`, IP, user agent, and reason, even though the UI mostly hides details. Evidence: `src/app/api/admin/audit/route.ts`.
-- P2: Admin route 500s include raw error messages in some JSON details. Evidence: `src/app/api/admin/internal-ops/queues/route.ts` and `src/app/api/admin/internal-ops/queues/[id]/route.ts`.
+- P1 resolved 2026-05-20: `GET /api/admin/audit` now returns an explicit list DTO and omits raw `changes`, `metadata`, IP address, and user agent fields. Evidence: `src/lib/audit/admin-audit-list.ts`, `src/app/api/admin/audit/route.ts`, `tests/lib/admin-audit-list.test.ts`.
+- P2 resolved 2026-05-20: unexpected admin queue 500 responses no longer include raw error message details, and server logs record only a sanitized error class/name for those paths. Evidence: `src/app/api/admin/internal-ops/queues/route.ts`, `src/app/api/admin/internal-ops/queues/[id]/route.ts`, `tests/api/admin-internal-ops-queue-route.test.ts`.
 - P2: The break-glass organization audit export returns full org audit logs through API after reason check, but there is no dashboard UI showing minimum necessary preview, risk labels, or access confirmation.
 
 ## E. Scope Problems
@@ -95,6 +96,7 @@ Passing evidence:
 - `npm run build`: pass.
 - `npm run docs:freshness`: pass.
 - `npm run test -- tests/ui/admin-dashboard-launch-links.test.tsx tests/lib/admin-launch-health-summary.test.ts tests/ui/admin-verification-dashboard.test.tsx tests/lib/internal-ops-queue.test.ts tests/api/admin-internal-ops-queue-route.test.ts`: pass after the 2026-05-20 launch-health card and audit refresh.
+- `npm run test -- tests/lib/admin-audit-list.test.ts tests/ui/admin-audit-log-table.test.tsx tests/api/admin-internal-ops-queue-route.test.ts`: pass, 14 tests, after the 2026-05-20 admin audit DTO and queue error-detail hardening. The suite still prints Vite websocket `EPERM` noise in this sandbox, but tests pass.
 
 Failing or unverified evidence:
 
@@ -133,11 +135,10 @@ Current guardrail: `tests/ui/admin-dashboard-launch-links.test.tsx` proves the c
 
 ### P1: Sanitize Admin API Projections And Errors
 
-Problem: Admin audit and queue APIs return full metadata/changes and some raw error details.
-Evidence: `src/app/api/admin/audit/route.ts`, `src/app/api/admin/internal-ops/queues/route.ts`, `src/app/api/admin/internal-ops/queues/[id]/route.ts`.
+Disposition: resolved for default list APIs on 2026-05-20.
+Evidence: `GET /api/admin/audit` selects and maps only the list DTO fields through `toAdminAuditListEntry`: id, admin id, action, target type/id, reason, created date, and safe admin display fields. Internal ops queue GET/PATCH unexpected 500s now return generic JSON errors and log only sanitized error identity.
 File/route: `/api/admin/audit`, `/api/admin/internal-ops/queues`.
-Recommended fix: Return explicit DTOs with whitelisted fields. Keep full detail behind break-glass endpoints if needed. Make production 500s generic and log sanitized detail server-side.
-Success criteria: Tests prove private filenames, storage paths, verifier raw text, break-glass reason details, and error stack/message details are not returned by default list APIs.
+Current guardrail: `tests/lib/admin-audit-list.test.ts`, `tests/ui/admin-audit-log-table.test.tsx`, and `tests/api/admin-internal-ops-queue-route.test.ts` prove raw audit `changes`, `metadata`, IP, user agent, private filenames, storage paths, verifier email, and unexpected backend error messages are not returned by default list/error APIs.
 
 ### P2: Add Operator Usability Controls
 

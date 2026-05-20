@@ -115,11 +115,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return jsonError(error.message, status);
     }
 
-    console.error('Error updating operations queue item:', error);
-    return jsonError(
-      'Failed to update operations queue item',
-      500,
-      error instanceof Error ? error.message : 'Unknown error'
-    );
+    console.error('Error updating operations queue item', {
+      errorName: error instanceof Error ? error.name : typeof error,
+    });
+    return jsonError('Failed to update operations queue item', 500);
   }
 }

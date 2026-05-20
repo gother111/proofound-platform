@@ -1843,3 +1843,17 @@ Browser evidence:
 - Codex Browser verified `/admin` in mock-admin mode at `http://localhost:33182/admin`: H1 `Launch Operations`, `Launch health` card rendered `READY`, `36` pass, `0` fail, `0` blocked, `4` open, external-proof copy, operations queue link, audit link, one `<main>` landmark, no horizontal overflow, no visible runtime-error text, no broad admin links, and no sampled secret/raw OCR leak terms.
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-admin-health/admin-health-smoke.json`.
 - Browser screenshot capture was attempted for `/admin`, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, title, heading, card text, link, overflow, and leak-term evidence was captured instead.
+
+## Continuation - Admin Audit DTO And Error Detail Minimization
+
+- Closed the remaining low-risk admin privacy finding from `audit/admin-dashboard-mvp-ops-review-2026-05-03.md`: default admin audit list responses now use an explicit DTO instead of returning full `admin_audit_log` rows.
+- Added `src/lib/audit/admin-audit-list.ts` as the default audit-list projection. The active list DTO includes only list-view fields: id, admin id, action, target type/id, reason, created date, and safe admin display fields.
+- Updated `/api/admin/audit` to select and map only the DTO fields, omitting raw `changes`, `metadata`, IP address, and user agent from the default list response.
+- Updated `AuditLogTable` so the UI consumes the narrow DTO and no longer depends on raw `changes`/`metadata` to render the details column.
+- Tightened unexpected admin queue GET/PATCH failures so JSON 500 responses no longer include raw backend messages. Route logs for these paths now record only sanitized error identity instead of the thrown raw object.
+- Added regression coverage proving the default list/error APIs do not return private filenames, storage paths, verifier email, audit metadata/changes, IP/user-agent fields, or unexpected backend error messages.
+- Codex Browser verified `/admin/audit` in mock-admin mode at `http://127.0.0.1:33183/admin/audit`: desktop showed `Audit Logs`, search, and visible table; mobile switched to readable cards; both had one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, and no sampled private leak terms.
+- Codex Browser also fetched `/api/admin/audit?page=1&limit=20&search=` from the rendered admin page and confirmed the first log keys were only `action`, `admin`, `adminId`, `createdAt`, `id`, `reason`, `targetId`, and `targetType`; no `changes`, `metadata`, `ipAddress`, or `userAgent` keys were present.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-admin-audit-dto/admin-audit-dto-smoke.json`.
+- Verification passed: `npm run test -- tests/lib/admin-audit-list.test.ts tests/ui/admin-audit-log-table.test.tsx tests/api/admin-internal-ops-queue-route.test.ts` (14 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+- Updated the admin ops audit note to remove the default admin audit DTO and queue 500 detail findings from the remaining-risk list. Remaining admin follow-ups are now internal ops table RLS proof, richer operator filters/SOP links, and a narrow pilot workflow drilldown.

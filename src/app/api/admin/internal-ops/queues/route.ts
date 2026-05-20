@@ -21,11 +21,12 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching operations queues:', error);
+    console.error('Error fetching operations queues', {
+      errorName: error instanceof Error ? error.name : typeof error,
+    });
     return NextResponse.json(
       {
         error: 'Failed to fetch operations queues',
-        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

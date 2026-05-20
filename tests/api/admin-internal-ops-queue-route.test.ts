@@ -157,6 +157,27 @@ describe('internal ops queue admin routes', () => {
     expect(mocks.listInternalOpsQueueItemsMock).not.toHaveBeenCalled();
   });
 
+  it('returns a generic GET error without backend details', async () => {
+    mocks.adminListGuardMock.mockResolvedValue({
+      adminUser: { userId: 'admin-1' },
+      params: { page: 1, limit: 10, search: '', sortField: 'createdAt', sortDir: 'desc' },
+    });
+    mocks.listInternalOpsQueueItemsMock.mockRejectedValue(
+      new Error('raw queue storage path user-uploads-private/Jane Doe Resume.pdf')
+    );
+
+    const response = await GET(
+      new NextRequest('https://proofound.io/api/admin/internal-ops/queues', { method: 'GET' })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toBe('Failed to fetch operations queues');
+    expect(body).not.toHaveProperty('details');
+    expect(JSON.stringify(body)).not.toContain('user-uploads-private');
+    expect(JSON.stringify(body)).not.toContain('Jane Doe Resume.pdf');
+  });
+
   it('updates non-upload queue status through the generic PATCH route and emits an audit event', async () => {
     mocks.requirePlatformAdminJsonMock.mockResolvedValue({
       adminLevel: 'platform_admin',
@@ -393,5 +414,38 @@ describe('internal ops queue admin routes', () => {
 
     expect(response.status).toBe(401);
     expect(mocks.transitionInternalOpsQueueItemMock).not.toHaveBeenCalled();
+  });
+
+  it('returns a generic PATCH error without backend details for unexpected failures', async () => {
+    mocks.requirePlatformAdminJsonMock.mockResolvedValue({
+      adminLevel: 'platform_admin',
+      userId: 'admin-1',
+      email: 'ops@proofound.io',
+      platformRole: 'platform_admin',
+    });
+    mocks.transitionInternalOpsQueueItemMock.mockRejectedValue(
+      new Error('raw queue storage path user-uploads-private/Jane Doe Resume.pdf')
+    );
+
+    const response = await PATCH(
+      new NextRequest(
+        'https://proofound.io/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            status: 'in_progress',
+            note: 'Start review.',
+          }),
+        }
+      ),
+      { params: Promise.resolve({ id: '33333333-3333-4333-8333-333333333333' }) }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toBe('Failed to update operations queue item');
+    expect(body.details).toBeUndefined();
+    expect(JSON.stringify(body)).not.toContain('user-uploads-private');
+    expect(JSON.stringify(body)).not.toContain('Jane Doe Resume.pdf');
   });
 });

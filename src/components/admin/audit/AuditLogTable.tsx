@@ -13,20 +13,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { adminAuditLog } from '@/db/schema';
 import { apiFetch } from '@/lib/api/fetch';
 import { internalValueLabel } from '@/lib/copy/labels';
-
-type AdminAuditLogEntry = typeof adminAuditLog.$inferSelect & {
-  admin: {
-    id: string;
-    displayName: string | null;
-    handle: string | null;
-  } | null;
-};
+import type { AdminAuditListEntry } from '@/lib/audit/admin-audit-list';
 
 interface AuditResponse {
-  logs: AdminAuditLogEntry[];
+  logs: AdminAuditListEntry[];
   pagination: {
     page: number;
     limit: number;
@@ -65,7 +57,9 @@ export function AuditLogTable() {
       const json = await res.json();
       setData(json);
     } catch (error) {
-      console.error(error);
+      console.error('Audit history load failed', {
+        errorName: error instanceof Error ? error.name : typeof error,
+      });
       setError('Audit history could not be loaded. Try again in a moment.');
       setData(null);
     } finally {
@@ -132,11 +126,8 @@ export function AuditLogTable() {
                   <TableCell>{log.admin?.displayName || log.admin?.handle || 'Unknown'}</TableCell>
                   <TableCell className="font-medium">{internalValueLabel(log.action)}</TableCell>
                   <TableCell>{internalValueLabel(log.targetType)}</TableCell>
-                  <TableCell
-                    className="max-w-md truncate text-muted-foreground"
-                    title={log.changes || log.metadata ? 'Additional protected details' : undefined}
-                  >
-                    {log.reason || (log.changes ? 'More information' : '-')}
+                  <TableCell className="max-w-md truncate text-muted-foreground">
+                    {log.reason || '-'}
                   </TableCell>
                 </TableRow>
               ))
@@ -187,9 +178,7 @@ export function AuditLogTable() {
                   <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Details
                   </dt>
-                  <dd className="break-words text-muted-foreground">
-                    {log.reason || (log.changes ? 'More information' : '-')}
-                  </dd>
+                  <dd className="break-words text-muted-foreground">{log.reason || '-'}</dd>
                 </div>
               </dl>
             </article>
