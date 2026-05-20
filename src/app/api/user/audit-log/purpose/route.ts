@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+/**
+ * Legacy purpose-audit compatibility route archived outside the locked launch MVP.
+ */
 export async function GET() {
   return NextResponse.json(
     {

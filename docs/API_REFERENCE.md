@@ -38,13 +38,13 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### admin
 
-| Methods | Path                                      | Auth Tier  | Launch Surface        | Notes | Source                                                    |
-| ------- | ----------------------------------------- | ---------- | --------------------- | ----- | --------------------------------------------------------- |
-| `GET`   | `/api/admin/audit`                        | `internal` | `internal launch ops` | -     | `src/app/api/admin/audit/route.ts`                        |
-| `GET`   | `/api/admin/internal-ops/queues`          | `internal` | `internal launch ops` | -     | `src/app/api/admin/internal-ops/queues/route.ts`          |
-| `PATCH` | `/api/admin/internal-ops/queues/[id]`     | `internal` | `internal launch ops` | -     | `src/app/api/admin/internal-ops/queues/[id]/route.ts`     |
-| `GET`   | `/api/admin/organizations/[orgId]/audit`  | `internal` | `internal launch ops` | -     | `src/app/api/admin/organizations/[orgId]/audit/route.ts`  |
-| `POST`  | `/api/admin/organizations/[orgId]/verify` | `internal` | `internal launch ops` | -     | `src/app/api/admin/organizations/[orgId]/verify/route.ts` |
+| Methods      | Path                                      | Auth Tier  | Launch Surface        | Notes | Source                                                    |
+| ------------ | ----------------------------------------- | ---------- | --------------------- | ----- | --------------------------------------------------------- |
+| `GET`        | `/api/admin/audit`                        | `internal` | `internal launch ops` | -     | `src/app/api/admin/audit/route.ts`                        |
+| `GET`        | `/api/admin/internal-ops/queues`          | `internal` | `internal launch ops` | -     | `src/app/api/admin/internal-ops/queues/route.ts`          |
+| `GET\|PATCH` | `/api/admin/internal-ops/queues/[id]`     | `internal` | `internal launch ops` | -     | `src/app/api/admin/internal-ops/queues/[id]/route.ts`     |
+| `GET`        | `/api/admin/organizations/[orgId]/audit`  | `internal` | `internal launch ops` | -     | `src/app/api/admin/organizations/[orgId]/audit/route.ts`  |
+| `POST`       | `/api/admin/organizations/[orgId]/verify` | `internal` | `internal launch ops` | -     | `src/app/api/admin/organizations/[orgId]/verify/route.ts` |
 
 ### ai
 
@@ -203,7 +203,7 @@ Canonical API documentation generated from the current App Router route handlers
 | `GET\|POST`         | `/api/match/interest`                 | `public`  | `active MVP`             | -                                | `src/app/api/match/interest/route.ts`                 |
 | `POST`              | `/api/match/profile`                  | `public`  | `active MVP`             | -                                | `src/app/api/match/profile/route.ts`                  |
 | `GET`               | `/api/match/snoozed`                  | `session` | `active MVP`             | -                                | `src/app/api/match/snoozed/route.ts`                  |
-| `GET`               | `/api/match/test`                     | `public`  | `archived compatibility` | -                                | `src/app/api/match/test/route.ts`                     |
+| `GET`               | `/api/match/test`                     | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/match/test/route.ts`                     |
 | `GET`               | `/api/match/visible-fields/[matchId]` | `session` | `active MVP`             | -                                | `src/app/api/match/visible-fields/[matchId]/route.ts` |
 
 ### matches
@@ -295,9 +295,9 @@ Canonical API documentation generated from the current App Router route handlers
 | Methods       | Path                                | Auth Tier | Launch Surface           | Notes                            | Source                                              |
 | ------------- | ----------------------------------- | --------- | ------------------------ | -------------------------------- | --------------------------------------------------- |
 | `GET\|DELETE` | `/api/user/account`                 | `session` | `active MVP`             | -                                | `src/app/api/user/account/route.ts`                 |
-| `POST`        | `/api/user/account/cancel-deletion` | `session` | `archived compatibility` | -                                | `src/app/api/user/account/cancel-deletion/route.ts` |
-| `GET`         | `/api/user/audit-log`               | `session` | `active MVP`             | -                                | `src/app/api/user/audit-log/route.ts`               |
-| `GET`         | `/api/user/audit-log/purpose`       | `public`  | `archived compatibility` | -                                | `src/app/api/user/audit-log/purpose/route.ts`       |
+| `POST`        | `/api/user/account/cancel-deletion` | `session` | `archived compatibility` | legacy/compat markers in source  | `src/app/api/user/account/cancel-deletion/route.ts` |
+| `GET`         | `/api/user/audit-log`               | `session` | `active MVP`             | compatibility handling in source | `src/app/api/user/audit-log/route.ts`               |
+| `GET`         | `/api/user/audit-log/purpose`       | `public`  | `archived compatibility` | legacy/compat markers in source  | `src/app/api/user/audit-log/purpose/route.ts`       |
 | `GET\|POST`   | `/api/user/consent`                 | `session` | `active MVP`             | compatibility handling in source | `src/app/api/user/consent/route.ts`                 |
 | `GET`         | `/api/user/consent/check`           | `session` | `active MVP`             | -                                | `src/app/api/user/consent/check/route.ts`           |
 | `GET`         | `/api/user/data-inventory`          | `session` | `active MVP`             | -                                | `src/app/api/user/data-inventory/route.ts`          |

@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 /**
  * POST /api/user/account/cancel-deletion
  *
+ * Legacy scheduled-deletion compatibility route archived outside the locked launch MVP.
  * Deletion is immediate in the current model, so cancellation is not supported.
  */
 export async function POST() {

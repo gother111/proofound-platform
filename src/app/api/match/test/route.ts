@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Legacy matching compatibility route archived outside the locked launch MVP.
+ */
 export async function GET() {
   return NextResponse.json(
     {
