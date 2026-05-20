@@ -2336,3 +2336,19 @@ Browser evidence:
 - Updated guided setup coverage and added a source-level guard across the active profile/tour copy files so `profile polish`, `profile polishing`, and `broad profile` do not return to the individual app entry surfaces.
 - Browser was not rerun for this slice because the rendered structure and controls did not change; this is active product-language cleanup plus focused UI/source-copy coverage.
 - Verification passed: `npm run test -- tests/ui/guided-profile-setup-view.test.tsx tests/lib/profile-copy-guardrails.test.ts` (2 files / 2 tests) and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.
+
+## Continuation - Public Export and Assignment Publish Failure Boundaries
+
+- Inspected recent focused API coverage for public portfolio export and organization assignment publishing.
+- Added public portfolio export coverage proving JSON serialization failures return the same neutral `Failed to generate export` response as PDF/text failures and do not leak implementation details from the public share surface.
+- Added assignment publish route coverage proving the final update is constrained to assignments still in `draft` or `active` workflow state, so state changes between readiness validation and update return the controlled `ASSIGNMENT_PUBLISH_STATE_CHANGED` response.
+- Browser was not rerun for this slice because these are API failure-boundary and race-state checks with no rendered UI change.
+- Verification passed: `npm run test -- tests/api/public-portfolio-export-route.test.ts tests/api/assignments-publish-route.test.ts` (2 files / 28 tests) and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.
+
+## Continuation - Google and LinkedIn Sign-In Availability
+
+- Rechecked the locked MVP authority and aligned technical requirements: Google/LinkedIn may be active OAuth sign-in entry points, while LinkedIn import or employment verification must not become MVP trust logic.
+- Inspected the active shared social sign-in component and existing regression coverage. `src/components/auth/social-sign-in-buttons.tsx` exposes Google with provider `google` and LinkedIn with provider `linkedin_oidc`; `tests/ui/social-sign-in-buttons.test.tsx` asserts both labels, submit controls, and provider values.
+- Used the Codex in-app Browser against the local dev server on `http://localhost:33180`. Browser verified `/login`, `/signup/individual`, and `/signup/organization` all show Google and LinkedIn sign-in buttons with the expected provider values.
+- Browser also verified live OAuth handoff behavior: the Google sign-in button reached `accounts.google.com`, and the LinkedIn sign-in button reached `linkedin.com` with OIDC scopes. No code change was needed for provider availability.
+- Verification passed: `npm run test -- tests/ui/social-sign-in-buttons.test.tsx tests/actions/auth.test.ts` (2 files / 18 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
