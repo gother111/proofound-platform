@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
+import { POST as CREATE_SKILL } from '@/app/api/expertise/user-skills/route';
 import { PATCH } from '@/app/api/expertise/user-skills/[id]/route';
 import { requireApiAuthContext } from '@/lib/auth';
 
@@ -22,6 +23,26 @@ function createPatchRequest(body: Record<string, unknown>) {
       'content-type': 'application/json',
     },
     body: JSON.stringify(body),
+  });
+}
+
+function createRawPostRequest(body: string) {
+  return new NextRequest('http://localhost/api/expertise/user-skills', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body,
+  });
+}
+
+function createRawPatchRequest(body: string) {
+  return new NextRequest('http://localhost/api/expertise/user-skills/skill-1', {
+    method: 'PATCH',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body,
   });
 }
 
@@ -147,5 +168,43 @@ describe('PATCH /api/expertise/user-skills/[id]', () => {
       error: 'Validation failed',
     });
     expect(skillsTable.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before skill lookup or update', async () => {
+    const { supabase, skillsTable } = createSupabaseMock();
+    authContext.supabase = supabase;
+
+    const response = await PATCH(createRawPatchRequest('{"level":'), params);
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(supabase.from).not.toHaveBeenCalled();
+    expect(skillsTable.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/expertise/user-skills', () => {
+  const authContext: { user: { id: string }; supabase: { from: ReturnType<typeof vi.fn> } } = {
+    user: { id: 'user-1' },
+    supabase: {
+      from: vi.fn(),
+    },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(requireApiAuthContext).mockImplementation(async () => authContext as any);
+  });
+
+  it('rejects malformed JSON before taxonomy lookup or skill insert', async () => {
+    authContext.supabase.from = vi.fn(() => {
+      throw new Error('database lookup should not run for malformed JSON');
+    });
+
+    const response = await CREATE_SKILL(createRawPostRequest('{"skill_code":'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(authContext.supabase.from).not.toHaveBeenCalled();
   });
 });

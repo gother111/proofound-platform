@@ -111,6 +111,22 @@ describe('expertise user-skill proofs route', () => {
     expect(vi.mocked(upsertCanonicalSkillProof)).not.toHaveBeenCalled();
   });
 
+  it('rejects malformed JSON before skill params, anchor checks, or proof creation', async () => {
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{"proofType":',
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
+    expect((authContext.supabase as any).from).not.toHaveBeenCalled();
+    expect(vi.mocked(upsertCanonicalSkillProof)).not.toHaveBeenCalled();
+  });
+
   it('blocks proof creation when the primary anchor does not belong to the user', async () => {
     authContext.supabase = createSupabaseMock({ anchorExists: false });
 

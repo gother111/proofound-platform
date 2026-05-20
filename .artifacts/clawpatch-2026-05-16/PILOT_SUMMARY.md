@@ -278,6 +278,22 @@ Verification after this sweep:
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 
+## Continuation: Seventh Local Malformed-JSON Sweep
+
+A seventh local sweep applied the same malformed-JSON boundary to expertise skill mutation routes:
+
+- `src/app/api/expertise/user-skills/route.ts`
+- `src/app/api/expertise/user-skills/[id]/route.ts`
+- `src/app/api/expertise/user-skills/[id]/proofs/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication, but before taxonomy lookup, skill ownership lookup, anchor checks, canonical proof writes, public-portfolio revalidation, or analytics work continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/expertise-user-skill-route.test.ts tests/api/expertise-user-skill-proofs-route.test.ts`: passed, `2` files and `12` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.
