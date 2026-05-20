@@ -169,6 +169,52 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
     expect(db.transaction as any).not.toHaveBeenCalled();
   });
 
+  it('returns 400 when no trust-tier transition is requested', async () => {
+    const request = new NextRequest(`http://localhost/api/admin/organizations/${orgId}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({
+        reasonCode: 'manual_review_passed',
+      }),
+      headers: {
+        'x-break-glass-reason': 'Investigating material trust issue',
+      },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toBe('trustTier or verified is required');
+    expect(db.transaction as any).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for overlong trust-tier reason codes', async () => {
+    const request = new NextRequest(`http://localhost/api/admin/organizations/${orgId}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({
+        trustTier: 'reviewed',
+        reasonCode: 'x'.repeat(121),
+      }),
+      headers: {
+        'x-break-glass-reason': 'Investigating material trust issue',
+      },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toBe('Invalid request body');
+    expect(payload.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: 'reasonCode',
+        }),
+      ])
+    );
+    expect(db.transaction as any).not.toHaveBeenCalled();
+  });
+
   it('returns 400 for malformed JSON request bodies', async () => {
     const request = new NextRequest(`http://localhost/api/admin/organizations/${orgId}/verify`, {
       method: 'POST',
