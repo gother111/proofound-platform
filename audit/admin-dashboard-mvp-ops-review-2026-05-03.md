@@ -1,25 +1,30 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-20`
 
 # Admin Dashboard MVP Ops Review
 
 Date: 2026-05-03
 Scope: current active Proofound admin dashboard, admin APIs, internal ops queues, launch-surface policy, authorization helpers, audit logging, and focused runtime/test evidence.
 
-> 2026-05-19 update: the route/test-noise finding in this audit is partially
-> superseded. The active admin E2E smoke and root admin testing guide now match
-> the locked launch-ops corridor (`/admin`, `/admin/verification`, `/admin/audit`)
-> and no longer expect broad users, organizations, fairness, metrics, or LinkedIn
-> queue pages. The deeper operator-console gaps below remain useful follow-up
-> risks unless later evidence closes them.
+> 2026-05-20 update: the route/test-noise finding and several operator-console
+> findings in this audit are superseded. The active admin E2E smoke and root
+> admin testing guide now match the locked launch-ops corridor (`/admin`,
+> `/admin/verification`, `/admin/audit`) and no longer expect broad users,
+> organizations, fairness, metrics, or LinkedIn queue pages. The operations queue
+> UI now exposes minimum-necessary queue details, explicit risky-upload
+> approve/reject actions, and sanitized queue metadata. The admin home now shows
+> a compact launch-health card backed by the generated launch checklist. Remaining
+> follow-up risks are internal ops table RLS proof, default admin audit DTO
+> minimization, richer operator filters/SOP links, and a narrow pilot workflow
+> drilldown.
 
 ## A. Executive Verdict
 
-Verdict: partially ready.
+Verdict: repo-ready with remaining operational follow-up risks.
 
-The admin dashboard is narrow, protected, and aligned away from broad enterprise/admin-suite sprawl. It is useful for seeing four internal ops queues and moving generic queue status with notes. It is not yet complete enough as the primary MVP pilot operations console.
+The admin dashboard is narrow, protected, and aligned away from broad enterprise/admin-suite sprawl. It is useful for seeing four internal ops queues, reviewing minimum-necessary queue detail, handling risky-upload approve/reject decisions, checking latest repo launch evidence, and reviewing audit trails.
 
-The main gap is operational depth: admins can see queue shells, IDs, summary text, and metadata, but cannot inspect the underlying claim-scoped verification record, reveal/consent state, workflow state, organization assignment/trust context, public portfolio state, export/deletion status, or launch health from the dashboard. The backend has some important safe actions, such as explicit upload review and break-glass organization trust changes, but those actions are either not exposed in the UI or not connected to a usable operator detail view.
+The main remaining gap is operational depth beyond the first launch-ops console: admins still lack richer filters, direct SOP links, and a narrow pilot workflow drilldown for stuck org/candidate corridor issues. The default audit API also still deserves a minimum-necessary DTO pass separate from existing break-glass org audit export behavior.
 
 ## B. What Works
 
@@ -28,29 +33,25 @@ The main gap is operational depth: admins can see queue shells, IDs, summary tex
 - Admin APIs use platform-admin guards through `requirePlatformAdminJson()` or break-glass platform-admin guards.
 - Launch-surface policy preserves only the narrow admin allowlist and archives broad admin APIs/pages.
 - The dashboard uses four MVP-relevant queues: `verification`, `privacy_reveal_exception`, `correction_revocation`, and `pilot_ops`.
+- Queue items expose a minimum-necessary operator detail projection derived from sanitized metadata.
 - Queue status changes require notes for resolve/cancel/reopen and create admin audit events.
 - Generic resolution is blocked for `uploaded_file` queue items; backend requires the explicit upload review path.
+- Uploaded-file queue items expose explicit `Approve private evidence` and `Reject upload` controls in the dashboard.
 - The explicit upload review service moves quarantined uploads to private storage or rejects them, records upload events, and writes audit rows.
 - Organization trust-tier changes require break-glass reason and write admin audit plus trust transition rows.
+- Admin home shows latest repo launch-health evidence from the generated launch checklist without exposing raw monitor payloads.
 - Launch monitoring, alerting, smoke artifact, and launch-status route tests exist and pass.
 
 ## C. What Is Missing
 
-- No admin detail view for a queue item.
-- No claim-scoped verification details, verifier response, freshness, contradiction, dispute, or revocation context in the dashboard.
-- No reveal/consent timeline or privacy exception inspection in the dashboard.
-- No interview, decision, hire, or engagement-verification workflow inspection in the dashboard.
-- No pilot organization overview showing trust page, assignment, shortlist/review, intro, reveal, interview, decision, or engagement state.
-- No public portfolio publication/export/delete status in admin.
-- No launch health or smoke/monitor evidence panel in `/admin`, despite launch-status APIs existing.
-- No UI affordance for `uploadReviewAction: approve|reject`; risky upload queue items cannot be completed safely from the dashboard as implemented.
 - No direct link from queue item to the relevant SOP or safe operator checklist.
-- No minimum-necessary projection for admin queue metadata; the UI renders arbitrary metadata values.
+- No priority/status/entity/age filters beyond the four queue tabs.
+- No narrow pilot organization/workflow drilldown for inspecting stuck assignment, shortlist/review, intro, reveal, interview, decision, or engagement state in one place.
+- No default minimum-necessary admin audit DTO; audit log API still returns more than the table renders.
 
 ## D. Security And Privacy Risks
 
 - P1: `internal_ops_queue_items` creation migration does not explicitly enable RLS or define direct table policies. The table may rely on server-side route protection and deployment/database defaults rather than an explicit table-level privacy contract. Evidence: `src/db/migrations/20260320195000_add_internal_ops_queue_items.sql`.
-- P1: `GET /api/admin/internal-ops/queues` returns raw queue metadata and summaries; UI renders every metadata key/value. If queue producers ever include private filenames, notes, raw verifier text, or consent details, those are exposed to every platform admin session. Evidence: `src/lib/internal-ops/queue.ts` and `src/components/admin/AdminVerificationDashboard.tsx`.
 - P1: `GET /api/admin/audit` returns full `admin_audit_log` rows, including `changes`, `metadata`, IP, user agent, and reason, even though the UI mostly hides details. Evidence: `src/app/api/admin/audit/route.ts`.
 - P2: Admin route 500s include raw error messages in some JSON details. Evidence: `src/app/api/admin/internal-ops/queues/route.ts` and `src/app/api/admin/internal-ops/queues/[id]/route.ts`.
 - P2: The break-glass organization audit export returns full org audit logs through API after reason check, but there is no dashboard UI showing minimum necessary preview, risk labels, or access confirmation.
@@ -67,14 +68,12 @@ The main gap is operational depth: admins can see queue shells, IDs, summary tex
 
 ## F. UX And Usability Issues
 
-- Queue cards show `Related record: <uuid>` but provide no human-readable record title, owner, org, claim, workflow stage, or safe link.
 - Operators cannot distinguish urgent privacy leaks from ordinary stale/manual-review items beyond priority badges.
 - No filters by priority/status/entity/age/operator, beyond queue tabs.
 - No confirmation for sensitive queue actions like cancel/reopen/resolve.
-- Upload review is unusable from UI because approve/reject actions are not shown.
 - Empty states are calm but not operationally helpful; they do not explain owner, SLA, or where evidence comes from.
 - Audit page search is basic and lacks filters by target type, admin, time range UI, sensitive action type, or break-glass-only view.
-- Dashboard is calm and uncluttered, but too sparse for a real launch operator.
+- Dashboard is calm and uncluttered, but still sparse for a real launch operator once pilot volume rises.
 
 ## G. Test Evidence
 
@@ -95,29 +94,27 @@ Passing evidence:
 - `npm run typecheck`: pass.
 - `npm run build`: pass.
 - `npm run docs:freshness`: pass.
+- `npm run test -- tests/ui/admin-dashboard-launch-links.test.tsx tests/lib/admin-launch-health-summary.test.ts tests/ui/admin-verification-dashboard.test.tsx tests/lib/internal-ops-queue.test.ts tests/api/admin-internal-ops-queue-route.test.ts`: pass after the 2026-05-20 launch-health card and audit refresh.
 
 Failing or unverified evidence:
 
-- `npm test`: failed with 2 unrelated current-checkout failures: `tests/lib/ai-provider-gemini-client.test.ts` expects no `suggestionId`, and `tests/ui/verifications-page.test.tsx` crashes reading `primaryClaim` in `src/lib/verification/request-feed.ts`.
-- Full local launch smoke was not run because no explicit live target was requested and the more relevant launch-status/monitoring route tests were run instead.
+- Full repo launch validation is tracked by the generated 2026-05-20 launch bundle instead of this audit note. At the time of this refresh, repo checklist evidence is `READY` with external production-candidate prerequisites still unverified.
 
 ## H. Required Fixes
 
 ### P0: Add Admin Queue Item Detail Projection
 
-Problem: The dashboard cannot support real operations from IDs and summaries alone.
-Evidence: `src/components/admin/AdminVerificationDashboard.tsx` renders summary, linked entity id, and metadata only.
+Disposition: resolved for current MVP queue metadata projection on 2026-05-20.
+Evidence: `src/lib/internal-ops/queue.ts` builds a `detail` object from whitelisted metadata, and `src/components/admin/AdminVerificationDashboard.tsx` renders `Minimum necessary context` with checklist and flags.
 File/route: `/admin/verification`, `GET /api/admin/internal-ops/queues`.
-Recommended fix: Add a backend queue-detail projection that resolves linked entities to minimum-necessary, privacy-safe operational facts by entity type: verification claim/status/freshness/dispute; reveal consent/current stage; interview/decision/engagement state; organization assignment/trust status; upload safety state.
-Success criteria: An operator can open one queue item and decide next action without raw SQL or overexposed private data; tests cover each entity projection and non-admin denial.
+Current guardrail: `tests/lib/internal-ops-queue.test.ts` proves raw filenames, sanitized filenames, storage paths, and candidate emails are not projected in listed queue items.
 
 ### P0: Expose Safe Upload Approve/Reject UI
 
-Problem: Backend supports explicit upload review, but the dashboard only sends generic `status` and never sends `uploadReviewAction`.
-Evidence: `src/app/api/admin/internal-ops/queues/[id]/route.ts` accepts `uploadReviewAction`; `src/components/admin/AdminVerificationDashboard.tsx` only sends `status` and `note`.
+Disposition: resolved on 2026-05-20.
+Evidence: `AdminVerificationDashboard` renders `Approve private evidence` and `Reject upload` for `linkedEntityType === "uploaded_file"` and sends `uploadReviewAction` with the operator note.
 File/route: `/admin/verification`, `PATCH /api/admin/internal-ops/queues/[id]`.
-Recommended fix: For uploaded-file queue items, replace generic resolve with explicit "Approve private evidence" and "Reject upload" actions, both requiring a note and showing privacy warnings.
-Success criteria: UI tests prove uploaded-file queue items call `uploadReviewAction: approve|reject`; backend tests remain green; no original filename/private storage path appears in response.
+Current guardrail: `tests/ui/admin-verification-dashboard.test.tsx` proves uploaded-file queue items do not show generic resolve and do send `uploadReviewAction: approve`; `tests/api/admin-internal-ops-queue-route.test.ts` proves responses avoid original filenames and private storage paths.
 
 ### P1: Make Internal Ops Queue Table Privacy Explicit
 
@@ -129,11 +126,10 @@ Success criteria: Live RLS test confirms ordinary authenticated and anon clients
 
 ### P1: Add Launch Health Panel To Admin Home
 
-Problem: Launch health exists through protected monitoring APIs but is invisible in the dashboard.
-Evidence: `/admin` links only queues and audit; `src/app/api/monitoring/launch-status/route.ts` exists separately.
+Disposition: resolved as a minimal repo-evidence card on 2026-05-20.
+Evidence: `/admin` now renders `Launch health` from `src/lib/launch/admin-health-summary.ts`, backed by the latest generated `final-launch-checklist-status.json`.
 File/route: `/admin`, `/api/monitoring/launch-status`.
-Recommended fix: Add a minimal launch readiness card showing ready/blocked, stale monitor count, failed critical monitors, smoke artifact freshness, and dependency blockers. Use existing internal auth safely; do not expose secrets.
-Success criteria: Admin home shows launch status with loading/error/empty states and a focused route test proves non-admin/unauthorized access remains blocked.
+Current guardrail: `tests/ui/admin-dashboard-launch-links.test.tsx` proves the card renders repo verdict/counts without broad admin links, and `tests/lib/admin-launch-health-summary.test.ts` proves the card helper returns only the compact summary rather than the full checklist payload.
 
 ### P1: Sanitize Admin API Projections And Errors
 

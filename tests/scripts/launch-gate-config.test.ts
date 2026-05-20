@@ -2060,8 +2060,14 @@ describe('launch gate package configuration', () => {
     const activeAdminEvidence = `${adminGuide}\n${adminSmoke}\n${adminDataProbe}`;
 
     expect(adminGuide).toContain('Last Verified: `2026-05-19`');
-    expect(adminAudit).toContain('Last Verified: `2026-05-19`');
-    expect(adminAudit).toContain('Disposition: resolved for the active Playwright smoke');
+    expect(adminAudit).toContain('Last Verified: `2026-05-20`');
+    expect(adminAudit).toContain(
+      'Disposition: resolved for current MVP queue metadata projection on 2026-05-20.'
+    );
+    expect(adminAudit).toContain('Disposition: resolved on 2026-05-20.');
+    expect(adminAudit).toContain(
+      'Disposition: resolved as a minimal repo-evidence card on 2026-05-20.'
+    );
     expect(adminGuide).toContain('/admin/verification');
     expect(adminGuide).toContain('/admin/audit');
     expect(adminGuide).toContain('tests/ui/admin-dashboard-launch-links.test.tsx');
@@ -2073,6 +2079,7 @@ describe('launch gate package configuration', () => {
     expect(activeAdminEvidence).toContain('/api/admin/audit?page=1&limit=20&search=');
     expect(activeAdminEvidence).toContain('Operations Queues');
     expect(activeAdminEvidence).toContain('Audit Logs');
+    expect(activeAdminEvidence).not.toContain('launch health panel is invisible');
     expect(activeAdminEvidence).not.toContain('admin dashboard/i');
     expect(activeAdminEvidence).not.toContain('linkedin verification queue');
     expect(activeAdminEvidence).not.toContain('/api/admin/analytics/overview');
@@ -2083,7 +2090,7 @@ describe('launch gate package configuration', () => {
       '| `ADMIN_DASHBOARD_TESTING_GUIDE.md`                                                                      | `active`         | `root`        | `repo+live`         | `2026-05-19`'
     );
     expect(docsRegistry).toContain(
-      '| `audit/admin-dashboard-mvp-ops-review-2026-05-03.md` | `reference-spec` | `audit` | `repo` | `2026-05-19`'
+      '| `audit/admin-dashboard-mvp-ops-review-2026-05-03.md` | `reference-spec` | `audit` | `repo` | `2026-05-20`'
     );
   });
 

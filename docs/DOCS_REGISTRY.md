@@ -392,7 +392,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `src/archive/non_launch_matching_ui/README.md` | `historical` | `archive` | `repo` | `2026-05-20` | `-` | `false` |
 | `docs/mobile/IOS_PARITY_MATRIX.md` | `reference-spec` | `docs` | `repo` | `2026-05-19` | `-` | `false` |
 | `audit/automation-and-flows-audit.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
-| `audit/admin-dashboard-mvp-ops-review-2026-05-03.md` | `reference-spec` | `audit` | `repo` | `2026-05-19` | `-` | `false` |
+| `audit/admin-dashboard-mvp-ops-review-2026-05-03.md` | `reference-spec` | `audit` | `repo` | `2026-05-20` | `-` | `false` |
 | `audit/ai-features-verification-2026-05-16.md` | `reference-spec` | `audit` | `repo` | `2026-05-16` | `-` | `false` |
 | `audit/bugs-and-risks.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/code-quality-audit.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |

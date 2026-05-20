@@ -1830,3 +1830,16 @@ Browser evidence:
 - Browser mobile-width evidence covered `/login`: `Sign In | Proofound`, H1 `Welcome back`, one main landmark, no horizontal overflow, and no runtime-error text.
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-launch-gate-alignment/route-smoke.json`.
 - Browser screenshot capture was attempted for `/portfolio/demo`, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, title, route, landmark, overflow, noindex, and runtime-error evidence was captured instead.
+
+## Continuation - Admin Launch Health And Ops Audit Refresh
+
+- Revisited the remaining admin/operator-console risk family recorded in the May 19 sweep.
+- Confirmed current active code had already closed several audit-listed gaps: `AdminVerificationDashboard` renders minimum-necessary queue detail, risky-upload queue items expose explicit `Approve private evidence` and `Reject upload` actions, generic uploaded-file resolve is blocked, and `src/lib/internal-ops/queue.ts` sanitizes queue metadata before it reaches the UI.
+- Added a compact internal-only `Launch health` card to `/admin`, backed by the latest generated `final-launch-checklist-status.json`. The card shows repo verdict, pass/fail/blocked/open counts, generated time, and external proof-item count without exposing raw monitor payloads, secrets, full checklist rows, or private evidence.
+- Added `src/lib/launch/admin-health-summary.ts` to read the latest generated checklist into a small safe DTO, with an unavailable state when no launch evidence exists in the environment.
+- Updated `tests/ui/admin-dashboard-launch-links.test.tsx` so the active admin home must render the launch-health card while staying limited to the launch-ops corridor and avoiding broad admin links.
+- Added `tests/lib/admin-launch-health-summary.test.ts` to prove the helper selects the latest checklist, returns only compact counts/labels, and does not return raw checklist payload fields.
+- Refreshed `audit/admin-dashboard-mvp-ops-review-2026-05-03.md` to `Last Verified: 2026-05-20` so it no longer claims queue detail projection, risky-upload approve/reject UI, sanitized queue DTOs, or launch-health visibility are missing. Remaining follow-up risks are now narrower: internal ops table RLS proof, default admin audit DTO minimization, richer operator filters/SOP links, and a narrow pilot workflow drilldown.
+- Codex Browser verified `/admin` in mock-admin mode at `http://localhost:33182/admin`: H1 `Launch Operations`, `Launch health` card rendered `READY`, `36` pass, `0` fail, `0` blocked, `4` open, external-proof copy, operations queue link, audit link, one `<main>` landmark, no horizontal overflow, no visible runtime-error text, no broad admin links, and no sampled secret/raw OCR leak terms.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-admin-health/admin-health-smoke.json`.
+- Browser screenshot capture was attempted for `/admin`, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, title, heading, card text, link, overflow, and leak-term evidence was captured instead.
