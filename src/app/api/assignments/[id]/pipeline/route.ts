@@ -64,12 +64,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
     const { user } = authContext;
     const { id: assignmentId } = await params;
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const bodyRecord =
+      body && typeof body === 'object' ? (body as Record<string, unknown>) : undefined;
 
     const access = await verifyExplicitAssignmentMutationAccess(
       user.id,
       assignmentId,
-      orgContextFromRequest(request, body)
+      orgContextFromRequest(request, bodyRecord)
     );
     const accessResponse = assignmentAccessResponse(access);
     if (accessResponse) {

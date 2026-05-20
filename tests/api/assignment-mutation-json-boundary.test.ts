@@ -30,6 +30,11 @@ vi.mock('@/db/schema', () => ({
   assignmentExpertiseMatrix: {
     assignmentId: 'assignment_id',
   },
+  assignmentCreationPipeline: {
+    assignmentId: 'assignment_id',
+    stepOrder: 'step_order',
+    id: 'id',
+  },
   assignmentOutcomes: {
     assignmentId: 'assignment_id',
   },
@@ -40,6 +45,7 @@ vi.mock('@/db/schema', () => ({
 
 vi.mock('drizzle-orm', () => ({
   eq: vi.fn((field: string, value: unknown) => ({ op: 'eq', field, value })),
+  and: vi.fn((...conditions: unknown[]) => ({ op: 'and', conditions })),
 }));
 
 vi.mock('@/lib/log', () => ({
@@ -51,6 +57,7 @@ vi.mock('@/lib/log', () => ({
 
 import { POST as saveExpertiseMatrix } from '@/app/api/assignments/[id]/expertise-matrix/route';
 import { POST as saveOutcomes } from '@/app/api/assignments/[id]/outcomes/route';
+import { POST as savePipelineStep } from '@/app/api/assignments/[id]/pipeline/route';
 import { db } from '@/db';
 
 describe('assignment mutation JSON boundaries', () => {
@@ -89,5 +96,21 @@ describe('assignment mutation JSON boundaries', () => {
     await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
     expect(mocks.verifyExplicitAssignmentMutationAccess).not.toHaveBeenCalled();
     expect(db.delete).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for malformed pipeline JSON before access or writes', async () => {
+    const response = await savePipelineStep(
+      new NextRequest('http://localhost/api/assignments/assignment-1/pipeline', {
+        method: 'POST',
+        body: '{',
+      }),
+      { params: Promise.resolve({ id: 'assignment-1' }) }
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.verifyExplicitAssignmentMutationAccess).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
+    expect(db.insert).not.toHaveBeenCalled();
   });
 });
