@@ -1659,3 +1659,9 @@ Non-fatal test noise:
 - Removed dashboard paste-flow guidance from `docs/deployment-guide.md` and replaced it with migration-runner-first failure handling.
 - Updated migration/demo helper scripts so failure text points operators back to canonical `src/db/migrations/*.sql` plus `npm run db:migrate`, and no longer suggests Supabase SQL Editor paste flows or `npm run db:push`.
 - Added launch-gate coverage preventing active migration docs/helper scripts from reintroducing SQL Editor paste flow language or helper-script `db:push` guidance.
+
+## Continuation - Surface Policy Overlap Cleanup
+
+- Found retained internal admin, cron, monitoring, and organization-audit routes could still match archived fallback policy classes after their internal-only policy matched, making route classification depend too heavily on policy order.
+- Tightened `src/lib/launch/surface-policy.ts` so archived admin, cron, and organization-suite fallbacks explicitly exclude retained internal launch-ops paths.
+- Added a surface-policy regression proving retained launch-ops API/page paths match exactly `internal_only_launch_ops` and do not also match archived policy classes.

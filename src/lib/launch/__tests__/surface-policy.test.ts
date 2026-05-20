@@ -265,4 +265,38 @@ describe('launch surface policy', () => {
       '/admin/audit',
     ]);
   });
+
+  it('does not let retained launch-ops routes match archived policy classes', () => {
+    const retainedApiPaths = [
+      '/api/admin/audit',
+      '/api/admin/internal-ops/queues',
+      '/api/admin/internal-ops/queues/11111111-1111-1111-1111-111111111111',
+      '/api/admin/organizations/org-1/audit',
+      '/api/admin/organizations/org-1/verify',
+      '/api/cron/decision-reminders',
+      '/api/cron/health-check',
+      '/api/cron/launch-synthetic-checks',
+      '/api/cron/performance-check',
+      '/api/cron/refresh-matches',
+      '/api/cron/refresh-matches-worker',
+      '/api/cron/sla-enforcement',
+      '/api/monitoring/launch-status',
+      '/api/organizations/org-1/audit/export',
+    ];
+    const retainedPagePaths = ['/admin', '/admin/verification', '/admin/audit'];
+
+    for (const path of retainedApiPaths) {
+      const matchedClasses = LAUNCH_API_SURFACE_POLICIES.filter((policy) =>
+        policy.matches(path)
+      ).map((policy) => policy.classification);
+      expect(matchedClasses).toEqual(['internal_only_launch_ops']);
+    }
+
+    for (const path of retainedPagePaths) {
+      const matchedClasses = LAUNCH_PAGE_SURFACE_POLICIES.filter((policy) =>
+        policy.matches(path)
+      ).map((policy) => policy.classification);
+      expect(matchedClasses).toEqual(['internal_only_launch_ops']);
+    }
+  });
 });

@@ -294,6 +294,9 @@ const INTERNAL_ONLY_API_POLICIES = [
   },
 ] as const satisfies readonly SurfacePolicy[];
 
+const matchesInternalOnlyApiPath = (pathname: string): boolean =>
+  INTERNAL_ONLY_API_POLICIES.some((policy) => policy.matches(pathname));
+
 const ARCHIVED_API_POLICIES = [
   {
     classification: 'archived',
@@ -558,7 +561,7 @@ const ARCHIVED_API_POLICIES = [
       'Broad organization-suite surfaces are archived outside the locked launch MVP corridor.',
     matches: (pathname: string) =>
       /^\/api\/org\/[^/]+\/(?:dashboard|coverage)(?:\/.*)?$/.test(pathname) ||
-      /^\/api\/organizations\/[^/]+\/(?:audit\/export|causes|goals(?:\/.*)?|ownership(?:\/.*)?|partnerships(?:\/.*)?|projects(?:\/.*)?|structure(?:\/.*)?|culture(?:\/.*)?|impact(?:\/.*)?|test-matches(?:\/.*)?)$/.test(
+      /^\/api\/organizations\/[^/]+\/(?:causes|goals(?:\/.*)?|ownership(?:\/.*)?|partnerships(?:\/.*)?|projects(?:\/.*)?|structure(?:\/.*)?|culture(?:\/.*)?|impact(?:\/.*)?|test-matches(?:\/.*)?)$/.test(
         pathname
       ),
   },
@@ -566,13 +569,16 @@ const ARCHIVED_API_POLICIES = [
     classification: 'archived',
     surfaceLabel: 'Admin API',
     detail: 'This admin surface is archived outside the locked launch MVP.',
-    matches: (pathname: string) => pathname === '/api/admin' || pathname.startsWith('/api/admin/'),
+    matches: (pathname: string) =>
+      (pathname === '/api/admin' || pathname.startsWith('/api/admin/')) &&
+      !matchesInternalOnlyApiPath(pathname),
   },
   {
     classification: 'archived',
     surfaceLabel: 'Launch Ops API',
     detail: 'This cron route is archived outside the locked launch MVP.',
-    matches: matchExactOrPrefix('/api/cron'),
+    matches: (pathname: string) =>
+      matchExactOrPrefix('/api/cron')(pathname) && !matchesInternalOnlyApiPath(pathname),
   },
 ] as const satisfies readonly SurfacePolicy[];
 
@@ -696,7 +702,9 @@ const ARCHIVED_PAGE_POLICIES = [
     classification: 'archived',
     surfaceLabel: 'Internal Ops Pages',
     detail: 'Non-critical admin pages are archived outside the locked launch MVP corridor.',
-    matches: (pathname: string) => pathname === '/admin' || pathname.startsWith('/admin/'),
+    matches: (pathname: string) =>
+      (pathname === '/admin' || pathname.startsWith('/admin/')) &&
+      !INTERNAL_OPS_APP_PATHS.includes(pathname as (typeof INTERNAL_OPS_APP_PATHS)[number]),
   },
   {
     classification: 'archived',
