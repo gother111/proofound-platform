@@ -1682,3 +1682,5 @@ Browser evidence:
 
 - Codex Browser loaded `http://localhost:3000/login`: title `Sign In | Proofound`; visible form included email, password, remember-me, reset-password, signup, terms, and privacy links; browser console error log was empty.
 - Codex Browser loaded `http://localhost:3000/portfolio/demo`: title `Public Page Unavailable | Proofound`; route showed the launch-safe unavailable state for the demo public page; browser console error log was empty.
+- Codex Browser loaded `http://localhost:3000/`: title `Proofound | Proof Behind the Claim`; visible landing content used proof-first positioning, CTA routing to `/signup/organization` and `/signup/individual`, and no browser console errors were reported.
+- Codex Browser loaded `http://localhost:3000/signup`: title `Sign Up | Proofound`; visible signup entry separated Individual and Organization choices, included sign-in plus terms/privacy links, and no browser console errors were reported.
