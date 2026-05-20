@@ -173,6 +173,7 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/matching/profile/[id]',
   '/api/match/test',
   '/api/performance/track',
+  '/api/profile/completeness',
   '/api/profile/snippet',
   '/api/data-export',
   '/api/expertise/profile',

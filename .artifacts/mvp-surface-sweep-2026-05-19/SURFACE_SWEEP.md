@@ -2582,3 +2582,12 @@ Browser evidence:
 - Left `docs/EXPERTISE_ATLAS_SETUP.md` alone because its remaining dashboard reference explicitly documents archived gap/dashboard routes.
 - Browser was not rerun for this slice because only docs and test labels changed; focused test execution and docs freshness are the direct evidence.
 - Verification passed: active-source scan for `dashboard-client|Organization dashboard loads|without handles to the dashboard|dashboard route|org dashboard route|individual dashboard route|non-dashboard route`, `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/matching-page-gated.test.tsx tests/ui/schedule-interview-modal.test.tsx tests/ui/organization-interviews-page-actions.test.tsx tests/ui/privacy-overview-copy.test.tsx tests/routes/onboarding-page.test.ts tests/ui/topbar-customize-visibility.test.tsx --reporter=verbose` (6 files / 24 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Profile Completeness Archive Policy Explicitness
+
+- Timestamp: 2026-05-20 14:06:38 CEST.
+- Inspected the launch surface policy, API reference, compiled API inventory test, and current route file for retained archived compatibility endpoints.
+- Found that `/api/profile/completeness` was compiled and allowed as archived compatibility, and the route itself returned `410`, but the representative archived-policy assertions did not explicitly name it. That left the route relying on fallback archived classification rather than a named policy bucket.
+- Added `/api/profile/completeness` to the `Profiles API` archived policy, added direct policy test coverage, and added it to the representative archived compatibility inventory list.
+- Browser was not rerun for this slice because no rendered UI changed; route-policy, middleware, and compiled-inventory tests are the relevant evidence.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts --reporter=verbose` (4 files / 26 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.

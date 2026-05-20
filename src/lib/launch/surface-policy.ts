@@ -489,7 +489,9 @@ const ARCHIVED_API_POLICIES = [
     detail:
       'Legacy profile lookup and snippet surfaces are archived outside the locked launch MVP corridor.',
     matches: (pathname: string) =>
-      pathname === '/api/profile/snippet' || pathname.startsWith('/api/profiles'),
+      pathname === '/api/profile/completeness' ||
+      pathname === '/api/profile/snippet' ||
+      pathname.startsWith('/api/profiles'),
   },
   {
     classification: 'archived',

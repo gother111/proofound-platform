@@ -68,6 +68,9 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/profile/snippet')).toMatchObject({
       surfaceLabel: 'Profiles API',
     });
+    expect(getArchivedApiPolicy('/api/profile/completeness')).toMatchObject({
+      surfaceLabel: 'Profiles API',
+    });
     expect(classifyLaunchApiPath('/api/people')).toBe('archived');
     expect(classifyLaunchApiPath('/api/candidates')).toBe('archived');
     expect(classifyLaunchApiPath('/api/directory')).toBe('archived');
