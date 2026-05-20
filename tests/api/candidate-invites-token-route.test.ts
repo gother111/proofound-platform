@@ -226,6 +226,35 @@ describe('GET /api/candidate-invites/[token]', () => {
     expect(db.update).not.toHaveBeenCalled();
   });
 
+  it('does not overwrite a proof-submitted invite with expired during preview', async () => {
+    mockAuthUser({ id: '11111111-1111-1111-1111-111111111111', email: 'candidate@example.com' });
+    mockInviteSelect([
+      {
+        id: 'invite-1',
+        orgId: 'org-1',
+        inviteeEmail: 'candidate@example.com',
+        status: 'pending',
+        flowType: 'proof_card',
+        assignmentId: 'assignment-1',
+        expiresAt: new Date(Date.now() - 60_000),
+        claimedByProfileId: null,
+        claimedAt: null,
+        acceptedByProfileId: null,
+        acceptedAt: null,
+        matchId: null,
+        conversationId: null,
+        proofSubmittedAt: new Date(),
+      },
+    ]);
+
+    const response = await GET(new NextRequest('http://localhost/api/candidate-invites/token'), {
+      params: Promise.resolve({ token: 'token-value' }),
+    });
+
+    expect(response.status).toBe(404);
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
   it('marks only pending unclaimed preview invites as expired', async () => {
     mockAuthUser(null);
     mockInviteSelect([
