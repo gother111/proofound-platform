@@ -1,9 +1,9 @@
 # Proofound Final Launch Checklist Status
 
-Generated: 2026-05-20T01:19:51.045Z
+Generated: 2026-05-20T01:26:55.137Z
 Scope: `repo`
 Workspace: `/Users/yuriibakurov/proofound`
-Git: `master` @ `1a8c1b42d9270825143c830c69330b941e95fada`
+Git: `master` @ `5d96369275b1178bc2cd104a35d70d03a43b76b2`
 Verdict: `NOT_READY`
 Live base URL: not configured
 Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`

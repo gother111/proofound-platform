@@ -1,9 +1,9 @@
 {
   "scope": "repo",
-  "generatedAt": "2026-05-20T01:19:51.045Z",
+  "generatedAt": "2026-05-20T01:26:55.137Z",
   "currentDate": "2026-05-20",
   "workspaceRoot": "/Users/yuriibakurov/proofound",
-  "gitHead": "1a8c1b42d9270825143c830c69330b941e95fada",
+  "gitHead": "5d96369275b1178bc2cd104a35d70d03a43b76b2",
   "gitBranch": "master",
   "verdict": "NOT_READY",
   "includeStateful": false,
@@ -250,10 +250,7 @@
       "section": "Engineering",
       "label": "`next start` is stable",
       "authorityRefs": ["agent/checklists/verification.md"],
-      "evidenceSources": [
-        ".artifacts/launch-validation-*/24_gate_summary.json",
-        ".artifacts/proofound-master-audit-2026-03-22.md"
-      ],
+      "evidenceSources": [".artifacts/launch-validation-*/24_gate_summary.json"],
       "status": "FAIL",
       "summary": "Production boot could not start in this environment; review the captured boot error and rerun on a host that can bind localhost.",
       "evidence": [
@@ -1028,10 +1025,7 @@
       "section": "Engineering",
       "label": "`next start` is stable",
       "authorityRefs": ["agent/checklists/verification.md"],
-      "evidenceSources": [
-        ".artifacts/launch-validation-*/24_gate_summary.json",
-        ".artifacts/proofound-master-audit-2026-03-22.md"
-      ],
+      "evidenceSources": [".artifacts/launch-validation-*/24_gate_summary.json"],
       "status": "FAIL",
       "summary": "Production boot could not start in this environment; review the captured boot error and rerun on a host that can bind localhost.",
       "evidence": [

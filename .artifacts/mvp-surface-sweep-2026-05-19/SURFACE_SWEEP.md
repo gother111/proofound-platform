@@ -1773,3 +1773,8 @@ Browser evidence:
 - Codex Browser loaded `http://localhost:3000/login`: title `Sign In | Proofound`, H1 `Welcome back`, clear email/password and social sign-in entry, no visible application error or score-first copy.
 - Codex Browser loaded `http://localhost:3000/signup`: title `Sign Up | Proofound`, H1 `Join Proofound`, individual and organization choices visible with legal links, no visible application error or score-first copy.
 - Browser screenshot capture timed out twice through the in-app Browser capture path, so this pass records DOM/visible-text evidence and route/server status instead of an image artifact.
+
+## Continuation - Nonexistent Launch Evidence Source Removed
+
+- Found `src/lib/launch/final-launch-checklist-definitions.ts` still declaring `.artifacts/proofound-master-audit-2026-03-22.md` as an evidence source for the `engineering_next_start_stable` gate, but the file does not exist. The historical master audit lives at `docs/proofound-master-audit-2026-03-22.md`, and the current `next start` gate is evaluated from the launch-validation bundle instead.
+- Removed the nonexistent `.artifacts/proofound-master-audit-2026-03-22.md` source so generated checklist JSON no longer points operators at a missing stale-evidence path.

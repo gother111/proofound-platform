@@ -455,10 +455,7 @@ export function buildFinalLaunchChecklistDefinitions({
       section: 'Engineering',
       label: '`next start` is stable',
       authorityRefs: ['agent/checklists/verification.md'],
-      evidenceSources: [
-        '.artifacts/launch-validation-*/24_gate_summary.json',
-        '.artifacts/proofound-master-audit-2026-03-22.md',
-      ],
+      evidenceSources: ['.artifacts/launch-validation-*/24_gate_summary.json'],
       evaluateDirect: (context) =>
         compactObservations([
           gateObservation(
