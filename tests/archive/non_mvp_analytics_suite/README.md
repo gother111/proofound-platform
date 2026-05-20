@@ -6,6 +6,7 @@ These tests cover the retired broad analytics endpoints:
 - `/api/analytics/events`
 - `/api/analytics/tour-event`
 - `/api/analytics/web-vitals`
+- `/api/performance/track`
 
 The locked MVP keeps these endpoints only as archived compatibility responses. Active launch coverage lives in `tests/api/archived-api-handlers-route.test.ts` and `src/lib/__tests__/middleware-launch-archive.test.ts`, which assert launch-safe archived behavior.
 

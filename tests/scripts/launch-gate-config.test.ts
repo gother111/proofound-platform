@@ -458,7 +458,8 @@ describe('launch gate package configuration', () => {
 
     expect(vitestConfig).toContain("'**/src/archive/**'");
     expect(vitestConfig).toContain("'**/tests/archive/**'");
-    expect(vitestConfig).toContain("'**/tests/api/analytics-track-route.test.ts'");
+    expect(vitestConfig).not.toContain('analytics-track-route.test.ts');
+    expect(vitestConfig).not.toContain('performance-track-route.test.ts');
     expect(vitestConfig).toContain("'**/tests/lib/cv-import-suggest-1000-benchmark.test.ts'");
     expect(archivedConfig).toContain('src/archive/**/*.test.ts');
     expect(archivedConfig).toContain('tests/archive/non_mvp_cv_import_wizard/**/*.test.ts');
@@ -479,6 +480,7 @@ describe('launch gate package configuration', () => {
       'tests/ui/admin-ai-spend-page.test.tsx',
       'tests/ui/admin-fairness-notes-page.test.tsx',
       'tests/ui/organization-settings-integrations.test.tsx',
+      'tests/api/performance-track-route.test.ts',
     ];
 
     for (const retiredPath of retiredActiveTestPaths) {
@@ -492,6 +494,7 @@ describe('launch gate package configuration', () => {
       'tests/archive/non_mvp_org_integrations_ui/organization-settings-integrations.archived.test.tsx',
       'tests/archive/non_mvp_admin_suite/admin-ai-spend-page.archived.test.tsx',
       'tests/archive/non_mvp_admin_suite/admin-fairness-notes-page.archived.test.tsx',
+      'tests/archive/non_mvp_analytics_suite/performance-track-route.archived.test.ts',
     ];
 
     for (const archivedPath of archivedPaths) {

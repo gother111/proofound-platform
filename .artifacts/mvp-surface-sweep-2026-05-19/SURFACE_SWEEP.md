@@ -1684,3 +1684,9 @@ Browser evidence:
 - Codex Browser loaded `http://localhost:3000/portfolio/demo`: title `Public Page Unavailable | Proofound`; route showed the launch-safe unavailable state for the demo public page; browser console error log was empty.
 - Codex Browser loaded `http://localhost:3000/`: title `Proofound | Proof Behind the Claim`; visible landing content used proof-first positioning, CTA routing to `/signup/organization` and `/signup/individual`, and no browser console errors were reported.
 - Codex Browser loaded `http://localhost:3000/signup`: title `Sign Up | Proofound`; visible signup entry separated Individual and Organization choices, included sign-in plus terms/privacy links, and no browser console errors were reported.
+
+## Continuation - Archived Performance Telemetry Test Cleanup
+
+- Found `tests/api/performance-track-route.test.ts` still asserting the old `/api/performance/track` persistence behavior even though the route is archived by launch surface policy and directly covered as `410 Gone` in `tests/api/archived-api-handlers-route.test.ts`.
+- Moved the stale pre-archive performance route test into `tests/archive/non_mvp_analytics_suite/performance-track-route.archived.test.ts` and documented `/api/performance/track` in that archive README.
+- Removed obsolete per-file Vitest excludes for old analytics/performance test paths; the active test runner now relies on the archive-directory exclude instead of hiding stale test files in active `tests/api`.
