@@ -203,8 +203,8 @@ function convertEventTypeToHumanReadable(eventType: string): string {
     profile_updated: 'Updated profile',
     profile_viewed: 'Viewed profile',
     public_portfolio_viewed: 'Viewed Public Page',
-    public_snippet_viewed: 'Viewed public snippet',
-    public_snippet_unavailable: 'Attempted unavailable public snippet',
+    public_snippet_viewed: 'Viewed legacy Public Page link',
+    public_snippet_unavailable: 'Attempted unavailable legacy Public Page link',
 
     // Skills & expertise
     skill_added: 'Added skill',
