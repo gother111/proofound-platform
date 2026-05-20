@@ -413,6 +413,9 @@ export async function extractStartFromCvSession(input: {
   if (!session.consentConfirmedAt) {
     throw new StartFromCvError('CONSENT_REQUIRED', 400);
   }
+  if (session.status !== 'created' || session.extractionStatus !== 'not_started') {
+    throw new StartFromCvError('START_FROM_CV_EXTRACTION_ALREADY_COMPLETED', 409);
+  }
 
   const config = resolveStartFromCvConfig(input.env);
   const mimeType = normalizeMimeType(input.file.type);

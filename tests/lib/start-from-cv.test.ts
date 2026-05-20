@@ -25,6 +25,7 @@ import {
   buildDeterministicDrafts,
   countStartFromCvPages,
   enforceStartFromCvDailyLimits,
+  extractStartFromCvSession,
   extractTextFromPdfStreams,
   getStartFromCvLaunchSummary,
   resolveStartFromCvConfig,
@@ -180,6 +181,46 @@ describe('Start from CV guardrails', () => {
     ]);
 
     expect(extractTextFromPdfStreams(new Uint8Array(pdf))).toBe('');
+  });
+
+  it('rejects repeat extraction for a session that already produced a draft', async () => {
+    const limitMock = vi.fn().mockResolvedValue([
+      {
+        id: 'session-1',
+        userId: '11111111-1111-4111-8111-111111111111',
+        status: 'ready_for_review',
+        extractionStatus: 'completed',
+        consentConfirmedAt: new Date(),
+        deletedAt: null,
+      },
+    ]);
+    const whereMock = vi.fn(() => ({ limit: limitMock }));
+    const fromMock = vi.fn(() => ({ where: whereMock }));
+    dbMocks.select.mockReturnValue({ from: fromMock });
+
+    await expect(
+      extractStartFromCvSession({
+        sessionId: 'session-1',
+        userId: '11111111-1111-4111-8111-111111111111',
+        persona: 'individual',
+        orgIds: [],
+        isBetaTesting: true,
+        file: {
+          name: 'cv.pdf',
+          type: 'application/pdf',
+          size: 8,
+          bytes: new Uint8Array(Buffer.from('%PDF-1.7')),
+        },
+        env: {
+          START_FROM_CV_BETA_ENABLED: 'true',
+          START_FROM_CV_GUEST_FIRST_PROOF_SCAFFOLDING_ENABLED: 'true',
+          START_FROM_CV_OPEN_BETA_ENABLED: 'true',
+          NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED: 'false',
+        },
+      })
+    ).rejects.toMatchObject({ code: 'START_FROM_CV_EXTRACTION_ALREADY_COMPLETED', status: 409 });
+
+    expect(pdfMocks.extractPdfTextFromBytes).not.toHaveBeenCalled();
   });
 
   it('keeps unsupported skill drafts explicitly unsupported with no trust or matching lift', () => {

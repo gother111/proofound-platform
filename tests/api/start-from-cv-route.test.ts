@@ -246,6 +246,46 @@ describe('Start from CV API routes', () => {
     expect(mocks.extractStartFromCvSession).not.toHaveBeenCalled();
   });
 
+  it('rejects malformed extraction multipart form data before extraction starts', async () => {
+    const response = await extractSession(
+      {
+        headers: new Headers({ 'content-type': 'multipart/form-data' }),
+        formData: vi.fn(async () => {
+          throw new Error('invalid multipart boundary');
+        }),
+      } as unknown as NextRequest,
+      params()
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toBe('Invalid form data.');
+    expect(mocks.extractStartFromCvSession).not.toHaveBeenCalled();
+  });
+
+  it('returns a safe conflict response for repeat extraction attempts', async () => {
+    mocks.extractStartFromCvSession.mockRejectedValueOnce(
+      new mocks.StartFromCvError('START_FROM_CV_EXTRACTION_ALREADY_COMPLETED', 409)
+    );
+
+    const response = await extractSession(
+      jsonRequest(`http://localhost/api/ai/start-from-cv/sessions/${sessionId}/extract`, {
+        file: {
+          name: 'cv.pdf',
+          type: 'application/pdf',
+          base64: Buffer.from('%PDF-1.7').toString('base64'),
+        },
+      }),
+      params()
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(payload.error).toBe(
+      'Start from CV extraction has already been completed for this session.'
+    );
+  });
+
   it('passes supported PDF uploads into the extraction boundary', async () => {
     const pdfBytes = Buffer.from('%PDF-1.7 /Type /Page (Proofound launch corridor)');
 

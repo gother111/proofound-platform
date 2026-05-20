@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 import { POST } from '@/app/api/admin/organizations/[orgId]/verify/route';
-import { logAdminAction } from '@/lib/audit/admin-logger';
+import { logAdminActionInTransaction } from '@/lib/audit/admin-logger';
 import { requireBreakGlassPlatformAdminJson } from '@/lib/authz';
 import { db } from '@/db';
 
@@ -15,7 +15,7 @@ vi.mock('@/lib/authz', async () => {
 });
 
 vi.mock('@/lib/audit/admin-logger', () => ({
-  logAdminAction: vi.fn(),
+  logAdminActionInTransaction: vi.fn(),
 }));
 
 vi.mock('@/db', () => ({
@@ -85,7 +85,8 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
         targetId: orgId,
       })
     );
-    expect(logAdminAction).toHaveBeenCalledWith(
+    expect(logAdminActionInTransaction).toHaveBeenCalledWith(
+      db,
       expect.objectContaining({
         action: 'set_org_trust_tier',
         targetId: orgId,
@@ -96,6 +97,54 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
         metadata: expect.objectContaining({
           breakGlassReason: 'Investigating material trust issue',
         }),
+      })
+    );
+  });
+
+  it('keeps the trust-tier update inside the same transaction as the admin audit insert', async () => {
+    const transactionOrder: string[] = [];
+    const tx = {
+      update: vi.fn(() => {
+        transactionOrder.push('update');
+        return {
+          set: vi.fn(() => ({
+            where: vi.fn().mockResolvedValue(undefined),
+          })),
+        };
+      }),
+      insert: vi.fn(() => {
+        transactionOrder.push('transition_insert');
+        return {
+          values: vi.fn().mockResolvedValue(undefined),
+        };
+      }),
+    };
+    (db.transaction as any).mockImplementation(async (callback: any) => callback(tx));
+    vi.mocked(logAdminActionInTransaction).mockImplementationOnce(async (writer) => {
+      expect(writer).toBe(tx);
+      transactionOrder.push('audit_insert');
+    });
+
+    const request = new NextRequest(`http://localhost/api/admin/organizations/${orgId}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({
+        trustTier: 'reviewed',
+        reasonCode: 'manual_review_passed',
+      }),
+      headers: {
+        'x-break-glass-reason': 'Investigating material trust issue',
+      },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+
+    expect(response.status).toBe(200);
+    expect(transactionOrder).toEqual(['update', 'transition_insert', 'audit_insert']);
+    expect(logAdminActionInTransaction).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({
+        action: 'set_org_trust_tier',
+        targetId: orgId,
       })
     );
   });

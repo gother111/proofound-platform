@@ -53,6 +53,20 @@ describe('POST /api/upload/document', () => {
     expect(ingestUploadedFile).not.toHaveBeenCalled();
   });
 
+  it('rejects malformed multipart form data before storage ingest', async () => {
+    const response = await POST({
+      headers: new Headers({ 'content-type': 'multipart/form-data' }),
+      formData: vi.fn(async () => {
+        throw new Error('invalid multipart boundary');
+      }),
+    } as unknown as NextRequest);
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid form data' });
+    expect(ingestUploadedFile).not.toHaveBeenCalled();
+  });
+
   it('returns a manual-review response with a generic label and no storage path for risky uploads', async () => {
     vi.mocked(ingestUploadedFile).mockResolvedValue({
       uploadedFileId: 'upload-1',
