@@ -2680,3 +2680,13 @@ Browser evidence:
 - Added a launch-gate guardrail proving the active match-explain route stays band-only and does not reintroduce `canRevealExactRank` or `rankMode: 'exact'`.
 - Browser was not rerun for this slice because no rendered UI changed; the relevant launch evidence is API contract and guardrail coverage.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/match-explain-route.test.ts tests/lib/matching-review-contract.test.ts tests/ui/match-explainer-modal.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 119 tests), active scan for `canRevealExactRank|rank transparency|returns exact rank|exactRankAllowed|rankMode: 'exact'|exactRankAvailable\\)\\.toBe\\(true\\)`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Historical Load Test Note Alignment
+
+- Timestamp: 2026-05-20 14:58:53 CEST.
+- Inspected active docs/tests for stale `TBD`, placeholder, and launch-prerequisite wording after the exact-rank closure.
+- Found `tests/load/RESULTS.md` was correctly classified as historical/non-gating, but still contained `TBD - Run tests to establish limits`, `Expected Metrics (to be filled after running)`, and `Before Launch` language that could be mistaken for current launch proof or a required gate.
+- Reframed the file as a historical Artillery snapshot: the old metrics are now explicitly historical expected metrics, optimization ideas are conditional on measured production-candidate evidence, and the stress-test status points to `perf:budgets`, authenticated perf-status, and go/no-go evidence as the current launch source.
+- Updated `docs/DOCS_REGISTRY.md` and the launch-gate guardrail so this load-test note stays non-gating, dated, and free of stale TBD/before-launch wording.
+- Browser was not rerun for this slice because no rendered UI changed; this is docs/test launch-evidence alignment.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 100 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run docs:freshness`, and scan for stale load-test wording. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.

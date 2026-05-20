@@ -1458,18 +1458,23 @@ describe('launch gate package configuration', () => {
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
     expect(loadResults).toContain('Doc Class: `reference-spec`');
-    expect(loadResults).toContain('Last Verified: `2026-05-19`');
+    expect(loadResults).toContain('Last Verified: `2026-05-20`');
     expect(loadResults).toContain('historical/non-gating load-test notes');
     expect(loadResults).toContain('BASE_URL=<production-candidate-url> npm run perf:budgets');
     expect(loadResults).toContain('optional stress exploration only');
     expect(loadResults).toContain('record the tool version, target, date, owner');
+    expect(loadResults).toContain('Not a current launch gate');
+    expect(loadResults).toContain('If These Artillery Notes Are Revived');
     expect(loadResults).not.toContain('npm install -g artillery');
     expect(loadResults).not.toContain('## How to Run Load Tests');
     expect(loadResults).not.toContain('Track cache hit rates');
+    expect(loadResults).not.toContain('TBD - Run tests to establish limits');
+    expect(loadResults).not.toContain('### Before Launch');
+    expect(loadResults).not.toContain('Expected Metrics (to be filled after running)');
     expect(artilleryMatching).toContain("url: '/api/match/profile'");
     expect(artilleryMatching).not.toContain('/api/core/matching/profile');
     expect(docsRegistry).toContain(
-      '| `tests/load/RESULTS.md`                                                                                 | `reference-spec` | `tests`       | `repo`              | `2026-05-19`'
+      '| `tests/load/RESULTS.md`                                                                                 | `reference-spec` | `tests`       | `repo`              | `2026-05-20`'
     );
   });
 

@@ -1,11 +1,11 @@
 # Load Test Results & Performance Baselines
 
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-20`
 > Reference note: historical/non-gating load-test notes. Current launch performance proof comes from `BASE_URL=<production-candidate-url> npm run perf:budgets`, authenticated perf-status evidence, and fresh launch go/no-go output.
 
-**Last Updated**: 2025-11-04
-**Environment**: Development/Local
+**Historical snapshot date**: 2025-11-04
+**Historical environment**: Development/Local
 
 ---
 
@@ -54,7 +54,7 @@ The current launch gate is `BASE_URL=<production-candidate-url> npm run perf:bud
 
 ### Matching API Results
 
-**Expected Metrics** (to be filled after running):
+**Historical expected metrics** (not measured launch evidence):
 
 ```
 Scenarios launched:  300
@@ -76,7 +76,7 @@ Slowest requests:
 
 ### Metrics API Results
 
-**Expected Metrics** (to be filled after running):
+**Historical expected metrics** (not measured launch evidence):
 
 ```
 Scenarios launched:  200
@@ -114,12 +114,12 @@ Notes:
 - ✅ Rate limiting to prevent overload
 - ✅ Database query optimization with Drizzle ORM
 
-### Recommended Optimizations
+### Historical Optimization Ideas
 
-- 🔄 Add Redis caching for matching results
-- 🔄 Implement background job for metrics calculation
-- 🔄 Database indexes on frequently queried columns
-- 🔄 Consider read replicas for analytics queries
+- Add cache-backed matching-result reuse only if current production-candidate evidence shows it is needed.
+- Implement background metrics calculation only if current perf-status evidence shows live request paths are overloaded.
+- Add database indexes only from measured query plans on the intended launch database.
+- Consider read replicas only after production-candidate database evidence shows sustained read pressure.
 
 ---
 
@@ -127,7 +127,7 @@ Notes:
 
 ### Peak Load (100 req/min)
 
-**Status**: TBD - Run tests to establish limits
+**Status**: Not a current launch gate. Use production-candidate `perf:budgets`, authenticated perf-status, and go/no-go evidence for launch limits.
 
 **Expected Behavior**:
 
@@ -144,15 +144,15 @@ Notes:
 
 ---
 
-## Production Recommendations
+## Historical Production Considerations
 
-### Before Launch
+### If These Artillery Notes Are Revived
 
-1. **Run load tests against production-like environment**
-2. **Establish actual baselines** (not just estimates)
-3. **Test rate limiting thresholds**
-4. **Verify caching behavior**
-5. **Monitor database connection pool**
+1. Run only against an approved target and record the exact URL, date, owner, tool version, and data-safety boundary.
+2. Establish actual baselines from the run and keep them separate from launch go/no-go evidence.
+3. Test rate limiting thresholds without touching production user data.
+4. Verify caching behavior through provider or app telemetry.
+5. Monitor database connection pool behavior during the approved run.
 
 ### Monitoring in Production
 
