@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const apiFetchMock = vi.fn();
@@ -127,5 +127,58 @@ describe('AuditLogTable', () => {
         screen.getByText('Audit history could not be loaded. Try again in a moment.')
       ).toBeInTheDocument();
     });
+  });
+
+  it('loads break-glass org audit preview with explicit reason and no raw metadata', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    apiFetchMock.mockResolvedValueOnce(buildJsonResponse(auditPayload)).mockResolvedValueOnce(
+      buildJsonResponse({
+        orgId: 'org-1',
+        accessedAt: '2026-05-20T10:00:00.000Z',
+        preview: {
+          mode: 'minimum_necessary',
+          returned: 1,
+          warning:
+            'Raw org audit metadata is withheld from the dashboard preview. Use download=true only for approved incident review.',
+        },
+        logs: [
+          {
+            id: 7,
+            action: 'member.invited',
+            targetType: 'organization_member',
+            targetId: 'member-1',
+            createdAt: '2026-05-20T10:00:00.000Z',
+            riskLabels: ['Protected metadata withheld'],
+          },
+        ],
+      })
+    );
+
+    render(<AuditLogTable />);
+
+    await screen.findAllByText('Verify Organization');
+
+    fireEvent.change(screen.getByLabelText('Organization id'), {
+      target: { value: 'org-1' },
+    });
+    fireEvent.change(screen.getByLabelText('Break-glass reason'), {
+      target: { value: 'Investigating confirmed privacy incident' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+
+    await screen.findByText('1 preview rows for org-1');
+
+    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('break-glass'));
+    expect(apiFetchMock).toHaveBeenLastCalledWith('/api/admin/organizations/org-1/audit?limit=10', {
+      headers: {
+        'x-break-glass-reason': 'Investigating confirmed privacy incident',
+      },
+    });
+    expect(screen.getByText('Member Invited')).toBeInTheDocument();
+    expect(screen.getByText('Protected metadata withheld')).toBeInTheDocument();
+    expect(screen.queryByText('candidate@example.com')).not.toBeInTheDocument();
+    expect(screen.queryByText('Raw incident detail')).not.toBeInTheDocument();
+
+    confirmSpy.mockRestore();
   });
 });

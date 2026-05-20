@@ -17,7 +17,10 @@ Scope: current active Proofound admin dashboard, admin APIs, internal ops queues
 > default admin audit API now returns a minimum-necessary list DTO, and unexpected
 > admin queue errors no longer return raw backend messages. `/admin/verification`
 > now includes a narrow read-only pilot corridor drilldown inside pilot queue
-> cards. The repo now includes an explicit internal-ops queue RLS hardening
+> cards. `/admin/audit` now includes a break-glass organization audit preview
+> that shows minimum-necessary audit fields and risk labels while withholding raw
+> metadata unless `download=true` is explicitly requested after break-glass
+> approval. The repo now includes an explicit internal-ops queue RLS hardening
 > migration; live target application remains unverified until the migration is
 > applied and the migration ledger is clean.
 
@@ -25,7 +28,7 @@ Scope: current active Proofound admin dashboard, admin APIs, internal ops queues
 
 Verdict: repo-ready with remaining live migration follow-up.
 
-The admin dashboard is narrow, protected, and aligned away from broad enterprise/admin-suite sprawl. It is useful for seeing four internal ops queues, reviewing minimum-necessary queue detail, handling risky-upload approve/reject decisions, checking latest repo launch evidence, and reviewing audit trails.
+The admin dashboard is narrow, protected, and aligned away from broad enterprise/admin-suite sprawl. It is useful for seeing four internal ops queues, reviewing minimum-necessary queue detail, handling risky-upload approve/reject decisions, checking latest repo launch evidence, reviewing audit trails, and opening minimum-necessary break-glass organization audit previews.
 
 The main remaining gap is live-target proof: the admin console is narrow and privacy-projected, and the repo now has an explicit `internal_ops_queue_items` RLS/service-role contract, but the migration has not been applied to the checked Supabase target in this sweep. Richer entity/operator filters remain deferred until pilot volume proves they are needed.
 
@@ -43,6 +46,7 @@ The main remaining gap is live-target proof: the admin console is narrow and pri
 - The explicit upload review service moves quarantined uploads to private storage or rejects them, records upload events, and writes audit rows.
 - Organization trust-tier changes require break-glass reason and write admin audit plus trust transition rows.
 - Admin home shows latest repo launch-health evidence from the generated launch checklist without exposing raw monitor payloads.
+- Admin audit page shows a break-glass organization audit preview that records reason, requires confirmation, and withholds raw metadata from the dashboard preview.
 - Launch monitoring, alerting, smoke artifact, and launch-status route tests exist and pass.
 
 ## C. What Is Missing
@@ -50,14 +54,14 @@ The main remaining gap is live-target proof: the admin console is narrow and pri
 - Direct queue-header SOP links now point to the current internal-ops runbooks for each active queue.
 - Status, priority, and age controls now exist on the active queue view; entity/operator filtering is still deferred until real pilot volume requires it.
 - Pilot queue cards now expose a narrow read-only corridor drilldown from sanitized queue metadata; richer cross-record org/workflow drilldown is deferred until pilot volume proves it is needed.
-- Default admin audit list projection is minimum-necessary, but there is still no richer break-glass preview UI for sensitive full-detail audit review.
+- Default admin audit list projection and break-glass organization audit preview are minimum-necessary. Raw organization audit export remains available only through the explicit break-glass `download=true` path for approved incident review.
 
 ## D. Security And Privacy Risks
 
 - P1 repo-side resolved 2026-05-20: `internal_ops_queue_items` now has a forward migration that enables and forces RLS, revokes direct `anon`/`authenticated` table grants, grants server/service-role access, and defines service-role-only CRUD policies. Live target application is still unverified; `npm run db:audit:migrations` reports this migration as present locally but not applied. Evidence: `src/db/migrations/20260520065000_harden_internal_ops_queue_rls.sql`, `tests/db/internal-ops-queue-rls.test.ts`.
 - P1 resolved 2026-05-20: `GET /api/admin/audit` now returns an explicit list DTO and omits raw `changes`, `metadata`, IP address, and user agent fields. Evidence: `src/lib/audit/admin-audit-list.ts`, `src/app/api/admin/audit/route.ts`, `tests/lib/admin-audit-list.test.ts`.
 - P2 resolved 2026-05-20: unexpected admin queue 500 responses no longer include raw error message details, and server logs record only a sanitized error class/name for those paths. Evidence: `src/app/api/admin/internal-ops/queues/route.ts`, `src/app/api/admin/internal-ops/queues/[id]/route.ts`, `tests/api/admin-internal-ops-queue-route.test.ts`.
-- P2: The break-glass organization audit export returns full org audit logs through API after reason check, but there is no dashboard UI showing minimum necessary preview, risk labels, or access confirmation.
+- P2 resolved 2026-05-20: break-glass organization audit review now has a dashboard preview with minimum-necessary fields, risk labels, reason header, and access confirmation. Raw metadata remains withheld from the preview and is available only through explicit `download=true` break-glass export. Evidence: `src/app/api/admin/organizations/[orgId]/audit/route.ts`, `src/components/admin/audit/AuditLogTable.tsx`, `tests/api/org-audit-export-routes.test.ts`, `tests/ui/admin-audit-log-table.test.tsx`.
 
 ## E. Scope Problems
 
@@ -98,6 +102,7 @@ Passing evidence:
 - `npm run docs:freshness`: pass.
 - `npm run test -- tests/ui/admin-dashboard-launch-links.test.tsx tests/lib/admin-launch-health-summary.test.ts tests/ui/admin-verification-dashboard.test.tsx tests/lib/internal-ops-queue.test.ts tests/api/admin-internal-ops-queue-route.test.ts`: pass after the 2026-05-20 launch-health card and audit refresh.
 - `npm run test -- tests/lib/admin-audit-list.test.ts tests/ui/admin-audit-log-table.test.tsx tests/api/admin-internal-ops-queue-route.test.ts`: pass, 14 tests, after the 2026-05-20 admin audit DTO and queue error-detail hardening. The suite still prints Vite websocket `EPERM` noise in this sandbox, but tests pass.
+- `npm run test -- tests/api/org-audit-export-routes.test.ts tests/ui/admin-audit-log-table.test.tsx tests/lib/admin-break-glass.test.ts tests/lib/admin-audit-list.test.ts`: pass, 12 tests, after the 2026-05-20 break-glass organization audit preview and raw-download guardrail update. The suite still prints Vite websocket `EPERM` noise in this sandbox, but tests pass.
 
 Failing or unverified evidence:
 
@@ -140,6 +145,13 @@ Disposition: resolved for default list APIs on 2026-05-20.
 Evidence: `GET /api/admin/audit` selects and maps only the list DTO fields through `toAdminAuditListEntry`: id, admin id, action, target type/id, reason, created date, and safe admin display fields. Internal ops queue GET/PATCH unexpected 500s now return generic JSON errors and log only sanitized error identity.
 File/route: `/api/admin/audit`, `/api/admin/internal-ops/queues`.
 Current guardrail: `tests/lib/admin-audit-list.test.ts`, `tests/ui/admin-audit-log-table.test.tsx`, and `tests/api/admin-internal-ops-queue-route.test.ts` prove raw audit `changes`, `metadata`, IP, user agent, private filenames, storage paths, verifier email, and unexpected backend error messages are not returned by default list/error APIs.
+
+### P2: Add Break-Glass Organization Audit Preview
+
+Disposition: resolved for current MVP admin audit review on 2026-05-20.
+Evidence: `/admin/audit` now renders a `Break-glass org audit preview` panel with organization id, reason, confirmation, preview warning, and risk labels. Default `GET /api/admin/organizations/[orgId]/audit` responses return preview DTOs only; raw metadata remains behind the explicit `download=true` break-glass export.
+File/route: `/admin/audit`, `/api/admin/organizations/[orgId]/audit`.
+Current guardrail: `tests/api/org-audit-export-routes.test.ts` proves preview responses do not contain invited email or raw incident detail while `download=true` does; `tests/ui/admin-audit-log-table.test.tsx` proves the dashboard sends the explicit reason header and does not render raw metadata.
 
 ### P2: Add Operator Usability Controls
 

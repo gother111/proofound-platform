@@ -7,6 +7,27 @@ import { requireBreakGlassPlatformAdminJson } from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 
+type OrgAuditLogRow = typeof auditLogs.$inferSelect;
+
+function toOrgAuditPreviewEntry(log: OrgAuditLogRow) {
+  const hasProtectedMetadata = Boolean(
+    log.meta &&
+      typeof log.meta === 'object' &&
+      Object.keys(log.meta as Record<string, unknown>).length > 0
+  );
+
+  return {
+    id: log.id,
+    action: log.action,
+    targetType: log.targetType,
+    targetId: log.targetId,
+    createdAt: log.createdAt,
+    riskLabels: hasProtectedMetadata
+      ? ['Protected metadata withheld', 'Use raw export only for incident review']
+      : ['No protected metadata on row'],
+  };
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ orgId: string }> }) {
   const { orgId } = await params;
   const breakGlass = await requireBreakGlassPlatformAdminJson(request, {
@@ -23,8 +44,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ orgI
   }
 
   const url = new URL(request.url);
-  const limit = Math.min(Number(url.searchParams.get('limit') || '200'), 1000);
   const download = url.searchParams.get('download') === 'true';
+  const limit = Math.min(Number(url.searchParams.get('limit') || (download ? '200' : '25')), 1000);
 
   const logs = await db.query.auditLogs.findMany({
     where: eq(auditLogs.orgId, orgId),
@@ -50,5 +71,19 @@ export async function GET(request: Request, { params }: { params: Promise<{ orgI
     });
   }
 
-  return NextResponse.json(payload);
+  return NextResponse.json({
+    orgId,
+    principalType: 'trust_admin',
+    breakGlassReason: breakGlass.reason,
+    accessedAt: payload.accessedAt,
+    preview: {
+      mode: 'minimum_necessary',
+      limit,
+      returned: logs.length,
+      rawExportAvailableWithDownloadFlag: true,
+      warning:
+        'Raw org audit metadata is withheld from the dashboard preview. Use download=true only for approved incident review.',
+    },
+    logs: logs.map(toOrgAuditPreviewEntry),
+  });
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import {
   Table,
   TableBody,
@@ -27,6 +27,28 @@ interface AuditResponse {
   };
 }
 
+interface OrgAuditPreviewResponse {
+  orgId: string;
+  accessedAt: string;
+  preview: {
+    mode: 'minimum_necessary';
+    returned: number;
+    warning: string;
+  };
+  logs: Array<{
+    id: number;
+    action: string;
+    targetType: string | null;
+    targetId: string | null;
+    createdAt: string;
+    riskLabels: string[];
+  }>;
+}
+
+function formatAuditLabel(value: string) {
+  return internalValueLabel(value.replace(/[.:-]+/g, '_'));
+}
+
 export function AuditLogTable() {
   const [data, setData] = useState<AuditResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +56,11 @@ export function AuditLogTable() {
   const [page, setPage] = useState(1);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [breakGlassOrgId, setBreakGlassOrgId] = useState('');
+  const [breakGlassReason, setBreakGlassReason] = useState('');
+  const [breakGlassLoading, setBreakGlassLoading] = useState(false);
+  const [breakGlassError, setBreakGlassError] = useState<string | null>(null);
+  const [breakGlassPreview, setBreakGlassPreview] = useState<OrgAuditPreviewResponse | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -71,8 +98,143 @@ export function AuditLogTable() {
     fetchLogs();
   }, [fetchLogs]);
 
+  const handleBreakGlassPreview = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const orgId = breakGlassOrgId.trim();
+    const reason = breakGlassReason.trim();
+    setBreakGlassError(null);
+    setBreakGlassPreview(null);
+
+    if (!orgId) {
+      setBreakGlassError('Enter an organization id before requesting a break-glass preview.');
+      return;
+    }
+
+    if (reason.length < 12) {
+      setBreakGlassError('Break-glass reason must be at least 12 characters.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Open a break-glass organization audit preview? This records the reason and keeps raw metadata hidden.'
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setBreakGlassLoading(true);
+    try {
+      const res = await apiFetch(
+        `/api/admin/organizations/${encodeURIComponent(orgId)}/audit?limit=10`,
+        {
+          headers: {
+            'x-break-glass-reason': reason,
+          },
+        }
+      );
+      if (!res.ok) {
+        throw new Error('Break-glass preview failed');
+      }
+      setBreakGlassPreview((await res.json()) as OrgAuditPreviewResponse);
+    } catch (error) {
+      console.error('break_glass_org_audit.preview.failed', {
+        errorName: error instanceof Error ? error.name : typeof error,
+      });
+      setBreakGlassError('Break-glass preview could not be loaded. Check the id and reason.');
+    } finally {
+      setBreakGlassLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      <section className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+        <div className="space-y-1">
+          <h2 className="text-sm font-semibold text-amber-950">Break-glass org audit preview</h2>
+          <p className="text-sm text-amber-900">
+            Use only for approved privacy, trust, or incident review. The dashboard preview records
+            the reason and withholds raw audit metadata.
+          </p>
+        </div>
+        <form
+          className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]"
+          onSubmit={handleBreakGlassPreview}
+        >
+          <Input
+            aria-label="Organization id"
+            placeholder="Organization id"
+            value={breakGlassOrgId}
+            onChange={(event) => setBreakGlassOrgId(event.target.value)}
+          />
+          <Input
+            aria-label="Break-glass reason"
+            placeholder="Break-glass reason"
+            value={breakGlassReason}
+            onChange={(event) => setBreakGlassReason(event.target.value)}
+          />
+          <Button type="submit" disabled={breakGlassLoading}>
+            {breakGlassLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading
+              </>
+            ) : (
+              'Preview'
+            )}
+          </Button>
+        </form>
+        {breakGlassError ? <p className="mt-3 text-sm text-amber-950">{breakGlassError}</p> : null}
+        {breakGlassPreview ? (
+          <div className="mt-4 rounded-md border border-amber-200 bg-white p-3">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-medium text-foreground">
+                {breakGlassPreview.preview.returned} preview rows for {breakGlassPreview.orgId}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Accessed {format(new Date(breakGlassPreview.accessedAt), 'MMM d, HH:mm')}
+              </p>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {breakGlassPreview.preview.warning}
+            </p>
+            <div className="mt-3 space-y-2">
+              {breakGlassPreview.logs.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No org audit rows in the preview.</p>
+              ) : (
+                breakGlassPreview.logs.map((log) => (
+                  <div key={log.id} className="rounded-md border border-proofound-stone/70 p-3">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {formatAuditLabel(log.action)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatAuditLabel(log.targetType || 'unknown')} ·{' '}
+                          {log.targetId || 'No target'}
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(log.createdAt), 'MMM d, HH:mm')}
+                      </p>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {log.riskLabels.map((label) => (
+                        <span
+                          key={`${log.id}:${label}`}
+                          className="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-950"
+                        >
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        ) : null}
+      </section>
+
       <div className="flex items-center justify-between">
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />

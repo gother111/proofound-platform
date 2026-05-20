@@ -87,7 +87,18 @@ describe('org audit access routes', () => {
       reason: 'Investigating confirmed privacy incident',
     });
     (db.query.auditLogs.findMany as any).mockResolvedValue([
-      { id: 2, action: 'member.invited', orgId: 'org-1' },
+      {
+        id: 2,
+        action: 'member.invited',
+        orgId: 'org-1',
+        targetType: 'organization_member',
+        targetId: 'member-1',
+        meta: {
+          invitedEmail: 'candidate@example.com',
+          privateNote: 'Raw incident detail',
+        },
+        createdAt: new Date('2026-05-20T10:00:00.000Z'),
+      },
     ]);
 
     const response = await adminAuditReadGET(
@@ -103,6 +114,53 @@ describe('org audit access routes', () => {
     expect(response.status).toBe(200);
     expect(payload.breakGlassReason).toBe('Investigating confirmed privacy incident');
     expect(payload.principalType).toBe('trust_admin');
+    expect(payload.preview).toEqual(
+      expect.objectContaining({
+        mode: 'minimum_necessary',
+        rawExportAvailableWithDownloadFlag: true,
+      })
+    );
+    expect(payload.logs[0]).toEqual(
+      expect.objectContaining({
+        action: 'member.invited',
+        targetType: 'organization_member',
+        targetId: 'member-1',
+        riskLabels: expect.arrayContaining(['Protected metadata withheld']),
+      })
+    );
+    expect(JSON.stringify(payload)).not.toContain('candidate@example.com');
+    expect(JSON.stringify(payload)).not.toContain('Raw incident detail');
     expect(db.query.auditLogs.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps raw admin org audit rows behind explicit break-glass download mode', async () => {
+    (requireBreakGlassPlatformAdminJson as any).mockResolvedValue({
+      adminUser: { userId: 'admin-1' },
+      reason: 'Investigating confirmed privacy incident',
+    });
+    (db.query.auditLogs.findMany as any).mockResolvedValue([
+      {
+        id: 2,
+        action: 'member.invited',
+        orgId: 'org-1',
+        meta: {
+          invitedEmail: 'candidate@example.com',
+        },
+      },
+    ]);
+
+    const response = await adminAuditReadGET(
+      new Request('http://localhost/api/admin/organizations/org-1/audit?download=true'),
+      {
+        params: Promise.resolve({ orgId: 'org-1' }),
+      }
+    );
+    const text = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-disposition')).toContain(
+      'proofound-admin-org-audit-org-1.json'
+    );
+    expect(text).toContain('candidate@example.com');
   });
 });
