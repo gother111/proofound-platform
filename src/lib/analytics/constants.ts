@@ -277,15 +277,6 @@ export interface InterviewScheduledProperties {
   days_since_match: number;
 }
 
-/**
- * Standard properties for SUS survey completion
- */
-export interface SUSSurveyProperties {
-  score: number; // 0-100
-  responses: number[]; // 10 responses, each 1-5
-  trigger_point: 'post_activation' | 'post_match' | 'post_contract' | 'periodic';
-}
-
 // ============================================================================
 // CACHE KEYS
 // ============================================================================
@@ -299,7 +290,6 @@ export const CacheKey = {
   TTV_MEDIAN: 'metrics:ttv:median',
   TTSC_MEDIAN: 'metrics:ttsc:median',
   PAC_LIFT: 'metrics:pac:lift',
-  SUS_AVERAGE: 'metrics:sus:average',
 } as const;
 
 /**

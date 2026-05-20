@@ -2,7 +2,7 @@
  * Analytics Event Emission System
  *
  * Centralized event tracking for all key user actions
- * Supports PRD metrics: TTFQI, TTV, TTSC, PAC lift, SUS, Well-Being Delta, Fairness Gap
+ * Supports launch metrics: TTFQI, TTV, TTSC, PAC lift, and first-ten-minute activation.
  */
 
 import { db } from '@/db';
