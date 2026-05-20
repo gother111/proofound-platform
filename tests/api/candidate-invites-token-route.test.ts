@@ -111,6 +111,44 @@ describe('GET /api/candidate-invites/[token]', () => {
     expect(payload.invite).not.toHaveProperty('conversationId');
   });
 
+  it('returns a derived communications URL to the claimant without exposing raw workflow identifiers', async () => {
+    mockAuthUser({ id: '11111111-1111-1111-1111-111111111111', email: 'candidate@example.com' });
+    mockInviteSelect([
+      {
+        id: 'invite-1',
+        orgId: 'org-1',
+        inviteeEmail: 'candidate@example.com',
+        status: 'claimed',
+        flowType: 'test_match',
+        assignmentId: 'assignment-1',
+        expiresAt: new Date(Date.now() + 60_000),
+        claimedByProfileId: '11111111-1111-1111-1111-111111111111',
+        claimedAt: new Date(),
+        acceptedByProfileId: null,
+        acceptedAt: null,
+        matchId: '22222222-2222-4222-8222-222222222222',
+        conversationId: '33333333-3333-4333-8333-333333333333',
+        proofSubmittedAt: null,
+      },
+    ]);
+
+    const response = await GET(new NextRequest('http://localhost/api/candidate-invites/token'), {
+      params: Promise.resolve({ token: 'token-value' }),
+    });
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.invite.claimedByCurrentUser).toBe(true);
+    expect(payload.invite.acceptedByCurrentUser).toBe(false);
+    expect(payload.invite.communicationsUrl).toBe(
+      '/app/i/communications?section=messages&conversation=33333333-3333-4333-8333-333333333333'
+    );
+    expect(payload.invite).not.toHaveProperty('claimedByProfileId');
+    expect(payload.invite).not.toHaveProperty('acceptedByProfileId');
+    expect(payload.invite).not.toHaveProperty('matchId');
+    expect(payload.invite).not.toHaveProperty('conversationId');
+  });
+
   it('reuses an existing preview redeem-session nonce instead of rotating blindly', async () => {
     mockAuthUser(null);
     mockInviteSelect([
