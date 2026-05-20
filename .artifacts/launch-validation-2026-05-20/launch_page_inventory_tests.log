@@ -8,36 +8,24 @@
 
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
-WebSocket server error:
-Error: listen EPERM: operation not permitted 0.0.0.0:24678
-    at Server.setupListenHandle [as _listen2] (node:net:1986:21)
-    at listenInCluster (node:net:2065:12)
-    at Server.listen (node:net:2170:7)
-    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
-    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
-    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
-    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
-    at Array.map (<anonymous>)
-    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
-    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
 
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
-
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
-
- ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 47ms
- ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 46ms
- ✓ tests/api/launch-page-inventory.test.ts  (6 tests) 108ms
- ✓ tests/api/archived-api-handlers-route.test.ts  (11 tests) 5ms
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 42ms
+ ✓ tests/api/launch-page-inventory.test.ts  (6 tests) 117ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 66ms
+ ✓ tests/api/archived-api-handlers-route.test.ts  (11 tests) 6ms
 
  Test Files  4 passed (4)
       Tests  27 passed (27)
-   Start at  03:15:06
-   Duration  1.15s (transform 228ms, setup 445ms, collect 622ms, tests 206ms, environment 861ms, prepare 192ms)
+   Start at  04:46:24
+   Duration  1.19s (transform 232ms, setup 439ms, collect 650ms, tests 231ms, environment 868ms, prepare 164ms)

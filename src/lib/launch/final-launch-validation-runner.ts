@@ -6,6 +6,7 @@ import { spawn } from 'node:child_process';
 import { getLaunchDateSlug } from '@/lib/launch/date-slug';
 
 export const FINAL_LAUNCH_VALIDATION_SCHEMA_VERSION = 1;
+export const FINAL_LAUNCH_VALIDATION_REPORT_FILE_NAME = 'launch-gate-status.md';
 
 export type FinalLaunchGateStatus = 'PASS' | 'FAIL' | 'UNVERIFIED' | 'NOT APPLICABLE';
 export type FinalLaunchGatePriority = 'P0' | 'P1';
@@ -540,7 +541,7 @@ export async function runFinalLaunchValidation(options: FinalLaunchValidationOpt
     'utf8'
   );
   await fs.writeFile(
-    path.join(outputDir, 'final-launch-checklist-status.md'),
+    path.join(outputDir, FINAL_LAUNCH_VALIDATION_REPORT_FILE_NAME),
     renderMarkdownReport(bundle),
     'utf8'
   );
@@ -549,7 +550,7 @@ export async function runFinalLaunchValidation(options: FinalLaunchValidationOpt
     bundle,
     outputDir,
     commandsPath: path.join(outputDir, 'commands.json'),
-    reportPath: path.join(outputDir, 'final-launch-checklist-status.md'),
+    reportPath: path.join(outputDir, FINAL_LAUNCH_VALIDATION_REPORT_FILE_NAME),
   };
 }
 

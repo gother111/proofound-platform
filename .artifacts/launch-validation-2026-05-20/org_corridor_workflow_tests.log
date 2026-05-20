@@ -8,53 +8,40 @@
 
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
-WebSocket server error:
-Error: listen EPERM: operation not permitted 0.0.0.0:24678
-    at Server.setupListenHandle [as _listen2] (node:net:1986:21)
-    at listenInCluster (node:net:2065:12)
-    at Server.listen (node:net:2170:7)
-    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
-    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
-    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
-    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
-    at Array.map (<anonymous>)
-    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
-    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
-
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
-
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
 [dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
 
- ✓ tests/api/decisions-route.test.ts  (10 tests) 15ms
- ✓ tests/lib/workflow-decision-record.test.ts  (3 tests) 5ms
- ✓ tests/api/interviews-schedule-route.test.ts  (11 tests) 31ms
- ✓ tests/api/org-match-review-route.test.ts  (18 tests) 106ms
+ ✓ tests/api/decisions-route.test.ts  (10 tests) 17ms
+ ✓ tests/lib/workflow-decision-record.test.ts  (3 tests) 7ms
+ ✓ tests/api/interviews-schedule-route.test.ts  (11 tests) 40ms
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
 
- ✓ tests/api/interviews-edit-route.test.ts  (5 tests) 15ms
+ ✓ tests/api/interviews-edit-route.test.ts  (5 tests) 14ms
 stderr | tests/api/interviews-complete-route.test.ts > POST /api/interviews/complete > returns success even if feedback invite issuance fails after completion
 Interview completion feedback invites failed Error: schema cache drift
     at /Users/yuriibakurov/proofound/tests/api/interviews-complete-route.test.ts:138:50
@@ -68,29 +55,30 @@ Interview completion feedback invites failed Error: schema cache drift
     at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
     at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)
 
- ✓ tests/api/interviews-complete-route.test.ts  (3 tests) 13ms
- ✓ tests/api/engagement-verifications-route.test.ts  (6 tests) 24ms
+ ✓ tests/api/interviews-complete-route.test.ts  (3 tests) 14ms
+ ✓ tests/api/org-match-review-route.test.ts  (18 tests) 44ms
+ ✓ tests/api/engagement-verifications-route.test.ts  (6 tests) 17ms
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/api/conversation-reveal-route.test.ts  (7 tests) 29ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+ ✓ tests/lib/workflow-email-privacy.test.ts  (11 tests) 37ms
+ ✓ tests/api/decisions-window-route.test.ts  (2 tests) 9ms
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
 
- ✓ tests/lib/workflow-email-privacy.test.ts  (11 tests) 31ms
- ✓ tests/api/conversation-reveal-route.test.ts  (7 tests) 21ms
- ✓ tests/api/decisions-window-route.test.ts  (2 tests) 11ms
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
-
-stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
-
- ✓ tests/lib/workflow-idempotency.test.ts  (3 tests) 9ms
+ ✓ tests/lib/workflow-idempotency.test.ts  (3 tests) 10ms
  ✓ tests/api/interviews-cancel-route.test.ts  (3 tests) 10ms
  ✓ tests/lib/workflow-contracts.test.ts  (4 tests) 2ms
- ✓ tests/lib/workflow-reveal-timeout.test.ts  (2 tests) 2ms
+ ✓ tests/lib/workflow-reveal-timeout.test.ts  (2 tests) 1ms
 
  Test Files  14 passed (14)
       Tests  88 passed (88)
-   Start at  03:15:12
-   Duration  2.45s (transform 1.22s, setup 1.94s, collect 6.66s, tests 295ms, environment 4.07s, prepare 947ms)
+   Start at  04:47:35
+   Duration  2.58s (transform 1.27s, setup 1.86s, collect 7.47s, tests 251ms, environment 4.15s, prepare 950ms)

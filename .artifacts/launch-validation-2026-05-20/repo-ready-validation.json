@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "kind": "repo_ready_validation",
   "scope": "repo",
-  "generatedAt": "2026-05-20T01:17:59.912Z",
-  "authoritativeBaseUrl": null,
-  "verdict": "NOT_READY",
+  "generatedAt": "2026-05-20T02:56:08.375Z",
+  "authoritativeBaseUrl": "http://127.0.0.1:61762",
+  "verdict": "READY",
   "gates": [
     {
       "id": "prod_build",
@@ -12,15 +12,18 @@
       "summary": "`npm run build` passed under the launch Node/runtime configuration.",
       "evidence": [".artifacts/launch-validation-2026-05-20/repo-ready-build.log"],
       "command": "npm run build",
-      "observedAt": "2026-05-20T01:17:59.912Z"
+      "observedAt": "2026-05-20T02:56:08.375Z"
     },
     {
       "id": "prod_boot",
-      "status": "FAIL",
-      "summary": "Production boot could not start in this environment; review the captured boot error and rerun on a host that can bind localhost.",
-      "evidence": [".artifacts/launch-validation-2026-05-20/repo-ready-prod-boot-error.log"],
+      "status": "PASS",
+      "summary": "`npm run start` booted successfully and `/api/health` returned ok.",
+      "evidence": [
+        ".artifacts/launch-validation-2026-05-20/repo-ready-prod-start.log",
+        ".artifacts/launch-validation-2026-05-20/repo-ready-prod-health.json"
+      ],
       "command": "npm run start -- -p <dynamic-port> && curl /api/health",
-      "observedAt": "2026-05-20T01:17:59.912Z"
+      "observedAt": "2026-05-20T02:56:08.375Z"
     },
     {
       "id": "route_surface_and_archived_routes",
@@ -28,7 +31,7 @@
       "summary": "Launch route and page inventory tests passed against the current repo state.",
       "evidence": [".artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log"],
       "command": "npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts",
-      "observedAt": "2026-05-20T01:17:59.912Z"
+      "observedAt": "2026-05-20T02:56:08.375Z"
     },
     {
       "id": "launch_status_route_logic",
@@ -36,7 +39,7 @@
       "summary": "Launch-status route tests passed with current persisted/live monitor logic.",
       "evidence": [".artifacts/launch-validation-2026-05-20/repo-ready-launch-status-route.log"],
       "command": "npm run test -- src/app/api/monitoring/__tests__/launch-status-route.test.ts",
-      "observedAt": "2026-05-20T01:17:59.912Z"
+      "observedAt": "2026-05-20T02:56:08.375Z"
     },
     {
       "id": "public_portfolio_safe",
@@ -44,7 +47,7 @@
       "summary": "Public portfolio page, access consistency, and projection tests passed for public-safe direct-link behavior.",
       "evidence": [".artifacts/launch-validation-2026-05-20/repo-ready-public-portfolio.log"],
       "command": "npm run test -- tests/ui/public-portfolio-access-consistency.test.tsx tests/ui/public-portfolio-page.test.tsx tests/lib/public-portfolio-projection.test.ts",
-      "observedAt": "2026-05-20T01:17:59.912Z"
+      "observedAt": "2026-05-20T02:56:08.375Z"
     },
     {
       "id": "private_context_scaffolding",
@@ -52,7 +55,7 @@
       "summary": "Private work, education, and volunteering context scaffolding tests passed.",
       "evidence": [".artifacts/launch-validation-2026-05-20/repo-ready-private-context.log"],
       "command": "npm run test -- tests/ui/profile-dialogs-edit-routing.test.tsx tests/ui/education-form-skill-picker.test.tsx tests/actions/onboarding-private-context-scaffolding.test.ts",
-      "observedAt": "2026-05-20T01:17:59.912Z"
+      "observedAt": "2026-05-20T02:56:08.375Z"
     },
     {
       "id": "workflow_email_privacy",
@@ -60,7 +63,7 @@
       "summary": "Workflow email privacy tests passed for masked and pre-reveal flows.",
       "evidence": [".artifacts/launch-validation-2026-05-20/repo-ready-workflow-email-privacy.log"],
       "command": "npm run test -- tests/lib/workflow-email-privacy.test.ts",
-      "observedAt": "2026-05-20T01:17:59.912Z"
+      "observedAt": "2026-05-20T02:56:08.375Z"
     },
     {
       "id": "manual_privacy_sweep",
@@ -68,7 +71,7 @@
       "summary": "Privacy-sensitive review, uploads, and launch archive protection tests passed.",
       "evidence": [".artifacts/launch-validation-2026-05-20/repo-ready-manual-privacy.log"],
       "command": "npm run test -- tests/api/org-match-review-route.test.ts tests/lib/uploads-privacy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts",
-      "observedAt": "2026-05-20T01:17:59.912Z"
+      "observedAt": "2026-05-20T02:56:08.375Z"
     },
     {
       "id": "internal_admin_surfaces",
@@ -76,23 +79,29 @@
       "summary": "Internal admin surface tests passed for route protection, queue APIs, and dashboard links.",
       "evidence": [".artifacts/launch-validation-2026-05-20/repo-ready-internal-admin.log"],
       "command": "npm run test -- tests/api/admin-internal-ops-queue-route.test.ts tests/ui/admin-dashboard-launch-links.test.tsx src/lib/__tests__/middleware-launch-archive.test.ts",
-      "observedAt": "2026-05-20T01:17:59.912Z"
+      "observedAt": "2026-05-20T02:56:08.375Z"
     },
     {
       "id": "live_launch_smoke_artifact_refresh",
-      "status": "FAIL",
-      "summary": "Skipped launch smoke runner because production boot was unavailable.",
-      "evidence": [".artifacts/launch-validation-2026-05-20/repo-ready-build.log"],
-      "command": "npm run test:launch:smoke -- --base-url <local-prod-url>",
-      "observedAt": "2026-05-20T01:17:59.912Z"
+      "status": "PASS",
+      "summary": "Repo launch smoke runner passed and refreshed fresh repo-scoped smoke evidence.",
+      "evidence": [
+        ".artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json",
+        ".artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke.log"
+      ],
+      "command": "npm run test:launch:smoke -- --scope repo --base-url http://127.0.0.1:61762 --artifact /Users/yuriibakurov/proofound/.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json",
+      "observedAt": "2026-05-20T02:56:08.375Z"
     },
     {
       "id": "public_org_trust_smoke",
-      "status": "FAIL",
-      "summary": "Skipped public org trust smoke because production boot was unavailable.",
-      "evidence": [".artifacts/launch-validation-2026-05-20/repo-ready-build.log"],
-      "command": "npm run test:launch:smoke -- --base-url <local-prod-url>",
-      "observedAt": "2026-05-20T01:17:59.912Z"
+      "status": "PASS",
+      "summary": "Public org trust smoke scenario passed in the fresh launch smoke artifact.",
+      "evidence": [
+        ".artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json",
+        ".artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke.log"
+      ],
+      "command": "npm run test:launch:smoke -- --scope repo --base-url http://127.0.0.1:61762 --artifact /Users/yuriibakurov/proofound/.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json",
+      "observedAt": "2026-05-20T02:56:08.375Z"
     }
   ]
 }

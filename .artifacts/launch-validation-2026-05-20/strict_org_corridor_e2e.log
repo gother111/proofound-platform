@@ -1,21 +1,35 @@
 > proofound@0.1.0 test:e2e:org:strict
 > NEXT_PUBLIC_USE_MOCK_SUPABASE=false PLAYWRIGHT_SERVER_MODE=prod PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY=1 PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK=1 PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE=1 node ./scripts/playwright-node24.mjs test e2e/strict/organization.strict.spec.ts e2e/strict/org-corridor.strict.spec.ts --project=chromium --reporter=line --workers=1
 
-[1A[2K[2m[WebServer] [22m(node:3620) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[1A[2K[2m[WebServer] [22m(node:57431) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
 
-[1A[2K[2m[WebServer] [22m ⨯ Failed to start server
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
 
-[1A[2K[2m[WebServer] [22mError: listen EPERM: operation not permitted 0.0.0.0:33100
-[2m[WebServer] [22m    at <unknown> (Error: listen EPERM: operation not permitted 0.0.0.0:33100)
-[2m[WebServer] [22m    at new Promise (<anonymous>) {
-[2m[WebServer] [22m  code: [32m'EPERM'[39m,
-[2m[WebServer] [22m  errno: [33m-1[39m,
-[2m[WebServer] [22m  syscall: [32m'listen'[39m,
-[2m[WebServer] [22m  address: [32m'0.0.0.0'[39m,
-[2m[WebServer] [22m  port: [33m33100[39m
-[2m[WebServer] [22m}
+Running 7 tests using 1 worker
 
-Error: Process from config.webServer was not able to start. Exit code: 1
+[1A[2K(node:57440) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
 
-[1A[2K
+
+[1A[2K(node:57440) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+[1A[2K[1/7] [chromium] › e2e/strict/org-corridor.strict.spec.ts:231:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end
+[1A[2K[2m[WebServer] [22m(node:57431) TimeoutNegativeWarning: -89111.86211708077 is a negative number.
+[2m[WebServer] [22mTimeout duration was set to 1.
+
+[1A[2K[2/7] [chromium] › e2e/strict/organization.strict.spec.ts:73:3 › Strict MVP Organization Flows (O-01..O-20) › O-02..O-04 org setup, team roles, and profile contracts are verifiable
+[1A[2K[3/7] [chromium] › e2e/strict/organization.strict.spec.ts:107:3 › Strict MVP Organization Flows (O-01..O-20) › O-05..O-07 and O-17 assignment create/publish/manage lifecycle is strict
+[1A[2K[4/7] [chromium] › e2e/strict/organization.strict.spec.ts:202:3 › Strict MVP Organization Flows (O-01..O-20) › O-08..O-12 ranked matches, shortlist, messaging, and interview prep are strict
+[1A[2K[5/7] [chromium] › e2e/strict/organization.strict.spec.ts:274:3 › Strict MVP Organization Flows (O-01..O-20) › O-07b draft autosave/update and resume-to-publish contract is strict
+[1A[2K[2m[WebServer] [22m{"level":"warn","event":"assignment.create.unknown_matrix_skills","timestamp":"2026-05-20T02:54:27.417Z","requestId":"UGgYTdnU0Pve","path":"/api/assignments","method":"POST","userId":"2f47d799-1c7f-4f68-abab-c4e297fbdad7","orgId":"24efb165-c201-4ca3-93fa-b439ec8918ba","unknownSkillCodes":["strict.resume.skill.1","strict.resume.skill.2","strict.resume.skill.3"]}
+
+[1A[2K[6/7] [chromium] › e2e/strict/organization.strict.spec.ts:376:3 › Strict MVP Organization Flows (O-01..O-20) › O-13..O-16 interview, archived contract gating, and verification surfaces stay aligned
+[1A[2K[7/7] [chromium] › e2e/strict/organization.strict.spec.ts:392:3 › Strict MVP Organization Flows (O-01..O-20) › O-18..O-20 team permissions and compliance settings are strict
+[1A[2K  Slow test file: [chromium] › e2e/strict/org-corridor.strict.spec.ts (5.0m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  7 passed (7.9m)

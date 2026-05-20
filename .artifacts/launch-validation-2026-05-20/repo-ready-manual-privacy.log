@@ -5,33 +5,19 @@
  RUN  v1.6.1 /Users/yuriibakurov/proofound
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
 
 stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
-[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
 
  ✓ tests/lib/uploads-privacy.test.ts  (14 tests) 7ms
- ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 47ms
- ✓ tests/api/org-match-review-route.test.ts  (18 tests) 30ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 44ms
+ ✓ tests/api/org-match-review-route.test.ts  (18 tests) 33ms
 
  Test Files  3 passed (3)
       Tests  38 passed (38)
-   Start at  03:19:48
-   Duration  1.14s (transform 251ms, setup 288ms, collect 623ms, tests 84ms, environment 616ms, prepare 128ms)
-
-
-WebSocket server error:
-Error: listen EPERM: operation not permitted 0.0.0.0:24678
-    at Server.setupListenHandle [as _listen2] (node:net:1986:21)
-    at listenInCluster (node:net:2065:12)
-    at Server.listen (node:net:2170:7)
-    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:20511:18)
-    at Object.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25914:27)
-    at DevEnvironment.listen (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:34831:12)
-    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:101
-    at Array.map (<anonymous>)
-    at file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25637:84
-    at async _createServer (file:///Users/yuriibakurov/proofound/node_modules/vite/dist/node/chunks/config.js:25654:9)
+   Start at  04:58:03
+   Duration  1.19s (transform 281ms, setup 331ms, collect 650ms, tests 84ms, environment 652ms, prepare 126ms)

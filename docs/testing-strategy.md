@@ -135,9 +135,13 @@ This document defines the current testing architecture for Proofound and the com
 Use `npm run launch:validate` for the locked MVP pilot's final engineering evidence pass.
 It writes a dated artifact directory at `.artifacts/launch-validation-YYYY-MM-DD/` with:
 
-- `final-launch-checklist-status.md`
+- `launch-gate-status.md`
 - `commands.json`
 - one redacted log per command that actually ran
+
+The broader evidence-backed operational checklist is generated separately with
+`npm run launch:checklist` and owns `final-launch-checklist-status.md` plus
+`final-launch-checklist-status.json`.
 
 The command runs the launch-critical gates in this order: deploy readiness, lint, typecheck,
 production build, launch surface inventory, launch page inventory, privacy/RLS, upload privacy,

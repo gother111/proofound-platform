@@ -1,11 +1,11 @@
 
 > proofound@0.1.0 start
-> next start -p 55731
+> next start -p 61762
 
    ▲ Next.js 15.5.18
-   - Local:        http://localhost:55731
-   - Network:      http://192.168.1.155:55731
+   - Local:        http://localhost:61762
+   - Network:      http://192.168.1.155:61762
 
  ✓ Starting...
- ✓ Ready in 440ms
-{"level":"warn","event":"database.health.timeout.recovered","timestamp":"2026-05-19T23:01:21.047Z","error":"Timed out after 1200ms"}
+ ✓ Ready in 439ms
+{"level":"warn","event":"database.health.timeout.recovered","timestamp":"2026-05-20T02:57:54.850Z","error":"Timed out after 1200ms"}

@@ -1,23 +1,18 @@
 {
   "schemaVersion": 1,
   "kind": "final_launch_validation",
-  "generatedAt": "2026-05-20T01:12:49.654Z",
+  "generatedAt": "2026-05-20T02:44:07.819Z",
   "artifactDate": "2026-05-20",
   "workspace": "/Users/yuriibakurov/proofound",
   "outputDir": ".artifacts/launch-validation-2026-05-20",
-  "verdict": "NO_GO",
+  "verdict": "GO",
   "statusCounts": {
-    "PASS": 9,
-    "FAIL": 4,
+    "PASS": 13,
+    "FAIL": 0,
     "UNVERIFIED": 0,
     "NOT APPLICABLE": 1
   },
-  "p0BlockingGateIds": [
-    "privacy_rls_baseline_tests",
-    "privacy_rls_extended_tests",
-    "strict_org_corridor_e2e",
-    "production_dependency_audit"
-  ],
+  "p0BlockingGateIds": [],
   "gates": [
     {
       "id": "deploy_readiness",
@@ -28,9 +23,9 @@
       "reason": null,
       "exitCode": 0,
       "signal": null,
-      "durationMs": 79,
-      "startedAt": "2026-05-20T01:12:49.670Z",
-      "endedAt": "2026-05-20T01:12:49.750Z",
+      "durationMs": 80,
+      "startedAt": "2026-05-20T02:44:07.835Z",
+      "endedAt": "2026-05-20T02:44:07.916Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/deploy_readiness.log"
     },
     {
@@ -42,9 +37,9 @@
       "reason": null,
       "exitCode": 0,
       "signal": null,
-      "durationMs": 12457,
-      "startedAt": "2026-05-20T01:12:49.750Z",
-      "endedAt": "2026-05-20T01:13:02.209Z",
+      "durationMs": 12704,
+      "startedAt": "2026-05-20T02:44:07.916Z",
+      "endedAt": "2026-05-20T02:44:20.621Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/lint.log"
     },
     {
@@ -56,9 +51,9 @@
       "reason": null,
       "exitCode": 0,
       "signal": null,
-      "durationMs": 20860,
-      "startedAt": "2026-05-20T01:13:02.209Z",
-      "endedAt": "2026-05-20T01:13:23.069Z",
+      "durationMs": 20468,
+      "startedAt": "2026-05-20T02:44:20.621Z",
+      "endedAt": "2026-05-20T02:44:41.089Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/typecheck.log"
     },
     {
@@ -70,9 +65,9 @@
       "reason": null,
       "exitCode": 0,
       "signal": null,
-      "durationMs": 100373,
-      "startedAt": "2026-05-20T01:13:23.069Z",
-      "endedAt": "2026-05-20T01:15:03.443Z",
+      "durationMs": 100200,
+      "startedAt": "2026-05-20T02:44:41.089Z",
+      "endedAt": "2026-05-20T02:46:21.290Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/production_build.log"
     },
     {
@@ -84,9 +79,9 @@
       "reason": null,
       "exitCode": 0,
       "signal": null,
-      "durationMs": 2349,
-      "startedAt": "2026-05-20T01:15:03.443Z",
-      "endedAt": "2026-05-20T01:15:05.792Z",
+      "durationMs": 2534,
+      "startedAt": "2026-05-20T02:46:21.290Z",
+      "endedAt": "2026-05-20T02:46:23.825Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/launch_surface_inventory_tests.log"
     },
     {
@@ -98,37 +93,37 @@
       "reason": null,
       "exitCode": 0,
       "signal": null,
-      "durationMs": 1842,
-      "startedAt": "2026-05-20T01:15:05.792Z",
-      "endedAt": "2026-05-20T01:15:07.634Z",
+      "durationMs": 1899,
+      "startedAt": "2026-05-20T02:46:23.825Z",
+      "endedAt": "2026-05-20T02:46:25.725Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/launch_page_inventory_tests.log"
     },
     {
       "id": "privacy_rls_baseline_tests",
       "label": "Privacy/RLS baseline tests",
       "priority": "P0",
-      "status": "FAIL",
+      "status": "PASS",
       "command": "npm run test:privacy",
-      "reason": "Command exited with 1.",
-      "exitCode": 1,
+      "reason": null,
+      "exitCode": 0,
       "signal": null,
-      "durationMs": 1456,
-      "startedAt": "2026-05-20T01:15:07.634Z",
-      "endedAt": "2026-05-20T01:15:09.091Z",
+      "durationMs": 34022,
+      "startedAt": "2026-05-20T02:46:25.725Z",
+      "endedAt": "2026-05-20T02:46:59.748Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/privacy_rls_baseline_tests.log"
     },
     {
       "id": "privacy_rls_extended_tests",
       "label": "Privacy/RLS extended tests",
       "priority": "P0",
-      "status": "FAIL",
+      "status": "PASS",
       "command": "npm run test:privacy:extended",
-      "reason": "Command exited with 1.",
-      "exitCode": 1,
+      "reason": null,
+      "exitCode": 0,
       "signal": null,
-      "durationMs": 1198,
-      "startedAt": "2026-05-20T01:15:09.091Z",
-      "endedAt": "2026-05-20T01:15:10.290Z",
+      "durationMs": 32957,
+      "startedAt": "2026-05-20T02:46:59.748Z",
+      "endedAt": "2026-05-20T02:47:32.706Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/privacy_rls_extended_tests.log"
     },
     {
@@ -140,9 +135,9 @@
       "reason": null,
       "exitCode": 0,
       "signal": null,
-      "durationMs": 1869,
-      "startedAt": "2026-05-20T01:15:10.290Z",
-      "endedAt": "2026-05-20T01:15:12.160Z",
+      "durationMs": 1868,
+      "startedAt": "2026-05-20T02:47:32.706Z",
+      "endedAt": "2026-05-20T02:47:34.574Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/upload_privacy_tests.log"
     },
     {
@@ -154,9 +149,9 @@
       "reason": null,
       "exitCode": 0,
       "signal": null,
-      "durationMs": 3176,
-      "startedAt": "2026-05-20T01:15:12.160Z",
-      "endedAt": "2026-05-20T01:15:15.337Z",
+      "durationMs": 3331,
+      "startedAt": "2026-05-20T02:47:34.574Z",
+      "endedAt": "2026-05-20T02:47:37.906Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/org_corridor_workflow_tests.log"
     },
     {
@@ -168,23 +163,23 @@
       "reason": null,
       "exitCode": 0,
       "signal": null,
-      "durationMs": 1952,
-      "startedAt": "2026-05-20T01:15:15.337Z",
-      "endedAt": "2026-05-20T01:15:17.290Z",
+      "durationMs": 1860,
+      "startedAt": "2026-05-20T02:47:37.906Z",
+      "endedAt": "2026-05-20T02:47:39.768Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/export_delete_tests.log"
     },
     {
       "id": "strict_org_corridor_e2e",
       "label": "Strict org corridor E2E",
       "priority": "P0",
-      "status": "FAIL",
+      "status": "PASS",
       "command": "npm run test:e2e:org:strict",
-      "reason": "Command exited with 1.",
-      "exitCode": 1,
+      "reason": null,
+      "exitCode": 0,
       "signal": null,
-      "durationMs": 1212,
-      "startedAt": "2026-05-20T01:15:17.290Z",
-      "endedAt": "2026-05-20T01:15:18.502Z",
+      "durationMs": 472948,
+      "startedAt": "2026-05-20T02:47:39.768Z",
+      "endedAt": "2026-05-20T02:55:32.717Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log"
     },
     {
@@ -197,22 +192,22 @@
       "exitCode": null,
       "signal": null,
       "durationMs": 0,
-      "startedAt": "2026-05-20T01:15:18.502Z",
-      "endedAt": "2026-05-20T01:15:18.502Z",
+      "startedAt": "2026-05-20T02:55:32.717Z",
+      "endedAt": "2026-05-20T02:55:32.717Z",
       "logPath": null
     },
     {
       "id": "production_dependency_audit",
       "label": "Production dependency audit",
       "priority": "P0",
-      "status": "FAIL",
+      "status": "PASS",
       "command": "npm audit --omit=dev",
-      "reason": "Command exited with 1.",
-      "exitCode": 1,
+      "reason": null,
+      "exitCode": 0,
       "signal": null,
-      "durationMs": 632,
-      "startedAt": "2026-05-20T01:15:18.502Z",
-      "endedAt": "2026-05-20T01:15:19.134Z",
+      "durationMs": 1330,
+      "startedAt": "2026-05-20T02:55:32.717Z",
+      "endedAt": "2026-05-20T02:55:34.048Z",
       "logPath": ".artifacts/launch-validation-2026-05-20/production_dependency_audit.log"
     }
   ]

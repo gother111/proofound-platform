@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildFinalLaunchValidationGates,
   computeFinalLaunchVerdict,
+  FINAL_LAUNCH_VALIDATION_REPORT_FILE_NAME,
   redactSensitiveOutput,
   runFinalLaunchValidation,
   type FinalLaunchGateResult,
@@ -133,6 +134,7 @@ describe('final launch validation runner', () => {
     };
     const report = await fs.readFile(result.reportPath, 'utf8');
 
+    expect(path.basename(result.reportPath)).toBe(FINAL_LAUNCH_VALIDATION_REPORT_FILE_NAME);
     expect(commands.verdict).toBe('NO_GO');
     expect(commands.statusCounts.UNVERIFIED).toBe(1);
     expect(commands.statusCounts['NOT APPLICABLE']).toBe(1);

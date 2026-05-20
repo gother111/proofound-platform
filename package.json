@@ -232,7 +232,8 @@
       "minimatch": "^9.0.7"
     },
     "postcss": "$postcss",
-    "protobufjs": "^7.5.5",
+    "protobufjs": "^7.5.8",
+    "ws": "^8.20.1",
     "vite": "^7.2.6"
   },
   "lint-staged": {

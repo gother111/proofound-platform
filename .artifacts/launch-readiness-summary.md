@@ -16,32 +16,35 @@ Historical Verdict: `NOT READY`
 > - Treat this March memo as historical evidence only. The current MVP sweep artifact is `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`.
 > - Current route-surface truth is no longer the March `18` disallowed-route blocker. The 2026-05-20 route inventory passed and classifies active MVP, internal launch-ops, and archived compatibility routes explicitly.
 > - Current local launch smoke evidence is `.artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke-full.json`; the local monitor rerun against that artifact passed `10/10` with persistence disabled.
-> - Current repo-ready checklist evidence is `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`, generated `2026-05-20T01:34:00.276Z` with repo scope `NOT_READY`, `30` pass, `6` fail, `1` blocked, and `3` external prerequisites unverified.
-> - Current launch blockers are narrower than this March memo, but they are not only external: this sandbox rerun could not start the production server, so production boot, local launch smoke refresh, public org trust smoke, and strict org E2E remain failed until rerun on a host that can bind localhost. Real-DB privacy/RLS tests also failed in this sandbox because Supabase DNS resolution was unavailable. Incident/support owner assignment, critical alert proof, backup/restore verification, and final founder go/no-go evidence remain external production-candidate prerequisites. Browser/dev-server checks in the MVP sweep are useful surface evidence, not a substitute for production boot/smoke sign-off.
+> - Current repo-ready checklist evidence is `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`, generated `2026-05-20T02:58:33.442Z` with repo scope `READY`, `36` pass, `0` fail, `0` blocked, and `4` external prerequisites unverified.
+> - Current final engineering gate evidence is `.artifacts/launch-validation-2026-05-20/launch-gate-status.md`, generated `2026-05-20T02:44:07.819Z` with verdict `GO`, `13` pass, `0` fail, `0` unverified, and `1` not applicable launch-smoke gate because `BASE_URL` was intentionally unset for that command.
+> - The previous sandbox bind and Supabase DNS blockers were cleared by the approved validation rerun. The remaining unresolved items are external production-candidate prerequisites: incident/support owner assignment, critical alert proof, backup/restore verification, and final founder go/no-go evidence after reviewing the green evidence pack.
 > - Non-blocking watch items should be read separately from launch gates: assignment publish/list latency still needs live or staging budget proof, and historical registry cleanup should not reopen retired March route blockers unless fresh evidence reproduces them. The current registry/current-state artifact refresh is recorded in the May 20 sweep continuation.
 
 ## Current Conclusion
 
-Fresh repo-scope evidence from `2026-05-20` does not currently support a repo-ready verdict in this sandbox because production boot/smoke, strict org E2E, and real-DB privacy/RLS evidence failed to run here.
+Fresh repo-scope evidence from `2026-05-20` supports a repo-ready verdict: the repo checklist is `READY`, the final engineering validation verdict is `GO`, production boot/smoke evidence refreshed locally, strict org E2E passed, real-DB privacy/RLS tests passed, and the production dependency audit is clean.
 
-The full launch recommendation is still `NO-GO` until the repo production boot/smoke, strict org E2E, and real-DB privacy/RLS blockers are cleared, the external production-candidate prerequisites are verified, and the founder go/no-go is signed. This distinction matters: several repo checks are green, but production boot/smoke, production ownership, alerting, restore, and sign-off evidence remain unresolved.
+The full launch recommendation remains `NO-GO` until the external production-candidate prerequisites are verified and the founder go/no-go is signed. This distinction matters: repo engineering evidence is green, but production ownership, alerting, restore proof, and sign-off evidence remain unresolved.
 
 ## Gate Summary
 
 - `PASS` repo production build
   - The repo-ready validation rebuilt the app successfully and stored the build log in `.artifacts/launch-validation-2026-05-20/repo-ready-build.log`.
-- `FAIL` repo production boot and health
-  - The repo-ready validation could not start the built app in this sandbox because localhost binding failed. Evidence is stored in `.artifacts/launch-validation-2026-05-20/repo-ready-prod-boot-error.log`.
+- `PASS` repo production boot and health
+  - The repo-ready validation started the built app and `/api/health` returned ok. Evidence is stored in `.artifacts/launch-validation-2026-05-20/repo-ready-prod-start.log` and `.artifacts/launch-validation-2026-05-20/repo-ready-prod-health.json`.
 - `PASS` route-surface and archived-route policy
   - The 2026-05-20 route-surface validation passed with active MVP, internal launch-ops, and archived compatibility routes explicitly classified.
-- `FAIL` launch-status route and launch smoke
-  - The launch-status route unit check passed, but launch smoke refresh was skipped because production boot was unavailable.
-- `FAIL` public org trust smoke
-  - Public organization trust smoke was skipped because production boot was unavailable. The Browser/dev-server sweep separately confirmed the representative public org demo route returns an intentional unavailable state without crashing.
-- `FAIL` strict org corridor E2E
-  - The latest final validation command could not start the Playwright-managed production server in this sandbox. Evidence is stored in `.artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log`.
-- `FAIL` real-DB privacy/RLS tests
-  - The latest final validation command could not reach the configured Supabase target due DNS failure. Evidence is stored in `.artifacts/launch-validation-2026-05-20/privacy_rls_baseline_tests.log` and `.artifacts/launch-validation-2026-05-20/privacy_rls_extended_tests.log`.
+- `PASS` launch-status route and launch smoke
+  - The launch-status route checks and local launch smoke refresh passed after production boot succeeded.
+- `PASS` public org trust smoke
+  - Public organization trust smoke passed in the fresh launch smoke artifact.
+- `PASS` strict org corridor E2E
+  - The approved rerun passed the strict org Playwright suite `7/7`. Evidence is stored in `.artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log`.
+- `PASS` real-DB privacy/RLS tests
+  - The approved rerun passed the configured Supabase-backed privacy/RLS baseline and extended suites. Evidence is stored in `.artifacts/launch-validation-2026-05-20/privacy_rls_baseline_tests.log` and `.artifacts/launch-validation-2026-05-20/privacy_rls_extended_tests.log`.
+- `PASS` production dependency audit
+  - `npm audit --omit=dev` reports `found 0 vulnerabilities` after dependency override and lockfile refresh. Evidence is stored in `.artifacts/launch-validation-2026-05-20/production_dependency_audit.log`.
 - `PASS` public individual portfolio safety
   - Public portfolio UI and projection tests now feed repo-ready evidence for the final checklist.
 - `PASS` privacy-sensitive repo checks
@@ -51,13 +54,9 @@ The full launch recommendation is still `NO-GO` until the repo production boot/s
 
 ## True Blockers
 
-Repo scope has current true blockers in the latest checklist evidence:
+Repo scope has no current true blockers in the latest checklist evidence.
 
-1. Production boot could not start in this sandbox.
-2. Launch-status and smoke-artifact refresh could not complete because production boot was unavailable.
-3. Public organization trust smoke could not run because production boot was unavailable.
-4. Strict org corridor E2E could not start its Playwright-managed production server in this sandbox.
-5. Real-DB privacy/RLS tests could not reach the configured Supabase target from this sandbox.
+## External Prerequisites
 
 Full launch still has external prerequisites:
 
@@ -76,15 +75,16 @@ Full launch still has external prerequisites:
 
 - Current checklist: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`
 - Current machine-readable checklist: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.json`
+- Current final engineering gate: `.artifacts/launch-validation-2026-05-20/launch-gate-status.md`
 - Current MVP sweep: `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`
 - Current launch smoke: `.artifacts/mvp-surface-sweep-2026-05-19/phase4-local-launch-smoke-full.json`
 - Historical March validation bundle: `.artifacts/launch-validation-2026-03-25/`
 
 ## Bottom Line
 
-The repo-scope recommendation is `NOT_READY` in the current generated checklist until production boot/smoke, strict org E2E, and real-DB privacy/RLS evidence are rerun successfully in an environment that can bind localhost and reach the configured Supabase target.
+The repo-scope recommendation is `READY` in the current generated checklist. The final engineering gate is `GO`.
 
-The full-launch recommendation remains `NO-GO` until repo production boot/smoke, strict org E2E, and real-DB privacy/RLS evidence is green, production-candidate operational prerequisites are evidenced, and the final founder go/no-go is signed.
+The full-launch recommendation remains `NO-GO` until production-candidate operational prerequisites are evidenced and the final founder go/no-go is signed.
 
 <!-- final-launch-checklist:start -->
 
@@ -92,5 +92,5 @@ The full-launch recommendation remains `NO-GO` until repo production boot/smoke,
 
 - Latest operational checklist: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`
 - Latest machine-readable bundle: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.json`
-- Generated at: `2026-05-20T01:51:33.435Z`
+- Generated at: `2026-05-20T02:58:33.442Z`
 <!-- final-launch-checklist:end -->

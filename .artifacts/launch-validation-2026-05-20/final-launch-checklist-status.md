@@ -1,45 +1,37 @@
 # Proofound Final Launch Checklist Status
 
-Generated: 2026-05-20T01:51:33.435Z
+Generated: 2026-05-20T02:58:33.442Z
 Scope: `repo`
 Workspace: `/Users/yuriibakurov/proofound`
-Git: `master` @ `38bd0da02bd8228eddc5d5a8c2a32f5a4072b373`
-Verdict: `NOT_READY`
-Live base URL: not configured
+Git: `master` @ `0d9942ccc5da3e60019ff8c2ad24a64c9d88a715`
+Verdict: `READY`
+Live base URL: `http://127.0.0.1:61762`
 Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 
 ## Summary
 
-- PASS: 26
-- FAIL: 10
-- BLOCKED: 1
-- UNVERIFIED: 3
+- PASS: 36
+- FAIL: 0
+- BLOCKED: 0
+- UNVERIFIED: 4
 
 ## True Blockers
 
-- Product — Org trust page is minimal and live: Skipped public org trust smoke because production boot was unavailable.
-- Product — Review queue is blind-by-default and reason-coded: Strict org corridor E2E: Command exited with 1.
-- Product — Hire and engagement verification remain distinct: Strict org corridor E2E: Command exited with 1.
-- Engineering — `next start` is stable: Production boot could not start in this environment; review the captured boot error and rerun on a host that can bind localhost.
-- Engineering — Canonical 3-role model is true across code, DB, and API: Privacy/RLS baseline tests: Command exited with 1.
-- Engineering — Launch-status and smoke-artifact logic run on fresh evidence: Repo-ready launch-status route logic or smoke refresh did not pass on fresh local evidence.
-- QA — Fresh strict org corridor passes in prod mode: Strict org corridor E2E: Command exited with 1.
-- QA — Public-org trust smoke passes: Skipped public org trust smoke because production boot was unavailable.
-- QA — RLS/privacy tests pass against actual DB state: Privacy/RLS baseline tests: Command exited with 1.
-- QA — Assignment publish smoke passes: Strict org corridor E2E: Command exited with 1.
+- No true blockers are currently recorded.
 
 ## External Prerequisites
 
 - Ops — Incident owner / support lead roles are assigned: Operational roles are named in docs, but this repo does not identify the currently assigned people for launch.
 - Ops — Critical alerts are configured: Monitoring docs describe critical alerts, but this checklist has no fresh environment-backed proof that they are configured in the live stack.
 - Ops — Backups and restore discipline are verified: Backup and restore discipline is documented with a checkpoint and restore-verify workflow, but this checklist does not rerun the drill itself.
-- Founder / GTM — Go/no-go is signed only after fresh evidence is green: Blocked by upstream checklist items: engineering_next_start_stable, engineering_launch_status_fresh_evidence. No current evidence source resolved this checklist line.
+- Founder / GTM — Go/no-go is signed only after fresh evidence is green: No current evidence source resolved this checklist line.
 
 ## Missing Evidence
 
 - Ops — Incident owner / support lead roles are assigned
 - Ops — Critical alerts are configured
 - Ops — Backups and restore discipline are verified
+- Founder / GTM — Go/no-go is signed only after fresh evidence is green
 
 ## Product
 
@@ -55,36 +47,33 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - [PASS] Public Page is calm, safe, and separate from review reveal
   - Summary: Fresh public portfolio tests, blind-review coverage, and consented reveal evidence all point to a privacy-safe Public Page that stays separate from reveal.
   - Evidence: Repo-ready public portfolio gate: `.artifacts/launch-validation-2026-05-20/repo-ready-public-portfolio.log`; Verification checklist: blind review: `docs/verification-checklist.md`; Verification checklist: consented reveal: `docs/verification-checklist.md`
-- [FAIL] Org trust page is minimal and live
-  - Summary: Skipped public org trust smoke because production boot was unavailable.
-  - Evidence: Latest launch bundle org trust smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-build.log`
+- [PASS] Org trust page is minimal and live
+  - Summary: Public org trust smoke scenario passed in the fresh launch smoke artifact.
+  - Evidence: Latest launch bundle org trust smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json`; Latest launch bundle org trust smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke.log`
 - [PASS] Assignment builder enforces why / work / proof / constraints
   - Summary: Assignment publish tests assert hard publish blocks for missing work summary, proof expectations, and constraints, with business-value coverage in the route fixture.
   - Evidence: Assignment publish route test: `tests/api/assignments-publish-route.test.ts` (Assertions include work_summary_required, proof_expectations_required, and constraints_required.)
-- [FAIL] Review queue is blind-by-default and reason-coded
-  - Summary: Strict org corridor E2E: Command exited with 1.
+- [PASS] Review queue is blind-by-default and reason-coded
+  - Summary: Strict org corridor E2E
   - Evidence: Latest final validation strict org corridor E2E evidence: `.artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log`
-  - Retired stale claims: Verification checklist disagrees with the selected FAIL status for this checklist line. | Assignment quality checklist disagrees with the selected FAIL status for this checklist line. | Org match review route test disagrees with the selected FAIL status for this checklist line.
-- [FAIL] Hire and engagement verification remain distinct
-  - Summary: Strict org corridor E2E: Command exited with 1.
+- [PASS] Hire and engagement verification remain distinct
+  - Summary: Strict org corridor E2E
   - Evidence: Latest final validation strict org corridor E2E evidence: `.artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log`
-  - Retired stale claims: Current-state reality check disagrees with the selected FAIL status for this checklist line.
 
 ## Engineering
 
 - [PASS] `npm run build` passes cleanly under launch Node version
   - Summary: `npm run build` passed under the launch Node/runtime configuration.
   - Evidence: Latest launch bundle prod build evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-build.log`
-- [FAIL] `next start` is stable
-  - Summary: Production boot could not start in this environment; review the captured boot error and rerun on a host that can bind localhost.
-  - Evidence: Latest launch bundle prod boot evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-prod-boot-error.log`
+- [PASS] `next start` is stable
+  - Summary: `npm run start` booted successfully and `/api/health` returned ok.
+  - Evidence: Latest launch bundle prod boot evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-prod-start.log`; Latest launch bundle prod boot evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-prod-health.json`
 - [PASS] Route surface is reduced to the launch allowlist
   - Summary: Launch route and page inventory tests passed against the current repo state.
   - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log`
-- [FAIL] Canonical 3-role model is true across code, DB, and API
-  - Summary: Privacy/RLS baseline tests: Command exited with 1.
+- [PASS] Canonical 3-role model is true across code, DB, and API
+  - Summary: Privacy/RLS baseline tests
   - Evidence: Latest final validation privacy/RLS baseline gate evidence: `.artifacts/launch-validation-2026-05-20/privacy_rls_baseline_tests.log`
-  - Retired stale claims: Current-state reality check disagrees with the selected FAIL status for this checklist line.
 - [PASS] Verification status semantics are canonical and freshness-aware
   - Summary: Launch-status route tests passed with current persisted/live monitor logic.
   - Evidence: Latest repo-ready launch-status gate evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-status-route.log`
@@ -94,23 +83,21 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - [PASS] Legacy decision and non-MVP route drift are removed or hard-gated
   - Summary: Launch route and page inventory tests passed against the current repo state.
   - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log`
-- [FAIL] Launch-status and smoke-artifact logic run on fresh evidence
-  - Summary: Repo-ready launch-status route logic or smoke refresh did not pass on fresh local evidence.
-  - Evidence: Launch-status route evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-status-route.log`; Launch smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-build.log`
+- [PASS] Launch-status and smoke-artifact logic run on fresh evidence
+  - Summary: Repo-ready launch-status route tests and smoke refresh both passed on fresh local evidence.
+  - Evidence: Launch-status route evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-status-route.log`; Launch smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json`; Launch smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke.log`
 
 ## QA
 
-- [FAIL] Fresh strict org corridor passes in prod mode
-  - Summary: Strict org corridor E2E: Command exited with 1.
+- [PASS] Fresh strict org corridor passes in prod mode
+  - Summary: Strict org corridor E2E
   - Evidence: Latest final validation strict org corridor E2E evidence: `.artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log`
-  - Retired stale claims: Current-state reality check disagrees with the selected FAIL status for this checklist line.
-- [FAIL] Public-org trust smoke passes
-  - Summary: Skipped public org trust smoke because production boot was unavailable.
-  - Evidence: Latest launch bundle public org trust smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-build.log`
-- [FAIL] RLS/privacy tests pass against actual DB state
-  - Summary: Privacy/RLS baseline tests: Command exited with 1.
+- [PASS] Public-org trust smoke passes
+  - Summary: Public org trust smoke scenario passed in the fresh launch smoke artifact.
+  - Evidence: Latest launch bundle public org trust smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke-report.json`; Latest launch bundle public org trust smoke evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-smoke.log`
+- [PASS] RLS/privacy tests pass against actual DB state
+  - Summary: Privacy/RLS baseline tests
   - Evidence: Latest final validation privacy/RLS baseline gate evidence: `.artifacts/launch-validation-2026-05-20/privacy_rls_baseline_tests.log`
-  - Retired stale claims: Current-state reality check disagrees with the selected FAIL status for this checklist line.
 - [PASS] Manual privacy leak sweep passes
   - Summary: Privacy-sensitive review, uploads, and launch archive protection tests passed.
   - Evidence: Repo-ready manual privacy validation evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-manual-privacy.log`
@@ -120,10 +107,9 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - [PASS] Archived-route and launch-surface tests pass
   - Summary: Launch route and page inventory tests passed against the current repo state.
   - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log`
-- [FAIL] Assignment publish smoke passes
-  - Summary: Strict org corridor E2E: Command exited with 1.
+- [PASS] Assignment publish smoke passes
+  - Summary: Strict org corridor E2E
   - Evidence: Latest final validation strict org corridor E2E evidence: `.artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log`
-  - Retired stale claims: Current-state reality check disagrees with the selected FAIL status for this checklist line. | Verification checklist disagrees with the selected FAIL status for this checklist line.
 - [PASS] Final evidence packet is assembled and dated
   - Summary: This checklist run generated a dated Markdown report and JSON bundle.
   - Evidence: Generated Markdown report: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`; Generated JSON bundle: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.json`
@@ -178,10 +164,9 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - [PASS] Org onboarding playbook exists
   - Summary: The GTM plan contains a repeatable org onboarding playbook for the pilot motion.
   - Evidence: GTM and initial marketing plan: `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`
-- [BLOCKED] Go/no-go is signed only after fresh evidence is green
-  - Summary: Blocked by upstream checklist items: engineering_next_start_stable, engineering_launch_status_fresh_evidence. No current evidence source resolved this checklist line.
+- [UNVERIFIED] Go/no-go is signed only after fresh evidence is green
+  - Summary: No current evidence source resolved this checklist line.
   - Evidence: Configured evidence source: `.artifacts/launch-readiness-summary.md`; Configured evidence source: `.artifacts/launch-validation-*/24_gate_summary.json`; Configured evidence source: `docs/launch-signoff-2026-04-27.md`
-  - Blocked by: engineering_next_start_stable, engineering_launch_status_fresh_evidence
 
 ## Retired Stale Claims
 
@@ -191,7 +176,3 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - `The org settings surface remains a live gate page.`
 - `The contracts API remains a live launch surface.`
 - `Google, LinkedIn, and video integrations remain live launch compatibility flows.`
-- Verification checklist disagrees with the selected FAIL status for this checklist line.
-- Assignment quality checklist disagrees with the selected FAIL status for this checklist line.
-- Org match review route test disagrees with the selected FAIL status for this checklist line.
-- Current-state reality check disagrees with the selected FAIL status for this checklist line.

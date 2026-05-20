@@ -490,7 +490,8 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
-    expect(screen.getByRole('heading', { name: 'Public Page unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Public page unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
     expect(screen.getByText(/this public page link is unavailable/i)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Jane Doe' })).not.toBeInTheDocument();
   });
@@ -508,7 +509,8 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
-    expect(screen.getByRole('heading', { name: 'Public Page unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Public page unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Return home' })).toHaveAttribute('href', '/');
     expect(screen.getByText(/this public page link is unavailable/i)).toBeInTheDocument();
     expect(notFoundMock).not.toHaveBeenCalled();
   });

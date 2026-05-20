@@ -21,8 +21,11 @@ Removed stale generated build state: .next
    Collecting page data ...
    Generating static pages (0/50) ...
    Generating static pages (12/50)
+
    Generating static pages (24/50)
+
    Generating static pages (37/50)
+
  ✓ Generating static pages (50/50)
    Finalizing page optimization ...
    Collecting build traces ...
@@ -176,7 +179,7 @@ Route (app)                                                     Size  First Load
 ├ ƒ /api/verification/work-email/verify                        727 B         255 kB
 ├ ƒ /api/verify/[token]                                        728 B         255 kB
 ├ ƒ /api/verify/custom/[token]                                 726 B         255 kB
-├ ƒ /app/i/communications                                      372 B         402 kB
+├ ƒ /app/i/communications                                      374 B         402 kB
 ├ ƒ /app/i/home                                                375 B         257 kB
 ├ ƒ /app/i/interviews                                        3.88 kB         285 kB
 ├ ƒ /app/i/matching                                          2.78 kB         266 kB
@@ -212,18 +215,18 @@ Route (app)                                                     Size  First Load
 ├ ○ /llms                                                      728 B         255 kB
 ├ ƒ /llms-full.txt                                             730 B         255 kB
 ├ ƒ /llms.txt                                                  727 B         255 kB
-├ ƒ /login                                                   4.01 kB         283 kB
-├ ƒ /onboarding                                              28.3 kB         349 kB
+├ ƒ /login                                                   4.02 kB         283 kB
+├ ƒ /onboarding                                              28.2 kB         349 kB
 ├ ƒ /portfolio/[handle]                                      4.16 kB         273 kB
 ├ ƒ /portfolio/org/[slug]                                    3.94 kB         267 kB
 ├ ƒ /privacy                                                   862 B         257 kB
-├ ƒ /reset-password                                          6.16 kB         269 kB
-├ ƒ /reset-password/confirm                                  8.41 kB         322 kB
+├ ƒ /reset-password                                          6.14 kB         269 kB
+├ ƒ /reset-password/confirm                                  8.43 kB         322 kB
 ├ ƒ /robots.txt                                                728 B         255 kB
 ├ ƒ /security.txt                                              728 B         255 kB
-├ ƒ /signup                                                  2.54 kB         286 kB
-├ ƒ /signup/individual                                         363 B         279 kB
-├ ƒ /signup/organization                                       363 B         279 kB
+├ ƒ /signup                                                  2.55 kB         286 kB
+├ ƒ /signup/individual                                         365 B         279 kB
+├ ƒ /signup/organization                                       364 B         279 kB
 ├ ƒ /sitemap.xml                                               728 B         255 kB
 ├ ƒ /terms                                                     861 B         257 kB
 ├ ƒ /verify-email                                            6.03 kB         269 kB
@@ -233,8 +236,8 @@ Route (app)                                                     Size  First Load
 + First Load JS shared by all                                 254 kB
   ├ chunks/4bd1b696-60762fde855476c8.js                      54.4 kB
   ├ chunks/52774a7f-c7072f5bcfc73fc8.js                      37.4 kB
-  ├ chunks/71-3d471eae14db2d2c.js                             158 kB
-  └ other shared chunks (total)                              4.79 kB
+  ├ chunks/71-217384ceafa02bc1.js                             158 kB
+  └ other shared chunks (total)                              4.78 kB
 
 
 ƒ Middleware                                                 63.7 kB
