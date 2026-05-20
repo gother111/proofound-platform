@@ -2311,3 +2311,11 @@ Browser evidence:
 - Regenerated the May 20 final launch checklist artifact; repo-scope verdict remains `READY` with `36` pass, `0` fail, `0` blocked, and `4` external prerequisites still `UNVERIFIED`.
 - Browser was not rerun for this slice because no rendered UI changed; the previous in-app Browser evidence already verified Google and LinkedIn sign-in buttons, and this change only corrects saved launch evidence wording.
 - Verification passed: `npm run test -- src/lib/launch/__tests__/final-launch-checklist.test.ts` (1 file / 9 tests), `npm run launch:checklist -- --skip-repo-validation`, `npm run test:launch:routes` (4 files / 27 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - Candidate Invite Preview Expiry Coverage
+
+- Inspected the public candidate-invite preview test coverage after the previous claimant URL privacy and nonce hardening.
+- Added focused coverage proving preview reads only mark an expired invite as `expired` when it is still pending, unclaimed, and has no submitted proof.
+- This complements the existing regression that claimed expired invites are not overwritten during preview and keeps the public/share surface from mutating active claimant state.
+- Browser was not rerun for this slice because no rendered UI changed; this is API route regression coverage for invite preview state handling.
+- Verification passed: `npm run test -- tests/api/candidate-invites-token-route.test.ts` (1 file / 5 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
