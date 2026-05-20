@@ -129,6 +129,53 @@ const QUEUE_SOP_LINKS = {
   },
 } satisfies Record<QueueId, { label: string; path: string }>;
 
+const DISPLAY_METADATA_KEYS = new Set([
+  'assignmentStatus',
+  'candidateConsentStatus',
+  'claimId',
+  'claimLabel',
+  'decisionId',
+  'decisionState',
+  'deletionStatus',
+  'disputeState',
+  'exportStatus',
+  'fallbackSurface',
+  'filenameReviewLabel',
+  'freshnessState',
+  'latestOperatorAction',
+  'latestOperatorActionAt',
+  'metadataStatus',
+  'monitoringStatus',
+  'organizationConsentStatus',
+  'organizationTrustPageStatus',
+  'pendingParty',
+  'privacyExceptionType',
+  'publicPortfolioStatus',
+  'revealStage',
+  'reviewReasons',
+  'safeForPublic',
+  'schemaCompatibilityFallback',
+  'safetyReason',
+  'safetyStatus',
+  'smokeStatus',
+  'sourceSurface',
+  'sensitivityReason',
+  'recommendedRevealGate',
+  'recommendedVisibility',
+  'trustTier',
+  'uploadKind',
+  'uploadReviewAction',
+  'attachStatus',
+  'lifecycleState',
+  'uploadedFileAttachStatus',
+  'uploadedFileLifecycleState',
+  'uploadedFileSafeForPublic',
+  'verificationOutcome',
+  'verificationStatus',
+  'verdict',
+  'workflowStatus',
+]);
+
 async function fetchQueueData() {
   const response = await apiFetch('/api/admin/internal-ops/queues');
 
@@ -176,12 +223,41 @@ function formatMetadataKey(key: string) {
   return internalValueLabel(key.replace(/([a-z0-9])([A-Z])/g, '$1_$2'));
 }
 
+function getDisplayMetadataEntries(metadata: Record<string, unknown>) {
+  return Object.entries(metadata).filter(([key]) => DISPLAY_METADATA_KEYS.has(key));
+}
+
+function getMetadataString(metadata: Record<string, unknown>, key: string) {
+  const value = metadata[key];
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+}
+
 function requiresOperatorNote(currentStatus: QueueStatus, nextStatus: QueueStatus) {
   return (
     nextStatus === 'resolved' ||
     nextStatus === 'cancelled' ||
     (nextStatus === 'open' && (currentStatus === 'resolved' || currentStatus === 'cancelled'))
   );
+}
+
+function getPilotCorridorFields(item: QueueItem) {
+  if (item.queueType !== 'pilot_ops') {
+    return [];
+  }
+
+  return [
+    ['Assignment', getMetadataString(item.metadata, 'assignmentStatus')],
+    ['Org trust', getMetadataString(item.metadata, 'trustTier')],
+    ['Trust page', getMetadataString(item.metadata, 'organizationTrustPageStatus')],
+    ['Reveal', getMetadataString(item.metadata, 'revealStage')],
+    ['Candidate consent', getMetadataString(item.metadata, 'candidateConsentStatus')],
+    ['Decision', getMetadataString(item.metadata, 'decisionState')],
+    ['Decision record', getMetadataString(item.metadata, 'decisionId')],
+    ['Engagement', getMetadataString(item.metadata, 'workflowStatus')],
+    ['Pending party', getMetadataString(item.metadata, 'pendingParty')],
+  ]
+    .filter((entry): entry is [string, string] => Boolean(entry[1]))
+    .slice(0, 8);
 }
 
 function shouldShowQueueItem(
@@ -568,6 +644,8 @@ export function AdminVerificationDashboard() {
                           requiresOperatorNote(item.status, action.nextStatus)
                         );
                         const detail = item.detail;
+                        const pilotCorridorFields = getPilotCorridorFields(item);
+                        const displayMetadataEntries = getDisplayMetadataEntries(item.metadata);
 
                         return (
                           <div
@@ -655,6 +733,29 @@ export function AdminVerificationDashboard() {
                               </div>
                             )}
 
+                            {pilotCorridorFields.length > 0 && (
+                              <div className="mt-4 rounded-lg border border-proofound-stone/70 bg-white p-3">
+                                <div className="space-y-1">
+                                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Pilot corridor
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Read-only workflow state for stuck MVP handoff support.
+                                  </p>
+                                </div>
+                                <div className="mt-3 grid gap-2 md:grid-cols-2">
+                                  {pilotCorridorFields.map(([label, value]) => (
+                                    <div key={`${item.id}:pilot:${label}`} className="text-sm">
+                                      <span className="font-medium text-foreground">{label}:</span>{' '}
+                                      <span className="break-words text-muted-foreground">
+                                        {internalValueLabel(value)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                             <div className="mt-4 space-y-3 rounded-lg border border-proofound-stone/70 bg-[#FBFAF6] p-3">
                               <div className="space-y-2">
                                 <label
@@ -705,13 +806,13 @@ export function AdminVerificationDashboard() {
                               </div>
                             </div>
 
-                            {Object.keys(item.metadata).length > 0 && (
+                            {displayMetadataEntries.length > 0 && (
                               <div className="mt-4 rounded-lg bg-[#F7F6F1] p-3">
                                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                   Audit context
                                 </p>
                                 <div className="grid gap-2 md:grid-cols-2">
-                                  {Object.entries(item.metadata).map(([key, value]) => (
+                                  {displayMetadataEntries.map(([key, value]) => (
                                     <div key={key} className="min-w-0 text-sm">
                                       <span className="font-medium text-foreground">
                                         {formatMetadataKey(key)}:

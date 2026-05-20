@@ -1883,3 +1883,15 @@ Browser evidence:
 - Codex Browser verified `/admin/verification` at `http://127.0.0.1:33185/admin/verification`: desktop and mobile rendered the redaction/risky-upload SOP link, status/priority filters, one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, and no sampled private leak terms.
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-admin-sop-links/admin-sop-links-smoke.json`.
 - Verification passed: `npm run test -- tests/ui/admin-verification-dashboard.test.tsx tests/api/admin-internal-ops-queue-route.test.ts tests/lib/internal-ops-queue.test.ts` (22 tests), `npm run lint`, and `npm run typecheck`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.
+
+## Continuation - Admin Pilot Corridor Drilldown
+
+- Added a narrow read-only `Pilot corridor` panel inside `/admin/verification` pilot queue cards rather than adding a broad admin dashboard route.
+- The panel shows safe workflow metadata when present: assignment, org trust, trust-page state, reveal state, candidate consent, decision, engagement, pending party, and the current live-data fallback `Decision record`.
+- Added client-side display filtering for the generic audit-context metadata panel so accidental unsafe metadata keys are not rendered even if an upstream projection regresses.
+- Added regression coverage proving the pilot drilldown renders safe workflow state and does not render private candidate email or raw interview notes when unsafe metadata is present in the component payload.
+- Updated `audit/admin-dashboard-mvp-ops-review-2026-05-03.md` so the remaining admin follow-up risk is explicit internal ops table RLS proof; richer cross-record pilot workflow views remain deferred until pilot volume proves need.
+- Codex Browser verified `/admin/verification` at `http://127.0.0.1:33186/admin/verification`: desktop `1360x900` and mobile `390x844` rendered `Operations Queues`, the `Pilot ops` tab, status/priority filters, `Pilot corridor`, `Decision record`, one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, and no sampled private leak terms.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-admin-pilot-drilldown/admin-pilot-drilldown-smoke.json`.
+- Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, interaction, viewport, overflow, console, and leak-term evidence was captured instead.
+- Verification passed: `npm run test -- tests/ui/admin-verification-dashboard.test.tsx tests/api/admin-internal-ops-queue-route.test.ts tests/lib/internal-ops-queue.test.ts` (23 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.

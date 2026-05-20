@@ -104,6 +104,47 @@ const actionableQueuePayload = {
   ),
 };
 
+const pilotWorkflowPayload = {
+  queues: [
+    {
+      id: 'pilot_ops',
+      label: 'Pilot ops',
+      description: 'Pilot follow-through.',
+      openCount: 1,
+      items: [
+        {
+          id: '55555555-5555-4555-8555-555555555555',
+          queueType: 'pilot_ops',
+          status: 'open',
+          priority: 'high',
+          linkedEntityType: 'engagement_verification',
+          linkedEntityId: '66666666-6666-4666-8666-666666666666',
+          summary: 'Pilot workflow is stuck after hire decision.',
+          metadata: {
+            assignmentStatus: 'published',
+            trustTier: 'verified',
+            organizationTrustPageStatus: 'published',
+            revealStage: 'candidate_consented',
+            candidateConsentStatus: 'granted',
+            decisionState: 'hire',
+            workflowStatus: 'pending_both_confirmations',
+            pendingParty: 'candidate',
+            privateCandidateEmail: 'candidate@example.com',
+            rawInterviewNotes: 'Candidate private notes',
+          },
+          createdAt: '2026-03-21T10:00:00.000Z',
+          updatedAt: '2026-03-21T11:00:00.000Z',
+          resolvedAt: null,
+        },
+      ],
+    },
+  ],
+  stats: {
+    total: 1,
+    open: 1,
+  },
+};
+
 describe('AdminVerificationDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -275,6 +316,28 @@ describe('AdminVerificationDashboard', () => {
     expect(
       screen.getByText('Risky evidence upload held for privacy-safe review.')
     ).toBeInTheDocument();
+  });
+
+  it('renders a narrow pilot corridor drilldown without private workflow notes', async () => {
+    apiFetchMock.mockResolvedValue(buildJsonResponse(pilotWorkflowPayload));
+
+    render(<AdminVerificationDashboard />);
+
+    await screen.findByText('Pilot workflow is stuck after hire decision.');
+
+    expect(screen.getByText('Pilot corridor')).toBeInTheDocument();
+    expect(screen.getByText('Assignment:')).toBeInTheDocument();
+    expect(screen.getAllByText('Published')).toHaveLength(2);
+    expect(screen.getByText('Org trust:')).toBeInTheDocument();
+    expect(screen.getByText('Verified')).toBeInTheDocument();
+    expect(screen.getByText('Decision:')).toBeInTheDocument();
+    expect(screen.getByText('Hire')).toBeInTheDocument();
+    expect(screen.getByText('Engagement:')).toBeInTheDocument();
+    expect(screen.getByText('Pending Both Confirmations')).toBeInTheDocument();
+    expect(screen.getByText('Pending party:')).toBeInTheDocument();
+    expect(screen.getByText('Candidate')).toBeInTheDocument();
+    expect(screen.queryByText('candidate@example.com')).not.toBeInTheDocument();
+    expect(screen.queryByText('Candidate private notes')).not.toBeInTheDocument();
   });
 
   it('uses explicit approve and reject actions for uploaded-file queue items', async () => {

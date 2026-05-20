@@ -15,8 +15,9 @@ Scope: current active Proofound admin dashboard, admin APIs, internal ops queues
 > approve/reject actions, and sanitized queue metadata. The admin home now shows
 > a compact launch-health card backed by the generated launch checklist. The
 > default admin audit API now returns a minimum-necessary list DTO, and unexpected
-> admin queue errors no longer return raw backend messages. Remaining follow-up
-> risks are internal ops table RLS proof and a narrow pilot workflow drilldown.
+> admin queue errors no longer return raw backend messages. `/admin/verification`
+> now includes a narrow read-only pilot corridor drilldown inside pilot queue
+> cards. Remaining follow-up risk is explicit internal ops table RLS proof.
 
 ## A. Executive Verdict
 
@@ -24,7 +25,7 @@ Verdict: repo-ready with remaining operational follow-up risks.
 
 The admin dashboard is narrow, protected, and aligned away from broad enterprise/admin-suite sprawl. It is useful for seeing four internal ops queues, reviewing minimum-necessary queue detail, handling risky-upload approve/reject decisions, checking latest repo launch evidence, and reviewing audit trails.
 
-The main remaining gap is operational depth beyond the first launch-ops console: admins still lack a narrow pilot workflow drilldown for stuck org/candidate corridor issues. Richer entity/operator filters remain deferred until pilot volume proves they are needed.
+The main remaining gap is database-level privacy proof: the admin console is narrow and privacy-projected, but `internal_ops_queue_items` still needs explicit RLS proof or a documented deployment/database contract. Richer entity/operator filters remain deferred until pilot volume proves they are needed.
 
 ## B. What Works
 
@@ -46,7 +47,7 @@ The main remaining gap is operational depth beyond the first launch-ops console:
 
 - Direct queue-header SOP links now point to the current internal-ops runbooks for each active queue.
 - Status, priority, and age controls now exist on the active queue view; entity/operator filtering is still deferred until real pilot volume requires it.
-- No narrow pilot organization/workflow drilldown for inspecting stuck assignment, shortlist/review, intro, reveal, interview, decision, or engagement state in one place.
+- Pilot queue cards now expose a narrow read-only corridor drilldown from sanitized queue metadata; richer cross-record org/workflow drilldown is deferred until pilot volume proves it is needed.
 - Default admin audit list projection is minimum-necessary, but there is still no richer break-glass preview UI for sensitive full-detail audit review.
 
 ## D. Security And Privacy Risks
@@ -149,11 +150,12 @@ Current guardrail: `tests/ui/admin-verification-dashboard.test.tsx` covers queue
 
 ### P2: Add Pilot Organization And Workflow Read-Only View
 
-Problem: Admins cannot inspect pilot organizations, assignment state, shortlist/review state, intro/reveal/interview/decision/engagement state, or stuck workflows in one place.
-Evidence: Active admin pages are only home, queues, and audit.
-File/route: new narrow `/admin/pilot-ops` or queue detail drawer only.
-Recommended fix: Prefer adding this as queue detail tabs or a narrow pilot-ops drilldown rather than a broad organization admin suite.
-Success criteria: Operators can support a stuck MVP corridor without seeing broad org analytics, ATS, HRIS, or enterprise fields.
+Disposition: resolved for current MVP pilot queue drilldown on 2026-05-20.
+Remaining problem: A richer cross-record pilot workflow view is deferred until pilot volume proves it is needed.
+Evidence: `/admin/verification` pilot queue cards now render a `Pilot corridor` panel from sanitized metadata, including safe assignment/trust/reveal/decision/engagement fields when present and `Decision record` as the current live-data fallback.
+File/route: `/admin/verification`.
+Recommended next fix: Keep this inside queue cards until repeated pilot support work proves that a separate narrow `/admin/pilot-ops` route is necessary.
+Current guardrail: `tests/ui/admin-verification-dashboard.test.tsx` proves the drilldown renders safe workflow state and does not render private email or raw interview notes when unsafe metadata is accidentally present.
 
 ### P3: Remove Or Quarantine Stale Admin Test/Component Noise
 
