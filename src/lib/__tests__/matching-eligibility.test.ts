@@ -93,8 +93,8 @@ function createReadinessSnapshot(
       missingRequirements: [
         {
           id: 'trusted_signal',
-          label: 'Trusted or attested proof-backed signal',
-          detail: 'Add a verified or attested proof-backed skill.',
+          label: 'Accepted non-self verification',
+          detail: 'Add one accepted verification tied to proof.',
           met: false,
           actionUrl: '/app/i/verifications',
         },
@@ -255,7 +255,7 @@ describe('evaluateIndividualMatchability', () => {
           portfolio_ready: [
             {
               id: 'public_proof_signal',
-              label: 'One public proof-backed signal',
+              label: 'One public-safe proof item',
               detail: 'Add one proof link.',
               met: false,
               actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',

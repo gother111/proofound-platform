@@ -4,7 +4,7 @@ const steps = [
   {
     number: '01',
     title: 'Build proof',
-    body: 'Candidates add context, outcomes, artifacts, and trust anchors through Proof Packs.',
+    body: 'Candidates add context, outcomes, artifacts, and optional verification through Proof Packs.',
   },
   {
     number: '02',

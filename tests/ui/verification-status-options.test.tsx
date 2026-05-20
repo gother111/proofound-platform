@@ -62,7 +62,7 @@ describe('VerificationStatus', () => {
     await waitFor(() => {
       expect(screen.getByText(/Proof verifications \/ attestations/i)).toBeInTheDocument();
     });
-    expect(screen.getByText(/Intro-readiness trust anchors/i)).toBeInTheDocument();
+    expect(screen.getByText(/Intro-readiness verification/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Account-side checks/i).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Add work email/i })).toBeInTheDocument();
     expect(

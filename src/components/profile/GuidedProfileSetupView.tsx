@@ -201,7 +201,7 @@ function buildGuidedSteps(
       id: 'publish_portfolio',
       label: 'Publish Public Page',
       detail:
-        'Publish a direct-link proof snapshot when one proof-backed signal is public-safe. Day one does not require extra profile fields.',
+        'Publish a direct-link proof snapshot when one proof item is public-safe. Day one does not require extra profile fields.',
       state: resolveStepState(5, activeIndex),
       icon: Rocket,
       actions: [

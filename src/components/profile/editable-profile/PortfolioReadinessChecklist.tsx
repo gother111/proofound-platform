@@ -40,7 +40,7 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
     {
       id: 'publish',
       label: 'Public Page publication',
-      nextAction: 'Publish one proof-backed signal',
+      nextAction: 'Publish one public-safe proof item',
       passed: completionState.checks.hasPublishedPortfolio,
     },
   ];

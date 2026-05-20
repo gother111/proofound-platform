@@ -30,7 +30,7 @@ export const individualTourSteps: Step[] = [
   {
     target: '[data-tour="gap-analysis-tab"]',
     content:
-      'Use readiness gaps to decide which proof-backed signal to strengthen next for your target work.',
+      'Use readiness gaps to decide which Proof Pack or proof item to strengthen next for your target work.',
     placement: 'bottom',
   },
   {

@@ -185,7 +185,7 @@ describe('getIndividualReadinessState', () => {
     );
   });
 
-  it('unlocks intro eligibility only with strong anchored proof and a non-self trust anchor', async () => {
+  it('unlocks intro eligibility only with strong anchored proof and a non-self verification', async () => {
     skillsFindManyMock.mockResolvedValue(
       ['skill-1', 'skill-2', 'skill-3'].map((id) => ({
         id,

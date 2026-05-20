@@ -79,7 +79,7 @@ export const individualTourSteps: Step[] = [
         <h3 className="text-base font-semibold text-foreground">Your Profile</h3>
         <p className="text-sm text-muted-foreground">
           This is where your Proof Packs, real contexts, and visibility choices live. Start with one
-          proof-backed signal before expanding public details.
+          public-safe proof item before expanding public details.
         </p>
         <p className="text-xs text-muted-foreground pt-2 border-t border-proofound-stone">
           <strong>Tip:</strong> Start with one context-backed Proof Pack.
@@ -149,7 +149,7 @@ export const individualTourSteps: Step[] = [
           </p>
           <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1 mt-1">
             <li>Publish one public-safe proof signal</li>
-            <li>Add one proof-backed signal you want to show publicly</li>
+            <li>Add one proof item you want to show publicly</li>
             <li>Add one proof-linked skill and one matching preference</li>
             <li>Complete stronger proof and constraints for qualified introductions</li>
           </ul>

@@ -32,8 +32,7 @@ const INDIVIDUAL_BASE_ACTIONS: RecoveryAction[] = [
   {
     id: 'add-skill',
     title: 'Strengthen your Public Page proof',
-    description:
-      'Refresh proof-backed signals so matching can evaluate fit without legacy Atlas flows.',
+    description: 'Refresh proof items so matching can evaluate fit without legacy Atlas flows.',
     actionUrl: '/app/i/profile',
   },
   {

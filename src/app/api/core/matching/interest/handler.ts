@@ -185,7 +185,7 @@ function buildIntroBlockedCopy(
   if (isOrgAction) {
     return {
       title: 'This candidate is reviewable, but not yet intro-eligible.',
-      body: 'You can keep reviewing the candidate proof, but Proofound is holding introductions until the candidate has stronger relevant proof and at least one active trust anchor for this assignment.',
+      body: 'You can keep reviewing the candidate proof, but Proofound is holding introductions until the candidate has stronger relevant proof and at least one active non-self verification for this assignment.',
     };
   }
 

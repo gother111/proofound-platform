@@ -197,8 +197,8 @@ describe('match interest route', () => {
         missingRequirements: [
           {
             id: 'trusted_signal',
-            label: 'Trusted or attested proof-backed signal',
-            detail: 'Add one trusted proof-backed skill.',
+            label: 'Accepted non-self verification',
+            detail: 'Add one accepted verification tied to proof.',
             met: false,
             actionUrl: '/app/i/verifications',
           },

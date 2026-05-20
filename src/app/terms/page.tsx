@@ -156,8 +156,8 @@ export default function TermsOfServicePage() {
                 <p className="mt-3 leading-7">
                   You retain ownership of content you upload. By using the service, you grant
                   Proofound a limited license to host, process, and display submitted materials as
-                  needed to deliver platform functionality. You are responsible for ensuring
-                  uploaded content does not infringe third-party rights.
+                  needed to deliver requested account functionality. You are responsible for
+                  ensuring uploaded content does not infringe third-party rights.
                 </p>
               </section>
 

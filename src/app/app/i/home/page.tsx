@@ -52,7 +52,7 @@ export default async function IndividualHomePage() {
   try {
     metrics = await getDashboardMetrics();
   } catch (error) {
-    console.error('Failed to load dashboard metrics:', error);
+    console.error('Failed to load proof home metrics:', error);
     // Fallback to default values if metrics fail to load
     metrics = {
       proofStoriesCount: 0,
@@ -71,8 +71,8 @@ export default async function IndividualHomePage() {
   const primaryProofLabel = hasProof ? 'Review Proof Packs' : 'Start proof record';
   const readinessTone = hasProof
     ? hasTrustAnchor
-      ? 'Proof and trust anchor present'
-      : 'Proof present; trust anchor is next'
+      ? 'Proof and verification are present'
+      : 'Proof present; verification is next'
     : 'Start with one proof record';
 
   const proofRecords = [
@@ -80,7 +80,7 @@ export default async function IndividualHomePage() {
       icon: FileCheck2,
       title: 'Proof Packs',
       detail: hasProof
-        ? `${metrics.proofStoriesCount} proof-backed signal${metrics.proofStoriesCount === 1 ? '' : 's'}`
+        ? `${metrics.proofStoriesCount} proof item${metrics.proofStoriesCount === 1 ? '' : 's'}`
         : 'No proof yet. Start with one private record.',
       status: hasProof ? 'Present' : 'Pending',
       tone: hasProof ? 'info' : 'warning',
@@ -88,13 +88,13 @@ export default async function IndividualHomePage() {
     },
     {
       icon: ShieldCheck,
-      title: 'Trust anchors',
+      title: 'Verification',
       detail:
         metrics.verifiedSkills > 0
           ? `${metrics.verifiedSkills} accepted verification${metrics.verifiedSkills === 1 ? '' : 's'}`
           : metrics.pendingVerifications > 0
             ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
-            : 'No trust anchor yet. You can add this after the first proof.',
+            : 'No non-self verification yet. You can add this after the first proof.',
       status:
         metrics.verifiedSkills > 0
           ? 'Verified'
@@ -137,10 +137,10 @@ export default async function IndividualHomePage() {
       icon: ShieldCheck,
       title:
         metrics.verifiedSkills > 0
-          ? 'Trust anchor verified'
+          ? 'Verification accepted'
           : metrics.pendingVerifications > 0
-            ? 'Trust anchor in review'
-            : 'Trust anchor missing',
+            ? 'Verification in review'
+            : 'Verification missing',
       detail:
         metrics.verifiedSkills > 0
           ? `${metrics.verifiedSkills} accepted verification${metrics.verifiedSkills === 1 ? '' : 's'} attached to your proof.`
@@ -159,7 +159,7 @@ export default async function IndividualHomePage() {
     },
     {
       icon: Eye,
-      title: hasProof ? 'Portfolio visibility review' : 'Public Page not ready yet',
+      title: hasProof ? 'Public Page visibility review' : 'Public Page not ready yet',
       detail: hasProof
         ? 'Your proof surface is ready for a final sharing pass.'
         : 'Sharing stays off by default until your first proof record is clearer.',
@@ -246,7 +246,7 @@ export default async function IndividualHomePage() {
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
                       Welcome back, {firstName}.{' '}
                       {hasProof
-                        ? 'Your proof is ready for context, trust, and visibility review.'
+                        ? 'Your proof is ready for context, verification, and visibility review.'
                         : 'Start with one work sample, credential, or case study that can be trusted.'}
                     </p>
                   </div>
@@ -270,14 +270,14 @@ export default async function IndividualHomePage() {
                 <div className="flex flex-col gap-2 border-b border-proofound-stone/70 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                      Your Proof Wallet
+                      Your Proof Pack Path
                     </h2>
                     <Badge variant="outline" className="bg-[#fbf8f1]">
                       {proofRecords.length} checks
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Evidence, trust, and sharing state
+                    Evidence, verification, and sharing state
                   </p>
                 </div>
                 <div className="divide-y divide-proofound-stone/70">
@@ -414,7 +414,7 @@ export default async function IndividualHomePage() {
             <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
               <div className="mb-4 flex items-start justify-between gap-3">
                 <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                  Trust Controls
+                  Privacy and Account Controls
                 </h2>
                 <span className="rounded-md bg-[#eef3e8] px-2 py-1 text-xs font-medium text-proofound-forest">
                   Account

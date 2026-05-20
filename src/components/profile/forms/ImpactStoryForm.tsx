@@ -1106,7 +1106,7 @@ export function ImpactStoryForm({
               </div>
               <p className="text-xs text-muted-foreground">
                 Optional. Skipping is fine while getting portfolio-ready, but intro-readiness may
-                still wait on a non-self trust anchor tied to this proof.
+                still wait on a non-self verification tied to this proof.
               </p>
               <div className="rounded-md bg-muted/40 p-3 text-xs text-muted-foreground">
                 <p>

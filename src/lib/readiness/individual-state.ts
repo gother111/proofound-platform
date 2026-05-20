@@ -1141,7 +1141,7 @@ export async function getIndividualReadinessState(
       ),
       buildRequirement(
         'trusted_signal',
-        'Non-self trust anchor',
+        'Non-self verification',
         'Add one active peer, manager, or external attestation tied to anchored proof or context.',
         '/app/i/verifications',
         hasTrustedSignal,

@@ -350,8 +350,8 @@ function AccountSignalActions({
             <div className="min-w-0 flex-1">
               <h4 className="font-semibold">Work email</h4>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">
-                Keep a workplace-linked account signal current for compatibility and organization
-                linking. This is optional and never a public trust badge.
+                Keep a workplace-linked account check current for organization linking. This is
+                optional and never a public trust badge.
               </p>
               <Button
                 onClick={onWorkEmail}
@@ -441,16 +441,16 @@ function VerificationOverview({
       </VerificationGroupCard>
 
       <VerificationGroupCard
-        eyebrow="Intro-readiness trust anchors"
+        eyebrow="Intro-readiness verification"
         title="Optional for portfolio-ready, harder for intros"
-        body="Skipping verification is fine while getting portfolio-ready. It can still block intro-eligible status and some gated intros until you have at least one non-self trust anchor attached to real proof."
+        body="Skipping verification is fine while getting portfolio-ready. It can still block intro-eligible status and some gated intros until you have at least one non-self verification attached to real proof."
       >
         <Alert>
           <CheckCircle2 className="h-4 w-4" />
           <AlertDescription>
             {hasTrustAnchor
-              ? 'You already have at least one trust anchor on the account. Keep future requests scoped to proof and claim.'
-              : 'No non-self trust anchor is active yet. That is okay for portfolio-ready, but it can still hold back intro-readiness.'}
+              ? 'You already have at least one non-self verification on the account. Keep future requests scoped to proof and claim.'
+              : 'No non-self verification is active yet. That is okay for portfolio-ready, but it can still hold back intro-readiness.'}
           </AlertDescription>
         </Alert>
       </VerificationGroupCard>

@@ -127,7 +127,7 @@ export function toExpertiseStatsPresentation(
             ? {
                 tier: 'strong',
                 message:
-                  'Your portfolio remains useful now. Introductions stay protected until stronger anchored proof coverage, one non-self trust anchor, and full intro preferences are in place.',
+                  'Your portfolio remains useful now. Introductions stay protected until stronger anchored proof coverage, one non-self verification, and full intro preferences are in place.',
                 remaining: {
                   skillsWithRecency: Math.max(0, 5 - readiness.counts.skillsWithRecency),
                   proofCount: Math.max(0, 4 - readiness.counts.qualifyingProofLinkedL4Count),

@@ -41,7 +41,7 @@ function resolvePortfolioGateMessage(lockReason: string | null): string {
     case 'verification':
       return 'Public Page is locked until one accepted non-self verification is tied to anchored proof.';
     case 'publish':
-      return 'Public Page is locked until you choose one proof-backed signal to publish from the profile Public Page visibility tab.';
+      return 'Public Page is locked until you choose one public-safe proof item from the profile Public Page visibility tab.';
     default:
       return 'Complete the required profile steps to unlock your Public Page.';
   }
