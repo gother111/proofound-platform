@@ -1,0 +1,11 @@
+{
+  "buttons": ["Sign in", "Google", "LinkedIn"],
+  "checkedAt": "2026-05-20T06:59:19.314Z",
+  "clientWidth": 1359,
+  "hasLinkedInVerificationCopy": false,
+  "hasRuntimeErrorText": false,
+  "providers": ["google", "linkedin_oidc"],
+  "scrollWidth": 1359,
+  "title": "Sign In | Proofound",
+  "url": "http://localhost:33180/login?next=%2Fapp%2Fi%2Fverifications"
+}
