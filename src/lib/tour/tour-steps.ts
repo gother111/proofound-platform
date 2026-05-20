@@ -12,7 +12,7 @@ export const individualTourSteps: Step[] = [
   {
     target: '[data-tour="profile-section"]',
     content:
-      'This is your profile hub. Start with one artifact-backed Proof Pack before broad profile polish.',
+      'This is your profile hub. Start with one artifact-backed Proof Pack before expanding public details.',
     placement: 'bottom',
   },
   {

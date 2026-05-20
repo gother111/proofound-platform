@@ -2332,6 +2332,7 @@ Browser evidence:
 
 - Inspected active individual profile readiness and first-run tour copy after the broad-profile language scan.
 - Replaced remaining active `profile polish` / `broad profile` phrasing with proof-first progression copy: start with proof, keep the shell light, then choose which public details to expand.
+- Follow-up inspection found the same stale phrase in the older active tour-step source under `src/lib/tour/tour-steps.ts`; it now uses the same proof-first public-details language.
 - Updated guided setup coverage and added a source-level guard across the active profile/tour copy files so `profile polish`, `profile polishing`, and `broad profile` do not return to the individual app entry surfaces.
 - Browser was not rerun for this slice because the rendered structure and controls did not change; this is active product-language cleanup plus focused UI/source-copy coverage.
 - Verification passed: `npm run test -- tests/ui/guided-profile-setup-view.test.tsx tests/lib/profile-copy-guardrails.test.ts` (2 files / 2 tests) and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.

@@ -10,6 +10,7 @@ const ACTIVE_PROFILE_COPY_FILES = [
   'src/components/profile/editable-profile/ProfileReadinessBanner.tsx',
   'src/components/tour/FirstRunTour.tsx',
   'src/components/tour/tourSteps.tsx',
+  'src/lib/tour/tour-steps.ts',
 ];
 
 describe('active profile copy guardrails', () => {
