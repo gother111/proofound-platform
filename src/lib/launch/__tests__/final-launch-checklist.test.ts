@@ -41,6 +41,8 @@ async function createWorkspaceFixture(
 
 - Older route counts are stale.
   - Retire this as current truth. Old explanatory route-count details should not become a separate stale claim.
+- \`Google, LinkedIn, and video integrations remain live launch compatibility flows.\`
+  - Retire this as current truth. Legacy integration-route wording should not erase active Supabase social sign-in.
 `
   );
 
@@ -505,6 +507,12 @@ describe('final launch checklist pipeline', () => {
     expect(buildItem?.summary).toContain('PageNotFoundError');
     expect(buildItem?.retiredStaleClaims.length).toBeGreaterThan(0);
     expect(report.retiredStaleClaims).toContain('Older route counts are stale.');
+    expect(report.retiredStaleClaims).toContain(
+      '`Non-auth Google/LinkedIn integration routes and native video integrations remain live launch compatibility flows.`'
+    );
+    expect(report.retiredStaleClaims).not.toContain(
+      '`Google, LinkedIn, and video integrations remain live launch compatibility flows.`'
+    );
     expect(report.retiredStaleClaims).not.toContain(
       'Retire this as current truth. Old explanatory route-count details should not become a separate stale claim.'
     );

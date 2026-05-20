@@ -2301,3 +2301,13 @@ Browser evidence:
 - Added focused regression coverage in the existing rate-limit test suite proving the local fallback denies a new distinct key after 1024 live entries and admits a new key after expired entries are evicted.
 - Browser was not rerun for this slice because the change is rate-limit library behavior with no rendered UI change.
 - Verification passed: `npm run test -- src/lib/__tests__/rate-limit.test.ts` (1 file / 25 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.
+
+## Continuation - Auth Provider Evidence Wording Alignment
+
+- Re-inspected the generated launch checklist and current-state evidence after the Google/LinkedIn sign-in clarification.
+- Found a stale retired-claim label that said `Google, LinkedIn, and video integrations remain live launch compatibility flows`, which could be misread as retiring Google/LinkedIn Supabase social sign-in rather than only the archived custom integration routes.
+- Updated the current-state evidence wording to `Non-auth Google/LinkedIn integration routes and native video integrations`, explicitly preserving Google/LinkedIn social sign-in as Supabase Auth entry only and not trust semantics.
+- Added a checklist-generator normalization guard so older artifacts with the ambiguous retired-claim wording render as the narrower non-auth integration-route claim.
+- Regenerated the May 20 final launch checklist artifact; repo-scope verdict remains `READY` with `36` pass, `0` fail, `0` blocked, and `4` external prerequisites still `UNVERIFIED`.
+- Browser was not rerun for this slice because no rendered UI changed; the previous in-app Browser evidence already verified Google and LinkedIn sign-in buttons, and this change only corrects saved launch evidence wording.
+- Verification passed: `npm run test -- src/lib/launch/__tests__/final-launch-checklist.test.ts` (1 file / 9 tests), `npm run launch:checklist -- --skip-repo-validation`, `npm run test:launch:routes` (4 files / 27 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.

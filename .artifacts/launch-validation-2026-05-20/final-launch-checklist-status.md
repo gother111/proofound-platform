@@ -1,9 +1,9 @@
 # Proofound Final Launch Checklist Status
 
-Generated: 2026-05-20T02:58:33.442Z
+Generated: 2026-05-20T09:06:17.990Z
 Scope: `repo`
 Workspace: `/Users/yuriibakurov/proofound`
-Git: `master` @ `0d9942ccc5da3e60019ff8c2ad24a64c9d88a715`
+Git: `master` @ `c8b2c5b1902ed001bed4f3682d3db4a8530e3c52`
 Verdict: `READY`
 Live base URL: `http://127.0.0.1:61762`
 Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
@@ -175,4 +175,4 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - `The active route surface is still 187 APIs and 91 pages.`
 - `The org settings surface remains a live gate page.`
 - `The contracts API remains a live launch surface.`
-- `Google, LinkedIn, and video integrations remain live launch compatibility flows.`
+- `Non-auth Google/LinkedIn integration routes and native video integrations remain live launch compatibility flows.`

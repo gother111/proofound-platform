@@ -1,9 +1,9 @@
 {
   "scope": "repo",
-  "generatedAt": "2026-05-20T02:58:33.442Z",
+  "generatedAt": "2026-05-20T09:06:17.990Z",
   "currentDate": "2026-05-20",
   "workspaceRoot": "/Users/yuriibakurov/proofound",
-  "gitHead": "0d9942ccc5da3e60019ff8c2ad24a64c9d88a715",
+  "gitHead": "c8b2c5b1902ed001bed4f3682d3db4a8530e3c52",
   "gitBranch": "master",
   "verdict": "READY",
   "includeStateful": false,
@@ -1234,7 +1234,7 @@
     "`The active route surface is still 187 APIs and 91 pages.`",
     "`The org settings surface remains a live gate page.`",
     "`The contracts API remains a live launch surface.`",
-    "`Google, LinkedIn, and video integrations remain live launch compatibility flows.`"
+    "`Non-auth Google/LinkedIn integration routes and native video integrations remain live launch compatibility flows.`"
   ],
   "outputs": {
     "markdownPath": ".artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md",

@@ -72,8 +72,8 @@ This matrix refreshes current-state launch truth from fresh repo evidence. Older
   - Retire this as current truth. `/app/o/[slug]/settings` is now archived and returns the launch-archive not-found copy.
 - `The contracts API remains a live launch surface.`
   - Retire this as current truth. `/api/contracts` is archived and returns `410`.
-- `Google, LinkedIn, and video integrations remain live launch compatibility flows.`
-  - Retire this as current truth. Those non-launch integration routes are now removed from the active launch surface, and interview scheduling is manual-link only in the active MVP UI.
+- `Non-auth Google/LinkedIn integration routes and native video integrations remain live launch compatibility flows.`
+  - Retire this as current truth. Those non-auth integration routes are now removed from the active launch surface, interview scheduling is manual-link only in the active MVP UI, and Supabase Google/LinkedIn social sign-in remains an allowed account entry path rather than trust semantics.
 
 ## Changed Evidence Since The Prior Snapshot
 
@@ -90,7 +90,8 @@ This matrix refreshes current-state launch truth from fresh repo evidence. Older
   - `npm run test:e2e:landing:visual` -> `1 passed (15.8s)`
 - `.artifacts/launch-smoke-report.json` is now a fresh pass artifact again.
 - Live synthetic monitor evidence is fresh and healthy across all ten monitors.
-- The non-launch Google, LinkedIn, and video integration slice is no longer part of the active launch surface:
+- The non-auth Google/LinkedIn integration and native video-integration slice is no longer part of the active launch surface:
   - related API routes are archived or removed from classification
   - settings and verification UI now present manual-only or read-only compatibility states
+  - Google and LinkedIn social sign-in remain available through Supabase Auth only, without LinkedIn import, employment verification, scraping, enrichment, or trust lift.
 - The March route-breadth blocker is superseded by the 2026-05-20 route inventory pass. Full launch readiness still depends on production-candidate backup, isolated restore, authenticated launch-status/perf-status, and final go/no-go evidence for the intended target.

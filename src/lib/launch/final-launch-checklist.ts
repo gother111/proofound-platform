@@ -598,15 +598,27 @@ function extractRetiredStaleClaims(markdown: string | null) {
       inExplicitSection = false;
     }
     if (inExplicitSection && line.startsWith('- ')) {
-      collected.push(trimmed.slice(2).trim());
+      collected.push(normalizeRetiredStaleClaim(trimmed.slice(2).trim()));
       continue;
     }
     if (!inExplicitSection && line.startsWith('- ') && /\bstale\b/i.test(trimmed)) {
-      collected.push(trimmed.slice(2).trim());
+      collected.push(normalizeRetiredStaleClaim(trimmed.slice(2).trim()));
     }
   }
 
   return [...new Set(collected)];
+}
+
+function normalizeRetiredStaleClaim(claim: string) {
+  if (
+    /^`?Google, LinkedIn, and video integrations remain live launch compatibility flows\.?`?$/i.test(
+      claim
+    )
+  ) {
+    return '`Non-auth Google/LinkedIn integration routes and native video integrations remain live launch compatibility flows.`';
+  }
+
+  return claim;
 }
 
 function docObservation(params: {
