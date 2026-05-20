@@ -227,6 +227,8 @@ describe('match interest route', () => {
     expect(payload.currentTrustLevel).toBe('match_visible');
     expect(payload.browseStillAvailable).toBe(true);
     expect(payload.copy.title).toContain('You can keep browsing');
+    expect(payload.copy.body).toContain('Your proof set is not yet ready');
+    expect(JSON.stringify(payload.copy)).not.toMatch(/profile is visible|save this profile/i);
   });
 
   it('counts skill-linked proof from experience-anchored packs toward assignment intro eligibility', async () => {

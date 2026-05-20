@@ -177,21 +177,21 @@ function buildIntroBlockedCopy(
 ): { title: string; body: string } {
   if (reasonCodes.includes('trust_regressed')) {
     return {
-      title: 'Trust changed since this profile last qualified.',
-      body: 'The profile is still visible in matching, but new introductions are paused until proof or trust signals are refreshed.',
+      title: 'Trust changed since this proof set last qualified.',
+      body: 'Assignment-fit review can continue, but new introductions are paused until proof or trust signals are refreshed.',
     };
   }
 
   if (isOrgAction) {
     return {
       title: 'This candidate is reviewable, but not yet intro-eligible.',
-      body: 'You can save this profile and keep reviewing it, but Proofound is holding introductions until the candidate has stronger relevant proof and at least one active trust anchor for this assignment.',
+      body: 'You can keep reviewing the candidate proof, but Proofound is holding introductions until the candidate has stronger relevant proof and at least one active trust anchor for this assignment.',
     };
   }
 
   return {
     title: 'You can keep browsing. Introductions unlock after stronger proof.',
-    body: 'Your profile is visible, but it does not yet meet Proofound’s qualified introduction threshold. Add proof to more relevant skills and complete one trusted or attested proof to unlock introductions.',
+    body: 'Your proof set is not yet ready for qualified introductions on this assignment. Add proof to more relevant skills and complete one trusted or attested proof to unlock introductions.',
   };
 }
 

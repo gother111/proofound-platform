@@ -2371,3 +2371,12 @@ Browser evidence:
 - Added contract coverage so fallback copy does not reintroduce `searchable`, `public directory`, or `profile remains` language.
 - Browser was not rerun for this slice because this is contract copy consumed by operational fallback payloads rather than a directly changed rendered page.
 - Verification passed: `npm run test -- tests/lib/launch-operations-contract.test.ts` (1 file / 4 tests) and a focused source scan for the retired fallback wording. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Matching and Privacy Visibility Copy
+
+- Inspected active matching-intro and privacy visibility surfaces after the launch-ops fallback cleanup. The next active drift was profile/directory-style phrasing in `/api/match/interest` copy and privacy field controls.
+- Replaced blocked-introduction copy that said a profile was visible or saved with proof-set and assignment-fit review language.
+- Reframed individual privacy controls from `Profile visibility` and generic public profile exposure toward `Public Page visibility`, proof-context headlines, and private context controls.
+- Added focused coverage for the matching blocked-intro response and the privacy visibility copy so broad profile exposure language does not return.
+- Browser was not rerun for this slice because the edited privacy control copy is covered by focused rendering tests and the matching copy is an API response; the next rendered Browser pass should include `/app/i/settings/privacy`.
+- Verification passed: `npm run test -- tests/api/match-interest-route.test.ts tests/ui/privacy-visibility-copy.test.tsx` (2 files / 8 tests), plus a focused active-source scan for the retired profile visibility phrases. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.

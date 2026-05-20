@@ -1,7 +1,7 @@
 /**
  * Individual Field Visibility Controls
  *
- * Allows individuals to control visibility of profile fields
+ * Allows individuals to control visibility of Public Page fields
  * Supports: public, network_only, match_only, private
  */
 
@@ -47,7 +47,7 @@ const VISIBILITY_OPTIONS = [
   {
     value: 'public' as IndividualVisibilityLevel,
     label: 'Public',
-    description: 'Visible to everyone',
+    description: 'Visible on your Public Page',
     icon: Eye,
     color: 'text-green-600',
   },
@@ -85,13 +85,13 @@ const FIELDS = [
     key: 'avatar',
     label: 'Profile photo',
     recommended: 'public',
-    description: 'Your profile picture',
+    description: 'Your Public Page picture',
   },
   {
     key: 'headline',
     label: 'Headline',
     recommended: 'public',
-    description: 'Professional headline or tagline',
+    description: 'Short proof-context headline',
   },
   {
     key: 'location',
@@ -190,9 +190,9 @@ export function IndividualFieldVisibilityControls({
   return (
     <Card className="border-proofound-stone">
       <CardHeader>
-        <CardTitle className="text-xl">Profile visibility</CardTitle>
+        <CardTitle className="text-xl">Public Page visibility</CardTitle>
         <CardDescription>
-          Control who can see each part of your profile. Changes apply to all future views.
+          Control which Public Page details are visible and which stay private for future views.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -317,7 +317,7 @@ export function IndividualFieldVisibilityControls({
               <p className="font-medium mb-1">Privacy first</p>
               <p className="text-xs">
                 Your privacy settings are applied everywhere your profile appears. Organizations and
-                other users will only see sections based on your visibility choices. You can change
+                other viewers only see sections based on your visibility choices. You can change
                 these settings anytime.
               </p>
             </div>

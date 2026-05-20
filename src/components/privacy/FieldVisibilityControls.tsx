@@ -272,7 +272,8 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
               </CardTitle>
               <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground mt-2">
                 Instantly hide all sensitive information (location, email, org affiliation) with one
-                toggle. Perfect for when you need to share your profile publicly.
+                toggle. Useful when you need to share your Public Page without exposing private
+                context.
               </CardDescription>
             </div>
             <Switch
