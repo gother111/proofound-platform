@@ -22,6 +22,8 @@ import {
   resolveConversationParticipantsForMatch,
 } from '@/lib/messaging/conversation-access';
 
+import { getMatchingVisualState } from '@/lib/matching/visual-fixtures';
+
 // Schema for creating a conversation
 const CreateConversationSchema = z.object({
   matchId: z.string().uuid(),
@@ -40,8 +42,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (visualMessagingFixturesEnabled()) {
+      const visualState = getMatchingVisualState(request?.nextUrl);
       return NextResponse.json({
-        conversations: buildVisualConversations(user.id),
+        conversations: visualState === 'empty' ? [] : buildVisualConversations(user.id),
         hasMore: false,
         nextOffset: null,
       });

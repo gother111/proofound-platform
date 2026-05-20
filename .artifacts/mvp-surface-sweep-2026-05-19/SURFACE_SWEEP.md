@@ -2115,3 +2115,12 @@ Browser evidence:
 - Updated the dashboard archive README and launch-gate coverage so active `src/lib/dashboard` cannot quietly regain the old broad goal/gap/momentum/org dashboard helper layer.
 - Browser was not rerun for this slice because no mounted route or UI output changed; the change removes unused active source and is covered by source/launch-gate checks.
 - Verification passed: `npm run test -- tests/scripts/launch-gate-config.test.ts tests/ui/widget-grid-skeleton.test.tsx tests/ui/metric-strip-chip-style.test.tsx` (3 files / 103 tests), `npm run test:launch:routes` (4 files / 27 tests), `npm run docs:freshness`, `npm run typecheck`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - Performance Alert Internal-Ops Link Cleanup
+
+- Inspected active launch-ops cron code and found the decision-reminder performance health alert still linked operators to the retired `/app/admin/performance` dashboard path through `NEXT_PUBLIC_APP_URL`.
+- Updated `sendPerformanceAlert` so alert emails point to the canonical internal ops surface (`/admin`) using `resolveCanonicalSiteUrl()` when configured, with a relative `/admin` fallback in production-like runtimes without a configured site URL.
+- Removed the stale "monitoring dashboard" action wording from that alert body and replaced it with launch monitoring / route-health language.
+- Added regression coverage proving performance health alerts do not contain `/app/admin/performance` or `undefined` links and prefer `NEXT_PUBLIC_SITE_URL` over legacy app URL configuration.
+- Browser was not rerun for this slice because no rendered web UI changed; the change is transactional launch-ops email copy and link resolution.
+- Verification passed: `npm run test -- src/lib/analytics/__tests__/health-check-alert.test.ts src/app/api/cron/decision-reminders/__tests__/route.test.ts` (2 files / 7 tests), `npm run test:launch:routes` (4 files / 27 tests), `npm run typecheck`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.

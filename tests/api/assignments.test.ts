@@ -134,6 +134,20 @@ describe('Assignment API', () => {
       expect(res.status).toBe(400);
     });
 
+    it('returns 400 for malformed JSON before organization lookup', async () => {
+      const req = new NextRequest('http://localhost/api/assignments', {
+        method: 'POST',
+        body: '{',
+      });
+
+      const res = await POST(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(data).toEqual({ error: 'Invalid JSON body' });
+      expect(db.query.organizationMembers.findFirst).not.toHaveBeenCalled();
+    });
+
     it('should create an assignment successfully', async () => {
       // Mock org membership
       (db.query.organizationMembers.findFirst as any).mockResolvedValue({

@@ -44,6 +44,14 @@ function request(body: unknown) {
   });
 }
 
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/ai/verifications/compose', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+}
+
 describe('Verification Request Composer route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -95,6 +103,14 @@ describe('Verification Request Composer route', () => {
 
     expect(response.status).toBe(503);
     expect(payload.code).toBe('ai_feature_kill_switch');
+    expect(mocks.composeVerificationRequestForUser).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before composer service access', async () => {
+    const response = await POST(rawRequest('{"proofPackId":'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
     expect(mocks.composeVerificationRequestForUser).not.toHaveBeenCalled();
   });
 

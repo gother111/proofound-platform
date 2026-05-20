@@ -112,6 +112,16 @@ function makeRequest(body: Record<string, unknown>) {
   });
 }
 
+function makeRawRequest(body: string) {
+  return new NextRequest('https://proofound.io/api/verification/work-email/send', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body,
+  });
+}
+
 describe('POST /api/verification/work-email/send', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -217,5 +227,19 @@ describe('POST /api/verification/work-email/send', () => {
 
     expect(response.status).toBe(401);
     expect(await response.json()).toMatchObject({ error: 'Unauthorized' });
+  });
+
+  it('returns 400 for malformed JSON before token generation or email delivery', async () => {
+    const { supabase, upsertPayloads } = createSupabaseMock({
+      existingProfile: null,
+    });
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await POST(makeRawRequest('{'), {} as any);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'Invalid JSON body' });
+    expect(upsertPayloads).toHaveLength(0);
+    expect(sendWorkEmailVerification).not.toHaveBeenCalled();
   });
 });

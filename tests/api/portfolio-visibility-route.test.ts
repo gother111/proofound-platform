@@ -42,6 +42,14 @@ function request(body: Record<string, unknown>) {
   });
 }
 
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/portfolio/visibility', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+}
+
 function buildSupabase({
   individual = {
     field_visibility: {
@@ -171,6 +179,15 @@ describe('POST /api/portfolio/visibility privacy preflight', () => {
     );
     expect(supabase.__mocks.individualUpdate).not.toHaveBeenCalled();
     expect(supabase.__mocks.profileUpdate).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for malformed JSON before auth or preflight work', async () => {
+    const response = await POST(rawRequest('{'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(createClient).not.toHaveBeenCalled();
+    expect(computePortfolioPublicationState).not.toHaveBeenCalled();
   });
 
   it('does not block low-risk publication automatically', async () => {

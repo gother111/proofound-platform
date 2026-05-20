@@ -35,6 +35,13 @@ function buildPutRequest(body: Record<string, unknown>) {
   });
 }
 
+function buildRawPutRequest(body: string) {
+  return new NextRequest(`http://localhost/api/organizations/${ORG_ID}`, {
+    method: 'PUT',
+    body,
+  });
+}
+
 function mockUpdateReturningOrganization() {
   const returning = vi.fn().mockResolvedValue([{ id: ORG_ID }]);
   const where = vi.fn().mockReturnValue({ returning });
@@ -130,6 +137,23 @@ describe('organizations [orgId] route', () => {
 
     expect(response.status).toBe(400);
     expect(body.details.unsupportedFields).toEqual(['industry']);
+  });
+
+  it('returns 400 for malformed JSON before principal or membership checks', async () => {
+    const authContext = {
+      user: { id: 'user-1' },
+      supabase: {
+        from: vi.fn(),
+      },
+    };
+    (requireApiAuthContext as any).mockResolvedValue(authContext);
+
+    const response = await PUT(buildRawPutRequest('{'), params);
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(authContext.supabase.from).not.toHaveBeenCalled();
+    expect(db.update).not.toHaveBeenCalled();
   });
 
   it('returns 403 when user role is manager', async () => {

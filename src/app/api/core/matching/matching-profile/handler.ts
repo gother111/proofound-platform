@@ -174,11 +174,11 @@ export async function GET(request: NextRequest) {
     const visualState = getMatchingVisualState(request?.nextUrl);
     if (matchingVisualFixturesEnabled() && visualState) {
       return NextResponse.json({
-        profile: visualState === 'filled' ? buildVisualMatchingProfile(user.id) : null,
+        profile: buildVisualMatchingProfile(user.id),
         eligibility: {
-          eligible: visualState === 'filled',
-          tier: visualState === 'filled' ? 'introductions_ready' : 'browse_ready',
-          nextTierTarget: visualState === 'filled' ? null : 'Add matching preferences',
+          eligible: true,
+          tier: 'introductions_ready',
+          nextTierTarget: null,
         },
       });
     }

@@ -70,7 +70,9 @@ test.describe('Profile visual contract', () => {
     await expect(page).toHaveURL(/\/app\/o\/test-org\/profile/);
     await stabilizeProfile(page);
 
-    await expect(page.getByRole('heading', { name: 'Organization Profile' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Organization Profile', exact: true })
+    ).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Launch corridor' })).toBeVisible();
     await expect(
       page.getByRole('heading', { name: 'Organization profile', exact: true })

@@ -15,6 +15,8 @@ Goal: controlled, repo-safe Clawpatch first pass with read-only mapping/reportin
   - `.artifacts/clawpatch-2026-05-16/root-report.md`
   - `.artifacts/clawpatch-2026-05-16-src/src-report.md`
   - `.artifacts/clawpatch-2026-05-16-src/src-report-after-local-fixes.md`
+  - `.artifacts/clawpatch-2026-05-16/root-report-latest.md`
+  - `.artifacts/clawpatch-2026-05-16-src/src-report-latest.md`
 - No `clawpatch fix` command was run.
 - No commit, push, PR, schema, auth, billing, or production change was made.
 
@@ -133,6 +135,132 @@ Focused verification after this sweep:
 3. Clawpatch automatic fixing is not appropriate while this worktree is dirty, because `git status` shows many unrelated pre-existing changes.
 4. The Clawpatch provider review needs explicit approval because it may export private repository context through the provider path.
 5. The local repo quality gates used for the resumed fixing pass passed after manual resolution of the persisted Clawpatch findings.
+
+## Continuation: Full-Suite Regression Fixes
+
+On 2026-05-20, a full local Vitest run exposed two remaining regressions after the LinkedIn archive/launch-corridor cleanup:
+
+- `ProfileDialogs` assumed every profile had `guidedSetup.handle`, which broke profile edit routing tests for lean profile fixtures. The share URL now uses an optional handle and omits the public path when the handle is absent.
+- Launch-gate guardrails still expected the older app-side LinkedIn OAuth callback and the previous LinkedIn reference date. The assertions and docs registry now match the current launch contract: LinkedIn app-side OAuth helpers are archived, and any intentionally enabled LinkedIn social auth belongs behind the Supabase callback.
+
+Verification after this pass:
+
+- `npm run test -- tests/scripts/launch-gate-config.test.ts tests/ui/profile-dialogs-edit-routing.test.tsx`: passed, `2` files and `101` tests.
+- `npm run lint`: passed.
+- `npm run typecheck`: passed.
+- `npm run docs:freshness`: passed with no findings.
+- `npm run test`: passed, `384` files and `1986` tests.
+
+## Continuation: Safe Local Clawpatch Refresh
+
+On 2026-05-20, the Clawpatch state was refreshed without invoking provider-backed review or automatic fixes:
+
+- `clawpatch --version`: `0.1.0`.
+- Root state status: `9` features, `0` findings, `0` open findings, `0` active locks.
+- `src/` state status: `197` features, `18` findings, `0` open findings, `0` active locks.
+- Fresh local reports were written to:
+  - `.artifacts/clawpatch-2026-05-16/root-report-latest.md`
+  - `.artifacts/clawpatch-2026-05-16-src/src-report-latest.md`
+
+The latest `src/` report still lists all `18` persisted findings as `status: fixed`. No provider-backed review, `clawpatch fix`, commit, push, PR, production, schema, auth, or billing mutation was made.
+
+Verification after the safe local refresh:
+
+- `npm run test -- tests/ui/profile-dialogs-edit-routing.test.tsx`: passed, `1` file and `1` test.
+- `npm run test -- tests/actions/auth.test.ts src/actions/__tests__/auth-signup-schema.test.ts tests/api/auth-callback-route.test.ts tests/ui/signin-form-mobile-clarity.test.tsx tests/ui/signup-form-mobile-clarity.test.tsx`: passed, `5` files and `22` tests.
+- `npm run test -- tests/actions/auth.test.ts tests/ui/social-sign-in-buttons.test.tsx tests/lib/archived-linkedin-integration-references.test.ts tests/scripts/launch-gate-config.test.ts`: passed, `4` files and `120` tests.
+- `npm run lint`: passed.
+- `npm run typecheck`: passed.
+- `npm run docs:freshness`: passed with no findings.
+
+## Continuation: Local Malformed-JSON Sweep
+
+Because provider-backed Clawpatch review remains blocked, a local follow-up sweep checked active route handlers for the repeat malformed-JSON bug class found by Clawpatch. The sweep confirmed additional user-facing routes where `request.json()` could throw into generic 500 handling before normal validation.
+
+Fixed routes:
+
+- `src/app/api/user/email/route.ts`
+- `src/app/api/user/password/route.ts`
+- `src/app/api/verification/work-email/send/route.ts`
+- `src/app/api/interviews/cancel/route.ts`
+- `src/app/api/matches/[id]/snooze/route.ts`
+
+Each now returns `400` with `Invalid JSON body` before provider, workflow, match, or persistence work continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/user-account-update-error-redaction.test.ts tests/api/work-email-verification-send-route.test.ts tests/api/interviews-cancel-route.test.ts tests/api/matches-snooze-route.test.ts`: passed, `4` files and `16` tests.
+- `npm run test -- tests/scripts/launch-gate-config.test.ts tests/lib/env.test.ts`: passed, `2` files and `106` tests.
+- `npm run docs:freshness`: passed with no findings.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Second Local Malformed-JSON Sweep
+
+A second local sweep applied the same malformed-JSON boundary to additional active routes:
+
+- `src/app/api/interviews/edit/route.ts`
+- `src/app/api/portfolio/visibility/route.ts`
+- `src/app/api/match/hide/route.ts`
+
+Each now returns `400` with `Invalid JSON body` before authorization-sensitive workflow lookup, privacy preflight/publication work, match lookup, or persistence work continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/interviews-edit-route.test.ts tests/api/portfolio-visibility-route.test.ts tests/api/match-hide-route.test.ts`: passed, `3` files and `12` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Third Local Malformed-JSON Sweep
+
+A third local sweep applied the same malformed-JSON boundary to assignment mutation routes:
+
+- `src/app/api/assignments/route.ts`
+- `src/app/api/assignments/[id]/expertise-matrix/route.ts`
+- `src/app/api/assignments/[id]/outcomes/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` before organization context lookup, assignment access checks, matrix/outcome deletes, or assignment persistence work continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/assignments.test.ts tests/api/assignment-mutation-json-boundary.test.ts`: passed, `2` files and `17` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Fourth Local Malformed-JSON Sweep
+
+A fourth local sweep applied the same malformed-JSON boundary to privacy/profile and organization settings routes:
+
+- `src/app/api/profile/privacy-settings/route.ts`
+- `src/app/api/profile/visibility/route.ts`
+- `src/app/api/user/privacy-settings/route.ts`
+- `src/app/api/organizations/[orgId]/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` before private profile visibility loads, analytics logging, organization principal checks, membership checks, or profile/organization writes continue.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/profile-privacy-settings-route.test.ts tests/api/profile-visibility-route.test.ts tests/api/user-privacy-settings-route.test.ts tests/api/organizations-route.test.ts`: passed, `4` files and `18` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
+## Continuation: Fifth Local Malformed-JSON Sweep
+
+A fifth local sweep applied the same malformed-JSON boundary to AI assistant routes:
+
+- `src/app/api/ai/assignments/clarify/route.ts`
+- `src/app/api/ai/proof-pack/suggest/route.ts`
+- `src/app/api/ai/privacy-preflight/check/route.ts`
+- `src/app/api/ai/verifications/compose/route.ts`
+- `src/app/api/ai/suggestions/events/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication and any applicable kill-switch checks, but before assignment access checks, profile enrichment reads, assistant service calls, suggestion event writes, or model/provider work continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/assignment-clarity-route.test.ts tests/api/proof-pack-assistant-route.test.ts tests/api/privacy-preflight-route.test.ts tests/api/verification-composer-route.test.ts tests/api/ai-suggestion-events-route.test.ts`: passed, `5` files and `37` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
 
 ## Completion Audit
 

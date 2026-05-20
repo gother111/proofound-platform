@@ -11,6 +11,8 @@ import { sql, and, gte } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { sendEmail } from '@/lib/email/sender';
 import { getRows } from '@/lib/db/rows';
+import { resolveCanonicalSiteUrl } from '@/lib/env';
+import { INTERNAL_OPS_HREF } from '@/lib/launch/surface-policy';
 
 export interface PerformanceHealthStatus {
   healthy: boolean;
@@ -42,6 +44,11 @@ function resolveApiLatencyP95Threshold(): number {
     return 1500;
   }
   return parsed;
+}
+
+function resolveInternalOpsUrl(): string {
+  const baseUrl = resolveCanonicalSiteUrl();
+  return baseUrl ? `${baseUrl}${INTERNAL_OPS_HREF}` : INTERNAL_OPS_HREF;
 }
 
 /**
@@ -294,6 +301,8 @@ Current Metrics (24h):
 - Error Rate: ${status.metrics.errorRate ? `${status.metrics.errorRate.toFixed(2)}%` : 'N/A'} (Target: <1%)
 `;
 
+    const internalOpsUrl = resolveInternalOpsUrl();
+
     const body = `
 Performance Health Check Alert
 
@@ -308,11 +317,11 @@ Timestamp: ${status.timestamp.toISOString()}
 
 Action Required:
 ${criticalBreaches.length > 0 ? '- Immediate investigation and remediation required for critical issues' : ''}
-- Review performance metrics in monitoring dashboard
+- Review launch monitoring evidence and recent route health
 - Check recent deployments for potential causes
 - Monitor trends to prevent escalation
 
-Dashboard: ${process.env.NEXT_PUBLIC_APP_URL}/app/admin/performance
+Internal ops: ${internalOpsUrl}
 `;
 
     await sendEmail({

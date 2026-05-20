@@ -27,7 +27,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
     const { user } = authContext;
     const { id: matchId } = await params;
-    const body: SnoozeParams = await request.json();
+    let body: SnoozeParams;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     // Validate input
     if (!body.duration && !body.until) {

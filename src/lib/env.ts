@@ -115,6 +115,9 @@ export function isProductionDeployRuntime(env: EnvSource = process.env): boolean
 }
 
 export function isMockSupabaseEnabled(env: EnvSource = process.env): boolean {
+  if (typeof window !== 'undefined') {
+    return isEnabledFlag(process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE);
+  }
   return isEnabledFlag(env.NEXT_PUBLIC_USE_MOCK_SUPABASE);
 }
 

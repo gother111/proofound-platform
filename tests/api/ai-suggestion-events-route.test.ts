@@ -32,6 +32,14 @@ function request(body: unknown) {
   });
 }
 
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/ai/suggestions/events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+}
+
 describe('AI suggestion events route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -53,6 +61,14 @@ describe('AI suggestion events route', () => {
     );
 
     expect(response.status).toBe(401);
+    expect(mocks.recordSuggestionEvent).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before recording suggestion events', async () => {
+    const response = await POST(rawRequest('{"suggestionId":'));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
     expect(mocks.recordSuggestionEvent).not.toHaveBeenCalled();
   });
 

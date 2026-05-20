@@ -262,6 +262,8 @@ async function runAssignmentCreationSideEffects({
  * - status: Filter by status (draft, active, hold, closed)
  */
 
+import { getMatchingVisualState } from '@/lib/matching/visual-fixtures';
+
 export async function GET(request: NextRequest) {
   return withApiObservability(request, '/api/assignments', async (ctx) => {
     try {
@@ -298,8 +300,9 @@ export async function GET(request: NextRequest) {
       }
 
       if (visualAssignmentFixturesEnabled()) {
+        const visualState = getMatchingVisualState(request.nextUrl);
         return NextResponse.json({
-          items: buildVisualAssignmentFixtures(orgId),
+          items: visualState === 'empty' ? [] : buildVisualAssignmentFixtures(orgId),
           hasMore: false,
           nextOffset: null,
         });
@@ -497,7 +500,12 @@ export async function POST(request: NextRequest) {
       const { user } = authContext;
       userId = user.id;
 
-      const body = await request.json();
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
 
       // Validate input
       const validatedData = AssignmentCreateSchema.parse(body);

@@ -126,8 +126,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const visualState = getMatchingVisualState(request.nextUrl);
-    if (matchingVisualFixturesEnabled() && visualState === 'filled') {
-      const items = buildVisualIndividualMatches();
+    if (matchingVisualFixturesEnabled() && visualState) {
+      const items = visualState === 'filled' ? buildVisualIndividualMatches() : [];
       return NextResponse.json({
         items,
         meta: {

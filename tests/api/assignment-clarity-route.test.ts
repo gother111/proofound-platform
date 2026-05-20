@@ -63,6 +63,14 @@ function request(body: Record<string, unknown>) {
   });
 }
 
+function rawRequest(body: string) {
+  return new NextRequest('http://localhost/api/ai/assignments/clarify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+}
+
 function baseBody(overrides: Record<string, unknown> = {}) {
   return {
     assignmentId,
@@ -147,6 +155,15 @@ describe('assignment clarity assistant route', () => {
 
     expect(res.status).toBe(503);
     expect(payload.code).toBe('ai_feature_kill_switch');
+    expect(generateJson).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before assignment access or model calls', async () => {
+    const res = await POST(rawRequest('{"assignmentId":'));
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(verifyExplicitAssignmentMutationAccess).not.toHaveBeenCalled();
     expect(generateJson).not.toHaveBeenCalled();
   });
 

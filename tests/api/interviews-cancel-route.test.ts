@@ -83,6 +83,29 @@ describe('POST /api/interviews/cancel', () => {
     expect(response.status).toBe(403);
   });
 
+  it('returns 400 for malformed JSON before interview authorization lookup', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: orgAdminId } },
+          error: null,
+        }),
+      },
+      from: vi.fn(),
+    } as any);
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/interviews/cancel', {
+        method: 'POST',
+        body: '{',
+      })
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(canManageInterviewAsOrgAdmin).not.toHaveBeenCalled();
+  });
+
   it('returns 400 when interview is not scheduled', async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {
