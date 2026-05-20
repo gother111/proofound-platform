@@ -2380,3 +2380,12 @@ Browser evidence:
 - Added focused coverage for the matching blocked-intro response and the privacy visibility copy so broad profile exposure language does not return.
 - Browser was not rerun for this slice because the edited privacy control copy is covered by focused rendering tests and the matching copy is an API response; the next rendered Browser pass should include `/app/i/settings/privacy`.
 - Verification passed: `npm run test -- tests/api/match-interest-route.test.ts tests/ui/privacy-visibility-copy.test.tsx` (2 files / 8 tests), plus a focused active-source scan for the retired profile visibility phrases. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Public Crawl and Launch-Ops Copy
+
+- Inspected active public crawl guidance after the profile/directory wording cleanup. The LLM crawl text still used `searchable` as a publication condition, and the active launch-operations doc still preserved the older `shareable and searchable` fallback phrase.
+- Updated `llms.txt` copy to describe portfolio indexing as an explicit publication-setting decision rather than searchability.
+- Updated `docs/launch-operations-mvp.md` approved fallback language to use Public Page + proof context instead of profile/searchable wording.
+- Added crawl-route coverage so `llms.txt` does not reintroduce `searchable` or public-directory language.
+- Browser was not rerun for this slice because the edited surface is deterministic plaintext plus an active doc; route tests and docs freshness cover the changed behavior.
+- Verification passed: `npm run test -- tests/app/llms-routes.test.ts tests/lib/launch-operations-contract.test.ts` (2 files / 7 tests), `npm run docs:freshness`, and a focused source/doc scan for the retired crawl/fallback wording. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.

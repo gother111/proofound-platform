@@ -126,7 +126,7 @@ export function renderLlmsTxt({ detailed = false }: { detailed?: boolean } = {})
     '- Public Pages and organization trust pages are available on direct URLs only when the owner or organization explicitly publishes public-safe content.'
   );
   lines.push(
-    '- Dynamic portfolio routes are privacy-gated and should not be assumed to be indexable unless the portfolio is explicitly marked searchable.'
+    '- Dynamic portfolio routes are privacy-gated and should not be assumed to be indexable unless publication settings explicitly allow indexing.'
   );
   lines.push('');
 

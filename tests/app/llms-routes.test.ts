@@ -17,6 +17,8 @@ describe('llms routes', () => {
     expect(body).toContain('privacy-safe review');
     expect(body).toContain('/privacy');
     expect(body).not.toContain('/about');
+    expect(body).not.toMatch(/searchable/i);
+    expect(body).not.toMatch(/public directory/i);
     expect(body).toContain('hello@proofound.io');
   });
 

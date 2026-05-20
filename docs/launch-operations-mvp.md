@@ -319,7 +319,7 @@
 
 - Approved language:
   - “There are not enough qualified introductions yet. Your portfolio is still doing useful work while we protect quality.”
-  - “Your profile remains shareable and searchable. Add proof or trust signals to strengthen intro readiness.”
+  - “Your Public Page remains shareable with proof context. Add proof or trust signals to strengthen intro readiness.”
   - “Verification is still in progress. We will keep trust labels conservative until it completes.”
   - “Shortlist quality is protected right now, so exact ranking is not shown.”
   - “Best next step”
