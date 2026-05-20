@@ -29,10 +29,6 @@ vi.mock('@/components/matching/VerificationGatesWarning', () => ({
   VerificationGatesWarning: () => <div>Verification gates warning</div>,
 }));
 
-vi.mock('@/components/matching/RankDisplay', () => ({
-  RankDisplay: () => <div>Rank display</div>,
-}));
-
 vi.mock('@/components/matching/ConsentToShareDialog', () => ({
   ConsentToShareDialog: () => <div>Consent dialog</div>,
 }));
@@ -61,12 +57,15 @@ describe('MatchResultCard', () => {
       />
     );
 
-    expect(screen.getByText('Proof:')).toBeInTheDocument();
-    expect(screen.getByText('Skills:')).toBeInTheDocument();
-    expect(screen.getByText('Trust:')).toBeInTheDocument();
+    expect(screen.getByText('Proof')).toBeInTheDocument();
+    expect(screen.getByText('Skills')).toBeInTheDocument();
+    expect(screen.getByText('Trust')).toBeInTheDocument();
+    expect(screen.getAllByText('Primary reason').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Clear support').length).toBeGreaterThan(0);
     expect(screen.queryByText('Proof_fit:')).not.toBeInTheDocument();
     expect(screen.queryByText('Skills_fit:')).not.toBeInTheDocument();
     expect(screen.queryByText('Verification_fit:')).not.toBeInTheDocument();
+    expect(screen.queryByText('91%')).not.toBeInTheDocument();
   });
 
   it('renders proof-first org review cards without score-first clutter', () => {
@@ -115,7 +114,7 @@ describe('MatchResultCard', () => {
 
     expect(screen.getByText('Candidate A7F2')).toBeInTheDocument();
     expect(screen.getByText('Blind by default')).toBeInTheDocument();
-    expect(screen.getByText('Top 10')).toBeInTheDocument();
+    expect(screen.getByText('High-priority proof review')).toBeInTheDocument();
     expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
     expect(
       screen.getByText('Led a privacy-safe launch proof for a complex hiring workflow.')
@@ -138,6 +137,7 @@ describe('MatchResultCard', () => {
     expect(screen.getByRole('button', { name: 'Pass' })).toBeInTheDocument();
     expect(screen.queryByText('82% Match')).not.toBeInTheDocument();
     expect(screen.queryByText('Match breakdown:')).not.toBeInTheDocument();
+    expect(screen.queryByText('Top 10')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /snooze/i })).not.toBeInTheDocument();
   });
 
@@ -169,6 +169,7 @@ describe('MatchResultCard', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/% proof fit/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/ranking band/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('91%')).not.toBeInTheDocument();
     expect(screen.queryByText(/verified profile/i)).not.toBeInTheDocument();
   });
 });

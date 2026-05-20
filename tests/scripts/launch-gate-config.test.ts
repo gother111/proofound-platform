@@ -2704,6 +2704,57 @@ describe('launch gate package configuration', () => {
     ).toBe(true);
   });
 
+  it('keeps active matching review UI proof-led instead of score or rank led', () => {
+    const activeMatchingReviewFiles = [
+      'src/components/matching/MatchResultCard.tsx',
+      'src/components/matching/MatchExplainerModal.tsx',
+      'src/components/matching/SnoozedMatchesList.tsx',
+    ];
+    const archivedScoreRankFiles = [
+      'src/archive/non_launch_matching_ui/preserved/components/matching/RankDisplay.tsx',
+      'src/archive/non_launch_matching_ui/preserved/components/matching/MatchScoreBreakdown.tsx',
+      'src/archive/non_launch_matching_ui/preserved/components/matching/MatchDetailPanel.tsx',
+      'src/archive/non_launch_matching_ui/preserved/components/matching/ExplainPanel.tsx',
+    ];
+
+    const activeMatchingReviewText = activeMatchingReviewFiles
+      .map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'))
+      .join('\n');
+
+    expect(activeMatchingReviewText).toContain('Reason-coded');
+
+    for (const relativePath of activeMatchingReviewFiles) {
+      const content = fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
+
+      expect(content).not.toContain("from '@/components/ui/progress'");
+      expect(content).not.toContain('<Progress');
+      expect(content).not.toContain('Signal Breakdown by Category');
+      expect(content).not.toContain('getRankDisplay');
+      expect(content).not.toContain('Match Score');
+      expect(content).not.toContain('Your Rank');
+      expect(content).not.toContain('Overall Match');
+      expect(content).not.toContain('Top 10');
+      expect(content).not.toContain('Top 5');
+      expect(content).not.toContain('Top 20');
+    }
+
+    for (const relativePath of archivedScoreRankFiles) {
+      expect(fs.existsSync(path.join(repoRoot, relativePath))).toBe(true);
+    }
+    expect(fs.existsSync(path.join(repoRoot, 'src/components/matching/RankDisplay.tsx'))).toBe(
+      false
+    );
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/components/matching/MatchScoreBreakdown.tsx'))
+    ).toBe(false);
+    expect(fs.existsSync(path.join(repoRoot, 'src/components/matching/MatchDetailPanel.tsx'))).toBe(
+      false
+    );
+    expect(fs.existsSync(path.join(repoRoot, 'src/components/matching/ExplainPanel.tsx'))).toBe(
+      false
+    );
+  });
+
   it('keeps retired wellbeing and Zen implementation modules archived', () => {
     expect(fs.existsSync(path.join(repoRoot, 'src/components/wellbeing'))).toBe(false);
     expect(fs.existsSync(path.join(repoRoot, 'src/components/zen'))).toBe(false);

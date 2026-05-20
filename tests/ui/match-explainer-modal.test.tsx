@@ -147,7 +147,7 @@ describe('MatchExplainerModal', () => {
       MATCH_EXPLAINER_DIALOG_DESCRIPTION
     );
     expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
-    expect(screen.getAllByText('Top 10').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Clear proof-fit band').length).toBeGreaterThan(0);
     expect(
       screen.getByText('Built a blind review corridor around proof-backed evaluation.')
     ).toBeInTheDocument();
@@ -166,12 +166,20 @@ describe('MatchExplainerModal', () => {
     expect(screen.getByText('Auditable verification history')).toBeInTheDocument();
     expect(screen.queryByText('Comparative score detail')).not.toBeInTheDocument();
     expect(
-      screen.getByText('Exact ranking detail is suppressed while fairness remediation is active.')
+      screen.getByText('Exact ordering detail is suppressed while fairness remediation is active.')
     ).toBeInTheDocument();
     expect(
       screen.getByText('Exact ordering is hidden while privacy or fairness limits apply.')
     ).toBeInTheDocument();
     expect(screen.getByText('Supporting fit signal')).toBeInTheDocument();
+    expect(screen.getByText('Review signals by area')).toBeInTheDocument();
+    expect(screen.getByText('Skills evidence')).toBeInTheDocument();
+    expect(screen.getByText('Practical constraints')).toBeInTheDocument();
+    expect(screen.getByText('Proof freshness')).toBeInTheDocument();
+    expect(screen.getByText('Verification support')).toBeInTheDocument();
+    expect(screen.queryByText('82%')).not.toBeInTheDocument();
+    expect(screen.queryByText('90%')).not.toBeInTheDocument();
+    expect(screen.queryByText('Top 10')).not.toBeInTheDocument();
     expect(
       screen.getByText(
         'This fit signal summarizes proof strength, fit rationale, and practical constraints after the privacy-safe review context above.'

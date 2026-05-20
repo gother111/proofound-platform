@@ -4,7 +4,6 @@ import { useEffect, useState, type ComponentType } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { MapPin, Clock, DollarSign, Shield, Eye, EyeOff, BellOff, Loader2 } from 'lucide-react';
 import { VerificationGatesWarning } from './VerificationGatesWarning';
 import { apiFetch } from '@/lib/api/fetch';
@@ -26,6 +25,21 @@ const CONTRIBUTION_LABELS: Record<string, string> = {
   recency: 'Recent',
   evidence: 'Evidence',
 };
+
+function proofSignalLabel(value: number): string {
+  if (value >= 0.85) return 'Primary reason';
+  if (value >= 0.65) return 'Clear support';
+  if (value >= 0.4) return 'Needs review';
+  return 'Limited signal';
+}
+
+function reviewBandLabel(label?: string | null): string | null {
+  if (!label) return null;
+  if (/^top\s*\d+/i.test(label) || /^#\d+/i.test(label)) {
+    return 'High-priority proof review';
+  }
+  return label;
+}
 
 type DeferredComponent = ComponentType<any>;
 
@@ -121,7 +135,6 @@ export function MatchResultCard({
   const [ConsentToShareDialogView, setConsentToShareDialogView] =
     useState<DeferredComponent | null>(null);
 
-  // Top 3 skills
   const topSkills = skills.slice(0, 3);
   const showExactCompensation =
     (result.assignment as any)?.visibility?.showExactSalary === true ||
@@ -135,7 +148,6 @@ export function MatchResultCard({
     return 'Proof review needed';
   })();
 
-  // Contribution bars
   const contributions = Object.entries(result.contributions ?? {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
@@ -310,8 +322,8 @@ export function MatchResultCard({
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{privacyCue}</Badge>
                 <Badge variant="secondary">{stateBadgeLabel}</Badge>
-                {orgReviewCard?.fitBand ? (
-                  <Badge variant="outline">{orgReviewCard.fitBand}</Badge>
+                {reviewBandLabel(orgReviewCard?.fitBand) ? (
+                  <Badge variant="outline">{reviewBandLabel(orgReviewCard?.fitBand)}</Badge>
                 ) : null}
                 {result.fairness?.status && result.fairness.status !== 'pass' ? (
                   <Badge variant="outline">Fairness protected</Badge>
@@ -472,7 +484,6 @@ export function MatchResultCard({
               </h4>
             )}
 
-            {/* Match score */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-proofound-forest/20 bg-proofound-forest/10 px-2.5 py-1 text-xs font-medium text-proofound-forest">
                 {proofFitLabel}
@@ -487,7 +498,6 @@ export function MatchResultCard({
               )}
             </div>
 
-            {/* Match Explainer - Full detailed breakdown */}
             {result.id && (
               <div className="mt-2">
                 {matchExplanation && MatchExplainerModalView ? (
@@ -607,24 +617,21 @@ export function MatchResultCard({
           )}
         </div>
 
-        {/* Contribution breakdown */}
         <div className="mb-3 flex-1">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Why it fits
           </p>
-          <div className="space-y-0.5">
+          <div className="space-y-1.5">
             {contributions.map(([key, value]) => (
-              <div key={key} className="flex items-center gap-2">
-                <span className="w-20 shrink-0 text-xs capitalize text-muted-foreground">
-                  {contributionLabel(key)}:
+              <div
+                key={key}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-proofound-stone/70 bg-white px-3 py-2"
+              >
+                <span className="text-xs font-medium capitalize text-proofound-charcoal">
+                  {contributionLabel(key)}
                 </span>
-                <Progress
-                  value={value * 100}
-                  className="h-1.5 flex-1"
-                  style={{ backgroundColor: '#E8E6DD' }}
-                />
-                <span className="w-10 text-right text-xs text-muted-foreground">
-                  {Math.round(value * 100)}%
+                <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
+                  {proofSignalLabel(value)}
                 </span>
               </div>
             ))}

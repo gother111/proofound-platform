@@ -1723,3 +1723,21 @@ Browser evidence:
 - Refreshed the current evidence banner and matrix rows for proof-first onboarding, Proof Pack anchor integrity, route-surface scope, and export/delete/auditability so the artifact no longer outranks `docs/verification-checklist.md` with stale `UNVERIFIED` or `FAIL` statuses.
 - Updated the retired stale-claim text to point at the 2026-05-20 route inventory: `140` compiled API route handlers, `51` compiled pages, `108` active MVP APIs, `16` internal launch-ops APIs, and `16` archived compatibility handlers.
 - Updated `docs/backlog/phase-5-launch-packaging.md` and `docs/DOCS_REGISTRY.md` so Phase 5 and the registry no longer treat historical-registry cleanup as an open watch item after this refresh.
+
+## Continuation - Matching Review Presentation Cleanup
+
+- Visual thesis: active matching should feel like a calm proof review desk, not a leaderboard, scorecard, or automated fit verdict.
+- Content plan: keep the primary object as a proof-backed assignment/candidate review, lead with privacy state, proof-fit band, strongest proof, reason codes, and practical constraints, and demote internal numeric matching values into qualitative labels.
+- Interaction thesis: preserve the current review actions (`Why This Proof Match?`, interest, shortlist, pass, hide, snooze), but make every next action read as a human review step instead of a rank/score outcome.
+- Found active `MatchResultCard`, `MatchExplainerModal`, and `SnoozedMatchesList` still rendered visible percentages, progress bars, score labels, or rank-band wording such as `Top 10`, while four unused active components preserved exact score/rank panels.
+- Reworked active matching card and explainer UI to render qualitative proof-fit bands, reason-coded summaries, privacy/review state, and review-signal labels instead of exact percentages or rank-first presentation.
+- Moved unused score/rank-first matching UI components into `src/archive/non_launch_matching_ui/preserved/components/matching/` with an archive README.
+- Added launch-gate coverage so active matching review components stay free of progress bars, `Top 5/10/20`, exact rank display helpers, and score-first UI copy.
+- Focused verification passed: `npm run test -- tests/ui/match-result-card.test.tsx tests/ui/match-explainer-modal.test.tsx tests/scripts/launch-gate-config.test.ts` (104 tests). The sandbox printed a Vite websocket `EPERM` warning, but the test command exited successfully.
+
+Browser evidence:
+
+- Codex Browser loaded `http://localhost:3000/login`: title `Sign In | Proofound`; login form rendered with reset, signup, terms, and privacy links; no browser console errors; no visible score/rank/percent text.
+- Codex Browser loaded `http://localhost:3000/signup`: title `Sign Up | Proofound`; Individual and Organization signup entry rendered with terms/privacy links; no browser console errors; no visible score/rank/percent text.
+- Codex Browser loaded `http://localhost:3000/portfolio/demo`: title `Public Page Unavailable | Proofound`; public unavailable state remained launch-safe; no browser console errors; no visible score/rank/percent text.
+- Codex Browser loaded `http://localhost:3000/app/i/matching?visualState=filled` while logged out: route redirected to `http://localhost:3000/login`; no browser console errors; no visible score/rank/percent text. Authenticated filled matching-card visual state remains covered by focused component tests in this slice.

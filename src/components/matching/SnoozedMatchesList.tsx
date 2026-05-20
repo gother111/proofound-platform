@@ -37,6 +37,12 @@ interface SnoozedMatchesListProps {
   onRestored?: () => void;
 }
 
+function proofFitLabel(score: number): string {
+  if (score >= 0.8) return 'Strong proof alignment';
+  if (score >= 0.6) return 'Clear proof alignment';
+  return 'Proof review needed';
+}
+
 export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
   const router = useRouter();
   const [matches, setMatches] = useState<SnoozedMatch[]>([]);
@@ -184,13 +190,12 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
                   </h3>
                   <p className="text-sm text-muted-foreground mb-2">{match.organization.name}</p>
 
-                  {/* Match Score */}
                   <div className="flex items-center gap-3 mb-3">
                     <Badge
                       variant="secondary"
                       className="bg-proofound-forest/10 text-proofound-forest border-proofound-forest/20"
                     >
-                      {Math.round(match.matchScore * 100)}% Match
+                      {proofFitLabel(match.matchScore)}
                     </Badge>
 
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
