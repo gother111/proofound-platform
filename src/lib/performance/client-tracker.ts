@@ -2,9 +2,9 @@
  * Client-Side Performance Tracking
  *
  * Tracks Web Vitals and page load metrics using the Web Vitals API.
- * Sends metrics to /api/performance/track endpoint with 10% sample rate.
+ * The former client telemetry endpoint is archived for the locked MVP corridor,
+ * so metrics remain local-only unless a launch-approved transport is added.
  *
- * PRD Reference: Part 8 (lines 1813-1817)
  * SLA Targets:
  * - Page load TTI P95 ≤2.5s (desktop), ≤3.5s (mobile)
  * - Dashboard P75 ≤2.0s
@@ -26,15 +26,19 @@ const SAMPLE_RATE = 0.1;
 
 // Check if this session should be sampled
 const shouldSample = (): boolean => {
-  // Use session storage to ensure consistent sampling for a session
-  const stored = sessionStorage.getItem('perf_sample');
-  if (stored !== null) {
-    return stored === 'true';
-  }
+  try {
+    // Use session storage to ensure consistent sampling for a session.
+    const stored = sessionStorage.getItem('perf_sample');
+    if (stored !== null) {
+      return stored === 'true';
+    }
 
-  const sample = Math.random() < SAMPLE_RATE;
-  sessionStorage.setItem('perf_sample', String(sample));
-  return sample;
+    const sample = Math.random() < SAMPLE_RATE;
+    sessionStorage.setItem('perf_sample', String(sample));
+    return sample;
+  } catch {
+    return Math.random() < SAMPLE_RATE;
+  }
 };
 
 // Get device type from user agent and screen size
@@ -53,28 +57,13 @@ const getDeviceType = (): 'desktop' | 'mobile' | 'tablet' => {
   return 'desktop';
 };
 
-// Send metric to tracking endpoint
-const sendMetric = async (data: PerformanceData): Promise<void> => {
+// Keep metrics local-only during launch; /api/performance/track is intentionally archived.
+const recordMetricLocally = (data: PerformanceData): void => {
   try {
-    // Use sendBeacon for reliability (fires even if page is unloading)
-    if (navigator.sendBeacon) {
-      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-      navigator.sendBeacon('/api/performance/track', blob);
-    } else {
-      // Fallback to fetch with keepalive
-      fetch('/api/performance/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-        keepalive: true,
-      }).catch((error) => {
-        // Silent fail - don't disrupt user experience
-        console.debug('Performance tracking failed:', error);
-      });
-    }
+    window.dispatchEvent(new CustomEvent('proofound:performance-metric', { detail: data }));
   } catch (error) {
     // Silent fail
-    console.debug('Performance tracking error:', error);
+    console.debug('Performance metric recording error:', error);
   }
 };
 
@@ -90,7 +79,7 @@ const handleMetric = (metric: Metric): void => {
     timestamp: new Date().toISOString(),
   };
 
-  sendMetric(data);
+  recordMetricLocally(data);
 };
 
 // Track Time to Interactive (TTI) - custom metric
@@ -139,7 +128,7 @@ const trackTTI = (): void => {
                 timestamp: new Date().toISOString(),
               };
 
-              sendMetric(data);
+              recordMetricLocally(data);
             }
           }, 5000); // Wait 5 seconds after load to capture late long tasks
         },
@@ -177,7 +166,7 @@ const trackPageLoad = (): void => {
             timestamp: new Date().toISOString(),
           };
 
-          sendMetric(data);
+          recordMetricLocally(data);
         }
       }, 0);
     },
@@ -219,7 +208,7 @@ export const trackCustomMetric = (name: string, durationMs: number): void => {
     timestamp: new Date().toISOString(),
   };
 
-  sendMetric(data);
+  recordMetricLocally(data);
 };
 
 /**

@@ -1999,3 +1999,14 @@ Browser evidence:
 - Codex Browser verified `/app/i/profile?profileView=full&tab=visibility` at `http://127.0.0.1:33180` with visual fixtures enabled: the active `Share` button opened `Share Your Public Page`, rendered `Public Page Not Ready` for the mock no-handle state, had one `<main>` landmark, no horizontal overflow, no runtime-error text, zero Browser console warnings/errors, and no `Profiles API is unavailable`, `Failed to create snippet`, `LinkedIn`, `Twitter`, `Social`, `professional profile`, or `profile snippet` copy.
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-public-page-share-dialog/public-page-share-dialog-browser-evidence.json`.
 - Verification passed: `npm run test -- tests/ui/share-profile-dialog.test.tsx` (4 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.
+
+## Continuation - Client Performance Telemetry Archive Safety
+
+- Inspected active source references to archived API surfaces and found `src/lib/performance/client-tracker.ts` still attempted to send sampled browser metrics to `/api/performance/track`, even though route-surface policy and archived handler coverage classify that endpoint as archived compatibility.
+- Reworked the client performance helper so launch browser metrics stay local-only. It now emits a local `proofound:performance-metric` browser event for diagnostics/tests and never calls `navigator.sendBeacon` or `fetch` against the archived performance API.
+- Hardened the sampling helper so blocked `sessionStorage` does not throw in user browsers.
+- Added focused regression coverage proving custom launch metrics do not call the archived API transport and still produce a local observable metric payload.
+- Codex Browser verified `/portfolio/demo` at `http://127.0.0.1:33180`: the route rendered the launch-safe `Public page unavailable` state, one `<main>` landmark, no horizontal overflow, no archived performance copy, and zero Browser console warnings/errors.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-performance-telemetry/public-portfolio-browser-evidence.json`.
+- Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, console, overflow, and stale-copy evidence was captured instead.
+- Verification passed: `npm run test -- tests/lib/client-performance-tracker.test.ts` (1 test). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the focused test command exited successfully.
