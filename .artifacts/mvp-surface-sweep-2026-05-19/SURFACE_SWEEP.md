@@ -2363,3 +2363,11 @@ Browser evidence:
 - Preserved and verified adjacent account-deletion coverage proving malformed deletion confirmation returns a 400 without creating a deletion request or invoking account deletion.
 - Browser was not rerun for this slice because these are state-specific verification copy and API guardrail regressions; the rendered auth-provider surfaces were verified in the previous Browser pass.
 - Verification passed: `npm run test -- tests/ui/verification-status-options.test.tsx tests/scripts/launch-gate-config.test.ts` (2 files / 103 tests), `npm run test -- tests/api/user-account-lifecycle-routes.test.ts` (1 file / 12 tests), active-source scan for `compatibility check|compatibility signal`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - Launch Operations Fallback Copy
+
+- Inspected scan hits for public-directory/profile-theater wording after the verification cleanup. The older `ProfileView` network tab is not imported by an active app route, so it was left untouched in this pass.
+- Tightened active launch-operations fallback copy that described a profile as `shareable and searchable`; it now frames the individual surface as a Public Page with proof context and assignment-fit readiness.
+- Added contract coverage so fallback copy does not reintroduce `searchable`, `public directory`, or `profile remains` language.
+- Browser was not rerun for this slice because this is contract copy consumed by operational fallback payloads rather than a directly changed rendered page.
+- Verification passed: `npm run test -- tests/lib/launch-operations-contract.test.ts` (1 file / 4 tests) and a focused source scan for the retired fallback wording. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.

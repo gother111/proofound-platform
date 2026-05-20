@@ -213,14 +213,14 @@ export const FALLBACK_COPY: Record<
   },
   proof_building_weak_coverage: {
     individual: {
-      title: 'Your profile remains shareable and searchable.',
+      title: 'Your Public Page remains shareable with proof context.',
       detail:
-        'Add proof or trust signals to strengthen intro readiness. Portfolio value comes first even before stronger matching corridors unlock.',
+        'Add proof or trust signals to strengthen intro readiness. Proof value comes first even before stronger assignment-fit corridors unlock.',
       statusLabel: 'Proof coverage in progress',
       nextActions: [
-        'Improve your portfolio or proof',
+        'Improve your Public Page or proof',
         'Complete trust signals or constraints',
-        'Keep browsing and share your portfolio',
+        'Keep browsing and share your Public Page',
       ],
     },
     organization: {

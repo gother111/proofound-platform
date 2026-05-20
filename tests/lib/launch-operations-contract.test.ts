@@ -16,6 +16,14 @@ describe('launch operations contract', () => {
     }
   });
 
+  it('keeps fallback copy away from public directory or profile-theater language', () => {
+    const serialized = JSON.stringify(FALLBACK_COPY);
+
+    expect(serialized).not.toMatch(/searchable/i);
+    expect(serialized).not.toMatch(/public directory/i);
+    expect(serialized).not.toMatch(/profile remains/i);
+  });
+
   it('keeps the canonical feature-flag taxonomy stable', () => {
     expect(FEATURE_FLAG_TAXONOMY_VALUES).toEqual([
       'default_on',
