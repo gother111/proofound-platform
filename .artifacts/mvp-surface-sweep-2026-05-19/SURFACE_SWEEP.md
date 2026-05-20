@@ -1741,3 +1741,16 @@ Browser evidence:
 - Codex Browser loaded `http://localhost:3000/signup`: title `Sign Up | Proofound`; Individual and Organization signup entry rendered with terms/privacy links; no browser console errors; no visible score/rank/percent text.
 - Codex Browser loaded `http://localhost:3000/portfolio/demo`: title `Public Page Unavailable | Proofound`; public unavailable state remained launch-safe; no browser console errors; no visible score/rank/percent text.
 - Codex Browser loaded `http://localhost:3000/app/i/matching?visualState=filled` while logged out: route redirected to `http://localhost:3000/login`; no browser console errors; no visible score/rank/percent text. Authenticated filled matching-card visual state remains covered by focused component tests in this slice.
+
+## Continuation - Public Hero And Review-Band Language Cleanup
+
+- Found the unused active landing `HeroSection` still carrying a public demo card labeled `Match Score` with `98% Fit`; the current homepage does not import that section, but leaving it in active `src/` preserved stale score-first launch UI.
+- Moved the retired hero section to `src/archive/non_launch_landing_variants/preserved/components/landing/sections/HeroSection.tsx` and documented that archived landing variants must not re-enter active source without MVP corridor review and Browser evidence.
+- Found active review-contract summaries still emitted `Rank band: ...`, and `getRankBand()` returned `Top 5/10/20` labels into active API payloads.
+- Changed review summaries to `Review band: ...` and converted generated band labels to proof-review language such as `High-priority proof review`, keeping the field shape stable while removing score/rank-first product copy.
+- Archived the unused legacy `src/lib/matching/explainer.ts` helper, which still contained exact rank and match-score explanation copy and was not imported by active routes/tests.
+- Added launch-gate coverage proving the retired hero and legacy explainer stay archived, active review contract summaries avoid `Rank band:`, and generated review bands avoid `Top 5/10/20`.
+
+Browser evidence:
+
+- Codex Browser loaded `http://localhost:3000/`: title `Proofound | Proof Behind the Claim`; the active homepage rendered the current scrollytelling landing, did not render `Match Score` or `98% Fit`, and reported no browser console errors.

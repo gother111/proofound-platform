@@ -97,7 +97,7 @@ describe('MatchResultCard', () => {
               count: 2,
             },
             trustLabels: ['Verified proof signal present', 'Auditable verification history'],
-            fitBand: 'Top 10',
+            fitBand: 'High-priority proof review',
             fitSummary: {
               headline: 'Proof signals align with the assignment needs.',
               bullets: [

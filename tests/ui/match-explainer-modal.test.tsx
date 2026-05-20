@@ -88,7 +88,7 @@ describe('MatchExplainerModal', () => {
       <MatchExplainerModal
         matchId="match-1"
         compositeScore={0.82}
-        rankBand="Top 10"
+        rankBand="High-priority proof review"
         rankMode="band"
         exactRankAvailable
         fairnessWarning="Exact ranking detail is suppressed while fairness remediation is active."
@@ -113,7 +113,7 @@ describe('MatchExplainerModal', () => {
             count: 2,
           },
           trustLabels: ['Verified proof signal present', 'Auditable verification history'],
-          fitBand: 'Top 10',
+          fitBand: 'High-priority proof review',
           fitSummary: {
             headline: 'Proof signals align with the role needs.',
             bullets: ['Evidence points to a strong skills fit for this assignment.'],
@@ -147,7 +147,7 @@ describe('MatchExplainerModal', () => {
       MATCH_EXPLAINER_DIALOG_DESCRIPTION
     );
     expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
-    expect(screen.getAllByText('Clear proof-fit band').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('High-priority proof review').length).toBeGreaterThan(0);
     expect(
       screen.getByText('Built a blind review corridor around proof-backed evaluation.')
     ).toBeInTheDocument();

@@ -347,16 +347,16 @@ describe('matching review contract', () => {
     );
   });
 
-  it('builds visibility-safe why payloads with rank bands instead of exact ranking', () => {
+  it('builds visibility-safe why payloads with review bands instead of exact ranking', () => {
     const why = buildVisibilitySafeWhy({
       reasonCodes: ['skills_strong', 'verification_ready'],
       fairnessStatus: 'elevated',
       fallbackState: 'fairness_suppressed_ranking',
-      rankBand: 'Top 10',
+      rankBand: 'High-priority proof review',
     });
 
     expect(why.reasonCodes).toContain('fairness_ranking_suppressed');
-    expect(why.summary).toContain('Rank band: Top 10');
+    expect(why.summary).toContain('Review band: High-priority proof review');
   });
 
   it('uses plain proof-review copy for verification fallback labels', () => {

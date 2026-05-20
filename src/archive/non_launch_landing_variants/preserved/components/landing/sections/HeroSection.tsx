@@ -3,7 +3,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { MagneticButton } from '@/components/landing/MagneticButton';
-import { ShieldCheck, BadgeCheck, Percent, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, BadgeCheck, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
@@ -217,7 +217,7 @@ export function HeroSection({
             </div>
           </motion.div>
 
-          {/* Floating Match Card (Top Left overlay) */}
+          {/* Floating proof-fit card */}
           <motion.div
             style={{ y: reduceMotion ? 0 : y2 }}
             initial={reduceMotion ? false : { opacity: 0, x: 20 }}
@@ -231,14 +231,14 @@ export function HeroSection({
           >
             <div className="flex items-center gap-3 mb-3 border-b border-border/40 pb-3">
               <div className="w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
-                <Percent className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Match Score
+                  Proof-fit band
                 </p>
                 <p className="text-xl font-display font-semibold text-foreground leading-none mt-0.5">
-                  98% Fit
+                  Strong review
                 </p>
               </div>
             </div>

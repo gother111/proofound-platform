@@ -379,6 +379,18 @@ describe('launch gate package configuration', () => {
     expect(landingStory).not.toContain('B2B platform');
     expect(landingStory).not.toContain('200+ employees');
     expect(landingStory).not.toContain('growth-stage B2B');
+
+    expect(
+      fs.existsSync(path.join(repoRoot, 'src/components/landing/sections/HeroSection.tsx'))
+    ).toBe(false);
+    expect(
+      fs.existsSync(
+        path.join(
+          repoRoot,
+          'src/archive/non_launch_landing_variants/preserved/components/landing/sections/HeroSection.tsx'
+        )
+      )
+    ).toBe(true);
   });
 
   it('keeps monitoring launch-ops routes documented as internal, not public', () => {
@@ -2715,6 +2727,7 @@ describe('launch gate package configuration', () => {
       'src/archive/non_launch_matching_ui/preserved/components/matching/MatchScoreBreakdown.tsx',
       'src/archive/non_launch_matching_ui/preserved/components/matching/MatchDetailPanel.tsx',
       'src/archive/non_launch_matching_ui/preserved/components/matching/ExplainPanel.tsx',
+      'src/archive/non_launch_matching_ui/preserved/lib/matching/explainer.ts',
     ];
 
     const activeMatchingReviewText = activeMatchingReviewFiles
@@ -2738,6 +2751,17 @@ describe('launch gate package configuration', () => {
       expect(content).not.toContain('Top 20');
     }
 
+    const reviewContract = fs.readFileSync(
+      path.join(repoRoot, 'src/lib/matching/review-contract.ts'),
+      'utf8'
+    );
+    expect(reviewContract).toContain('Review band:');
+    expect(reviewContract).toContain('High-priority proof review');
+    expect(reviewContract).not.toContain('Rank band:');
+    expect(reviewContract).not.toContain("return 'Top 10'");
+    expect(reviewContract).not.toContain("return 'Top 5'");
+    expect(reviewContract).not.toContain("return 'Top 20'");
+
     for (const relativePath of archivedScoreRankFiles) {
       expect(fs.existsSync(path.join(repoRoot, relativePath))).toBe(true);
     }
@@ -2753,6 +2777,7 @@ describe('launch gate package configuration', () => {
     expect(fs.existsSync(path.join(repoRoot, 'src/components/matching/ExplainPanel.tsx'))).toBe(
       false
     );
+    expect(fs.existsSync(path.join(repoRoot, 'src/lib/matching/explainer.ts'))).toBe(false);
   });
 
   it('keeps retired wellbeing and Zen implementation modules archived', () => {

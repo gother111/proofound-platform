@@ -989,7 +989,7 @@ export function buildVisibilitySafeWhy(input: {
   const summary = [...rendered.summary];
 
   if (input.rankBand) {
-    summary.push(`Rank band: ${input.rankBand}`);
+    summary.push(`Review band: ${input.rankBand}`);
   }
 
   if (input.fallbackState === 'low_supply') {
@@ -1369,12 +1369,12 @@ export function canRevealExactRank(
 }
 
 export function getRankBand(rank: number, totalCandidates: number): string {
-  if (rank <= 5) return 'Top 5';
-  if (rank <= 10) return 'Top 10';
-  if (rank <= 20) return 'Top 20';
-  if (rank <= Math.ceil(totalCandidates * 0.3)) return 'Top 30%';
-  if (rank <= Math.ceil(totalCandidates * 0.5)) return 'Top 50%';
-  return 'Competitive';
+  if (rank <= 5) return 'Highest-priority proof review';
+  if (rank <= 10) return 'High-priority proof review';
+  if (rank <= 20) return 'Priority proof review';
+  if (rank <= Math.ceil(totalCandidates * 0.3)) return 'Strong proof review';
+  if (rank <= Math.ceil(totalCandidates * 0.5)) return 'Clear proof review';
+  return 'Contextual proof review';
 }
 
 export function buildCandidateReviewProjection(
