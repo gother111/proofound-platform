@@ -2045,3 +2045,15 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-notification-archive/settings-notification-archive-smoke.json`.
 - Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, console, overflow, and actionable-control evidence was captured instead.
 - Verification passed: `npm run test -- tests/ui/launch-discoverability.test.tsx tests/ui/topbar-customize-visibility.test.tsx tests/ui/archived-mvp-routes.test.ts` (10 tests) and `npm run test:launch:routes` (27 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but both commands exited successfully.
+
+## Continuation - Settings Data Import Archive Boundary
+
+- Inspected active settings/privacy references and found `PrivacyOverview` still mounted an `Import data` action and `EnhancedDataImportDialog`, while the target `/api/user/import` endpoint is already classified as archived by route-surface policy.
+- Removed the active settings import action and dialog mount so the Privacy & Data surface keeps launch-valid privacy settings, export, data inventory, audit history, and delete-account controls without exposing import/restore workflows.
+- Moved the retired data import button, enhanced import dialog, and conflict-resolution dialog into `src/archive/non_launch_components/data-import/` with a README explaining that data import is outside the locked launch MVP corridor.
+- Added archive-boundary regression coverage proving the retired data import components stay out of active `src/components`.
+- Registered the new archive README in `docs/DOCS_REGISTRY.md`.
+- Codex Browser verified `/app/i/settings` at `http://127.0.0.1:33180` with the Privacy & Data tab selected through Browser DOM interaction: the route rendered privacy settings, `Download my data`, `View account history`, `View your data`, data-inventory copy, and `Delete Account`; had no horizontal overflow, no Browser console errors, no `/api/user/import` visible text, and no `Import data`, `Import Profile Data`, `import your data`, or import-progress copy.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-data-import-archive/settings-data-import-archive-smoke.json`.
+- Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, viewport, console, overflow, selected-tab, and stale-copy evidence was captured instead.
+- Focused verification passed: `npm run test -- tests/ui/privacy-overview-copy.test.tsx tests/ui/archived-mvp-routes.test.ts tests/ui/launch-discoverability.test.tsx` (8 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.

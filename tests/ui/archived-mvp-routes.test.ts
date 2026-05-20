@@ -160,6 +160,9 @@ const REMOVED_ARCHIVED_PAGE_IMPLEMENTATIONS = [
   'src/app/verify-skill/VerifySkillContent.tsx',
   'src/components/notifications/NotificationBell.tsx',
   'src/components/notifications/NotificationDropdown.tsx',
+  'src/components/settings/DataImportButton.tsx',
+  'src/components/settings/EnhancedDataImportDialog.tsx',
+  'src/components/settings/ConflictResolutionDialog.tsx',
 ] as const;
 
 describe('archived non-MVP routes', () => {

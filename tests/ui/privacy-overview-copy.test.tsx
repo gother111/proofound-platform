@@ -14,10 +14,6 @@ vi.mock('@/components/privacy/VisibilitySettingsModal', () => ({
   VisibilitySettingsModal: () => null,
 }));
 
-vi.mock('@/components/settings/EnhancedDataImportDialog', () => ({
-  EnhancedDataImportDialog: () => null,
-}));
-
 describe('PrivacyOverview copy', () => {
   const scrollIntoViewMock = vi.fn();
   const focusMock = vi.fn();
@@ -88,6 +84,7 @@ describe('PrivacyOverview copy', () => {
     expect(
       screen.getByText(/Review stored data categories and export your data/i)
     ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /import data/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /view your data/i }));
 

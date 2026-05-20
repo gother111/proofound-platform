@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import {
   Shield,
   Download,
-  Upload,
   Eye,
   Trash2,
   FileText,
@@ -19,7 +18,6 @@ import {
 import { DataBreakdown } from '@/components/privacy/DataBreakdown';
 import { AuditLogTable } from './AuditLogTable';
 import { DeleteAccount } from './DeleteAccount';
-import { EnhancedDataImportDialog } from './EnhancedDataImportDialog';
 import { VisibilitySettingsModal } from '../privacy/VisibilitySettingsModal';
 import { apiFetch } from '@/lib/api/fetch';
 import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
@@ -35,7 +33,6 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showVisibilitySettings, setShowVisibilitySettings] = useState(false);
-  const [showImportDialog, setShowImportDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [privacySummaryEnabled, setPrivacySummaryEnabled] = useState(
     CLIENT_FF_DEFAULTS.privacySummary
@@ -195,14 +192,6 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
                 >
                   <Download className="h-4 w-4 mr-2" />
                   {isExporting ? 'Preparing...' : 'Download my data'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowImportDialog(true)}
-                  className="w-full justify-center sm:w-auto"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import data
                 </Button>
                 <Button
                   variant="outline"
@@ -564,9 +553,6 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
         open={showVisibilitySettings}
         onOpenChange={setShowVisibilitySettings}
       />
-
-      {/* Enhanced Data Import Dialog */}
-      <EnhancedDataImportDialog open={showImportDialog} onOpenChange={setShowImportDialog} />
     </div>
   );
 }

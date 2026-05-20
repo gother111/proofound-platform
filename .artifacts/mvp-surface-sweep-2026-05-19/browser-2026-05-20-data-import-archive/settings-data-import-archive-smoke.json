@@ -1,0 +1,41 @@
+{
+  "capturedAt": "2026-05-20T06:01:31.566Z",
+  "url": "http://127.0.0.1:33180/app/i/settings",
+  "title": "Proofound - Focus on what matters",
+  "route": "/app/i/settings?tab=privacy via tab click",
+  "viewport": {
+    "devicePixelRatio": 2,
+    "height": 1354,
+    "width": 1359
+  },
+  "selectedTabs": [
+    {
+      "selected": "false",
+      "text": "Account"
+    },
+    {
+      "selected": "false",
+      "text": "InterviewsInterview Scheduling"
+    },
+    {
+      "selected": "true",
+      "text": "PrivacyPrivacy & Data"
+    }
+  ],
+  "checks": {
+    "dataInventoryVisible": true,
+    "deleteAccountVisible": true,
+    "downloadMyDataVisible": true,
+    "loadingSettingsGone": true,
+    "noHorizontalOverflow": true,
+    "noImportDataCopy": true,
+    "noUserImportApiText": true,
+    "privacySettingsVisible": true,
+    "viewAccountHistoryVisible": true
+  },
+  "errorLogs": [],
+  "screenshot": {
+    "ok": false,
+    "error": "Timed out running CDP command \"Page.captureScreenshot\" for tab 1"
+  }
+}
