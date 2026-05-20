@@ -34,11 +34,54 @@ describe('createClient', () => {
   });
 
   it('creates a Supabase client with correct configuration', async () => {
+    const { createServerClient } = await import('@supabase/ssr');
+    const { cookies } = await import('next/headers');
+    const cookieStore = {
+      getAll: vi.fn(() => [{ name: 'sb-session', value: 'token' }]),
+      set: vi.fn(),
+    };
+
+    vi.mocked(cookies).mockResolvedValue(cookieStore as never);
+    process.env.NEXT_PUBLIC_SUPABASE_URL = ' https://example.supabase.co ';
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = ' anon-key ';
+
     const { createClient } = await import('../server');
     await createClient();
 
-    // Test passes if no errors are thrown during client creation
-    expect(true).toBe(true);
+    expect(createServerClient).toHaveBeenCalledWith(
+      'https://example.supabase.co',
+      'anon-key',
+      expect.objectContaining({
+        cookies: expect.objectContaining({
+          getAll: expect.any(Function),
+          setAll: expect.any(Function),
+        }),
+      })
+    );
+
+    const cookieAdapter = vi.mocked(createServerClient).mock.calls[0]?.[2]?.cookies;
+    expect(cookieAdapter?.getAll()).toEqual([{ name: 'sb-session', value: 'token' }]);
+
+    cookieAdapter?.setAll([{ name: 'sb-session', value: 'new-token', options: { path: '/' } }]);
+    expect(cookieStore.set).not.toHaveBeenCalled();
+  });
+
+  it('writes refreshed auth cookies only when explicitly allowed', async () => {
+    const { createServerClient } = await import('@supabase/ssr');
+    const { cookies } = await import('next/headers');
+    const cookieStore = {
+      getAll: vi.fn(() => []),
+      set: vi.fn(),
+    };
+
+    vi.mocked(cookies).mockResolvedValue(cookieStore as never);
+    const { createClient } = await import('../server');
+    await createClient({ allowCookieWrite: true });
+
+    const cookieAdapter = vi.mocked(createServerClient).mock.calls[0]?.[2]?.cookies;
+    cookieAdapter?.setAll([{ name: 'sb-session', value: 'new-token', options: { path: '/' } }]);
+
+    expect(cookieStore.set).toHaveBeenCalledWith('sb-session', 'new-token', { path: '/' });
   });
 
   it('throws when required environment variables are missing', async () => {

@@ -2658,3 +2658,13 @@ Browser evidence:
 - Added launch-gate guardrails proving the integration command is documented, the dedicated config is wired, active integration files do not contain `expect(true).toBe(true)` or placeholder text, and the stale setup helper stays removed.
 - Browser was not rerun for this slice because no rendered UI changed; the relevant evidence is executable test/doc alignment.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:integration -- --reporter=verbose` (2 files / 9 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 100 tests), active scan for placeholder integration assertions, and `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run docs:freshness`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Supabase Server Client No-Op Test Cleanup
+
+- Timestamp: 2026-05-20 14:42:10 CEST.
+- Inspected active non-archive source/docs/tests for no-op assertions after the integration placeholder cleanup.
+- Found `src/lib/supabase/__tests__/server.test.ts` still used `expect(true).toBe(true)` for the primary server-client creation path, so the test only proved that no exception was thrown.
+- Replaced the no-op assertion with concrete coverage that `createClient` trims the Supabase URL and anon key before calling `createServerClient`, exposes the request cookie `getAll` adapter, and does not write refreshed auth cookies unless `allowCookieWrite` is explicitly enabled.
+- Added focused coverage for the `allowCookieWrite: true` path so session-refresh cookie writes stay intentional.
+- Browser was not rerun for this slice because no rendered UI changed; this is auth infrastructure test evidence.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run src/lib/supabase/__tests__/server.test.ts --reporter=verbose` (1 file / 5 tests), active scan for `expect(true).toBe(true)|Placeholder for actual test|passes if no errors are thrown`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
