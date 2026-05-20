@@ -110,7 +110,7 @@ function ProfileReadinessPreview({ profile }: { profile: ProfileData }) {
           <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2">
               <h1 className="font-display text-2xl text-proofound-charcoal">
-                Start with proof, not profile polish
+                Start with proof, then choose what to share
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
                 Build only the parts that make the first proof credible: safe shell, one real

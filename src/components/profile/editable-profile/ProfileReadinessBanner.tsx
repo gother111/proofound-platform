@@ -52,7 +52,7 @@ export function ProfileReadinessBanner({
               </h3>
               <p className="mt-1 text-sm leading-5 text-proofound-charcoal/70 dark:text-muted-foreground sm:mt-2">
                 Keep the first milestone anchored in real work. Add proof context, visibility
-                choices, and optional trust signals before broad profile polish.
+                choices, and optional trust signals before expanding public details.
               </p>
             </div>
             <div className="grid gap-1.5 sm:grid-cols-2 sm:gap-2">

@@ -2319,3 +2319,19 @@ Browser evidence:
 - This complements the existing regression that claimed expired invites are not overwritten during preview and keeps the public/share surface from mutating active claimant state.
 - Browser was not rerun for this slice because no rendered UI changed; this is API route regression coverage for invite preview state handling.
 - Verification passed: `npm run test -- tests/api/candidate-invites-token-route.test.ts` (1 file / 5 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Organization Messages Persona Boundary Coverage
+
+- Inspected the active organization messages route after the communications/intros/reveals sweep. The route already resolves the current actor server-side with `requirePersona('org_member')` and passes only that user id into the deferred messages client.
+- Added focused route coverage proving `/app/o/[slug]/messages` uses the server org-member persona as the current user source instead of accepting a client-supplied or query-derived identity for organization conversations.
+- This keeps the active organization communications surface aligned with the locked MVP corridor: conversations stay org-gated, privacy-stage aware, and tied to the authenticated organization member before candidate reveal or interview actions.
+- Browser was not rerun for this slice because no rendered UI changed; this is route-level identity-boundary coverage for the existing server component.
+- Verification passed: `npm run test -- tests/routes/organization-messages-page.test.tsx` (1 file / 4 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Individual Profile Proof-First Copy Cleanup
+
+- Inspected active individual profile readiness and first-run tour copy after the broad-profile language scan.
+- Replaced remaining active `profile polish` / `broad profile` phrasing with proof-first progression copy: start with proof, keep the shell light, then choose which public details to expand.
+- Updated guided setup coverage and added a source-level guard across the active profile/tour copy files so `profile polish`, `profile polishing`, and `broad profile` do not return to the individual app entry surfaces.
+- Browser was not rerun for this slice because the rendered structure and controls did not change; this is active product-language cleanup plus focused UI/source-copy coverage.
+- Verification passed: `npm run test -- tests/ui/guided-profile-setup-view.test.tsx tests/lib/profile-copy-guardrails.test.ts` (2 files / 2 tests) and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test command exited successfully.

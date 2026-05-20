@@ -149,6 +149,55 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
     );
   });
 
+  it('fails the transaction when the admin audit write fails', async () => {
+    const transactionError = new Error('audit insert failed');
+    const tx = {
+      update: vi.fn(() => ({
+        set: vi.fn(() => ({
+          where: vi.fn().mockResolvedValue(undefined),
+        })),
+      })),
+      insert: vi.fn(() => ({
+        values: vi.fn().mockResolvedValue(undefined),
+      })),
+    };
+    (db.transaction as any).mockImplementation(async (callback: any) => {
+      try {
+        await callback(tx);
+      } catch (error) {
+        expect(error).toBe(transactionError);
+        throw error;
+      }
+    });
+    vi.mocked(logAdminActionInTransaction).mockRejectedValueOnce(transactionError);
+
+    const request = new NextRequest(`http://localhost/api/admin/organizations/${orgId}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({
+        trustTier: 'restricted',
+        reasonCode: 'safety_review_failed',
+      }),
+      headers: {
+        'x-break-glass-reason': 'Investigating material trust issue',
+      },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload.error).toBe('Failed to update organization verification');
+    expect(tx.update).toHaveBeenCalled();
+    expect(tx.insert).toHaveBeenCalled();
+    expect(logAdminActionInTransaction).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({
+        action: 'set_org_trust_tier',
+        targetId: orgId,
+      })
+    );
+  });
+
   it('returns 400 for invalid trust-tier request bodies', async () => {
     const request = new NextRequest(`http://localhost/api/admin/organizations/${orgId}/verify`, {
       method: 'POST',

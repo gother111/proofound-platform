@@ -78,7 +78,7 @@ const individualTourSteps: TourStep[] = [
     id: 'profile',
     title: 'Your Profile',
     description:
-      'Profile is where your Proof Packs, real contexts, and visibility choices live. Start with proof before broad profile polish.',
+      'Profile is where your Proof Packs, real contexts, and visibility choices live. Start with proof before expanding public details.',
     icon: User,
     target: '[data-tour="profile-link"]',
     placement: 'right',

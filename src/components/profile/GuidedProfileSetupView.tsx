@@ -98,7 +98,7 @@ function buildGuidedSteps(
       id: 'safe_shell',
       label: 'Create a safe shell',
       detail:
-        'Keep the shell light: display name, handle, headline, broad location and timezone, target role, and work preferences.',
+        'Keep the shell light: display name, handle, headline, general location and timezone, target role, and work preferences.',
       state: resolveStepState(0, activeIndex),
       icon: UserRound,
       actions: [
@@ -114,7 +114,7 @@ function buildGuidedSteps(
       id: 'real_context',
       label: 'Add one real context',
       detail:
-        'Anchor your first proof in one real work, volunteering, or learning context. No broad profile polishing needed first.',
+        'Anchor your first proof in one real work, volunteering, or learning context before expanding public details.',
       state: resolveStepState(1, activeIndex),
       icon: Briefcase,
       actions: [
@@ -201,7 +201,7 @@ function buildGuidedSteps(
       id: 'publish_portfolio',
       label: 'Publish Public Page',
       detail:
-        'Publish a direct-link proof snapshot when one proof-backed signal is public-safe. Broad profile setup is not required for day one.',
+        'Publish a direct-link proof snapshot when one proof-backed signal is public-safe. Day one does not require extra profile fields.',
       state: resolveStepState(5, activeIndex),
       icon: Rocket,
       actions: [
@@ -284,7 +284,7 @@ export function GuidedProfileSetupView({
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
             <h1 className="text-2xl font-display text-proofound-charcoal">
-              Start with proof, not profile polish
+              Start with proof, then choose what to share
             </h1>
             <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
               Build only the parts that make the first proof credible: safe shell, one real context,
