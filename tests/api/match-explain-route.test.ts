@@ -14,7 +14,6 @@ const mocks = vi.hoisted(() => ({
   isActiveOrgMember: vi.fn(),
   getRows: vi.fn((result: unknown) => result),
   buildFairnessUiContract: vi.fn(),
-  canRevealExactRank: vi.fn(),
   getOrgMembershipRole: vi.fn(),
   getRankBand: vi.fn(),
   getReasonLedgerEntries: vi.fn(),
@@ -50,7 +49,6 @@ vi.mock('@/lib/db/rows', () => ({
 
 vi.mock('@/lib/matching/review-contract', () => ({
   buildFairnessUiContract: mocks.buildFairnessUiContract,
-  canRevealExactRank: mocks.canRevealExactRank,
   getOrgMembershipRole: mocks.getOrgMembershipRole,
   getRankBand: mocks.getRankBand,
   getReasonLedgerEntries: mocks.getReasonLedgerEntries,
@@ -128,9 +126,6 @@ describe('GET /api/match/explain/[matchId]', () => {
       warning: null,
       suppressExactRank: false,
     });
-    mocks.canRevealExactRank.mockImplementation(
-      (role: string | null | undefined) => role !== 'org_reviewer'
-    );
     mocks.getOrgMembershipRole.mockResolvedValue('org_owner');
     mocks.getRankBand.mockReturnValue('Top tier');
     mocks.getReasonLedgerEntries.mockResolvedValue([]);
@@ -218,7 +213,7 @@ describe('GET /api/match/explain/[matchId]', () => {
     ]);
   });
 
-  it('returns exact rank for owners when the fairness contract allows it', async () => {
+  it('keeps exact rank hidden for owners even when rankMode=exact is requested', async () => {
     const response = await GET(
       new NextRequest('https://example.com/api/match/explain/match-1?rankMode=exact'),
       {
@@ -228,9 +223,9 @@ describe('GET /api/match/explain/[matchId]', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.rank).toBe(1);
-    expect(body.rankMode).toBe('exact');
-    expect(body.exactRankAvailable).toBe(true);
+    expect(body.rank).toBeUndefined();
+    expect(body.rankMode).toBe('band');
+    expect(body.exactRankAvailable).toBe(false);
     expect(body.rankBand).toBe('Top tier');
     expect(body.explainer).toEqual({
       title: MATCH_EXPLAINER_TITLE,

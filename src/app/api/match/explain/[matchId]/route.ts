@@ -13,8 +13,6 @@ import { isActiveOrgMember, requireApiAuth } from '@/lib/api/auth';
 import {
   buildProofFirstReviewCard,
   buildFairnessUiContract,
-  canRevealExactRank,
-  getOrgMembershipRole,
   getRankBand,
   getReviewCardProofPackMapForMatchedOrg,
   getReviewCardProofPackMapForOwner,
@@ -141,9 +139,6 @@ export async function GET(
       match.org_id,
       ['org_owner', 'org_manager', 'org_reviewer']
     );
-    const orgRole = canViewAsOrgMember
-      ? await getOrgMembershipRole(authResult.user.id, match.org_id)
-      : null;
 
     if (match.profile_id !== authResult.user.id && !canViewAsOrgMember) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -264,15 +259,11 @@ export async function GET(
 
     const rankBand =
       rank > 0 && totalCandidates > 0 ? getRankBand(rank, totalCandidates) : 'Competitive';
-    const requestedRankMode = request.nextUrl.searchParams.get('rankMode');
     const fairnessStatus = normalizeFairnessStatus(match.fairness_status);
     const fairnessUi = buildFairnessUiContract(fairnessStatus);
-    const exactRankAllowed =
-      requestedRankMode === 'exact' &&
-      canViewAsOrgMember &&
-      totalCandidates >= 30 &&
-      canRevealExactRank(orgRole, fairnessStatus) &&
-      !fairnessUi.suppressExactRank;
+    // Locked launch corridor: keep exact ranking hidden even for org owners.
+    // Review stays proof-first and reason-coded through rank bands only.
+    const exactRankAvailable = false;
     const ledgerEntries = await getReasonLedgerEntries(match.id);
     const reasonCodes = sanitizeMatchReasonCodes(
       Array.isArray(match.reason_codes) ? match.reason_codes : []
@@ -338,15 +329,11 @@ export async function GET(
       reviewCard,
       reasonSummary: renderedExplanation.summary,
       reasonSections: renderedExplanation.sections,
-      rank: exactRankAllowed ? rank : undefined,
+      rank: undefined,
       totalCandidates,
       rankBand,
-      rankMode: exactRankAllowed ? 'exact' : 'band',
-      exactRankAvailable:
-        canViewAsOrgMember &&
-        totalCandidates >= 30 &&
-        canRevealExactRank(orgRole, fairnessStatus) &&
-        !fairnessUi.suppressExactRank,
+      rankMode: 'band',
+      exactRankAvailable,
       subscores: {
         skills: Number(subscores.skills_fit ?? 0) / 10000,
         constraints: Number(subscores.constraints_fit ?? 0) / 10000,

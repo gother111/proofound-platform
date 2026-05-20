@@ -83,7 +83,7 @@ test.describe('Individual Flows - Unauthenticated Contract Matching (I-15 to I-1
     await expectAuthRedirect(page, '/app/i/matching');
   });
 
-  test('I-18: Match explainer modal with rank transparency', async ({ page }) => {
+  test('I-18: Match explainer modal remains protected and rank-safe', async ({ page }) => {
     await expectAuthRedirect(page, '/app/i/matching');
   });
 

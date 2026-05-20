@@ -2755,6 +2755,10 @@ describe('launch gate package configuration', () => {
       'src/components/matching/MatchExplainerModal.tsx',
       'src/components/matching/SnoozedMatchesList.tsx',
     ];
+    const matchExplainRoute = fs.readFileSync(
+      path.join(repoRoot, 'src/app/api/match/explain/[matchId]/route.ts'),
+      'utf8'
+    );
     const archivedScoreRankFiles = [
       'src/archive/non_launch_matching_ui/preserved/components/matching/RankDisplay.tsx',
       'src/archive/non_launch_matching_ui/preserved/components/matching/MatchScoreBreakdown.tsx',
@@ -2768,6 +2772,10 @@ describe('launch gate package configuration', () => {
       .join('\n');
 
     expect(activeMatchingReviewText).toContain('Reason-coded');
+    expect(matchExplainRoute).toContain("rankMode: 'band'");
+    expect(matchExplainRoute).toContain('exactRankAvailable = false');
+    expect(matchExplainRoute).not.toContain('canRevealExactRank');
+    expect(matchExplainRoute).not.toContain("rankMode: 'exact'");
 
     for (const relativePath of activeMatchingReviewFiles) {
       const content = fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');

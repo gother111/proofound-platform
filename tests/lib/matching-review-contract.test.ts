@@ -5,7 +5,6 @@ import {
   buildCandidateReviewProjection,
   buildFairnessUiContract,
   buildVisibilitySafeWhy,
-  canRevealExactRank,
   evaluateFairnessCohortAvailability,
   getReviewProjectionPolicy,
   getShortlistProjectionPolicy,
@@ -283,10 +282,7 @@ describe('matching review contract', () => {
     expect(rendered.sections.fairness[0]).toContain('Policy checks are elevated');
   });
 
-  it('suppresses exact order unless policy checks pass and reviewer role allows it', () => {
-    expect(canRevealExactRank('org_reviewer', 'pass')).toBe(false);
-    expect(canRevealExactRank('org_manager', 'unavailable')).toBe(false);
-    expect(canRevealExactRank('org_manager', 'pass')).toBe(true);
+  it('suppresses exact order when policy checks are stale or elevated', () => {
     expect(
       shouldSuppressExactRank('pass', 'stale', new Date('2026-03-01T00:00:00Z'), new Date())
     ).toBe(true);

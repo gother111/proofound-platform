@@ -1386,17 +1386,6 @@ export function canMutateReview(role: OrgReviewRole | null): boolean {
   }).allowed;
 }
 
-export function canRevealExactRank(
-  role: OrgReviewRole | null,
-  fairnessStatus: FairnessStatus
-): boolean {
-  const normalizedRole = normalizeAuthorizedOrgRole(role);
-  return (
-    fairnessStatus === 'pass' &&
-    (normalizedRole === 'org_owner' || normalizedRole === 'org_manager')
-  );
-}
-
 export function getRankBand(rank: number, totalCandidates: number): string {
   if (rank <= 5) return 'Highest-priority proof review';
   if (rank <= 10) return 'High-priority proof review';

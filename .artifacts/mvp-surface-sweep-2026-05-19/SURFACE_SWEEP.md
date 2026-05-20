@@ -2668,3 +2668,15 @@ Browser evidence:
 - Added focused coverage for the `allowCookieWrite: true` path so session-refresh cookie writes stay intentional.
 - Browser was not rerun for this slice because no rendered UI changed; this is auth infrastructure test evidence.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run src/lib/supabase/__tests__/server.test.ts --reporter=verbose` (1 file / 5 tests), active scan for `expect(true).toBe(true)|Placeholder for actual test|passes if no errors are thrown`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Exact Rank Exposure Closure
+
+- Timestamp: 2026-05-20 14:51:17 CEST.
+- Inspected active matching review and launch-operations sources after the copy/scope scan found an E2E label for `rank transparency` and the active match-explain route still accepted `rankMode=exact`.
+- Confirmed `docs/launch-operations-mvp.md` keeps exact rank exposure outside the launch corridor and requires reason-coded review with no comparative ranking disclosure.
+- Closed the active `/api/match/explain/[matchId]` exact-rank branch so the response always returns `rankMode: 'band'`, `exactRankAvailable: false`, and no exact `rank`, even when an org owner requests `rankMode=exact`.
+- Removed the unused active `canRevealExactRank` helper and updated the matching review contract test so live contract coverage no longer asserts exact-rank availability for org managers.
+- Renamed the unauthenticated PRD E2E label from `rank transparency` to rank-safe protected behavior.
+- Added a launch-gate guardrail proving the active match-explain route stays band-only and does not reintroduce `canRevealExactRank` or `rankMode: 'exact'`.
+- Browser was not rerun for this slice because no rendered UI changed; the relevant launch evidence is API contract and guardrail coverage.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/match-explain-route.test.ts tests/lib/matching-review-contract.test.ts tests/ui/match-explainer-modal.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 119 tests), active scan for `canRevealExactRank|rank transparency|returns exact rank|exactRankAllowed|rankMode: 'exact'|exactRankAvailable\\)\\.toBe\\(true\\)`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
