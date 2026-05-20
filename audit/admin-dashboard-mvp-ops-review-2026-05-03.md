@@ -24,7 +24,7 @@ Verdict: repo-ready with remaining operational follow-up risks.
 
 The admin dashboard is narrow, protected, and aligned away from broad enterprise/admin-suite sprawl. It is useful for seeing four internal ops queues, reviewing minimum-necessary queue detail, handling risky-upload approve/reject decisions, checking latest repo launch evidence, and reviewing audit trails.
 
-The main remaining gap is operational depth beyond the first launch-ops console: admins still lack richer filters, direct SOP links, and a narrow pilot workflow drilldown for stuck org/candidate corridor issues.
+The main remaining gap is operational depth beyond the first launch-ops console: admins still lack a narrow pilot workflow drilldown for stuck org/candidate corridor issues. Richer entity/operator filters remain deferred until pilot volume proves they are needed.
 
 ## B. What Works
 
