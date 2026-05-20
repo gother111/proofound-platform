@@ -3,6 +3,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import { normalizeLaunchBaseUrl } from '@/lib/launch/contracts';
+import { shouldSendLaunchInternalAuth } from '@/lib/launch/trusted-internal-auth';
 import { validateLaunchSmokeArtifact } from '@/lib/launch/smoke-artifact';
 import {
   REPO_READY_VALIDATION_FILE_NAME,
@@ -116,15 +117,25 @@ function gateFromRepoReadyGate(
   };
 }
 
-async function fetchJsonWithTimeout(fetchImpl: typeof fetch, url: string, timeoutMs: number) {
+async function fetchJsonWithTimeout(
+  fetchImpl: typeof fetch,
+  url: string,
+  timeoutMs: number,
+  options: { includeInternalAuth?: boolean } = {}
+) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const cronSecret = process.env.CRON_SECRET?.trim();
+  const includeCronSecret = shouldSendLaunchInternalAuth({
+    url,
+    includeInternalAuth: options.includeInternalAuth,
+    secret: cronSecret,
+  });
   try {
     const response = await fetchImpl(url, {
       headers: {
         accept: 'application/json',
-        ...(cronSecret ? { authorization: `Bearer ${cronSecret}` } : {}),
+        ...(includeCronSecret ? { authorization: `Bearer ${cronSecret}` } : {}),
       },
       signal: controller.signal,
     });
@@ -312,7 +323,8 @@ export async function runFullLaunchValidationBundle(options: FullLaunchValidatio
       fetchJsonWithTimeout(
         options.fetchImpl,
         `${liveBaseUrl}/api/monitoring/launch-status`,
-        15_000
+        15_000,
+        { includeInternalAuth: true }
       ),
     ]);
 

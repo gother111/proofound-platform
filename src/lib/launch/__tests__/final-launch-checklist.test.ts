@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   FINAL_LAUNCH_CHECKLIST_DEFINITIONS,
@@ -765,5 +765,55 @@ Technical owner: \`Yurii Bakurov\` \`APPROVED\`
     expect(itemStatus('ops_critical_alerts_configured')).toBe('UNVERIFIED');
     expect(itemStatus('ops_backup_restore_verified')).toBe('UNVERIFIED');
     expect(itemStatus('founder_go_no_go_signed_after_green')).not.toBe('PASS');
+  });
+
+  it('does not send cron secrets to untrusted live checklist origins or public health checks', async () => {
+    const workspace = await createWorkspaceFixture({ includeRepoReadyBundle: true });
+    vi.stubEnv('CRON_SECRET', 'cron-secret-value');
+    vi.stubEnv('LAUNCH_TRUSTED_BASE_URLS', '');
+    const fetchCalls: Array<{ url: string; authorization: string | null }> = [];
+    const fetchImpl = (async (url: string | URL | Request, init?: RequestInit) => {
+      const requestUrl = String(url);
+      const headers = new Headers(init?.headers);
+      fetchCalls.push({
+        url: requestUrl,
+        authorization: headers.get('authorization'),
+      });
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+    }) as typeof fetch;
+
+    await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'full',
+      liveBaseUrl: 'https://evil.example',
+      now: new Date('2026-04-14T21:10:00.000Z'),
+      fetchImpl,
+    });
+
+    expect(fetchCalls).toEqual(
+      expect.arrayContaining([
+        { url: 'https://evil.example/api/health', authorization: null },
+        { url: 'https://evil.example/api/monitoring/launch-status', authorization: null },
+      ])
+    );
+
+    fetchCalls.length = 0;
+    await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'full',
+      liveBaseUrl: 'https://proofound.io',
+      now: new Date('2026-04-14T21:10:00.000Z'),
+      fetchImpl,
+    });
+
+    expect(fetchCalls).toEqual(
+      expect.arrayContaining([
+        { url: 'https://proofound.io/api/health', authorization: null },
+        {
+          url: 'https://proofound.io/api/monitoring/launch-status',
+          authorization: 'Bearer cron-secret-value',
+        },
+      ])
+    );
   });
 });

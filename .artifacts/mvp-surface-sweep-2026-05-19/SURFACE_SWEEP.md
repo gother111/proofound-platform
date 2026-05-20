@@ -2260,6 +2260,14 @@ Browser evidence:
 - Added focused export-route coverage proving the failure path does not emit `portfolio_export_ready` or `organization_export_ready` before returning the neutral error.
 - Browser was not rerun for this slice because no rendered UI changed; this is export API response and launch-trace correctness.
 
+## Continuation - Launch Internal Secret Forwarding Boundary
+
+- Inspected full launch validation and final launch checklist live endpoint checks after the internal launch-status surface was protected.
+- Hardened launch validation fetches so `CRON_SECRET` is only attached to the internal `/api/monitoring/launch-status` check when the target origin is canonical Proofound, localhost/127.0.0.1, or explicitly listed in `LAUNCH_TRUSTED_BASE_URLS`.
+- Public `/api/health` probes never receive the internal secret, and untrusted `liveBaseUrl` values do not receive it even when full-scope launch checks include internal auth.
+- Factored the trust decision into `src/lib/launch/trusted-internal-auth.ts` and added focused unit coverage for canonical, local, explicit-preview, malformed, and hostile origins.
+- Browser was not rerun for this slice because no rendered UI changed; this is launch-ops secret forwarding hardening.
+
 ## Continuation - Google and LinkedIn Auth Entry Current Recheck
 
 - Rechecked the current local app with the Codex in-app Browser after the latest clarification that Google and LinkedIn should both be available as sign-in options.
