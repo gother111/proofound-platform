@@ -2124,3 +2124,11 @@ Browser evidence:
 - Added regression coverage proving performance health alerts do not contain `/app/admin/performance` or `undefined` links and prefer `NEXT_PUBLIC_SITE_URL` over legacy app URL configuration.
 - Browser was not rerun for this slice because no rendered web UI changed; the change is transactional launch-ops email copy and link resolution.
 - Verification passed: `npm run test -- src/lib/analytics/__tests__/health-check-alert.test.ts src/app/api/cron/decision-reminders/__tests__/route.test.ts` (2 files / 7 tests), `npm run test:launch:routes` (4 files / 27 tests), `npm run typecheck`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - Performance SLA Alert Payload Cleanup
+
+- Inspected the separate performance SLA alert sender used by `/api/cron/performance-check` and found it still built email/Slack links from `NEXT_PUBLIC_APP_URL`, used a Slack button labeled `View Dashboard`, and emitted the legacy `dashboard_load` metric name for app-route responsiveness.
+- Updated performance SLA alert payloads to resolve the canonical internal ops URL via `resolveCanonicalSiteUrl()` and point operators to `/admin`, with a relative `/admin` fallback in production-like runtimes without a configured site URL.
+- Renamed the internal performance alert metric from `dashboard_load` to `app_route_load` and the threshold key from `dashboard_p75` to `app_route_p75`, keeping the same numeric threshold while removing broad dashboard language from newly created alert records.
+- Added regression coverage proving email and Slack alert payloads contain `Open Internal Ops`, use `https://proofound.io/admin` when configured, never emit `undefined/admin`, and do not reintroduce `View Dashboard`.
+- Browser was not rerun for this slice because no rendered web UI changed; the change is launch-ops notification payload construction and source-level alert naming.
