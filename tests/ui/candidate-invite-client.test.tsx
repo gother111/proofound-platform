@@ -218,6 +218,66 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(apiFetchMock.mock.calls.some(([url]) => url === '/api/profile/snippet')).toBe(false);
   });
 
+  it('does not expose unsupported legacy trust gates to candidates', async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/token-value') {
+        return {
+          ok: true,
+          json: async () => ({
+            invite: {
+              id: 'invite-1',
+              status: 'claimed',
+              flowType: 'proof_card',
+              assignmentId: 'assignment-1',
+              maskedEmail: 'ca***@example.com',
+              expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+              claimedAt: new Date().toISOString(),
+              claimedByCurrentUser: true,
+              acceptedAt: null,
+              acceptedByCurrentUser: false,
+              communicationsUrl: null,
+              proofSubmittedAt: null,
+            },
+            organization: {
+              id: 'org-1',
+              slug: 'acme',
+              displayName: 'Acme Org',
+              logoUrl: null,
+            },
+            assignment: {
+              ...structuredAssignment,
+              verificationGates: ['work_email', 'linkedin'],
+            },
+          }),
+        };
+      }
+
+      if (url === '/api/user/me') {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'user-1',
+            email: 'candidate@example.com',
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(<CandidateInviteClient token="token-value" />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/submit assignment-specific proof/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Work email check/i)).toBeInTheDocument();
+    const visibleText = document.body.textContent ?? '';
+    expect(visibleText).not.toMatch(/LinkedIn|unsupported trust/i);
+  });
+
   it('shows the structured assignment before asking an unauthenticated guest to apply', async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url === '/api/candidate-invites/token-value') {

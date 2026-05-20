@@ -1949,3 +1949,14 @@ Browser evidence:
 - Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-assignment-gates/assignment-gates-browser-smoke.json`.
 - Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, viewport, console, overflow, and stale-copy evidence was captured instead.
 - Verification passed: `npm run test -- tests/ui/assignment-weight-matrix-gates.test.tsx tests/lib/assignment-publish-validation.test.ts` (7 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Candidate Invite Gate Copy Cleanup
+
+- Tightened the assignment gate cleanup so candidate-facing invite pages no longer name unsupported legacy LinkedIn trust gates at all.
+- Candidate invites now render only launch-valid gate labels (`Identity`, `Work email`, `Background`, `Education`) and silently omit unsupported legacy gates from the public/candidate review-process section.
+- Organization assignment review now renders supported gate badges and a generic `Remove unsupported trust requirements before publishing this assignment.` warning when legacy unsupported gates are present, without naming LinkedIn as a valid product feature.
+- Added focused regression coverage proving legacy `linkedin` gates are filtered from candidate-visible copy and represented as a generic org-review publish warning.
+- Codex Browser verified `/candidate-invite/visual-proof-card-claimed` at `http://127.0.0.1:33180` with visual fixtures enabled: the route rendered the assignment invite with `Identity check` and `Work email check`, no LinkedIn/unsupported-gate copy, one `<main>` landmark, no horizontal overflow, no runtime-error text, and zero Browser console warnings/errors.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-candidate-invite-gate-cleanup/candidate-invite-gate-cleanup.json`.
+- Browser screenshot capture was attempted, but `Page.captureScreenshot` timed out in the in-app Browser backend. DOM, route, viewport, console, overflow, and stale-copy evidence was captured instead.
+- Verification passed: `npm run test -- tests/ui/candidate-invite-client.test.tsx tests/ui/assignment-review-client.test.tsx tests/ui/assignment-weight-matrix-gates.test.tsx tests/lib/assignment-publish-validation.test.ts` (17 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.

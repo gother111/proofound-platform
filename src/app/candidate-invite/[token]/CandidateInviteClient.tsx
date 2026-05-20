@@ -179,16 +179,15 @@ function skillLabels(skills: AssignmentState['mustHaveSkills']) {
     .slice(0, 6);
 }
 
-function verificationGateLabel(gate: string) {
-  const labels: Record<string, string> = {
-    identity: 'Identity check',
-    work_email: 'Work email check',
-    linkedin: 'Unsupported LinkedIn employment check',
-    background_check: 'Background check',
-    education: 'Education check',
-  };
+const CANDIDATE_VISIBLE_VERIFICATION_GATE_LABELS: Record<string, string> = {
+  identity: 'Identity check',
+  work_email: 'Work email check',
+  background_check: 'Background check',
+  education: 'Education check',
+};
 
-  return labels[gate] ?? internalValueLabel(gate);
+function candidateVisibleVerificationGateLabel(gate: string) {
+  return CANDIDATE_VISIBLE_VERIFICATION_GATE_LABELS[gate] ?? null;
 }
 
 const DEFAULT_ACCOUNT_SAVE_CONTROLS: AccountSaveControls = {
@@ -478,7 +477,9 @@ export function CandidateInviteClient({
 
   const assignmentTitle = assignment?.role?.trim() || 'Untitled assignment';
   const assignmentSkills = assignment ? skillLabels(assignment.mustHaveSkills) : [];
-  const verificationGates = assignment?.verificationGates ?? [];
+  const verificationGates = (assignment?.verificationGates ?? [])
+    .map((gate) => candidateVisibleVerificationGateLabel(gate))
+    .filter((label): label is string => Boolean(label));
   const selectedProofPack = availableProofPacks.find((pack) => pack.id === proofPackId);
   const reviewProofPack = availableProofPacks.find((pack) => pack.id === reviewProofPackId);
   const headline = isTestFlow
@@ -691,7 +692,7 @@ export function CandidateInviteClient({
                           variant="outline"
                           className="border-proofound-stone bg-proofound-parchment/70"
                         >
-                          {verificationGateLabel(gate)}
+                          {gate}
                         </Badge>
                       ))}
                     </div>

@@ -96,4 +96,23 @@ describe('AssignmentReviewClient', () => {
 
     expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments/new?draftId=assignment-1');
   });
+
+  it('shows a generic warning for unsupported trust requirements without naming LinkedIn', () => {
+    render(
+      <AssignmentReviewClient
+        initialAssignment={{
+          ...baseAssignment,
+          verificationGates: ['work_email', 'linkedin'],
+        }}
+        assignmentId="assignment-1"
+        slug="acme"
+      />
+    );
+
+    expect(screen.getByText('Work Email Verification')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Remove unsupported trust requirements before publishing this assignment/i)
+    ).toBeInTheDocument();
+    expect(document.body.textContent ?? '').not.toMatch(/LinkedIn/i);
+  });
 });

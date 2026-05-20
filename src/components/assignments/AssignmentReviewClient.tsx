@@ -38,7 +38,6 @@ function getSkillDisplayLabel(skill: any) {
 const VERIFICATION_GATE_LABELS: Record<string, string> = {
   identity: 'Identity Verification',
   work_email: 'Work Email Verification',
-  linkedin: 'Unsupported LinkedIn employment check',
   background_check: 'Background Check',
   education: 'Education Verification',
 };
@@ -98,6 +97,14 @@ function getReviewItems(assignment: Assignment): ReviewItem[] {
       detail: 'Attach the skills reviewers should use as anchors.',
     },
   ];
+}
+
+function getSupportedVerificationGates(gates: string[] | undefined) {
+  return (gates ?? []).filter((gate) => VERIFICATION_GATE_LABELS[gate]);
+}
+
+function hasUnsupportedVerificationGates(gates: string[] | undefined) {
+  return (gates ?? []).some((gate) => !VERIFICATION_GATE_LABELS[gate]);
 }
 
 export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }: Props) {
@@ -414,11 +421,11 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
                   'No proof expectations have been saved yet.'}
               </p>
             </div>
-            {assignment.verificationGates && assignment.verificationGates.length > 0 && (
+            {getSupportedVerificationGates(assignment.verificationGates).length > 0 && (
               <div className="border-t pt-4">
                 <p className="mb-2 text-sm text-muted-foreground">Verification requirements</p>
                 <div className="flex flex-wrap gap-2">
-                  {assignment.verificationGates.map((gate) => (
+                  {getSupportedVerificationGates(assignment.verificationGates).map((gate) => (
                     <Badge
                       key={gate}
                       variant="secondary"
@@ -430,6 +437,11 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
                 </div>
               </div>
             )}
+            {hasUnsupportedVerificationGates(assignment.verificationGates) ? (
+              <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                Remove unsupported trust requirements before publishing this assignment.
+              </p>
+            ) : null}
           </div>
         </Card>
 
