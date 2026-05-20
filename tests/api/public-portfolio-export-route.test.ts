@@ -215,6 +215,35 @@ describe('/api/portfolio/public/[handle]/export', () => {
     expect(generateTrustPdf).not.toHaveBeenCalled();
   });
 
+  it('returns the same neutral error when JSON export serialization fails', async () => {
+    const access = buildAccessibleAccess();
+    const circularExportData: any = {
+      ...access.projection.exportData,
+      profile: {
+        ...access.projection.exportData.profile,
+      },
+    };
+    circularExportData.self = circularExportData;
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      ...access,
+      projection: {
+        ...access.projection,
+        exportData: circularExportData,
+      },
+    } as any);
+
+    const response = await GET(
+      new Request('http://localhost/api/portfolio/public/jane/export?format=json'),
+      {
+        params: Promise.resolve({ handle: 'jane' }),
+      }
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Failed to generate export' });
+    expect(generateTrustPdf).not.toHaveBeenCalled();
+  });
+
   it.each(['unavailable', 'private', 'draft', 'unpublished', 'blocked'])(
     'returns 404 for %s public state',
     async (stateLabel) => {
