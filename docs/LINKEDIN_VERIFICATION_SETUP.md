@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-20`
 
 # LinkedIn Verification Reference
 
@@ -20,6 +20,9 @@ Use the current source files before making any LinkedIn-related change:
 - `src/lib/verification/tier.ts`
 - `src/app/api/verification/status/route.ts`
 - `src/archive/non_launch_integrations/preserved/components/settings/LinkedInVerification.tsx`
+- `src/archive/non_launch_integrations/linkedin-oauth/README.md`
+- `src/archive/non_launch_integrations/linkedin-enrichment/README.md`
+- `src/archive/non_launch_integrations/linkedin-scraper/README.md`
 
 ## Preserved Data Shape
 
@@ -61,10 +64,14 @@ The following are not active MVP launch surfaces:
 The preserved non-launch implementation reference lives under:
 
 - `src/archive/non_launch_integrations/preserved/components/settings/LinkedInVerification.tsx`
+- `src/archive/non_launch_integrations/linkedin-oauth/linkedin.archived.ts`
+- `src/archive/non_launch_integrations/linkedin-oauth/linkedin-oauth-context.archived.ts`
+- `src/archive/non_launch_integrations/linkedin-enrichment/linkedin-enrichment.archived.ts`
+- `src/archive/non_launch_integrations/linkedin-scraper/linkedin-scraper.archived.ts`
 
 ## Environment Variables
 
-These variables may exist for compatibility or future/post-MVP investigation, but they are not launch-blocking by default:
+These variables may appear in older environments for compatibility or future/post-MVP investigation, but they are not launch-blocking and active launch code must not depend on them:
 
 ```env
 LINKEDIN_CLIENT_ID=

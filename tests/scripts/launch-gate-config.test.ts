@@ -1559,7 +1559,7 @@ describe('launch gate package configuration', () => {
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
     expect(linkedInSetup).toContain('Doc Class: `reference-spec`');
-    expect(linkedInSetup).toContain('Last Verified: `2026-05-19`');
+    expect(linkedInSetup).toContain('Last Verified: `2026-05-20`');
     expect(linkedInSetup).toContain('outside the locked MVP launch corridor');
     expect(linkedInSetup).toContain('Work email is the only launch-active account-side check');
     expect(linkedInSetup).toContain('LinkedIn state is read-only history when present');
@@ -1580,7 +1580,7 @@ describe('launch gate package configuration', () => {
     );
     expect(linkedInSummary).not.toContain('Canonical active reference');
     expect(docsRegistry).toContain(
-      '| `docs/LINKEDIN_VERIFICATION_SETUP.md`                                                                   | `reference-spec` | `docs`        | `repo`              | `2026-05-19`'
+      '| `docs/LINKEDIN_VERIFICATION_SETUP.md`                                                                   | `reference-spec` | `docs`        | `repo`              | `2026-05-20`'
     );
   });
 
@@ -1792,9 +1792,10 @@ describe('launch gate package configuration', () => {
     expect(envDocs).toContain('Required Vars When `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`');
     expect(envDocs).toContain('Manual-link interview scheduling must still work');
     expect(envDocs).toContain('https://proofound.io/api/integrations/google/callback');
-    expect(envDocs).toContain('https://proofound.io/api/auth/linkedin/callback');
+    expect(envDocs).toContain('https://<supabase-project>.supabase.co/auth/v1/callback');
     expect(envDocs).toContain('<preview-app-url>/api/integrations/google/callback');
-    expect(envDocs).toContain('<staging-app-url>/api/auth/linkedin/callback');
+    expect(envDocs).toContain('Do not configure the archived app-side LinkedIn callback');
+    expect(envDocs).not.toContain('/api/auth/linkedin/callback');
     expect(envDocs).toContain('/api/match/profile');
     expect(envDocs).not.toContain('/api/core/matching/profile');
     expect(envDocs).toContain('retained near-matches matching handler');

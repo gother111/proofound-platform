@@ -1,6 +1,6 @@
 /**
  * LinkedIn Profile Scraper using Playwright
- * 
+ *
  * Automatically analyzes LinkedIn profiles to detect identity verification badges
  * and other trust signals. Free and fast (5-10 seconds per check).
  */
@@ -28,34 +28,32 @@ export interface AutomatedCheckResult {
 /**
  * Main function: Check LinkedIn profile for verification badge and trust signals
  */
-export async function checkLinkedInVerification(
-  profileUrl: string
-): Promise<AutomatedCheckResult> {
+export async function checkLinkedInVerification(profileUrl: string): Promise<AutomatedCheckResult> {
   let browser: Browser | null = null;
-  
+
   try {
     // Launch headless browser
-    browser = await chromium.launch({ 
+    browser = await chromium.launch({
       headless: true,
-      timeout: 30000 
+      timeout: 30000,
     });
-    
+
     const page = await browser.newPage();
-    
+
     // Set user agent to avoid bot detection
     await page.setExtraHTTPHeaders({
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
     });
-    
+
     // Navigate to LinkedIn profile
-    await page.goto(profileUrl, { 
+    await page.goto(profileUrl, {
       waitUntil: 'networkidle',
-      timeout: 15000 
+      timeout: 15000,
     });
-    
+
     // Wait a moment for dynamic content to load
     await page.waitForTimeout(2000);
-    
+
     // Extract all signals
     const signals: LinkedInSignals = {
       hasVerificationBadge: await detectVerificationBadge(page),
@@ -65,15 +63,15 @@ export async function checkLinkedInVerification(
       hasProfilePhoto: await hasProfilePhoto(page),
       accountAge: await estimateAccountAge(page),
     };
-    
+
     // Calculate confidence score
     const confidence = calculateConfidenceScore(signals);
-    
+
     // Generate recommendation
     const recommendation = generateRecommendation(signals, confidence);
-    
+
     await browser.close();
-    
+
     return {
       success: true,
       signals,
@@ -85,9 +83,9 @@ export async function checkLinkedInVerification(
     if (browser) {
       await browser.close().catch(() => {});
     }
-    
+
     console.error('LinkedIn scraper error:', error);
-    
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -111,21 +109,22 @@ async function detectVerificationBadge(page: Page): Promise<boolean> {
       '.pv-member-badge__icon',
       '[data-test-member-badge="VERIFIED"]',
     ];
-    
+
     for (const selector of selectors) {
-      const isVisible = await page.locator(selector).isVisible().catch(() => false);
+      const isVisible = await page
+        .locator(selector)
+        .isVisible()
+        .catch(() => false);
       if (isVisible) {
         return true;
       }
     }
-    
+
     // Also check for text-based verification indicators
     const bodyText = await page.textContent('body').catch(() => '');
     const verificationTerms = ['identity verified', 'verified member', 'identity confirmation'];
-    
-    return verificationTerms.some(term => 
-      bodyText?.toLowerCase().includes(term)
-    );
+
+    return verificationTerms.some((term) => bodyText?.toLowerCase().includes(term));
   } catch (error) {
     console.error('Error detecting verification badge:', error);
     return false;
@@ -144,14 +143,14 @@ async function extractConnectionCount(page: Page): Promise<number | null> {
       '.pv-top-card__connections',
       'span:has-text("connections")',
     ];
-    
+
     for (const selector of selectors) {
       const elements = await page.locator(selector).all();
-      
+
       for (const element of elements) {
         const text = await element.textContent().catch(() => '');
         if (!text) continue;
-        
+
         // Match patterns like "500+ connections", "1,234 connections"
         const match = text.match(/(\d+[\d,]*)\+?\s*connections?/i);
         if (match) {
@@ -162,7 +161,7 @@ async function extractConnectionCount(page: Page): Promise<number | null> {
         }
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error extracting connection count:', error);
@@ -180,14 +179,14 @@ async function extractExperienceCount(page: Page): Promise<number> {
       '.experience-section li',
       '[data-section="experience"] li',
     ];
-    
+
     for (const selector of selectors) {
       const count = await page.locator(selector).count();
       if (count > 0) {
         return count;
       }
     }
-    
+
     return 0;
   } catch (error) {
     console.error('Error extracting experience count:', error);
@@ -200,43 +199,52 @@ async function extractExperienceCount(page: Page): Promise<number> {
  */
 async function calculateProfileCompleteness(page: Page): Promise<number> {
   let score = 0;
-  
+
   try {
     // Profile photo (20 points)
     if (await hasProfilePhoto(page)) {
       score += 20;
     }
-    
+
     // Headline (15 points)
-    const hasHeadline = await page.locator('.text-body-medium').count() > 0;
+    const hasHeadline = (await page.locator('.text-body-medium').count()) > 0;
     if (hasHeadline) {
       score += 15;
     }
-    
+
     // About/Summary section (15 points)
-    const hasAbout = await page.locator('#about').isVisible().catch(() => false);
+    const hasAbout = await page
+      .locator('#about')
+      .isVisible()
+      .catch(() => false);
     if (hasAbout) {
       score += 15;
     }
-    
+
     // Experience section (20 points)
     const experienceCount = await extractExperienceCount(page);
     if (experienceCount > 0) {
       score += 20;
     }
-    
+
     // Education section (15 points)
-    const hasEducation = await page.locator('#education').isVisible().catch(() => false);
+    const hasEducation = await page
+      .locator('#education')
+      .isVisible()
+      .catch(() => false);
     if (hasEducation) {
       score += 15;
     }
-    
+
     // Skills section (15 points)
-    const hasSkills = await page.locator('#skills').isVisible().catch(() => false);
+    const hasSkills = await page
+      .locator('#skills')
+      .isVisible()
+      .catch(() => false);
     if (hasSkills) {
       score += 15;
     }
-    
+
     return score;
   } catch (error) {
     console.error('Error calculating profile completeness:', error);
@@ -254,14 +262,17 @@ async function hasProfilePhoto(page: Page): Promise<boolean> {
       '[data-test-profile-photo]',
       'img[alt*="profile"]',
     ];
-    
+
     for (const selector of selectors) {
-      const isVisible = await page.locator(selector).isVisible().catch(() => false);
+      const isVisible = await page
+        .locator(selector)
+        .isVisible()
+        .catch(() => false);
       if (isVisible) {
         return true;
       }
     }
-    
+
     return false;
   } catch (error) {
     return false;
@@ -275,15 +286,13 @@ async function estimateAccountAge(page: Page): Promise<'new' | 'medium' | 'old'>
   try {
     // Check experience entries - older accounts tend to have more history
     const experienceCount = await extractExperienceCount(page);
-    
+
     // Check if profile has old dates (look for years in the past)
     const bodyText = await page.textContent('body').catch(() => '');
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 15 }, (_, i) => currentYear - i - 1);
-    const oldYearMatches = years.filter(year => 
-      bodyText?.includes(year.toString())
-    ).length;
-    
+    const oldYearMatches = years.filter((year) => bodyText?.includes(year.toString())).length;
+
     // Scoring logic
     if (experienceCount >= 4 || oldYearMatches >= 3) {
       return 'old'; // 5+ years
@@ -304,12 +313,12 @@ async function estimateAccountAge(page: Page): Promise<'new' | 'medium' | 'old'>
  */
 function calculateConfidenceScore(signals: LinkedInSignals): number {
   let score = 0;
-  
+
   // Verification badge is the strongest signal (50 points)
   if (signals.hasVerificationBadge) {
     score += 50;
   }
-  
+
   // Connection count (15 points max)
   if (signals.connectionCount !== null) {
     if (signals.connectionCount >= 500) {
@@ -322,7 +331,7 @@ function calculateConfidenceScore(signals: LinkedInSignals): number {
       score += 5;
     }
   }
-  
+
   // Profile completeness (15 points max)
   if (signals.profileCompleteness >= 90) {
     score += 15;
@@ -331,14 +340,14 @@ function calculateConfidenceScore(signals: LinkedInSignals): number {
   } else if (signals.profileCompleteness >= 50) {
     score += 5;
   }
-  
+
   // Account age (10 points max)
   if (signals.accountAge === 'old') {
     score += 10;
   } else if (signals.accountAge === 'medium') {
     score += 5;
   }
-  
+
   // Experience count (5 points max)
   if (signals.experienceCount >= 3) {
     score += 5;
@@ -347,12 +356,12 @@ function calculateConfidenceScore(signals: LinkedInSignals): number {
   } else if (signals.experienceCount >= 1) {
     score += 1;
   }
-  
+
   // Profile photo (5 points)
   if (signals.hasProfilePhoto) {
     score += 5;
   }
-  
+
   return Math.min(score, 100);
 }
 
@@ -367,12 +376,12 @@ function generateRecommendation(
   if (signals.hasVerificationBadge && confidence >= 80) {
     return 'approve';
   }
-  
+
   // Medium confidence - needs manual review
   if (confidence >= 50) {
     return 'review_manually';
   }
-  
+
   // Low confidence - recommend rejection
   return 'reject';
 }
@@ -384,11 +393,10 @@ export function validateLinkedInUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return (
-      parsed.hostname === 'www.linkedin.com' ||
-      parsed.hostname === 'linkedin.com'
-    ) && parsed.pathname.startsWith('/in/');
+      (parsed.hostname === 'www.linkedin.com' || parsed.hostname === 'linkedin.com') &&
+      parsed.pathname.startsWith('/in/')
+    );
   } catch {
     return false;
   }
 }
-

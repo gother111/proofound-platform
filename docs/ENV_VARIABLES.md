@@ -3,7 +3,7 @@
 > Doc Class: `active`
 > Last Verified: `2026-05-19`
 
-Complete guide to all environment variables used in Proofound, including which features require which variables and how to configure them.
+Complete guide to launch-active environment variables used in Proofound, including which features require which variables and how to configure them. Historical or archived variables may appear in old reports, but they are not launch requirements unless listed here as active.
 
 > **📍 PRODUCTION DOMAIN**
 >
@@ -29,7 +29,6 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 # ============================================================================
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
 EMAIL_FROM="Proofound <no-reply@proofound.io>"
-LINKEDIN_VERIFICATION_ADMIN_EMAILS=admin1@proofound.io,admin2@proofound.io
 CRON_SECRET=your_secure_random_token_here
 CRON_API_KEY=your_cron_job_org_api_token
 PYTHON_INTERNAL_SERVICE_SECRET=your_python_internal_secret_here
@@ -47,8 +46,6 @@ RATE_LIMIT_MAX=30
 GOOGLE_CLIENT_ID=your_google_oauth_client_id  # Target-scoped connected-provider/social login only
 GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
 GOOGLE_REDIRECT_URI=/api/integrations/google/callback
-LINKEDIN_CLIENT_ID=your_linkedin_client_id  # Target-scoped LinkedIn/social login only
-LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
 E2E_PROVIDER_USER_ID=deterministic_user_uuid  # Only when STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true
 E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.io
 E2E_PROVIDER_USER_PASSWORD=your_deterministic_test_password
@@ -545,15 +542,13 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 ### Interview and Identity OAuth
 
-**Purpose**: Enable optional connected-provider interview scheduling through Google Meet, plus identity/social provider callbacks. Manual meeting links remain the locked MVP default.
+**Purpose**: Enable optional connected-provider interview scheduling through Google Meet, plus social provider callbacks. Manual meeting links remain the locked MVP default.
 
 **Target-scoped Vars**:
 
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required only when the target intentionally enables Google Meet integration or Google social login through Supabase.
 - `GOOGLE_REDIRECT_URI` — Required only for enabled Google integration flows. Must match the app integration callback (recommended runtime value: `/api/integrations/google/callback`).
-- `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required only when the target intentionally enables LinkedIn settings integration callback or LinkedIn social login through Supabase.
-- `LINKEDIN_REDIRECT_URI` - Set to the canonical app callback for the target (production recommendation: `https://proofound.io/api/auth/linkedin/callback`).
-- `LINKEDIN_API_VERSION` - Optional LinkedIn REST version header for Verified APIs (`/rest/verificationReport`, `/rest/identityMe`). Defaults to `202510`.
+- LinkedIn social login, if intentionally enabled for a target, should be configured through the Supabase provider callback. Custom app-side LinkedIn OAuth helpers, LinkedIn REST verification APIs, and LinkedIn enrichment are archived for launch.
 - `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used for OAuth callback construction (`NEXT_PUBLIC_URL` is legacy fallback only).
 - LinkedIn verification tier behavior (no extra env needed):
   - `IDENTITY` label maps to `identity_verified`
@@ -564,7 +559,6 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 - Google integration callback (app route): `https://proofound.io/api/integrations/google/callback`
 - Google social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
-- LinkedIn integration callback (app route): `https://proofound.io/api/auth/linkedin/callback`
 - LinkedIn social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
 
 **Used By**:
@@ -588,12 +582,9 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
    - `http://localhost:3000/api/integrations/google/callback`
    - `<preview-app-url>/api/integrations/google/callback`
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
-2. Configure LinkedIn app callback URIs:
-   - `https://proofound.io/api/auth/linkedin/callback`
+2. If LinkedIn social login is intentionally enabled for a target, configure only the Supabase social auth callback:
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
-   - Optional local callback for local OAuth testing: `http://localhost:3000/api/auth/linkedin/callback`
-   - Optional additional live-domain callbacks for each domain that can initiate `/api/auth/linkedin` (for example `<staging-app-url>/api/auth/linkedin/callback`)
-   - For LinkedIn verification, ensure OAuth scopes include `r_profile_basicinfo` and `r_verify` in addition to `openid profile email`.
+     Do not configure the archived app-side LinkedIn callback or request LinkedIn verification scopes for launch.
 3. Set `NEXT_PUBLIC_SITE_URL` to your canonical domain (for example `https://proofound.io`).
 
 ---

@@ -2078,3 +2078,14 @@ Browser evidence:
 - Updated active launch docs and runbooks to use `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`, and removed the stale SUS bullet from performance-testing docs. Historical block reports and scratchpad logs were left unchanged as historical evidence.
 - Added launch-gate coverage proving the active go/no-go script no longer contains `SUS_STUDY_COMPLETE`.
 - Browser was not used for this slice because the change is launch-ops/docs only; the previous SUS archive Browser smoke remains the UI evidence for absence of SUS prompts in the active app shell.
+
+## Continuation - LinkedIn External Integration Archive Boundary
+
+- Inspected active LinkedIn-related source after the verification surface had already been bounded to account-side read-only history and found unused but active launch helpers for Playwright LinkedIn scraping, custom LinkedIn OAuth/profile API calls, direct LinkedIn REST verification APIs, and Proxycurl enrichment.
+- Archived the unused external integration helpers under `src/archive/non_launch_integrations/` so launch source preserves only local compatibility parsing for historical LinkedIn labels.
+- Updated LinkedIn and environment docs so launch readiness no longer asks operators to configure `LINKEDIN_API_VERSION`, app-side LinkedIn callbacks, `r_profile_basicinfo`, `r_verify`, Proxycurl, PhantomBuster, scraping, or LinkedIn REST verification APIs.
+- Added active-source guard coverage proving launch helpers stay local-only and the custom LinkedIn OAuth, scraper, and enrichment helpers do not return to active `src/lib`.
+- Codex Browser verified `/login` at `http://127.0.0.1:33180`: the route rendered `Welcome back`, had one `<main>` landmark, no horizontal overflow, no runtime-error text, no stale LinkedIn verification/enrichment/scraping copy, and zero Browser console warnings/errors.
+- Codex Browser also checked `/app/i/settings` for the same stale-copy and runtime-error assertions. The authenticated settings mock remained in its loading skeleton during capture, so the stable visual evidence for this slice is the logged-out login route.
+- Saved Browser evidence at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-linkedin-archive/login-linkedin-archive-smoke.json` and `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-linkedin-archive/settings-linkedin-archive-smoke.json`.
+- Browser screenshots were saved at `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-linkedin-archive/login-linkedin-archive-smoke.png` and `.artifacts/mvp-surface-sweep-2026-05-19/browser-2026-05-20-linkedin-archive/settings-linkedin-archive-smoke.png`.
