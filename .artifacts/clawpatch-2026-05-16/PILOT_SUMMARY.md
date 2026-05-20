@@ -308,6 +308,20 @@ Verification after this sweep:
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 
+## Continuation: Ninth Local Malformed-JSON Sweep
+
+A ninth local sweep applied the same malformed-JSON boundary to the candidate invite Proof Card submission route:
+
+- `src/app/api/candidate-invites/[token]/proof-card/route.ts`
+
+Malformed JSON now returns `400` with `Invalid JSON body` after authentication and invite-token inspection in the normal path, and before invite lookup, Proof Pack lookup, canonical submission writes, invite status updates, or analytics work continues. The visual-fixture path now returns the same `400` before fixture validation or submission response construction.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/candidate-invite-proof-card-route.test.ts`: passed, `1` file and `4` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.

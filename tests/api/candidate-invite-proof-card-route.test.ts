@@ -154,6 +154,22 @@ describe('POST /api/candidate-invites/[token]/proof-card', () => {
     expect(db.select).not.toHaveBeenCalled();
   });
 
+  it('returns 400 for malformed JSON before invite lookup or submission writes', async () => {
+    const request = new NextRequest('http://localhost/api/candidate-invites/token/proof-card', {
+      method: 'POST',
+      body: '{"proofPackId":',
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ token: 'token-value' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ error: 'Invalid JSON body' });
+    expect(db.select).not.toHaveBeenCalled();
+    expect(upsertCanonicalProofCardSubmission).not.toHaveBeenCalled();
+  });
+
   it('submits an owner-only Proof Pack without requiring a public snippet', async () => {
     mockSelectWithLimit([
       {

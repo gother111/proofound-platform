@@ -522,7 +522,7 @@ async function main() {
       id: 'npm-ci',
       label: 'Clean install',
       command: 'npm',
-      commandArgs: ['ci'],
+      commandArgs: ['ci', '--ignore-scripts'],
     });
     await runGateCommand({
       id: 'prod-dependency-audit',

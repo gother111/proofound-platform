@@ -81,7 +81,12 @@ export async function POST(
       candidateInviteVisualFixturesEnabled() &&
       token === VISUAL_CANDIDATE_INVITE_TOKENS.proofCardClaimed
     ) {
-      const body = await request.json();
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
       const parsed = submitProofCardSchema.safeParse(body);
 
       if (!parsed.success) {
@@ -138,7 +143,12 @@ export async function POST(
     if (!inspectedInviteToken.ok) {
       return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const parsed = submitProofCardSchema.safeParse(body);
 
     if (!parsed.success) {
