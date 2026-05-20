@@ -1665,3 +1665,10 @@ Non-fatal test noise:
 - Found retained internal admin, cron, monitoring, and organization-audit routes could still match archived fallback policy classes after their internal-only policy matched, making route classification depend too heavily on policy order.
 - Tightened `src/lib/launch/surface-policy.ts` so archived admin, cron, and organization-suite fallbacks explicitly exclude retained internal launch-ops paths.
 - Added a surface-policy regression proving retained launch-ops API/page paths match exactly `internal_only_launch_ops` and do not also match archived policy classes.
+
+## Continuation - Archived Why-Not-Shortlisted UI Cleanup
+
+- Found `AUDIT_REMAINING_WORK.md` still named `/api/feedback/why-not-shortlisted` as a TODO-grade active route, but current route policy archives that path and the active route file is gone.
+- Found the unused active component `src/components/feedback/WhyNotShortlisted.tsx` still calling the archived endpoint.
+- Moved the component into `src/archive/non_launch_feedback/preserved/components/feedback/WhyNotShortlisted.tsx` and documented the archive boundary.
+- Added launch-gate coverage so active `src/` files cannot call `/api/feedback/why-not-shortlisted` except through the route-surface policy declaration.

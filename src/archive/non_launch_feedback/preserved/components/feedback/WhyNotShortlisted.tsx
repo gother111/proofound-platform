@@ -26,14 +26,10 @@ import {
   Calendar,
   MapPin,
   DollarSign,
-  ExternalLink
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { apiFetch } from '@/lib/api/fetch';
 
 interface FeedbackItem {
@@ -196,9 +192,7 @@ export function WhyNotShortlisted({ assignmentId, assignmentTitle }: WhyNotShort
               <span className="text-proofound-charcoal/70 dark:text-muted-foreground">
                 Current Match Score
               </span>
-              <span className="font-semibold">
-                {Math.round(feedback.currentMatchScore)}/100
-              </span>
+              <span className="font-semibold">{Math.round(feedback.currentMatchScore)}/100</span>
             </div>
             <Progress value={feedback.currentMatchScore} className="h-2" />
 
@@ -230,9 +224,7 @@ export function WhyNotShortlisted({ assignmentId, assignmentTitle }: WhyNotShort
               <CheckCircle2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               Top Actions to Take
             </CardTitle>
-            <CardDescription>
-              Focus on these high-impact improvements first
-            </CardDescription>
+            <CardDescription>Focus on these high-impact improvements first</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {feedback.nextBestActions.map((item, idx) => (
@@ -258,7 +250,7 @@ export function WhyNotShortlisted({ assignmentId, assignmentTitle }: WhyNotShort
                       variant="ghost"
                       size="sm"
                       className="h-auto p-0 text-xs text-proofound-forest hover:text-proofound-forest/80"
-                      onClick={() => window.location.href = item.details!.link!}
+                      onClick={() => (window.location.href = item.details!.link!)}
                     >
                       Take action <ArrowRight className="h-3 w-3 ml-1" />
                     </Button>
@@ -322,7 +314,7 @@ export function WhyNotShortlisted({ assignmentId, assignmentTitle }: WhyNotShort
                 </p>
               </div>
               <Button
-                onClick={() => window.location.href = '/profile/gap-map'}
+                onClick={() => (window.location.href = '/profile/gap-map')}
                 className="bg-proofound-forest hover:bg-proofound-forest/90"
               >
                 View Gap Map

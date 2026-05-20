@@ -31,6 +31,17 @@ function listFiles(dir: string): string[] {
   });
 }
 
+function listActiveSourceFiles(dir: string): string[] {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === 'archive') return [];
+      return listActiveSourceFiles(fullPath);
+    }
+    return [fullPath];
+  });
+}
+
 function compactWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ');
 }
@@ -2569,6 +2580,27 @@ describe('launch gate package configuration', () => {
       .map((file) => path.relative(repoRoot, file));
 
     expect(offenders).toEqual([]);
+  });
+
+  it('keeps archived why-not-shortlisted feedback out of active source', () => {
+    const archivedFeedbackApi = '/api/feedback/why-not-shortlisted';
+    const activeSourceFiles = listActiveSourceFiles(path.join(repoRoot, 'src'));
+    const offenders = activeSourceFiles
+      .filter((file) => fs.readFileSync(file, 'utf8').includes(archivedFeedbackApi))
+      .map((file) => path.relative(repoRoot, file));
+
+    expect(offenders).toEqual([
+      'src/lib/__tests__/middleware-launch-archive.test.ts',
+      'src/lib/launch/surface-policy.ts',
+    ]);
+    expect(
+      fs.existsSync(
+        path.join(
+          repoRoot,
+          'src/archive/non_launch_feedback/preserved/components/feedback/WhyNotShortlisted.tsx'
+        )
+      )
+    ).toBe(true);
   });
 
   it('keeps retired wellbeing and Zen implementation modules archived', () => {
