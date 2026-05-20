@@ -81,7 +81,7 @@ describe('individual interviews page clarity', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('heading', { name: /no active hiring corridor yet/i })
+        screen.getByRole('heading', { name: /no active interview workflow yet/i })
       ).toBeInTheDocument();
     });
 

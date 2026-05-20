@@ -215,7 +215,7 @@ export const FALLBACK_COPY: Record<
     individual: {
       title: 'Your Public Page remains shareable with proof context.',
       detail:
-        'Add proof or verification checks to strengthen intro readiness. Proof value comes first even before stronger assignment-fit corridors unlock.',
+        'Add proof or verification checks to strengthen intro readiness. Proof value comes first while stronger assignment-fit corridors remain protected.',
       statusLabel: 'Proof coverage in progress',
       nextActions: [
         'Improve your Public Page or proof',

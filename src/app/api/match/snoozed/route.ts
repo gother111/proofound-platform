@@ -6,6 +6,14 @@ import { eq, and, isNotNull, gt } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
+function proofFitLabel(score: unknown): string {
+  const normalized = Number(score);
+  if (!Number.isFinite(normalized)) return 'Proof review needed';
+  if (normalized >= 0.8) return 'Strong proof alignment';
+  if (normalized >= 0.6) return 'Clear proof alignment';
+  return 'Proof review needed';
+}
+
 /**
  * GET /api/match/snoozed
  *
@@ -42,7 +50,7 @@ export async function GET() {
     // Format response
     const formattedMatches = snoozedMatches.map((row) => ({
       id: row.match.id,
-      matchScore: parseFloat(row.match.score),
+      proofFitLabel: proofFitLabel(row.match.score),
       snoozedUntil: row.match.snoozedUntil,
       assignment: {
         id: row.assignment.id,
@@ -60,6 +68,7 @@ export async function GET() {
     return NextResponse.json({
       matches: formattedMatches,
       count: formattedMatches.length,
+      scoreVisibility: 'internal_ordering_only',
     });
   } catch (error) {
     console.error('Error fetching snoozed matches:', error);

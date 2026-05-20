@@ -3,7 +3,7 @@ import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ClipboardCheck } from 'lucide-react';
-import { DeferredOrgMatchingClient } from '../matching/DeferredOrgMatchingClient';
+import { OrgMatchingClient } from '../matching/OrgMatchingClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,17 +49,9 @@ export default async function OrgAssignmentsAliasPage({
                 </p>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-3">
-              <Button
-                asChild
-                className="w-full bg-proofound-forest px-6 text-white hover:bg-proofound-forest/90 sm:w-auto"
-              >
-                <Link href={`/app/o/${slug}/assignments/new`}>Create assignment</Link>
-              </Button>
-            </div>
           </div>
         </header>
-        <DeferredOrgMatchingClient orgSlug={slug} />
+        <OrgMatchingClient />
       </div>
     </AppSurface>
   );

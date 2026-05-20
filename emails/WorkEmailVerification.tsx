@@ -30,18 +30,15 @@ export default function WorkEmailVerification({
 
           <Section style={content}>
             <Text style={heading}>Verify Your Work Email</Text>
-            
-            <Text style={paragraph}>
-              Hi {userName},
-            </Text>
+
+            <Text style={paragraph}>Hi {userName},</Text>
 
             <Text style={paragraph}>
-              You requested to verify your work email address to unlock the verified badge on your Proofound profile.
+              You requested to verify your work email address as an account-side trust signal on
+              your Proofound profile.
             </Text>
 
-            <Text style={paragraph}>
-              Click the button below to complete your verification:
-            </Text>
+            <Text style={paragraph}>Click the button below to complete your verification:</Text>
 
             <Section style={buttonContainer}>
               <Button style={button} href={verifyUrl}>
@@ -49,9 +46,7 @@ export default function WorkEmailVerification({
               </Button>
             </Section>
 
-            <Text style={paragraph}>
-              Or copy and paste this link into your browser:
-            </Text>
+            <Text style={paragraph}>Or copy and paste this link into your browser:</Text>
 
             <Text style={link}>
               <Link href={verifyUrl} style={linkStyle}>
@@ -66,7 +61,9 @@ export default function WorkEmailVerification({
             </Text>
 
             <Text style={footerText}>
-              Once verified, your profile will display a verified badge that helps organizations trust your identity and improves your match quality.
+              Once verified, your profile can display a checked work-email signal that helps
+              organizations review your proof with clearer context. It does not create an automated
+              score, rank, or hiring recommendation.
             </Text>
 
             <Text style={footerText}>
@@ -189,4 +186,3 @@ const footerSmall = {
   color: '#9ca3af',
   margin: '0 0 8px 0',
 };
-

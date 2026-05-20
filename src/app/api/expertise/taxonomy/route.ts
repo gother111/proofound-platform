@@ -104,6 +104,14 @@ function hashQuery(value: string): string {
   return createHash('sha256').update(normalized).digest('hex').slice(0, 16);
 }
 
+function taxonomyMatchConfidenceLabel(score: unknown): string | null {
+  const normalizedScore = Number(score);
+  if (!Number.isFinite(normalizedScore)) return null;
+  if (normalizedScore >= 0.85) return 'Strong taxonomy match';
+  if (normalizedScore >= 0.65) return 'Clear taxonomy match';
+  return 'Review suggested';
+}
+
 function sortSimpleSearchResults(searchTerm: string, rows: any[]): any[] {
   const normalized = normalizeForComparison(searchTerm);
 
@@ -575,7 +583,7 @@ export async function GET(request: Request) {
               return {
                 ...skill,
                 matchMethod: match?.match_method || null,
-                matchScore: match?.score ?? null,
+                matchConfidence: taxonomyMatchConfidenceLabel(match?.score),
                 matchSource: match?.match_source || null,
                 matchedQuery: match?.matched_query || null,
                 matchedLabel: match?.matched_label || null,
@@ -631,7 +639,7 @@ export async function GET(request: Request) {
           return {
             ...baseSkill,
             matchMethod: s.matchMethod ?? null,
-            matchScore: s.matchScore ?? null,
+            matchConfidence: s.matchConfidence ?? null,
             matchSource: s.matchSource ?? null,
             matchedQuery: s.matchedQuery ?? null,
             matchedLabel: s.matchedLabel ?? null,

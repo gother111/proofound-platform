@@ -1636,6 +1636,86 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps active public and outbound contact surfaces on the canonical proofound.io domain', () => {
+    const activeSurfaceFiles = [
+      'emails/SkillVerificationRequest.tsx',
+      'emails/DeletionComplete.tsx',
+      'emails/DeletionReminder.tsx',
+      'emails/DeletionScheduled.tsx',
+      'src/lib/email/templates/assignment-invitation.tsx',
+      'src/lib/email/templates/interview-scheduled.tsx',
+      'src/components/settings/PrivacyOverview.tsx',
+      'src/app/terms/page.tsx',
+      'src/app/cookies/settings/page.tsx',
+      'src/app/privacy/page.tsx',
+      'src/app/api/verify/[token]/route.ts',
+      'src/components/onboarding/OrganizationSetup.tsx',
+      'src/lib/interviews/calendar.ts',
+    ];
+
+    for (const relativePath of activeSurfaceFiles) {
+      const source = fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
+
+      expect(source, relativePath).not.toContain('proofound.com');
+      expect(source, relativePath).not.toContain('https://proofound.io/help');
+    }
+
+    const skillVerificationEmail = fs.readFileSync(
+      path.join(repoRoot, 'emails/SkillVerificationRequest.tsx'),
+      'utf8'
+    );
+    const deletionEmail = fs.readFileSync(
+      path.join(repoRoot, 'emails/DeletionComplete.tsx'),
+      'utf8'
+    );
+    const orgSetup = fs.readFileSync(
+      path.join(repoRoot, 'src/components/onboarding/OrganizationSetup.tsx'),
+      'utf8'
+    );
+    const calendarInvite = fs.readFileSync(
+      path.join(repoRoot, 'src/lib/interviews/calendar.ts'),
+      'utf8'
+    );
+
+    expect(skillVerificationEmail).toContain('hello@proofound.io');
+    expect(deletionEmail).toContain('https://proofound.io');
+    expect(deletionEmail).toContain('privacy@proofound.io');
+    expect(orgSetup).toContain('proofound.io/portfolio/org/');
+    expect(calendarInvite).toContain('@proofound.io');
+  });
+
+  it('keeps deletion emails aligned with immediate irreversible account deletion', () => {
+    const deletionScheduled = fs.readFileSync(
+      path.join(repoRoot, 'emails/DeletionScheduled.tsx'),
+      'utf8'
+    );
+    const deletionReminder = fs.readFileSync(
+      path.join(repoRoot, 'emails/DeletionReminder.tsx'),
+      'utf8'
+    );
+    const deletionComplete = fs.readFileSync(
+      path.join(repoRoot, 'emails/DeletionComplete.tsx'),
+      'utf8'
+    );
+    const emailService = fs.readFileSync(path.join(repoRoot, 'src/lib/email.ts'), 'utf8');
+    const combined = `${deletionScheduled}\n${deletionReminder}\n${deletionComplete}\n${emailService}`;
+
+    expect(combined).toContain('immediate, irreversible lifecycle request');
+    expect(combined).toContain('We do not support a scheduled cancellation window');
+    expect(combined).toContain('Proof Packs, proof items, and public portfolio projections');
+    expect(combined).toContain('Matching, intro, reveal, interview, and decision records');
+    expect(combined).toContain('Account Deletion Request Received - Proofound');
+    expect(combined).toContain('Account Deletion Update - Proofound');
+    expect(combined).not.toContain('30 days');
+    expect(combined).not.toContain('cancel this request');
+    expect(combined).not.toContain('Cancel Deletion');
+    expect(combined).not.toContain('Cancel Deletion & Keep My Account');
+    expect(combined).not.toContain('scheduled deletion state');
+    expect(combined).not.toContain('automatically deleted on the scheduled date');
+    expect(combined).not.toContain('Your matches and connections');
+    expect(combined).not.toContain('Your messages and conversations');
+  });
+
   it('keeps legacy PRD mirrors below the locked MVP authority stack', () => {
     const compatibilityPrd = fs.readFileSync(
       path.join(repoRoot, 'PRD_for_a_web_platform_MVP.md'),
@@ -2418,6 +2498,25 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps active expertise taxonomy responses free of numeric match scores', () => {
+    const taxonomyRoute = fs.readFileSync(
+      path.join(repoRoot, 'src/app/api/expertise/taxonomy/route.ts'),
+      'utf8'
+    );
+    const taxonomyRouteTest = fs.readFileSync(
+      path.join(repoRoot, 'tests/api/expertise-taxonomy-route.test.ts'),
+      'utf8'
+    );
+
+    expect(taxonomyRoute).toContain('taxonomyMatchConfidenceLabel');
+    expect(taxonomyRoute).toContain('matchConfidence: taxonomyMatchConfidenceLabel(match?.score)');
+    expect(taxonomyRoute).toContain('matchConfidence: s.matchConfidence ?? null');
+    expect(taxonomyRoute).not.toContain('matchScore: match?.score');
+    expect(taxonomyRoute).not.toContain('matchScore: s.matchScore');
+    expect(taxonomyRouteTest).toContain('without numeric match scores');
+    expect(taxonomyRouteTest).toContain("not.toHaveProperty('matchScore')");
+  });
+
   it('keeps the Supabase setup guide target-agnostic and launch-safe', () => {
     const setupSupabase = fs.readFileSync(path.join(repoRoot, 'SETUP_SUPABASE.md'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
@@ -2756,12 +2855,17 @@ describe('launch gate package configuration', () => {
 
   it('keeps active matching review UI proof-led instead of score or rank led', () => {
     const activeMatchingReviewFiles = [
+      'src/components/matching/MatchingOrganizationView.tsx',
       'src/components/matching/MatchResultCard.tsx',
       'src/components/matching/MatchExplainerModal.tsx',
       'src/components/matching/SnoozedMatchesList.tsx',
     ];
     const matchExplainRoute = fs.readFileSync(
       path.join(repoRoot, 'src/app/api/match/explain/[matchId]/route.ts'),
+      'utf8'
+    );
+    const assignmentMatchHandler = fs.readFileSync(
+      path.join(repoRoot, 'src/app/api/core/matching/assignment/handler.ts'),
       'utf8'
     );
     const archivedScoreRankFiles = [
@@ -2777,10 +2881,26 @@ describe('launch gate package configuration', () => {
       .join('\n');
 
     expect(activeMatchingReviewText).toContain('Reason-coded');
+    expect(activeMatchingReviewText).toContain('Evidence Review');
+    expect(activeMatchingReviewText).toContain('Skills evidence:');
+    expect(activeMatchingReviewText).toContain('Constraint fit:');
+    expect(activeMatchingReviewText).toContain('Proof freshness:');
+    expect(activeMatchingReviewText).toContain('Verification support:');
     expect(matchExplainRoute).toContain("rankMode: 'band'");
     expect(matchExplainRoute).toContain('exactRankAvailable = false');
+    expect(matchExplainRoute).toContain("scoreVisibility: 'internal_ordering_only'");
+    expect(matchExplainRoute).toContain('proofSignals: toProofSignals(match.subscores_json)');
     expect(matchExplainRoute).not.toContain('canRevealExactRank');
     expect(matchExplainRoute).not.toContain("rankMode: 'exact'");
+    expect(matchExplainRoute).not.toContain('compositeScore:');
+    expect(matchExplainRoute).not.toContain('scoreTotal:');
+    expect(matchExplainRoute).not.toContain('scoreState:');
+    expect(matchExplainRoute).not.toContain('scoreVersion:');
+    expect(matchExplainRoute).not.toContain('inputsHash:');
+    expect(matchExplainRoute).not.toContain('subscores: {');
+    expect(assignmentMatchHandler).toContain('const exactRankLive = false');
+    expect(assignmentMatchHandler).not.toContain('rank: showExactRank');
+    expect(assignmentMatchHandler).not.toContain('canViewExactRank');
 
     for (const relativePath of activeMatchingReviewFiles) {
       const content = fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
@@ -2795,6 +2915,12 @@ describe('launch gate package configuration', () => {
       expect(content).not.toContain('Top 10');
       expect(content).not.toContain('Top 5');
       expect(content).not.toContain('Top 20');
+      expect(content).not.toContain('Evidence Breakdown');
+      expect(content).not.toContain('Skills Evidence Match');
+      expect(content).not.toContain('Constraints Match');
+      expect(content).not.toContain('Proof Freshness (Recency)');
+      expect(content).not.toContain('Verification Support');
+      expect(content).not.toContain('Unlocked');
     }
 
     const reviewContract = fs.readFileSync(
@@ -2824,6 +2950,422 @@ describe('launch gate package configuration', () => {
       false
     );
     expect(fs.existsSync(path.join(repoRoot, 'src/lib/matching/explainer.ts'))).toBe(false);
+  });
+
+  it('keeps retained near-matches responses reason-coded without raw score artifacts', () => {
+    const nearMatchesHandler = fs.readFileSync(
+      path.join(repoRoot, 'src/app/api/core/matching/near-matches/handler.ts'),
+      'utf8'
+    );
+
+    expect(nearMatchesHandler).toContain('function toVisibilitySafeNearMatch');
+    expect(nearMatchesHandler).toContain("reviewMode: 'reason_coded'");
+    expect(nearMatchesHandler).toContain('items: visibilitySafeItems');
+    expect(nearMatchesHandler).toContain("scoreVisibility: 'internal_ordering_only'");
+    expect(nearMatchesHandler).toContain('Scores stay internal for ordering only.');
+    expect(nearMatchesHandler).not.toContain('items: topK');
+    expect(nearMatchesHandler).not.toContain('weights: weights');
+
+    const publicMapperStart = nearMatchesHandler.indexOf('function toVisibilitySafeNearMatch');
+    const publicMapperEnd = nearMatchesHandler.indexOf('/**', publicMapperStart);
+    const publicMapperBody = nearMatchesHandler.slice(publicMapperStart, publicMapperEnd);
+    expect(publicMapperBody).toContain('assignmentId: item.assignmentId');
+    expect(publicMapperBody).toContain('reason: item.reason');
+    expect(publicMapperBody).not.toContain('score: item.score');
+    expect(publicMapperBody).not.toContain('subscores: item.subscores');
+    expect(publicMapperBody).not.toContain('contributions: item.contributions');
+    expect(publicMapperBody).not.toContain('focusBoost: item.focusBoost');
+  });
+
+  it('keeps retained assignment matching responses free of raw score artifacts', () => {
+    const assignmentMatchHandler = fs.readFileSync(
+      path.join(repoRoot, 'src/app/api/core/matching/assignment/handler.ts'),
+      'utf8'
+    );
+
+    expect(assignmentMatchHandler).toContain('function toVisibilitySafeAssignmentMatchItem');
+    expect(assignmentMatchHandler).toContain("scoreVisibility: 'internal_ordering_only'");
+    expect(assignmentMatchHandler).toContain('weights: {}');
+    expect(assignmentMatchHandler).not.toContain('score: item.score');
+    expect(assignmentMatchHandler).not.toContain('scoreTotal: item.scoreTotal');
+    expect(assignmentMatchHandler).not.toContain('subscoresJson: item.subscoresJson');
+    expect(assignmentMatchHandler).not.toContain('scoreSnapshotJson: item.scoreSnapshotJson');
+    expect(assignmentMatchHandler).not.toContain('score: Number(row.score)');
+    expect(assignmentMatchHandler).not.toContain('scoreTotal: row.scoreTotal');
+    expect(assignmentMatchHandler).not.toContain('subscoresJson: row.subscoresJson');
+    expect(assignmentMatchHandler).not.toContain('scoreSnapshotJson: row.scoreSnapshotJson');
+
+    const publicMapperStart = assignmentMatchHandler.indexOf(
+      'function toVisibilitySafeAssignmentMatchItem'
+    );
+    const publicMapperEnd = assignmentMatchHandler.indexOf(
+      '// Validation schema',
+      publicMapperStart
+    );
+    const publicMapperBody = assignmentMatchHandler.slice(publicMapperStart, publicMapperEnd);
+    expect(publicMapperBody).toContain('score: _score');
+    expect(publicMapperBody).toContain('scoreTotal: _scoreTotal');
+    expect(publicMapperBody).toContain('scoreSnapshotJson: _scoreSnapshotJson');
+    expect(publicMapperBody).toContain('contributions: _contributions');
+    expect(publicMapperBody).toContain('focusBoost: _focusBoost');
+  });
+
+  it('keeps hidden-match responses free of raw score artifacts', () => {
+    const matchHideRoute = fs.readFileSync(
+      path.join(repoRoot, 'src/app/api/match/hide/route.ts'),
+      'utf8'
+    );
+
+    expect(matchHideRoute).toContain("scoreVisibility: 'internal_ordering_only'");
+    expect(matchHideRoute).not.toContain('score: Number(row.match.score)');
+    expect(matchHideRoute).not.toContain('score: row.match.score');
+  });
+
+  it('keeps paused-match responses free of raw score artifacts', () => {
+    const matchSnoozedRoute = fs.readFileSync(
+      path.join(repoRoot, 'src/app/api/match/snoozed/route.ts'),
+      'utf8'
+    );
+    const snoozedMatchesList = fs.readFileSync(
+      path.join(repoRoot, 'src/components/matching/SnoozedMatchesList.tsx'),
+      'utf8'
+    );
+
+    expect(matchSnoozedRoute).toContain("scoreVisibility: 'internal_ordering_only'");
+    expect(matchSnoozedRoute).toContain('proofFitLabel: proofFitLabel(row.match.score)');
+    expect(matchSnoozedRoute).not.toContain('matchScore: parseFloat(row.match.score)');
+    expect(matchSnoozedRoute).not.toContain('matchScore:');
+    expect(snoozedMatchesList).toContain('proofFitLabel?: string');
+  });
+
+  it('keeps retained profile matching responses reason-coded without raw score artifacts', () => {
+    const profileMatchHandler = fs.readFileSync(
+      path.join(repoRoot, 'src/app/api/core/matching/profile/handler.ts'),
+      'utf8'
+    );
+
+    expect(profileMatchHandler).toContain('function toVisibilitySafeProfileMatch');
+    expect(profileMatchHandler).toContain("reviewMode: 'reason_coded'");
+    expect(profileMatchHandler).toContain('items: topKWithIds.map(toVisibilitySafeProfileMatch)');
+    expect(profileMatchHandler).toContain("scoreVisibility: 'internal_ordering_only'");
+    expect(profileMatchHandler).not.toContain('score: item.score');
+    expect(profileMatchHandler).not.toContain('scoreTotal: item.scoreTotal');
+    expect(profileMatchHandler).not.toContain('subscores: item.subscores');
+    expect(profileMatchHandler).not.toContain('contributions: item.contributions');
+    expect(profileMatchHandler).not.toContain('focusBoost: item.focusBoost');
+
+    const publicMapperStart = profileMatchHandler.indexOf('function toVisibilitySafeProfileMatch');
+    const publicMapperEnd = profileMatchHandler.indexOf(
+      'function resolveAssignmentScanLimit',
+      publicMapperStart
+    );
+    const publicMapperBody = profileMatchHandler.slice(publicMapperStart, publicMapperEnd);
+    expect(publicMapperBody).toContain('assignmentId: item.assignmentId');
+    expect(publicMapperBody).toContain('reasonCodes: item.artifact.reasonCodes');
+    expect(publicMapperBody).toContain('proofSignals: Object.entries(item.contributions)');
+    expect(publicMapperBody).not.toContain('score: item.score');
+    expect(publicMapperBody).not.toContain('subscores: item.subscores');
+    expect(publicMapperBody).not.toContain('contributions: item.contributions');
+    expect(publicMapperBody).not.toContain('focusBoost: item.focusBoost');
+  });
+
+  it('keeps active readiness and intro copy eligibility-led instead of unlock-led', () => {
+    const activeReadinessCopyFiles = [
+      'src/app/app/i/home/page.tsx',
+      'src/app/app/o/[slug]/interviews/page.tsx',
+      'src/components/onboarding/PublicPortfolioReadyStep.tsx',
+      'src/components/onboarding/PersonaChoice.tsx',
+      'src/components/profile/GuidedProfileSetupView.tsx',
+      'src/components/profile/EditableProfileView.tsx',
+      'src/components/matching/IndividualMatchingEmpty.tsx',
+      'src/components/matching/MatchingProfileSetup.tsx',
+      'src/app/api/core/matching/interest/handler.ts',
+      'src/lib/contracts/launch-operations.ts',
+      'src/lib/matching/eligibility.ts',
+      'src/lib/readiness/individual-state.ts',
+      'src/lib/ui/recovery-actions.ts',
+    ];
+
+    const activeReadinessCopy = activeReadinessCopyFiles
+      .map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'))
+      .join('\n');
+
+    expect(activeReadinessCopy).toContain('Day 1 proof link ready');
+    expect(activeReadinessCopy).toContain('build matching readiness');
+    expect(activeReadinessCopy).toContain('Introductions need stronger proof first');
+    expect(activeReadinessCopy).toContain('introductions are available');
+
+    for (const staleCopy of [
+      'Day 1 win unlocked',
+      'unlock matching',
+      'unlock opportunities',
+      'Introductions unlock',
+      'unlock introductions',
+      'introductions unlock',
+      'personalized browse unlocks',
+      'before browse unlocks',
+      'before public visibility can unlock',
+      'before introductions can unlock',
+      'Introductions are unlocked',
+      'introductions are unlocked',
+      'unlocks your profile',
+      'ranking quality',
+      'unlock your Public Page',
+      'unlock better matches',
+      'unlock and improve opportunities',
+      'unlock the decision step',
+      'unlock personalized browse results',
+    ]) {
+      expect(activeReadinessCopy).not.toContain(staleCopy);
+    }
+  });
+
+  it('keeps active interview feedback UI away from score-led labels', () => {
+    const feedbackPage = fs.readFileSync(
+      path.join(repoRoot, 'src/app/app/interviews/[id]/feedback/page.tsx'),
+      'utf8'
+    );
+    const feedbackForm = fs.readFileSync(
+      path.join(repoRoot, 'src/components/feedback/FeedbackForm.tsx'),
+      'utf8'
+    );
+
+    expect(feedbackPage).toContain('Rating: {answer.score}');
+    expect(feedbackPage).not.toContain('Score: {answer.score}');
+    expect(feedbackForm).toContain('Submit feedback');
+    expect(feedbackForm).not.toContain('Submit score');
+  });
+
+  it('keeps outbound match email copy proof-led and score-free', () => {
+    const matchEmail = fs.readFileSync(
+      path.join(repoRoot, 'emails/NewMatchNotification.tsx'),
+      'utf8'
+    );
+    const emailService = fs.readFileSync(path.join(repoRoot, 'src/lib/email.ts'), 'utf8');
+
+    expect(matchEmail).toContain('A Proof Review Is Ready');
+    expect(matchEmail).toContain('Review state');
+    expect(matchEmail).toContain('Relevant proof signals:');
+    expect(matchEmail).toContain('without exposing a numeric match score');
+    expect(matchEmail).not.toContain('Match Score');
+    expect(matchEmail).not.toContain('scorePercentage');
+    expect(matchEmail).not.toContain('You Have a New Match!');
+    expect(matchEmail).not.toContain('high-quality matches');
+    expect(emailService).toContain('Proof review ready - Proofound');
+    expect(emailService).toContain('/app/i/matching?matchId=');
+    expect(emailService).not.toContain('matchScore: number');
+    expect(emailService).not.toContain('matchScore: matchData.matchScore');
+    expect(emailService).not.toContain('/app/i/matches/');
+  });
+
+  it('keeps outbound verification emails trust-signal led instead of premium or ranking led', () => {
+    const verificationApprovedEmail = fs.readFileSync(
+      path.join(repoRoot, 'emails/VerificationApproved.tsx'),
+      'utf8'
+    );
+    const verificationRejectedEmail = fs.readFileSync(
+      path.join(repoRoot, 'emails/VerificationRejected.tsx'),
+      'utf8'
+    );
+    const workEmailVerificationEmail = fs.readFileSync(
+      path.join(repoRoot, 'emails/WorkEmailVerification.tsx'),
+      'utf8'
+    );
+    const combined = `${verificationApprovedEmail}\n${verificationRejectedEmail}\n${workEmailVerificationEmail}`;
+    const compactCombined = compactWhitespace(combined);
+
+    expect(combined).toContain('account-side trust signal');
+    expect(combined).toContain('Work email is the launch-active account-side check');
+    expect(combined).toContain('Review verification settings');
+    expect(combined).toContain('LinkedIn checks are outside the launch corridor');
+    expect(compactCombined).toContain(
+      'It is a trust signal, not an automated score, rank, or hiring recommendation.'
+    );
+    expect(compactCombined).toContain('It does not create an automated');
+    expect(compactCombined).toContain(
+      'Verification is a trust signal, not an automated score, rank, or hiring recommendation.'
+    );
+    expect(compactCombined).toContain('Keep your profile and Proof Packs current');
+    expect(combined).not.toContain('Unlock premium features');
+    expect(combined).not.toContain('Improve Matching');
+    expect(combined).not.toContain('Stand Out');
+    expect(combined).not.toContain('priority in search and matching');
+    expect(combined).not.toContain('better match recommendations');
+    expect(combined).not.toContain('improves your match quality');
+    expect(combined).not.toContain('unlock the verified badge');
+    expect(combined).not.toContain('Connect your LinkedIn profile');
+    expect(combined).not.toContain('Connect your LinkedIn profile instead');
+    expect(combined).not.toContain('Complete government ID verification with Veriff');
+    expect(combined).not.toContain('better matching opportunities');
+    expect(combined).not.toContain('enhanced credibility');
+    expect(combined).not.toContain('?tab=help');
+  });
+
+  it('keeps interview scheduled email proof-led and stage-aware', () => {
+    const interviewScheduledEmail = fs.readFileSync(
+      path.join(repoRoot, 'emails/InterviewScheduled.tsx'),
+      'utf8'
+    );
+    const legacyInterviewScheduledEmail = fs.readFileSync(
+      path.join(repoRoot, 'src/lib/email/templates/interview-scheduled.tsx'),
+      'utf8'
+    );
+    const combined = `${interviewScheduledEmail}\n${legacyInterviewScheduledEmail}`;
+    const compactInterviewEmail = compactWhitespace(combined);
+
+    expect(combined).toContain('approved context, and meeting details');
+    expect(combined).toContain('relevant Proof Packs and portfolio context');
+    expect(interviewScheduledEmail).toContain('Privacy and workflow stage');
+    expect(legacyInterviewScheduledEmail).toContain('Interview reminders:');
+    expect(compactInterviewEmail).toContain(
+      'This email only includes scheduling details. Proof files, private notes, contact details, and reveal-stage context stay inside the authenticated workflow'
+    );
+    expect(combined).not.toContain('Both parties will now have their identities revealed');
+    expect(combined).not.toContain('Have your resume and portfolio ready');
+    expect(combined).not.toContain('Identities Revealed');
+    expect(combined).not.toContain('full profiles');
+    expect(combined).not.toContain('communicate directly');
+    expect(combined).not.toContain('within 7 days of match');
+    expect(combined).not.toContain('Be ready to discuss your relevant skills and experience');
+    expect(combined).not.toContain('Need to reschedule? Contact');
+  });
+
+  it('keeps decision notification email workflow-led instead of ATS/application-led', () => {
+    const notificationEmails = fs.readFileSync(
+      path.join(repoRoot, 'src/lib/email/notifications.ts'),
+      'utf8'
+    );
+    const compactNotificationEmails = compactWhitespace(notificationEmails);
+
+    expect(notificationEmails).toContain('Proofound workflow decision from');
+    expect(notificationEmails).toContain('Proofound Workflow Decision');
+    expect(notificationEmails).toContain('proof-review workflow');
+    expect(notificationEmails).toContain('Workflow feedback from');
+    expect(notificationEmails).toContain('Open Proofound for the approved next step');
+    expect(compactNotificationEmails).toContain(
+      'This decision does not score, rank, or evaluate your wider profile.'
+    );
+    expect(notificationEmails).not.toContain('Application Update');
+    expect(notificationEmails).not.toContain('Application update from');
+    expect(notificationEmails).not.toContain('Thank you for your interest in');
+    expect(notificationEmails).not.toContain('continue exploring opportunities on Proofound');
+    expect(notificationEmails).not.toContain('You will receive next steps shortly.');
+  });
+
+  it('keeps account verification emails and tours proof-review led', () => {
+    const accountVerificationEmails = [
+      'emails/VerifyEmailIndividual.tsx',
+      'emails/VerifyEmailOrganization.tsx',
+    ]
+      .map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'))
+      .join('\n');
+    const activeTourCopy = ['src/components/tour/tourSteps.tsx', 'src/lib/tour/tour-steps.ts']
+      .map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'))
+      .join('\n');
+    const combined = `${accountVerificationEmails}\n${activeTourCopy}`;
+
+    expect(accountVerificationEmails).toContain('Create one artifact-backed Proof Pack');
+    expect(accountVerificationEmails).toContain('organization trust page');
+    expect(accountVerificationEmails).toContain('Request staged introductions');
+    expect(activeTourCopy).toContain('reason-coded proof context');
+    expect(activeTourCopy).toContain('privacy staged');
+    expect(activeTourCopy).toContain('Ready to start proof review');
+
+    for (const staleCopy of [
+      'Connect with mission-aligned opportunities',
+      'Find collaborators and mentors',
+      'Post opportunities and find the right team members',
+      'Connect with partners and collaborators',
+      'scoring to compare skills',
+      'potential employers',
+      'Our algorithm prioritizes',
+      'matching system will find qualified candidates',
+      'track the hiring process',
+      'Ready to find great talent',
+    ]) {
+      expect(combined).not.toContain(staleCopy);
+    }
+  });
+
+  it('keeps consent-to-share copy snapshot-scoped and workflow-led', () => {
+    const consentDialog = fs.readFileSync(
+      path.join(repoRoot, 'src/components/matching/ConsentToShareDialog.tsx'),
+      'utf8'
+    );
+
+    expect(consentDialog).toContain('Consent to Share Proof Snapshot');
+    expect(consentDialog).toContain('exact proof-review snapshot');
+    expect(consentDialog).toContain('request the next workflow stage');
+    expect(consentDialog).toContain('assignment workflow');
+    expect(consentDialog).toContain('Give Consent & Share Snapshot');
+    expect(consentDialog).not.toContain('Consent to Share Profile');
+    expect(consentDialog).not.toContain('Your profile will be shared');
+    expect(consentDialog).not.toContain('continue the hiring corridor');
+    expect(consentDialog).not.toContain('part of their hiring process');
+    expect(consentDialog).not.toContain('hiring process');
+    expect(consentDialog).not.toContain('Give Consent & Share Profile');
+  });
+
+  it('keeps identity reveal messaging stage-scoped and approval-led', () => {
+    const revealCard = fs.readFileSync(
+      path.join(repoRoot, 'src/components/messaging/RevealIdentityCard.tsx'),
+      'utf8'
+    );
+
+    expect(revealCard).toContain('Identity reveal approved');
+    expect(revealCard).toContain('Approved identity fields are now visible');
+    expect(revealCard).toContain('Request Identity Reveal');
+    expect(revealCard).toContain('approved identity fields are shown');
+    expect(revealCard).toContain('Reveal Approved Identity Fields');
+    expect(revealCard).toContain('Reveal Approved Fields');
+    expect(revealCard).toContain('move this workflow beyond masked review');
+    expect(revealCard).not.toContain('Identities Revealed!');
+    expect(revealCard).not.toContain("see each other's full profiles");
+    expect(revealCard).not.toContain('Reveal My Identity');
+    expect(revealCard).not.toContain('Your identity will be revealed when they agree');
+    expect(revealCard).not.toContain('continue the hiring corridor');
+    expect(revealCard).not.toContain('hiring corridor');
+  });
+
+  it('keeps active interview pages workflow-led instead of generic hiring-corridor led', () => {
+    const interviewPages = [
+      'src/app/app/i/interviews/page.tsx',
+      'src/app/app/o/[slug]/interviews/page.tsx',
+    ]
+      .map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'))
+      .join('\n');
+
+    expect(interviewPages).toContain('Interview workflow is loading');
+    expect(interviewPages).toContain('Loading interview workflow');
+    expect(interviewPages).toContain('Track the staged workflow');
+    expect(interviewPages).toContain('No active interview workflow yet');
+    expect(interviewPages).toContain('workflow stage');
+    expect(interviewPages).toContain('workflow messaging');
+    expect(interviewPages).not.toContain('Track the full hiring corridor');
+    expect(interviewPages).not.toContain('No active hiring corridor yet');
+    expect(interviewPages).not.toContain('Loading interview corridor');
+    expect(interviewPages).not.toContain('Interview corridor is loading');
+    expect(interviewPages).not.toContain('candidate via messaging');
+  });
+
+  it('keeps decision dialog workflow-scoped and engagement-distinct', () => {
+    const decisionDialog = fs.readFileSync(
+      path.join(repoRoot, 'src/components/decisions/DecisionDialog.tsx'),
+      'utf8'
+    );
+
+    expect(decisionDialog).toContain('Record Workflow Decision');
+    expect(decisionDialog).toContain('Your workflow decision has been recorded');
+    expect(decisionDialog).toContain('Move to engagement confirmation');
+    expect(decisionDialog).toContain('hiring and verification stay distinct');
+    expect(decisionDialog).toContain('Close this assignment workflow');
+    expect(decisionDialog).toContain('without a broader profile judgment');
+    expect(decisionDialog).toContain('Confirm Workflow Decision');
+    expect(decisionDialog).not.toContain('Make Hiring Decision');
+    expect(decisionDialog).not.toContain('Extend an offer to this candidate');
+    expect(decisionDialog).not.toContain('Not a fit for this role');
+    expect(decisionDialog).not.toContain('Your ${decision} decision has been recorded');
+    expect(decisionDialog).not.toContain('will not be shared with the candidate');
   });
 
   it('keeps retired wellbeing and Zen implementation modules archived', () => {

@@ -19,7 +19,7 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
     {
       id: 'setup-matching',
       title: 'Set up matching profile',
-      description: 'Add constraints and preferences to unlock matching.',
+      description: 'Add constraints and preferences to make matching ready.',
       onClick: onSetup,
     },
     {

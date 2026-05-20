@@ -1,6 +1,7 @@
 'use client';
 
-import { CheckCircle2, Circle } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle2, Circle, ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 import type { IndividualProfileCompletionState } from '@/lib/profile/completion-flow';
@@ -10,6 +11,8 @@ type PortfolioReadinessChecklistProps = {
 };
 
 export function PortfolioReadinessChecklist({ completionState }: PortfolioReadinessChecklistProps) {
+  const [isOpen, setIsOpen] = useState(true);
+
   const checklist = [
     {
       id: 'safe_shell',
@@ -52,48 +55,56 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
       className="border-proofound-stone/60 p-4 sm:p-5"
       data-testid="portfolio-readiness-checklist"
     >
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
-        <div className="space-y-3">
+      <div className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-proofound-forest text-sm font-semibold text-white">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-proofound-forest text-xs font-semibold text-white">
               {completedCount}/{checklist.length}
             </div>
             <div>
-              <h2 className="font-display text-lg font-semibold text-proofound-charcoal">
+              <h2 className="font-display text-base font-semibold text-proofound-charcoal">
                 Public Page readiness
               </h2>
-              <p className="text-xs leading-5 text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Complete one clear proof path before publishing.
               </p>
             </div>
           </div>
-          <div className="rounded-xl border border-proofound-stone/70 bg-white/65 px-3 py-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-proofound-charcoal">
-              Next
-            </p>
-            <p className="mt-1 text-sm text-proofound-charcoal">
-              {nextItem ? nextItem.nextAction : 'Public Page is ready to review'}
-            </p>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex-1 sm:flex-initial rounded-lg border border-proofound-stone/70 bg-white/65 px-3 py-1.5 text-xs text-proofound-charcoal">
+              <span className="font-medium text-muted-foreground">Next: </span>
+              {nextItem ? nextItem.nextAction : 'Ready to review'}
+            </div>
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-proofound-stone/60 hover:bg-[#fbf8f1] transition-colors"
+              aria-label={isOpen ? 'Collapse checklist' : 'Expand checklist'}
+            >
+              {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
-          {checklist.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-2 rounded-xl border border-proofound-stone/60 bg-white/55 px-3 py-2 text-sm"
-            >
-              {item.passed ? (
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
-              ) : (
-                <Circle className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-              )}
-              <span className={item.passed ? 'text-proofound-charcoal' : 'text-muted-foreground'}>
-                {item.label}
-              </span>
-            </div>
-          ))}
-        </div>
+        {isOpen && (
+          <div className="grid gap-2 border-t border-proofound-stone/50 pt-4 sm:grid-cols-2 md:grid-cols-3">
+            {checklist.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-2 rounded-xl border border-proofound-stone/60 bg-white/55 px-3 py-2 text-xs"
+              >
+                {item.passed ? (
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                ) : (
+                  <Circle className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                )}
+                <span className={item.passed ? 'text-proofound-charcoal' : 'text-muted-foreground'}>
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Card>
   );

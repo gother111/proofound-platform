@@ -34,6 +34,10 @@ const AssignmentCreationStatusSchema = z
   .enum(['draft', 'assignment_ready', 'review_ready', 'pending_review'])
   .transform((value) => (value === 'pending_review' ? 'review_ready' : value));
 const MOCK_ASSIGNMENT_ID = '22222222-2222-4222-8222-222222222222';
+const MOCK_ASSIGNMENT_IDS = new Set([
+  '11111111-1111-4111-8111-111111111111',
+  '22222222-2222-4222-8222-222222222222',
+]);
 const MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
 
 const EngagementTypeSchema = z.enum(canonicalEngagementTypeValues);
@@ -189,7 +193,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
-    if (isMockSupabaseEnabled() && assignmentId === MOCK_ASSIGNMENT_ID) {
+    if (isMockSupabaseEnabled() && assignmentId && MOCK_ASSIGNMENT_IDS.has(assignmentId)) {
       return NextResponse.json({
         assignment: buildAssignmentResponse(buildMockAssignment(assignmentId), {
           outcomes: [],
@@ -343,7 +347,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
     const validatedData = AssignmentUpdateSchema.parse(body);
 
-    if (isMockSupabaseEnabled() && assignmentId === MOCK_ASSIGNMENT_ID) {
+    if (isMockSupabaseEnabled() && assignmentId && MOCK_ASSIGNMENT_IDS.has(assignmentId)) {
       return NextResponse.json({
         assignment: buildAssignmentResponse(
           buildMockAssignment(assignmentId, {

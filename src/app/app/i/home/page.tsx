@@ -222,222 +222,61 @@ export default async function IndividualHomePage() {
 
   return (
     <AppSurface density="comfortable" className="bg-[#f7f2ea]">
-      <div className="flex flex-col gap-6">
-        <section className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="flex min-w-0 flex-col gap-5">
-            <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-[0_18px_50px_rgba(45,51,48,0.06)]">
-              <div className="border-b border-proofound-stone/60 bg-[#f3f6ef] px-5 py-3">
-                <Badge
-                  variant="outline"
-                  className="border-proofound-forest/20 bg-white/70 text-proofound-forest"
-                >
-                  Proof-first home
-                </Badge>
-              </div>
-              <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
-                <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
-                  <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-[#dfead5] text-proofound-forest">
-                    <Briefcase className="h-8 w-8" />
-                  </span>
-                  <div className="min-w-0">
-                    <h1 className="font-display text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
-                      {hasProof ? 'Verify strongest proof record' : 'Add your first proof record'}
-                    </h1>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                      Welcome back, {firstName}.{' '}
-                      {hasProof
-                        ? 'Your proof is ready for context, verification, and visibility review.'
-                        : 'Start with one work sample, credential, or case study that can be trusted.'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex shrink-0 flex-col gap-2 md:items-end">
-                  <Button
-                    className="w-full justify-between bg-proofound-forest px-6 text-white sm:w-auto"
-                    asChild
-                  >
-                    <Link href="/app/i/profile?profileView=full&tab=proof_packs">
-                      {primaryProofLabel}
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
+      <div className="mx-auto max-w-2xl px-4 py-8 md:py-16">
+        <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-[0_18px_50px_rgba(45,51,48,0.06)]">
+          <div className="border-b border-proofound-stone/60 bg-[#f3f6ef] px-6 py-4 flex items-center justify-between">
+            <h2 className="font-display text-sm font-semibold tracking-wide uppercase text-proofound-forest">
+              Portfolio Readiness
+            </h2>
+            <Badge
+              variant="outline"
+              className={
+                hasProof
+                  ? 'border-proofound-forest/20 bg-[#eef3e8] text-proofound-forest'
+                  : 'border-proofound-stone/50 bg-[#fbf8f1] text-[#8a5b00]'
+              }
+            >
+              {hasProof ? 'Ready to Share' : 'Setup Required'}
+            </Badge>
+          </div>
+          <div className="p-6 md:p-8 space-y-6">
+            <div className="space-y-3">
+              <h1 className="font-display text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
+                {hasProof
+                  ? 'Review and manage your proof portfolio'
+                  : 'Build your proof-first profile'}
+              </h1>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Welcome back, {firstName}.{' '}
+                {hasProof
+                  ? 'Your proof records are structured. Review your verified skills and publish your public page to align with the matching corridor.'
+                  : 'Start by creating your first proof record. Shaping a single trusted work sample or artifact makes your profile ready.'}
+              </p>
             </div>
 
-            <div className="grid items-start gap-5 2xl:grid-cols-[1.12fr_0.88fr]">
-              <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-sm">
-                <div className="flex flex-col gap-2 border-b border-proofound-stone/70 p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3">
-                    <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                      Your Proof Pack Path
-                    </h2>
-                    <Badge variant="outline" className="bg-[#fbf8f1]">
-                      {proofRecords.length} checks
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Evidence, verification, and sharing state
-                  </p>
-                </div>
-                <div className="divide-y divide-proofound-stone/70">
-                  {proofRecords.map(({ icon: Icon, title, detail, status, tone, href }) => (
-                    <Link
-                      key={title}
-                      href={href}
-                      className="flex min-h-[92px] flex-col gap-3 p-5 transition-colors hover:bg-[#fbf8f1] sm:flex-row sm:items-center sm:gap-4"
-                    >
-                      <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#eef3e8] text-proofound-forest">
-                          <Icon className="h-5 w-5" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-proofound-charcoal">{title}</p>
-                          <p className="text-xs leading-5 text-muted-foreground">{detail}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between gap-3 pl-14 sm:min-w-32 sm:justify-end sm:pl-0">
-                        <span
-                          className={`min-w-20 rounded-md px-2.5 py-1 text-center text-xs font-medium ${
-                            tone === 'success'
-                              ? 'bg-[#dff0d9] text-proofound-forest'
-                              : tone === 'warning'
-                                ? 'bg-[#fff1d6] text-[#8a5b00]'
-                                : tone === 'info'
-                                  ? 'bg-[#dcecf8] text-[#28628a]'
-                                  : 'bg-proofound-stone/35 text-muted-foreground'
-                          }`}
-                        >
-                          {status}
-                        </span>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-                <div className="border-t border-proofound-stone/70 bg-[#fbf8f1]/70 p-4">
-                  <Link
-                    href="/app/i/profile?profileView=full&tab=proof_packs"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-proofound-forest"
-                  >
-                    Add new record
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
+            <div className="pt-2">
+              <Button
+                className="w-full justify-between bg-proofound-forest px-6 py-5 text-white hover:bg-proofound-forest/90"
+                asChild
+              >
+                <Link href={hasProof ? '/app/i/profile?profileView=full' : '/app/i/profile'}>
+                  {hasProof ? 'Go to profile' : 'Guided setup'}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
 
-              <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
-                <div className="mb-5 flex items-start justify-between gap-3">
-                  <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                    Readiness Checklist
-                  </h2>
-                  <Badge variant="outline">
-                    {unresolvedReadinessSteps > 0
-                      ? `${unresolvedReadinessSteps} to resolve`
-                      : 'Ready'}
-                  </Badge>
-                </div>
-                <div className="space-y-4">
-                  {readinessSteps.map(
-                    ({ icon: Icon, title, detail, action, href, status, state }) => {
-                      const stateClasses = readinessStateClasses(state);
-
-                      return (
-                        <div
-                          key={title}
-                          className="flex flex-col gap-3 rounded-lg border border-proofound-stone/60 bg-[#fbf8f1]/55 p-3 sm:flex-row sm:items-center sm:gap-4"
-                        >
-                          <div className="flex min-w-0 flex-1 gap-3">
-                            <span
-                              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${stateClasses.icon}`}
-                            >
-                              <Icon className="h-5 w-5" />
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <p className="font-semibold text-proofound-charcoal">{title}</p>
-                                <span
-                                  className={`rounded-md px-2 py-0.5 text-xs font-medium ${stateClasses.pill}`}
-                                >
-                                  {status}
-                                </span>
-                              </div>
-                              <p className="mt-1 text-sm leading-5 text-muted-foreground">
-                                {detail}
-                              </p>
-                            </div>
-                          </div>
-                          <Button size="sm" variant="outline" className="w-full sm:w-32" asChild>
-                            <Link href={href}>{action}</Link>
-                          </Button>
-                        </div>
-                      );
-                    }
-                  )}
-                </div>
+            <div className="border-t border-proofound-stone/60 pt-6">
+              <div className="flex items-start gap-3 rounded-lg bg-[#fbf8f1] p-4 border border-proofound-stone/40">
+                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-proofound-forest" />
+                <p className="text-xs leading-5 text-proofound-charcoal/90">
+                  Your profile is private by default. Candidates stay hidden until they explicitly
+                  authorize discovery or initiate a verification check.
+                </p>
               </div>
             </div>
           </div>
-
-          <aside className="flex min-w-0 flex-col gap-5">
-            <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                  Proof Readiness
-                </h2>
-                <span className="rounded-md bg-[#eef3e8] px-2 py-1 text-xs font-medium text-proofound-forest">
-                  Checklist
-                </span>
-              </div>
-              <p className="mt-5 text-sm leading-6 text-muted-foreground">{readinessTone}</p>
-              <div className="mt-5 space-y-3">
-                {scoreItems.map((item) => (
-                  <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
-                    <span className="text-muted-foreground">{item.label}</span>
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${
-                        item.state === 'ok' ? 'bg-proofound-forest' : 'bg-[#e59f35]'
-                      }`}
-                    />
-                  </div>
-                ))}
-              </div>
-              <Link
-                href="/app/i/profile?profileView=full&tab=proof_packs"
-                className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-proofound-forest"
-              >
-                {hasProof ? 'Review proof readiness' : 'Start proof readiness'}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            <div className="rounded-lg border border-proofound-stone/70 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                  Privacy and Account Controls
-                </h2>
-                <span className="rounded-md bg-[#eef3e8] px-2 py-1 text-xs font-medium text-proofound-forest">
-                  Account
-                </span>
-              </div>
-              <div className="grid gap-2">
-                {trustControls.map(({ icon: Icon, title, href }) => (
-                  <Link
-                    key={title}
-                    href={href}
-                    className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-proofound-stone/60 bg-[#fbf8f1]/55 px-3 py-2 text-sm font-medium text-proofound-charcoal transition-colors hover:border-proofound-forest/30 hover:bg-[#fbf8f1]"
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      <Icon className="h-4 w-4 shrink-0 text-proofound-forest" />
-                      <span className="truncate">{title}</span>
-                    </span>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </aside>
-        </section>
+        </div>
       </div>
     </AppSurface>
   );

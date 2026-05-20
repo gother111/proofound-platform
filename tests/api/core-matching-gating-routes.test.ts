@@ -80,7 +80,7 @@ const baseEligibility = {
   unmetCriteria: ['skillsWithRecency', 'proofs'],
   nextTierTarget: {
     tier: 'lite',
-    message: 'Add recent skills and one preference to unlock personalized browse results.',
+    message: 'Add recent skills and one preference to make personalized browse results available.',
     remaining: { skillsWithRecency: 1, proofCount: 1, intentSignal: 1, constraints: 1 },
   },
   criteria: {

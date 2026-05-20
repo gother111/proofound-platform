@@ -34,23 +34,20 @@ export const DeletionComplete = (_props: DeletionCompleteProps) => {
 
           <Heading style={h2}>What we deleted</Heading>
           <Text style={listText}>
-            • Your profile information (name, email, bio, photo)
+            • Profile and account identity fields
             <br />
-            • Your matches and connections
+            • Proof Packs, proof items, and public portfolio projections
             <br />
-            • Your messages and conversations
-            <br />
-            • Your preferences and settings
-            <br />• Your activity history
+            • Matching, intro, reveal, interview, and decision records where they identify you
+            <br />• Preferences, settings, and account activity that are not legally retained
           </Text>
 
           <Hr style={divider} />
 
           <Heading style={h2}>Data Retention for Legal Compliance</Heading>
           <Text style={text}>
-            For legal compliance and fraud prevention purposes, some anonymized metadata may be
-            retained for up to <strong>90 days</strong>, after which it will be permanently deleted.
-            This includes:
+            For legal compliance, fraud prevention, security, or audit obligations, limited
+            minimized metadata may be retained where required. This may include:
           </Text>
           <Text style={listText}>
             • Transaction records (anonymized)
@@ -74,8 +71,8 @@ export const DeletionComplete = (_props: DeletionCompleteProps) => {
             <Text style={text}>
               If you&apos;d like to join Proofound again in the future, you&apos;re always welcome
               to create a new account at{' '}
-              <Link href="https://proofound.com" style={link}>
-                proofound.com
+              <Link href="https://proofound.io" style={link}>
+                proofound.io
               </Link>
             </Text>
           </Section>
@@ -84,8 +81,8 @@ export const DeletionComplete = (_props: DeletionCompleteProps) => {
             <strong>Questions or concerns?</strong>
             <br />
             Contact our privacy team at{' '}
-            <Link href="mailto:privacy@proofound.com" style={link}>
-              privacy@proofound.com
+            <Link href="mailto:privacy@proofound.io" style={link}>
+              privacy@proofound.io
             </Link>
           </Text>
 

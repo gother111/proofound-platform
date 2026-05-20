@@ -30,7 +30,7 @@ describe('PublicPortfolioReadyStep', () => {
     );
 
     expect(screen.getByText(/your public page is live/i)).toBeInTheDocument();
-    expect(screen.getByText(/day 1 win unlocked/i)).toBeInTheDocument();
+    expect(screen.getByText(/day 1 proof link ready/i)).toBeInTheDocument();
     expect(screen.getByText(/search engines stay off until you opt in/i)).toBeInTheDocument();
     expect(screen.getByText('https://proofound.io/portfolio/jane')).toBeInTheDocument();
 

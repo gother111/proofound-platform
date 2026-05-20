@@ -1,5 +1,4 @@
 import { Step } from 'react-joyride';
-import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
 
 export const individualTourSteps: Step[] = [
   {
@@ -41,13 +40,14 @@ export const individualTourSteps: Step[] = [
   },
   {
     target: '[data-tour="opportunities-section"]',
-    content: `Once proof and privacy are ready, matched opportunities will appear here. We use ${UI_VOCABULARY.pacLabel} scoring to compare skills, evidence, freshness, verification, and practical constraints.`,
+    content:
+      'Once proof and privacy are ready, assignment reviews can appear here. Proofound keeps review context reason-coded and privacy staged.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="messages-section"]',
     content:
-      'Communicate with potential employers through our secure messaging system. Initial messages are identity-masked to reduce bias.',
+      'Use secure workflow messages for staged introduction and interview context. Initial messages stay identity-masked to reduce bias.',
     placement: 'bottom',
   },
   {
@@ -80,7 +80,8 @@ export const organizationTourSteps: Step[] = [
   },
   {
     target: '[data-tour="matches-section"]',
-    content: `Review matched candidates here. Our algorithm prioritizes ${UI_VOCABULARY.pacLabel.toLowerCase()} to find people who care about your mission.`,
+    content:
+      'Review reason-coded proof context here. Matching support stays internal to assignment review and staged introductions.',
     placement: 'bottom',
   },
   {

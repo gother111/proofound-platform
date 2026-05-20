@@ -7,8 +7,10 @@ vi.mock('@/db', () => ({
   db: {
     query: {
       assignments: { findFirst: vi.fn() },
+      matchReviewStates: { findMany: vi.fn() },
       organizationMembers: { findFirst: vi.fn() },
     },
+    insert: vi.fn(),
   },
 }));
 
@@ -82,6 +84,22 @@ describe('/api/core/matching/assignment', () => {
       role: 'org_owner',
       status: 'active',
     });
+    (db.query.matchReviewStates.findMany as any).mockResolvedValue([]);
+    (db.insert as any).mockImplementation(() => ({
+      values: vi.fn(() => ({
+        onConflictDoUpdate: vi.fn(() => ({
+          returning: vi.fn(async () => [
+            {
+              id: 'match-1',
+              profileId: 'profile-1',
+              assignmentId: '11111111-1111-1111-1111-111111111111',
+              generatedAt: new Date('2026-05-20T00:00:00.000Z'),
+              reasonCodes: ['proof_pack_relevant'],
+            },
+          ]),
+        })),
+      })),
+    }));
   });
 
   it('rejects malformed JSON before assignment lookup or matching work', async () => {
@@ -144,5 +162,59 @@ describe('/api/core/matching/assignment', () => {
       introCorridorLive: false,
       exactRankLive: false,
     });
+  });
+
+  it('keeps exact rank suppressed even when the legacy exact-rank flag is enabled', async () => {
+    (computeAssignmentMatches as any).mockResolvedValue({
+      items: [
+        {
+          profileId: 'profile-1',
+          score: 0.91,
+          scoreTotal: 9100,
+          subscoresJson: {},
+          scoreSnapshotJson: {},
+          reasonCodes: ['proof_pack_relevant'],
+          profile: { profileId: 'profile-1', verified: { proofPack: true } },
+          artifact: {
+            scoreNormalized: 0.91,
+            scoreTotal: 9100,
+            subscoresJson: {},
+            scoreSnapshotJson: {},
+            reasonCodes: ['proof_pack_relevant'],
+          },
+        },
+      ],
+      meta: { source: 'test' },
+    });
+    (resolveFeatureFlags as any).mockResolvedValue({
+      FF_QUALIFIED_INTRO_CORRIDOR: true,
+      FF_EXACT_RANK_EXPOSURE: true,
+      FF_KILL_SWITCH_INTROS: false,
+      FF_KILL_SWITCH_EXACT_RANK: false,
+    });
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/core/matching/assignment', {
+        method: 'POST',
+        body: JSON.stringify({
+          assignmentId: '11111111-1111-1111-1111-111111111111',
+          refresh: true,
+        }),
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0]).not.toHaveProperty('score');
+    expect(body.items[0]).not.toHaveProperty('scoreTotal');
+    expect(body.items[0]).not.toHaveProperty('subscoresJson');
+    expect(body.items[0]).not.toHaveProperty('scoreSnapshotJson');
+    expect(body.items[0].rank).toBeNull();
+    expect(body.items[0].rankBand).toBe('top_band');
+    expect(body.meta.weights).toEqual({});
+    expect(body.meta.scoreVisibility).toBe('internal_ordering_only');
+    expect(body.meta.launchFallback.exactRankLive).toBe(false);
+    expect(body.meta.launchFallback.activeModes).toContain('fairness_suppressed_ranking');
   });
 });

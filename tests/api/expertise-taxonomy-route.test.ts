@@ -218,6 +218,67 @@ describe('GET /api/expertise/taxonomy (search mode)', () => {
     expect(searchAtlasSkillMatchesMock).not.toHaveBeenCalled();
   });
 
+  it('returns active atlas-ranked taxonomy matches without numeric match scores', async () => {
+    searchAtlasSkillMatchesMock.mockResolvedValue([
+      {
+        skill_id: 'skill_nodejs',
+        skill_name: 'Node.js',
+        match_method: 'exact',
+        score: 0.91,
+        match_source: 'alias',
+        matched_query: 'node.js',
+        matched_label: 'Node.js',
+      },
+    ]);
+
+    createClientMock.mockResolvedValue(
+      createSupabaseMock({
+        skills: [
+          {
+            code: 'skill_nodejs',
+            cat_id: 3,
+            subcat_id: 84,
+            l3_id: 665,
+            slug: 'nodejs',
+            name_i18n: { en: 'Node.js' },
+            description_i18n: { en: 'Build backend services with Node.js.' },
+            tags: ['backend'],
+            status: 'active',
+            version: 1,
+          },
+        ],
+        l1: [{ cat_id: 3, slug: 'tools-technology', name_i18n: { en: 'Tools & Technology' } }],
+        l2: [{ cat_id: 3, subcat_id: 84, slug: 'frameworks', name_i18n: { en: 'Frameworks' } }],
+        l3: [
+          {
+            cat_id: 3,
+            subcat_id: 84,
+            l3_id: 665,
+            slug: 'application-platforms',
+            name_i18n: { en: 'Application platforms' },
+          },
+        ],
+      })
+    );
+
+    const response = await GET(
+      new Request(
+        'http://localhost/api/expertise/taxonomy?search=node.js&category=technical&evidence=Built%20Node.js%20services'
+      )
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(searchAtlasSkillMatchesMock).toHaveBeenCalledOnce();
+    expect(body.l4_skills[0]).toMatchObject({
+      code: 'skill_nodejs',
+      matchMethod: 'exact',
+      matchConfidence: 'Strong taxonomy match',
+      matchSource: 'alias',
+    });
+    expect(body.l4_skills[0]).not.toHaveProperty('matchScore');
+  });
+
   it('keeps ambiguous short-token cv_import guesses archived', async () => {
     searchAtlasSkillMatchesMock.mockResolvedValue([
       {
@@ -319,9 +380,11 @@ describe('GET /api/expertise/taxonomy (search mode)', () => {
     expect(body.l4_skills[0]).toMatchObject({
       code: 'skill_quality_audit',
       nameI18n: { en: 'Quality audit' },
+      matchConfidence: null,
       l1: { nameI18n: { en: 'Foundation' } },
       l2: { nameI18n: { en: 'Operations' } },
       l3: { nameI18n: { en: 'Quality' } },
     });
+    expect(body.l4_skills[0]).not.toHaveProperty('matchScore');
   });
 });

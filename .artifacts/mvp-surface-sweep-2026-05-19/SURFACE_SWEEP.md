@@ -2702,3 +2702,308 @@ Browser evidence:
 - Added focused guardrail coverage for localized messages and active landing copy so stale trust-anchor/signal language cannot return to the public surface quietly.
 - Used the bundled Codex in-app Browser runtime (`iab`) against `http://localhost:3001/`. Browser verified the rendered landing page had no stale `trust anchor`, `trust signal`, `compatibility signal`, `external proof`, `privacy-safe signal`, `stronger signal than CVs`, `higher-signal candidates`, `Weak signal`, `Review-fit signal`, `Verified signal`, or `Outcome signal` copy, and did render `privacy-safe evidence`, `stronger evidence than CVs`, `Proof Packs`, and proof/review wording. Initial Browser navigation failed because no local server was listening; a temporary local dev server was started for the smoke check and then stopped.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/localized-copy-guardrails.test.ts tests/ui/landing-copy-guardrails.test.tsx src/lib/launch/__tests__/final-launch-checklist.test.ts --reporter=verbose` (3 files / 12 tests), focused active-source scan for stale landing/locale terms, Browser smoke, and `tsconfig.json` was restored after Next dev-server generated local include churn.
+
+## Continuation - Verification And Matching Corridor UI Stabilization
+
+- Timestamp: 2026-05-20 19:03:40 CEST.
+- Visual thesis: active app surfaces should read as calm review workspaces where the primary object is explicit: verification request, Proof Pack, assignment, candidate review, intro, or decision.
+- Content plan: keep verification request state first; keep organization matching language proof/reason-code led; remove score-first, console, dossier, unlock, and overclaim wording from active mock/visual paths.
+- Interaction thesis: preserve the existing tab/filter/action structure, keep touch targets at least 44px on mobile, and make primary actions plain enough to scan without help text.
+- Found the individual verifications page was staying on `Loading verification center...` in the bundled Codex in-app Browser even though route tests rendered the client directly. Replaced the page-level deferred import with a direct `VerificationsClient` render while leaving `DeferredVerificationsClient` and its retry/loading tests intact.
+- Restored verification request action language expected by current behavior: `Draft scoped request`, `Resend request`, `Resend bundle`, `Manage bundle`, and `Delete` for non-bundled pending sent requests.
+- Kept the portfolio readiness checklist open by default so safe-shell/readiness gates are immediately visible.
+- Tightened active organization communications and matching copy: removed the overclaim `fully encrypted`, replaced score/signal language with proof/evidence/reason-code language, and renamed `Candidate Dossier`, `Request Unlock`, and `Unlock Requested` to candidate-review / intro-request wording.
+- Cleaned visual matching fixtures so mock reason summaries no longer surface `Candidate matching score is ...` and blind review cards use anonymized candidate labels (`Candidate A`, etc.) instead of name-like labels.
+- Browser evidence with bundled Codex in-app Browser (`iab`) on a temporary mock local server:
+  - `/login` desktop rendered both `Continue with Google` and `Continue with LinkedIn`, with zero horizontal overflow and no stale corridor-risk copy.
+  - `/app/i/verifications` desktop and mobile rendered `Proof verification requests`, visible attention/pending/active state guidance, zero horizontal overflow, and no stale score/dossier/unlock/trust-signal copy after the deferred-load fix.
+  - `/portfolio/demo` mobile returned the launch-safe unavailable public-page state with zero horizontal overflow.
+  - `/portfolio/org/test-org` desktop rendered the public organization trust page with zero horizontal overflow.
+  - Fresh protected org app Browser checks redirected to the individual mock persona because Browser's read-only page evaluation cannot set the `proofound-mock-persona=org_member` cookie. Older Browser evidence remains under `.artifacts/ux-verification-2026-05-20/browser-goal-sweep/`; org app routes still need a fresh org-persona Browser pass before this broad sweep can be called complete.
+- Verification passed:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/verifications-page.test.tsx tests/ui/verifications-client.test.tsx tests/ui/deferred-settings-loaders.test.tsx --reporter=verbose` (3 files / 25 tests).
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/verifications-page.test.tsx tests/ui/verifications-client.test.tsx tests/ui/portfolio-readiness-checklist.test.tsx tests/ui/matching-page-gated.test.tsx tests/ui/organization-communications-page.test.tsx tests/routes/organization-messages-page.test.tsx --reporter=verbose` (5 files / 25 tests).
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/core-matching-assignment-route.test.ts tests/api/match-explain-route.test.ts tests/api/org-match-review-route.test.ts tests/api/launch-surface-inventory.test.ts --reporter=verbose` (4 files / 27 tests).
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`.
+- Known test noise: Vitest still prints the sandbox Vite websocket `EPERM` warning and `tests/ui/verifications-page.test.tsx` still logs the existing jsdom relative fetch warning for `/api/feature-flags`; all listed suites exited successfully.
+
+## Continuation - Fresh Org-Persona Visual Sweep Closure
+
+- Timestamp: 2026-05-20 20:27:46 CEST.
+- Continued from the interrupted goal thread at `codex://threads/019e3ebb-7cdb-74c2-8244-1c7f75d089c4`.
+- Restarted the local app with mock-safe fixtures on `http://127.0.0.1:3001` because the previous Browser pass could not set the organization persona cookie through read-only page evaluation.
+- Reused the existing visual sweep script under `.artifacts/ux-verification-2026-05-20/browser-goal-sweep/visual-sweep.mjs` and captured fresh desktop plus mobile evidence for:
+  - individual home, onboarding, portfolio redirect, full profile, and verifications;
+  - organization home, assignments, communications, and shortlist redirect.
+- Saved the fresh report at `.artifacts/ux-verification-2026-05-20/browser-goal-sweep/visual-sweep-results.json` with viewport screenshots in the same folder.
+- Result: 18 route/viewport checks, zero navigation errors, zero console warnings/errors after filtering, zero horizontal overflow, no duplicate create-assignment actions, and no stale score/ranking language flagged by the sweep.
+- Verified representative headings and final routes: `Build your proof-first profile`, `Start with one Proof Pack`, `Mock Individual`, `Proof verification requests`, `Nordic Field Systems`, `Assignments`, and `Messages`; `/app/o/test-org/shortlist` correctly redirected to `/app/o/test-org/assignments`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` and `BASE_URL=http://127.0.0.1:3001 node .artifacts/ux-verification-2026-05-20/browser-goal-sweep/visual-sweep.mjs` run with approved local browser permissions.
+- Tool noise cleaned: Next.js dev-server generated `tsconfig.json` include/format churn for `.next-dev-3001`, and it was restored after the sweep.
+
+## Continuation - Assignment Shortlist Exact Rank Suppression
+
+- Timestamp: 2026-05-20 20:56:29 CEST.
+- Continued the active launch-polish goal after the fresh org-persona visual sweep.
+- Inspected the active matching assignment handler and found a remaining contract mismatch: cached shortlist responses already suppressed exact rank, but freshly computed shortlist responses could still return `rank: index + 1` when the old exact-rank feature flag was live and the reviewer role could mutate review state.
+- Closed the computed branch so `/api/core/matching/assignment` and `/api/match/assignment` always return `rank: null` and `exactRankLive: false`; assignment review stays proof-led through review bands and reason-coded cards only.
+- Removed the now-unused reviewer-role exact-rank helper path from the assignment handler.
+- Added focused route coverage proving exact rank stays hidden even when `FF_EXACT_RANK_EXPOSURE=true` and the kill switch is off.
+- Extended the launch-gate guardrail so the assignment handler cannot quietly reintroduce `rank: showExactRank` or `canViewExactRank`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/core-matching-assignment-route.test.ts tests/api/match-explain-route.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 106 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Organization Evidence Review Language
+
+- Timestamp: 2026-05-20 21:03:15 CEST.
+- Inspected the organization matching review surface after closing exact rank and found one remaining score-style island: the evidence tab still exposed percentage-based `Evidence Breakdown` labels for skills, constraints, recency, and verification support.
+- Reframed that tab as `Evidence Review` and replaced raw percentage values with qualitative proof labels (`Strong`, `Clear`, `Partial`, `Needs more proof`, or `Not available`) so the active org shortlist stays proof-led instead of score-led.
+- Renamed the intro badge from `Unlocked` to `Intro open` to keep the corridor language action/state based rather than unlock-gated.
+- Updated organization matching UI tests for the current launch behavior: assignment review loads immediately, assignment switching uses assignment-scoped match requests, and activity badges remain lightweight.
+- Extended the launch-gate guardrail so active matching review files cannot quietly reintroduce the old evidence-breakdown labels, exact-rank helpers, score bars, or `Unlocked` copy.
+- Browser evidence with bundled Codex in-app Browser (`iab`) on a temporary organization-persona mock local server:
+  - `/app/o/test-org/assignments` desktop rendered `Assignments`, `Evidence Review`, `Skills evidence:`, `Constraint fit:`, `Proof freshness:`, and `Verification support:`, with qualitative `Strong` values, zero horizontal overflow, and no old `Evidence Breakdown`, score-label, or `Unlocked` copy.
+  - `/app/o/test-org/assignments` mobile at 390px rendered the same evidence review labels and qualitative values with zero horizontal overflow and no old evidence-breakdown/unlock copy.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/matching-organization-view-beta.test.tsx tests/api/core-matching-assignment-route.test.ts tests/api/match-explain-route.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 110 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Readiness And Intro Eligibility Copy Alignment
+
+- Timestamp: 2026-05-20 21:13:13 CEST.
+- Inspected active onboarding, individual readiness, matching empty-state, launch-operations, and interest-route copy after the org matching surface cleanup.
+- Found the old unlock-led phrasing still appeared on active launch surfaces: `Day 1 win unlocked`, `unlock matching`, `introductions unlock`, `personalized browse unlocks`, and similar readiness copy.
+- Reframed those surfaces around readiness, availability, and protected intro eligibility: day-1 proof links are `ready`, matching is built through readiness, browse becomes available after required preferences, and introductions are requested only after stronger proof and required constraints.
+- Updated the individual intro-blocked route response so blocked candidates see `Introductions need stronger proof first` and no longer receive `unlock introductions` copy.
+- Added focused UI/API coverage plus a launch-gate guardrail over the active readiness copy files so stale unlock-led launch copy cannot quietly return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/public-portfolio-ready-step.test.tsx tests/api/match-interest-route.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 110 tests) and an active-source scan for stale unlock-led readiness phrases. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Active Unlock Copy Residue Cleanup
+
+- Timestamp: 2026-05-20 21:16:45 CEST.
+- Re-ran the active source scan after the first readiness-copy pass and found more unlock-led residue on active individual and organization app surfaces.
+- Reframed the individual home empty state from proof `unlocks your profile` to proof making the profile ready.
+- Reframed profile fallback gating, matching recovery actions, matching profile setup, and the organization interview-completion confirm prompt around readiness, availability, and next-step availability instead of unlocking.
+- Updated the core matching gating fixture copy so personalized browse results become available after requirements rather than being unlocked.
+- Extended the launch-gate guardrail to cover the additional active files and stale phrases, including `unlocks your profile`, `unlock your Public Page`, `unlock better matches`, `unlock and improve opportunities`, `unlock the decision step`, and `unlock personalized browse results`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/core-matching-gating-routes.test.ts tests/api/match-interest-route.test.ts tests/ui/public-portfolio-ready-step.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 114 tests) and an active-source scan for stale unlock-led launch phrases. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Retained Near-Matches Response Hardening
+
+- Timestamp: 2026-05-20 21:20:32 CEST.
+- Inspected the retained `/api/core/matching/near-matches` handler after active scans showed raw score/subscore language in matching surfaces.
+- Found the route was not linked from active UI, but it is still a retained active API handler and its successful response returned raw `score`, `subscores`, `contributions`, `focusBoost`, and request `weights` artifacts.
+- Kept internal scoring for deterministic ordering, but added a visibility-safe response mapper so returned near-match items expose assignment context, reason-coded review data, gaps, missing proof/skill info, and `reviewMode: 'reason_coded'` only.
+- Changed response metadata to use `weights: {}` and `scoreVisibility: 'internal_ordering_only'`, making the score posture explicit without exposing raw weights.
+- Added a launch-gate guardrail proving the route returns `visibilitySafeItems`, does not return `items: topK`, and does not expose raw score/subscore/contribution/focus-boost fields from the public mapper.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/core-matching-gating-routes.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 106 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Retained Profile Matching Response Hardening
+
+- Timestamp: 2026-05-20 21:24:28 CEST.
+- Inspected `/api/core/matching/profile` after hardening near-matches and found the same retained-route issue: the successful response still returned raw `score`, `scoreTotal`, `subscores`, `contributions`, and `focusBoost` fields even though the route uses those values only for ordering, persistence, and analytics.
+- Kept internal scoring and first-match analytics unchanged, but added a visibility-safe response mapper so returned profile-match items expose assignment context, reason codes, gaps/missing info, `reviewMode: 'reason_coded'`, and qualitative `proofSignals`.
+- Updated `MatchResultCard` so individual match cards can render qualitative `proofSignals` without requiring raw contribution numbers, while preserving legacy fixture/test compatibility.
+- Added a launch-gate guardrail proving profile matching responses use the visibility-safe mapper and do not return raw score/subscore/contribution/focus-boost fields.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/core-matching-gating-routes.test.ts tests/api/core-matching-profile-performance.test.ts tests/ui/match-result-card.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 113 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Retained Assignment Matching Response Hardening
+
+- Timestamp: 2026-05-20 21:32:30 CEST.
+- Continued the retained matching API sweep and inspected `/api/core/matching/assignment`, which also backs `/api/match/assignment`.
+- Found that both cached and freshly computed assignment-match responses still returned raw `score`, `scoreTotal`, `subscoresJson`, and `scoreSnapshotJson` even though exact rank had already been suppressed and those values are only needed internally for ordering, persistence, fairness, and review-card generation.
+- Removed the raw score artifact fields from cached and fresh response items while preserving internal scoring, deterministic ordering, match persistence, review-state creation, fairness evaluation, reason-coded `why`, and proof-first `reviewCard` output.
+- Added a visibility-safe scrubber for local visual-fixture assignment responses so fixture-backed organization review screens do not leak `score`, `scoreTotal`, `subscores`, `subscoresJson`, `scoreSnapshotJson`, `contributions`, or `focusBoost` either.
+- Marked assignment-match metadata with `weights: {}` and `scoreVisibility: 'internal_ordering_only'` so the route’s score posture is explicit without exposing raw scoring weights.
+- Cleaned one active organization recovery-action string from `rank candidates accurately` to proof-backed candidate discovery language.
+- Added focused API assertions and a launch-gate guardrail proving assignment matching responses stay free of raw score artifacts and exact rank remains suppressed.
+
+## Continuation - Match Explanation Response Hardening
+
+- Timestamp: 2026-05-20 21:38:17 CEST.
+- Inspected `/api/match/explain/[matchId]` and the active explanation consumers after assignment/profile/near-match response hardening.
+- Found the explanation response still returned numeric `compositeScore`, `scoreTotal`, raw-ish `subscores`, and score metadata even though the active modal and organization review console present the explanation as proof-first, reason-coded, and qualitative.
+- Removed those raw score artifacts from normal and visual-fixture explanation responses, while preserving internal ordering for review-band calculation and preserving model/explanation/fairness version metadata that remains useful as contract provenance.
+- Added qualitative `proofSignals` plus `scoreVisibility: 'internal_ordering_only'` to the explanation response so the UI can render evidence labels without receiving numeric score slices.
+- Updated `MatchExplainerModal`, `MatchResultCard`, and `MatchingOrganizationView` to consume qualitative `proofSignals` while preserving backward-compatible handling for older in-memory explanation objects that still carry `subscores`.
+- Extended route and launch-gate tests so the explanation endpoint cannot quietly reintroduce `compositeScore`, `scoreTotal`, `scoreState`, `scoreVersion`, `inputsHash`, or raw `subscores` response fields.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/match-explain-route.test.ts tests/ui/match-explainer-modal.test.tsx tests/ui/match-result-card.test.tsx tests/ui/matching-organization-view-beta.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (5 files / 116 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Hidden Match Response Hardening
+
+- Timestamp: 2026-05-20 21:41:28 CEST.
+- Inspected `/api/org/[id]/shortlist` and `/api/match/hide` after explanation response hardening.
+- Found the organization shortlist route keeps score values internal for ordering and review-band generation without returning exact rank or raw score fields, but `/api/match/hide` still returned a numeric `score` for hidden matches even though the active hidden-matches UI intentionally avoids score badges.
+- Removed the hidden-match `score` response field and added `scoreVisibility: 'internal_ordering_only'` to the GET response so individual hidden-match data stays aligned with the score-free launch corridor.
+- Added route coverage proving hidden-match GET responses omit raw score fields, and extended the launch-gate guardrail so `/api/match/hide` cannot quietly reintroduce `score: Number(row.match.score)` or `score: row.match.score`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/match-hide-route.test.ts tests/ui/matching-paused-hidden-manager.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 109 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Paused Match Response Hardening
+
+- Timestamp: 2026-05-20 21:44:39 CEST.
+- Continued the individual matching pause/hidden sweep and inspected `/api/match/snoozed` plus `SnoozedMatchesList`.
+- Found the paused-match response still returned `matchScore`, and the client converted that number into a qualitative proof-alignment badge locally.
+- Moved that conversion to the API boundary: `/api/match/snoozed` now returns `proofFitLabel` and `scoreVisibility: 'internal_ordering_only'`, without exposing `matchScore` or raw score fields to the paused-matches UI.
+- Updated `SnoozedMatchesList` to prefer the qualitative `proofFitLabel` while keeping a compatibility fallback for older in-memory payloads.
+- Added direct route coverage proving paused-match responses carry qualitative proof labels instead of raw scores, updated the paused/hidden UI test fixture, and extended the launch-gate guardrail so `/api/match/snoozed` cannot quietly reintroduce `matchScore: parseFloat(row.match.score)`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/match-snoozed-route.test.ts tests/ui/matching-paused-hidden-manager.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 109 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Recovery Copy Rank-Language Cleanup
+
+- Timestamp: 2026-05-20 21:48:15 CEST.
+- Re-scanned active recovery copy after paused-match hardening and found one remaining rank-adjacent phrase in the individual empty-proof action: `increase credibility and ranking quality`.
+- Reframed that action as `strengthen credibility and readiness`, keeping the user-facing recovery path proof/readiness-led instead of ranking-led.
+- Extended the launch-gate stale-copy list with `ranking quality` so active readiness and intro copy cannot quietly drift back toward rank-led wording.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 106 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Active Taxonomy Match Score Boundary
+
+- Timestamp: 2026-05-20 21:51:00 CEST.
+- Continued the score/rank response sweep and inspected `/api/expertise/taxonomy`, which remains an active launch route for assignment and proof skill mapping even though the broad Expertise Atlas UI and `context=cv_import` flow are archived.
+- Found the active Atlas-ranked search branch could still include a numeric `matchScore` on returned `l4_skills`, even though the current assignment skill-mapping client does not need numeric search confidence and the launch corridor is avoiding public score-led response fields.
+- Kept Atlas ranking internal, but converted returned search confidence to qualitative `matchConfidence` labels (`Strong taxonomy match`, `Clear taxonomy match`, or `Review suggested`) and removed `matchScore` from both ranked and fallback response mapping.
+- Added direct route coverage for a non-legacy Atlas-ranked search proving `matchScore` is absent, plus fallback coverage proving normal taxonomy search also omits it.
+- Added launch-gate coverage so the active taxonomy route cannot quietly reintroduce `matchScore: match?.score` or `matchScore: s.matchScore`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/expertise-taxonomy-route.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 112 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused source scan for taxonomy `matchScore`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Interview Feedback Score-Label Cleanup
+
+- Timestamp: 2026-05-20 21:53:24 CEST.
+- Continued the active score/rank copy sweep after taxonomy response hardening.
+- Re-checked `/api/org/[id]/shortlist` and confirmed it keeps numeric match values internal for ordering while returning qualitative shortlist/review-band fields only.
+- Found the active interview feedback page still rendered saved scale answers as `Score: {answer.score}`, even though this is human structured feedback rather than candidate scoring and the locked corridor avoids score-led labels on user-facing MVP surfaces.
+- Kept the structured feedback data contract and numeric scale answers intact, but changed the visible response label to `Rating: {answer.score}`.
+- Added launch-gate coverage so the active feedback page cannot quietly reintroduce the `Score:` label and the active feedback form does not drift toward `Submit score` copy.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 108 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused source scan for `Score: {answer.score}`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Outbound Match Email Score Boundary
+
+- Timestamp: 2026-05-20 21:56:19 CEST.
+- Continued the score/rank sweep into outbound email surfaces after active app/API checks.
+- Found `emails/NewMatchNotification.tsx` still rendered the old broad matching story: `Match Score`, a percentage derived from `matchScore`, compatibility copy, `Top Skill Matches`, `View Match Details`, and dashboard-era pass copy.
+- Removed the numeric `matchScore` prop from the email template and `sendMatchNotification` boundary, replacing it with optional qualitative `proofFitLabel` copy.
+- Reframed the email as `A Proof Review Is Ready`, with `Review state`, `Relevant proof signals`, reason-coded/privacy-staged language, and an active matching review link at `/app/i/matching?matchId=...` instead of the stale `/app/i/matches/...` path.
+- Added launch-gate coverage so the outbound template and email sender cannot quietly reintroduce `Match Score`, `scorePercentage`, `You Have a New Match!`, `high-quality matches`, the `matchScore` sender contract, or the stale `/app/i/matches/` link.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 109 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused source scan for old email score/match terms, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Canonical Domain And Contact Link Cleanup
+
+- Timestamp: 2026-05-20 22:01:01 CEST.
+- Continued the launch-facing stale route/contact sweep after the outbound match email score-boundary cleanup.
+- Found active public and outbound surfaces still using the legacy `proofound.com` domain even though current environment docs and app metadata use `proofound.io` as the canonical production domain.
+- Updated deletion emails, assignment invitation emails, interview scheduled emails, public legal/privacy/cookie contact links, the privacy overview, verification route fallback URL, organization setup public-link preview, and interview calendar UID generation to use `proofound.io`.
+- Replaced the skill-verification email's stale `https://proofound.com/help/verification` link with a direct `hello@proofound.io` contact link so the active email does not point users at a non-launch help-center route.
+- Added launch-gate coverage for the touched active surfaces so they cannot quietly reintroduce `proofound.com` or `https://proofound.io/help`, while preserving historical/archive and legacy-normalization references elsewhere.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts src/lib/interviews/__tests__/calendar.test.ts --reporter=verbose` (2 files / 112 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, a focused `proofound.com` scan over the active touched surfaces, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Verification Email Trust-Signal Cleanup
+
+- Timestamp: 2026-05-20 22:04:04 CEST.
+- Continued the outbound email sweep after canonical-domain cleanup and inspected active verification emails.
+- Found `VerificationApproved` and `WorkEmailVerification` still used broader product copy around premium unlocks, search/matching priority, better match recommendations, and match quality, plus nudges toward LinkedIn/Veriff additions that are not launch-active account-side requirements.
+- Reframed the work-email and approval emails around checked trust signals, proof review context, privacy-staged visibility, and intro readiness without changing the delivery contract, verification token flow, or rendered component API.
+- Added launch-gate coverage so outbound verification emails cannot quietly reintroduce `Unlock premium features`, `Improve Matching`, `Stand Out`, search priority, match-quality claims, verified-badge unlock framing, or LinkedIn/Veriff upsell nudges.
+- Verification passed after one whitespace-sensitive assertion adjustment: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/lib/work-email-delivery.test.ts tests/lib/workflow-email-privacy.test.ts --reporter=verbose` (3 files / 126 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale verification-email copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and the work-email delivery test intentionally logged redacted failure records for negative-path assertions, but the suite exited successfully.
+
+## Continuation - Verification Rejection Email Corridor Cleanup
+
+- Timestamp: 2026-05-20 22:06:36 CEST.
+- Continued the outbound verification email sweep and inspected the rejection template after approval/work-email cleanup.
+- Found `VerificationRejected` still told users to improve LinkedIn/Veriff, try alternative verification methods, and implied verification improves matching opportunities and credibility, which conflicts with the locked launch corridor where work email is the only launch-active account-side check and verification must not become a matching/ranking promise.
+- Reframed rejected LinkedIn and identity checks as non-required, account-side history outside the launch corridor; kept work email as the only launch-active check; and pointed the footer CTA back to verification settings instead of a `?tab=help` pseudo-help route.
+- Preserved the delivery contract and `verificationType` compatibility while removing launch-misaligned upsell and matching-quality language from the rendered email.
+- Extended the outbound verification-email launch guard to include `VerificationRejected`, including explicit checks for work-email-only launch posture and negatives for LinkedIn/Veriff upsells, better matching opportunities, enhanced credibility, and `?tab=help`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/lib/work-email-delivery.test.ts tests/lib/workflow-email-privacy.test.ts --reporter=verbose` (3 files / 126 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale verification-email copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and the work-email delivery test intentionally logged redacted failure records for negative-path assertions, but the suite exited successfully.
+
+## Continuation - Deletion Email Lifecycle Alignment
+
+- Timestamp: 2026-05-20 22:09:43 CEST.
+- Continued the privacy-sensitive outbound email sweep and inspected account deletion emails against the active lifecycle routes.
+- Found `DeletionScheduled` and `DeletionReminder` still described a 30-day cancellation window and delayed scheduled deletion, while active account lifecycle tests prove deletion is immediate and irreversible and `/api/user/account/cancel-deletion` returns 410.
+- Reframed scheduled/reminder emails as deletion-request/status emails, removed cancel buttons and cancellation-window copy, updated their subjects, and pointed users only to privacy settings while a session is still available.
+- Updated deletion complete/scheduled/reminder data descriptions from broad social-suite language (`matches and connections`, `messages and conversations`) to MVP-aligned Proof Packs, public portfolio projections, matching/intro/reveal/interview/decision records, preferences, settings, and minimized legally retained metadata.
+- Preserved sender function compatibility while renaming the internal rendered link from `cancellationUrl` to `settingsUrl`.
+- Added launch-gate coverage proving deletion emails stay aligned with immediate irreversible deletion, canonical subjects, MVP data objects, and no scheduled-cancellation promises.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/lib/workflow-email-privacy.test.ts tests/api/user-account-lifecycle-routes.test.ts tests/api/cron-account-deletion-workflow-route.test.ts --reporter=verbose` (4 files / 137 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale deletion-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Interview Scheduled Email Stage-Awareness Cleanup
+
+- Timestamp: 2026-05-20 22:12:13 CEST.
+- Continued the remaining transactional-email sweep and inspected interview scheduled email copy against the staged reveal/interview corridor.
+- Found `InterviewScheduled` still said scheduling reveals both identities, told users to have a resume ready, promised full profiles and direct communication, and referenced a 7-day match reschedule window.
+- Reframed the email around the current workflow stage, approved context, meeting details, relevant Proof Packs/portfolio context, and Proofound-mediated workflow updates.
+- Replaced the `Identities Revealed` footer with a privacy/stage note making clear that proof files, private notes, contact details, and reveal-stage context remain inside the authenticated workflow unless explicitly approved for the current stage.
+- Added launch-gate coverage so the email cannot quietly reintroduce resume-first language, full-profile/direct-communication claims, identity-reveal overstatement, or stale match-window copy.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/lib/workflow-email-privacy.test.ts tests/api/interviews-schedule-route.test.ts --reporter=verbose` (3 files / 136 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale interview-email copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Legacy Interview Email Template Alignment
+
+- Timestamp: 2026-05-20 22:14:19 CEST.
+- Continued the transactional email sweep into `src/lib/email/templates`, which remains active through `src/lib/email/notifications.ts`.
+- Found the legacy interview scheduled template still used generic candidate-prep language (`Interview Tips`, profile review, skills/experience discussion, direct reschedule contact), while the React email had already been aligned to the staged reveal/interview corridor.
+- Reframed the legacy HTML and plain-text templates around Proofound workflow stage, approved context, relevant Proof Packs/portfolio context, and authenticated workflow updates.
+- Added the same privacy/stage reminder to the legacy template so scheduling emails do not imply that proof files, private notes, contact details, or reveal-stage context are exposed outside the approved workflow stage.
+- Extended the launch-gate guard to cover both `emails/InterviewScheduled.tsx` and `src/lib/email/templates/interview-scheduled.tsx`, including negatives for resume-first language, full-profile/direct-communication claims, stale identity-reveal copy, and direct reschedule-contact copy.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/lib/workflow-email-privacy.test.ts tests/api/interviews-schedule-route.test.ts --reporter=verbose` (3 files / 136 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, template-only stale phrase scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Decision Notification Email Workflow Alignment
+
+- Timestamp: 2026-05-20 22:18 CEST.
+- Continued the transactional email sweep into the active decision-notification sender in `src/lib/email/notifications.ts`.
+- Found `sendDecisionFeedbackEmail` still used ATS/application-era framing: `Application Update`, `Application update from`, `Thank you for your interest`, opportunity language, and next-step/exploring-opportunities copy.
+- Reframed the subject, HTML, and text bodies around a Proofound workflow decision for a proof-review workflow, with optional workflow feedback and no implication that the wider profile has been scored, ranked, or evaluated.
+- Kept the accepted-path footer action-oriented (`Open Proofound for the approved next step`) and made the rejected-path footer explicit that the decision is workflow-scoped, not a broad profile judgment.
+- Added launch-gate coverage so the active notification sender cannot quietly reintroduce ATS/application-led decision copy.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/lib/workflow-email-privacy.test.ts --reporter=verbose` (2 files / 125 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale decision-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Account Verification And Tour Corridor Cleanup
+
+- Timestamp: 2026-05-20 22:21 CEST.
+- Continued the active copy sweep into account verification emails and first-run/guided tour copy.
+- Found `VerifyEmailIndividual` and `VerifyEmailOrganization` still used broad network/platform language around opportunities, collaborators, partners, and finding team members before the account had entered the locked proof-first corridor.
+- Reframed individual verification toward one artifact-backed Proof Pack, public-safe proof choices, work-email trust signals, and staged assignment reviews/introductions.
+- Reframed organization verification toward the organization trust page, assignment paths with proof needs, proof-led candidate context, and staged introduction requests.
+- Found active tour copy still referenced scoring, algorithmic candidate finding, broad hiring process/talent search language, and potential employers.
+- Reframed the active and retained tour step files around reason-coded proof context, privacy-staged assignment review, proof needs, workflow stages, and proof review.
+- Added launch-gate coverage so account verification emails and tour copy cannot quietly reintroduce broad opportunity/networking/scoring/algorithm/talent-search language.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/lib/profile-copy-guardrails.test.ts --reporter=verbose` (2 files / 116 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale tour/email copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Consent Snapshot Copy Alignment
+
+- Timestamp: 2026-05-20 22:23 CEST.
+- Continued the staged reveal/privacy copy sweep into `ConsentToShareDialog`, which is loaded by active individual match cards.
+- Found the dialog still described sharing a profile, continuing the hiring corridor, and retention as part of a hiring process, even though the active reveal model is snapshot-scoped, candidate-consented, and workflow-stage bounded.
+- Reframed the title, description, toast, explainer, notice, checkbox, and primary action around sharing an exact proof-review snapshot for the assignment workflow.
+- Preserved the visible-field/redacted-field mechanics, explicit consent checkboxes, and `onConsent(matchId)` behavior.
+- Added launch-gate coverage so the dialog cannot quietly reintroduce profile-share, generic hiring-process, or corridor-continuation language.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/ui/match-result-card.test.tsx tests/ui/individual-matching-mobile-clarity.test.tsx --reporter=verbose` (3 files / 123 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale consent-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Identity Reveal Messaging Alignment
+
+- Timestamp: 2026-05-20 22:26 CEST.
+- Continued the staged reveal/privacy sweep into `RevealIdentityCard` and adjacent communications routing.
+- Found the reveal card still used broad full-profile and hiring-corridor copy: `Identities Revealed!`, `see each other's full profiles`, `Reveal My Identity`, and `continue the hiring corridor`.
+- Reframed reveal states around approved identity fields, masked-review handoff, explicit approval, and direct-contact details staying inside the workflow until the right stage.
+- Added launch-gate coverage so the reveal card cannot quietly reintroduce full-profile or hiring-corridor reveal language.
+- Focused verification surfaced a nearby communications accessibility/context regression: section links no longer exposed explicit `Switch to ...` accessible names, the organization no-user loading copy lost its threads/intros/reveal context, and the ready org messages path bypassed the deferred client expected by the active mobile-target tests.
+- Restored those communications affordances by adding switch labels and stable touch-target classes to the section links, restoring contextual loading text, and using `DeferredOrgMessagesClient` for ready organization messages.
+- Verification passed after that adjacent fix: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/ui/conversation-list.test.tsx tests/ui/communications-hub-mobile-targets.test.tsx --reporter=verbose` (3 files / 123 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale reveal-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Interview Workflow Copy Alignment
+
+- Timestamp: 2026-05-20 22:30 CEST.
+- Continued from the reveal/messaging surface into the active individual and organization interview pages.
+- Found the active interview pages still used broad user-facing `hiring corridor` wording for the loading state, empty state, and page intro, even though the page itself is the staged interview/decision/engagement workflow surface.
+- Reframed visible copy to `interview workflow` and `staged workflow`, including the organization loading heading/status, organization badge, individual and organization page intros, and both empty-state headings.
+- Reframed the organization edit dialog from `candidate via messaging` to workflow messaging so interview reschedule notices remain stage-neutral and identity-safe.
+- Preserved the underlying `HiringCorridorSnapshot` data model, timeline component, decision/engagement state handling, edit/cancel/complete/no-show actions, and calendar behavior.
+- Added launch-gate coverage so the active interview pages cannot quietly reintroduce generic `hiring corridor` loading/empty-state copy or candidate-specific reschedule messaging.
+- Verification passed after one stale loading string was caught and fixed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/ui/organization-interviews-page-actions.test.tsx tests/ui/individual-interviews-page-clarity.test.tsx --reporter=verbose` (3 files / 124 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale interview-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Decision Dialog Workflow Scope Alignment
+
+- Timestamp: 2026-05-20 22:32 CEST.
+- Continued downstream from interview workflow copy into the active organization decision dialog.
+- Found `DecisionDialog` still used broad hiring-decision language: `Make Hiring Decision`, `Extend an offer to this candidate`, `Not a fit for this role`, decision-specific toast interpolation, and team notes framed only as not shared with the candidate.
+- Preserved the canonical decision states and API payload (`hire`, `advance`, `hold`, `reject`, `withdraw`), but reframed the visible dialog as `Record Workflow Decision`.
+- Updated decision option descriptions so `hire` moves to engagement confirmation while hiring and verification remain distinct, `advance` moves to the next approved interview step, `hold` pauses the workflow with follow-up, and `reject` closes this assignment workflow without a broader profile judgment.
+- Reframed success and note copy around workflow decisions and candidate-facing workflow notifications.
+- Added launch-gate coverage so the dialog cannot quietly reintroduce broad hiring-decision, offer, not-a-fit, or candidate-note leakage wording.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/ui/organization-interviews-page-actions.test.tsx --reporter=verbose` (2 files / 123 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, focused stale decision-dialog copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.

@@ -39,18 +39,24 @@ import { motion } from 'framer-motion';
 
 interface MatchExplainerProps {
   matchId: string;
-  compositeScore: number;
+  compositeScore?: number;
   rank?: number;
   totalCandidates?: number;
   rankBand?: string;
   rankMode?: 'exact' | 'band';
   exactRankAvailable?: boolean;
 
-  subscores: {
+  subscores?: {
     skills?: number;
     constraints?: number;
     recency?: number;
     evidence?: number;
+  };
+  proofSignals?: {
+    skills?: string;
+    constraints?: string;
+    recency?: string;
+    evidence?: string;
   };
 
   skillsMatch?: {
@@ -137,7 +143,8 @@ export function MatchExplainerModal({
   rankBand,
   rankMode,
   exactRankAvailable,
-  subscores,
+  subscores = {},
+  proofSignals = {},
   skillsMatch,
   constraints,
   reasonSummary = [],
@@ -150,6 +157,12 @@ export function MatchExplainerModal({
   const explainerContract = buildMatchExplainerContract();
   const fitBand = fitBandLabel(reviewCard?.fitBand ?? rankBand, compositeScore);
   const warning = privacySafeWarning(fairnessWarning);
+  const evidenceSignals = {
+    skills: proofSignals.skills ?? proofSignalLabel(subscores.skills),
+    constraints: proofSignals.constraints ?? proofSignalLabel(subscores.constraints),
+    recency: proofSignals.recency ?? proofSignalLabel(subscores.recency),
+    evidence: proofSignals.evidence ?? proofSignalLabel(subscores.evidence),
+  };
 
   // Default trigger
   const defaultTrigger = (
@@ -331,7 +344,7 @@ export function MatchExplainerModal({
           <TabsContent value="overview" className="space-y-4 pt-4">
             <h4 className="mb-3 text-sm font-semibold text-foreground">Review signals by area</h4>
 
-            {subscores.skills !== undefined && (
+            {(proofSignals.skills || subscores.skills !== undefined) && (
               <div className="rounded-lg border border-proofound-stone bg-white p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -339,13 +352,13 @@ export function MatchExplainerModal({
                     <span className="text-sm font-medium text-foreground">Skills evidence</span>
                   </div>
                   <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
-                    {proofSignalLabel(subscores.skills)}
+                    {evidenceSignals.skills}
                   </span>
                 </div>
               </div>
             )}
 
-            {subscores.constraints !== undefined && (
+            {(proofSignals.constraints || subscores.constraints !== undefined) && (
               <div className="rounded-lg border border-proofound-stone bg-white p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -355,13 +368,13 @@ export function MatchExplainerModal({
                     </span>
                   </div>
                   <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
-                    {proofSignalLabel(subscores.constraints)}
+                    {evidenceSignals.constraints}
                   </span>
                 </div>
               </div>
             )}
 
-            {subscores.recency !== undefined && (
+            {(proofSignals.recency || subscores.recency !== undefined) && (
               <div className="rounded-lg border border-proofound-stone bg-white p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -369,13 +382,13 @@ export function MatchExplainerModal({
                     <span className="text-sm font-medium text-foreground">Proof freshness</span>
                   </div>
                   <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
-                    {proofSignalLabel(subscores.recency)}
+                    {evidenceSignals.recency}
                   </span>
                 </div>
               </div>
             )}
 
-            {subscores.evidence !== undefined && (
+            {(proofSignals.evidence || subscores.evidence !== undefined) && (
               <div className="rounded-lg border border-proofound-stone bg-white p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -385,7 +398,7 @@ export function MatchExplainerModal({
                     </span>
                   </div>
                   <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
-                    {proofSignalLabel(subscores.evidence)}
+                    {evidenceSignals.evidence}
                   </span>
                 </div>
               </div>

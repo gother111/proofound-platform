@@ -12,8 +12,6 @@
  */
 
 import type { Step } from 'react-joyride';
-import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
-
 /**
  * Tour steps for individual users
  *
@@ -185,8 +183,8 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Organization Navigation</h3>
         <p className="text-sm text-muted-foreground">
-          Your sidebar helps you manage assignments, review candidates, and track the narrow launch
-          hiring corridor.
+          Your sidebar helps you manage assignments, review proof-led candidate context, and track
+          the narrow launch workflow.
         </p>
       </div>
     ),
@@ -213,9 +211,8 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Assignments</h3>
         <p className="text-sm text-muted-foreground">
-          Create and manage role assignments. Define requirements, and our matching system will find
-          qualified candidates who align with your organization's mission and{' '}
-          {UI_VOCABULARY.pacLabel.toLowerCase()}.
+          Create and manage assignments with outcomes, practical constraints, proof needs, and a
+          clear review path for staged introductions.
         </p>
       </div>
     ),
@@ -228,7 +225,8 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Candidates</h3>
         <p className="text-sm text-muted-foreground">
-          Review matched candidates, see their qualifications, and track the hiring process.
+          Review reason-coded proof context, request introductions when appropriate, and keep each
+          workflow stage privacy-aware.
         </p>
       </div>
     ),
@@ -253,10 +251,10 @@ export const organizationTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Ready to find great talent! 🎉</h2>
+        <h2 className="text-lg font-semibold text-foreground">Ready to start proof review! 🎉</h2>
         <p className="text-sm text-muted-foreground">
           Start by sharing your Public Page link, then create your first <strong>Assignment</strong>{' '}
-          to define what you're looking for.
+          with the proof, context, and constraints reviewers need.
         </p>
       </div>
     ),

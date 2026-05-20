@@ -60,16 +60,17 @@ export function RevealIdentityCard({
       if (result.revealed) {
         // Both agreed - identities revealed
         toast({
-          title: '✅ Identities Revealed!',
-          description: "You can now see each other's full profiles and continue your conversation.",
+          title: 'Identity reveal approved',
+          description:
+            'Approved identity fields are now visible. Direct contact details still stay inside the workflow until the right stage.',
           duration: 5000,
         });
       } else {
         // Request sent - waiting for other person
         toast({
-          title: '⏳ Request Sent',
+          title: 'Reveal request sent',
           description:
-            "The other person will be notified. You'll be able to see their profile when they agree.",
+            'The other person will be notified. Approved identity fields stay hidden until they agree.',
           duration: 5000,
         });
       }
@@ -95,8 +96,8 @@ export function RevealIdentityCard({
               Anonymous Conversation
             </CardTitle>
             <CardDescription>
-              Your identities are currently hidden. You can continue talking anonymously, or both
-              agree to reveal identities.
+              Identity-bearing fields are currently hidden. You can keep talking in the masked
+              thread, or request the next reveal step.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -112,16 +113,16 @@ export function RevealIdentityCard({
                 'Scheduling links and meeting logistics',
                 'Any identity-bearing details that are still outside the approved reveal scope',
               ]}
-              whyThisRequestExists="Reveal exists to move the hiring corridor from blind review into identity-bearing coordination. Approval is required before that handoff happens."
+              whyThisRequestExists="Reveal exists to move this workflow from masked review into approved identity-bearing coordination. Approval is required before that handoff happens."
             />
 
             <Button onClick={handleRevealClick} className="w-full" disabled={revealing}>
               <Eye className="mr-2 h-4 w-4" />
-              Reveal My Identity
+              Request Identity Reveal
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">
-              Both people must agree before identities are revealed
+              Both people must agree before approved identity fields are shown
             </p>
           </CardContent>
         </Card>
@@ -130,7 +131,7 @@ export function RevealIdentityCard({
         <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Reveal Your Identity?</AlertDialogTitle>
+              <AlertDialogTitle>Request Identity Reveal?</AlertDialogTitle>
               <AlertDialogDescription className="space-y-3">
                 <p>This asks the other person to approve identity-bearing reveal.</p>
                 <p>
@@ -162,14 +163,14 @@ export function RevealIdentityCard({
             Waiting for Response
           </CardTitle>
           <CardDescription className="text-amber-800 dark:text-amber-200">
-            You've requested to reveal identities. The other person will be notified and can choose
-            to accept or continue anonymously.
+            You've requested the reveal step. The other person will be notified and can choose to
+            approve approved identity fields or keep the thread masked.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-100">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <span>Your identity will be revealed when they agree</span>
+            <span>Approved identity fields become visible only when they agree</span>
           </div>
         </CardContent>
       </Card>
@@ -187,8 +188,8 @@ export function RevealIdentityCard({
               Identity Reveal Requested
             </CardTitle>
             <CardDescription className="text-blue-800 dark:text-blue-200">
-              The other person has requested to reveal identities. If you agree, you'll both be able
-              to see each other's full profiles.
+              The other person has requested identity reveal. If you agree, both sides can see the
+              approved identity fields for this workflow stage.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -204,12 +205,12 @@ export function RevealIdentityCard({
                 'Scheduling links and meeting logistics',
                 'Any identity-bearing details that still require interview coordination',
               ]}
-              whyThisRequestExists="The other side wants to continue the hiring corridor beyond blind review. They cannot see identity-bearing details unless you approve this reveal step."
+              whyThisRequestExists="The other side wants to move this workflow beyond masked review. They cannot see identity-bearing details unless you approve this reveal step."
             />
 
             <Button onClick={handleRevealClick} className="w-full" disabled={revealing}>
               <Eye className="mr-2 h-4 w-4" />
-              Agree & Reveal Identities
+              Agree To Reveal Approved Fields
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">
@@ -222,7 +223,7 @@ export function RevealIdentityCard({
         <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Reveal Identities?</AlertDialogTitle>
+              <AlertDialogTitle>Reveal Approved Identity Fields?</AlertDialogTitle>
               <AlertDialogDescription className="space-y-3">
                 <p>
                   By agreeing, both of you will be able to see the approved identity-bearing fields
@@ -239,7 +240,9 @@ export function RevealIdentityCard({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Not Now</AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmReveal}>Reveal Identities</AlertDialogAction>
+              <AlertDialogAction onClick={handleConfirmReveal}>
+                Reveal Approved Fields
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

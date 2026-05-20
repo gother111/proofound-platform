@@ -192,7 +192,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           Set up your matching profile
         </h2>
         <p className="text-sm" style={{ color: '#6B6760' }}>
-          Save your focus, proof emphasis, and work preferences to unlock better matches.
+          Save your focus, proof emphasis, and work preferences to make better matches available.
         </p>
       </div>
 

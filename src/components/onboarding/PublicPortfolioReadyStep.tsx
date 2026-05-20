@@ -47,8 +47,8 @@ export function PublicPortfolioReadyStep({
 
   const description =
     persona === 'organization'
-      ? 'Day 1 win unlocked. Your public organization link is shareable now, and search engines stay off until you opt in.'
-      : 'Day 1 win unlocked. Preview it, copy it, and share it by direct link. Search engines stay off until you opt in.';
+      ? 'Day 1 proof link ready. Your public organization link is shareable now, and search engines stay off until you opt in.'
+      : 'Day 1 proof link ready. Preview it, copy it, and share it by direct link. Search engines stay off until you opt in.';
 
   async function handleCopy() {
     try {

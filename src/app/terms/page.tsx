@@ -140,10 +140,10 @@ export default function TermsOfServicePage() {
                 <p className="mt-3 leading-7">
                   For legal questions, contact{' '}
                   <a
-                    href="mailto:legal@proofound.com"
+                    href="mailto:legal@proofound.io"
                     className="font-medium text-proofound-terracotta hover:underline"
                   >
-                    legal@proofound.com
+                    legal@proofound.io
                   </a>
                   .
                 </p>
@@ -212,7 +212,7 @@ export default function TermsOfServicePage() {
               <Link href="/cookies">View Cookie Policy</Link>
             </Button>
             <a
-              href="mailto:legal@proofound.com"
+              href="mailto:legal@proofound.io"
               className="inline-flex items-center justify-center rounded-md border border-proofound-stone px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-proofound-terracotta hover:bg-proofound-terracotta/5"
             >
               Email legal

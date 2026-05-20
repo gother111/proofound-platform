@@ -84,6 +84,34 @@ interface MatchResult {
 
 type CandidatePoolSource = 'full_scan';
 
+function proofSupportLabel(
+  value: number
+): 'Primary reason' | 'Clear support' | 'Needs review' | 'Limited signal' {
+  if (value >= 0.85) return 'Primary reason';
+  if (value >= 0.65) return 'Clear support';
+  if (value >= 0.4) return 'Needs review';
+  return 'Limited signal';
+}
+
+function toVisibilitySafeProfileMatch(item: MatchResult) {
+  return {
+    id: item.id,
+    assignmentId: item.assignmentId,
+    assignment: item.assignment,
+    gaps: item.gaps,
+    missing: item.missing,
+    reasonCodes: item.artifact.reasonCodes,
+    reviewMode: 'reason_coded' as const,
+    proofSignals: Object.entries(item.contributions)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([key, value]) => ({
+        key,
+        support: proofSupportLabel(value),
+      })),
+  };
+}
+
 function resolveAssignmentScanLimit(k: number): number {
   return Math.min(
     MAX_ASSIGNMENT_SCAN_LIMIT,
@@ -544,24 +572,13 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      items: topKWithIds.map((item) => ({
-        id: item.id,
-        assignmentId: item.assignmentId,
-        score: item.score,
-        scoreTotal: item.scoreTotal,
-        subscores: item.subscores,
-        contributions: item.contributions,
-        gaps: item.gaps,
-        missing: item.missing,
-        assignment: item.assignment,
-        focusBoost: item.focusBoost,
-        reasonCodes: item.artifact.reasonCodes,
-      })),
+      items: topKWithIds.map(toVisibilitySafeProfileMatch),
       meta: {
         total: results.length,
         returned: topKWithIds.length,
         durationMs: duration,
         weights: {},
+        scoreVisibility: 'internal_ordering_only',
         candidatePoolSource,
         candidatePoolSize: activeAssignments.length,
         twoStageEnabled,

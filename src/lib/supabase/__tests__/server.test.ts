@@ -62,7 +62,9 @@ describe('createClient', () => {
     const cookieAdapter = vi.mocked(createServerClient).mock.calls[0]?.[2]?.cookies;
     expect(cookieAdapter?.getAll()).toEqual([{ name: 'sb-session', value: 'token' }]);
 
-    cookieAdapter?.setAll([{ name: 'sb-session', value: 'new-token', options: { path: '/' } }]);
+    (cookieAdapter as any)?.setAll([
+      { name: 'sb-session', value: 'new-token', options: { path: '/' } },
+    ]);
     expect(cookieStore.set).not.toHaveBeenCalled();
   });
 
@@ -79,7 +81,9 @@ describe('createClient', () => {
     await createClient({ allowCookieWrite: true });
 
     const cookieAdapter = vi.mocked(createServerClient).mock.calls[0]?.[2]?.cookies;
-    cookieAdapter?.setAll([{ name: 'sb-session', value: 'new-token', options: { path: '/' } }]);
+    (cookieAdapter as any)?.setAll([
+      { name: 'sb-session', value: 'new-token', options: { path: '/' } },
+    ]);
 
     expect(cookieStore.set).toHaveBeenCalledWith('sb-session', 'new-token', { path: '/' });
   });

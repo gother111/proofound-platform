@@ -238,6 +238,14 @@ function sanitizeBlindReviewCardForResponse(
   };
 }
 
+import { isMockSupabaseEnabled } from '@/lib/env';
+import { buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
+
+const visualAssignmentFixturesEnabled = () =>
+  isMockSupabaseEnabled() &&
+  process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+  process.env.VERCEL_ENV !== 'production';
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; matchId: string }> }
@@ -262,6 +270,76 @@ export async function POST(
         { error: 'Invalid payload', details: parsed.error.flatten() },
         { status: 400 }
       );
+    }
+
+    if (visualAssignmentFixturesEnabled() && matchId.startsWith('visual-match-')) {
+      const mockMatches = buildVisualOrgMatches('11111111-1111-4111-8111-111111111111');
+      const foundMock = mockMatches.find((m) => m.id === matchId);
+      if (!foundMock) {
+        return NextResponse.json({ error: 'Mock match not found' }, { status: 404 });
+      }
+
+      if (parsed.data.action === 'shortlist') {
+        return NextResponse.json({
+          matchId: matchId,
+          reviewStage: 'shortlisted',
+          revealScope: 'shortlist_identity',
+          progressiveRevealStage: 'stage2_contextual_reveal',
+          corridorState: 'shortlist',
+          visibleIdentityFields: [
+            'photo',
+            'country',
+            'city',
+            'desired_roles',
+            'timezone',
+            'right_to_work',
+            'engagement_type',
+            'skills',
+          ],
+          reviewCard: {
+            ...foundMock.reviewCard,
+            candidateLabel: 'Elena Rostova',
+          },
+        });
+      }
+
+      if (parsed.data.action === 'request_intro') {
+        return NextResponse.json({
+          matchId: matchId,
+          reviewStage: 'shortlisted',
+          revealScope: 'full_identity',
+          progressiveRevealStage: 'stage3_unlocked',
+          corridorState: 'intro_approved',
+          conversationId: 'visual-conv-7',
+          introApproved: true,
+          visibleIdentityFields: [
+            'photo',
+            'country',
+            'city',
+            'desired_roles',
+            'timezone',
+            'right_to_work',
+            'engagement_type',
+            'skills',
+            'name',
+            'email',
+            'phone',
+          ],
+          reviewCard: {
+            ...foundMock.reviewCard,
+            candidateLabel: 'Elena Rostova',
+          },
+        });
+      }
+
+      if (parsed.data.action === 'pass') {
+        return NextResponse.json({
+          matchId: matchId,
+          reviewStage: 'passed',
+          revealScope: 'blind',
+          corridorState: 'passed',
+        });
+      }
     }
 
     const org = await getOrgByIdOrSlug(id);

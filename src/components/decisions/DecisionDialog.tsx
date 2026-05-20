@@ -1,7 +1,7 @@
 /**
  * Decision Dialog Component
  *
- * UI for organizations to make hiring decisions after interviews
+ * UI for organizations to record workflow decisions after interviews
  * Displays 48-hour SLA countdown and decision options
  */
 
@@ -127,7 +127,7 @@ export function DecisionDialog({
 
       toast({
         title: 'Decision recorded',
-        description: `Your ${decision} decision has been recorded${
+        description: `Your workflow decision has been recorded${
           data.decision.withinSLA ? ' within the 48-hour SLA' : ' (past SLA)'
         }`,
       });
@@ -195,7 +195,7 @@ export function DecisionDialog({
     {
       value: 'hire' as DecisionType,
       label: 'Hire',
-      description: 'Extend an offer to this candidate',
+      description: 'Move to engagement confirmation; hiring and verification stay distinct',
       icon: CheckCircle2,
       color: 'text-green-600 dark:text-green-400',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
@@ -204,7 +204,7 @@ export function DecisionDialog({
     {
       value: 'advance' as DecisionType,
       label: 'Advance',
-      description: 'Move to next interview round',
+      description: 'Move this workflow to the next approved interview step',
       icon: ArrowRight,
       color: 'text-blue-600 dark:text-blue-400',
       bgColor: 'bg-blue-50 dark:bg-blue-900/20',
@@ -213,7 +213,7 @@ export function DecisionDialog({
     {
       value: 'hold' as DecisionType,
       label: 'Hold',
-      description: 'Keep for future consideration',
+      description: 'Pause this workflow with a reason and follow-up window',
       icon: Clock,
       color: 'text-yellow-600 dark:text-yellow-400',
       bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
@@ -222,7 +222,7 @@ export function DecisionDialog({
     {
       value: 'reject' as DecisionType,
       label: 'Reject',
-      description: 'Not a fit for this role',
+      description: 'Close this assignment workflow without a broader profile judgment',
       icon: XCircle,
       color: 'text-red-600 dark:text-red-400',
       bgColor: 'bg-red-50 dark:bg-red-900/20',
@@ -243,9 +243,9 @@ export function DecisionDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Make Hiring Decision</DialogTitle>
+          <DialogTitle>Record Workflow Decision</DialogTitle>
           <DialogDescription>
-            Interview with {candidateName} for {role}
+            Interview workflow for {candidateName} and {role}
           </DialogDescription>
         </DialogHeader>
 
@@ -320,7 +320,8 @@ export function DecisionDialog({
             className="resize-none"
           />
           <p className="text-xs text-gray-500">
-            These notes stay with your team and will not be shared with the candidate.
+            These notes stay with your team and are not sent through candidate-facing workflow
+            notifications.
           </p>
         </div>
 
@@ -329,7 +330,7 @@ export function DecisionDialog({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!decision || isSubmitting} className="min-w-32">
-            {isSubmitting ? 'Recording...' : 'Confirm Decision'}
+            {isSubmitting ? 'Recording...' : 'Confirm Workflow Decision'}
           </Button>
         </DialogFooter>
       </DialogContent>

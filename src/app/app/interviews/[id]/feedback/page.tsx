@@ -85,7 +85,7 @@ function ResponseList({
                   <div key={answer.id} className="rounded-md border bg-muted/40 p-3">
                     <p className="text-sm font-medium">{question?.prompt || 'Question'}</p>
                     {answer.score !== null && answer.score !== undefined ? (
-                      <p className="text-sm text-muted-foreground">Score: {answer.score}</p>
+                      <p className="text-sm text-muted-foreground">Rating: {answer.score}</p>
                     ) : null}
                     {answer.text_answer ? (
                       <p className="text-sm text-muted-foreground">{answer.text_answer}</p>

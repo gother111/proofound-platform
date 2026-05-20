@@ -190,8 +190,8 @@ function buildIntroBlockedCopy(
   }
 
   return {
-    title: 'You can keep browsing. Introductions unlock after stronger proof.',
-    body: 'Your proof set is not yet ready for qualified introductions on this assignment. Add proof to more relevant skills and complete one trusted or attested proof to unlock introductions.',
+    title: 'You can keep browsing. Introductions need stronger proof first.',
+    body: 'Your proof set is not yet ready for qualified introductions on this assignment. Add proof to more relevant skills and complete one trusted or attested proof before requesting introductions.',
   };
 }
 

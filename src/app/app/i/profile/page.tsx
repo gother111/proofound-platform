@@ -1,4 +1,5 @@
 import { requireAuth } from '@/lib/auth';
+import { getProfileData } from '@/actions/profile';
 import { getProfileShellData } from '@/actions/profile-shell';
 import { DeferredEditableProfileView } from '@/components/profile/DeferredEditableProfileView';
 
@@ -16,7 +17,8 @@ export default async function IndividualProfilePage({ searchParams }: Individual
 
   if (profileView === 'full') {
     await requireAuth();
-    return <DeferredEditableProfileView />;
+    const initialProfile = await getProfileData();
+    return <DeferredEditableProfileView initialProfile={initialProfile} />;
   }
 
   const initialProfile = await getProfileShellData();

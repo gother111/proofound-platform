@@ -141,7 +141,7 @@ export async function sendDecisionFeedbackEmail(params: {
   const safeFeedback = maskedStage ? undefined : params.feedback;
   const emailPrivacy = applyWorkflowEmailPrivacy(
     {
-      subject: `Application update from ${params.organizationName}`,
+      subject: `Proofound workflow decision from ${params.organizationName}`,
       organizationName: params.organizationName,
       candidateName: params.candidateName,
     },
@@ -158,23 +158,23 @@ export async function sendDecisionFeedbackEmail(params: {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Application Update</title>
+  <title>Proofound Workflow Decision</title>
 </head>
 <body style="font-family: sans-serif; line-height: 1.6; color: #2D3330; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: ${isAccepted ? 'linear-gradient(135deg, #1C4D3A 0%, #2D5F4A 100%)' : 'linear-gradient(135deg, #6B6760 0%, #8B8680 100%)'}; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0; font-size: 28px;">${isAccepted ? '🎉' : '📧'} Application Update</h1>
+    <h1 style="margin: 0; font-size: 28px;">${isAccepted ? 'Workflow moving forward' : 'Workflow decision update'}</h1>
   </div>
 
   <div style="padding: 40px 30px; background-color: white; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
     <p style="font-size: 18px; margin-bottom: 20px;">Hi ${emailPrivacy.candidateName || 'there'},</p>
 
-    <p>Thank you for your interest in ${safeAssignmentTitle ? `the <strong>${safeAssignmentTitle}</strong> opportunity with` : ''} <strong>${emailPrivacy.organizationName || 'the organization'}</strong>.</p>
+    <p>${emailPrivacy.organizationName || 'The organization'} has shared a decision update for ${safeAssignmentTitle ? `the <strong>${safeAssignmentTitle}</strong> proof-review workflow` : 'your Proofound proof-review workflow'}.</p>
 
     ${
       safeFeedback
         ? `
     <div style="background-color: #F7F6F1; border-left: 4px solid #1C4D3A; border-radius: 6px; padding: 16px; margin: 24px 0;">
-      <h3 style="margin: 0 0 12px 0; color: #1C4D3A;">Feedback from ${emailPrivacy.organizationName || 'the organization'}:</h3>
+      <h3 style="margin: 0 0 12px 0; color: #1C4D3A;">Workflow feedback from ${emailPrivacy.organizationName || 'the organization'}:</h3>
       <p style="margin: 0;">${safeFeedback}</p>
     </div>
     `
@@ -182,7 +182,11 @@ export async function sendDecisionFeedbackEmail(params: {
     }
 
     <p style="font-size: 14px; color: #6B6760; margin-top: 30px;">
-      ${isAccepted ? 'You will receive next steps shortly.' : 'We encourage you to continue exploring opportunities on Proofound.'}
+      ${
+        isAccepted
+          ? 'Open Proofound for the approved next step and any stage-specific context.'
+          : 'This decision does not score, rank, or evaluate your wider profile. Keep Proof Packs current for future proof-review workflows.'
+      }
     </p>
   </div>
 </body>
@@ -190,15 +194,19 @@ export async function sendDecisionFeedbackEmail(params: {
   `;
 
   const text = `
-Application Update
+Proofound Workflow Decision
 
 Hi ${emailPrivacy.candidateName || 'there'},
 
-Thank you for your interest in ${safeAssignmentTitle ? `the ${safeAssignmentTitle} opportunity with` : ''} ${emailPrivacy.organizationName || 'the organization'}.
+${emailPrivacy.organizationName || 'The organization'} has shared a decision update for ${safeAssignmentTitle ? `the ${safeAssignmentTitle} proof-review workflow` : 'your Proofound proof-review workflow'}.
 
-${safeFeedback ? `Feedback from ${emailPrivacy.organizationName || 'the organization'}:\n${safeFeedback}\n\n` : ''}
+${safeFeedback ? `Workflow feedback from ${emailPrivacy.organizationName || 'the organization'}:\n${safeFeedback}\n\n` : ''}
 
-${isAccepted ? 'You will receive next steps shortly.' : 'We encourage you to continue exploring opportunities on Proofound.'}
+${
+  isAccepted
+    ? 'Open Proofound for the approved next step and any stage-specific context.'
+    : 'This decision does not score, rank, or evaluate your wider profile. Keep Proof Packs current for future proof-review workflows.'
+}
   `.trim();
 
   return await sendEmail({

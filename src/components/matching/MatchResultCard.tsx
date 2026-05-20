@@ -46,9 +46,10 @@ type DeferredComponent = ComponentType<any>;
 interface MatchResultCardProps {
   result: {
     id?: string; // Match ID for fetching detailed explanation
-    score: number;
+    score?: number;
     subscores?: Record<string, number>;
     contributions?: Record<string, number>;
+    proofSignals?: Array<{ key: string; support: string }>;
     profileId?: string;
     assignmentId?: string;
     reviewStage?: string;
@@ -142,7 +143,8 @@ export function MatchResultCard({
     (data as any)?.showExactSalary === true;
 
   const proofFitLabel = (() => {
-    const score = Number.isFinite(result.score) ? result.score : 0;
+    const score =
+      typeof result.score === 'number' && Number.isFinite(result.score) ? result.score : 0;
     if (score >= 0.8) return 'Strong proof alignment';
     if (score >= 0.6) return 'Clear proof alignment';
     return 'Proof review needed';
@@ -151,6 +153,12 @@ export function MatchResultCard({
   const contributions = Object.entries(result.contributions ?? {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
+  const proofSignals =
+    result.proofSignals ??
+    contributions.map(([key, value]) => ({
+      key,
+      support: proofSignalLabel(value),
+    }));
   const contributionLabel = (key: string) =>
     CONTRIBUTION_LABELS[key] ||
     key.replace(/[_-]+/g, ' ').replace(/^\w/, (char) => char.toUpperCase());
@@ -345,6 +353,7 @@ export function MatchResultCard({
                   reasonSummary={matchExplanation.reasonSummary}
                   reasonSections={matchExplanation.reasonSections}
                   subscores={matchExplanation.subscores}
+                  proofSignals={matchExplanation.proofSignals}
                   skillsMatch={matchExplanation.skillsMatch}
                   constraints={matchExplanation.constraints}
                   reviewCard={matchExplanation.reviewCard}
@@ -514,6 +523,7 @@ export function MatchResultCard({
                       reasonSummary={matchExplanation.reasonSummary}
                       reasonSections={matchExplanation.reasonSections}
                       subscores={matchExplanation.subscores}
+                      proofSignals={matchExplanation.proofSignals}
                       skillsMatch={matchExplanation.skillsMatch}
                       constraints={matchExplanation.constraints}
                     />
@@ -622,16 +632,16 @@ export function MatchResultCard({
             Why it fits
           </p>
           <div className="space-y-1.5">
-            {contributions.map(([key, value]) => (
+            {proofSignals.map((signal) => (
               <div
-                key={key}
+                key={signal.key}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-proofound-stone/70 bg-white px-3 py-2"
               >
                 <span className="text-xs font-medium capitalize text-proofound-charcoal">
-                  {contributionLabel(key)}
+                  {contributionLabel(signal.key)}
                 </span>
                 <span className="rounded-full bg-proofound-parchment px-2 py-0.5 text-xs text-muted-foreground">
-                  {proofSignalLabel(value)}
+                  {signal.support}
                 </span>
               </div>
             ))}

@@ -18,7 +18,8 @@ import { apiFetch } from '@/lib/api/fetch';
 
 interface SnoozedMatch {
   id: string;
-  matchScore: number;
+  proofFitLabel?: string;
+  matchScore?: number;
   snoozedUntil: string;
   assignment: {
     id: string;
@@ -37,7 +38,8 @@ interface SnoozedMatchesListProps {
   onRestored?: () => void;
 }
 
-function proofFitLabel(score: number): string {
+function legacyProofFitLabel(score?: number): string {
+  if (typeof score !== 'number' || !Number.isFinite(score)) return 'Proof review needed';
   if (score >= 0.8) return 'Strong proof alignment';
   if (score >= 0.6) return 'Clear proof alignment';
   return 'Proof review needed';
@@ -195,7 +197,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
                       variant="secondary"
                       className="bg-proofound-forest/10 text-proofound-forest border-proofound-forest/20"
                     >
-                      {proofFitLabel(match.matchScore)}
+                      {match.proofFitLabel ?? legacyProofFitLabel(match.matchScore)}
                     </Badge>
 
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

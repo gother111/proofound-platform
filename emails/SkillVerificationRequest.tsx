@@ -132,8 +132,11 @@ export default function SkillVerificationRequest({
               This is an automated message. Please do not reply to this email.
             </Text>
             <Text style={footerSmall}>
-              <Link href="https://proofound.com/help/verification" style={helpLink}>
-                Learn more about skill verification
+              <Link
+                href="mailto:hello@proofound.io?subject=Skill%20verification%20question"
+                style={helpLink}
+              >
+                Contact Proofound about skill verification
               </Link>
             </Text>
           </Section>

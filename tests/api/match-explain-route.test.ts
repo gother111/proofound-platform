@@ -263,7 +263,19 @@ describe('GET /api/match/explain/[matchId]', () => {
     expect(body.reviewCard).not.toHaveProperty('displayName');
     expect(body.reviewCard).not.toHaveProperty('avatarUrl');
     expect(body).not.toHaveProperty('pac');
-    expect(body.subscores).not.toHaveProperty('pac');
+    expect(body).not.toHaveProperty('compositeScore');
+    expect(body).not.toHaveProperty('scoreTotal');
+    expect(body).not.toHaveProperty('scoreState');
+    expect(body).not.toHaveProperty('scoreVersion');
+    expect(body).not.toHaveProperty('inputsHash');
+    expect(body).not.toHaveProperty('subscores');
+    expect(body.scoreVisibility).toBe('internal_ordering_only');
+    expect(body.proofSignals).toEqual({
+      skills: 'Strong proof support',
+      constraints: 'Strong proof support',
+      recency: 'Clear support',
+      evidence: 'Clear support',
+    });
     expect(JSON.stringify(body.reviewCard)).not.toContain('http');
     expect(body.rank).toBeUndefined();
     expect(body.rankMode).toBe('band');

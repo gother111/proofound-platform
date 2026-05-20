@@ -195,7 +195,7 @@ async function getCanonicalSkillVerificationWithSkillDetails(
 
 function normalizeBaseUrl(url?: string | null) {
   const base = (url || '').trim();
-  if (!base) return 'https://proofound.com';
+  if (!base) return 'https://proofound.io';
   return base.endsWith('/') ? base.slice(0, -1) : base;
 }
 

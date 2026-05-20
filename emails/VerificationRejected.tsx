@@ -32,11 +32,11 @@ export default function VerificationRejected({
   const getDefaultReason = () => {
     switch (verificationType) {
       case 'linkedin':
-        return 'We were unable to verify sufficient professional information from your LinkedIn profile. Please ensure your profile is complete and public.';
+        return 'This LinkedIn check could not be completed. LinkedIn checks are not required for the launch corridor and do not create proof trust by themselves.';
       case 'work-email':
-        return 'The work email domain could not be verified or does not match your profile information.';
+        return 'The work email domain could not be confirmed for this account-side trust signal.';
       case 'veriff':
-        return 'The identity verification could not be completed. This may be due to document quality or information mismatch.';
+        return 'This identity check could not be completed. Identity checks are not required for the launch corridor and do not create proof trust by themselves.';
       default:
         return 'We were unable to complete your verification at this time.';
     }
@@ -72,8 +72,8 @@ export default function VerificationRejected({
             </Section>
 
             <Text style={paragraph}>
-              Don&apos;t worry - you can retry the verification process or try an alternative
-              verification method.
+              You can review the account-side verification status in settings. This does not remove
+              your Proof Packs or public portfolio.
             </Text>
 
             <Hr style={hr} />
@@ -84,25 +84,23 @@ export default function VerificationRejected({
 
             {verificationType === 'linkedin' && (
               <Text style={benefitsList}>
-                <strong>1. Update your LinkedIn profile:</strong>
+                <strong>1. No launch-active action is required:</strong>
                 <br />
-                • Ensure your profile is set to public
+                • LinkedIn checks are outside the launch corridor
                 <br />
-                • Add detailed work history with dates
+                • Any older LinkedIn signal remains account-side history only
                 <br />
-                • Include your current position and company
-                <br />
-                • Add relevant skills and endorsements
+                • It does not create public proof trust or intro eligibility by itself
                 <br />
                 <br />
-                <strong>2. Try again:</strong>
+                <strong>2. Keep Proof Packs current:</strong>
                 <br />
-                Once you&apos;ve updated your profile, you can retry verification
+                Add recent proof tied to real work and review your portfolio visibility
                 <br />
                 <br />
-                <strong>3. Use alternative verification:</strong>
-                <br />• Verify with your work email instead
-                <br />• Complete government ID verification with Veriff
+                <strong>3. Use work email if relevant:</strong>
+                <br />
+                Work email is the launch-active account-side check
               </Text>
             )}
 
@@ -122,33 +120,32 @@ export default function VerificationRejected({
                 Request a new verification email
                 <br />
                 <br />
-                <strong>3. Use alternative verification:</strong>
-                <br />• Connect your LinkedIn profile instead
-                <br />• Complete government ID verification with Veriff
+                <strong>3. Keep proof context current:</strong>
+                <br />
+                Work email is a trust signal only; your Proof Packs and portfolio carry the review
+                context
               </Text>
             )}
 
             {verificationType === 'veriff' && (
               <Text style={benefitsList}>
-                <strong>1. Prepare better documents:</strong>
+                <strong>1. No launch-active action is required:</strong>
                 <br />
-                • Use clear, well-lit photos of your ID
+                • Identity checks are outside the required launch corridor
                 <br />
-                • Ensure all text is readable
+                • They do not create public proof trust or intro eligibility by themselves
                 <br />
-                • Use a valid government-issued ID
-                <br />
-                • Make sure your information matches your profile
+                • Your Proof Packs remain the review center
                 <br />
                 <br />
-                <strong>2. Try again:</strong>
+                <strong>2. Keep Proof Packs current:</strong>
                 <br />
-                Restart the verification process with updated documents
+                Add recent proof tied to real work and review your portfolio visibility
                 <br />
                 <br />
-                <strong>3. Use alternative verification:</strong>
-                <br />• Connect your LinkedIn profile instead
-                <br />• Verify with your work email
+                <strong>3. Use work email if relevant:</strong>
+                <br />
+                Work email is the launch-active account-side check
               </Text>
             )}
 
@@ -163,9 +160,9 @@ export default function VerificationRejected({
             <Text style={footerText}>
               <strong>Need help?</strong>
               <br />
-              If you&apos;re having trouble with verification, our support team is here to help. You
-              can continue using Proofound without verification, but verified profiles have better
-              matching opportunities and enhanced credibility.
+              If you&apos;re having trouble with work email verification, review settings or contact
+              support. Verification is a trust signal, not an automated score, rank, or hiring
+              recommendation.
             </Text>
           </Section>
 
@@ -176,8 +173,8 @@ export default function VerificationRejected({
               © {new Date().getFullYear()} Proofound. All rights reserved.
             </Text>
             <Text style={footerSmall}>
-              <Link href={`${retryUrl}?tab=help`} style={unsubscribeLink}>
-                Get Help with Verification
+              <Link href={retryUrl} style={unsubscribeLink}>
+                Review verification settings
               </Link>
             </Text>
           </Section>

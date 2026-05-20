@@ -13,6 +13,9 @@ export function useAssistiveAiFlag() {
         const payload = await response.json();
         setEnabled(payload?.flags?.assistiveAiUi === true);
       } catch (error) {
+        if (error instanceof TypeError && error.message.includes('Failed to parse URL')) {
+          return;
+        }
         console.error('Failed to load assistive AI feature flag', error);
       }
     };

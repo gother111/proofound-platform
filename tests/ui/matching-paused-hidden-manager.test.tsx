@@ -69,7 +69,7 @@ describe('matching paused/hidden manager launch safety', () => {
         matches: [
           {
             id: 'match-2',
-            matchScore: 0.84,
+            proofFitLabel: 'Strong proof alignment',
             snoozedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
             assignment: {
               id: 'assignment-2',

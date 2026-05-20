@@ -200,7 +200,7 @@ export function OrganizationSetup() {
             </Label>
             <div className="flex items-center gap-2">
               <span className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-                proofound.com/o/
+                proofound.io/portfolio/org/
               </span>
               <Input
                 id="slug"

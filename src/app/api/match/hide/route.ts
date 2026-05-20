@@ -61,7 +61,6 @@ export async function GET() {
           ? {
               id: row.match.id,
               assignmentId: row.assignment.id,
-              score: Number(row.match.score),
               assignment: {
                 title: row.assignment.role,
                 locationMode: row.assignment.locationMode,
@@ -76,7 +75,11 @@ export async function GET() {
       })
       .filter(Boolean);
 
-    return NextResponse.json({ matches: hiddenMatches, count: hiddenMatches.length });
+    return NextResponse.json({
+      matches: hiddenMatches,
+      count: hiddenMatches.length,
+      scoreVisibility: 'internal_ordering_only',
+    });
   } catch (error) {
     console.error('Failed to fetch hidden matches:', error);
     return NextResponse.json({ error: 'Failed to fetch hidden matches' }, { status: 500 });

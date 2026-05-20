@@ -22,7 +22,13 @@ import {
   sanitizeMatchReasonCodes,
 } from '@/lib/matching/review-contract';
 import { buildMatchExplainerContract } from '@/lib/matching/explainer-contract';
-import { resolveEffectiveScoreState } from '@/lib/matching/match-score-contract';
+import { isMockSupabaseEnabled } from '@/lib/env';
+import { buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
+
+const visualAssignmentFixturesEnabled = () =>
+  isMockSupabaseEnabled() &&
+  process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
+  process.env.VERCEL_ENV !== 'production';
 
 type SkillRequirement = {
   id?: string;
@@ -38,6 +44,26 @@ function asArray<T>(value: unknown): T[] {
 
 function toSkillKey(skill: SkillRequirement): string {
   return skill.id || skill.skillCode || skill.skill_id || '';
+}
+
+function proofSignalLabel(value: unknown) {
+  const normalized = Number(value);
+  if (!Number.isFinite(normalized)) return 'Not available';
+  if (normalized >= 0.85) return 'Strong proof support';
+  if (normalized >= 0.65) return 'Clear support';
+  if (normalized >= 0.4) return 'Needs reviewer judgment';
+  return 'Limited signal';
+}
+
+function toProofSignals(subscores: Record<string, unknown> | null | undefined) {
+  const normalizeBps = (value: unknown) => Number(value ?? 0) / 10000;
+
+  return {
+    skills: proofSignalLabel(normalizeBps(subscores?.skills_fit)),
+    constraints: proofSignalLabel(normalizeBps(subscores?.constraints_fit)),
+    recency: proofSignalLabel(normalizeBps(subscores?.proof_fit)),
+    evidence: proofSignalLabel(normalizeBps(subscores?.proof_fit)),
+  };
 }
 
 export async function GET(
@@ -56,15 +82,70 @@ export async function GET(
       return NextResponse.json({ error: 'Match ID required' }, { status: 400 });
     }
 
+    if (visualAssignmentFixturesEnabled() && matchId.startsWith('visual-match-')) {
+      const mockMatches = buildVisualOrgMatches('11111111-1111-4111-8111-111111111111');
+      const foundMock = mockMatches.find((m) => m.id === matchId);
+      if (!foundMock) {
+        return NextResponse.json({ error: 'Mock match not found' }, { status: 404 });
+      }
+
+      // Format skillsMatch
+      const required = Object.entries(foundMock.profile.skills).map(
+        ([name, detail]: [string, any]) => ({
+          skillName: name.replace(/-/g, ' '),
+          requiredLevel: 3,
+          yourLevel: detail.level,
+          met: detail.level >= 3,
+        })
+      );
+
+      const explanation = {
+        explainer: {
+          version: '1.0.0',
+          title: 'Visual Explainer',
+        },
+        matchId: foundMock.id,
+        reasonCodes: foundMock.reasonCodes,
+        generatedAt: new Date().toISOString(),
+        fairness: {
+          status: 'pass',
+          evaluatedAt: new Date().toISOString(),
+          warning: null,
+        },
+        reviewCard: foundMock.reviewCard,
+        reasonSummary: foundMock.why.summary,
+        reasonSections: foundMock.why.sections,
+        rank: undefined,
+        totalCandidates: mockMatches.length,
+        rankBand: foundMock.rankBand,
+        rankMode: 'band',
+        exactRankAvailable: false,
+        scoreVisibility: 'internal_ordering_only',
+        proofSignals: {
+          skills: 'Strong proof support',
+          constraints: 'Strong proof support',
+          recency: 'Strong proof support',
+          evidence: 'Strong proof support',
+        },
+        skillsMatch: {
+          required: required,
+          nice: [],
+        },
+        constraints: {
+          location: { match: true, details: foundMock.profile.workMode },
+          timezone: { match: true, details: foundMock.profile.timezone },
+          workMode: { match: true, details: foundMock.profile.workMode },
+        },
+      };
+
+      return NextResponse.json(explanation);
+    }
+
     const matchResult = await db.execute(sql`
       SELECT
         m.id,
         m.assignment_id,
         m.profile_id,
-        m.score,
-        m.score_total,
-        m.score_state,
-        m.score_version,
         m.model_version,
         m.explanation_version,
         m.fairness_check_version,
@@ -75,8 +156,6 @@ export async function GET(
         m.generated_at,
         m.stale_at,
         m.subscores_json,
-        m.score_snapshot_json,
-        m.weights,
         a.role,
         a.must_have_skills,
         a.nice_to_have_skills,
@@ -98,10 +177,6 @@ export async function GET(
       id: string;
       assignment_id: string;
       profile_id: string;
-      score: string | number;
-      score_total: number | null;
-      score_state: string | null;
-      score_version: string | null;
       model_version: string | null;
       explanation_version: string | null;
       fairness_check_version: string | null;
@@ -112,8 +187,6 @@ export async function GET(
       generated_at: string | null;
       stale_at: string | null;
       subscores_json: Record<string, unknown> | null;
-      score_snapshot_json: Record<string, unknown> | null;
-      weights: unknown;
       role: string | null;
       must_have_skills: unknown;
       nice_to_have_skills: unknown;
@@ -302,23 +375,12 @@ export async function GET(
       fitBand: rankBand,
     });
 
-    const subscores = (match.subscores_json as Record<string, number> | null) || {};
-
     const explanation = {
       explainer: buildMatchExplainerContract(),
       matchId: match.id,
-      compositeScore: Number(match.score) || 0,
-      scoreTotal: match.score_total,
-      scoreState: resolveEffectiveScoreState({
-        scoreState: match.score_state as any,
-        generatedAt: match.generated_at,
-        staleAt: match.stale_at,
-      }),
-      scoreVersion: match.score_version,
       modelVersion: match.model_version,
       explanationVersion: match.explanation_version,
       fairnessCheckVersion: match.fairness_check_version,
-      inputsHash: match.inputs_hash,
       reasonCodes,
       generatedAt: match.generated_at,
       fairness: {
@@ -334,12 +396,8 @@ export async function GET(
       rankBand,
       rankMode: 'band',
       exactRankAvailable,
-      subscores: {
-        skills: Number(subscores.skills_fit ?? 0) / 10000,
-        constraints: Number(subscores.constraints_fit ?? 0) / 10000,
-        recency: Number(subscores.proof_fit ?? 0) / 10000,
-        evidence: Number(subscores.proof_fit ?? 0) / 10000,
-      },
+      scoreVisibility: 'internal_ordering_only',
+      proofSignals: toProofSignals(match.subscores_json),
       skillsMatch,
       constraints,
     };

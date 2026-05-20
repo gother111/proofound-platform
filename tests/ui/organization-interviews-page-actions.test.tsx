@@ -92,9 +92,9 @@ describe('organization interviews page actions', () => {
     render(<OrganizationInterviewsPage />);
 
     expect(
-      screen.getByRole('heading', { name: 'Interview corridor is loading' })
+      screen.getByRole('heading', { name: 'Interview workflow is loading' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('Loading interview corridor...');
+    expect(screen.getByRole('status')).toHaveTextContent('Loading interview workflow...');
   });
 
   it('shows edit/cancel actions and calls edit + cancel APIs with refresh', async () => {

@@ -1,7 +1,7 @@
 /**
  * Interviews Page - Organization
  *
- * View and manage the hiring corridor for your organization.
+ * View and manage the interview workflow for your organization.
  * Shows reveal approval, interview scheduling, decision, and engagement verification.
  */
 
@@ -282,7 +282,7 @@ export default function OrganizationInterviewsPage() {
       return;
     }
 
-    if (!confirm('Mark this interview as completed? This will unlock the decision step.')) {
+    if (!confirm('Mark this interview as completed? This will make the decision step available.')) {
       return;
     }
 
@@ -473,14 +473,14 @@ export default function OrganizationInterviewsPage() {
               Interviews
             </p>
             <h1 className="mt-2 font-display text-xl font-semibold text-foreground">
-              Interview corridor is loading
+              Interview workflow is loading
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               We are preparing scheduling, decision, feedback, and engagement verification steps for
               this organization workspace.
             </p>
             <p className="mt-3 text-sm text-muted-foreground" role="status">
-              Loading interview corridor...
+              Loading interview workflow...
             </p>
           </section>
           <PageIntroSkeleton showAction={false} />
@@ -499,7 +499,7 @@ export default function OrganizationInterviewsPage() {
               variant="secondary"
               className="bg-white hover:bg-white text-proofound-forest border-proofound-stone"
             >
-              Interview corridor
+              Interview workflow
             </Badge>
           </div>
           <div className="flex flex-col gap-6 px-5 py-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
@@ -512,7 +512,7 @@ export default function OrganizationInterviewsPage() {
                   Interviews
                 </h1>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Track the full hiring corridor, from shortlist through decision and engagement
+                  Track the staged workflow from shortlist through decision and engagement
                   verification.
                 </p>
               </div>
@@ -526,10 +526,10 @@ export default function OrganizationInterviewsPage() {
               <Calendar className="h-8 w-8" />
             </div>
             <h2 className="mb-2 text-xl font-medium text-proofound-charcoal">
-              No active hiring corridor yet
+              No active interview workflow yet
             </h2>
             <p className="mb-6 max-w-md text-sm text-muted-foreground">
-              Once you shortlist a candidate, this page will show each corridor stage, the privacy
+              Once an introduction is approved, this page will show each workflow stage, the privacy
               status, and the next action.
             </p>
           </div>
@@ -796,7 +796,7 @@ export default function OrganizationInterviewsPage() {
             <DialogHeader>
               <DialogTitle>Edit Interview</DialogTitle>
               <DialogDescription>
-                Update the interview time. Changes will be sent to the candidate via messaging.
+                Update the interview time. Changes will be sent through workflow messaging.
               </DialogDescription>
             </DialogHeader>
 

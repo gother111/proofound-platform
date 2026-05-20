@@ -182,7 +182,7 @@ export function AssignmentInvitationEmail({
     <div class="footer">
       <p>
         This invitation was sent by ${organizationName} via Proofound.<br>
-        <a href="https://proofound.com">Learn more about Proofound</a>
+        <a href="https://proofound.io">Learn more about Proofound</a>
       </p>
       <p style="font-size: 12px; margin-top: 20px;">
         If you believe you received this email in error, you can safely ignore it.
@@ -228,6 +228,6 @@ If you have any questions, please reply to this email or contact ${organizationN
 
 ---
 This invitation was sent by ${organizationName} via Proofound.
-Learn more: https://proofound.com
+Learn more: https://proofound.io
   `.trim();
 }

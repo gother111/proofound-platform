@@ -538,11 +538,8 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
               Privacy Policy
             </a>{' '}
             or contact us at{' '}
-            <a
-              href="mailto:privacy@proofound.com"
-              className="text-proofound-forest hover:underline"
-            >
-              privacy@proofound.com
+            <a href="mailto:privacy@proofound.io" className="text-proofound-forest hover:underline">
+              privacy@proofound.io
             </a>
           </p>
         </CardContent>

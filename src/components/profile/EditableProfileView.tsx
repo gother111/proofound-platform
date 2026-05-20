@@ -43,7 +43,7 @@ function resolvePortfolioGateMessage(lockReason: string | null): string {
     case 'publish':
       return 'Public Page is locked until you choose one public-safe proof item from the profile Public Page visibility tab.';
     default:
-      return 'Complete the required profile steps to unlock your Public Page.';
+      return 'Complete the required profile steps before your Public Page is ready.';
   }
 }
 

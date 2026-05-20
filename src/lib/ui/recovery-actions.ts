@@ -38,7 +38,7 @@ const INDIVIDUAL_BASE_ACTIONS: RecoveryAction[] = [
   {
     id: 'turn-on-matchable',
     title: 'Turn on matchable',
-    description: 'Complete matching preferences to unlock and improve opportunities.',
+    description: 'Complete matching preferences to make better-fit opportunities available.',
     actionUrl: '/app/i/matching/preferences',
   },
 ];
@@ -60,7 +60,7 @@ const INDIVIDUAL_DESCRIPTION_OVERRIDES: Record<
     'add-skill': 'Start with a skill you can connect to real proof.',
   },
   'proofs-empty': {
-    'add-proof': 'Add your first proof artifact to increase credibility and ranking quality.',
+    'add-proof': 'Add your first proof artifact to strengthen credibility and readiness.',
   },
   'profile-incomplete': {
     'turn-on-matchable': 'Finish matching preferences so your profile can start receiving matches.',
@@ -166,7 +166,7 @@ export function getOrganizationRecoveryActions(
       {
         id: 'add-skill-requirements',
         title: 'Add skill requirements',
-        description: 'Define required skills so matching can rank candidates accurately.',
+        description: 'Define required skills so matching can surface proof-backed candidates.',
         actionUrl: `${basePath}/assignments/new?focus=skills`,
       },
       {

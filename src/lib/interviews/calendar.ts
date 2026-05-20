@@ -44,7 +44,7 @@ export function buildInterviewIcs(payload: InterviewCalendarPayload): string {
     'VERSION:2.0',
     'PRODID:-//Proofound//Interview//EN',
     'BEGIN:VEVENT',
-    `UID:${payload.interviewId}@proofound.com`,
+    `UID:${payload.interviewId}@proofound.io`,
     `DTSTAMP:${toUtcCalendarTimestamp(new Date())}`,
     `DTSTART:${toUtcCalendarTimestamp(start)}`,
     `DTEND:${toUtcCalendarTimestamp(end)}`,

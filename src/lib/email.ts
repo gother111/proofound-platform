@@ -187,12 +187,12 @@ export async function sendDeletionScheduledEmail(
   scheduledDate: Date
 ): Promise<void> {
   try {
-    const cancellationUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
+    const settingsUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
     await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
-      subject: 'Account Deletion Scheduled - Proofound',
-      react: DeletionScheduled({ scheduledDate, cancellationUrl }),
+      subject: 'Account Deletion Request Received - Proofound',
+      react: DeletionScheduled({ scheduledDate, settingsUrl }),
     });
   } catch (error) {
     recordLegacyEmailFailure('deletion', error);
@@ -207,12 +207,12 @@ export async function sendDeletionReminderEmail(
   daysRemaining: number
 ): Promise<void> {
   try {
-    const cancellationUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
+    const settingsUrl = buildCanonicalEmailUrl('/settings', { tab: 'privacy' });
     await sendLegacyResendEmail({
       from: fromEmail,
       to: email,
-      subject: `${daysRemaining} Days Until Your Proofound Account is Deleted`,
-      react: DeletionReminder({ scheduledDate, daysRemaining, cancellationUrl }),
+      subject: 'Account Deletion Update - Proofound',
+      react: DeletionReminder({ scheduledDate, daysRemaining, settingsUrl }),
     });
   } catch (error) {
     recordLegacyEmailFailure('deletion', error);
@@ -296,7 +296,7 @@ export async function sendMatchNotification(
   recipientName: string,
   matchData: {
     matchType: 'individual' | 'organization';
-    matchScore: number;
+    proofFitLabel?: string;
     roleTitle?: string;
     organizationName?: string;
     topSkillMatches?: string[];
@@ -305,16 +305,16 @@ export async function sendMatchNotification(
 ): Promise<void> {
   try {
     const viewMatchUrl = buildCanonicalEmailUrl(
-      `/app/i/matches/${encodeURIComponent(matchData.matchId)}`
+      `/app/i/matching?matchId=${encodeURIComponent(matchData.matchId)}`
     );
     await sendLegacyResendEmail({
       from: fromEmail,
       to: recipientEmail,
-      subject: 'You have a new match! - Proofound',
+      subject: 'Proof review ready - Proofound',
       react: NewMatchNotification({
         recipientName,
         matchType: matchData.matchType,
-        matchScore: matchData.matchScore,
+        proofFitLabel: matchData.proofFitLabel,
         roleTitle: matchData.roleTitle,
         organizationName: matchData.organizationName,
         topSkillMatches: matchData.topSkillMatches,

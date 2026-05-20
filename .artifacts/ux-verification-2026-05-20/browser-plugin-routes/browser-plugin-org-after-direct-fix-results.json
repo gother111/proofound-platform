@@ -1,0 +1,29 @@
+[
+  {
+    "id": "org-assignments-after-direct-fix",
+    "requestedUrl": "/app/o/test-org/assignments",
+    "error": "Timed out waiting for tab 2 to navigate to http://localhost:33122/app/o/test-org/assignments."
+  },
+  {
+    "id": "org-communications-after-direct-fix",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-communications-after-direct-fix.png",
+    "candidateVisible": true,
+    "finalUrl": "http://localhost:33122/app/o/test-org/communications",
+    "h1": "Messages",
+    "hasPermanentDeferredShell": false,
+    "horizontalOverflow": 0,
+    "messagesVisible": true,
+    "textStart": "Skip to main content Overview Work Inbox Profile Preview NF HIRING CORRIDOR Communications Messages Threads, intros, and reveal requests. Interviews Scheduling, feedback, and handoff. Messages Assignment conversations stay private and stage-aware. Candidate identity remains protected until a consented reveal opens the next step. Messages"
+  },
+  {
+    "id": "org-shortlist-after-direct-fix",
+    "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/browser-plugin-routes/org-shortlist-after-direct-fix.png",
+    "candidateVisible": false,
+    "finalUrl": "http://localhost:33122/app/o/test-org/assignments",
+    "h1": "Assignments",
+    "hasPermanentDeferredShell": false,
+    "horizontalOverflow": 0,
+    "messagesVisible": false,
+    "textStart": "Skip to main content Overview Work Inbox Profile Preview NF Assignment corridor Organization / Assignments Assignments Assignment cards own their matching corridor, candidate review, and pipeline context. Loading assignments and matches..."
+  }
+]

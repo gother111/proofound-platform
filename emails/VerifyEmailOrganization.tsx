@@ -19,20 +19,20 @@ interface VerifyEmailOrganizationProps {
 export const VerifyEmailOrganization = ({ verifyUrl }: VerifyEmailOrganizationProps) => (
   <Html>
     <Head />
-    <Preview>Welcome to Proofound! Verify your email to set up your organization</Preview>
+    <Preview>Verify your email to set up your organization trust page</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Welcome to Proofound!</Heading>
         <Text style={text}>
           Thanks for signing up as an Organization! Verify your email address to get started
-          creating your organization profile on Proofound.
+          creating your organization trust page on Proofound.
         </Text>
         <Text style={text}>Once verified, you&apos;ll be able to:</Text>
         <ul style={list}>
-          <li>Create your organization profile and showcase your mission</li>
-          <li>Post opportunities and find the right team members</li>
-          <li>Build trust through verifications and impact stories</li>
-          <li>Connect with partners and collaborators</li>
+          <li>Publish a narrow organization trust page</li>
+          <li>Create assignment paths with outcomes, constraints, and proof needs</li>
+          <li>Review proof-led candidate context without public directory browsing</li>
+          <li>Request staged introductions when the workflow is ready</li>
         </ul>
         <Section style={buttonContainer}>
           <Button style={button} href={verifyUrl}>

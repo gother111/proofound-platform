@@ -45,6 +45,7 @@ describe('MatchingOrganizationView launch corridor', () => {
     vi.clearAllMocks();
     searchParamAssignment = '';
     window.localStorage.clear();
+    (global as any).fetch = vi.fn();
   });
 
   it('does not render the archived beta test initiation CTA', async () => {
@@ -55,16 +56,16 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
 
-    expect(screen.getByText('Review focus')).toBeInTheDocument();
-    expect(screen.getByText('Choose an assignment to review matches.')).toBeInTheDocument();
+    expect(screen.getByText('Assignment review queue')).toBeInTheDocument();
     expect(
-      screen.getByText('Select an assignment to open its matching queue.')
+      screen.getByText(
+        'Review proof-backed candidates, shortlist fits, and request intros when ready.'
+      )
     ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: /matching for designer/i }));
+    expect(screen.getByText('Active Assignments')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/no matches for designer yet/i)).toBeInTheDocument();
+      expect(screen.getByText('No candidate matches yet')).toBeInTheDocument();
     });
 
     expect(screen.queryByRole('button', { name: /initiate test/i })).not.toBeInTheDocument();
@@ -87,10 +88,6 @@ describe('MatchingOrganizationView launch corridor', () => {
     });
 
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
-
-    expect(apiFetchMock).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByRole('button', { name: /matching for designer/i }));
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
@@ -130,9 +127,16 @@ describe('MatchingOrganizationView launch corridor', () => {
       />
     );
 
-    expect(apiFetchMock).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/match/assignment',
+        expect.objectContaining({
+          body: expect.stringContaining('"assignmentId":"assignment-1"'),
+        })
+      );
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: /matching for research lead/i }));
+    fireEvent.click(screen.getByRole('button', { name: /research lead/i }));
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
@@ -143,8 +147,7 @@ describe('MatchingOrganizationView launch corridor', () => {
       );
     });
     expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments?matching=assignment-2');
-    expect(screen.getByTestId('assignment-matching-grid')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'View / Edit' })[1]).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Edit assignment context' })).toHaveAttribute(
       'href',
       '/app/o/acme/assignments/assignment-2/review'
     );
@@ -177,9 +180,9 @@ describe('MatchingOrganizationView launch corridor', () => {
     );
 
     expect(screen.getByText('New candidates')).toBeInTheDocument();
-    expect(screen.getAllByText('2 candidates').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('2 matches').length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole('button', { name: /matching for designer/i }));
+    fireEvent.click(screen.getByRole('button', { name: /designer/i }));
 
     await waitFor(() => {
       expect(screen.queryByText('New candidates')).not.toBeInTheDocument();

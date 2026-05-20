@@ -1,0 +1,668 @@
+{
+  "generatedAt": "2026-05-20T19:07:12.473Z",
+  "baseURL": "http://127.0.0.1:33123",
+  "results": [
+    {
+      "route": "org-home",
+      "persona": "org_member",
+      "requestedPath": "/app/o/test-org/home",
+      "viewport": "desktop",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/desktop-org-home.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/o/test-org/home",
+      "heading": "Nordic Field Systems",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/o/test-org/home",
+          "left": 8,
+          "top": 12,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Assignments",
+          "href": "/app/o/test-org/assignments",
+          "left": 8,
+          "top": 62,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/o/test-org/communications",
+          "left": 8,
+          "top": 112,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Organization Trust Page",
+          "href": "/app/o/test-org/profile",
+          "left": 8,
+          "top": 162,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Public Preview",
+          "href": "/app/o/test-org/portfolio",
+          "left": 8,
+          "top": 212,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Collapse sidebar",
+          "href": null,
+          "left": 8,
+          "top": 960,
+          "width": 223,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 1380,
+          "top": 6,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Create first assignment",
+          "href": "/app/o/test-org/assignments/new",
+          "left": 361,
+          "top": 437,
+          "width": 258,
+          "height": 44,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Nordic Field SystemsCurrent review workspaceSigned in as ManagerReview statusReady for assignmentCreate the first assignmentYour organization trust profile is active. Define a proof-led assignment (real-world context, required evidence, and compensation bounds) to open the matching corridor.Create first assignmentTeam accessMembers authorized to review matchesCCollaboratorManager"
+    },
+    {
+      "route": "org-assignments",
+      "persona": "org_member",
+      "requestedPath": "/app/o/test-org/assignments",
+      "viewport": "desktop",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/desktop-org-assignments.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/o/test-org/assignments",
+      "heading": "Assignments",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/o/test-org/home",
+          "left": 8,
+          "top": 12,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Assignments",
+          "href": "/app/o/test-org/assignments",
+          "left": 8,
+          "top": 62,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/o/test-org/communications",
+          "left": 8,
+          "top": 112,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Organization Trust Page",
+          "href": "/app/o/test-org/profile",
+          "left": 8,
+          "top": 162,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Public Preview",
+          "href": "/app/o/test-org/portfolio",
+          "left": 8,
+          "top": 212,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Collapse sidebar",
+          "href": null,
+          "left": 8,
+          "top": 960,
+          "width": 223,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 1380,
+          "top": 6,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Organization",
+          "href": "/app/o/test-org/home",
+          "left": 365,
+          "top": 162,
+          "width": 88,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "New Assignment",
+          "href": null,
+          "left": 1206,
+          "top": 338,
+          "width": 202,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Field operations launch lead for municipal infrastructure handoffsReview updatesOpen7 matches",
+          "href": null,
+          "left": 272,
+          "top": 472,
+          "width": 271,
+          "height": 103,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Partner readiness analystDraft0 matches",
+          "href": null,
+          "left": 272,
+          "top": 583,
+          "width": 271,
+          "height": 81,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Edit assignment context",
+          "href": "/app/o/test-org/assignments/11111111-1111-4111-8111-111111111111/review",
+          "left": 1194,
+          "top": 467,
+          "width": 197,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Review queue (5)",
+          "href": null,
+          "left": 576,
+          "top": 544,
+          "width": 149,
+          "height": 39,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Shortlist and intros (2)",
+          "href": null,
+          "left": 725,
+          "top": 544,
+          "width": 183,
+          "height": 39,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Candidate AStrong technical and timezone alignment.program-operationsstakeholder-updatesrisk-logs",
+          "href": null,
+          "left": 576,
+          "top": 600,
+          "width": 314,
+          "height": 109,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Candidate BRobust engineering background.systems-engineeringcompliance",
+          "href": null,
+          "left": 576,
+          "top": 721,
+          "width": 314,
+          "height": 109,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Candidate CData-driven Product Manager.product-managementdata-analysis",
+          "href": null,
+          "left": 576,
+          "top": 841,
+          "width": 314,
+          "height": 109,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Candidate DDesign Engineer with strong portfolio.frontend-engineeringui-ux-design",
+          "href": null,
+          "left": 576,
+          "top": 962,
+          "width": 314,
+          "height": 109,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Shortlist",
+          "href": null,
+          "left": 1219,
+          "top": 621,
+          "width": 81,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Decline",
+          "href": null,
+          "left": 1308,
+          "top": 621,
+          "width": 79,
+          "height": 44,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Assignment corridorOrganization / AssignmentsAssignmentsAssignment cards own their matching corridor, candidate review, and pipeline context.Assignment review queueReview proof-backed candidates, shortlist fits, and request intros when ready.New AssignmentActive AssignmentsField operations launch lead for municipal infrastructure handoffsReview updatesOpen7 matchesPartner readiness analystDraft0 matchesFocused ReviewField operations launch lead for municipal infrastructure handoffsLaunched 5/16/2026Edit assignment contextReview queue (5)Shortlist and intros (2)Candidate AStrong technical and timezone alignment.program-operationsstakeholder-updatesrisk-logsCandidate BRobust engineering backgr"
+    },
+    {
+      "route": "org-communications",
+      "persona": "org_member",
+      "requestedPath": "/app/o/test-org/communications",
+      "viewport": "desktop",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/desktop-org-communications.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/o/test-org/communications",
+      "heading": "Messages",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/o/test-org/home",
+          "left": 8,
+          "top": 12,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Assignments",
+          "href": "/app/o/test-org/assignments",
+          "left": 8,
+          "top": 62,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/o/test-org/communications",
+          "left": 8,
+          "top": 112,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Organization Trust Page",
+          "href": "/app/o/test-org/profile",
+          "left": 8,
+          "top": 162,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Public Preview",
+          "href": "/app/o/test-org/portfolio",
+          "left": 8,
+          "top": 212,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Collapse sidebar",
+          "href": null,
+          "left": 8,
+          "top": 960,
+          "width": 223,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 1380,
+          "top": 6,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "MessagesThreads, intros, and reveal requests.",
+          "href": "/app/o/test-org/communications?section=messages",
+          "left": 260,
+          "top": 149,
+          "width": 215,
+          "height": 55,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "InterviewsScheduling, feedback, and handoff.",
+          "href": "/app/o/test-org/communications?section=interviews",
+          "left": 260,
+          "top": 212,
+          "width": 215,
+          "height": 55,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "OOrganizationRe: Privacy-safe proof review for a launch corridor with intentionally long assignment ",
+          "href": null,
+          "left": 496,
+          "top": 343,
+          "width": 319,
+          "height": 192,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "EPElena Proof ReviewerRe: Evidence operations leadThe public proof summary is clear. I would keep th",
+          "href": null,
+          "left": 496,
+          "top": 535,
+          "width": 319,
+          "height": 143,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Hiring CorridorCommunicationsMessagesThreads, intros, and reveal requests.InterviewsScheduling, feedback, and handoff.Secure CorridorMessages, scheduling, and reveal steps stay inside the consent-bound corridor.MessagesAssignment conversations stay private and stage-aware. Candidate identity remains protected until a consented reveal opens the next step.MessagesReview open introductions and keep each thread tied to its proof corridor.OOrganizationRe: Privacy-safe proof review for a launch corridor with intentionally long assignment title2Thanks. I can review the proof pack and keep identity detail...15 minutes agoIdentity protected until reveal approvalEPElena Proof ReviewerRe: Evidence oper"
+    },
+    {
+      "route": "org-shortlist",
+      "persona": "org_member",
+      "requestedPath": "/app/o/test-org/shortlist",
+      "viewport": "desktop",
+      "screenshotPath": "<repo>/.artifacts/ux-verification-2026-05-20/goal-sweep/desktop-org-shortlist.png",
+      "consoleMessages": [],
+      "title": "Proofound - Focus on what matters",
+      "finalUrl": "http://127.0.0.1:33123/app/o/test-org/assignments",
+      "heading": "Assignments",
+      "horizontalOverflow": 0,
+      "cookieBannerVisible": false,
+      "loginVisible": false,
+      "overflowOffenders": [],
+      "primaryActions": [
+        {
+          "tag": "a",
+          "label": "Overview",
+          "href": "/app/o/test-org/home",
+          "left": 8,
+          "top": 12,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Assignments",
+          "href": "/app/o/test-org/assignments",
+          "left": 8,
+          "top": 62,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Communications",
+          "href": "/app/o/test-org/communications",
+          "left": 8,
+          "top": 112,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Organization Trust Page",
+          "href": "/app/o/test-org/profile",
+          "left": 8,
+          "top": 162,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Public Preview",
+          "href": "/app/o/test-org/portfolio",
+          "left": 8,
+          "top": 212,
+          "width": 223,
+          "height": 48,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Collapse sidebar",
+          "href": null,
+          "left": 8,
+          "top": 960,
+          "width": 223,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Open profile menu",
+          "href": null,
+          "left": 1380,
+          "top": 6,
+          "width": 44,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Organization",
+          "href": "/app/o/test-org/home",
+          "left": 365,
+          "top": 162,
+          "width": 88,
+          "height": 32,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "New Assignment",
+          "href": null,
+          "left": 1206,
+          "top": 338,
+          "width": 202,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Field operations launch lead for municipal infrastructure handoffsReview updatesOpen7 matches",
+          "href": null,
+          "left": 272,
+          "top": 472,
+          "width": 271,
+          "height": 103,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Partner readiness analystDraft0 matches",
+          "href": null,
+          "left": 272,
+          "top": 583,
+          "width": 271,
+          "height": 81,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Edit assignment context",
+          "href": "/app/o/test-org/assignments/11111111-1111-4111-8111-111111111111/review",
+          "left": 1194,
+          "top": 467,
+          "width": 197,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Review queue (5)",
+          "href": null,
+          "left": 576,
+          "top": 544,
+          "width": 149,
+          "height": 39,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Shortlist and intros (2)",
+          "href": null,
+          "left": 725,
+          "top": 544,
+          "width": 183,
+          "height": 39,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Candidate AStrong technical and timezone alignment.program-operationsstakeholder-updatesrisk-logs",
+          "href": null,
+          "left": 576,
+          "top": 600,
+          "width": 314,
+          "height": 109,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Candidate BRobust engineering background.systems-engineeringcompliance",
+          "href": null,
+          "left": 576,
+          "top": 721,
+          "width": 314,
+          "height": 109,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Candidate CData-driven Product Manager.product-managementdata-analysis",
+          "href": null,
+          "left": 576,
+          "top": 841,
+          "width": 314,
+          "height": 109,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Candidate DDesign Engineer with strong portfolio.frontend-engineeringui-ux-design",
+          "href": null,
+          "left": 576,
+          "top": 962,
+          "width": 314,
+          "height": 109,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Shortlist",
+          "href": null,
+          "left": 1219,
+          "top": 621,
+          "width": 81,
+          "height": 44,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "Decline",
+          "href": null,
+          "left": 1308,
+          "top": 621,
+          "width": 79,
+          "height": 44,
+          "visible": true
+        }
+      ],
+      "mainTextStart": "Assignment corridorOrganization / AssignmentsAssignmentsAssignment cards own their matching corridor, candidate review, and pipeline context.Assignment review queueReview proof-backed candidates, shortlist fits, and request intros when ready.New AssignmentActive AssignmentsField operations launch lead for municipal infrastructure handoffsReview updatesOpen7 matchesPartner readiness analystDraft0 matchesFocused ReviewField operations launch lead for municipal infrastructure handoffsLaunched 5/16/2026Edit assignment contextReview queue (5)Shortlist and intros (2)Candidate AStrong technical and timezone alignment.program-operationsstakeholder-updatesrisk-logsCandidate BRobust engineering backgr"
+    }
+  ]
+}

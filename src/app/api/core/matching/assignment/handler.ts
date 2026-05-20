@@ -25,7 +25,6 @@ import {
   buildCanonicalMatchPersistenceFields,
   buildProofFirstReviewCard,
   buildVisibilitySafeWhy,
-  canMutateReview,
   ensureMatchReviewState,
   getReviewCardProofPackMapForMatchedOrg,
   getRankBand,
@@ -35,6 +34,7 @@ import {
   resolveCanonicalCorridor,
   resolveCanonicalFallbackState,
 } from '@/lib/matching/review-contract';
+import { getMatchingVisualState, buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
 
 // Shared handler imported by the kept launch corridor routes.
 export const dynamic = 'force-dynamic';
@@ -48,6 +48,21 @@ const visualAssignmentFixturesEnabled = () =>
   isMockSupabaseEnabled() &&
   process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
   process.env.VERCEL_ENV !== 'production';
+
+function toVisibilitySafeAssignmentMatchItem<T extends Record<string, unknown>>(item: T) {
+  const {
+    score: _score,
+    scoreTotal: _scoreTotal,
+    subscores: _subscores,
+    subscoresJson: _subscoresJson,
+    scoreSnapshotJson: _scoreSnapshotJson,
+    contributions: _contributions,
+    focusBoost: _focusBoost,
+    ...safeItem
+  } = item;
+
+  return safeItem;
+}
 
 // Validation schema
 const MatchRequestSchema = z.object({
@@ -106,33 +121,74 @@ export async function POST(request: NextRequest) {
     trace.objectRefs.assignmentId = assignmentId;
 
     if (visualAssignmentFixturesEnabled() && VISUAL_ASSIGNMENT_FIXTURE_IDS.has(assignmentId)) {
+      const visualState = getMatchingVisualState(request.url);
+      if (visualState === 'empty') {
+        emitLaunchTrace(trace, {
+          outcome: 'fallback',
+          state: 'browse_only_low_candidate_supply',
+          details: {
+            resultCount: 0,
+            cached: true,
+            fixture: true,
+          },
+        });
+
+        return NextResponse.json({
+          items: [],
+          meta: {
+            total: 0,
+            returned: 0,
+            durationMs: Date.now() - startTime,
+            weights: {},
+            twoStage: false,
+            hasMissionVisionScores: false,
+            cached: true,
+            fairness: {
+              status: 'not_evaluated',
+              evaluationId: null,
+            },
+            launchFallback: {
+              mode: 'browse_only_low_candidate_supply',
+              activeModes: ['browse_only_low_candidate_supply'],
+              introCorridorLive: null,
+              exactRankLive: null,
+            },
+          },
+        });
+      }
+
+      // Default: Return the 7 visual mock matches
+      const mockItems = buildVisualOrgMatches(assignmentId).map(
+        toVisibilitySafeAssignmentMatchItem
+      );
       emitLaunchTrace(trace, {
-        outcome: 'fallback',
-        state: 'browse_only_low_candidate_supply',
+        outcome: 'success',
+        state: 'shortlist_generated',
         details: {
-          resultCount: 0,
+          resultCount: mockItems.length,
           cached: true,
           fixture: true,
         },
       });
 
       return NextResponse.json({
-        items: [],
+        items: mockItems,
         meta: {
-          total: 0,
-          returned: 0,
+          total: mockItems.length,
+          returned: mockItems.length,
           durationMs: Date.now() - startTime,
           weights: {},
           twoStage: false,
           hasMissionVisionScores: false,
           cached: true,
+          scoreVisibility: 'internal_ordering_only',
           fairness: {
-            status: 'not_evaluated',
-            evaluationId: null,
+            status: 'pass',
+            evaluationId: 'visual-evaluation-id',
           },
           launchFallback: {
-            mode: 'browse_only_low_candidate_supply',
-            activeModes: ['browse_only_low_candidate_supply'],
+            mode: null,
+            activeModes: [],
             introCorridorLive: null,
             exactRankLive: null,
           },
@@ -266,10 +322,6 @@ export async function POST(request: NextRequest) {
 
             return {
               profileId: row.profileId,
-              score: Number(row.score),
-              scoreTotal: row.scoreTotal,
-              subscoresJson: row.subscoresJson,
-              scoreSnapshotJson: row.scoreSnapshotJson,
               reasonCodes,
               profile: profile ? scrubDisallowedFields(profile) : null,
               id: row.id,
@@ -306,6 +358,7 @@ export async function POST(request: NextRequest) {
             twoStage: false,
             hasMissionVisionScores: false,
             cached: true,
+            scoreVisibility: 'internal_ordering_only',
             fairness: {
               status: cachedFairnessStatus,
               evaluationId: null,
@@ -396,7 +449,6 @@ export async function POST(request: NextRequest) {
       actorType: 'user_account',
     });
     const fairnessStatus = normalizeFairnessStatus(fairnessEvaluation.status);
-    const canViewExactRank = canMutateReview(membershipRole);
     const flags = await resolveFeatureFlags(
       [
         FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR,
@@ -414,9 +466,7 @@ export async function POST(request: NextRequest) {
     const introCorridorLive =
       flags[FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR] &&
       !flags[FEATURE_FLAG_KEYS.KILL_SWITCH_INTROS];
-    const exactRankLive =
-      flags[FEATURE_FLAG_KEYS.EXACT_RANK_EXPOSURE] &&
-      !flags[FEATURE_FLAG_KEYS.KILL_SWITCH_EXACT_RANK];
+    const exactRankLive = false;
     const fallbackModes = [
       ...(items.length === 0 ? (['browse_only_low_candidate_supply'] as const) : []),
       ...(!introCorridorLive ? (['intro_hold_insufficient_qualified_intros'] as const) : []),
@@ -448,8 +498,6 @@ export async function POST(request: NextRequest) {
     const proofPackByProfileId = await getReviewCardProofPackMapForMatchedOrg(
       items.map((item) => item.profileId)
     );
-    const showExactRank = canViewExactRank && fairnessStatus === 'pass' && exactRankLive;
-
     emitLaunchTrace(trace, {
       outcome: primaryFallbackMode ? 'fallback' : 'success',
       state: primaryFallbackMode ?? 'shortlist_generated',
@@ -488,10 +536,6 @@ export async function POST(request: NextRequest) {
 
         return {
           profileId: item.profileId,
-          score: item.score,
-          scoreTotal: item.scoreTotal,
-          subscoresJson: item.subscoresJson,
-          scoreSnapshotJson: item.scoreSnapshotJson,
           reasonCodes: item.reasonCodes,
           profile: item.profile,
           id: matchId,
@@ -502,7 +546,7 @@ export async function POST(request: NextRequest) {
           fairness: {
             status: fairnessStatus,
           },
-          rank: showExactRank ? index + 1 : null,
+          rank: null,
           rankBand,
           why: buildVisibilitySafeWhy({
             reasonCodes: item.reasonCodes,
@@ -522,6 +566,8 @@ export async function POST(request: NextRequest) {
       }),
       meta: {
         ...meta,
+        weights: {},
+        scoreVisibility: 'internal_ordering_only',
         fairness: {
           status: fairnessStatus,
           evaluationId: fairnessEvaluation.id,
