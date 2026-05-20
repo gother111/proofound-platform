@@ -2875,7 +2875,9 @@ describe('launch gate package configuration', () => {
       'src/components/dashboard/DynamicDashboard.tsx',
       'src/app/app/o/[slug]/home/OrgDashboardClient.tsx',
       'src/app/app/o/[slug]/home/SuspendedOrgDashboardClient.tsx',
+      'src/lib/dashboard/indDataFetchers.ts',
       'src/lib/dashboard/layout.ts',
+      'src/lib/dashboard/orgDataFetchers.ts',
       'src/components/dashboard/ExpertiseDepthWidget.tsx',
       'src/components/dashboard/ExploreCard.tsx',
       'src/components/dashboard/GapMapWidget.tsx',
@@ -2935,6 +2937,16 @@ describe('launch gate package configuration', () => {
     expect(
       fs.existsSync(
         path.join(repoRoot, 'src/archive/non_launch_dashboard_ui/lib/dashboard/layout.ts')
+      )
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'src/archive/non_launch_dashboard_ui/lib/dashboard/indDataFetchers.ts')
+      )
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(repoRoot, 'src/archive/non_launch_dashboard_ui/lib/dashboard/orgDataFetchers.ts')
       )
     ).toBe(true);
     expect(fs.existsSync(path.join(repoRoot, 'tests/archive/non_mvp_dashboard_ui/README.md'))).toBe(
