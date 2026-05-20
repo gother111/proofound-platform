@@ -2133,3 +2133,11 @@ Browser evidence:
 - Added regression coverage proving email and Slack alert payloads contain `Open Internal Ops`, use `https://proofound.io/admin` when configured, never emit `undefined/admin`, and do not reintroduce `View Dashboard`.
 - Browser was not rerun for this slice because no rendered web UI changed; the change is launch-ops notification payload construction and source-level alert naming.
 - Verification passed: `npm run test -- src/lib/performance/__tests__/alerting.test.ts src/lib/analytics/__tests__/health-check-alert.test.ts src/app/api/cron/decision-reminders/__tests__/route.test.ts` (3 files / 10 tests), `npm run test:launch:routes` (4 files / 27 tests), `npm run docs:freshness`, `npm run typecheck`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
+
+## Continuation - User Skill API JSON Boundary Hardening
+
+- Inspected the active retained user-skill APIs under `/api/expertise/user-skills*`; these are narrow launch-supporting skill/proof APIs, unlike the archived broad Expertise Atlas UI.
+- Added malformed JSON guards to skill creation, skill update, and skill-proof creation so bad request bodies return controlled `400` responses before taxonomy lookup, skill lookup/update, anchor ownership checks, or canonical proof writes.
+- Added regression coverage for all three malformed JSON paths, including assertions that database calls and proof creation do not run after parse failure.
+- Browser was not rerun for this slice because no rendered web UI changed; the change is API error-boundary hardening for retained proof/skill endpoints.
+- Verification passed: `npm run test -- tests/api/expertise-user-skill-route.test.ts tests/api/expertise-user-skill-proofs-route.test.ts` (2 files / 12 tests), `npm run test:launch:routes` (4 files / 27 tests), `npm run typecheck`, and scoped `git diff --check` for the touched user-skill route/test files. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.
