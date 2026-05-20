@@ -1173,9 +1173,15 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const supabase = await createClient();
     const { token } = await params;
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const supabase = await createClient();
     let skillDataClient:
       | ReturnType<typeof createAdminClient>
       | Awaited<ReturnType<typeof createClient>> = supabase;

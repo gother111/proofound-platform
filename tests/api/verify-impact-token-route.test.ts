@@ -201,6 +201,27 @@ describe('verify token route', () => {
     listCanonicalSkillProofRowsForOwnerSkillMock.mockResolvedValue([]);
   });
 
+  it('POST rejects malformed verifier JSON before token redemption', async () => {
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verify/${TOKEN}`, {
+        method: 'POST',
+        body: '{"action":',
+        headers: { 'content-type': 'application/json' },
+      }),
+      { params: Promise.resolve({ token: TOKEN }) }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'Invalid JSON body' });
+    expect(createClientMock).not.toHaveBeenCalled();
+    expect(redeemCapabilityTokenMock).not.toHaveBeenCalled();
+    expect(getCanonicalImpactVerificationRequestByTokenMock).not.toHaveBeenCalled();
+    expect(getCanonicalSkillVerificationRequestByTokenMock).not.toHaveBeenCalled();
+    expect(updateCanonicalImpactVerificationRequestMock).not.toHaveBeenCalled();
+    expect(updateCanonicalSkillVerificationRequestMock).not.toHaveBeenCalled();
+  });
+
   it('GET returns impact-story payload from canonical verification transport', async () => {
     createClientMock.mockReturnValue(createClientWithAuth(null));
     createAdminClientMock.mockReturnValue(createAdminClient());

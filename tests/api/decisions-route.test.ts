@@ -51,6 +51,14 @@ function buildRequest(body: Record<string, unknown>) {
   });
 }
 
+function buildRawRequest(body: string) {
+  return new NextRequest('https://example.com/api/decisions', {
+    method: 'POST',
+    body,
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
 function buildSupabase({
   user = { id: 'user-1' },
 }: {
@@ -108,6 +116,18 @@ describe('POST /api/decisions', () => {
         handler: () => Promise<Response>
       ) => handler()
     );
+  });
+
+  it('rejects malformed JSON before decision workflow lookups', async () => {
+    const response = await POST(buildRawRequest('{"interviewId":'));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'Invalid JSON body' });
+    expect(mocks.getInterviewAccessContext).not.toHaveBeenCalled();
+    expect(mocks.isActiveOrgMember).not.toHaveBeenCalled();
+    expect(mocks.withWorkflowMutationIdempotency).not.toHaveBeenCalled();
+    expect(mocks.recordDecisionTransition).not.toHaveBeenCalled();
   });
 
   it('allows org owners to record final decisions', async () => {

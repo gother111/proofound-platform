@@ -2222,3 +2222,12 @@ Browser evidence:
 - Added focused regression coverage proving malformed response JSON does not call `respondCanonicalBundle` or `getCanonicalBundleById`.
 - Browser was not rerun for this slice because this is public API verifier-response hardening with no rendered UI change.
 - Verification passed: `npm run test -- tests/api/custom-verification-routes.test.ts` (1 file / 11 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Decision and Public Verify JSON Boundary Hardening
+
+- Inspected two remaining active mutating MVP routes whose JSON parsing was not yet locally guarded: `POST /api/decisions` and `POST /api/verify/[token]`.
+- Added controlled malformed JSON responses for decision recording so bad request bodies return `400` after org-session authentication, but before interview lookup, owner-role checks, idempotency scope evaluation, workflow transition writes, or engagement-verification side effects.
+- Added controlled malformed JSON responses for public verification token responses so bad request bodies return `400` before request-scoped Supabase client setup, capability-token redemption, canonical impact/skill verification lookup, verification updates, trust lift, emails, analytics, or internal-ops queueing.
+- Added focused regression coverage for both paths.
+- Browser was not rerun for this slice because this is API error-boundary hardening with no rendered UI change.
+- Verification passed: `npm run test -- tests/api/decisions-route.test.ts tests/api/verify-impact-token-route.test.ts` (2 files / 23 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.

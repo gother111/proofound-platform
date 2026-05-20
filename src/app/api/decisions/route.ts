@@ -12,6 +12,21 @@ import { isActiveOrgMember } from '@/lib/api/auth';
 import { getInterviewAccessContext } from '@/lib/interviews/messaging';
 import { buildWorkflowView, recordDecisionTransition } from '@/lib/workflow/service';
 
+const VALID_DECISIONS = ['hire', 'advance', 'hold', 'reject', 'withdraw'] as const;
+type DecisionState = (typeof VALID_DECISIONS)[number];
+
+type DecisionRequestBody = {
+  interviewId?: string;
+  decision?: string;
+  feedback?: string;
+  holdUntil?: string;
+  reasonCode?: string;
+};
+
+function isDecisionState(value: unknown): value is DecisionState {
+  return typeof value === 'string' && VALID_DECISIONS.includes(value as DecisionState);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -23,17 +38,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
+    let body: DecisionRequestBody;
+    try {
+      body = (await req.json()) as DecisionRequestBody;
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const { interviewId, decision, feedback, holdUntil, reasonCode } = body;
 
     if (!interviewId || !decision) {
       return NextResponse.json({ error: 'interviewId and decision are required' }, { status: 400 });
     }
 
-    const validDecisions = ['hire', 'advance', 'hold', 'reject', 'withdraw'];
-    if (!validDecisions.includes(decision)) {
+    if (!isDecisionState(decision)) {
       return NextResponse.json(
-        { error: `decision must be one of: ${validDecisions.join(', ')}` },
+        { error: `decision must be one of: ${VALID_DECISIONS.join(', ')}` },
         { status: 400 }
       );
     }

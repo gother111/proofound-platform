@@ -504,6 +504,24 @@ Verification after this sweep:
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 
+## Continuation: Twenty-Third Local Malformed-JSON Sweep
+
+A twenty-third local sweep applied the same malformed-JSON boundary to two retained workflow and public verification response routes:
+
+- `src/app/api/decisions/route.ts`
+- `src/app/api/verify/[token]/route.ts`
+
+Decision malformed JSON now returns `400` with `Invalid JSON body` after organization session authentication, but before interview lookup, owner-role checks, idempotency handling, workflow transition writes, or engagement-verification side effects continue.
+
+Public verify malformed JSON now returns `400` with `Invalid JSON body` before request-scoped Supabase client setup, capability-token redemption, canonical impact/skill verification lookup, verification updates, trust lift, emails, analytics, internal-ops queueing, or verification logging continues.
+
+Verification after this sweep:
+
+- `npm run test -- tests/api/decisions-route.test.ts tests/api/verify-impact-token-route.test.ts`: passed, `2` files and `23` tests.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+- `npm run docs:freshness`: passed.
+
 ## Completion Audit
 
 - Controlled read-only Clawpatch setup: complete. State was kept under `.artifacts/`.
