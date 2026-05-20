@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-20`
 
 # Proofound 0-5 Execution Backlog
 
@@ -29,7 +29,7 @@ Treat [`../../audit/prioritized-roadmap.md`](../../audit/prioritized-roadmap.md)
 
 - Current phase being executed: post-`Phase 0` launch polish and evidence cleanup.
 - Current top blocker: no active blocker is tracked in this backlog. The 2026-05-19 surface sweep, route inventory reruns, and verification checklist now supersede the March route-breadth blocker.
-- Current route-surface truth: [`../verification-checklist.md`](../verification-checklist.md) marks `no non-MVP launch surface` as `PASS` using `npm run test:launch:routes`. Source inventory currently reports 140 compiled API route handlers and 51 compiled pages; route policy classifies 110 APIs and 48 pages as active launch paths, 16 APIs and 3 pages as internal-only launch ops, and 14 API handlers as archived compatibility responses.
+- Current route-surface truth: [`../verification-checklist.md`](../verification-checklist.md) marks `no non-MVP launch surface` as `PASS` using `npm run test:launch:routes`. Source inventory currently reports 140 compiled API route handlers and 51 compiled pages; API route policy classifies 108 APIs as active MVP, 16 APIs as internal-only launch ops, and 16 API handlers as archived compatibility responses. Page policy classifies 48 pages as active launch paths, 3 pages as internal-only launch ops, and `/dev/resolve-home` as an archived/fail-closed development-only route handler.
 - Historical route-count truth: the 2026-03-25 `149 / 117` and `138 / 106` route counts are retained only as historical March baselines. Do not use them as current implementation truth.
 - Completed before backlog execution:
   - `npm run lint`

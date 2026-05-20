@@ -435,6 +435,41 @@ describe('launch gate package configuration', () => {
     expect(activeLegacyRows).toEqual([]);
   });
 
+  it('keeps active route-count evidence aligned across launch docs', () => {
+    const apiReference = fs.readFileSync(path.join(repoRoot, 'docs/API_REFERENCE.md'), 'utf8');
+    const currentTruth = fs.readFileSync(path.join(repoRoot, 'docs/CURRENT_TRUTH.md'), 'utf8');
+    const verificationChecklist = fs.readFileSync(
+      path.join(repoRoot, 'docs/verification-checklist.md'),
+      'utf8'
+    );
+    const backlogReadme = fs.readFileSync(path.join(repoRoot, 'docs/backlog/README.md'), 'utf8');
+    const phaseZero = fs.readFileSync(
+      path.join(repoRoot, 'docs/backlog/phase-0-scope-lock.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+    const routeDocs = [currentTruth, verificationChecklist, backlogReadme, phaseZero].join('\n');
+
+    expect(apiReference).toContain('- Total route handlers: **140**');
+    expect(apiReference).toContain(
+      '- Launch surface counts: `active MVP=108`, `internal launch ops=16`, `archived compatibility=16`'
+    );
+    expect(routeDocs).toContain('140 compiled API route handlers');
+    expect(routeDocs).toContain('51 compiled pages');
+    expect(routeDocs).toContain('108 APIs as active MVP');
+    expect(routeDocs).toContain('16 APIs as internal-only launch ops');
+    expect(routeDocs).toContain('16 API handlers as archived compatibility responses');
+    expect(routeDocs).toContain('/dev/resolve-home');
+    expect(routeDocs).not.toContain('110 APIs');
+    expect(routeDocs).not.toContain('14 API handlers as archived compatibility responses');
+    expect(docsRegistry).toContain(
+      '| `docs/API_REFERENCE.md`                                                                                 | `active`         | `docs`        | `repo+live`         | `2026-05-20`'
+    );
+    expect(docsRegistry).toContain(
+      '| `docs/verification-checklist.md`                                                                        | `active`         | `docs`        | `repo+live`         | `2026-05-20`'
+    );
+  });
+
   it('keeps cache monitoring docs aligned with implemented stats', () => {
     const cacheSource = fs.readFileSync(path.join(repoRoot, 'src/lib/cache.ts'), 'utf8');
     const monitoringDocs = [

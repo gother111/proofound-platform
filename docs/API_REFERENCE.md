@@ -2,7 +2,7 @@
 
 > Doc Class: `active`
 > Verification Source: `src/app/api/**/route.ts`, `src/middleware.ts`, `package.json`, `.github/workflows/ci.yml`, `vercel.json`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-20`
 
 Canonical API documentation generated from the current App Router route handlers under `src/app/api/**/route.ts`.
 

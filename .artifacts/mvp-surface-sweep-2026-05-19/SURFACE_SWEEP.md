@@ -1696,3 +1696,17 @@ Browser evidence:
 - Found `src/app/dev/resolve-home/route.ts` was safely development-gated but depended on fallback archived page classification in the route-surface policy.
 - Added an explicit archived page policy for `/dev/resolve-home` and focused coverage proving it stays archived in route classification.
 - Added a direct route test proving non-development `GET /dev/resolve-home` returns 404 before creating a Supabase client or resolving auth home state.
+
+## Continuation - Route Count Documentation Refresh
+
+- Found active route-evidence docs still carried the previous `110` active API / `14` archived API count after later archived-compatibility cleanup moved current API reference counts to `108` active MVP APIs, `16` internal launch-ops APIs, and `16` archived compatibility APIs.
+- Reran `npm run test:launch:routes`; it passed as 4 files / 27 tests.
+- Refreshed `docs/API_REFERENCE.md`, `docs/CURRENT_TRUTH.md`, `docs/verification-checklist.md`, `docs/backlog/README.md`, and `docs/backlog/phase-0-scope-lock.md` so active docs agree on 140 API route handlers, 51 compiled pages, the current API launch-surface counts, 48 active page routes, 3 internal-only page routes, and `/dev/resolve-home` as archived/fail-closed development-only compatibility.
+
+Browser evidence:
+
+- Reconnected Codex Browser and started the local app at `http://localhost:3000` after the existing Browser tab was pointing at a stale refused-connection page.
+- Codex Browser desktop pass loaded `http://localhost:3000/portfolio/demo`: title `Public Page Unavailable | Proofound`; route showed the launch-safe unavailable public page state for the demo portfolio; browser console warning/error log was empty.
+- Codex Browser desktop pass loaded `http://localhost:3000/signup`: title `Sign Up | Proofound`; visible signup entry separated Individual and Organization choices, included sign-in plus terms/privacy links, and browser console warning/error log was empty.
+- Codex Browser mobile-width pass at 390x844 repeated `/signup` and `/portfolio/demo`; DOM evidence stayed equivalent, with no browser console warnings/errors.
+- Codex Browser screenshot capture was attempted after reconnecting and again after the dev server was live, but `Page.captureScreenshot` timed out both times. DOM, title, route, and console evidence were gathered through Browser; image evidence remains unavailable for this slice.

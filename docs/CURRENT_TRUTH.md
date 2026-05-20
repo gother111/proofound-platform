@@ -1,7 +1,7 @@
 # Proofound Current Truth
 
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-20`
 
 This document records the current repo-grounded truth for the locked Proofound MVP after the May 19, 2026 surface sweep, route inventory, docs, privacy, and launch-corridor verification passes.
 
@@ -32,7 +32,7 @@ Current evidence from recent verification passes:
 - Extended privacy suite passes after network access to the configured Supabase test project.
 - Production-threshold dependency audit passes the high/critical launch gate, with moderate transitive advisories still present.
 - Route inventory and launch-surface tests align on `140` compiled API handlers and `51` compiled app page handlers.
-- Focused route inventory verification passes: `4` files and `25` tests.
+- Focused route inventory verification passes: `4` files and `27` tests.
 
 The GTM plan remains narrow: 3 to 5 design partners, founder-led/manual support, one concrete assignment per partner, proof-first review, blind-by-default review, consented reveal, and engagement verification.
 
@@ -45,8 +45,9 @@ Current filesystem counts:
 
 Current launch-surface policy:
 
-- API routes: `110` active launch, `16` internal-only launch ops, `14` archived compiled compatibility handlers
+- API routes: `108` active MVP, `16` internal-only launch ops, `16` archived compiled compatibility handlers
 - Page routes: `48` active launch, `3` internal-only launch ops, `0` archived compiled page handlers
+- Non-API route handlers: `/dev/resolve-home` is explicit archived/fail-closed development-only compatibility.
 - Hard-gated named pages remain out of the compiled page surface: individual opportunities, org team, and org settings/team.
 
 The compiled archived API compatibility handlers are explicitly covered by `tests/api/launch-surface-inventory.test.ts` and classified as archived by `src/lib/launch/surface-policy.ts`. They do not define current launch scope.
@@ -111,4 +112,4 @@ Remaining caution:
 | `npm run test:privacy:extended` | PASS after network approval | May 14 evidence: passed `2` files and `31` tests against the Supabase test project.                                                                                                                                                                                            |
 | `npm run audit:prod`            | PASS with moderate findings | 2026-05-19 evidence: sandbox run failed with DNS `ENOTFOUND` for npm registry; approved network rerun exited `0` at the high/critical threshold and reported 9 moderate transitive advisories in `protobufjs` via `@xenova/transformers` and `ws` via `react-email`/Socket.IO. |
 | `npm run audit:all`             | UNVERIFIED                  | 2026-05-19 sandbox run failed with DNS `ENOTFOUND`; escalated external audit was rejected by local policy because it sends dependency metadata to the npm registry. Rerun only with explicit user approval for that disclosure.                                                |
-| `npm run test:launch:routes`    | PASS                        | 2026-05-19 rerun passed `4` files and `25` tests; this is the focused route/archived-surface confirmation used for the route inventory section.                                                                                                                                |
+| `npm run test:launch:routes`    | PASS                        | 2026-05-20 rerun passed `4` files and `27` tests; this is the focused route/archived-surface confirmation used for the route inventory section.                                                                                                                                |
