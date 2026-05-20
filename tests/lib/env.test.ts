@@ -4,6 +4,7 @@ import {
   assertMockDatabaseAllowed,
   getEnabledMockDatabaseModes,
   resolveCanonicalSiteUrl,
+  resolveSiteUrlFromHeaders,
 } from '@/lib/env';
 
 const originalEnv = { ...process.env };
@@ -38,6 +39,30 @@ describe('resolveCanonicalSiteUrl', () => {
     process.env.VERCEL_ENV = '';
 
     expect(resolveCanonicalSiteUrl()).toBe('http://localhost:3000');
+  });
+});
+
+describe('resolveSiteUrlFromHeaders', () => {
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it('uses localhost request origin before configured production URL', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.SITE_URL = 'https://proofound.io';
+
+    expect(resolveSiteUrlFromHeaders(new Headers({ origin: 'http://localhost:3001' }))).toBe(
+      'http://localhost:3001'
+    );
+  });
+
+  it('uses configured production URL for non-local request origins', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.SITE_URL = 'https://proofound.io';
+
+    expect(resolveSiteUrlFromHeaders(new Headers({ origin: 'https://attacker.example' }))).toBe(
+      'https://proofound.io'
+    );
   });
 });
 

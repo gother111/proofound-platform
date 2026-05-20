@@ -266,6 +266,31 @@ export function getEnv(
 export function resolveSiteUrlFromHeaders(
   h: Headers | Record<string, string | string[] | undefined>
 ): string {
+  const localOrigin = normalizeSiteUrl(getHeaderValue(h, 'origin'), { allowPreviewHosts: true });
+  if (localOrigin && isLocalUrl(localOrigin)) {
+    return stripTrailingSlash(localOrigin);
+  }
+
+  const localForwardedHost = getHeaderValue(h, 'x-forwarded-host');
+  if (localForwardedHost) {
+    const forwardedProto = getHeaderValue(h, 'x-forwarded-proto') || 'https';
+    const forwardedUrl = normalizeSiteUrl(`${forwardedProto}://${localForwardedHost}`, {
+      allowPreviewHosts: true,
+    });
+    if (forwardedUrl && isLocalUrl(forwardedUrl)) {
+      return stripTrailingSlash(forwardedUrl);
+    }
+  }
+
+  const localHost = getHeaderValue(h, 'host');
+  if (localHost) {
+    const proto = resolveProtocol(localHost, getHeaderValue(h, 'x-forwarded-proto'));
+    const hostUrl = normalizeSiteUrl(`${proto}://${localHost}`, { allowPreviewHosts: true });
+    if (hostUrl && isLocalUrl(hostUrl)) {
+      return stripTrailingSlash(hostUrl);
+    }
+  }
+
   const { SITE_URL: configuredSiteUrl } = aggregateEnv();
   if (configuredSiteUrl) {
     return stripTrailingSlash(configuredSiteUrl);
@@ -333,4 +358,12 @@ export function resolveCanonicalSiteUrl(): string {
   }
 
   return '';
+}
+
+function isLocalUrl(value: string): boolean {
+  try {
+    return isLocalHostname(new URL(value).hostname);
+  } catch {
+    return false;
+  }
 }

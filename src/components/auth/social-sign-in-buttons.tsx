@@ -4,7 +4,7 @@ import { signInWithOAuth, type OAuthState } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
-import { useActionState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 type Provider = 'google' | 'linkedin_oidc';
@@ -20,11 +20,22 @@ const initialState: OAuthState = {
 
 export default function SocialSignInButtons({ className, nextPath }: SocialSignInButtonsProps) {
   const [state, formAction, isPending] = useActionState(signInWithOAuth, initialState);
+  const [origin, setOrigin] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   return (
     <div className={cn('space-y-3', className)}>
       <div className="grid grid-cols-1 gap-3">
-        <OAuthProviderForm provider="google" label="Google" action={formAction} nextPath={nextPath}>
+        <OAuthProviderForm
+          provider="google"
+          label="Google"
+          action={formAction}
+          nextPath={nextPath}
+          origin={origin}
+        >
           <GoogleIcon className="h-5 w-5" aria-hidden="true" />
         </OAuthProviderForm>
         <OAuthProviderForm
@@ -32,6 +43,7 @@ export default function SocialSignInButtons({ className, nextPath }: SocialSignI
           label="LinkedIn"
           action={formAction}
           nextPath={nextPath}
+          origin={origin}
         >
           <LinkedInIcon className="h-5 w-5" aria-hidden="true" />
         </OAuthProviderForm>
@@ -54,6 +66,7 @@ type OAuthProviderFormProps = {
   label: string;
   action: (payload: FormData) => void;
   nextPath?: string | null;
+  origin?: string | null;
   children: ReactNode;
 };
 
@@ -62,12 +75,14 @@ function OAuthProviderForm({
   label,
   action,
   nextPath,
+  origin,
   children,
 }: OAuthProviderFormProps) {
   return (
     <form action={action} className="w-full" data-testid={`oauth-${provider}-form`}>
       <input type="hidden" name="provider" value={provider} />
       {nextPath ? <input type="hidden" name="next" value={nextPath} /> : null}
+      {origin ? <input type="hidden" name="requestOrigin" value={origin} /> : null}
       <OAuthSubmitButton provider={provider}>
         <span className="mr-2">{children}</span>
         {label}

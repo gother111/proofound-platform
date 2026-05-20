@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
@@ -25,7 +25,7 @@ vi.mock('@/actions/auth', () => ({
 }));
 
 describe('SocialSignInButtons', () => {
-  it('keeps Google and LinkedIn social login available', () => {
+  it('keeps Google and LinkedIn social login available', async () => {
     const { container } = render(<SocialSignInButtons nextPath="/app/i/verifications" />);
 
     expect(screen.getByRole('button', { name: /Google/i })).toBeInTheDocument();
@@ -37,5 +37,10 @@ describe('SocialSignInButtons', () => {
     expect(
       container.querySelector('input[name="next"][value="/app/i/verifications"]')
     ).not.toBeNull();
+    await waitFor(() => {
+      expect(
+        container.querySelector('input[name="requestOrigin"][value="http://localhost:3000"]')
+      ).not.toBeNull();
+    });
   });
 });

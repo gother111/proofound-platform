@@ -2567,7 +2567,7 @@ describe('launch gate package configuration', () => {
     );
     const qaBugs = fs.readFileSync(path.join(repoRoot, 'docs/qa/bugs.md'), 'utf8');
     const qaSummary = fs.readFileSync(path.join(repoRoot, 'docs/qa/summary.md'), 'utf8');
-    const loginPage = fs.readFileSync(path.join(repoRoot, 'src/app/(auth)/login/page.tsx'), 'utf8');
+    const loginPage = fs.readFileSync(path.join(repoRoot, 'src/app/login/page.tsx'), 'utf8');
     const debugIngest = fs.readFileSync(path.join(repoRoot, 'src/lib/debug-ingest.ts'), 'utf8');
     const envExample = fs.readFileSync(path.join(repoRoot, '.env.example'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');

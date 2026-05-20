@@ -4,6 +4,7 @@ import {
   assertMockDatabaseAllowed,
   isMockSupabaseEnabled,
   resolveCanonicalSiteUrl,
+  resolveSiteUrlFromHeaders,
 } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
@@ -56,6 +57,29 @@ function isRedirectError(error: unknown): error is { digest: string } {
 function resolveRequestSiteUrl(headersList: Headers): string {
   void headersList;
   return resolveCanonicalSiteUrl();
+}
+
+function resolveOAuthSiteUrl(headersList: Headers): string {
+  return resolveSiteUrlFromHeaders(headersList);
+}
+
+function sanitizeLocalRequestOrigin(value: string | null | undefined): string | null {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value.trim());
+    const hostname = url.hostname.toLowerCase();
+    if (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1')
+    ) {
+      return url.origin;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
 }
 
 function sanitizeNextPath(value: string | null | undefined): string | null {
@@ -743,7 +767,9 @@ export async function signInWithOAuth(
     }
 
     const headersList = await headers();
-    const siteUrl = resolveRequestSiteUrl(headersList);
+    const siteUrl =
+      sanitizeLocalRequestOrigin((formData.get('requestOrigin') as string | null) ?? null) ??
+      resolveOAuthSiteUrl(headersList);
     const nextPath = sanitizeNextPath((formData.get('next') as string | null) ?? null);
 
     if (!siteUrl) {

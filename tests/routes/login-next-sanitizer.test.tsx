@@ -30,7 +30,7 @@ vi.mock('@/components/auth/SignIn', () => ({
   SignIn: () => null,
 }));
 
-import LoginPage from '@/app/(auth)/login/page';
+import LoginPage from '@/app/login/page';
 
 describe('login next redirect sanitizer', () => {
   beforeEach(() => {

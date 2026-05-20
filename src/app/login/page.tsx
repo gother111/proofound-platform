@@ -43,7 +43,6 @@ export default async function LoginPage({
   let hasUser = false;
 
   try {
-    // Check if user is already logged in
     supabase = await createClient({ allowCookieWrite: true });
     try {
       const result = await supabase.auth.getUser();
@@ -68,11 +67,10 @@ export default async function LoginPage({
       });
     }
   } catch (error) {
-    // If anything fails, log it and continue to show login page
     console.error('Error checking authentication on login page:', error);
   }
 
-  // If already logged in, redirect to appropriate dashboard based on persona.
+  // If already logged in, redirect to appropriate home based on persona.
   // In mock mode we intentionally keep the login page reachable for auth E2E tests.
   if (hasUser && supabase && !isMock) {
     let homePath: string | null = null;
@@ -80,7 +78,6 @@ export default async function LoginPage({
       homePath = await resolveUserHomePath(supabase);
     } catch (resolveError) {
       console.error('Error resolving home path:', resolveError);
-      // Fall through to show login page if home path resolution fails
     }
 
     if (homePath) {
@@ -93,11 +90,9 @@ export default async function LoginPage({
         data: { homePath, nextPath },
       });
 
-      // Important: do not catch the redirect (it throws NEXT_REDIRECT internally).
       redirect(nextPath || homePath);
     }
   }
 
-  // Render SignIn component with MVP design
   return <SignIn />;
 }

@@ -308,6 +308,23 @@ describe('Auth Actions', () => {
       });
     });
 
+    it('allows local Browser origin to keep OAuth redirects on localhost', async () => {
+      vi.mocked(resolveCanonicalSiteUrl).mockReturnValueOnce('https://proofound.io');
+
+      const formData = new FormData();
+      formData.append('provider', 'google');
+      formData.append('requestOrigin', 'http://localhost:3001');
+
+      await signInWithOAuth(undefined, formData);
+
+      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'google',
+        options: {
+          redirectTo: 'http://localhost:3001/auth/callback',
+        },
+      });
+    });
+
     it.each(['https://attacker.example/app/i/home', '/\\\\attacker.example/phish'])(
       'drops unsafe next path %s before starting social login',
       async (nextPath) => {

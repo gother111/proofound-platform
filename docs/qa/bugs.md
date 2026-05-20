@@ -57,7 +57,7 @@ Status values are normalized to: `open`, `fixed`, `monitoring`, `wontfix`.
 - Severity: medium
 - Status: fixed
 - Regression: `tests/scripts/launch-gate-config.test.ts`
-- Evidence: `src/app/(auth)/login/page.tsx`, `src/lib/debug-ingest.ts`, and `.env.example` now use an optional env-driven debug ingest sink. No hardcoded localhost ingest endpoint is present in the active login path.
+- Evidence: `src/app/login/page.tsx`, `src/lib/debug-ingest.ts`, and `.env.example` now use an optional env-driven debug ingest sink. No hardcoded localhost ingest endpoint is present in the active login path.
 
 ### B-009 Playwright workflow DB fallback without DB service
 
