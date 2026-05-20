@@ -572,7 +572,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       user_id: user.id,
       headline: headline || `First proof: ${proofTitle}`,
       location: location || cityOrResidence || null,
-      visibility: 'public',
+      visibility: 'network',
       field_visibility: INDIVIDUAL_DAY_ONE_FIELD_VISIBILITY,
     });
 

@@ -17,7 +17,7 @@ import {
   buildProofFirstReviewCard,
   buildVisibilitySafeWhy,
   getShortlistProjectionPolicy,
-  getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg,
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
@@ -148,7 +148,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
               matches.id
             )
         : [];
-    const proofPackByProfileId = await getReviewCardProofPackMap(
+    const proofPackByProfileId = await getReviewCardProofPackMapForMatchedOrg(
       shortlist.map((row) => row.profileId)
     );
 

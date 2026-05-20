@@ -195,7 +195,7 @@ describe('onboarding actions', () => {
 
     expect(individualUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        visibility: 'public',
+        visibility: 'network',
         field_visibility: expect.objectContaining({
           contact: false,
           workEmail: false,

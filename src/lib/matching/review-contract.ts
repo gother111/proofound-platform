@@ -792,7 +792,30 @@ function getBestReviewProofPackSnapshot(
   })[0];
 }
 
-export async function getReviewCardProofPackMap(profileIds: string[]) {
+type ReviewCardProofPackAggregate = Awaited<
+  ReturnType<typeof listCanonicalProofPackAggregatesForOwner>
+>[number];
+
+function isProofPackVisibleToMatchedOrg(aggregate: ReviewCardProofPackAggregate) {
+  return (
+    aggregate.pack.packKind === 'verification_bundle' &&
+    aggregate.pack.lifecycleState === 'published' &&
+    (aggregate.pack.visibility === 'public' || aggregate.pack.visibility === 'matched_org') &&
+    (aggregate.pack.revealGate === 'none' || aggregate.pack.revealGate === 'match_exists') &&
+    hasPrimaryAnchorContext(aggregate.pack)
+  );
+}
+
+function isProofPackVisibleToOwnerReviewCard(aggregate: ReviewCardProofPackAggregate) {
+  return (
+    aggregate.pack.packKind === 'verification_bundle' && hasPrimaryAnchorContext(aggregate.pack)
+  );
+}
+
+async function getReviewCardProofPackMapWithFilter(
+  profileIds: string[],
+  isVisible: (aggregate: ReviewCardProofPackAggregate) => boolean
+) {
   const uniqueProfileIds = [...new Set(profileIds.filter(Boolean))];
   if (uniqueProfileIds.length === 0) {
     return new Map<string, ReviewCardProofPackSnapshot | null>();
@@ -807,40 +830,46 @@ export async function getReviewCardProofPackMap(profileIds: string[]) {
   );
 
   for (const { profileId, aggregates } of aggregatesByProfile) {
-    const snapshots = aggregates
-      .filter(
-        (aggregate) =>
-          aggregate.pack.packKind === 'verification_bundle' &&
-          hasPrimaryAnchorContext(aggregate.pack)
-      )
-      .map((aggregate) => ({
-        ownerId: aggregate.pack.ownerId,
-        primarySubjectType: aggregate.pack.primarySubjectType,
-        lifecycleState: aggregate.ownerFull.contract.status,
-        title: resolveReviewSafePackTitle(aggregate),
-        summary: aggregate.ownerFull.contract.primaryClaim.statement,
-        contextJson:
-          aggregate.pack.contextJson &&
-          typeof aggregate.pack.contextJson === 'object' &&
-          !Array.isArray(aggregate.pack.contextJson)
-            ? (aggregate.pack.contextJson as Record<string, unknown>)
-            : {},
-        ownershipStatement: aggregate.ownerFull.contract.ownershipStatement,
-        evidenceSummary: aggregate.pack.evidenceSummary,
-        outcomesSummary: aggregate.ownerFull.contract.outcomeSummary,
-        verificationSummary: aggregate.ownerFull.contract.verificationSummary.summary,
-        verificationStatus: aggregate.verificationStatus,
-        freshnessState: aggregate.freshnessState,
-        proofQualityScore: aggregate.ownerFull.contract.proofQualityScore,
-        contract: aggregate.ownerFull.contract,
-        updatedAt: aggregate.pack.updatedAt,
-        publishedAt: aggregate.pack.publishedAt,
-      }));
+    const snapshots = aggregates.filter(isVisible).map((aggregate) => ({
+      ownerId: aggregate.pack.ownerId,
+      primarySubjectType: aggregate.pack.primarySubjectType,
+      lifecycleState: aggregate.ownerFull.contract.status,
+      title: resolveReviewSafePackTitle(aggregate),
+      summary: aggregate.ownerFull.contract.primaryClaim.statement,
+      contextJson:
+        aggregate.pack.contextJson &&
+        typeof aggregate.pack.contextJson === 'object' &&
+        !Array.isArray(aggregate.pack.contextJson)
+          ? (aggregate.pack.contextJson as Record<string, unknown>)
+          : {},
+      ownershipStatement: aggregate.ownerFull.contract.ownershipStatement,
+      evidenceSummary: aggregate.pack.evidenceSummary,
+      outcomesSummary: aggregate.ownerFull.contract.outcomeSummary,
+      verificationSummary: aggregate.ownerFull.contract.verificationSummary.summary,
+      verificationStatus: aggregate.verificationStatus,
+      freshnessState: aggregate.freshnessState,
+      proofQualityScore: aggregate.ownerFull.contract.proofQualityScore,
+      contract: aggregate.ownerFull.contract,
+      updatedAt: aggregate.pack.updatedAt,
+      publishedAt: aggregate.pack.publishedAt,
+    }));
 
     snapshotMap.set(profileId, getBestReviewProofPackSnapshot(snapshots));
   }
 
   return snapshotMap;
+}
+
+export async function getReviewCardProofPackMapForMatchedOrg(profileIds: string[]) {
+  return getReviewCardProofPackMapWithFilter(profileIds, isProofPackVisibleToMatchedOrg);
+}
+
+export async function getReviewCardProofPackMapForOwner(profileIds: string[]) {
+  return getReviewCardProofPackMapWithFilter(profileIds, isProofPackVisibleToOwnerReviewCard);
+}
+
+export async function getReviewCardProofPackMap(profileIds: string[]) {
+  return getReviewCardProofPackMapForOwner(profileIds);
 }
 
 function mapRevealActorTypeToLifecycleActorType(

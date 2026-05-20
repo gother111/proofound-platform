@@ -27,7 +27,7 @@ import {
   buildVisibilitySafeWhy,
   canMutateReview,
   ensureMatchReviewState,
-  getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg,
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
           db.query.matchingProfiles.findMany({
             where: inArray(matchingProfiles.profileId, profileIds),
           }),
-          getReviewCardProofPackMap(profileIds),
+          getReviewCardProofPackMapForMatchedOrg(profileIds),
         ]);
         const reviewStateByMatchId = new Map(reviewStateRows.map((row) => [row.matchId, row]));
         const profileById = new Map(profileRows.map((row) => [row.profileId, row]));
@@ -435,7 +435,7 @@ export async function POST(request: NextRequest) {
         })
       : [];
     const reviewStateByMatchId = new Map(reviewStateRows.map((row) => [row.matchId, row]));
-    const proofPackByProfileId = await getReviewCardProofPackMap(
+    const proofPackByProfileId = await getReviewCardProofPackMapForMatchedOrg(
       items.map((item) => item.profileId)
     );
     const showExactRank = canViewExactRank && fairnessStatus === 'pass' && exactRankLive;

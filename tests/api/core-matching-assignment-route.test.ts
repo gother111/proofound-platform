@@ -50,6 +50,7 @@ vi.mock('@/lib/matching/review-contract', () => ({
   canMutateReview: vi.fn(() => true),
   ensureMatchReviewState: vi.fn(),
   getReviewCardProofPackMap: vi.fn(async () => new Map()),
+  getReviewCardProofPackMapForMatchedOrg: vi.fn(async () => new Map()),
   getRankBand: vi.fn(() => 'top_band'),
   getVisibleIdentityFields: vi.fn(() => []),
   normalizeFairnessStatus: vi.fn(() => 'pass'),

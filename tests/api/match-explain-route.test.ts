@@ -28,6 +28,8 @@ const mocks = vi.hoisted(() => ({
   ),
   resolveEffectiveScoreState: vi.fn(),
   getReviewCardProofPackMap: vi.fn(),
+  getReviewCardProofPackMapForMatchedOrg: vi.fn(),
+  getReviewCardProofPackMapForOwner: vi.fn(),
   buildProofFirstReviewCard: vi.fn(),
 }));
 
@@ -53,6 +55,8 @@ vi.mock('@/lib/matching/review-contract', () => ({
   getRankBand: mocks.getRankBand,
   getReasonLedgerEntries: mocks.getReasonLedgerEntries,
   getReviewCardProofPackMap: mocks.getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg: mocks.getReviewCardProofPackMapForMatchedOrg,
+  getReviewCardProofPackMapForOwner: mocks.getReviewCardProofPackMapForOwner,
   normalizeFairnessStatus: mocks.normalizeFairnessStatus,
   renderExplanationFromReasonCodes: mocks.renderExplanationFromReasonCodes,
   sanitizeMatchReasonCodes: mocks.sanitizeMatchReasonCodes,
@@ -131,6 +135,14 @@ describe('GET /api/match/explain/[matchId]', () => {
     mocks.getRankBand.mockReturnValue('Top tier');
     mocks.getReasonLedgerEntries.mockResolvedValue([]);
     mocks.getReviewCardProofPackMap.mockResolvedValue(new Map([['candidate-1', null]]));
+    mocks.getReviewCardProofPackMapForMatchedOrg.mockResolvedValue(
+      new Map([['candidate-1', null]])
+    );
+    mocks.getReviewCardProofPackMapForOwner.mockResolvedValue(new Map([['candidate-1', null]]));
+    mocks.getReviewCardProofPackMapForMatchedOrg.mockResolvedValue(
+      new Map([['candidate-1', null]])
+    );
+    mocks.getReviewCardProofPackMapForOwner.mockResolvedValue(new Map([['candidate-1', null]]));
     mocks.normalizeFairnessStatus.mockImplementation(
       (status: string | null | undefined) => status ?? 'pass'
     );

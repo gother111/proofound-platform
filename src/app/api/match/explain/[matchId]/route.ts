@@ -16,7 +16,8 @@ import {
   canRevealExactRank,
   getOrgMembershipRole,
   getRankBand,
-  getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg,
+  getReviewCardProofPackMapForOwner,
   getReasonLedgerEntries,
   normalizeFairnessStatus,
   renderExplanationFromReasonCodes,
@@ -292,7 +293,10 @@ export async function GET(
       fairnessStatus,
       audience: match.profile_id === authResult.user.id ? 'candidate' : 'org',
     });
-    const proofPackByProfileId = await getReviewCardProofPackMap([match.profile_id]);
+    const proofPackByProfileId =
+      match.profile_id === authResult.user.id
+        ? await getReviewCardProofPackMapForOwner([match.profile_id])
+        : await getReviewCardProofPackMapForMatchedOrg([match.profile_id]);
     const reviewCard = buildProofFirstReviewCard({
       profileId: match.profile_id,
       reasonCodes,

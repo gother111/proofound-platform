@@ -23,7 +23,7 @@ import {
   appendManualOverrideReason,
   buildProofFirstReviewCard,
   buildVisibilitySafeWhy,
-  getReviewCardProofPackMap,
+  getReviewCardProofPackMapForMatchedOrg,
   getOrgMembershipRole,
   normalizeFairnessStatus,
   resolveCanonicalCorridor,
@@ -94,7 +94,7 @@ async function buildReviewCardPayload(params: {
   fairnessStatus: ReturnType<typeof normalizeFairnessStatus>;
   revealScope: RevealScope;
 }) {
-  const proofPackByProfileId = await getReviewCardProofPackMap([params.profileId]);
+  const proofPackByProfileId = await getReviewCardProofPackMapForMatchedOrg([params.profileId]);
 
   const reviewCard = buildProofFirstReviewCard({
     profileId: params.profileId,
