@@ -5,33 +5,11 @@
  * PRD Reference: Part 2 F2 - Data Portability & Public Sharing
  */
 
-import { nanoid } from 'nanoid';
-
-const CANONICAL_SNIPPET_HOST = 'proofound.io';
-const LEGACY_SNIPPET_HOSTS = new Set(['proofound.com', 'www.proofound.com']);
-
-export type SnippetFields = Record<string, boolean | number | null | undefined>;
-
-export interface ProfileSnippet {
-  id: string;
-  userId: string;
-  shareToken: string; // Unique token for public access
-  expiresAt?: Date;
-  fields: SnippetFields;
-  theme: 'light' | 'dark' | 'auto';
-  format: 'card' | 'mini' | 'full';
-  createdAt: Date;
-}
-
-/**
- * Generate a new share token
- */
-export function generateShareToken(): string {
-  return nanoid(16); // 16-character random string
-}
+const CANONICAL_PUBLIC_SITE_HOST = 'proofound.io';
+const LEGACY_PUBLIC_SITE_HOSTS = new Set(['proofound.com', 'www.proofound.com']);
 
 function normalizePublicSiteUrl(rawUrl: string | null | undefined): string {
-  const fallback = `https://${CANONICAL_SNIPPET_HOST}`;
+  const fallback = `https://${CANONICAL_PUBLIC_SITE_HOST}`;
   const trimmed = rawUrl?.trim();
 
   if (!trimmed) {
@@ -45,8 +23,8 @@ function normalizePublicSiteUrl(rawUrl: string | null | undefined): string {
     const normalized = new URL(parsed.origin);
     const hostname = normalized.hostname.toLowerCase();
 
-    if (LEGACY_SNIPPET_HOSTS.has(hostname)) {
-      normalized.hostname = CANONICAL_SNIPPET_HOST;
+    if (LEGACY_PUBLIC_SITE_HOSTS.has(hostname)) {
+      normalized.hostname = CANONICAL_PUBLIC_SITE_HOST;
     }
 
     return normalized.origin.replace(/\/+$/, '');
@@ -55,45 +33,24 @@ function normalizePublicSiteUrl(rawUrl: string | null | undefined): string {
   }
 }
 
-export function resolvePublicSnippetBaseUrl(): string {
+export function resolvePublicSiteBaseUrl(): string {
   return normalizePublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 }
 
-/**
- * Build public profile URL
- */
-export function buildPublicProfileURL(shareToken: string): string {
-  const baseURL = resolvePublicSnippetBaseUrl();
-  const safeToken = encodeURIComponent(shareToken.trim());
-  return `${baseURL}/p/${safeToken}`;
-}
-
-export function buildPublicEmbedURLFromProfileURL(profileUrl: string): string {
-  const trimmed = profileUrl.trim().replace(/\/+$/, '');
+export function buildPublicEmbedURLFromPublicPageURL(publicPageUrl: string): string {
+  const trimmed = publicPageUrl.trim().replace(/\/+$/, '');
   return `${trimmed}/embed`;
 }
 
 /**
- * Generate embeddable HTML snippet
- */
-export function generateEmbedCode(
-  shareToken: string,
-  format: 'card' | 'mini' | 'full' = 'card',
-  width: number = 400
-): string {
-  const url = buildPublicProfileURL(shareToken);
-  return generateEmbedCodeFromUrl(url, format, width);
-}
-
-/**
- * Generate embeddable HTML snippet from a full profile URL
+ * Generate embeddable HTML from a launch Public Page URL.
  */
 export function generateEmbedCodeFromUrl(
-  profileUrl: string,
+  publicPageUrl: string,
   format: 'card' | 'mini' | 'full' = 'card',
   width: number = 400
 ): string {
-  const embedURL = buildPublicEmbedURLFromProfileURL(profileUrl);
+  const embedURL = buildPublicEmbedURLFromPublicPageURL(publicPageUrl);
 
   const heights = {
     mini: 120,
@@ -127,45 +84,4 @@ export function generateShareText(profile: { name: string; headline?: string }):
     outreach: withHeadline,
     generic: withHeadline,
   };
-}
-
-/**
- * Validate snippet configuration
- */
-export function validateSnippetConfig(fields: SnippetFields): {
-  valid: boolean;
-  errors: string[];
-} {
-  const errors: string[] = [];
-
-  // Must have at least one field enabled
-  const hasAnyField = Object.values(fields).some((value) => value === true);
-  if (!hasAnyField) {
-    errors.push('At least one field must be enabled');
-  }
-
-  // If skills enabled, topSkills should be reasonable
-  if (fields.skills === true && typeof fields.topSkills === 'number') {
-    if (fields.topSkills < 1 || fields.topSkills > 20) {
-      errors.push('Top skills must be between 1 and 20');
-    }
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors,
-  };
-}
-
-/**
- * Get snippet analytics (view count, last accessed, etc.)
- */
-export interface SnippetAnalytics {
-  views: number;
-  uniqueVisitors: number;
-  lastViewedAt?: Date;
-  referrers: Array<{
-    source: string;
-    count: number;
-  }>;
 }

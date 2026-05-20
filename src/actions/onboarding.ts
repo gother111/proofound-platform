@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
-import { resolvePublicSnippetBaseUrl } from '@/lib/profile/snippet-generator';
+import { resolvePublicSiteBaseUrl } from '@/lib/profile/snippet-generator';
 import { ORGANIZATION_DAY_ONE_VISIBILITY } from '@/lib/portfolio/public-organization';
 import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
 import { emitIndividualOnboardingCompleted } from '@/lib/analytics/events';
@@ -103,7 +103,7 @@ const FIRST_PROOF_VERIFICATION_RELATIONSHIPS = new Set<FirstProofVerificationCon
 );
 
 function buildPublicPortfolioUrl(pathname: string) {
-  const baseUrl = resolvePublicSnippetBaseUrl();
+  const baseUrl = resolvePublicSiteBaseUrl();
   const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
   return `${baseUrl}${normalizedPath}`;
 }

@@ -2478,3 +2478,14 @@ Browser evidence:
 - This reduces false active-surface hits without changing runtime behavior or reviving archived routes.
 - Browser was not rerun for this slice because no active rendered route changed; route classification and absence from active imports are the relevant evidence.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/public-snippet-page.test.tsx tests/ui/public-snippet-embed-page.test.tsx src/lib/launch/__tests__/surface-policy.test.ts --reporter=verbose` (3 files / 12 tests) and an active-source scan for `PublicSnippetView|Public profile status|Profile narrative|proofound Public Profile template`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.
+
+## Continuation - Public Page Share Helpers and Legacy `/p` Test Retirement
+
+- Inspected the active Public Page sharing helper after moving the unused snippet component. The helper still exported legacy `/p/{token}` URL builders and active tests still asserted the archived `/p` route shape.
+- Removed the unused legacy `/p` URL builder, token generator, snippet config validator, and snippet analytics types from the active share helper. The active helper now resolves the canonical public site base URL, builds embeds from launch Public Page URLs, and generates proof-safe outreach copy.
+- Updated onboarding and candidate-invite URL builders to use the renamed public-site base URL helper rather than `resolvePublicSnippetBaseUrl`.
+- Moved the legacy public-snippet view-model library and privacy tests into `src/archive/non_launch_lib/profile/` and `tests/archive/non_mvp_public_snippet/`, and removed the old active `/p` URL test expectation.
+- Updated Public Page metadata coverage to use `/portfolio/...` paths instead of `/p/...` paths.
+- Moved the unused landing hero artifact variant with the legacy `proofound.co/p/sample` mock link into `src/archive/non_launch_landing_variants/hero-variants/`.
+- Browser was not rerun for this slice because no active rendered route changed; active import scans, route-policy tests, and focused helper/UI tests cover the behavior.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/public-page-share-helpers.test.ts tests/lib/public-profile-metadata.test.ts tests/ui/share-profile-dialog.test.tsx tests/ui/public-snippet-page.test.tsx tests/ui/public-snippet-embed-page.test.tsx src/lib/launch/__tests__/surface-policy.test.ts --reporter=verbose` (6 files / 23 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`, active-source scans for retired snippet helper exports, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but exited successfully.

@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import { db } from '@/db';
 import { getRows } from '@/lib/db/rows';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
-import type { SnippetFields } from '@/lib/profile/snippet-generator';
+type SnippetFields = Record<string, boolean | number | null | undefined>;
 import { sql } from 'drizzle-orm';
 import { CAPABILITY_TOKEN_CLASSES, redeemCapabilityToken } from '@/lib/security/capability-tokens';
 import { internalValueLabel } from '@/lib/copy/labels';

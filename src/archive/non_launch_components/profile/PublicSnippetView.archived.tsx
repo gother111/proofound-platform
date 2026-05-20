@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { Globe, GraduationCap, MapPin, Sparkles, Briefcase, Target } from 'lucide-react';
 import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
 import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
-import type { PublicSnippetViewModel } from '@/lib/profile/public-snippet';
+import type { PublicSnippetViewModel } from '@/archive/non_launch_lib/profile/public-snippet.archived';
 
 type PublicSnippetViewProps = {
   viewModel: PublicSnippetViewModel;

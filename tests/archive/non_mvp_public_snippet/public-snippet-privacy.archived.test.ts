@@ -7,7 +7,10 @@ vi.mock('@/db', () => ({
 }));
 
 import { db } from '@/db';
-import { buildPublicSnippetViewModel, type PublicSnippet } from '@/lib/profile/public-snippet';
+import {
+  buildPublicSnippetViewModel,
+  type PublicSnippet,
+} from '@/archive/non_launch_lib/profile/public-snippet.archived';
 
 function buildSnippet(fields: Record<string, unknown>): PublicSnippet {
   return {
