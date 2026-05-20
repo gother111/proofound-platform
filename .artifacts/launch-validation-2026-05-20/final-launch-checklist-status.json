@@ -1,17 +1,17 @@
 {
   "scope": "repo",
-  "generatedAt": "2026-05-20T01:34:00.276Z",
+  "generatedAt": "2026-05-20T01:51:33.435Z",
   "currentDate": "2026-05-20",
   "workspaceRoot": "/Users/yuriibakurov/proofound",
-  "gitHead": "653d0ae7936b2f05e9eae9640ec8a1f59250feaf",
+  "gitHead": "38bd0da02bd8228eddc5d5a8c2a32f5a4072b373",
   "gitBranch": "master",
   "verdict": "NOT_READY",
   "includeStateful": false,
   "liveBaseUrl": null,
   "latestLaunchBundleDir": ".artifacts/launch-validation-2026-05-20",
   "statusCounts": {
-    "PASS": 30,
-    "FAIL": 6,
+    "PASS": 26,
+    "FAIL": 10,
     "BLOCKED": 1,
     "UNVERIFIED": 3
   },
@@ -185,18 +185,21 @@
         "tests/api/org-match-review-route.test.ts",
         "src/app/api/org/[id]/matches/[matchId]/review/route.ts"
       ],
-      "status": "PASS",
-      "summary": "2026-05-19 current rerun passed npm run test:launch:org-corridor, the Phase 2 review/reveal/authz pack, and escalated npm run test:e2e:org:strict 7/7. Evidence covers privacy-safe matching review, hidden identity fields before reveal, shortlist review, strict organization flow screens, and workflow email privacy.",
+      "status": "FAIL",
+      "summary": "Strict org corridor E2E: Command exited with 1.",
       "evidence": [
         {
-          "label": "Verification checklist: blind-by-default review",
-          "path": "docs/verification-checklist.md",
-          "note": "2026-05-19 current rerun passed npm run test:launch:org-corridor, the Phase 2 review/reveal/authz pack, and escalated npm run test:e2e:org:strict 7/7. Evidence covers privacy-safe matching review, hidden identity fields before reveal, shortlist review, strict organization flow screens, and workflow email privacy."
+          "label": "Latest final validation strict org corridor E2E evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log"
         }
       ],
       "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "Verification checklist",
+      "retiredStaleClaims": [
+        "Verification checklist disagrees with the selected FAIL status for this checklist line.",
+        "Assignment quality checklist disagrees with the selected FAIL status for this checklist line.",
+        "Org match review route test disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation strict org corridor E2E",
       "blocksVerdict": true,
       "blockingScope": "both"
     },
@@ -206,18 +209,19 @@
       "label": "Hire and engagement verification remain distinct",
       "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
       "evidenceSources": [".artifacts/proofound-current-state-reality-check.md"],
-      "status": "PASS",
-      "summary": "Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario.",
+      "status": "FAIL",
+      "summary": "Strict org corridor E2E: Command exited with 1.",
       "evidence": [
         {
-          "label": "Current-state reality check: review -> intro -> reveal -> interview -> decision -> hire -> engagement verification",
-          "path": ".artifacts/proofound-current-state-reality-check.md",
-          "note": "Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario."
+          "label": "Latest final validation strict org corridor E2E evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log"
         }
       ],
       "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "Current-state reality check",
+      "retiredStaleClaims": [
+        "Current-state reality check disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation strict org corridor E2E",
       "blocksVerdict": true,
       "blockingScope": "both"
     },
@@ -300,18 +304,19 @@
         "tests/lib/authz-policy.test.ts",
         "src/lib/authz/policy.ts"
       ],
-      "status": "PASS",
-      "summary": "tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.",
+      "status": "FAIL",
+      "summary": "Privacy/RLS baseline tests: Command exited with 1.",
       "evidence": [
         {
-          "label": "Current-state reality check: canonical role and RLS truth",
-          "path": ".artifacts/proofound-current-state-reality-check.md",
-          "note": "tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target."
+          "label": "Latest final validation privacy/RLS baseline gate evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/privacy_rls_baseline_tests.log"
         }
       ],
       "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "Current-state reality check",
+      "retiredStaleClaims": [
+        "Current-state reality check disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation privacy/RLS baseline gate",
       "blocksVerdict": true,
       "blockingScope": "both"
     },
@@ -576,18 +581,20 @@
         ".artifacts/proofound-current-state-reality-check.md",
         "tests/api/assignments-publish-route.test.ts"
       ],
-      "status": "PASS",
-      "summary": "PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict passed 7/7, including the narrowed org assignment lifecycle checks.",
+      "status": "FAIL",
+      "summary": "Strict org corridor E2E: Command exited with 1.",
       "evidence": [
         {
-          "label": "Current-state reality check: assignment create / edit / publish",
-          "path": ".artifacts/proofound-current-state-reality-check.md",
-          "note": "PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict passed 7/7, including the narrowed org assignment lifecycle checks."
+          "label": "Latest final validation strict org corridor E2E evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log"
         }
       ],
       "blockerIds": [],
-      "retiredStaleClaims": [],
-      "sourceLabel": "Current-state reality check",
+      "retiredStaleClaims": [
+        "Current-state reality check disagrees with the selected FAIL status for this checklist line.",
+        "Verification checklist disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation strict org corridor E2E",
       "blocksVerdict": true,
       "blockingScope": "both"
     },
@@ -1024,6 +1031,56 @@
       "blockingScope": "both"
     },
     {
+      "id": "product_review_queue_blind_and_reason_coded",
+      "section": "Product",
+      "label": "Review queue is blind-by-default and reason-coded",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        "docs/verification-checklist.md",
+        "tests/api/org-match-review-route.test.ts",
+        "src/app/api/org/[id]/matches/[matchId]/review/route.ts"
+      ],
+      "status": "FAIL",
+      "summary": "Strict org corridor E2E: Command exited with 1.",
+      "evidence": [
+        {
+          "label": "Latest final validation strict org corridor E2E evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [
+        "Verification checklist disagrees with the selected FAIL status for this checklist line.",
+        "Assignment quality checklist disagrees with the selected FAIL status for this checklist line.",
+        "Org match review route test disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation strict org corridor E2E",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "product_hire_and_engagement_distinct",
+      "section": "Product",
+      "label": "Hire and engagement verification remain distinct",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [".artifacts/proofound-current-state-reality-check.md"],
+      "status": "FAIL",
+      "summary": "Strict org corridor E2E: Command exited with 1.",
+      "evidence": [
+        {
+          "label": "Latest final validation strict org corridor E2E evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [
+        "Current-state reality check disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation strict org corridor E2E",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
       "id": "engineering_next_start_stable",
       "section": "Engineering",
       "label": "`next start` is stable",
@@ -1040,6 +1097,32 @@
       "blockerIds": [],
       "retiredStaleClaims": [],
       "sourceLabel": "Latest launch bundle prod boot",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "engineering_three_role_model_canonical",
+      "section": "Engineering",
+      "label": "Canonical 3-role model is true across code, DB, and API",
+      "authorityRefs": ["Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md"],
+      "evidenceSources": [
+        ".artifacts/proofound-current-state-reality-check.md",
+        "tests/lib/authz-policy.test.ts",
+        "src/lib/authz/policy.ts"
+      ],
+      "status": "FAIL",
+      "summary": "Privacy/RLS baseline tests: Command exited with 1.",
+      "evidence": [
+        {
+          "label": "Latest final validation privacy/RLS baseline gate evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/privacy_rls_baseline_tests.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [
+        "Current-state reality check disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation privacy/RLS baseline gate",
       "blocksVerdict": true,
       "blockingScope": "both"
     },
@@ -1143,6 +1226,33 @@
         "Current-state reality check disagrees with the selected FAIL status for this checklist line."
       ],
       "sourceLabel": "Latest final validation privacy/RLS baseline gate",
+      "blocksVerdict": true,
+      "blockingScope": "both"
+    },
+    {
+      "id": "qa_assignment_publish_smoke",
+      "section": "QA",
+      "label": "Assignment publish smoke passes",
+      "authorityRefs": ["LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md"],
+      "evidenceSources": [
+        "docs/verification-checklist.md",
+        ".artifacts/proofound-current-state-reality-check.md",
+        "tests/api/assignments-publish-route.test.ts"
+      ],
+      "status": "FAIL",
+      "summary": "Strict org corridor E2E: Command exited with 1.",
+      "evidence": [
+        {
+          "label": "Latest final validation strict org corridor E2E evidence",
+          "path": ".artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log"
+        }
+      ],
+      "blockerIds": [],
+      "retiredStaleClaims": [
+        "Current-state reality check disagrees with the selected FAIL status for this checklist line.",
+        "Verification checklist disagrees with the selected FAIL status for this checklist line."
+      ],
+      "sourceLabel": "Latest final validation strict org corridor E2E",
       "blocksVerdict": true,
       "blockingScope": "both"
     }
@@ -1342,6 +1452,9 @@
     "`The org settings surface remains a live gate page.`",
     "`The contracts API remains a live launch surface.`",
     "`Google, LinkedIn, and video integrations remain live launch compatibility flows.`",
+    "Verification checklist disagrees with the selected FAIL status for this checklist line.",
+    "Assignment quality checklist disagrees with the selected FAIL status for this checklist line.",
+    "Org match review route test disagrees with the selected FAIL status for this checklist line.",
     "Current-state reality check disagrees with the selected FAIL status for this checklist line."
   ],
   "outputs": {

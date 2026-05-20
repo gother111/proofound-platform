@@ -92,5 +92,5 @@ The full-launch recommendation remains `NO-GO` until repo production boot/smoke,
 
 - Latest operational checklist: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`
 - Latest machine-readable bundle: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.json`
-- Generated at: `2026-05-20T01:34:00.276Z`
+- Generated at: `2026-05-20T01:51:33.435Z`
 <!-- final-launch-checklist:end -->

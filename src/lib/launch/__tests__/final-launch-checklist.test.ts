@@ -576,6 +576,67 @@ describe('final launch checklist pipeline', () => {
     ).toBe('PASS');
   });
 
+  it('uses current strict-org and privacy gates over older green corridor claims', async () => {
+    const workspace = await createWorkspaceFixture({ includeRepoReadyBundle: true });
+
+    await writeFile(
+      workspace,
+      `.artifacts/launch-validation-2026-04-15/${REPO_READY_VALIDATION_FILE_NAME}`,
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          kind: 'repo_ready_validation',
+          scope: 'repo',
+          generatedAt: '2026-04-15T21:00:00.000Z',
+          authoritativeBaseUrl: 'http://127.0.0.1:33124',
+          verdict: 'NOT_READY',
+          gates: [
+            {
+              id: 'strict_org_corridor_e2e',
+              status: 'FAIL',
+              summary: 'Strict org corridor failed in the latest validation run.',
+              evidence: ['strict_org_corridor_e2e.log'],
+            },
+            {
+              id: 'privacy_rls_baseline_tests',
+              status: 'FAIL',
+              summary: 'Privacy/RLS baseline failed in the latest validation run.',
+              evidence: ['privacy_rls_baseline_tests.log'],
+            },
+            {
+              id: 'privacy_rls_extended_tests',
+              status: 'FAIL',
+              summary: 'Privacy/RLS extended failed in the latest validation run.',
+              evidence: ['privacy_rls_extended_tests.log'],
+            },
+          ],
+        },
+        null,
+        2
+      )
+    );
+
+    const report = await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'repo',
+      now: new Date('2026-04-15T21:10:00.000Z'),
+      fetchImpl: globalThis.fetch,
+    });
+
+    const item = (id: string) => report.items.find((candidate) => candidate.id === id);
+
+    expect(item('product_review_queue_blind_and_reason_coded')?.status).toBe('FAIL');
+    expect(item('product_hire_and_engagement_distinct')?.status).toBe('FAIL');
+    expect(item('qa_assignment_publish_smoke')?.status).toBe('FAIL');
+    expect(item('engineering_three_role_model_canonical')?.status).toBe('FAIL');
+    expect(item('product_hire_and_engagement_distinct')?.retiredStaleClaims.length).toBeGreaterThan(
+      0
+    );
+    expect(
+      item('engineering_three_role_model_canonical')?.retiredStaleClaims.length
+    ).toBeGreaterThan(0);
+  });
+
   it('treats external prerequisites as non-blocking in repo scope but blocking in full scope', async () => {
     const workspace = await createWorkspaceFixture({ includeRepoReadyBundle: true });
 

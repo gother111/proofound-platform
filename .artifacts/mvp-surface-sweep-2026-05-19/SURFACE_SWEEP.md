@@ -1783,6 +1783,19 @@ Browser evidence:
 - Corrected `.artifacts/launch-readiness-summary.md` after the regenerated checklist: it no longer claims repo scope is `READY` while `.artifacts/launch-validation-2026-05-20/repo-ready-validation.json` and the final checklist report say `NOT_READY` because production boot/smoke could not run in this sandbox.
 - Tightened the final checklist generator so current `.artifacts/launch-validation-2026-05-20/commands.json` gates can override older PASS rows. This prevents the strict org E2E and real-DB privacy/RLS checklist rows from staying green when the latest final validation run records sandbox DNS/bind failures for those gates.
 
+## Continuation - Final Checklist Dependent Evidence Truth Tightening
+
+- Refreshed `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md` and `.json` at current `HEAD` after the Browser-backed public-surface commit so the generated checklist no longer pointed at an older commit.
+- Found dependent checklist rows still selected older green strict-org and RLS claims for broader launch assertions:
+  - Review queue is blind-by-default and reason-coded.
+  - Hire and engagement verification remain distinct.
+  - Canonical 3-role model is true across code, DB, and API.
+  - Assignment publish smoke passes.
+- Updated the final checklist definitions so the latest strict org E2E and privacy/RLS command gates outrank older green current-state or verification-checklist rows for those dependent launch assertions.
+- Added a regression fixture that injects current red strict-org and privacy/RLS gates over older green corridor claims and asserts the broader dependent rows become `FAIL` with stale green claims retired.
+- Regenerated the final checklist. Current repo-scope verdict remains `NOT_READY`; counts changed from `PASS: 30 / FAIL: 6 / BLOCKED: 1 / UNVERIFIED: 3` to `PASS: 26 / FAIL: 10 / BLOCKED: 1 / UNVERIFIED: 3`, which is stricter but more faithful to the latest evidence bundle.
+- Focused verification passed: `npm run test -- src/lib/launch/__tests__/final-launch-checklist.test.ts tests/scripts/launch-gate-config.test.ts` (108 tests). Vitest still prints the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
 ## Continuation - Codex Browser Landmark And Unavailable-State Sweep
 
 - Used Codex Browser in-app browser against the local app at `http://localhost:3000` with the browser made visible for the user-requested Browser pass.

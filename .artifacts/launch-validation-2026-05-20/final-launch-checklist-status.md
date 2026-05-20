@@ -1,28 +1,32 @@
 # Proofound Final Launch Checklist Status
 
-Generated: 2026-05-20T01:34:00.276Z
+Generated: 2026-05-20T01:51:33.435Z
 Scope: `repo`
 Workspace: `/Users/yuriibakurov/proofound`
-Git: `master` @ `653d0ae7936b2f05e9eae9640ec8a1f59250feaf`
+Git: `master` @ `38bd0da02bd8228eddc5d5a8c2a32f5a4072b373`
 Verdict: `NOT_READY`
 Live base URL: not configured
 Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 
 ## Summary
 
-- PASS: 30
-- FAIL: 6
+- PASS: 26
+- FAIL: 10
 - BLOCKED: 1
 - UNVERIFIED: 3
 
 ## True Blockers
 
 - Product — Org trust page is minimal and live: Skipped public org trust smoke because production boot was unavailable.
+- Product — Review queue is blind-by-default and reason-coded: Strict org corridor E2E: Command exited with 1.
+- Product — Hire and engagement verification remain distinct: Strict org corridor E2E: Command exited with 1.
 - Engineering — `next start` is stable: Production boot could not start in this environment; review the captured boot error and rerun on a host that can bind localhost.
+- Engineering — Canonical 3-role model is true across code, DB, and API: Privacy/RLS baseline tests: Command exited with 1.
 - Engineering — Launch-status and smoke-artifact logic run on fresh evidence: Repo-ready launch-status route logic or smoke refresh did not pass on fresh local evidence.
 - QA — Fresh strict org corridor passes in prod mode: Strict org corridor E2E: Command exited with 1.
 - QA — Public-org trust smoke passes: Skipped public org trust smoke because production boot was unavailable.
 - QA — RLS/privacy tests pass against actual DB state: Privacy/RLS baseline tests: Command exited with 1.
+- QA — Assignment publish smoke passes: Strict org corridor E2E: Command exited with 1.
 
 ## External Prerequisites
 
@@ -57,12 +61,14 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - [PASS] Assignment builder enforces why / work / proof / constraints
   - Summary: Assignment publish tests assert hard publish blocks for missing work summary, proof expectations, and constraints, with business-value coverage in the route fixture.
   - Evidence: Assignment publish route test: `tests/api/assignments-publish-route.test.ts` (Assertions include work_summary_required, proof_expectations_required, and constraints_required.)
-- [PASS] Review queue is blind-by-default and reason-coded
-  - Summary: 2026-05-19 current rerun passed npm run test:launch:org-corridor, the Phase 2 review/reveal/authz pack, and escalated npm run test:e2e:org:strict 7/7. Evidence covers privacy-safe matching review, hidden identity fields before reveal, shortlist review, strict organization flow screens, and workflow email privacy.
-  - Evidence: Verification checklist: blind-by-default review: `docs/verification-checklist.md` (2026-05-19 current rerun passed npm run test:launch:org-corridor, the Phase 2 review/reveal/authz pack, and escalated npm run test:e2e:org:strict 7/7. Evidence covers privacy-safe matching review, hidden identity fields before reveal, shortlist review, strict organization flow screens, and workflow email privacy.)
-- [PASS] Hire and engagement verification remain distinct
-  - Summary: Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario.
-  - Evidence: Current-state reality check: review -> intro -> reveal -> interview -> decision -> hire -> engagement verification: `.artifacts/proofound-current-state-reality-check.md` (Isolated strict corridor rerun passed 1/1, full org strict rerun passed 7/7, and live smoke passed the full_org_corridor_review_to_engagement_verification scenario.)
+- [FAIL] Review queue is blind-by-default and reason-coded
+  - Summary: Strict org corridor E2E: Command exited with 1.
+  - Evidence: Latest final validation strict org corridor E2E evidence: `.artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log`
+  - Retired stale claims: Verification checklist disagrees with the selected FAIL status for this checklist line. | Assignment quality checklist disagrees with the selected FAIL status for this checklist line. | Org match review route test disagrees with the selected FAIL status for this checklist line.
+- [FAIL] Hire and engagement verification remain distinct
+  - Summary: Strict org corridor E2E: Command exited with 1.
+  - Evidence: Latest final validation strict org corridor E2E evidence: `.artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log`
+  - Retired stale claims: Current-state reality check disagrees with the selected FAIL status for this checklist line.
 
 ## Engineering
 
@@ -75,9 +81,10 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - [PASS] Route surface is reduced to the launch allowlist
   - Summary: Launch route and page inventory tests passed against the current repo state.
   - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log`
-- [PASS] Canonical 3-role model is true across code, DB, and API
-  - Summary: tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.
-  - Evidence: Current-state reality check: canonical role and RLS truth: `.artifacts/proofound-current-state-reality-check.md` (tests/lib/authz-policy.test.ts, npm run test:privacy, and npm run test:privacy:extended all passed against the configured Supabase target.)
+- [FAIL] Canonical 3-role model is true across code, DB, and API
+  - Summary: Privacy/RLS baseline tests: Command exited with 1.
+  - Evidence: Latest final validation privacy/RLS baseline gate evidence: `.artifacts/launch-validation-2026-05-20/privacy_rls_baseline_tests.log`
+  - Retired stale claims: Current-state reality check disagrees with the selected FAIL status for this checklist line.
 - [PASS] Verification status semantics are canonical and freshness-aware
   - Summary: Launch-status route tests passed with current persisted/live monitor logic.
   - Evidence: Latest repo-ready launch-status gate evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-launch-status-route.log`
@@ -113,9 +120,10 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - [PASS] Archived-route and launch-surface tests pass
   - Summary: Launch route and page inventory tests passed against the current repo state.
   - Evidence: Latest launch bundle route-surface gate evidence: `.artifacts/launch-validation-2026-05-20/repo-ready-route-surface.log`
-- [PASS] Assignment publish smoke passes
-  - Summary: PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict passed 7/7, including the narrowed org assignment lifecycle checks.
-  - Evidence: Current-state reality check: assignment create / edit / publish: `.artifacts/proofound-current-state-reality-check.md` (PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict passed 7/7, including the narrowed org assignment lifecycle checks.)
+- [FAIL] Assignment publish smoke passes
+  - Summary: Strict org corridor E2E: Command exited with 1.
+  - Evidence: Latest final validation strict org corridor E2E evidence: `.artifacts/launch-validation-2026-05-20/strict_org_corridor_e2e.log`
+  - Retired stale claims: Current-state reality check disagrees with the selected FAIL status for this checklist line. | Verification checklist disagrees with the selected FAIL status for this checklist line.
 - [PASS] Final evidence packet is assembled and dated
   - Summary: This checklist run generated a dated Markdown report and JSON bundle.
   - Evidence: Generated Markdown report: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.md`; Generated JSON bundle: `.artifacts/launch-validation-2026-05-20/final-launch-checklist-status.json`
@@ -183,4 +191,7 @@ Latest launch-validation bundle: `.artifacts/launch-validation-2026-05-20`
 - `The org settings surface remains a live gate page.`
 - `The contracts API remains a live launch surface.`
 - `Google, LinkedIn, and video integrations remain live launch compatibility flows.`
+- Verification checklist disagrees with the selected FAIL status for this checklist line.
+- Assignment quality checklist disagrees with the selected FAIL status for this checklist line.
+- Org match review route test disagrees with the selected FAIL status for this checklist line.
 - Current-state reality check disagrees with the selected FAIL status for this checklist line.

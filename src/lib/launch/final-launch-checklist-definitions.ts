@@ -330,6 +330,13 @@ export function buildFinalLaunchChecklistDefinitions({
       ],
       evaluateDirect: (context) => {
         const observations: FinalLaunchChecklistObservation[] = [];
+        const strictOrgGate = gateObservation(
+          context.latestLaunchBundle,
+          'strict_org_corridor_e2e',
+          'Latest final validation strict org corridor E2E'
+        );
+        if (strictOrgGate) observations.push(strictOrgGate);
+
         const blindReview = checklistRowObservation(
           verificationRow(context, 'blind-by-default review'),
           'verification_checklist'
@@ -400,6 +407,11 @@ export function buildFinalLaunchChecklistDefinitions({
       authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
       evidenceSources: ['.artifacts/proofound-current-state-reality-check.md'],
       evaluateDirect: (context) => {
+        const strictOrgGate = gateObservation(
+          context.latestLaunchBundle,
+          'strict_org_corridor_e2e',
+          'Latest final validation strict org corridor E2E'
+        );
         const corridor = checklistRowObservation(
           realityRow(
             context,
@@ -407,10 +419,7 @@ export function buildFinalLaunchChecklistDefinitions({
           ),
           'current_state_reality_check'
         );
-        if (corridor) {
-          return [corridor];
-        }
-        return [];
+        return compactObservations([strictOrgGate, corridor]);
       },
     },
     {
@@ -520,12 +529,38 @@ export function buildFinalLaunchChecklistDefinitions({
         'src/lib/authz/policy.ts',
       ],
       evaluateDirect: (context) => {
+        const observations: FinalLaunchChecklistObservation[] = [];
+        const baseline = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_baseline_tests',
+          'Latest final validation privacy/RLS baseline gate'
+        );
+        if (baseline) observations.push(baseline);
+
+        const extended = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_extended_tests',
+          'Latest final validation privacy/RLS extended gate'
+        );
+        if (extended) observations.push(extended);
+
+        const liveDb = gateObservation(
+          context.latestLaunchBundle,
+          'privacy_rls_live_db',
+          'Latest launch bundle privacy/RLS live DB gate'
+        );
+        if (liveDb) observations.push(liveDb);
+
         const row = checklistRowObservation(
           realityRow(context, 'canonical role and RLS truth'),
           'current_state_reality_check'
         );
         if (row) {
-          return [row];
+          observations.push(row);
+        }
+
+        if (observations.length > 0) {
+          return observations;
         }
 
         if (
@@ -939,6 +974,11 @@ export function buildFinalLaunchChecklistDefinitions({
       ],
       evaluateDirect: (context) =>
         compactObservations([
+          gateObservation(
+            context.latestLaunchBundle,
+            'strict_org_corridor_e2e',
+            'Latest final validation strict org corridor E2E'
+          ),
           checklistRowObservation(
             verificationRow(context, 'assignment create / edit / publish'),
             'verification_checklist'
