@@ -42,7 +42,7 @@ test.describe('Organization Flows - Unauthenticated Contract Onboarding (O-01 to
     await expect(page.locator('input[type="email"]').or(page.locator('body'))).toBeVisible();
   });
 
-  test('O-05: Organization dashboard loads', async ({ page }) => {
+  test('O-05: Organization home route is gated', async ({ page }) => {
     await expectAuthRedirect(page, '/app/o/test-org/home');
   });
 });

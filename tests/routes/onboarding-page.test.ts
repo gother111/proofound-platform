@@ -71,7 +71,7 @@ describe('OnboardingPage', () => {
     getCurrentUserMock.mockResolvedValue({ handle: null });
   });
 
-  it('redirects legacy individual users without handles to the dashboard', async () => {
+  it('redirects legacy individual users without handles to Proof home', async () => {
     getIndividualProfileCompletionStateMock.mockResolvedValue({
       isCoreProfileComplete: true,
       checks: { hasStructuredProofPack: true },

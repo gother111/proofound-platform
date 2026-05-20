@@ -19,7 +19,7 @@ describe('TopBar header actions', () => {
     mockPathname = '/app/i/home';
   });
 
-  it('renders profile menu trigger on individual dashboard route', () => {
+  it('renders profile menu trigger on individual home route', () => {
     mockPathname = '/app/i/home';
 
     render(<TopBar userName="Alex Doe" userInitials="AD" />);
@@ -28,7 +28,7 @@ describe('TopBar header actions', () => {
     expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
   });
 
-  it('does not render Customize button on individual non-dashboard route', () => {
+  it('does not render Customize button on individual non-home route', () => {
     mockPathname = '/app/i/profile';
 
     render(<TopBar userName="Alex Doe" userInitials="AD" />);
@@ -36,7 +36,7 @@ describe('TopBar header actions', () => {
     expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
   });
 
-  it('renders profile menu trigger on org dashboard route', () => {
+  it('renders profile menu trigger on org home route', () => {
     mockPathname = '/app/o/acme/home';
 
     render(<TopBar userName="Acme" userInitials="AC" />);
@@ -45,7 +45,7 @@ describe('TopBar header actions', () => {
     expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
   });
 
-  it('does not render Customize button on org non-dashboard route', () => {
+  it('does not render Customize button on org non-home route', () => {
     mockPathname = '/app/o/acme/settings';
 
     render(<TopBar userName="Acme" userInitials="AC" />);
