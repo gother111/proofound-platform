@@ -37,7 +37,7 @@ Compatibility fields still exist so older records can be displayed safely:
 - `individual_profiles.verification_tier`
 - `individual_profiles.verification_tier_source`
 
-These fields must stay bounded as account-side compatibility signals. They must not be projected as public trust, candidate proof quality, portfolio credibility, organization scoring, or assignment-match advantage.
+These fields must stay bounded as read-only account-side history. They must not be projected as public trust, candidate proof quality, portfolio credibility, organization scoring, or assignment-match advantage.
 
 ## Current User Copy Contract
 

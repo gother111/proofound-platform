@@ -134,4 +134,56 @@ describe('VerificationStatus', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Run LinkedIn check/i })).not.toBeInTheDocument();
   });
+
+  it('keeps older LinkedIn failures framed as archived account history', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          summary: {
+            badgeSemanticsVersion: 2,
+            publicBadges: [],
+            orgReviewBadges: [],
+            internalBadges: [],
+            scopedSignals: [],
+            slots: {
+              identity: { state: 'none' },
+              workplace: { state: 'none' },
+              organizationDomain: { state: 'none' },
+              organizationPlatformReview: { state: 'none' },
+            },
+            activeIssues: [],
+          },
+          workflow: null,
+          channels: {
+            workEmail: {
+              email: null,
+              state: 'unverified',
+              verifiedAt: null,
+              reverifyDueAt: null,
+              needsReverify: false,
+            },
+            linkedin: {
+              state: 'failed',
+              signalLevel: 'none',
+              verifiedAt: null,
+              hasIdentitySignal: false,
+            },
+          },
+        }),
+      })
+    );
+
+    render(<VerificationStatus />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/An older LinkedIn account-history check failed/i)
+      ).toBeInTheDocument();
+    });
+    expect(document.body.textContent ?? '').not.toMatch(/compatibility check/i);
+    expect(document.body.textContent ?? '').not.toMatch(/compatibility signal/i);
+    expect(screen.queryByRole('button', { name: /Run LinkedIn check/i })).not.toBeInTheDocument();
+  });
 });

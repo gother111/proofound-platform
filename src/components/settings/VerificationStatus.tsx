@@ -298,8 +298,7 @@ function AccountSignalAlerts({ status }: { status: VerificationStatusData }) {
         <Alert>
           <Loader2 className="h-4 w-4 animate-spin" />
           <AlertDescription>
-            An account-side compatibility check is in progress. It will not create proof trust by
-            itself.
+            An account-side check is in progress. It will not create proof trust by itself.
           </AlertDescription>
         </Alert>
       )}
@@ -307,8 +306,8 @@ function AccountSignalAlerts({ status }: { status: VerificationStatusData }) {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            The LinkedIn compatibility check failed. Retry only if you still want that account-side
-            signal.
+            An older LinkedIn account-history check failed before LinkedIn checks were removed from
+            the launch corridor.
           </AlertDescription>
         </Alert>
       )}

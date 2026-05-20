@@ -403,6 +403,35 @@ describe('/api/user/account lifecycle routes', () => {
     expect(mocks.adminDeleteUser).not.toHaveBeenCalled();
   });
 
+  it('returns 400 for invalid deletion confirmation without creating a deletion request', async () => {
+    mocks.requireApiAuthContext.mockResolvedValue({
+      user: { id: 'user-1' },
+    });
+
+    const response = await deleteAccount(
+      new NextRequest('http://localhost/api/user/account', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          password: 'TestPassword123!',
+          confirmPhrase: 'delete my account',
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Invalid deletion request');
+    expect(body.details.fieldErrors.confirmPhrase).toEqual([
+      'You must type the confirmation phrase exactly: DELETE MY ACCOUNT',
+    ]);
+    expect(mocks.createLifecycleOperation).not.toHaveBeenCalled();
+    expect(mocks.createProfileDeletionRequest).not.toHaveBeenCalled();
+    expect(mocks.adminDeleteUser).not.toHaveBeenCalled();
+  });
+
   it('minimizes free-text deletion reasons before retention', async () => {
     mocks.requireApiAuthContext.mockResolvedValue({
       user: { id: 'user-1' },

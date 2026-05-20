@@ -2352,3 +2352,14 @@ Browser evidence:
 - Used the Codex in-app Browser against the local dev server on `http://localhost:33180`. Browser verified `/login`, `/signup/individual`, and `/signup/organization` all show Google and LinkedIn sign-in buttons with the expected provider values.
 - Browser also verified live OAuth handoff behavior: the Google sign-in button reached `accounts.google.com`, and the LinkedIn sign-in button reached `linkedin.com` with OIDC scopes. No code change was needed for provider availability.
 - Verification passed: `npm run test -- tests/ui/social-sign-in-buttons.test.tsx tests/actions/auth.test.ts` (2 files / 18 tests). Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Verification Copy and Deletion Request Guardrails
+
+- Rechecked the active verification settings copy and LinkedIn verification reference after confirming Google/LinkedIn social sign-in availability. The source of truth allows LinkedIn as authentication only and keeps LinkedIn verification outside the launch trust corridor.
+- Replaced remaining active `compatibility check` / `compatibility signal` wording in the verification settings UI with plain account-side/account-history language so older LinkedIn state does not read like a trust or matching signal.
+- Updated the LinkedIn verification reference to describe preserved LinkedIn fields as read-only account-side history, not compatibility signals.
+- Added focused UI coverage proving older LinkedIn failures are framed as archived account history, do not show a LinkedIn retry action, and do not reintroduce compatibility-check/signal language.
+- Updated launch-gate doc coverage for the LinkedIn reference wording and corrected a stale strict-gate expectation so the test matches the current safer `npm ci --ignore-scripts` gate command.
+- Preserved and verified adjacent account-deletion coverage proving malformed deletion confirmation returns a 400 without creating a deletion request or invoking account deletion.
+- Browser was not rerun for this slice because these are state-specific verification copy and API guardrail regressions; the rendered auth-provider surfaces were verified in the previous Browser pass.
+- Verification passed: `npm run test -- tests/ui/verification-status-options.test.tsx tests/scripts/launch-gate-config.test.ts` (2 files / 103 tests), `npm run test -- tests/api/user-account-lifecycle-routes.test.ts` (1 file / 12 tests), active-source scan for `compatibility check|compatibility signal`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the test commands exited successfully.

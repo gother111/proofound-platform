@@ -199,7 +199,7 @@ describe('launch gate package configuration', () => {
       'utf8'
     );
 
-    expect(gateScript).toContain("commandArgs: ['ci']");
+    expect(gateScript).toContain("commandArgs: ['ci', '--ignore-scripts']");
     expect(gateScript).toContain("'prod-dependency-audit'");
     expect(gateScript).toContain("'all-dependency-audit'");
     expect(gateScript).toContain("commandArgs: ['run', 'audit:prod']");
@@ -1564,6 +1564,7 @@ describe('launch gate package configuration', () => {
     expect(linkedInSetup).toContain('Work email is the only launch-active account-side check');
     expect(linkedInSetup).toContain('LinkedIn state is read-only history when present');
     expect(linkedInSetup).toContain('never creates proof trust');
+    expect(linkedInSetup).toContain('read-only account-side history');
     expect(linkedInSetup).toContain('/api/admin/internal-ops/queues');
     expect(linkedInSetup).toContain('/api/admin/verification/linkedin/queue');
     expect(compactWhitespace(linkedInSetup)).toContain(
@@ -1573,6 +1574,7 @@ describe('launch gate package configuration', () => {
     expect(linkedInSetup).not.toContain('Quick approvals');
     expect(linkedInSetup).not.toContain('Admin dashboard shows request sorted by confidence');
     expect(linkedInSetup).not.toContain('High Confidence (80-100%)');
+    expect(linkedInSetup).not.toContain('compatibility signals');
     expect(linkedInSetup).not.toContain('Use ngrok for LinkedIn OAuth');
     expect(linkedInSetup).not.toContain('Track these metrics after deployment');
     expect(linkedInSummary).toContain(
