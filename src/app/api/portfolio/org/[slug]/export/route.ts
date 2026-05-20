@@ -78,10 +78,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     if (!data) {
       emitLaunchTrace(trace, {
         outcome: 'rejected',
-        state: 'org_export_profile_unavailable',
-        failureClass: 'organization_profile_unavailable',
+        state: 'org_export_trust_page_unavailable',
+        failureClass: 'organization_trust_page_unavailable',
       });
-      return NextResponse.json({ error: 'Organization profile unavailable' }, { status: 404 });
+      return NextResponse.json({ error: 'Organization trust page unavailable' }, { status: 404 });
     }
 
     const format = resolvePortfolioExportFormat(request);

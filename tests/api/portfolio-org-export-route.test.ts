@@ -113,7 +113,7 @@ describe('/api/portfolio/org/[slug]/export', () => {
     });
 
     expect(response.status).toBe(404);
-    expect(await response.json()).toEqual({ error: 'Organization profile unavailable' });
+    expect(await response.json()).toEqual({ error: 'Organization trust page unavailable' });
   });
 
   it('returns a downloadable PDF on success', async () => {

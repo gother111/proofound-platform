@@ -99,7 +99,7 @@ describe('Start from CV guardrails', () => {
     ).resolves.toBeUndefined();
   });
 
-  it('keeps organization profiles outside Start from CV even during open beta', async () => {
+  it('keeps organization trust-page work outside Start from CV even during open beta', async () => {
     await expect(
       assertStartFromCvAccess({
         userId: '11111111-1111-4111-8111-111111111111',

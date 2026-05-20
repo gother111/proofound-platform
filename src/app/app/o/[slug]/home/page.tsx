@@ -86,19 +86,19 @@ export default async function OrganizationHomePage({
     : `/app/o/${slug}/assignments/new`;
   const primaryActionLabel = needsTrustWork
     ? canEditTrustProfile
-      ? 'Complete organization profile'
-      : 'Review organization profile'
+      ? 'Complete trust page'
+      : 'Review trust page'
     : 'Create assignment';
   const readinessActionLabel = needsTrustWork
     ? canEditTrustProfile
-      ? 'Complete organization profile'
-      : 'Review organization profile'
+      ? 'Complete trust page'
+      : 'Review trust page'
     : 'Create first assignment';
 
   const queueItems = [
     {
       icon: ShieldCheck,
-      label: 'Organization profile',
+      label: 'Organization trust page',
       subject: org.displayName,
       detail: verifiedDomainPath
         ? `Verified path: ${verifiedDomainPath}`
@@ -115,7 +115,7 @@ export default async function OrganizationHomePage({
       subject: 'Proof expectations',
       detail: assignmentReady
         ? 'Purpose, real work, constraints, and evidence stay in one builder'
-        : 'This opens after the organization profile has enough context.',
+        : 'This opens after the organization trust page has enough context.',
       priority: assignmentReady ? 'Ready' : 'Next',
       value: assignmentReady ? 'Can start' : 'Needs trust',
       tone: assignmentReady ? 'active' : 'pending',
@@ -156,12 +156,12 @@ export default async function OrganizationHomePage({
   const teamRows = [
     {
       label: 'Owner',
-      detail: 'Owns organization profile, launch setup, and collaborator access.',
+      detail: 'Owns the organization trust page, launch setup, and collaborator access.',
       current: roleLabel === 'Owner',
     },
     {
       label: 'Manager',
-      detail: 'Maintains the org profile and assignment corridor.',
+      detail: 'Maintains the trust page and assignment corridor.',
       current: roleLabel === 'Manager',
     },
     {

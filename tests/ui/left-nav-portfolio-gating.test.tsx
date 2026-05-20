@@ -126,10 +126,10 @@ describe('LeftNav portfolio gating', () => {
     );
   });
 
-  it('keeps org account menu inside the organization profile corridor', () => {
+  it('keeps org account menu inside the organization trust page corridor', () => {
     render(<TopBarProfileMenu userName="Acme" basePath="/app/o/acme" onClose={vi.fn()} />);
 
-    expect(screen.getByRole('menuitem', { name: /organization profile/i })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: /organization trust page/i })).toHaveAttribute(
       'href',
       '/app/o/acme/profile'
     );
@@ -157,7 +157,7 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/o/acme/communications'
     );
-    expect(screen.getAllByRole('link', { name: /organization profile/i })[0]).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: /organization trust page/i })[0]).toHaveAttribute(
       'href',
       '/app/o/acme/profile'
     );

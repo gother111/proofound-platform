@@ -180,7 +180,7 @@ describe('organizations [orgId] route', () => {
     expect(response.status).toBe(403);
   });
 
-  it('normalizes website input and updates lean organization profile fields for an owner', async () => {
+  it('normalizes website input and updates lean organization trust page fields for an owner', async () => {
     const { set } = mockUpdateReturningOrganization();
 
     const response = await PUT(
@@ -212,7 +212,7 @@ describe('organizations [orgId] route', () => {
     const body = await response.json();
 
     expect(response.status).toBe(400);
-    expect(body.error).toContain('Only launch organization profile fields can be updated');
+    expect(body.error).toContain('Only launch organization trust page fields can be updated');
     expect(body.details.unsupportedFields).toEqual(['values']);
     expect(db.update).not.toHaveBeenCalled();
   });

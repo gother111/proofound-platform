@@ -239,10 +239,10 @@ export const organizationTourSteps: Step[] = [
     target: '[data-tour="org-profile"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Organization Profile</h3>
+        <h3 className="text-base font-semibold text-foreground">Organization Trust Page</h3>
         <p className="text-sm text-muted-foreground">
-          Share your mission, values, and causes. This helps attract candidates who are aligned with
-          your organization's purpose.
+          Share the narrow trust basics candidates and reviewers need before one assignment path:
+          mission, why the work matters, operating context, and domain evidence.
         </p>
       </div>
     ),

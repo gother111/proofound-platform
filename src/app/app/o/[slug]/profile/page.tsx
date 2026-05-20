@@ -65,10 +65,10 @@ export default async function OrganizationProfilePage({
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h1 className="font-display text-2xl font-semibold leading-none tracking-tight text-proofound-charcoal">
-                    Organization Profile
+                    Organization Trust Page
                   </h1>
                   <CardDescription className="max-w-2xl leading-6">
-                    This is the launch-facing organization profile used to support one assignment
+                    This is the launch-facing organization trust page used to support one assignment
                     path and a clean review queue.
                   </CardDescription>
                 </div>
@@ -117,7 +117,7 @@ export default async function OrganizationProfilePage({
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 h-4 w-4 text-foreground/70" />
                 <div>
-                  <p className="font-medium text-foreground">Organization profile</p>
+                  <p className="font-medium text-foreground">Organization trust page</p>
                   <p>Mission, why the work matters, verified domain path, and operating context.</p>
                 </div>
               </div>

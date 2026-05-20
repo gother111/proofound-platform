@@ -18,7 +18,7 @@ export function TopBarProfileMenu({ userName, basePath, onClose }: TopBarProfile
         { href: '/app/i/settings/audit-log', label: 'Account history' },
       ]
     : [
-        { href: `${basePath}/profile`, label: 'Organization profile' },
+        { href: `${basePath}/profile`, label: 'Organization trust page' },
         { href: `${basePath}/portfolio`, label: 'Public preview' },
       ];
 

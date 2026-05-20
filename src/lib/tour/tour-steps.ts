@@ -69,7 +69,7 @@ export const organizationTourSteps: Step[] = [
   {
     target: '[data-tour="org-profile-section"]',
     content:
-      'Complete your organization profile with mission, vision, values, and causes. This helps attract candidates who share your purpose.',
+      'Complete your organization trust page with mission, why the work matters, operating context, and domain evidence for one assignment path.',
     placement: 'bottom',
   },
   {

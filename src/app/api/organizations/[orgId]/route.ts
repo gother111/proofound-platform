@@ -86,7 +86,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error:
-            'Only launch organization profile fields can be updated from this endpoint: displayName, whyWorkMatters, mission, operatingContext, and website.',
+            'Only launch organization trust page fields can be updated from this endpoint: displayName, whyWorkMatters, mission, operatingContext, and website.',
           details: { unsupportedFields },
         },
         { status: 400 }

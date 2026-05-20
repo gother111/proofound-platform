@@ -2405,3 +2405,13 @@ Browser evidence:
 - Reframed public organization portfolio/trust-page copy, metadata fallbacks, route metadata, export/PDF copy, and org onboarding helper copy around the organization trust page.
 - Added focused mock OAuth coverage and updated UI/projection tests to guard the new wording and provider availability.
 - Verification passed: `npm run test -- tests/lib/mock-server-client-oauth.test.ts tests/ui/social-sign-in-buttons.test.tsx tests/actions/auth.test.ts tests/ui/verify-work-email-content.test.tsx tests/ui/public-org-portfolio-page.test.tsx tests/lib/public-portfolio-projection.test.ts` (6 files / 44 tests) and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, but the command exited successfully.
+
+## Continuation - Organization Trust Page App Wording
+
+- Inspected active organization app/profile/trust-page copy after the public organization trust-page cleanup.
+- Replaced remaining active user-facing `organization profile` wording in organization home, organization trust-page editor, top-bar menu, route metadata, org nav policy, share control, tour copy, assignment-invitation email copy, organization update API errors, and organization public export errors.
+- Left schema/migration contract names such as `profile_export` untouched because those are historical/data-contract identifiers, not launch UI language.
+- Browser verified `http://localhost:33180/app/o/mock-org/home` in mock organization mode: the queue shows organization trust-page wording and no stale complete/review organization-profile copy.
+- Browser verified `http://localhost:33180/app/o/mock-org/profile`: the page heading and save state use organization trust-page wording and stale `Organization Profile` / `Save organization profile` copy is absent.
+- Added/updated focused test expectations for org trust-page page copy, navigation labels, organization update errors, public org export errors, and Start-from-CV naming.
+- Verification passed: `npm run test -- tests/ui/organization-trust-profile-page.test.tsx tests/ui/left-nav-portfolio-gating.test.tsx tests/api/organizations-route.test.ts tests/api/portfolio-org-export-route.test.ts tests/lib/start-from-cv.test.ts src/lib/__tests__/middleware-launch-archive.test.ts tests/api/launch-surface-inventory.test.ts` (7 files / 53 tests), `npm run typecheck`, active-source scan for retired org-profile wording, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning, and portfolio export failure tests intentionally logged simulated failures, but all commands exited successfully.

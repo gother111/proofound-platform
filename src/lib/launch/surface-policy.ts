@@ -171,7 +171,7 @@ const ACTIVE_API_POLICIES = [
     classification: 'active_launch_path',
     surfaceLabel: 'Organization API',
     detail:
-      'Organization profile, assignment, visibility, and team membership routes remain active for launch.',
+      'Organization trust page, assignment, visibility, and team membership routes remain active for launch.',
     matches: (pathname: string) =>
       pathname === '/api/organizations' ||
       /^\/api\/organizations\/[^/]+$/.test(pathname) ||

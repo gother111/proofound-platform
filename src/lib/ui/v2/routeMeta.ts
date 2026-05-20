@@ -48,7 +48,7 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
     };
   if (path.includes('/app/o/') && path.includes('/profile'))
     return {
-      title: 'Organization Profile',
+      title: 'Organization Trust Page',
       description: 'Launch-safe organization context and trust basics',
       icon: User,
     };

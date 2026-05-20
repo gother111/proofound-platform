@@ -27,7 +27,7 @@ export function OrganizationShareControl({
         className="gap-2 border-proofound-forest/30 text-proofound-forest hover:bg-proofound-forest/5"
       >
         <Share2 className="h-4 w-4" />
-        Share Organization Profile
+        Share Organization Trust Page
       </Button>
 
       <ShareProfileDialog

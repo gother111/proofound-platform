@@ -129,7 +129,7 @@ export function AssignmentInvitationEmail({
 <body>
   <div class="container">
     <div class="header">
-      <h1>📋 Profile Contribution Invitation</h1>
+      <h1>Trust Page Contribution Invitation</h1>
     </div>
 
     <div class="content">
@@ -138,7 +138,7 @@ export function AssignmentInvitationEmail({
       </div>
 
       <p>
-        <strong>${organizationName}</strong> has invited you to help complete their organization profile on Proofound.
+        <strong>${organizationName}</strong> has invited you to help complete their organization trust page on Proofound.
       </p>
 
       ${
@@ -166,7 +166,7 @@ export function AssignmentInvitationEmail({
 
       <div style="text-align: center;">
         <a href="${invitationUrl}" class="button">
-          Complete Profile Sections
+          Complete Trust Page Sections
         </a>
       </div>
 
@@ -206,11 +206,11 @@ export function AssignmentInvitationEmailText({
   expiryDate,
 }: AssignmentInvitationEmailProps) {
   return `
-Profile Contribution Invitation
+Trust Page Contribution Invitation
 
 ${stakeholderName ? `Hello ${stakeholderName},` : 'Hello,'}
 
-${organizationName} has invited you to help complete their organization profile on Proofound.
+${organizationName} has invited you to help complete their organization trust page on Proofound.
 
 ${message ? `Personal message from ${organizationName}:\n${message}\n\n` : ''}
 
@@ -219,7 +219,7 @@ ${assignedSections.map((s) => `- ${s.charAt(0).toUpperCase() + s.slice(1)}`).joi
 
 Your input will help provide a complete and accurate picture of ${organizationName}'s work and impact. No account is required.
 
-Complete the profile sections here:
+Complete the trust page sections here:
 ${invitationUrl}
 
 This invitation expires on ${expiryDate}
