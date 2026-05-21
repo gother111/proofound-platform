@@ -133,6 +133,8 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] `npm run db:backup:checkpoint`
 - [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 - [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
+- [ ] Protected launch-status and go/no-go commands use a server-only internal secret; examples may
+      use `CRON_SECRET=<secret>` or `INTERNAL_API_SECRET=<secret>`.
 - [ ] Local `next start` is stable after the build.
 - [ ] Local `/api/health` responds with `status:"ok"` and no diagnostics.
 - [ ] Local `/api/monitoring/launch-status` responds healthy.

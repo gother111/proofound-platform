@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Production Readiness Checklist
 
@@ -45,6 +45,9 @@ restore rehearsal, and final go/no-go evidence.
 - [ ] `/api/health` returns minimal `status:"ok"`.
 - [ ] Authenticated `/api/monitoring/perf-status` is healthy and includes `/api/assignments` latency samples.
 - [ ] Authenticated `/api/monitoring/launch-status` reports the full launch monitor contract as ready.
+
+For protected launch-status and go/no-go commands, `INTERNAL_API_SECRET=<secret>` may be used
+instead of `CRON_SECRET=<secret>`.
 
 ## Migration and Data Safety
 

@@ -1343,16 +1343,19 @@ describe('launch gate package configuration', () => {
     expect(verificationChecklist).toContain(
       'Production-candidate runs additionally require a fresh passing restore verification report'
     );
+    expect(verificationChecklist).toContain('INTERNAL_API_SECRET=<secret>');
     expect(launchMasterChecklist).toContain(
       'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
     );
     expect(launchMasterChecklist).toContain(
       'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status'
     );
+    expect(launchMasterChecklist).toContain('INTERNAL_API_SECRET=<secret>');
     expect(phaseExitChecklist).toContain('Last Verified: `2026-05-21`');
     expect(phaseExitChecklist).toContain(
       'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status'
     );
+    expect(phaseExitChecklist).toContain('INTERNAL_API_SECRET=<secret>');
     expect(phaseExitChecklist).toContain(
       'BASE_URL=<production-candidate-url> npm run perf:budgets'
     );
@@ -1364,12 +1367,14 @@ describe('launch gate package configuration', () => {
       phaseExitChecklist,
     ]) {
       expect(content).toContain('CRON_SECRET=<secret>');
+      expect(content).toContain('INTERNAL_API_SECRET=<secret>');
       expectTextBefore(
         content,
         'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json',
         'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go'
       );
     }
+    expect(productionReadinessChecklist).toContain('Last Verified: `2026-05-21`');
   });
 
   it('does not allow the active go/no-go gate to be bypassed by environment flags', () => {
@@ -3059,12 +3064,14 @@ describe('launch gate package configuration', () => {
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
     expect(readme).toContain('Last Verified: `2026-05-21`');
+    expect(readme).toContain('INTERNAL_API_SECRET=your-internal-launch-ops-token');
     expect(readme).toContain('npm run launch:status');
     expect(docsRegistry).toContain(
       '| `README.md`                                                                                             | `active`         | `root`        | `repo+live`         | `2026-05-21`'
     );
     expect(testingStrategy).toContain('Last Verified: `2026-05-21`');
     expect(testingStrategy).toContain('BASE_URL=<production-candidate-url>');
+    expect(testingStrategy).toContain('INTERNAL_API_SECRET=<secret>');
     expect(testingStrategy).toContain(
       'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status'
     );
@@ -3711,6 +3718,7 @@ describe('launch gate package configuration', () => {
     expect(deploymentChecklist).toContain('public.app_migration_ledger');
     expect(deploymentChecklist).toContain('Do not use `npm run db:push`');
     expect(deploymentChecklist).toContain('/api/monitoring/launch-status');
+    expect(deploymentChecklist).toContain('INTERNAL_API_SECRET=<secret>');
     expect(deploymentChecklist).toContain(
       'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status'
     );
@@ -4170,6 +4178,7 @@ describe('launch gate package configuration', () => {
     expect(signoffTemplate).not.toContain('Candidate supply-seeding plan ready');
 
     expect(qaSummary).toContain('Last Verified: `2026-05-21`');
+    expect(qaSummary).toContain('INTERNAL_API_SECRET=<secret>');
     expect(qaSummary).toContain('npm run test:launch:routes');
     expect(qaSummary).toContain('npm run test:launch:workflow');
     expect(qaSummary).toContain('npm run test:launch:smoke');

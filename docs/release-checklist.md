@@ -40,6 +40,9 @@ go/no-go evidence.
 - [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json` against an isolated recovery target.
 - [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 
+For the protected launch-status and go/no-go commands, `INTERNAL_API_SECRET=<secret>` may be used
+instead of `CRON_SECRET=<secret>`.
+
 ### Optional Consolidated Runner
 
 - [ ] `npm run gates:mvp:strict -- --env-file .env.local --port 40123`

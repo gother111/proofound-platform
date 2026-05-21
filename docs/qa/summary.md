@@ -45,6 +45,10 @@ This summary tracks the currently enforced QA automation surface and launch-gate
   - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
   - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 
+`CRON_SECRET=<secret>` in launch command examples may be replaced with
+`INTERNAL_API_SECRET=<secret>`; the protected launch probes use `INTERNAL_API_SECRET` first and
+`CRON_SECRET` second.
+
 ## Primary Suite Ownership
 
 - Auth: `e2e/auth.real.spec.ts`

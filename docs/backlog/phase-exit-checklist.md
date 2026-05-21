@@ -5,6 +5,9 @@
 
 Use this checklist together with [`../verification-checklist.md`](../verification-checklist.md) and the fresh `.artifacts/` evidence files. A phase is not complete until both the checklist and the linked evidence agree.
 
+For protected launch-status and go/no-go commands below, `INTERNAL_API_SECRET=<secret>` may be used
+instead of `CRON_SECRET=<secret>`.
+
 ## Phase 0 exit
 
 - [x] Route counts are reconciled to the 2026-05-19 route-policy baseline, and earlier March `149 / 117` and `138 / 106` counts are historical only.

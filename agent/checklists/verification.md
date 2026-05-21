@@ -160,6 +160,9 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
   - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`
   - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
+- In launch command examples, `INTERNAL_API_SECRET=<secret>` may be used instead of
+  `CRON_SECRET=<secret>`; protected launch probes prefer `INTERNAL_API_SECRET` and fall back to
+  `CRON_SECRET`.
 - The strict gate writes per-command logs and status JSON under `.artifacts/mvp-strict-gates/`.
 - Any timeout is a failed gate and must not be treated as launch-ready.
 - CI also runs perf budgets and go/no-go gates after starting the app. (source: .github/workflows/ci.yml)

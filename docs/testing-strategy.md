@@ -150,8 +150,8 @@ The command runs the launch-critical gates in this order: deploy readiness, lint
 production build, launch surface inventory, launch page inventory, privacy/RLS, upload privacy,
 organization corridor workflow, export/delete, strict org corridor E2E when the environment has the
 required real Supabase/site settings, launch smoke and perf budgets when `BASE_URL` is set,
-authenticated launch monitors, launch status, and go/no-go when `BASE_URL` and `CRON_SECRET` are set,
-then `npm audit --omit=dev`.
+authenticated launch monitors, launch status, and go/no-go when `BASE_URL` and either
+`INTERNAL_API_SECRET` or `CRON_SECRET` are set, then `npm audit --omit=dev`.
 
 `FAIL` and `UNVERIFIED` are not treated as pass states. Any P0 `FAIL` or `UNVERIFIED` produces a
 `NO_GO` verdict and a non-zero exit. `NOT APPLICABLE` is reserved for gates whose trigger is
@@ -159,6 +159,8 @@ intentionally absent, such as launch smoke when `BASE_URL` is not configured.
 Protected final validation gates send launch secrets only to localhost, canonical proofound.io
 origins, or exact origins listed in `LAUNCH_TRUSTED_BASE_URLS`; any other `BASE_URL` keeps those
 gates `UNVERIFIED`.
+Command examples use `CRON_SECRET=<secret>` for brevity; `INTERNAL_API_SECRET=<secret>` is an
+equivalent server-only launch secret for the protected launch-status and go/no-go gates.
 
 Local run:
 

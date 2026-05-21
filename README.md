@@ -158,6 +158,7 @@ SENTRY_DEBUG=false
 
 # Cron jobs
 CRON_SECRET=your-cron-bearer-token
+INTERNAL_API_SECRET=your-internal-launch-ops-token
 ```
 
 Archived Python document-intelligence helper variables are documented in `docs/ENV_VARIABLES.md`; they are not default MVP launch requirements.
@@ -294,7 +295,7 @@ npm run test             # Run unit tests (Vitest)
 npm run test:privacy     # Core Supabase RLS/privacy suite
 npm run test:privacy:extended # Extended privacy and workflow isolation suite
 npm run test:launch:smoke # Launch smoke matrix; writes .artifacts/launch-smoke-report.json
-npm run monitor:launch   # Synthetic launch monitors; requires BASE_URL and CRON_SECRET for protected cron checks
+npm run monitor:launch   # Synthetic launch monitors; pass BASE_URL for target checks
 npm run launch:status    # Authenticated launch-status probe; requires BASE_URL and CRON_SECRET/INTERNAL_API_SECRET for protected runtimes
 npm run test:archived:non-launch # Archived/removed non-MVP tests kept out of npm test
 npm run test:e2e         # Run E2E tests (Playwright)
@@ -453,7 +454,7 @@ E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pa
 
 - `npm run test:privacy` (and `:extended`, `:coverage`, `:watch`) — Supabase RLS/Privacy suites.
 - `npm run test:launch:smoke` — launch smoke matrix for the locked MVP corridor.
-- `npm run monitor:launch` — synthetic launch monitor runner; pass `BASE_URL` and `CRON_SECRET` when checking a protected runtime.
+- `npm run monitor:launch` — synthetic launch monitor runner; pass `BASE_URL` when checking a specific runtime.
 - `npm run launch:status` — authenticated launch-status probe; pass `BASE_URL` and `CRON_SECRET` or `INTERNAL_API_SECRET` for protected runtimes.
 - `npm run test:archived:non-launch` — archived/removed non-MVP regression tests that are preserved but do not block the default launch gate.
 - `npm run test:python` — Python document-intelligence package regression tests; not default MVP launch evidence. See `tests/python/README.md`.
