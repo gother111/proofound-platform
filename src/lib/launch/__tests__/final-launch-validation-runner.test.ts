@@ -114,6 +114,7 @@ describe('final launch validation runner', () => {
         ...strictEnv,
         BASE_URL: 'https://preview.proofound.example',
         CRON_SECRET: '',
+        LAUNCH_TRUSTED_BASE_URLS: 'https://preview.proofound.example',
       },
       outputDir: '.artifacts/launch-validation-test',
     });
@@ -128,6 +129,33 @@ describe('final launch validation runner', () => {
       expect(gates.find((gate) => gate.id === gateId)?.skip).toMatchObject({
         status: 'UNVERIFIED',
       });
+    }
+  });
+
+  it('blocks protected production-candidate gates when BASE_URL is not trusted for secrets', () => {
+    const gates = buildFinalLaunchValidationGates({
+      env: {
+        ...process.env,
+        ...strictEnv,
+        BASE_URL: 'https://untrusted.example',
+        CRON_SECRET: 'cron-secret',
+        LAUNCH_TRUSTED_BASE_URLS: '',
+      },
+      outputDir: '.artifacts/launch-validation-test',
+    });
+
+    expect(gates.find((gate) => gate.id === 'launch_smoke')?.command?.display).toContain(
+      '--base-url https://untrusted.example'
+    );
+    expect(gates.find((gate) => gate.id === 'perf_budgets')?.command?.display).toBe(
+      'npm run perf:budgets'
+    );
+    for (const gateId of ['launch_synthetics', 'launch_status', 'go_no_go']) {
+      expect(gates.find((gate) => gate.id === gateId)?.skip).toMatchObject({
+        status: 'UNVERIFIED',
+        reason: expect.stringContaining('BASE_URL is not trusted for internal launch secrets'),
+      });
+      expect(gates.find((gate) => gate.id === gateId)?.command).toBeUndefined();
     }
   });
 

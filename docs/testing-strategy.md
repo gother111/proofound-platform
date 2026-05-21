@@ -156,6 +156,9 @@ then `npm audit --omit=dev`.
 `FAIL` and `UNVERIFIED` are not treated as pass states. Any P0 `FAIL` or `UNVERIFIED` produces a
 `NO_GO` verdict and a non-zero exit. `NOT APPLICABLE` is reserved for gates whose trigger is
 intentionally absent, such as launch smoke when `BASE_URL` is not configured.
+Protected final validation gates send launch secrets only to localhost, canonical proofound.io
+origins, or exact origins listed in `LAUNCH_TRUSTED_BASE_URLS`; any other `BASE_URL` keeps those
+gates `UNVERIFIED`.
 
 Local run:
 

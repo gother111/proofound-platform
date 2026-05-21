@@ -4,6 +4,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 
 import { getLaunchDateSlug } from '@/lib/launch/date-slug';
+import { isTrustedLaunchSecretUrl } from '@/lib/launch/trusted-internal-auth';
 
 export const FINAL_LAUNCH_VALIDATION_SCHEMA_VERSION = 1;
 export const FINAL_LAUNCH_VALIDATION_REPORT_FILE_NAME = 'launch-gate-status.md';
@@ -164,9 +165,16 @@ export function buildFinalLaunchValidationGates(
   const launchSmokeArtifactPath = path.join(outputDir, 'launch-smoke-report.json');
   const strictOrgSupport = environmentSupportsStrictOrgCorridor(env);
   const cronSecretConfigured = hasCronSecret(env);
+  const baseUrlMayReceiveLaunchSecret = baseUrl ? isTrustedLaunchSecretUrl(baseUrl, env) : false;
   const protectedLaunchGateSkip = baseUrl
     ? cronSecretConfigured
-      ? undefined
+      ? baseUrlMayReceiveLaunchSecret
+        ? undefined
+        : {
+            status: 'UNVERIFIED' as const,
+            reason:
+              'BASE_URL is not trusted for internal launch secrets. Use localhost, proofound.io, or add the exact origin to LAUNCH_TRUSTED_BASE_URLS.',
+          }
       : {
           status: 'UNVERIFIED' as const,
           reason:
@@ -308,7 +316,7 @@ export function buildFinalLaunchValidationGates(
       label: 'Launch synthetic monitors',
       priority: 'P0',
       command:
-        baseUrl && cronSecretConfigured
+        baseUrl && cronSecretConfigured && baseUrlMayReceiveLaunchSecret
           ? npmCommand(
               [
                 'run',
@@ -333,7 +341,7 @@ export function buildFinalLaunchValidationGates(
       label: 'Authenticated launch status',
       priority: 'P0',
       command:
-        baseUrl && cronSecretConfigured
+        baseUrl && cronSecretConfigured && baseUrlMayReceiveLaunchSecret
           ? npmCommand(['run', 'launch:status'], 5 * ONE_MINUTE, {
               BASE_URL: baseUrl,
               LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
@@ -346,7 +354,7 @@ export function buildFinalLaunchValidationGates(
       label: 'Go/No-Go',
       priority: 'P0',
       command:
-        baseUrl && cronSecretConfigured
+        baseUrl && cronSecretConfigured && baseUrlMayReceiveLaunchSecret
           ? npmCommand(['run', 'go:no-go'], 10 * ONE_MINUTE, {
               BASE_URL: baseUrl,
               LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
