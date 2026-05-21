@@ -9,49 +9,49 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="profile-section"]',
+    target: '[data-tour="profile-link"]',
     content:
       'This is your profile hub. Start with one artifact-backed Proof Pack before expanding public details.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="expertise-section"]',
+    target: '[data-tour="profile-link"]',
     content:
       'Add proof-linked skills here. Start with skills you can anchor to real work, education, volunteering, or a proof artifact.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="import-cv-tab"]',
+    target: '[data-tour="profile-link"]',
     content:
       'Quick start: use your CV only as private context for suggested proof work. Review everything before it becomes part of your profile.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="gap-analysis-tab"]',
+    target: '[data-tour="profile-link"]',
     content:
       'Use readiness gaps to decide which Proof Pack or proof item to strengthen next for your target work.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="matching-section"]',
+    target: '[data-tour="matching-link"]',
     content:
       "Set up your matching preferences - what kind of work you're looking for, your availability, location preferences, and compensation expectations.",
     placement: 'bottom',
   },
   {
-    target: '[data-tour="opportunities-section"]',
+    target: '[data-tour="matching-link"]',
     content:
       'Once proof and privacy are ready, assignment reviews can appear here. Proofound keeps review context reason-coded and privacy staged.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="messages-section"]',
+    target: '[data-tour="communications-link"]',
     content:
       'Use secure workflow messages for staged introduction and interview context. Initial messages stay identity-masked to reduce bias.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="proof-readiness"]',
+    target: '[data-tour="home-link"]',
     content:
       'Track your proof readiness here. Start with one Proof Pack, then strengthen trust when it matters.',
     placement: 'left',
@@ -67,43 +67,43 @@ export const organizationTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="org-profile-section"]',
+    target: '[data-tour="org-profile"]',
     content:
       'Complete your organization trust page with mission, why the work matters, operating context, and domain evidence for one assignment path.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="assignments-section"]',
+    target: '[data-tour="assignments-link"]',
     content:
       'Create assignments with outcomes, practical constraints, proof requirements, and a clear review path.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="matches-section"]',
+    target: '[data-tour="assignments-link"]',
     content:
       'Review reason-coded proof context here. Matching support stays internal to assignment review and staged introductions.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="projects-section"]',
+    target: '[data-tour="portfolio-link"]',
     content:
-      "Keep assignment and engagement evidence tied to concrete outcomes so your organization's public trust page stays credible.",
+      'Preview the public trust page only after mission, work context, and domain evidence are ready for launch-safe sharing.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="team-section"]',
+    target: '[data-tour="org-profile"]',
     content:
-      'Manage your team members and their roles. Set up stakeholders who will be involved in proof-review workflow decisions.',
+      'Keep the organization trust page focused on the context participants need before one assignment path.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="interviews-section"]',
+    target: '[data-tour="communications-link"]',
     content:
       'Schedule or reschedule interviews with clear state, consent, and manual meeting-link control.',
     placement: 'bottom',
   },
   {
-    target: '[data-tour="messages-section"]',
+    target: '[data-tour="communications-link"]',
     content:
       'Use secure workflow messages for staged introductions and interview context. Initial messages stay identity-masked to reduce review bias.',
     placement: 'bottom',

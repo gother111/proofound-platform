@@ -746,7 +746,7 @@ export function CandidateInviteClient({
                   </h2>
                 </div>
                 <p className="max-w-3xl text-sm leading-6 text-proofound-charcoal/70">
-                  Candidate invites must be tied to a structured assignment before Proof Packs can
+                  Submission invites must be tied to a structured assignment before Proof Packs can
                   be submitted for review.
                 </p>
               </div>

@@ -66,7 +66,7 @@ export function TourProvider() {
     setPersona(nextPersona);
     setLoadedTourComponent(null);
 
-    // Only check tour status on appropriate pages (home/dashboard)
+    // Only check tour status on current launch home pages.
     if (!isTourPage(pathname)) {
       setIsLoading(false);
       setShowTour(false);
@@ -126,7 +126,7 @@ export function TourProvider() {
   const toggleMockMode = (enabled: boolean) => {
     try {
       window.dispatchEvent(
-        new CustomEvent('dashboard-mock-mode', {
+        new CustomEvent('home-mock-mode', {
           detail: { enabled },
         })
       );

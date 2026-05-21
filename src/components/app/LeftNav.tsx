@@ -115,9 +115,13 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
         ? 'home-link'
         : item.hrefSuffix === '/assignments'
           ? 'assignments-link'
-          : item.hrefSuffix === '/profile'
-            ? 'org-profile'
-            : 'portfolio-link',
+          : item.hrefSuffix === '/communications'
+            ? 'communications-link'
+            : item.hrefSuffix === '/profile'
+              ? 'org-profile'
+              : item.hrefSuffix === '/portfolio'
+                ? 'portfolio-link'
+                : undefined,
   }));
 
   const navItems = isOrg ? orgNavItems : individualNavItems;

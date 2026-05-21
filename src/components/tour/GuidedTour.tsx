@@ -47,9 +47,9 @@ export function GuidedTour({ persona, shouldRun, onComplete, onSkip }: GuidedTou
       '[data-tour="left-nav"]', // Navigation sidebar
     ];
 
-    // For individual tours, also check dashboard
+    // For individual tours, also check the current overview navigation target.
     if (persona === 'individual' && steps.length > 2) {
-      criticalSelectors.push('[data-tour="dashboard"]');
+      criticalSelectors.push('[data-tour="home-link"]');
     }
 
     // Check if elements exist in DOM

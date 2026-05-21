@@ -58,7 +58,7 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="dashboard"]',
+    target: '[data-tour="home-link"]',
     content: (
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Your Overview</h3>
@@ -206,7 +206,7 @@ export const organizationTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="assignments"]',
+    target: '[data-tour="assignments-link"]',
     content: (
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Assignments</h3>
@@ -220,10 +220,10 @@ export const organizationTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="candidates"]',
+    target: '[data-tour="communications-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Proof Review</h3>
+        <h3 className="text-base font-semibold text-foreground">Communications</h3>
         <p className="text-sm text-muted-foreground">
           Review reason-coded proof context, request introductions when appropriate, and keep each
           workflow stage privacy-aware.

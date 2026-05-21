@@ -144,7 +144,7 @@ describe('LeftNav portfolio gating', () => {
   it('shows only the MVP org navigation corridor', () => {
     usePathnameMock.mockReturnValue('/app/o/acme/home');
 
-    render(<LeftNav basePath="/app/o/acme" />);
+    const { container } = render(<LeftNav basePath="/app/o/acme" />);
 
     expect(screen.getAllByRole('link', { name: /overview/i })[0]).toHaveAttribute(
       'href',
@@ -170,5 +170,11 @@ describe('LeftNav portfolio gating', () => {
     expect(screen.queryByRole('link', { name: /shortlist/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /team/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /^settings$/i })).not.toBeInTheDocument();
+    expect(container.querySelector('[data-tour="home-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="assignments-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="communications-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="org-profile"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="portfolio-link"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour="candidates"]')).toBeNull();
   });
 });
