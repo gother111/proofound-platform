@@ -64,6 +64,9 @@ jobs:
           E2E_PROVIDER_USER_ID: ${{ secrets.E2E_PROVIDER_USER_ID }}
           E2E_PROVIDER_USER_EMAIL: ${{ secrets.E2E_PROVIDER_USER_EMAIL }}
           E2E_PROVIDER_USER_PASSWORD: ${{ secrets.E2E_PROVIDER_USER_PASSWORD }}
+          KV_REST_API_URL: ${{ secrets.KV_REST_API_URL }}
+          KV_REST_API_TOKEN: ${{ secrets.KV_REST_API_TOKEN }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: node ./scripts/run-mvp-strict-gates.mjs --artifact-dir .artifacts/mvp-strict-gates/retry-vercel-deploy
 
       - name: Install Python package manager

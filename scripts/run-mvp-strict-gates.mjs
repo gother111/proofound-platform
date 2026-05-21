@@ -368,6 +368,8 @@ const commandEnv = {
   FORCE_STRICT_DEPLOY_CHECK: 'true',
   npm_config_engine_strict: 'true',
   PLAYWRIGHT_SERVER_MODE: process.env.PLAYWRIGHT_SERVER_MODE || 'prod',
+  PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK: '1',
+  PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE: '1',
   STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: providerConnectedRequired ? 'true' : 'false',
   PII_HASH_SALT: process.env.PII_HASH_SALT || 'strict-local-salt',
   NODE_OPTIONS: process.env.NODE_OPTIONS || '--max-old-space-size=6144',
