@@ -5088,3 +5088,12 @@ Browser evidence:
 - Preserved invalid/expired invite fallback copy, claim error handling, proof submission error handling, visual fixture behavior, account-save controls, and post-action state reloads.
 - Extended runtime debug-output guardrails so the old candidate-invite client console strings cannot return.
 - Verification passed: focused candidate-invite/runtime guard run `npm test -- --run tests/ui/candidate-invite-client.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 78 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted candidate-invite client console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Assignment Builder Client Diagnostics
+
+- Timestamp: 2026-05-21 16:29 CEST.
+- Continued the active organization assignment-builder surface sweep after the new-assignment builder still emitted raw console diagnostics for draft hydration, autosave, and review-save failures.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using `assignment_builder.client.*` event names.
+- Preserved draft hydration fallback toast, autosave interval behavior, publish-review save flow, related outcomes/expertise sync, transition locking, and review-route navigation.
+- Extended runtime debug-output guardrails so the old assignment-builder console strings cannot return.
+- Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 72 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted assignment-builder console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

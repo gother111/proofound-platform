@@ -18,6 +18,7 @@ import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   extractAssignmentDraftFromJobDescription,
   type ImportedAssignmentDraft,
@@ -256,7 +257,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
         setLastSaved(new Date());
         setCurrentStep(resolveDraftResumeStep(assignment));
       } catch (error) {
-        console.error(error);
+        dispatchClientErrorDiagnostic('assignment_builder.client.draft_load_failed', error);
         toast.error('Could not load existing draft');
       } finally {
         setHasHydratedDraft(true);
@@ -535,7 +536,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
           const persisted = await persistDraft();
           await syncRelatedData(persisted.assignmentId);
         } catch (error) {
-          console.error('Failed to auto-save assignment builder draft:', error);
+          dispatchClientErrorDiagnostic('assignment_builder.client.auto_save_failed', error);
         }
       })();
     }, 30000);
@@ -584,7 +585,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
       toast.success('Assignment saved for internal review');
       router.push(`/app/o/${slug}/assignments/${persisted.assignmentId}/review`);
     } catch (error) {
-      console.error('Failed to save assignment:', error);
+      dispatchClientErrorDiagnostic('assignment_builder.client.review_save_failed', error);
       toast.error(error instanceof Error ? error.message : 'Failed to save assignment');
     } finally {
       transitionLockRef.current = false;
