@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendFeedbackRequestEmail } from '@/lib/email';
+import { log } from '@/lib/log';
 import {
   CAPABILITY_BINDINGS,
   CAPABILITY_TOKEN_CLASSES,
@@ -275,7 +276,11 @@ export const issueFeedbackInvites = async (interviewId: string) => {
           expiresAt: t.expiresAt,
           interviewTime: interview.scheduled_at,
         }).catch((err) => {
-          console.error('Failed to send feedback email', err);
+          log.error('feedback.invite.email_send_failed', {
+            interviewId,
+            direction: t.direction,
+            errorMessage: err instanceof Error ? err.message : String(err),
+          });
         })
       )
   );

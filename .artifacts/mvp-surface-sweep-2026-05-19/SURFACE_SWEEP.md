@@ -5013,3 +5013,11 @@ Browser evidence:
 - Replaced that diagnostic with structured `learning.coursera.fallback_used` logging while preserving one-hour cache behavior, API response parsing, fallback filtering, and successful fallback recommendations.
 - Extended runtime debug-output guardrails so the old Coursera fallback console string cannot return.
 - Verification passed: focused learning/runtime guard run `npm test -- --run src/lib/__tests__/learning-provider.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 64 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted learning-provider console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Feedback Invite Email Structured Logging
+
+- Timestamp: 2026-05-21 15:54 CEST.
+- Continued the active feedback workflow diagnostics sweep after feedback invite issuance still emitted a raw console error when best-effort feedback request email delivery failed.
+- Replaced that diagnostic with structured `feedback.invite.email_send_failed` logging while preserving token issuance, legacy raw token compatibility, capability token binding, email best-effort behavior, and returned invite tokens.
+- Added focused coverage proving email-send failures are structured and non-blocking, and extended runtime debug-output guardrails so the old feedback-email console string cannot return.
+- Verification passed: focused feedback/runtime guard run `npm test -- --run tests/lib/feedback-invite-issuance.test.ts tests/lib/feedback-service.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (3 files / 69 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted feedback-service console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning; `feedback-service.test.ts` also printed the existing Node `punycode` deprecation warning while passing.

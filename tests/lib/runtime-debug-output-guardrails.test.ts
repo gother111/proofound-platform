@@ -679,6 +679,7 @@ describe('runtime debug output guardrails', () => {
       readSource('src/app/api/feedback/[interviewId]/route.ts'),
       readSource('src/app/api/feedback/submit/route.ts'),
       readSource('src/app/api/feedback/token/[token]/route.ts'),
+      readSource('src/lib/feedback/service.ts'),
     ].join('\n');
 
     expect(sources).toContain("import { log } from '@/lib/log'");
@@ -687,11 +688,13 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('feedback.submit.answers_failed');
     expect(sources).toContain('feedback.submit.failed');
     expect(sources).toContain('feedback.token.lookup_failed');
+    expect(sources).toContain('feedback.invite.email_send_failed');
     expect(sources).not.toContain('Feedback load failed');
     expect(sources).not.toContain('Feedback save error');
     expect(sources).not.toContain('Feedback answers error');
     expect(sources).not.toContain('Feedback submit failed');
     expect(sources).not.toContain('Feedback token lookup failed');
+    expect(sources).not.toContain('Failed to send feedback email');
   });
 
   it('keeps user skills API failures on structured server logging', () => {

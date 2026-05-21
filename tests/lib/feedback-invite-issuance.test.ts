@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   redeemCapabilityToken: vi.fn(),
   getUserById: vi.fn(),
   feedbackTokensInsert: vi.fn(),
+  logError: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/admin', () => ({
@@ -27,6 +28,12 @@ vi.mock('@/lib/security/capability-tokens', () => ({
   },
   issueCapabilityToken: mocks.issueCapabilityToken,
   redeemCapabilityToken: mocks.redeemCapabilityToken,
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: mocks.logError,
+  },
 }));
 
 import { issueFeedbackInvites } from '@/lib/feedback/service';
@@ -182,5 +189,20 @@ describe('feedback invite issuance compatibility', () => {
         recipient_email: 'host@test.proofound.com',
       })
     );
+  });
+
+  it('keeps feedback email failures best-effort and structured', async () => {
+    mocks.sendFeedbackRequestEmail
+      .mockRejectedValueOnce(new Error('mail transport unavailable'))
+      .mockResolvedValueOnce(undefined);
+
+    const tokens = await issueFeedbackInvites('interview-1');
+
+    expect(tokens).toHaveLength(2);
+    expect(mocks.logError).toHaveBeenCalledWith('feedback.invite.email_send_failed', {
+      interviewId: 'interview-1',
+      direction: 'candidate_to_org',
+      errorMessage: 'mail transport unavailable',
+    });
   });
 });
