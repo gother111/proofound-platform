@@ -32,6 +32,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Trash2, AlertTriangle, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 const DELETION_REASONS = [
   'No longer need the service',
@@ -88,7 +89,7 @@ export function DeleteAccountSection() {
       router.push('/');
       router.refresh();
     } catch (error) {
-      console.error('Deletion request failed:', error);
+      dispatchClientErrorDiagnostic('privacy.delete_account.request_failed', error);
       alert(error instanceof Error ? error.message : 'Failed to delete account');
     } finally {
       setDeleting(false);

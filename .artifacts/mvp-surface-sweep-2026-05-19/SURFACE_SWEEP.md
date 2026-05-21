@@ -5142,3 +5142,12 @@ Browser evidence:
 - Preserved visibility settings loading, privacy shell framing, load-error toast behavior, save rejection propagation to the field-visibility controls, and existing privacy overview/data/audit/delete sections.
 - Extended runtime debug-output guardrails so the old privacy settings client console strings cannot return.
 - Verification passed: focused privacy/runtime guard run `npm test -- --run tests/ui/deferred-settings-loaders.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 84 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted privacy-settings console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Privacy Settings Child Diagnostics
+
+- Timestamp: 2026-05-21 16:53 CEST.
+- Continued the active individual privacy settings surface sweep after the data inventory, account history, delete-account, and Public Page field-visibility components still emitted raw console diagnostics for load, export, delete, and save failures.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using `privacy.*` event names.
+- Preserved data-inventory fallback content and export button visibility, account-history loading behavior, delete-account confirmation/reset behavior, field-visibility save propagation, and existing user-facing alerts/toasts.
+- Updated focused data-breakdown coverage to assert the client diagnostic event instead of suppressing console output, and extended runtime debug-output guardrails so the old privacy child console strings cannot return.
+- Verification passed: focused privacy/runtime guard run `npm test -- --run tests/ui/privacy-data-breakdown.test.tsx tests/ui/privacy-audit-log-mobile-clarity.test.tsx tests/ui/privacy-visibility-copy.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (4 files / 82 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted privacy-child console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

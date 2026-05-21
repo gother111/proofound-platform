@@ -972,6 +972,29 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to save visibility settings:');
   });
 
+  it('keeps privacy settings child failures on client diagnostics without console output', () => {
+    const sources = [
+      readSource('src/components/privacy/DataBreakdown.tsx'),
+      readSource('src/components/privacy/AuditLogTable.tsx'),
+      readSource('src/components/privacy/DeleteAccountSection.tsx'),
+      readSource('src/components/profile/IndividualFieldVisibilityControls.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(sources).toContain('privacy.data_breakdown.load_failed');
+    expect(sources).toContain('privacy.data_breakdown.export_failed');
+    expect(sources).toContain('privacy.audit_log.load_failed');
+    expect(sources).toContain('privacy.delete_account.request_failed');
+    expect(sources).toContain('privacy.field_visibility.save_failed');
+    expect(sources).not.toContain('Failed to fetch data breakdown:');
+    expect(sources).not.toContain('Export failed:');
+    expect(sources).not.toContain('Failed to fetch account history:');
+    expect(sources).not.toContain('Deletion request failed:');
+    expect(sources).not.toContain('Failed to save visibility settings:');
+  });
+
   it('keeps match explanation failures on structured server logging', () => {
     const source = readSource('src/app/api/match/explain/[matchId]/route.ts');
 

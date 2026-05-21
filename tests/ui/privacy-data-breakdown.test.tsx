@@ -53,7 +53,11 @@ describe('privacy data breakdown', () => {
   });
 
   it('keeps the export action visible when the inventory cannot load', async () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const diagnostics: Array<Record<string, unknown>> = [];
+    window.addEventListener('proofound:client-diagnostic', ((event: CustomEvent) => {
+      diagnostics.push(event.detail);
+    }) as EventListener);
+
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => ({
@@ -67,6 +71,9 @@ describe('privacy data breakdown', () => {
     expect(await screen.findByText(/Your data inventory could not load/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument();
     expect(screen.getAllByText('0 records').length).toBeGreaterThan(0);
-    consoleErrorSpy.mockRestore();
+    expect(diagnostics).toContainEqual({
+      reason: 'privacy.data_breakdown.load_failed',
+      error: 'Data inventory unavailable',
+    });
   });
 });

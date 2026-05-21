@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel, isMachineIdentifier } from '@/lib/copy/labels';
 
 interface AuditLogEntry {
@@ -66,7 +67,7 @@ export function AuditLogTable({ title = 'Account history' }: AuditLogTableProps)
       setLogs(data.events || []);
       setHasMore(data.hasMore || false);
     } catch (error) {
-      console.error('Failed to fetch account history:', error);
+      dispatchClientErrorDiagnostic('privacy.audit_log.load_failed', error);
     } finally {
       setLoading(false);
     }

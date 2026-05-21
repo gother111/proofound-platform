@@ -22,6 +22,7 @@ import { Eye, Users, Handshake, Lock, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 export type IndividualVisibilityLevel = 'public' | 'network_only' | 'match_only' | 'private';
 
@@ -168,7 +169,7 @@ export function IndividualFieldVisibilityControls({
         description: 'Your field visibility preferences have been updated',
       });
     } catch (error) {
-      console.error('Failed to save visibility settings:', error);
+      dispatchClientErrorDiagnostic('privacy.field_visibility.save_failed', error);
       toast.error('Failed to save settings', {
         description: 'Please try again',
       });

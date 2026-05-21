@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Download, User, Briefcase, MessageSquare, BarChart3, Shield } from 'lucide-react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { buildUserExportDownloadFilename } from '@/lib/privacy/export-download';
 
 interface DataInventoryPayload {
@@ -57,7 +58,7 @@ export function DataBreakdown() {
 
         setCategories(categories);
       } catch (error) {
-        console.error('Failed to fetch data breakdown:', error);
+        dispatchClientErrorDiagnostic('privacy.data_breakdown.load_failed', error);
         setError('Your data inventory could not load. You can still try downloading your data.');
         setCategories(buildDataCategories());
       } finally {
@@ -85,7 +86,7 @@ export function DataBreakdown() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Export failed:', error);
+      dispatchClientErrorDiagnostic('privacy.data_breakdown.export_failed', error);
       alert('Failed to export data. Please try again.');
     } finally {
       setExporting(false);
