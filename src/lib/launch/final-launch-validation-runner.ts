@@ -132,9 +132,12 @@ function hasAnyEnv(env: NodeJS.ProcessEnv, names: readonly string[]) {
   return names.some((name) => Boolean(env[name]?.trim()));
 }
 
-function hasCronSecret(env: NodeJS.ProcessEnv) {
+function hasInternalLaunchSecret(env: NodeJS.ProcessEnv) {
   const value = env.CRON_SECRET?.trim();
-  return Boolean(value && value.toLowerCase() !== 'undefined' && value.toLowerCase() !== 'null');
+  const internalValue = env.INTERNAL_API_SECRET?.trim();
+  return [internalValue, value].some((secret) =>
+    Boolean(secret && secret.toLowerCase() !== 'undefined' && secret.toLowerCase() !== 'null')
+  );
 }
 
 export function environmentSupportsStrictOrgCorridor(env: NodeJS.ProcessEnv = process.env) {
@@ -164,10 +167,10 @@ export function buildFinalLaunchValidationGates(
   const outputDir = options.outputDir ?? '.artifacts/launch-validation-current';
   const launchSmokeArtifactPath = path.join(outputDir, 'launch-smoke-report.json');
   const strictOrgSupport = environmentSupportsStrictOrgCorridor(env);
-  const cronSecretConfigured = hasCronSecret(env);
+  const internalLaunchSecretConfigured = hasInternalLaunchSecret(env);
   const baseUrlMayReceiveLaunchSecret = baseUrl ? isTrustedLaunchSecretUrl(baseUrl, env) : false;
   const protectedLaunchGateSkip = baseUrl
-    ? cronSecretConfigured
+    ? internalLaunchSecretConfigured
       ? baseUrlMayReceiveLaunchSecret
         ? undefined
         : {
@@ -178,7 +181,7 @@ export function buildFinalLaunchValidationGates(
       : {
           status: 'UNVERIFIED' as const,
           reason:
-            'CRON_SECRET is required for authenticated production-candidate launch-status, monitor, and go/no-go gates.',
+            'INTERNAL_API_SECRET or CRON_SECRET is required for authenticated production-candidate launch-status, monitor, and go/no-go gates.',
         }
     : {
         status: 'NOT APPLICABLE' as const,
@@ -316,7 +319,7 @@ export function buildFinalLaunchValidationGates(
       label: 'Launch synthetic monitors',
       priority: 'P0',
       command:
-        baseUrl && cronSecretConfigured && baseUrlMayReceiveLaunchSecret
+        baseUrl && internalLaunchSecretConfigured && baseUrlMayReceiveLaunchSecret
           ? npmCommand(
               [
                 'run',
@@ -341,7 +344,7 @@ export function buildFinalLaunchValidationGates(
       label: 'Authenticated launch status',
       priority: 'P0',
       command:
-        baseUrl && cronSecretConfigured && baseUrlMayReceiveLaunchSecret
+        baseUrl && internalLaunchSecretConfigured && baseUrlMayReceiveLaunchSecret
           ? npmCommand(['run', 'launch:status'], 5 * ONE_MINUTE, {
               BASE_URL: baseUrl,
               LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
@@ -354,7 +357,7 @@ export function buildFinalLaunchValidationGates(
       label: 'Go/No-Go',
       priority: 'P0',
       command:
-        baseUrl && cronSecretConfigured && baseUrlMayReceiveLaunchSecret
+        baseUrl && internalLaunchSecretConfigured && baseUrlMayReceiveLaunchSecret
           ? npmCommand(['run', 'go:no-go'], 10 * ONE_MINUTE, {
               BASE_URL: baseUrl,
               LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,

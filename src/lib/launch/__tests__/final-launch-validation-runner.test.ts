@@ -107,7 +107,29 @@ describe('final launch validation runner', () => {
     });
   });
 
-  it('blocks production-candidate authenticated gates when CRON_SECRET is missing', () => {
+  it('allows protected production-candidate gates with INTERNAL_API_SECRET instead of CRON_SECRET', () => {
+    const gates = buildFinalLaunchValidationGates({
+      env: {
+        ...process.env,
+        ...strictEnv,
+        BASE_URL: 'https://preview.proofound.example',
+        INTERNAL_API_SECRET: 'internal-api-secret',
+        CRON_SECRET: '',
+        LAUNCH_TRUSTED_BASE_URLS: 'https://preview.proofound.example',
+      },
+      outputDir: '.artifacts/launch-validation-test',
+    });
+
+    expect(gates.find((gate) => gate.id === 'launch_synthetics')?.command?.display).toContain(
+      'npm run monitor:launch'
+    );
+    expect(gates.find((gate) => gate.id === 'launch_status')?.command?.display).toBe(
+      'npm run launch:status'
+    );
+    expect(gates.find((gate) => gate.id === 'go_no_go')?.command?.display).toBe('npm run go:no-go');
+  });
+
+  it('blocks production-candidate authenticated gates when no internal launch secret is configured', () => {
     const gates = buildFinalLaunchValidationGates({
       env: {
         ...process.env,

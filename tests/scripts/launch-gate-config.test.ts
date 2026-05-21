@@ -132,6 +132,40 @@ describe('launch gate package configuration', () => {
     expect(perfBudgets).toContain('API ${path} p95');
   });
 
+  it('keeps launch CLI probes aligned with server-only internal auth fallback order', () => {
+    const launchStatus = fs.readFileSync(
+      path.join(repoRoot, 'scripts/check-launch-status.mjs'),
+      'utf8'
+    );
+    const goNoGo = fs.readFileSync(path.join(repoRoot, 'scripts/go-no-go-check.ts'), 'utf8');
+    const finalRunner = fs.readFileSync(
+      path.join(repoRoot, 'src/lib/launch/final-launch-validation-runner.ts'),
+      'utf8'
+    );
+    const fullLaunchValidation = fs.readFileSync(
+      path.join(repoRoot, 'src/lib/launch/full-launch-validation.ts'),
+      'utf8'
+    );
+    const finalLaunchChecklist = fs.readFileSync(
+      path.join(repoRoot, 'src/lib/launch/final-launch-checklist.ts'),
+      'utf8'
+    );
+
+    for (const source of [
+      launchStatus,
+      goNoGo,
+      finalRunner,
+      fullLaunchValidation,
+      finalLaunchChecklist,
+    ]) {
+      expect(source).toContain('INTERNAL_API_SECRET');
+      expect(source).toContain('CRON_SECRET');
+    }
+    expect(launchStatus).toContain('INTERNAL_API_SECRET or CRON_SECRET is required');
+    expect(goNoGo).toContain('INTERNAL_API_SECRET or CRON_SECRET is required');
+    expect(finalRunner).toContain('INTERNAL_API_SECRET or CRON_SECRET is required');
+  });
+
   it('keeps external BASE_URL Playwright runs from starting local web servers in CI', () => {
     const configs = [
       'playwright.config.ts',

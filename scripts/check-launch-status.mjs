@@ -10,10 +10,20 @@ function fail(message) {
   process.exit(1);
 }
 
-function getCronSecret() {
-  const value = process.env.CRON_SECRET?.trim();
+function normalizeInternalSecret(value) {
+  const secret = value?.trim();
+  if (!secret || secret.toLowerCase() === 'undefined' || secret.toLowerCase() === 'null') {
+    return null;
+  }
+  return secret;
+}
+
+function getInternalLaunchSecret() {
+  const value =
+    normalizeInternalSecret(process.env.INTERNAL_API_SECRET) ??
+    normalizeInternalSecret(process.env.CRON_SECRET);
   if (!value || value.toLowerCase() === 'undefined' || value.toLowerCase() === 'null') {
-    fail('CRON_SECRET is required');
+    fail('INTERNAL_API_SECRET or CRON_SECRET is required');
   }
   return value;
 }
@@ -45,12 +55,12 @@ function trustedLaunchOrigins() {
     });
 }
 
-function assertBaseUrlMayReceiveCronSecret(value) {
+function assertBaseUrlMayReceiveInternalSecret(value) {
   let parsed;
   try {
     parsed = new URL(value);
   } catch {
-    fail('BASE_URL must be an absolute URL before CRON_SECRET is sent');
+    fail('BASE_URL must be an absolute URL before internal launch secrets are sent');
   }
 
   const host = parsed.hostname.toLowerCase();
@@ -62,15 +72,15 @@ function assertBaseUrlMayReceiveCronSecret(value) {
   }
 
   fail(
-    'Refusing to send CRON_SECRET to untrusted BASE_URL. Add the exact origin to LAUNCH_TRUSTED_BASE_URLS for approved launch checks.'
+    'Refusing to send internal launch secrets to untrusted BASE_URL. Add the exact origin to LAUNCH_TRUSTED_BASE_URLS for approved launch checks.'
   );
 }
 
-assertBaseUrlMayReceiveCronSecret(baseUrl);
+assertBaseUrlMayReceiveInternalSecret(baseUrl);
 
 const response = await fetch(`${baseUrl}/api/monitoring/launch-status`, {
   headers: {
-    authorization: `Bearer ${getCronSecret()}`,
+    authorization: `Bearer ${getInternalLaunchSecret()}`,
   },
 });
 

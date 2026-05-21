@@ -789,17 +789,17 @@ async function fetchJsonWithTimeout(
 ) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  const cronSecret = process.env.CRON_SECRET?.trim();
+  const internalSecret = process.env.INTERNAL_API_SECRET?.trim() || process.env.CRON_SECRET?.trim();
   const includeCronSecret = shouldSendLaunchInternalAuth({
     url,
     includeInternalAuth: options.includeInternalAuth,
-    secret: cronSecret,
+    secret: internalSecret,
   });
   try {
     const response = await fetchImpl(url, {
       headers: {
         accept: 'application/json',
-        ...(includeCronSecret ? { authorization: `Bearer ${cronSecret}` } : {}),
+        ...(includeCronSecret ? { authorization: `Bearer ${internalSecret}` } : {}),
       },
       signal: controller.signal,
     });

@@ -55,16 +55,24 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-function getCronSecret() {
-  const cronSecret = process.env.CRON_SECRET?.trim();
-  if (
-    !cronSecret ||
-    cronSecret.toLowerCase() === 'undefined' ||
-    cronSecret.toLowerCase() === 'null'
-  ) {
-    fail('CRON_SECRET is required to query authenticated launch-ops endpoints');
+function normalizeInternalSecret(value: string | undefined) {
+  const secret = value?.trim();
+  if (!secret || secret.toLowerCase() === 'undefined' || secret.toLowerCase() === 'null') {
+    return null;
   }
-  return cronSecret;
+  return secret;
+}
+
+function getInternalLaunchSecret() {
+  const internalSecret =
+    normalizeInternalSecret(process.env.INTERNAL_API_SECRET) ??
+    normalizeInternalSecret(process.env.CRON_SECRET);
+  if (!internalSecret) {
+    fail(
+      'INTERNAL_API_SECRET or CRON_SECRET is required to query authenticated launch-ops endpoints'
+    );
+  }
+  return internalSecret;
 }
 
 function trustedLaunchOrigins() {
@@ -104,7 +112,7 @@ function assertBaseUrlMayReceiveInternalSecret() {
 function internalOpsHeaders() {
   assertBaseUrlMayReceiveInternalSecret();
   return {
-    authorization: `Bearer ${getCronSecret()}`,
+    authorization: `Bearer ${getInternalLaunchSecret()}`,
   };
 }
 
