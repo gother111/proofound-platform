@@ -83,10 +83,11 @@ describe('LeftNav portfolio gating', () => {
     expect(toastSuccessMock).not.toHaveBeenCalled();
   });
 
-  it('shows Beta testing marker without archived expertise or zen links', () => {
+  it('shows Early access marker without archived expertise or zen links', () => {
     render(<LeftNav basePath="/app/i" isBetaTesting />);
 
-    expect(screen.getByText(/beta testing/i)).toBeInTheDocument();
+    expect(screen.getByText(/early access/i)).toBeInTheDocument();
+    expect(screen.queryByText(/beta testing/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /private check-ins/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /expertise/i })).not.toBeInTheDocument();
   });

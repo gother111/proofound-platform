@@ -1374,6 +1374,7 @@ describe('runtime debug output guardrails', () => {
     expect(source).toContain("import { log } from '@/lib/log'");
     expect(source).toContain('launch_status.live_refresh_failed');
     expect(source).not.toContain('Live launch-status refresh failed; returning persisted status');
+    expect(source).not.toContain('Start from CV beta is enabled');
   });
 
   it('keeps rate-limit provider failures on structured server logging', () => {

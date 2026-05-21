@@ -209,7 +209,7 @@ describe('Start from CV API routes', () => {
     expect(mocks.createStartFromCvSession).not.toHaveBeenCalled();
   });
 
-  it('returns a safe beta denial if access is unavailable for the account', async () => {
+  it('returns a safe denial if access is unavailable for the account', async () => {
     mocks.createStartFromCvSession.mockRejectedValueOnce(
       new mocks.StartFromCvError('START_FROM_CV_NOT_INVITED', 403)
     );
@@ -223,7 +223,7 @@ describe('Start from CV API routes', () => {
     const payload = await response.json();
 
     expect(response.status).toBe(403);
-    expect(payload.error).toBe('Start from CV beta is not available for this account.');
+    expect(payload.error).toBe('Start from CV is not available for this account.');
   });
 
   it('rejects profile-context session creation without the approved private scaffolding surface', async () => {

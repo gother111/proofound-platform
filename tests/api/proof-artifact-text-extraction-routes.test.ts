@@ -374,15 +374,17 @@ describe('Proof artifact OCR API routes', () => {
   });
 
   it('logs status failures structurally while returning the safe public error', async () => {
-    mocks.isProofArtifactOcrEligible.mockRejectedValueOnce(new Error('ocr beta context failed'));
+    mocks.isProofArtifactOcrEligible.mockRejectedValueOnce(
+      new Error('text extraction status context failed')
+    );
 
     const response = await getTextExtractionStatus();
     const payload = await response.json();
 
     expect(response.status).toBe(500);
-    expect(payload).toEqual({ error: 'Failed to load OCR beta status' });
+    expect(payload).toEqual({ error: 'Failed to load text extraction status' });
     expect(log.error).toHaveBeenCalledWith('proof_artifact_ocr.status.failed', {
-      error: 'ocr beta context failed',
+      error: 'text extraction status context failed',
     });
   });
 });

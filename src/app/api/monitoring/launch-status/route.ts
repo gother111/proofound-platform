@@ -267,7 +267,7 @@ export async function GET(request: Request) {
       dependencyReasons.push({
         code: 'start_from_cv_beta_blocked' as const,
         message:
-          'Launch readiness is blocked because Start from CV beta is enabled with unsafe or incomplete gates.',
+          'Launch readiness is blocked because Start from CV is enabled with unsafe or incomplete gates.',
         monitorKeys: ['start_from_cv_beta'],
         source: 'dependency' as const,
         freshnessState: 'fresh' as const,
