@@ -47,6 +47,7 @@ const stagingDeployDetected =
     .toLowerCase() === 'staging';
 const strict =
   env.FORCE_STRICT_DEPLOY_CHECK === 'true' || productionDeployDetected || stagingDeployDetected;
+const liveDeployDetected = productionDeployDetected || stagingDeployDetected;
 
 const enabledMockModes = [];
 if (truthy(env.NEXT_PUBLIC_USE_MOCK_SUPABASE))
@@ -77,6 +78,39 @@ if ((productionDeployDetected || stagingDeployDetected) && !env.KV_REST_API_TOKE
 if (strict && enabledMockModes.length) {
   failures.push(
     `Strict deploy checks must not enable mock database/admin/auth modes: ${enabledMockModes.join(', ')}`
+  );
+}
+
+if (strict && truthy(env.PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY)) {
+  failures.push(
+    'Strict deploy checks must not skip transactional email delivery: PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY'
+  );
+}
+
+const enabledDebugIngest = [
+  truthy(env.DEBUG_INGEST_ENABLED) ? 'DEBUG_INGEST_ENABLED' : null,
+  env.DEBUG_INGEST_URL ? 'DEBUG_INGEST_URL' : null,
+  env.NEXT_PUBLIC_DEBUG_INGEST_URL ? 'NEXT_PUBLIC_DEBUG_INGEST_URL' : null,
+].filter(Boolean);
+
+if (strict && enabledDebugIngest.length) {
+  failures.push(
+    `Strict deploy checks must not enable debug ingest sinks: ${enabledDebugIngest.join(', ')}`
+  );
+}
+
+const enabledLocalSmokeFlags = [
+  truthy(env.PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK)
+    ? 'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK'
+    : null,
+  truthy(env.PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE)
+    ? 'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE'
+    : null,
+].filter(Boolean);
+
+if (liveDeployDetected && enabledLocalSmokeFlags.length) {
+  failures.push(
+    `Live deploy checks must not enable local smoke fallbacks: ${enabledLocalSmokeFlags.join(', ')}`
   );
 }
 

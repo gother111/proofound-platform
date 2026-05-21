@@ -81,4 +81,60 @@ describe('check-deploy-readiness', () => {
     expect(result.status).toBe(1);
     expect(`${result.stdout}${result.stderr}`).toContain('NEXT_PUBLIC_USE_MOCK_SUPABASE');
   });
+
+  it('fails strict readiness when transactional email delivery is skipped', () => {
+    const result = runReadiness({
+      ...requiredEnv,
+      FORCE_STRICT_DEPLOY_CHECK: 'true',
+      PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY: '1',
+    });
+
+    expect(result.status).toBe(1);
+    expect(`${result.stdout}${result.stderr}`).toContain(
+      'PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY'
+    );
+  });
+
+  it('fails strict readiness when debug ingest sinks are configured', () => {
+    const result = runReadiness({
+      ...requiredEnv,
+      FORCE_STRICT_DEPLOY_CHECK: 'true',
+      DEBUG_INGEST_ENABLED: 'true',
+      DEBUG_INGEST_URL: 'https://debug.example/ingest',
+      NEXT_PUBLIC_DEBUG_INGEST_URL: 'https://debug-public.example/ingest',
+    });
+
+    expect(result.status).toBe(1);
+    expect(`${result.stdout}${result.stderr}`).toContain('DEBUG_INGEST_ENABLED');
+    expect(`${result.stdout}${result.stderr}`).toContain('DEBUG_INGEST_URL');
+    expect(`${result.stdout}${result.stderr}`).toContain('NEXT_PUBLIC_DEBUG_INGEST_URL');
+  });
+
+  it('fails live deploy readiness when local smoke fallbacks are enabled', () => {
+    const result = runReadiness({
+      ...requiredEnv,
+      VERCEL_ENV: 'preview',
+      PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK: '1',
+      PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE: '1',
+    });
+
+    expect(result.status).toBe(1);
+    expect(`${result.stdout}${result.stderr}`).toContain(
+      'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK'
+    );
+    expect(`${result.stdout}${result.stderr}`).toContain(
+      'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE'
+    );
+  });
+
+  it('allows strict local readiness to keep local smoke fallbacks for local parity gates', () => {
+    const result = runReadiness({
+      ...requiredEnv,
+      FORCE_STRICT_DEPLOY_CHECK: 'true',
+      PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK: '1',
+      PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE: '1',
+    });
+
+    expect(result.status).toBe(0);
+  });
 });
