@@ -11,9 +11,12 @@ import {
   History,
   LockKeyhole,
   ShieldCheck,
+  ChevronRight,
 } from 'lucide-react';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,59 +70,6 @@ export default async function IndividualHomePage() {
   const firstName = userName.split(' ')[0];
   const hasProof = metrics.proofStoriesCount > 0;
   const hasTrustAnchor = metrics.verifiedSkills > 0;
-  const hasPendingTrustAnchor = metrics.pendingVerifications > 0;
-  const primaryProofLabel = hasProof ? 'Review Proof Packs' : 'Start proof record';
-  const readinessTone = hasProof
-    ? hasTrustAnchor
-      ? 'Proof and verification are present'
-      : 'Proof present; verification is next'
-    : 'Start with one proof record';
-
-  const proofRecords = [
-    {
-      icon: FileCheck2,
-      title: 'Proof Packs',
-      detail: hasProof
-        ? `${metrics.proofStoriesCount} proof item${metrics.proofStoriesCount === 1 ? '' : 's'}`
-        : 'No proof yet. Start with one private record.',
-      status: hasProof ? 'Present' : 'Pending',
-      tone: hasProof ? 'info' : 'warning',
-      href: '/app/i/profile?profileView=full&tab=proof_packs',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'Verification',
-      detail:
-        metrics.verifiedSkills > 0
-          ? `${metrics.verifiedSkills} accepted verification${metrics.verifiedSkills === 1 ? '' : 's'}`
-          : metrics.pendingVerifications > 0
-            ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
-            : 'No non-self verification yet. You can add this after the first proof.',
-      status:
-        metrics.verifiedSkills > 0
-          ? 'Verified'
-          : metrics.pendingVerifications > 0
-            ? 'Pending'
-            : 'Needed',
-      tone:
-        metrics.verifiedSkills > 0
-          ? 'success'
-          : metrics.pendingVerifications > 0
-            ? 'warning'
-            : 'neutral',
-      href: '/app/i/verifications',
-    },
-    {
-      icon: Eye,
-      title: 'Public Page visibility',
-      detail: hasProof
-        ? 'Public-safe sharing controls'
-        : 'Private by default until you choose to share',
-      status: hasProof ? 'Review' : 'Locked',
-      tone: hasProof ? 'info' : 'neutral',
-      href: '/app/i/profile?profileView=full&tab=visibility',
-    },
-  ];
 
   const readinessSteps = [
     {
@@ -177,6 +127,7 @@ export default async function IndividualHomePage() {
     status: string;
     state: ReadinessState;
   }>;
+
   const unresolvedReadinessSteps = readinessSteps.filter((step) => step.state !== 'ok').length;
   const trustControls = [
     {
@@ -201,77 +152,213 @@ export default async function IndividualHomePage() {
     },
   ];
 
-  const scoreItems = [
-    {
-      label: `${metrics.verifiedSkills} accepted verification${metrics.verifiedSkills === 1 ? '' : 's'}`,
-      state: hasTrustAnchor ? 'ok' : 'warn',
-    },
-    {
-      label: `${metrics.pendingVerifications} pending verification${metrics.pendingVerifications === 1 ? '' : 's'}`,
-      state: hasPendingTrustAnchor ? 'warn' : 'ok',
-    },
-    {
-      label: `${metrics.proofStoriesCount} proof item${metrics.proofStoriesCount === 1 ? '' : 's'} ready`,
-      state: hasProof ? 'ok' : 'warn',
-    },
-    {
-      label: hasProof ? 'Public Page can be reviewed' : 'Public Page waits for first proof',
-      state: hasProof ? 'wait' : 'warn',
-    },
-  ];
-
   return (
     <AppSurface density="comfortable" className="bg-[#f7f2ea]">
-      <div className="mx-auto max-w-2xl px-4 py-8 md:py-16">
-        <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white shadow-[0_18px_50px_rgba(45,51,48,0.06)]">
-          <div className="border-b border-proofound-stone/60 bg-[#f3f6ef] px-6 py-4 flex items-center justify-between">
-            <h2 className="font-display text-sm font-semibold tracking-wide uppercase text-proofound-forest">
-              Portfolio Readiness
-            </h2>
-            <Badge
-              variant="outline"
-              className={
-                hasProof
-                  ? 'border-proofound-forest/20 bg-[#eef3e8] text-proofound-forest'
-                  : 'border-proofound-stone/50 bg-[#fbf8f1] text-[#8a5b00]'
-              }
-            >
-              {hasProof ? 'Ready to Share' : 'Setup Required'}
-            </Badge>
+      <div className="mx-auto w-full max-w-5xl space-y-8">
+        {/* Page Header */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-proofound-stone/50 pb-5">
+          <div className="space-y-1">
+            <h1 className="font-display text-3xl font-semibold text-proofound-charcoal dark:text-foreground">
+              Welcome back, {firstName}
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-2xl">
+              {hasProof
+                ? 'Your proof records are structured. Review your verified skills and publish your public page to align with the matching corridor.'
+                : 'Start by creating your first proof record. Shaping a single trusted work sample or artifact makes your profile ready.'}
+            </p>
           </div>
-          <div className="p-6 md:p-8 space-y-6">
-            <div className="space-y-3">
-              <h1 className="font-display text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
-                {hasProof
-                  ? 'Review and manage your proof portfolio'
-                  : 'Build your proof-first profile'}
-              </h1>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Welcome back, {firstName}.{' '}
-                {hasProof
-                  ? 'Your proof records are structured. Review your verified skills and publish your public page to align with the matching corridor.'
-                  : 'Start by creating your first proof record. Shaping a single trusted work sample or artifact makes your profile ready.'}
-              </p>
-            </div>
+          <Badge
+            variant="outline"
+            className={cn(
+              'self-start md:self-auto font-medium px-3 py-1 shrink-0',
+              hasProof
+                ? 'border-proofound-forest/30 bg-[#eef3e8] text-proofound-forest'
+                : 'border-proofound-stone/50 bg-[#fbf8f1] text-[#8a5b00]'
+            )}
+          >
+            {hasProof ? 'Ready to Share' : 'Setup Required'}
+          </Badge>
+        </div>
 
-            <div className="pt-2">
-              <Button
-                className="w-full justify-between bg-proofound-forest px-6 py-5 text-white hover:bg-proofound-forest/90"
-                asChild
-              >
-                <Link href={hasProof ? '/app/i/profile?profileView=full' : '/app/i/profile'}>
-                  {hasProof ? 'Go to profile' : 'Guided setup'}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
+        {/* Bento Grid */}
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Left Column: Readiness Checklist */}
+          <div className="md:col-span-2 space-y-4">
+            <Card variant="bento" className="p-6 md:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-proofound-stone/30 pb-4">
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold text-proofound-charcoal">
+                    Readiness corridor
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Steps required for active, verified matches
+                  </p>
+                </div>
+                {unresolvedReadinessSteps > 0 ? (
+                  <Badge
+                    variant="outline"
+                    className="border-amber-500/30 text-amber-600 bg-amber-500/5"
+                  >
+                    {unresolvedReadinessSteps} action{unresolvedReadinessSteps === 1 ? '' : 's'}{' '}
+                    remaining
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="border-proofound-forest/30 text-proofound-forest bg-proofound-forest/5"
+                  >
+                    All steps complete
+                  </Badge>
+                )}
+              </div>
 
-            <div className="border-t border-proofound-stone/60 pt-6">
-              <div className="flex items-start gap-3 rounded-lg bg-[#fbf8f1] p-4 border border-proofound-stone/40">
-                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-proofound-forest" />
-                <p className="text-xs leading-5 text-proofound-charcoal/90">
-                  Your profile is private by default. Candidates stay hidden until they explicitly
-                  authorize discovery or initiate a verification check.
+              <div className="space-y-4">
+                {readinessSteps.map((step, idx) => {
+                  const StepIcon = step.icon;
+                  const classes = readinessStateClasses(step.state);
+                  return (
+                    <div
+                      key={idx}
+                      className="group relative flex flex-col sm:flex-row sm:items-start gap-4 p-4 rounded-xl border border-proofound-stone/30 bg-[#fdfdfd] transition-all hover:bg-white hover:shadow-sm"
+                    >
+                      {/* Icon & Status (Mobile/Desktop adaptive) */}
+                      <div className="flex items-center sm:items-start gap-3 sm:gap-0 shrink-0">
+                        <div
+                          className={cn(
+                            'h-10 w-10 rounded-xl flex items-center justify-center shrink-0',
+                            classes.icon
+                          )}
+                        >
+                          <StepIcon className="h-5 w-5" />
+                        </div>
+                        <div className="sm:hidden flex-1">
+                          <span className="font-semibold text-proofound-charcoal text-sm">
+                            {step.title}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 space-y-2 sm:space-y-1 min-w-0">
+                        <div className="hidden sm:flex items-center justify-between gap-4">
+                          <h3 className="font-semibold text-proofound-charcoal text-sm">
+                            {step.title}
+                          </h3>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              'text-[10px] px-2 py-0.5 uppercase tracking-wider font-semibold border-none',
+                              classes.pill
+                            )}
+                          >
+                            {step.status}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed sm:max-w-[85%]">
+                          {step.detail}
+                        </p>
+                        <div className="flex sm:hidden items-center justify-between gap-2 pt-2 border-t border-proofound-stone/20">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              'text-[10px] px-2 py-0.5 uppercase tracking-wider font-semibold border-none',
+                              classes.pill
+                            )}
+                          >
+                            {step.status}
+                          </Badge>
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto text-xs text-proofound-forest font-semibold hover:text-proofound-forest/80 flex items-center gap-1"
+                            asChild
+                          >
+                            <Link href={step.href}>
+                              {step.action}
+                              <ArrowRight className="h-3 w-3" />
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Desktop Action */}
+                      <div className="hidden sm:flex shrink-0 self-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-proofound-stone hover:bg-proofound-forest/5 text-proofound-charcoal text-xs font-medium"
+                          asChild
+                        >
+                          <Link href={step.href}>
+                            {step.action}
+                            <ArrowRight className="h-3 w-3 ml-1.5" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Main Guided Action */}
+              <div className="pt-4 border-t border-proofound-stone/30">
+                <Button
+                  className="w-full justify-between bg-proofound-forest px-6 py-5 text-white hover:bg-proofound-forest/90 rounded-xl"
+                  asChild
+                >
+                  <Link href={hasProof ? '/app/i/profile?profileView=full' : '/app/i/profile'}>
+                    <span>
+                      {hasProof ? 'Review my Proof Packs' : 'Begin guided portfolio setup'}
+                    </span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </Card>
+          </div>
+
+          {/* Right Column: Trust Controls & Notices */}
+          <div className="space-y-6">
+            <Card variant="bento" className="p-6 space-y-4">
+              <div>
+                <h3 className="font-semibold text-sm text-proofound-charcoal">
+                  Trust & privacy controls
+                </h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Manage your data visibility and corridor access
+                </p>
+              </div>
+
+              <div className="divide-y divide-proofound-stone/30">
+                {trustControls.map((ctrl, idx) => {
+                  const CtrlIcon = ctrl.icon;
+                  return (
+                    <Link
+                      key={idx}
+                      href={ctrl.href}
+                      className="flex items-center justify-between py-3 text-proofound-charcoal hover:text-proofound-forest group first:pt-0 last:pb-0"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-8 w-8 rounded-lg bg-proofound-stone/20 text-proofound-charcoal flex items-center justify-center shrink-0 group-hover:bg-proofound-forest/5 group-hover:text-proofound-forest">
+                          <CtrlIcon className="h-4 w-4" />
+                        </div>
+                        <span className="text-xs font-medium truncate">{ctrl.title}</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-proofound-forest" />
+                    </Link>
+                  );
+                })}
+              </div>
+            </Card>
+
+            <div className="flex items-start gap-3 rounded-2xl bg-[#fbf8f1] p-5 border border-proofound-stone/40">
+              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-proofound-forest" />
+              <div className="space-y-1">
+                <h4 className="text-xs font-semibold text-proofound-charcoal">
+                  Private-first corridor
+                </h4>
+                <p className="text-[11px] leading-relaxed text-proofound-charcoal/80">
+                  Your profile and evidence stay private by default. Organizations only see blind
+                  profiles and proof details unless you explicitly approve a reveal request.
                 </p>
               </div>
             </div>

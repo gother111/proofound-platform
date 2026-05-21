@@ -20,9 +20,10 @@ import { LoadingOrganizationMessages } from './DeferredOrgMessagesClient';
 
 type OrgMessagesClientProps = {
   currentUserId: string;
+  hideHeader?: boolean;
 };
 
-function OrganizationMessagesPageContent({ currentUserId }: OrgMessagesClientProps) {
+function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessagesClientProps) {
   const searchParams = useSearchParams();
   const conversationParam = searchParams?.get('conversation');
   const pathname = usePathname();
@@ -180,15 +181,19 @@ function OrganizationMessagesPageContent({ currentUserId }: OrgMessagesClientPro
 
   return (
     <div className="flex h-full min-h-[calc(100vh-3.5rem)] flex-col">
-      <header className="border-b border-proofound-stone/70 bg-white/80 px-4 py-4 md:px-6">
-        <div className="space-y-1">
-          <h1 className="font-display text-2xl font-semibold text-proofound-charcoal">Messages</h1>
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            Assignment conversations stay private and stage-aware. Identity remains protected until
-            a consented reveal opens the next step.
-          </p>
-        </div>
-      </header>
+      {!hideHeader && (
+        <header className="border-b border-proofound-stone/70 bg-white/80 px-4 py-4 md:px-6">
+          <div className="space-y-1">
+            <h1 className="font-display text-2xl font-semibold text-proofound-charcoal">
+              Messages
+            </h1>
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+              Assignment conversations stay private and stage-aware. Identity remains protected
+              until a consented reveal opens the next step.
+            </p>
+          </div>
+        </header>
+      )}
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         {/* Left: Conversation List */}
@@ -252,10 +257,10 @@ function OrganizationMessagesPageContent({ currentUserId }: OrgMessagesClientPro
 }
 
 // Wrap in Suspense for useSearchParams
-export function OrgMessagesClient({ currentUserId }: OrgMessagesClientProps) {
+export function OrgMessagesClient({ currentUserId, hideHeader }: OrgMessagesClientProps) {
   return (
     <Suspense fallback={<LoadingOrganizationMessages />}>
-      <OrganizationMessagesPageContent currentUserId={currentUserId} />
+      <OrganizationMessagesPageContent currentUserId={currentUserId} hideHeader={hideHeader} />
     </Suspense>
   );
 }

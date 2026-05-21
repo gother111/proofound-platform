@@ -4,6 +4,7 @@ import { useEffect, useState, type ComponentType } from 'react';
 
 type OrgMessagesClientProps = {
   currentUserId: string;
+  hideHeader?: boolean;
 };
 
 export function LoadingOrganizationMessages() {
@@ -25,7 +26,7 @@ export function LoadingOrganizationMessages() {
   );
 }
 
-export function DeferredOrgMessagesClient({ currentUserId }: OrgMessagesClientProps) {
+export function DeferredOrgMessagesClient({ currentUserId, hideHeader }: OrgMessagesClientProps) {
   const [MessagesView, setMessagesView] = useState<ComponentType<OrgMessagesClientProps> | null>(
     null
   );
@@ -48,5 +49,5 @@ export function DeferredOrgMessagesClient({ currentUserId }: OrgMessagesClientPr
     return <LoadingOrganizationMessages />;
   }
 
-  return <MessagesView currentUserId={currentUserId} />;
+  return <MessagesView currentUserId={currentUserId} hideHeader={hideHeader} />;
 }

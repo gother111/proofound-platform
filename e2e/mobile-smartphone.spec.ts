@@ -94,7 +94,7 @@ test.describe('Smartphone UI regression', () => {
         assertLoaded: async (routePage) => {
           await expect(
             routePage.getByRole('heading', {
-              name: /Add your first proof record|Verify strongest proof record/,
+              name: 'Readiness corridor',
             })
           ).toBeVisible();
         },
@@ -118,7 +118,7 @@ test.describe('Smartphone UI regression', () => {
         route: '/app/o/test-org/home',
         pathname: '/app/o/test-org/home',
         assertLoaded: async (routePage) => {
-          await expect(routePage.getByText('Trust, assignment, and review order')).toBeVisible();
+          await expect(routePage.getByText('Current review workspace')).toBeVisible();
         },
       },
       {
@@ -126,7 +126,7 @@ test.describe('Smartphone UI regression', () => {
         pathname: '/app/o/test-org/profile',
         assertLoaded: async (routePage) => {
           await expect(
-            routePage.getByRole('heading', { name: 'Organization Profile', exact: true })
+            routePage.getByRole('heading', { name: 'Organization Trust Page', exact: true })
           ).toBeVisible();
         },
       },
@@ -201,17 +201,14 @@ test.describe('Smartphone UI regression', () => {
     await gotoStable(page, '/admin');
 
     const navTrigger = page.getByRole('button', { name: 'Open admin navigation' });
-    const notifications = page.getByRole('button', { name: 'Open notifications' });
     const profile = page.getByRole('button', { name: 'Open admin profile menu' });
 
     await expect(navTrigger).toBeVisible();
-    await expect(notifications).toBeVisible();
     await expect(profile).toBeVisible();
 
     const { viewportWidth, rightEdgeMax } = await page.evaluate(() => {
       const actions = [
         document.querySelector('[aria-label="Open admin navigation"]') as HTMLElement | null,
-        document.querySelector('[aria-label="Open notifications"]') as HTMLElement | null,
         document.querySelector('[aria-label="Open admin profile menu"]') as HTMLElement | null,
       ].filter(Boolean) as HTMLElement[];
 

@@ -155,7 +155,7 @@ export function CommunicationsHub({
           {activeSection === 'messages' ? (
             isOrganization ? (
               currentUserId ? (
-                <DeferredOrgMessagesClient currentUserId={currentUserId} />
+                <DeferredOrgMessagesClient currentUserId={currentUserId} hideHeader />
               ) : (
                 <OrganizationMessagesLoading />
               )
