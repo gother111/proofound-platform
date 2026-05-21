@@ -197,7 +197,7 @@ export default async function IndividualHomePage() {
                 {unresolvedReadinessSteps > 0 ? (
                   <Badge
                     variant="outline"
-                    className="border-amber-500/30 text-amber-600 bg-amber-500/5"
+                    className="border-amber-700/40 bg-amber-50 text-amber-900"
                   >
                     {unresolvedReadinessSteps} action{unresolvedReadinessSteps === 1 ? '' : 's'}{' '}
                     remaining
@@ -356,7 +356,7 @@ export default async function IndividualHomePage() {
                 <h4 className="text-xs font-semibold text-proofound-charcoal">
                   Private-first corridor
                 </h4>
-                <p className="text-[11px] leading-relaxed text-proofound-charcoal/80">
+                <p className="text-[11px] leading-relaxed text-proofound-charcoal">
                   Your profile and evidence stay private by default. Organizations only see blind
                   profiles and proof details unless you explicitly approve a reveal request.
                 </p>
