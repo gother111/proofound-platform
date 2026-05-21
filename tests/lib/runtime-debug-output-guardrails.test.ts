@@ -944,6 +944,28 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to update organization verification:');
   });
 
+  it('keeps admin authorization helper failures on structured server logging', () => {
+    const source = readSource('src/lib/auth/admin.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('admin.platform_status.check_failed');
+    expect(source).toContain('admin.super_status.check_failed');
+    expect(source).toContain('admin.org_status.check_failed');
+    expect(source).toContain('admin.level.resolve_failed');
+    expect(source).toContain('admin.user.resolve_failed');
+    expect(source).toContain('admin.action_permission.check_failed');
+    expect(source).toContain('admin.invitation.lookup_failed');
+    expect(source).toContain('admin.role.auto_grant_failed');
+    expect(source).not.toContain('Error checking platform admin status:');
+    expect(source).not.toContain('Error checking super admin status:');
+    expect(source).not.toContain('Error checking org admin status:');
+    expect(source).not.toContain('Error getting admin level:');
+    expect(source).not.toContain('Error getting admin user:');
+    expect(source).not.toContain('Error checking admin action permission:');
+    expect(source).not.toContain('Error checking admin invitation:');
+    expect(source).not.toContain('Error auto-granting admin role:');
+  });
+
   it('keeps organization server-action failures on structured server logging', () => {
     const source = readSource('src/actions/org.ts');
 

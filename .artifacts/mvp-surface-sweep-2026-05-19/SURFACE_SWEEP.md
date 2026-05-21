@@ -4973,3 +4973,11 @@ Browser evidence:
 - Replaced that diagnostic with structured `internal_ops_queue.*.compatibility_fallback` logging while preserving synthetic fallback queue items, empty queue groups, uploaded-file privacy metadata sanitization, and pre-migration constraint tolerance.
 - Updated focused queue tests to mock and assert the structured logger, and extended runtime debug-output guardrails so the old raw fallback warning cannot return.
 - Verification passed: focused internal-ops/runtime guard run `npm test -- --run tests/lib/internal-ops-queue.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 68 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted internal-ops queue console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Admin Authorization Helper Structured Logging
+
+- Timestamp: 2026-05-21 15:35 CEST.
+- Continued the active admin diagnostics sweep after the admin authorization helper still emitted raw console errors for platform-admin checks, super-admin checks, organization-admin checks, admin-level resolution, current admin user resolution, action-permission checks, invitation lookup, and auto-grant failures.
+- Replaced those diagnostics with structured `admin.*` log events while preserving fail-closed authorization behavior, mock-admin test gates, organization role normalization, redirect behavior, whitelist/invitation auto-grant behavior, and success audit-style info events.
+- Extended runtime debug-output guardrails so the old admin authorization console strings cannot return.
+- Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 60 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted admin-auth console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
