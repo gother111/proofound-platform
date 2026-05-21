@@ -597,4 +597,24 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Interview completion feedback invites failed');
     expect(sources).not.toContain('Interview completion failed');
   });
+
+  it('keeps feedback API failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/feedback/[interviewId]/route.ts'),
+      readSource('src/app/api/feedback/submit/route.ts'),
+      readSource('src/app/api/feedback/token/[token]/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('feedback.load.failed');
+    expect(sources).toContain('feedback.submit.save_failed');
+    expect(sources).toContain('feedback.submit.answers_failed');
+    expect(sources).toContain('feedback.submit.failed');
+    expect(sources).toContain('feedback.token.lookup_failed');
+    expect(sources).not.toContain('Feedback load failed');
+    expect(sources).not.toContain('Feedback save error');
+    expect(sources).not.toContain('Feedback answers error');
+    expect(sources).not.toContain('Feedback submit failed');
+    expect(sources).not.toContain('Feedback token lookup failed');
+  });
 });

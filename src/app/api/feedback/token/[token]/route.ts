@@ -13,6 +13,7 @@ import {
   CAPABILITY_TOKEN_CLASSES,
   getCapabilityRedeemSessionCookieName,
 } from '@/lib/security/capability-tokens';
+import { log } from '@/lib/log';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   try {
@@ -145,7 +146,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
 
     return response;
   } catch (error) {
-    console.error('Feedback token lookup failed', error);
+    log.error('feedback.token.lookup_failed', { error });
     return NextResponse.json({ error: 'Failed to load feedback form' }, { status: 500 });
   }
 }
