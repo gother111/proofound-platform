@@ -4860,3 +4860,11 @@ Browser evidence:
 - Replaced that diagnostic with structured `match.profile.first_match_event_failed` logging while preserving profile-match response behavior, first-match event best-effort semantics, matching feed revalidation, and generic client-facing behavior.
 - Extended runtime debug-output guardrails so the old first-match analytics console string cannot return.
 - Verification passed: focused matching profile/runtime guard run `npm test -- --run tests/api/core-matching-profile-route.test.ts tests/api/core-matching-profile-performance.test.ts tests/api/core-matching-gating-routes.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (4 files / 57 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted profile matching console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Start From CV Status Structured Logging
+
+- Timestamp: 2026-05-21 14:27 CEST.
+- Continued the active AI/private first-proof scaffolding diagnostics sweep after `/api/ai/start-from-cv/status` still emitted a raw console diagnostic for unexpected status resolution failures.
+- Replaced that diagnostic with structured `start_from_cv.status.failed` logging while preserving auth gating, Start from CV launch-summary behavior, beta/access denial response shape, no-store caching, and generic client-facing 500 behavior.
+- Added focused status-route failure coverage and extended runtime debug-output guardrails so the old status console string cannot return.
+- Verification passed: focused Start from CV/runtime guard run `npm test -- --run tests/api/start-from-cv-route.test.ts tests/lib/start-from-cv.test.ts tests/lib/ai-launch-guardrails.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (4 files / 90 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted Start from CV status console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

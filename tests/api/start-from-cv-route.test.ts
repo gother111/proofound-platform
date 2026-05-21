@@ -23,6 +23,8 @@ const mocks = vi.hoisted(() => {
     acceptStartFromCvDrafts: vi.fn(),
     discardStartFromCvSession: vi.fn(),
     assertStartFromCvAccess: vi.fn(),
+    getStartFromCvLaunchSummary: vi.fn(),
+    logError: vi.fn(),
     StartFromCvError: MockStartFromCvError,
   };
 });
@@ -50,8 +52,15 @@ vi.mock('@/lib/ai/start-from-cv', () => ({
     })
     .strict(),
   resolveStartFromCvConfig: () => ({
+    enabled: true,
     maxFileSizeBytes: 5 * 1024 * 1024,
+    maxFileSizeMb: 5,
+    maxPages: 8,
+    userDailyLimit: 3,
+    globalDailyLimit: 25,
+    retentionHours: 24,
   }),
+  getStartFromCvLaunchSummary: (...args: unknown[]) => mocks.getStartFromCvLaunchSummary(...args),
   StartFromCvAcceptSchema: z
     .object({
       accepted: z
@@ -74,11 +83,18 @@ vi.mock('@/lib/ai/start-from-cv', () => ({
   discardStartFromCvSession: (...args: unknown[]) => mocks.discardStartFromCvSession(...args),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: (...args: unknown[]) => mocks.logError(...args),
+  },
+}));
+
 import { POST as createSession } from '@/app/api/ai/start-from-cv/sessions/route';
 import { GET as getSession } from '@/app/api/ai/start-from-cv/sessions/[sessionId]/route';
 import { POST as extractSession } from '@/app/api/ai/start-from-cv/sessions/[sessionId]/extract/route';
 import { POST as acceptSession } from '@/app/api/ai/start-from-cv/sessions/[sessionId]/accept/route';
 import { POST as discardSession } from '@/app/api/ai/start-from-cv/sessions/[sessionId]/discard/route';
+import { GET as getStatus } from '@/app/api/ai/start-from-cv/status/route';
 
 const sessionId = '11111111-1111-4111-8111-111111111111';
 const approvedSurface = 'guest_first_proof_private_scaffolding';
@@ -146,6 +162,14 @@ describe('Start from CV API routes', () => {
     mocks.extractStartFromCvSession.mockResolvedValue(completedSession);
     mocks.acceptStartFromCvDrafts.mockResolvedValue(completedSession);
     mocks.discardStartFromCvSession.mockResolvedValue({ ok: true, deleted: true });
+    mocks.getStartFromCvLaunchSummary.mockReturnValue({
+      ok: true,
+      enabled: true,
+      guestFirstProofScaffoldingEnabled: true,
+      inviteOnly: true,
+      authenticatedUserBeta: true,
+      blockers: [],
+    });
   });
 
   it('requires authentication before creating a session', async () => {
@@ -412,5 +436,19 @@ describe('Start from CV API routes', () => {
     expect(response.status).toBe(400);
     expect(payload).toEqual({ error: 'Invalid JSON body' });
     expect(mocks.discardStartFromCvSession).not.toHaveBeenCalled();
+  });
+
+  it('logs status route failures with structured server diagnostics', async () => {
+    const routeError = new Error('status dependency unavailable');
+    mocks.assertStartFromCvAccess.mockRejectedValueOnce(routeError);
+
+    const response = await getStatus();
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to load Start from CV status' });
+    expect(mocks.logError).toHaveBeenCalledWith('start_from_cv.status.failed', {
+      error: routeError,
+    });
   });
 });

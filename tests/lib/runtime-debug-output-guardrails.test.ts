@@ -759,6 +759,14 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to emit first match shown event:');
   });
 
+  it('keeps Start from CV status failures on structured server logging', () => {
+    const source = readSource('src/app/api/ai/start-from-cv/status/route.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('start_from_cv.status.failed');
+    expect(source).not.toContain("console.error('start_from_cv.status.failed'");
+  });
+
   it('keeps organization detail and profile visibility failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/organizations/[orgId]/route.ts'),
