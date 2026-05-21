@@ -1,3 +1,5 @@
+import { isProductionDeployRuntime } from './env';
+
 type DebugIngestPayload = {
   sessionId: string;
   runId: string;
@@ -19,6 +21,10 @@ function resolveDebugIngestUrl(): string | null {
 }
 
 function isDebugIngestEnabled(): boolean {
+  if (isProductionDeployRuntime()) {
+    return false;
+  }
+
   if (typeof window !== 'undefined') {
     return Boolean(process.env.NEXT_PUBLIC_DEBUG_INGEST_URL?.trim());
   }
