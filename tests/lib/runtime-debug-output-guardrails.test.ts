@@ -1090,4 +1090,21 @@ describe('runtime debug output guardrails', () => {
       '[organizations.team] skipping team stats row with non-canonical role'
     );
   });
+
+  it('keeps shared cache utility failures on structured server logging without raw keys', () => {
+    const source = readSource('src/lib/cache.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('cache.get_failed');
+    expect(source).toContain('cache.set_failed');
+    expect(source).toContain('cache.delete_failed');
+    expect(source).toContain('cache.pattern_delete_failed');
+    expect(source).toContain('cache.clear_all_requested');
+    expect(source).toContain('keyFamily');
+    expect(source).not.toContain('Cache get error for key');
+    expect(source).not.toContain('Cache set error for key');
+    expect(source).not.toContain('Cache delete error for key');
+    expect(source).not.toContain('Cache pattern delete error for pattern');
+    expect(source).not.toContain('Clearing all caches - this may impact performance');
+  });
 });
