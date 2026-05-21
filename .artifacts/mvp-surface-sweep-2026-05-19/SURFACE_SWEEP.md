@@ -4721,3 +4721,11 @@ Browser evidence:
 - Replaced those diagnostics with structured `verification.integrity.admin_client_unavailable` and `verification.integrity.audit_log_insert_failed` events while preserving the helper's best-effort, non-throwing behavior.
 - Added focused helper coverage for admin-client and audit-insert failures, and extended runtime debug-output guardrails so the old integrity console strings cannot return.
 - Verification passed: focused integrity/runtime guard run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/verification-integrity-logging.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (2 files / 33 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted integrity console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Verifier Contradiction Structured Logging
+
+- Timestamp: 2026-05-21 09:47 CEST.
+- Continued the active verification diagnostics sweep after verifier contradiction reconciliation still emitted raw console diagnostics for admin-client fallback, canonical record scan failures, and catch-all reconciliation failures.
+- Replaced those diagnostics with structured `verification.contradiction.*` warning/error events while preserving the helper's best-effort empty-result behavior.
+- Added focused helper coverage for admin-client fallback/catch-all failures and canonical-record scan failures, and extended runtime debug-output guardrails so the old contradiction console strings cannot return.
+- Verification passed: focused contradiction/runtime guard run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/verification-contradiction-logging.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (2 files / 34 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted contradiction console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

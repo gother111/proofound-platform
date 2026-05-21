@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { log } from '@/lib/log';
 import {
   VERIFICATION_INTEGRITY_REASONS,
   getEmailDomain,
@@ -137,7 +138,7 @@ async function resolveVerifierIdentity(input: ReconcileInput): Promise<{
   try {
     adminClient = createAdminClient();
   } catch (error) {
-    console.warn('resolveVerifierIdentity: admin client unavailable', error);
+    log.warn('verification.contradiction.admin_client_unavailable', { error });
     return {
       verifierEmail: normalizeEmail(input.verifierEmail),
       verifierProfileId: input.verifierProfileId || null,
@@ -408,10 +409,11 @@ export async function reconcileVerifierContradictions(
 
     if (error || !data) {
       if (error) {
-        console.error(
-          'Failed to load canonical verification records for contradiction scan:',
-          error
-        );
+        log.error('verification.contradiction.records_load_failed', {
+          error,
+          verifierProfileId: identity.verifierProfileId,
+          hasVerifierEmail: Boolean(identity.verifierEmail),
+        });
       }
       return emptyResult();
     }
@@ -493,7 +495,7 @@ export async function reconcileVerifierContradictions(
       impactedStoryCount: impactedStoryIds.size,
     };
   } catch (error) {
-    console.error('reconcileVerifierContradictions failed:', error);
+    log.error('verification.contradiction.reconcile_failed', { error });
     return emptyResult();
   }
 }

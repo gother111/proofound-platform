@@ -483,4 +483,18 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('verification integrity admin client unavailable:');
     expect(source).not.toContain('verification audit log insert failed:');
   });
+
+  it('keeps verifier contradiction reconciliation failures on structured server logging', () => {
+    const source = readSource('src/lib/verification/contradiction.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('verification.contradiction.admin_client_unavailable');
+    expect(source).toContain('verification.contradiction.records_load_failed');
+    expect(source).toContain('verification.contradiction.reconcile_failed');
+    expect(source).not.toContain('resolveVerifierIdentity: admin client unavailable');
+    expect(source).not.toContain(
+      'Failed to load canonical verification records for contradiction scan:'
+    );
+    expect(source).not.toContain('reconcileVerifierContradictions failed:');
+  });
 });
