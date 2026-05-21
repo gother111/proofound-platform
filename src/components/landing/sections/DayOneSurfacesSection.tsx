@@ -87,7 +87,7 @@ function CorridorSurface() {
             Operations lead for onboarding redesign
           </div>
           <div className="mt-3 text-sm leading-6 text-[var(--landing-text)]">
-            Define expected outcomes, useful evidence, and review sequence before applications open.
+            Define expected outcomes, useful evidence, and review sequence before submissions open.
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">

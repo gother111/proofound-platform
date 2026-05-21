@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { trackCustomMetric } from '@/lib/performance/client-tracker';
+import { markPerformanceEnd, trackCustomMetric } from '@/lib/performance/client-tracker';
 
 vi.mock('web-vitals', () => ({
   onCLS: vi.fn(),
@@ -44,6 +44,24 @@ describe('client performance tracker', () => {
       pageRoute: '/',
       valueMs: 123,
       deviceType: 'desktop',
+    });
+  });
+
+  it('emits local diagnostics instead of console output when measurement fails', () => {
+    const observedDiagnostics: unknown[] = [];
+    const handleDiagnostic = (event: Event) => {
+      observedDiagnostics.push((event as CustomEvent).detail);
+    };
+    const consoleDebug = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    window.addEventListener('proofound:performance-diagnostic', handleDiagnostic);
+    markPerformanceEnd('missing-start-mark');
+    window.removeEventListener('proofound:performance-diagnostic', handleDiagnostic);
+
+    expect(consoleDebug).not.toHaveBeenCalled();
+    expect(observedDiagnostics).toHaveLength(1);
+    expect(observedDiagnostics[0]).toMatchObject({
+      reason: 'measure_failed',
     });
   });
 });

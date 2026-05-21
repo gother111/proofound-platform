@@ -196,7 +196,7 @@ export function buildFinalLaunchChecklistDefinitions({
         const smokeGateId =
           context.scope === 'repo' ? 'public_portfolio_safe' : 'live_launch_smoke_artifact_refresh';
         const smokeGate = context.latestLaunchBundle?.gates.get(smokeGateId);
-        const revealRow = verificationRow(context, 'candidate-consented reveal');
+        const revealRow = verificationRow(context, 'proof-review-participant-consented reveal');
         const blindRow = verificationRow(context, 'blind-by-default review');
 
         if (
@@ -1298,8 +1298,8 @@ export function buildFinalLaunchChecklistDefinitions({
           sourcePath: 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
           sourceLabel: 'Locked MVP source of truth',
           summary:
-            'The locked MVP explicitly chooses a proof-first hiring corridor centered on Proof Packs.',
-          patterns: [/proof-first/i, /hiring corridor/i, /Proof Packs/i],
+            'The locked MVP explicitly chooses a proof-first assignment review corridor centered on Proof Packs.',
+          patterns: [/proof-first/i, /assignment review corridor/i, /Proof Packs/i],
         }),
       ],
     },
@@ -1388,10 +1388,10 @@ export function buildFinalLaunchChecklistDefinitions({
         if (
           textContainsAll(context.lockedMvp, [
             /stronger signal than CV filtering/i,
-            /proof instead of profile theater/i,
+            /proof(?: submissions)? instead of profile theater/i,
           ]) &&
           textContainsAll(context.readme, [
-            /narrow proof-first hiring corridor/i,
+            /narrow proof-first assignment review corridor/i,
             /MVP excludes ATS or HRIS replacement, public people directories, open candidate indexes/i,
           ])
         ) {
@@ -1415,7 +1415,7 @@ export function buildFinalLaunchChecklistDefinitions({
       id: 'founder_candidate_supply_plan',
       section: 'Founder / GTM',
       blocksVerdictIn: 'full',
-      label: 'Candidate supply-seeding plan exists for the chosen corridor',
+      label: 'Proof-submission supply-seeding plan exists for the chosen corridor',
       authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
       evidenceSources: ['Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md'],
       evaluateDirect: (context) =>
@@ -1425,9 +1425,9 @@ export function buildFinalLaunchChecklistDefinitions({
           sourcePath: 'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md',
           sourceLabel: 'GTM and initial marketing plan',
           summary:
-            'The GTM plan defines the first-wave candidate supply channels, volume assumptions, readiness criteria, and operating loop.',
+            'The GTM plan defines the first-wave proof-submission supply channels, volume assumptions, readiness criteria, and operating loop.',
           patterns: [
-            /Candidate Supply-Seeding Plan/i,
+            /Proof-Submission Supply-Seeding Plan/i,
             /source channels/i,
             /volume assumptions/i,
             /readiness criteria/i,

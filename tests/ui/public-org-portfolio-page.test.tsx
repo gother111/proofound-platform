@@ -65,7 +65,7 @@ function buildProjection(overrides: Partial<any> = {}) {
       operating_region: 'EU',
       verified: true,
       website: 'https://acme.org/',
-      tagline: 'This work matters because trustworthy hiring is still too rare.',
+      tagline: 'This work matters because proof-first assignment review still needs trust.',
       mission: 'Ship impact',
       working_context: 'Small distributed team across Europe with weekly async check-ins.',
       type: 'company',

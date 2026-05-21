@@ -10,6 +10,7 @@ import {
   getFeatureFlagDefault,
 } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,7 +74,9 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('feature_flags.fetch_failed', error);
+    log.error('feature_flags.fetch_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Failed to load feature flags' }, { status: 500 });
   }
 }

@@ -1,7 +1,7 @@
 # Proofound Ubiquitous Language
 
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 Scope: shared vocabulary for implementation and maintenance. This document is guidance only. It does not imply a broad rename and does not override the locked MVP authority stack in `AGENTS.md`.
 
@@ -38,7 +38,7 @@ Scope: shared vocabulary for implementation and maintenance. This document is gu
 
 - Assignment: the organization-defined work or role context for matching and review. Prefer this over job or opportunity in new code unless the existing surface requires older wording.
 - Match: a generated relationship between an individual and an assignment or organization review context.
-- Reason code: a plain-language explanation for why a match or review item appears. Reason codes must stay explainable and must not become automated hiring recommendations.
+- Reason code: a plain-language explanation for why a match or review item appears. Reason codes must stay explainable and must not become automated workflow recommendations.
 - Review: the organization-side action state for evaluating a match.
 - Shortlist: a curated organization-side collection of matches for closer review.
 - Decision: a post-review outcome or state change, such as proceeding, declining, or completing an interview outcome.
@@ -50,7 +50,7 @@ Scope: shared vocabulary for implementation and maintenance. This document is gu
 - Visibility: the policy that decides who may see a field, proof item, artifact, portfolio element, or review detail.
 - Public-safe: data that is allowed to leave private/authenticated contexts and appear in public or shareable surfaces.
 - Review-safe: data that may be shown to an organization during the review flow before full identity reveal.
-- Privacy stage: the current reveal/visibility boundary for a workflow, especially before and after candidate consent.
+- Privacy stage: the current reveal/visibility boundary for a workflow, especially before and after proof-review participant consent.
 - Reveal: the consent workflow through which identity or additional private context becomes visible.
 - Unlock: the internal state mutation that grants a wider identity or field scope after reveal rules are satisfied.
 - Export: the user-controlled data download surface. Export helpers must preserve quarantine, deletion, visibility, and anchor safety rules.

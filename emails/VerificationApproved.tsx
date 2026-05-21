@@ -125,7 +125,7 @@ export default function VerificationApproved({
 
             <Text style={footerText}>
               Your verified status is displayed on your profile with a verification badge. It is a
-              trust signal, not an automated score, rank, or hiring recommendation.
+              trust signal, not an automated score, rank, or workflow recommendation.
             </Text>
           </Section>
 

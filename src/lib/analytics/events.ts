@@ -2,7 +2,7 @@
  * Analytics Event Emission System
  *
  * Centralized event tracking for all key user actions
- * Supports launch metrics: TTFQI, TTV, TTSC, PAC lift, and first-ten-minute activation.
+ * Supports launch metrics: TTFQI, TTV, TTSC, proof-fit lift, and first-ten-minute activation.
  */
 
 import { db } from '@/db';

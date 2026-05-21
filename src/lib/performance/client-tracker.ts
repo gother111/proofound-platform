@@ -24,6 +24,24 @@ interface PerformanceData {
 // Sample rate: 10% of page loads
 const SAMPLE_RATE = 0.1;
 
+const dispatchLocalPerformanceDiagnostic = (
+  reason: 'metric_record_failed' | 'tti_track_failed' | 'measure_failed',
+  error: unknown
+): void => {
+  try {
+    window.dispatchEvent(
+      new CustomEvent('proofound:performance-diagnostic', {
+        detail: {
+          reason,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      })
+    );
+  } catch {
+    // Local performance instrumentation must never affect the user flow.
+  }
+};
+
 // Check if this session should be sampled
 const shouldSample = (): boolean => {
   try {
@@ -62,8 +80,7 @@ const recordMetricLocally = (data: PerformanceData): void => {
   try {
     window.dispatchEvent(new CustomEvent('proofound:performance-metric', { detail: data }));
   } catch (error) {
-    // Silent fail
-    console.debug('Performance metric recording error:', error);
+    dispatchLocalPerformanceDiagnostic('metric_record_failed', error);
   }
 };
 
@@ -135,7 +152,7 @@ const trackTTI = (): void => {
         { once: true }
       );
     } catch (error) {
-      console.debug('TTI tracking error:', error);
+      dispatchLocalPerformanceDiagnostic('tti_track_failed', error);
     }
   }
 };
@@ -240,7 +257,7 @@ export const markPerformanceEnd = (name: string): void => {
       performance.clearMarks(`${name}-end`);
       performance.clearMeasures(name);
     } catch (error) {
-      console.debug('Performance measurement error:', error);
+      dispatchLocalPerformanceDiagnostic('measure_failed', error);
     }
   }
 };

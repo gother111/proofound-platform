@@ -124,7 +124,7 @@ describe('conversation detail routes', () => {
       id: 'conversation-1',
       participantOneId: 'user-1',
       participantTwoId: 'user-2',
-      maskedHandleOne: 'Candidate A',
+      maskedHandleOne: 'Submission A',
       maskedHandleTwo: 'Reviewer B',
       stage: 'masked',
     });

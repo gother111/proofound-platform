@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Email Support Setup
 
@@ -111,14 +111,14 @@ If you are stuck, tell us which step is unclear and what page you are on.
 Proofound Support
 ```
 
-### Assignment Or Candidate Review Help
+### Assignment Or Proof-Submission Review Help
 
 ```text
 Hi [Name],
 
-Please open the assignment or review queue in your organization workspace. The next action should be on that page: review proofs, request an intro, request reveal consent, schedule or reschedule an interview, record a decision, or request engagement verification.
+Please open the assignment or proof-submission review queue in your organization workspace. The next action should be on that page: review proofs, request an intro, request proof-review participant reveal consent, schedule or reschedule an interview, record a decision, or request engagement verification.
 
-If the next action is missing or disabled, send the assignment name and the action you expected. Do not email candidate private proof files or hidden identity details.
+If the next action is missing or disabled, send the assignment name and the action you expected. Do not email participant private proof files or hidden identity details.
 
 Proofound Support
 ```

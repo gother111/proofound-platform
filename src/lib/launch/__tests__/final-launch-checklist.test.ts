@@ -56,7 +56,7 @@ async function createWorkspaceFixture(
 | Proof Pack canonicality | Locked MVP | Fresh proof evidence | Canonical proof evidence passed. | \`PASS\` |
 | bounded verification semantics | Locked MVP | Fresh verification evidence | Verification status route is canonical. | \`PASS\` |
 | blind-by-default review | Locked MVP | Fresh review evidence | Blind review passed. | \`PASS\` |
-| candidate-consented reveal | Locked MVP | Fresh reveal evidence | Reveal passed. | \`PASS\` |
+| proof-review-participant-consented reveal | Locked MVP | Fresh reveal evidence | Reveal passed. | \`PASS\` |
 | assignment create / edit / publish | Locked MVP | Fresh assignment evidence | Assignment publish passed. | \`PASS\` |
 `
   );
@@ -102,9 +102,9 @@ async function createWorkspaceFixture(
     `# Locked MVP
 
 Make portfolio-ready narrow and verified. Make intro-eligible hard.
-The proof-first hiring corridor is centered on Proof Packs.
+The proof-first assignment review corridor is centered on Proof Packs.
 Matching exists to help each side reach better-fit introductions faster using stronger signal than CV filtering.
-Proofound helps organizations review candidates through proof instead of profile theater.
+Proofound helps organizations review proof submissions instead of profile theater.
 It includes org_owner, org_manager, and org_reviewer.
 `
   );
@@ -143,7 +143,7 @@ critical alerts are configured
     'README.md',
     `# Proofound
 
-Proofound is a narrow proof-first hiring corridor centered on Proof Packs.
+Proofound is a narrow proof-first assignment review corridor centered on Proof Packs.
 MVP excludes ATS or HRIS replacement, public people directories, open candidate indexes, and social or feed-driven product behavior.
 
 \`npm run db:backup:checkpoint\`
@@ -227,7 +227,7 @@ Status: \`PASS\`
 Hire through proof, not profile theater.
 See the work behind the claim.
 
-## Candidate Supply-Seeding Plan
+## Proof-Submission Supply-Seeding Plan
 
 Status: \`PASS\`
 

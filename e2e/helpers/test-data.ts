@@ -105,23 +105,22 @@ export function createTestAssignment(
  * This function should be called at the start of test suites
  * that need pre-existing data
  *
- * Note: Implementation requires database access
- * For now, this is a placeholder
+ * Requires an explicit connected data adapter. This helper fails closed so
+ * broad E2E suites cannot silently pass without seeding the data they claim.
  */
 export async function seedTestData(data: {
   users?: TestProfile[];
   organizations?: TestOrganization[];
   assignments?: TestAssignment[];
 }): Promise<void> {
-  console.log('Seeding test data:', data);
+  const requestedKinds = Object.entries(data)
+    .filter(([, values]) => Array.isArray(values) && values.length > 0)
+    .map(([kind]) => kind)
+    .join(', ');
 
-  // In real implementation:
-  // 1. Connect to test database
-  // 2. Insert users, organizations, assignments
-  // 3. Return IDs for cleanup
-
-  // For now, this is a no-op
-  // Real implementation would use Supabase or direct DB connection
+  throw new Error(
+    `No E2E test-data adapter is configured for ${requestedKinds || 'the requested data'}. Use a strict seeded fixture or inject a connected adapter before calling seedTestData.`
+  );
 }
 
 /**
@@ -136,14 +135,14 @@ export async function cleanupTestData(options: {
   assignmentIds?: string[];
   emailPatterns?: string[];
 }): Promise<void> {
-  console.log('Cleaning up test data:', options);
+  const requestedKinds = Object.entries(options)
+    .filter(([, values]) => Array.isArray(values) && values.length > 0)
+    .map(([kind]) => kind)
+    .join(', ');
 
-  // In real implementation:
-  // 1. Connect to test database
-  // 2. Delete test data by IDs or patterns
-  // 3. Verify cleanup
-
-  // For now, this is a no-op
+  throw new Error(
+    `No E2E test-data adapter is configured to clean up ${requestedKinds || 'the requested data'}. Use the strict fixture cleanup path or inject a connected adapter before calling cleanupTestData.`
+  );
 }
 
 /**
@@ -231,7 +230,7 @@ export const mockApiResponses = {
     items: Array.from({ length: count }, (_, i) => ({
       id: generateId(),
       title: `Test Assignment ${i + 1}`,
-      matchScore: 0.8 + Math.random() * 0.2,
+      proofSignals: ['Relevant proof pack', 'Review-ready evidence'],
       organization: createTestOrganization(),
     })),
   }),

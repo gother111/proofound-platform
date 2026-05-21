@@ -50,28 +50,28 @@ Last updated: 2026-05-19
 
 ## Organization Flows (O-01 to O-20)
 
-| Flow                          | iOS Screen Module                  | Primary Data/API                            |
-| ----------------------------- | ---------------------------------- | ------------------------------------------- |
-| O-01 Authenticate             | `Auth/*`                           | Supabase Auth + bootstrap persona context   |
-| O-02 Org Setup & Team Roles   | `Organization/Settings`            | org + team endpoints                        |
-| O-03 Verify Org & Consent     | `Organization/Verification`        | verification APIs                           |
-| O-04 Org Profile              | `Organization/Profile`             | `/api/mobile/v1/organizations/[orgId]`      |
-| O-05 Create Assignment        | `Organization/Assignments/Create`  | `/api/mobile/v1/assignments`                |
-| O-06 Matching Weights & Gates | `Organization/Assignments/Weights` | assignment payload                          |
-| O-07 Publish Assignment       | `Organization/Assignments`         | assignment status updates                   |
-| O-08 View Ranked Matches      | `Organization/Matching`            | matching feed + explain                     |
-| O-09 Candidate Deep-Dive      | `Organization/Candidates/Detail`   | match explain + profile data                |
-| O-10 Shortlist                | `Organization/Shortlist`           | match action endpoints                      |
-| O-11 Messaging                | `Shared/Messaging`                 | conversations/messages APIs                 |
-| O-12 Schedule Interviews      | `Shared/Interviews`                | `/api/mobile/v1/interviews`                 |
-| O-13 Interview Feedback       | `Organization/Interviews`          | interview completion APIs                   |
-| O-14 Decision / Engage        | `Organization/Decisions`           | decisions + engagement APIs                 |
-| O-15 Engagement Verification  | `Organization/Engagements`         | engagement verification APIs                |
-| O-16 Issue Verifications      | `Organization/Verifications`       | verification response APIs                  |
-| O-17 Manage Assignments       | `Organization/Assignments`         | assignments APIs                            |
-| O-18 Team & Permissions       | `Organization/Team`                | `/api/mobile/v1/organizations/[orgId]/team` |
-| O-19 Launch Ops Snapshot      | `Organization/LaunchOps`           | readiness and internal launch-ops evidence  |
-| O-20 Org Admin & Compliance   | `Organization/Settings`            | profile, visibility, audit, and privacy     |
+| Flow                          | iOS Screen Module                        | Primary Data/API                            |
+| ----------------------------- | ---------------------------------------- | ------------------------------------------- |
+| O-01 Authenticate             | `Auth/*`                                 | Supabase Auth + bootstrap persona context   |
+| O-02 Org Setup & Team Roles   | `Organization/Settings`                  | org + team endpoints                        |
+| O-03 Verify Org & Consent     | `Organization/Verification`              | verification APIs                           |
+| O-04 Org Profile              | `Organization/Profile`                   | `/api/mobile/v1/organizations/[orgId]`      |
+| O-05 Create Assignment        | `Organization/Assignments/Create`        | `/api/mobile/v1/assignments`                |
+| O-06 Matching Weights & Gates | `Organization/Assignments/Weights`       | assignment payload                          |
+| O-07 Publish Assignment       | `Organization/Assignments`               | assignment status updates                   |
+| O-08 View Ranked Matches      | `Organization/Matching`                  | matching feed + explain                     |
+| O-09 Proof Submission Review  | `Organization/Matching/SubmissionDetail` | match explain + proof-submission data       |
+| O-10 Shortlist                | `Organization/Shortlist`                 | match action endpoints                      |
+| O-11 Messaging                | `Shared/Messaging`                       | conversations/messages APIs                 |
+| O-12 Schedule Interviews      | `Shared/Interviews`                      | `/api/mobile/v1/interviews`                 |
+| O-13 Interview Feedback       | `Organization/Interviews`                | interview completion APIs                   |
+| O-14 Decision / Engage        | `Organization/Decisions`                 | decisions + engagement APIs                 |
+| O-15 Engagement Verification  | `Organization/Engagements`               | engagement verification APIs                |
+| O-16 Issue Verifications      | `Organization/Verifications`             | verification response APIs                  |
+| O-17 Manage Assignments       | `Organization/Assignments`               | assignments APIs                            |
+| O-18 Team & Permissions       | `Organization/Team`                      | `/api/mobile/v1/organizations/[orgId]/team` |
+| O-19 Launch Ops Snapshot      | `Organization/LaunchOps`                 | readiness and internal launch-ops evidence  |
+| O-20 Org Admin & Compliance   | `Organization/Settings`                  | profile, visibility, audit, and privacy     |
 
 ## Admin Flows
 

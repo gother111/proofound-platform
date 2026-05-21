@@ -1,7 +1,7 @@
 # PROOFOUND DATA REQUIREMENTS & AI STRATEGY
 
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 > Reference note: this file is reference or historical strategy material. It is not the canonical MVP launch contract.
 > Current precedence: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded evidence. This document is reference context only.
 
@@ -158,17 +158,17 @@ This document defines all data requirements for Proofound from MVP launch throug
 | ----------------------- | ------------------------------------------------- | --------------- | --------------------------- |
 | **Match Views**         | user_id, assignment_id, timestamp, match_score    | ✅ Yes          | **10K+ events**             |
 | **Match Saves**         | user_id, assignment_id, timestamp                 | ✅ Yes          | 2K+ events                  |
-| **Applications**        | user_id, assignment_id, timestamp, gating_answers | ✅ Yes          | **5K+ applications**        |
+| **Proof Submissions**   | user_id, assignment_id, timestamp, gating_answers | ✅ Yes          | **5K+ proof submissions**   |
 | **Rejections**          | user_id, assignment_id, reason (optional)         | ✅ Yes          | 5K+ rejections              |
 | **Messages**            | sender_id, recipient_id, timestamp, length        | ⚠️ Optional     | 10K+ messages               |
-| **Interviews**          | application_id, scheduled_at, outcome             | ✅ Yes          | 2K+ interviews              |
-| **Hires**               | application_id, hired_at, offer_details           | ✅ Yes          | **1K+ hires**               |
+| **Interviews**          | proof_submission_id, scheduled_at, outcome        | ✅ Yes          | 2K+ interviews              |
+| **Workflow Decisions**  | proof_submission_id, decision_at, decision_type   | ✅ Yes          | **1K+ decisions**           |
 | **Engagement Outcomes** | success, deliverables_completed, satisfaction     | ✅ Yes          | **Critical: 500+ outcomes** |
 
 **Why This Data is Critical**:
 
-- **Match Views → Applications**: Conversion rate = signal for match quality
-- **Applications → Hires**: Ultimate success metric for ML optimization
+- **Match Views → Proof Submissions**: Conversion rate = signal for match quality
+- **Proof Submissions → Workflow/Engagement Outcomes**: Ultimate success metric for ML optimization
 - **Engagement Outcomes**: Validates that matches led to successful collaborations
 
 **Data Collection Timeline**:
@@ -261,19 +261,19 @@ function calculateProfileCompleteness(profile: Profile): number {
 
 ### 2.2 Database Size Projections
 
-| Data Type            | Row Size (KB) | MVP (3mo)           | Year 1              | Year 2              | Notes             |
-| -------------------- | ------------- | ------------------- | ------------------- | ------------------- | ----------------- |
-| **Profiles**         | 5 KB          | 150 × 5 = 0.75 MB   | 6.75K × 5 = 34 MB   | 66.75K × 5 = 334 MB | Text + metadata   |
-| **Skills**           | 0.5 KB        | 1.2K × 0.5 = 0.6 MB | 54K × 0.5 = 27 MB   | 534K × 0.5 = 267 MB | 8 skills/user     |
-| **Experiences**      | 2 KB          | 450 × 2 = 0.9 MB    | 20K × 2 = 40 MB     | 200K × 2 = 400 MB   | 3 per user        |
-| **Assignments**      | 10 KB         | 30 × 10 = 0.3 MB    | 1.7K × 10 = 17 MB   | 13.7K × 10 = 137 MB | Rich descriptions |
-| **Applications**     | 3 KB          | 100 × 3 = 0.3 MB    | 3K × 3 = 9 MB       | 30K × 3 = 90 MB     | 30% apply rate    |
-| **Messages**         | 1 KB          | 500 × 1 = 0.5 MB    | 15K × 1 = 15 MB     | 150K × 1 = 150 MB   | Messaging traffic |
-| **Verifications**    | 2 KB          | 30 × 2 = 0.06 MB    | 1.7K × 2 = 3.4 MB   | 16.7K × 2 = 33 MB   | 25% verified      |
-| **Analytics Events** | 0.5 KB        | 5K × 0.5 = 2.5 MB   | 200K × 0.5 = 100 MB | 2M × 0.5 = 1 GB     | 30 events/user    |
-| **Files (Storage)**  | Varies        | 50 MB               | 5 GB                | 50 GB               | Proofs, avatars   |
-| **Total (Database)** | -             | **~5 MB**           | **~245 MB**         | **~2.4 GB**         | Postgres size     |
-| **Total (Storage)**  | -             | **~50 MB**          | **~5 GB**           | **~50 GB**          | Supabase Storage  |
+| Data Type             | Row Size (KB) | MVP (3mo)           | Year 1              | Year 2              | Notes                     |
+| --------------------- | ------------- | ------------------- | ------------------- | ------------------- | ------------------------- |
+| **Profiles**          | 5 KB          | 150 × 5 = 0.75 MB   | 6.75K × 5 = 34 MB   | 66.75K × 5 = 334 MB | Text + metadata           |
+| **Skills**            | 0.5 KB        | 1.2K × 0.5 = 0.6 MB | 54K × 0.5 = 27 MB   | 534K × 0.5 = 267 MB | 8 skills/user             |
+| **Experiences**       | 2 KB          | 450 × 2 = 0.9 MB    | 20K × 2 = 40 MB     | 200K × 2 = 400 MB   | 3 per user                |
+| **Assignments**       | 10 KB         | 30 × 10 = 0.3 MB    | 1.7K × 10 = 17 MB   | 13.7K × 10 = 137 MB | Rich descriptions         |
+| **Proof Submissions** | 3 KB          | 100 × 3 = 0.3 MB    | 3K × 3 = 9 MB       | 30K × 3 = 90 MB     | 30% proof-submission rate |
+| **Messages**          | 1 KB          | 500 × 1 = 0.5 MB    | 15K × 1 = 15 MB     | 150K × 1 = 150 MB   | Messaging traffic         |
+| **Verifications**     | 2 KB          | 30 × 2 = 0.06 MB    | 1.7K × 2 = 3.4 MB   | 16.7K × 2 = 33 MB   | 25% verified              |
+| **Analytics Events**  | 0.5 KB        | 5K × 0.5 = 2.5 MB   | 200K × 0.5 = 100 MB | 2M × 0.5 = 1 GB     | 30 events/user            |
+| **Files (Storage)**   | Varies        | 50 MB               | 5 GB                | 50 GB               | Proofs, avatars           |
+| **Total (Database)**  | -             | **~5 MB**           | **~245 MB**         | **~2.4 GB**         | Postgres size             |
+| **Total (Storage)**   | -             | **~50 MB**          | **~5 GB**           | **~50 GB**          | Supabase Storage          |
 
 **Storage Cost Projections**:
 
@@ -290,11 +290,11 @@ function calculateProfileCompleteness(profile: Profile): number {
 | Event Type                | MVP (3mo) | Month 6 | Month 12 (AI Threshold) | Year 2  |
 | ------------------------- | --------- | ------- | ----------------------- | ------- |
 | **Match Views**           | 500       | 5,000   | **15,000** ✅           | 150,000 |
-| **Applications**          | 100       | 1,000   | **5,000** ✅            | 50,000  |
+| **Proof Submissions**     | 100       | 1,000   | **5,000** ✅            | 50,000  |
 | **Rejections** (Explicit) | 50        | 500     | 2,500                   | 25,000  |
 | **Saves**                 | 150       | 1,500   | 7,500                   | 75,000  |
 | **Interviews**            | 30        | 300     | 1,500                   | 15,000  |
-| **Hires**                 | 10        | 100     | **500** ✅              | 5,000   |
+| **Workflow Decisions**    | 10        | 100     | **500** ✅              | 5,000   |
 | **Engagement Outcomes**   | 5         | 50      | 250                     | 2,500   |
 
 **ML Readiness**: Month 12 is when you have enough data to train initial ML models.
@@ -371,7 +371,7 @@ SELECT * FROM matching_profiles
 | **Match pairs** (user × assignment)           | 10,000+  | Each has ground truth label | ✅ Critical     |
 | **Positive labels** (applied/saved)           | 3,000+   | User expressed interest     | ✅ Critical     |
 | **Negative labels** (viewed but dismissed)    | 7,000+   | User saw but didn't engage  | ✅ Critical     |
-| **Hires** (ultimate positive signal)          | 500+     | Match led to engagement     | ✅ Critical     |
+| **Verified engagement outcomes**              | 500+     | Match led to engagement     | ✅ Critical     |
 | **Failed matches** (rejected after interview) | 200+     | Negative signal             | ⚠️ Nice to have |
 
 **Feature Engineering** (input to ML model):
@@ -415,12 +415,12 @@ interface MatchFeatures {
 2. **Train model**: XGBoost on features above, optimizing for precision@20
 3. **Validate**: Hold-out set of 20% of data, ensure AUC ≥ 0.75
 4. **Deploy**: Replace deterministic scoring with ML predictions
-5. **Monitor**: Track CTR, application rate, hire rate
+5. **Monitor**: Track CTR, proof-submission rate, workflow outcome rate
 
 **Expected Improvements**:
 
 - Click-through rate: +15-25% (industry benchmark)
-- Application rate: +10-20%
+- Proof-submission rate: +10-20%
 - Time-to-first-match: -20-30%
 
 **Cost**:
@@ -546,20 +546,20 @@ if (moderation.results[0].flagged) {
 
 **Critical for ML**: Labeled data must be accurate
 
-| Event           | Quality Standard                     | Why It Matters                             |
-| --------------- | ------------------------------------ | ------------------------------------------ |
-| **Application** | User clicked "Apply", submitted form | Strong positive signal                     |
-| **Save**        | User clicked "Save for later"        | Moderate positive signal                   |
-| **View**        | User viewed ≥15 seconds              | Weak positive signal (vs accidental click) |
-| **Dismiss**     | User clicked "Not for me"            | Strong negative signal                     |
-| **Ignore**      | User saw but didn't interact         | Weak negative signal                       |
+| Event                | Quality Standard              | Why It Matters                             |
+| -------------------- | ----------------------------- | ------------------------------------------ |
+| **Proof Submission** | User submitted proof interest | Strong positive signal                     |
+| **Save**             | User clicked "Save for later" | Moderate positive signal                   |
+| **View**             | User viewed ≥15 seconds       | Weak positive signal (vs accidental click) |
+| **Dismiss**          | User clicked "Not for me"     | Strong negative signal                     |
+| **Ignore**           | User saw but didn't interact  | Weak negative signal                       |
 
 **Data Labeling Pipeline**:
 
 ```
 1. Collect raw events (clicks, views, time on page)
 2. Apply business logic to label:
-   - Applied → Positive (weight: 1.0)
+   - Proof submitted → Positive (weight: 1.0)
    - Saved → Positive (weight: 0.6)
    - Viewed 30s+ → Neutral (weight: 0.2)
    - Dismissed → Negative (weight: -0.8)
@@ -621,7 +621,7 @@ if (moderation.results[0].flagged) {
 - Experience (1+ role) → 10 min
 - Mission/values → 5 min
 
-**Post-First Apply**:
+**Post-First Proof Submission**:
 
 - Prompt to add more skills
 - Suggest verification
@@ -680,11 +680,11 @@ trackEvent('match_dismissed', {
 - `match_clicked` (clicked to detail page)
 - `match_saved` (saved for later)
 - `match_dismissed` (clicked "not for me")
-- `applied` (submitted application)
-- `application_withdrawn` (user withdrew)
-- `application_rejected` (org rejected)
+- `proof_submitted` (submitted proof interest)
+- `proof_submission_withdrawn` (user withdrew)
+- `workflow_decision_recorded` (organization recorded workflow decision)
 - `interview_scheduled` (progressed to interview)
-- `hired` (got the role)
+- `engagement_verified` (confirmed engagement outcome)
 - `engagement_completed` (finished work, with outcome)
 
 **Data Retention**: 2 years (for ML training), then anonymize/delete per GDPR
@@ -698,8 +698,8 @@ trackEvent('match_dismissed', {
 - [x] User profiles (basic, skills, experience)
 - [x] Org profiles
 - [x] Assignments
-- [x] Applications
-- [x] Analytics events (basic: signup, login, apply)
+- [x] Proof submissions
+- [x] Analytics events (basic: signup, login, proof-submission)
 
 **Phase 1 (Month 3-6)**:
 
@@ -1074,7 +1074,7 @@ async function deleteUserAccount(userId: string) {
 Machine Learning & AI
 
 We use machine learning to improve match quality. This involves:
-- Training models on anonymized interaction data (views, applications, hires)
+- Training models on anonymized interaction data (views, proof submissions, workflow decisions, engagement outcomes)
 - Analyzing skills, mission statements, and engagement outcomes
 - Predicting which matches are most likely to succeed
 
@@ -1249,12 +1249,12 @@ async function exportMLTrainingData() {
 
 **Key Findings**:
 
-| Metric                  | Industry Baseline | With ML  | Improvement |
-| ----------------------- | ----------------- | -------- | ----------- |
-| **Click-Through Rate**  | 15-20%            | 20-25%   | +20-30%     |
-| **Application Rate**    | 5-8%              | 7-12%    | +40-50%     |
-| **Hire Rate**           | 2-3%              | 3-5%     | +50-100%    |
-| **Time to First Match** | 7-14 days         | 2-5 days | -60-80%     |
+| Metric                    | Industry Baseline | With ML  | Improvement |
+| ------------------------- | ----------------- | -------- | ----------- |
+| **Click-Through Rate**    | 15-20%            | 20-25%   | +20-30%     |
+| **Proof-Submission Rate** | 5-8%              | 7-12%    | +40-50%     |
+| **Workflow Outcome Rate** | 2-3%              | 3-5%     | +50-100%    |
+| **Time to First Match**   | 7-14 days         | 2-5 days | -60-80%     |
 
 **Critical Thresholds**:
 
@@ -1416,8 +1416,8 @@ Target: ≥0.50
 - [ ] Experience: ≥1 role per user
 - [ ] Org profiles: name, mission, verified status
 - [ ] Assignments: title, description, must-have skills, comp
-- [ ] Applications: user_id, assignment_id, timestamp
-- [ ] Basic analytics: signup, login, apply events
+- [ ] Proof submissions: user_id, assignment_id, timestamp
+- [ ] Basic analytics: signup, login, proof-submission events
 
 ### Phase 1 (Month 3-6)
 
@@ -1452,7 +1452,7 @@ Target: ≥0.50
 - [ ] **Data Quality**: ≥10K labeled interactions, <5% label errors
 - [ ] **Model Performance**: AUC ≥0.75, Precision@20 ≥0.20
 - [ ] **A/B Test**: Run 50/50 split (rules vs ML) for 2 weeks
-- [ ] **Monitor Metrics**: Track CTR, apply rate, hire rate daily
+- [ ] **Monitor Metrics**: Track CTR, proof-submission rate, workflow outcome rate daily
 - [ ] **Fallback**: Keep rules-based scoring as backup
 - [ ] **Explainability**: Can explain top 3 features driving each match
 - [ ] **Privacy**: All training data anonymized, GDPR-compliant
@@ -1479,10 +1479,10 @@ Target: ≥0.50
 **Break-even Analysis**:
 
 - Investment: $5,600 over 2 years
-- Impact: +30% application rate (conservative)
-- Value: If 10K users apply 30% more → 3K extra applications
-- If 5% convert to hires → 150 extra hires
-- If each hire generates $100 revenue → $15K revenue
+- Impact: +30% proof-submission rate (conservative)
+- Value: If 10K users submit proof interest 30% more → 3K extra proof submissions
+- If 5% convert to verified engagement outcomes → 150 extra verified outcomes
+- If each verified engagement generates $100 revenue → $15K revenue
 - **ROI**: $15K / $5.6K = **2.7x** (267% return)
 
 ---

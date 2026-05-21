@@ -1,9 +1,9 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
-# Phase 3: Hiring Corridor and Assignment Runtime Hardening
+# Phase 3: Assignment-Review Corridor and Assignment Runtime Hardening
 
-Execution crosswalk: authoritative MVP `Phase 3 — Hiring corridor`.
+Execution crosswalk: authoritative MVP `Phase 3 — Assignment-review corridor`.
 
 Current status: `PARTIALLY RESOLVED`: `P3-2` and `P3-3` have current focused evidence; `P3-1` has local route and monitoring-gate hardening fixes, while live/staging `/api/assignments` perf-budget proof remains a non-blocking watch item.
 

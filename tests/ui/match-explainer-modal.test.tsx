@@ -87,7 +87,6 @@ describe('MatchExplainerModal', () => {
     render(
       <MatchExplainerModal
         matchId="match-1"
-        compositeScore={0.82}
         rankBand="High-priority proof review"
         rankMode="band"
         exactRankAvailable
@@ -97,10 +96,10 @@ describe('MatchExplainerModal', () => {
           'The organization has requested reveal. Identity-bearing fields stay hidden until you approve.',
         ]}
         reasonSections={{
-          manual_override: ['A reviewer manually shortlisted this candidate.'],
+          manual_override: ['A reviewer manually shortlisted this proof-review participant.'],
         }}
         reviewCard={{
-          candidateLabel: 'Candidate A7F2',
+          candidateLabel: 'Submission A7F2',
           strongestProof: {
             summary: 'Built a blind review corridor around proof-backed evaluation.',
             outcome: 'Made fit clearer without exposing identity-bearing fields.',
@@ -120,11 +119,11 @@ describe('MatchExplainerModal', () => {
             reasonCodes: ['skills_strong'],
           },
         }}
-        subscores={{
-          skills: 0.9,
-          constraints: 0.8,
-          recency: 0.75,
-          evidence: 0.9,
+        proofSignals={{
+          skills: 'Strong proof support',
+          constraints: 'Clear support',
+          recency: 'Clear support',
+          evidence: 'Strong proof support',
         }}
         skillsMatch={{ required: [], nice: [] }}
         constraints={{
@@ -156,13 +155,15 @@ describe('MatchExplainerModal', () => {
     expect(screen.getByText('Privacy-safe explanation')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Blind-by-default review keeps identity-bearing details hidden until the candidate consents to reveal.'
+        'Blind-by-default review keeps identity-bearing details hidden until the proof-review participant consents to reveal.'
       )
     ).toBeInTheDocument();
     expect(
       screen.getAllByText('Evidence points to a strong skills fit for this assignment.')
     ).toHaveLength(2);
-    expect(screen.getByText('A reviewer manually shortlisted this candidate.')).toBeInTheDocument();
+    expect(
+      screen.getByText('A reviewer manually shortlisted this proof-review participant.')
+    ).toBeInTheDocument();
     expect(screen.getByText('Auditable verification history')).toBeInTheDocument();
     expect(screen.queryByText('Comparative score detail')).not.toBeInTheDocument();
     expect(

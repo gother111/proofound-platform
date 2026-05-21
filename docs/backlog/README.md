@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-20`
+> Last Verified: `2026-05-21`
 
 # Proofound 0-5 Execution Backlog
 
@@ -21,7 +21,7 @@ Treat [`../../audit/prioritized-roadmap.md`](../../audit/prioritized-roadmap.md)
 - `Phase 0` is a pre-feature launch gate. It enforces the locked MVP scope boundary and retires stale route-count truth before any further implementation prioritization.
 - `Phase 1` maps to authoritative MVP `Phase 1 — Foundation`.
 - `Phase 2` maps to authoritative MVP `Phase 2 — Trust and review`.
-- `Phase 3` maps to authoritative MVP `Phase 3 — Hiring corridor`.
+- `Phase 3` maps to authoritative MVP `Phase 3 — Assignment-review corridor`.
 - `Phase 4` maps to authoritative MVP `Phase 4 — Pilot hardening`.
 - `Phase 5` is launch packaging and governance cleanup that stays downstream of the locked MVP feature phases.
 

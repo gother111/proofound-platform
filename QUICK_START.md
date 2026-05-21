@@ -1,12 +1,12 @@
 # Quick Start
 
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 This is the launch-safe local quick start for the locked Proofound MVP corridor.
 It is for local setup and smoke checks only. Do not use this file to apply
 production migrations, change Supabase project settings, or broaden scope beyond
-the proof-first hiring corridor.
+the proof-first assignment review corridor.
 
 For database migration operations, use the current migration runbooks instead:
 
@@ -77,7 +77,7 @@ Keep the smoke focused on the active corridor:
 - Individual onboarding, first Proof Pack, proof upload/import/linking,
   verification requests, privacy settings, export/delete, and public portfolio
   publishing.
-- Organization onboarding, trust profile, assignments, candidate proof review,
+- Organization onboarding, trust profile, assignments, proof submission review,
   reason-coded matching, intro/reveal consent, interview manual-link scheduling,
   decisions, and engagement verification.
 - Internal launch ops: operations queues, audit logs, and protected diagnostics.

@@ -76,7 +76,7 @@ function buildProjection(overrides: Partial<any> = {}) {
         {
           key: 'context',
           label: 'Context',
-          value: 'Industry: Proof-first hiring',
+          value: 'Industry: Proof-first assignment review',
           state: 'ready',
           sources: [
             { id: 'pack-1', label: 'Proof Pack: Product Strategy', detail: 'Product Strategy' },
@@ -302,7 +302,8 @@ describe('Public individual portfolio page', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Company size: 11-50')).toBeInTheDocument();
     expect(screen.getByText('Work area: Product strategy')).toBeInTheDocument();
-    expect(screen.getByText('Industry: Proof-first hiring')).toBeInTheDocument();
+    expect(screen.getByText('Industry: Proof-first assignment review')).toBeInTheDocument();
+    expect(screen.queryByText('Industry: Proof-first hiring')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /proof snapshot/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /selected outcomes/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /skills snapshot/i })).toBeInTheDocument();
@@ -313,7 +314,10 @@ describe('Public individual portfolio page', () => {
       screen.getByText(/skills are not shared publicly on this public page/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /request introduction/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /copy recruiter summary/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copy proof summary/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /copy recruiter summary/i })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/my next challenge/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/mission & vision/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/stockholm, sweden/i)).not.toBeInTheDocument();

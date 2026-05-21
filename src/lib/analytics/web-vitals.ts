@@ -39,8 +39,14 @@ interface PerformanceMetricPayload {
  * Keep client-side web-vitals capture local while broad analytics endpoints are archived for MVP.
  */
 async function sendMetricToBackend(payload: PerformanceMetricPayload): Promise<void> {
-  if (process.env.NODE_ENV === 'development') {
-    console.debug('Web vital captured locally', payload);
+  dispatchLocalWebVitalsEvent('captured', payload);
+}
+
+function dispatchLocalWebVitalsEvent(type: 'captured' | 'init_failed', detail: object): void {
+  try {
+    window.dispatchEvent(new CustomEvent('proofound:web-vital', { detail: { type, ...detail } }));
+  } catch {
+    // Local instrumentation must never affect the user flow.
   }
 }
 
@@ -78,15 +84,6 @@ function trackMetric(metric: Metric): void {
   };
 
   sendMetricToBackend(payload);
-
-  // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[Web Vitals] ${metric.name}:`, {
-      value: Math.round(metric.value),
-      rating: payload.rating,
-      threshold: WEB_VITALS_THRESHOLDS[metric.name as keyof typeof WEB_VITALS_THRESHOLDS],
-    });
-  }
 }
 
 /**
@@ -102,7 +99,9 @@ export function reportWebVitals(): void {
     onFCP(trackMetric);
     onTTFB(trackMetric);
   } catch (error) {
-    console.error('Failed to initialize web vitals:', error);
+    dispatchLocalWebVitalsEvent('init_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 

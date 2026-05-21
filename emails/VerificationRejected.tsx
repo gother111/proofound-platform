@@ -161,7 +161,7 @@ export default function VerificationRejected({
               <strong>Need help?</strong>
               <br />
               If you&apos;re having trouble with work email verification, review settings or contact
-              support. Verification is a trust signal, not an automated score, rank, or hiring
+              support. Verification is a trust signal, not an automated score, rank, or workflow
               recommendation.
             </Text>
           </Section>

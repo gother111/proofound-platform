@@ -16,6 +16,7 @@ const ACTIVE_LANDING_COPY_FILES = [
   'src/components/landing/sections/EarlyProofSection.tsx',
   'src/components/landing/sections/FinalCTASection.tsx',
   'src/components/landing/sections/FooterSection.tsx',
+  'src/components/landing/sections/HiringTeamsSection.tsx',
   'src/components/landing/sections/PracticalTrustSection.tsx',
   'src/components/landing/sections/PrivacySafeReviewSection.tsx',
   'src/components/landing/sections/ScrollytellingSection.tsx',
@@ -56,7 +57,12 @@ describe('landing copy guardrails', () => {
     expect(landingCopy).toMatch(/Evidence-based assignment review/i);
     expect(landingCopy).toMatch(/proof-backed\s+submissions/i);
     expect(landingCopy).toMatch(/clearer-evidence submissions/i);
+    expect(landingCopy).toMatch(/before proof submissions start/i);
+    expect(landingCopy).toMatch(/before submissions open/i);
+    expect(landingCopy).toMatch(/Too many weak submissions/i);
     expect(landingCopy).toMatch(/organizations review assignment submissions/i);
+    expect(landingCopy).toMatch(/Proof-review participants add context/i);
+    expect(landingCopy).toMatch(/Proof-review participants flatten real ability/i);
     expect(landingCopy).not.toMatch(/privacy-safe signal/i);
     expect(landingCopy).not.toMatch(/stronger signal than CVs/i);
     expect(landingCopy).not.toMatch(/weak CV signal/i);
@@ -73,7 +79,12 @@ describe('landing copy guardrails', () => {
     expect(landingCopy).not.toMatch(/Evidence-based hiring for a world/i);
     expect(landingCopy).not.toMatch(/Review proof-backed candidates/i);
     expect(landingCopy).not.toMatch(/clearer-evidence candidates/i);
+    expect(landingCopy).not.toMatch(/Candidates add context/i);
+    expect(landingCopy).not.toMatch(/Candidates flatten real ability/i);
     expect(landingCopy).not.toMatch(/organizations find talent/i);
     expect(landingCopy).not.toMatch(/talent feed/i);
+    expect(landingCopy).not.toMatch(/before applications start/i);
+    expect(landingCopy).not.toMatch(/before applications open/i);
+    expect(landingCopy).not.toMatch(/weak applications/i);
   });
 });

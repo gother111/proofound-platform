@@ -10,8 +10,8 @@
 ## A. Operational fallback model
 
 - Main launch-risk scenarios:
-  - `low candidate supply`: active assignments exist, but not enough candidates clear readiness, proof, trust, or logistics gates.
-  - `low assignment supply`: candidate portfolios are ready, but active assignment demand is too thin to sustain qualified intros.
+  - `low proof-submission supply`: active assignments exist, but not enough proof submissions clear readiness, proof, trust, or logistics gates.
+  - `low assignment supply`: individual proof portfolios are ready, but active assignment demand is too thin to sustain qualified intros.
   - `weak proof coverage`: portfolio exists, but proof coverage is too thin or too concentrated to support qualified intros.
   - `incomplete verification`: verification checks are pending, expired, disputed, contradicted, or absent.
   - `review overprecision risk`: exact ranking or confidence language would overstate what the proof, trust, or supply state supports.
@@ -39,7 +39,7 @@
   - `review_overprecision_protected`
   - `intro_hold_insufficient_qualified_intros`
 - Scenario contract:
-  - `low candidate supply`
+  - `low proof-submission supply`
     - System: keep assignment review browse-safe, suppress intros, log fallback, emit `fallback_entered`.
     - Operator: triage assignment scope, recommend scope edits, optionally extend intro wait window.
   - `low assignment supply`
@@ -73,7 +73,7 @@
   - exactly three next actions:
     - broaden assignment
     - request more evidence
-    - keep reviewing blind profiles
+    - keep reviewing blind submissions
 - Copy and CTA rules:
   - replace empty shortlist or empty intro states with calm fallback panels
   - never say candidates or assignments are “available now” unless they actually satisfy the live corridor
@@ -256,7 +256,7 @@
   - `operator_override_reason`
   - `internal_note`
 - Variants:
-  - candidate-facing reason codes:
+  - proof-review participant-facing reason codes:
     - `proof_strength_incomplete`
     - `verification_pending`
     - `constraints_incomplete`

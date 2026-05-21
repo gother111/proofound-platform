@@ -9,8 +9,8 @@ const corridor: HiringCorridorSnapshot = {
   privacyStage: 'stage4_interview_coordination',
   decisionState: null,
   engagementVerification: null,
-  subjectLabel: 'Candidate',
-  summary: 'Interview coordination is active for this candidate.',
+  subjectLabel: 'Proof-review participant',
+  summary: 'Interview coordination is active for this proof-review participant.',
   nextAction: {
     id: 'prepare_for_interview',
     label: 'Prepare for interview',
@@ -45,7 +45,13 @@ describe('HiringCorridorTimeline', () => {
     const { container } = render(<HiringCorridorTimeline corridor={corridor} />);
 
     expect(screen.getByText('Corridor step')).toBeInTheDocument();
+    expect(
+      screen.getByText('Interview coordination is active for this proof-review participant.')
+    ).toBeInTheDocument();
     expect(screen.getByText('Interviews · step 6 of 9')).toBeInTheDocument();
+    expect(
+      screen.queryByText('Interview coordination is active for this candidate.')
+    ).not.toBeInTheDocument();
     expect(screen.getByText('Current next action')).toBeInTheDocument();
     expect(screen.getByText('Prepare for interview')).toBeInTheDocument();
 

@@ -16,10 +16,17 @@ vi.mock('@/lib/feature-flags/server', () => ({
   isFeatureEnabled: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/feature-flags/route';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import { log } from '@/lib/log';
 
 describe('/api/feature-flags', () => {
   beforeEach(() => {
@@ -71,6 +78,21 @@ describe('/api/feature-flags', () => {
       killSwitchIntros: false,
       killSwitchExactRank: true,
       legacyMvpSurfaces: false,
+    });
+  });
+
+  it('logs failures structurally while returning the safe public error', async () => {
+    (db.select as any).mockImplementationOnce(() => {
+      throw new Error('feature flag membership load failed');
+    });
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to load feature flags' });
+    expect(log.error).toHaveBeenCalledWith('feature_flags.fetch_failed', {
+      error: 'feature flag membership load failed',
     });
   });
 });

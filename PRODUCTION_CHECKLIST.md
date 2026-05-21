@@ -1,7 +1,7 @@
 # Production Deployment Checklist
 
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 This checklist is an execution aid for a production-candidate Proofound deployment. It does not broaden MVP scope.
 
@@ -68,7 +68,7 @@ Manual-link interview scheduling is the locked MVP default. Connected providers 
   - Keep a manual-link fallback passing.
 
 - [ ] LinkedIn provider credentials, only if the target intentionally enables account-side verification history.
-  - LinkedIn account-side checks must not grant public trust, candidate reveal, or intro eligibility by themselves.
+  - LinkedIn account-side checks must not grant public trust, proof-review participant reveal readiness, or intro eligibility by themselves.
 
 - [ ] Zoom-native credentials are not a launch requirement.
   - Do not block launch on Zoom app review, Zoom OAuth credentials, or Zoom-specific scheduling tests.
@@ -127,8 +127,8 @@ Use the target production-candidate URL for these checks.
 - [ ] Public portfolio publishing controls.
 - [ ] Organization onboarding/profile/trust page.
 - [ ] Assignment list, create, edit, review, and publish.
-- [ ] Review queue, shortlist, candidate proof review cards, and reason-code explanations.
-- [ ] Intro request, reveal request, candidate consent, interview scheduling/reschedule, decision recording, and engagement verification.
+- [ ] Review queue, shortlist, proof submission review cards, and reason-code explanations.
+- [ ] Intro request, reveal request, proof-review participant consent, interview scheduling/reschedule, decision recording, and engagement verification.
 - [ ] Admin/internal launch ops: verification queue, audit surfaces, launch status, and monitoring.
 - [ ] Empty, loading, error, disabled, success, archived, gated, mobile, and desktop states where relevant.
 

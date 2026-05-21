@@ -88,7 +88,7 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 ## I‑06 Mission / Vision / Values
 
 **Purpose**: Express purpose alignment to power values‑based matching.
-**Entry**: From profile; nudge before first apply.
+**Entry**: From profile; nudge before first proof submission.
 **Steps**: Write statements → select value tags → reorder priority.
 **Inputs/Data**: Free‑text + tag selections.
 **Needs & Feelings**: Wants authentic expression; avoids fluff.
@@ -145,17 +145,17 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 **Metrics**: Preference edit frequency; uplift in click‑through.
 **Edge Cases**: Conflicting hard constraints → show zero‑result warning.
 
-## I‑11 Recommended Feed
+## I‑11 Recommended Assignment Reviews
 
-**Purpose**: Discover best‑fit opportunities.
+**Purpose**: Review proof-led assignment contexts that match stated constraints.
 **Entry**: Home/dashboard.
-**Steps**: Scroll ranked list → inspect match chips → open details or save.
-**Inputs/Data**: Match score & subscores; personalization data.
+**Steps**: Review suggested assignment contexts → inspect reason-coded proof signals → open detail or dismiss.
+**Inputs/Data**: Constraint fit, proof signals, and privacy-safe preference data.
 **Needs & Feelings**: Wants relevance and transparency; low noise.
-**System Support**: Sort by score/newness; dismiss/“not for me” to refine.
-**Done**: User opens detail, saves, or applies to at least one.
-**Metrics**: CTR; save/apply rate; dwell time.
-**Edge Cases**: Cold start; stale postings.
+**System Support**: Reason-coded context, freshness, and dismiss/“not for me” feedback.
+**Done**: User opens detail, dismisses, or marks interest in one assignment-review context.
+**Metrics**: Detail open rate; interest/dismiss rate; dwell time.
+**Edge Cases**: Cold start; stale assignment context.
 
 ## I‑12 Search & Filter
 
@@ -177,26 +177,26 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 **Inputs/Data**: Assignment JSON; match vector.
 **Needs & Feelings**: Wants transparency; no surprises.
 **System Support**: “Why you match/Don’t match” explainer; red flags; verification gates.
-**Done**: Apply / save / dismiss action taken.
-**Metrics**: View‑to‑apply conversion; time on page.
+**Done**: Interest / save / dismiss action taken.
+**Metrics**: View‑to‑interest conversion; time on page.
 **Edge Cases**: Hidden comp; conflicting requirements.
 
-## I‑14 Apply / Express Interest
+## I‑14 Submit Proof Interest
 
-**Purpose**: Submit a targeted, low‑friction application.
+**Purpose**: Submit targeted, low‑friction proof-submission interest.
 **Entry**: From assignment detail.
 **Steps**: Answer gating questions; attach tailored proofs; confirm profile sections; consent to share; submit.
 **Inputs/Data**: Short answers; attachments.
 **Needs & Feelings**: Wants speed; fears black hole.
 **System Support**: Autofill; character limits; submission receipt; next‑steps timeline.
-**Done**: Application created and acknowledged.
+**Done**: Proof-submission interest recorded and acknowledged.
 **Metrics**: Submission success rate; time‑to‑submit; dropout at questions.
 **Edge Cases**: Missing mandatory proof; eligibility gate fails.
 
 ## I‑15 Messaging
 
 **Purpose**: Communicate securely with the org.
-**Entry**: After apply or inbound outreach.
+**Entry**: After proof-submission interest or inbound outreach.
 **Steps**: Open thread → send message/file → read receipts → follow‑ups.
 **Inputs/Data**: Messages, files; audit metadata.
 **Needs & Feelings**: Wants responsiveness and clarity.
@@ -307,14 +307,14 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 
 ## O‑04 Org Profile
 
-**Purpose**: Communicate mission and context to candidates.
+**Purpose**: Communicate mission and context to proof-review participants.
 **Entry**: From setup or prompt on first posting.
 **Steps**: Mission/vision/values → sectors/locations → media/case studies → save.
 **Inputs/Data**: Text, tags, images.
 **Needs & Feelings**: Show authenticity; efficiency.
 **System Support**: Examples; brand image helper; preview.
 **Done**: Profile visible; linked on assignments.
-**Metrics**: Profile completeness; candidate view time.
+**Metrics**: Profile completeness; proof-review participant view time.
 **Edge Cases**: Sensitive data; brand approvals.
 
 ## O‑05 Create Assignment
@@ -324,7 +324,7 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 **Steps**: Title → tags → must/nice skills → hours & mode → comp/budget → start window → gating questions.
 **Inputs/Data**: Structured assignment fields.
 **Needs & Feelings**: Clarity; speed; quality of matches.
-**System Support**: Templates; skill picker with level rubrics; preview of candidate volume.
+**System Support**: Templates; skill picker with level rubrics; preview of proof-submission volume.
 **Done**: Draft saved and ready to publish.
 **Metrics**: Time‑to‑draft; predicted match coverage.
 **Edge Cases**: Missing comp; legal wording flags.
@@ -336,10 +336,10 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 **Steps**: Adjust skill/value weights; set verification gates; set hard vs soft requirements.
 **Inputs/Data**: Weights JSON; gate toggles.
 **Needs & Feelings**: Control; confidence in signal.
-**System Support**: Explain impact; sample candidate preview; warnings for over‑strict gates.
+**System Support**: Explain impact; sample proof-submission preview; warnings for over‑strict gates.
 **Done**: Weights saved; scoring configured.
-**Metrics**: Shortlist rate; candidate quality score.
-**Edge Cases**: Zero candidates → suggest relaxations.
+**Metrics**: Shortlist rate; proof-submission quality signal.
+**Edge Cases**: Zero proof submissions → suggest relaxations.
 
 ## O‑07 Publish Assignment
 
@@ -353,24 +353,24 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 **Metrics**: Time‑to‑first view; impressions; applies.
 **Edge Cases**: Scheduled future publish; unpublish edits.
 
-## O‑08 View Ranked Matches
+## O‑08 Review Proof-Submission Matches
 
-**Purpose**: Quickly see best candidates with reasons.
+**Purpose**: Quickly review strongest proof submissions with reasons.
 **Entry**: After publish; on matches tab.
-**Steps**: Review ranked list → open subscores/explanations → take action (shortlist/message/dismiss).
-**Inputs/Data**: Match vectors; candidate profiles.
-**Needs & Feelings**: Trust in the ranking; transparency.
-**System Support**: “Why this match”; filters (verified only, etc.).
-**Done**: At least one candidate advanced or contacted.
+**Steps**: Review ordered list → open reason codes/evidence explanations → take action (shortlist/message/dismiss).
+**Inputs/Data**: Match vectors; proof-submission review records.
+**Needs & Feelings**: Trust in the evidence; transparency.
+**System Support**: “Why this submission”; filters (verified only, etc.).
+**Done**: At least one proof submission advanced, held, or contacted.
 **Metrics**: View‑to‑action rate; time to first outreach.
 **Edge Cases**: Sparse matches; false positives.
 
-## O‑09 Candidate Deep‑Dive
+## O‑09 Proof-Submission Review
 
 **Purpose**: Evaluate an individual thoroughly.
 **Entry**: From matches or search.
 **Steps**: Inspect profile, proofs, verifications, history → compare to must/nice haves → notes.
-**Inputs/Data**: Candidate data; internal notes.
+**Inputs/Data**: Proof-review participant data; internal notes.
 **Needs & Feelings**: Confidence; evidence.
 **System Support**: Side‑by‑side with assignment; red‑flag highlights.
 **Done**: Decision to shortlist, message, or pass.
@@ -379,20 +379,20 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 
 ## O‑10 Shortlist (Stages)
 
-**Purpose**: Move candidates through a clear pipeline.
-**Entry**: From matches or deep‑dive.
+**Purpose**: Move proof submissions through a clear workflow.
+**Entry**: From matches or proof-submission review.
 **Steps**: Move to stage (new → shortlisted → interview → offer → closed) → add notes and owners.
 **Inputs/Data**: Stage status; assignees; notes.
 **Needs & Feelings**: Organization; collaboration.
 **System Support**: Kanban pipeline; stage SLAs; mentions.
-**Done**: Candidate in correct stage with owner.
+**Done**: Proof submission in correct stage with owner.
 **Metrics**: Stage conversion rates; time‑in‑stage.
-**Edge Cases**: Duplicate applications; withdraws.
+**Edge Cases**: Duplicate proof submissions; withdraws.
 
 ## O‑11 Messaging
 
-**Purpose**: Communicate securely with candidates.
-**Entry**: From candidate card or stage action.
+**Purpose**: Communicate securely with proof-review participants.
+**Entry**: From proof-submission card or stage action.
 **Steps**: Send message; request files; templates for FAQs; track responses.
 **Inputs/Data**: Messages, attachments.
 **Needs & Feelings**: Speed; professionalism.
@@ -405,7 +405,7 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 
 **Purpose**: Coordinate times across time zones.
 **Entry**: From stage action or message thread.
-**Steps**: Propose slots; accept from candidate; calendar sync; reminders.
+**Steps**: Propose slots; accept from proof-review participant; calendar sync; reminders.
 **Inputs/Data**: Calendars; timezones.
 **Needs & Feelings**: Efficiency; certainty.
 **System Support**: Auto‑convert times; conflict detection.
@@ -421,19 +421,19 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 **Inputs/Data**: Ratings; qualitative notes.
 **Needs & Feelings**: Fairness; signal quality.
 **System Support**: Bias‑aware prompts; calibrated rubrics.
-**Done**: Decision recorded; candidate moved stage.
+**Done**: Decision recorded; proof submission moved stage.
 **Metrics**: Feedback completion rate; time‑to‑decision.
 **Edge Cases**: Conflicting feedback; late submissions.
 
 ## O‑14 Send Offer / Confirm Scope
 
 **Purpose**: Formalize engagement terms.
-**Entry**: Candidate selected.
-**Steps**: Draft scope/milestones/rate/benefits; approvals; send; e‑sign.
-**Inputs/Data**: Offer JSON; signatures; dates.
+**Entry**: Proof-review participant selected.
+**Steps**: Draft scope/milestones/rate/benefits; approvals; send engagement confirmation.
+**Inputs/Data**: Engagement scope JSON; approvals; dates.
 **Needs & Feelings**: Legal clarity; speed.
-**System Support**: Templates; versioning; signature.
-**Done**: Offer accepted or declined; status updated.
+**System Support**: Templates; versioning; manual-link confirmation.
+**Done**: Engagement accepted or declined; status updated.
 **Metrics**: Offer accept rate; time‑to‑accept.
 **Edge Cases**: Conditional offers; counter‑proposals.
 
@@ -451,13 +451,13 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 
 ## O‑16 Issue Verifications
 
-**Purpose**: Convert outcomes into trusted credentials for the talent.
+**Purpose**: Convert outcomes into trusted credentials for the proof-review participant.
 **Entry**: On milestone or project completion.
 **Steps**: Select outcome → confirm evidence → choose visibility → issue verification → optional testimonial.
 **Inputs/Data**: Evidence references; issuer identity.
 **Needs & Feelings**: Fair portrayal; minimal effort.
 **System Support**: One‑click issuance; template testimonials; audit log.
-**Done**: Verification recorded on candidate profile.
+**Done**: Verification recorded on proof-review participant profile.
 **Metrics**: Verification issuance rate; testimonial coverage.
 **Edge Cases**: Disputes; sensitive work (private badge).
 
@@ -487,14 +487,14 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 
 ## O‑19 Analytics Snapshot
 
-**Purpose**: Understand pipeline health and match quality.
+**Purpose**: Understand workflow health and match quality.
 **Entry**: Analytics tab.
-**Steps**: Review KPIs (time‑to‑fill, stage conversion, match quality, diversity/values alignment) → drill into bottlenecks.
-**Inputs/Data**: Aggregated pipeline & match data.
+**Steps**: Review KPIs (time‑to‑workflow outcome, stage conversion, match quality, diversity/values alignment) → drill into bottlenecks.
+**Inputs/Data**: Aggregated workflow & match data.
 **Needs & Feelings**: Insight → action; no vanity.
 **System Support**: Benchmarks; alerts; export.
 **Done**: Action identified or setting adjusted.
-**Metrics**: Time‑to‑fill trend; quality‑of‑hire proxies.
+**Metrics**: Time‑to‑workflow-outcome trend; quality‑of‑engagement proxies.
 **Edge Cases**: Low data volumes; seasonality.
 
 ## O‑20 Org Admin & Compliance
@@ -514,5 +514,5 @@ _A concise, thorough blueprint for MVP software documentation. Forty (40) flows:
 ## Notes for Spec Authors
 
 - Turn each flow into a detailed spec by expanding **Steps** into screens & states, adding **Field‑level validation**, **Empty/Error states**, and **API/data contracts**.
-- Attach success metrics to OKRs (e.g., "I‑11 view→apply ≥ 30%"; "O‑08 time‑to‑first outreach ≤ 2 days").
+- Attach success metrics to OKRs (e.g., "I‑11 view→proof-submission interest ≥ 30%"; "O‑08 time‑to‑first outreach ≤ 2 days").
 - Keep copy tone empathetic and direct; provide in‑product guidance where cognitive load is highest.

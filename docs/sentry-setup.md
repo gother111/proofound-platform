@@ -51,7 +51,7 @@ Do not expose `SENTRY_AUTH_TOKEN` or DSN-adjacent project secrets in docs, scree
 Sentry events must not include:
 
 - private proof content or raw evidence
-- hidden candidate identity details before reveal consent
+- hidden identity details before reveal consent
 - passwords, tokens, cookies, auth headers, API keys, or signed URLs
 - uploaded file contents, private storage paths, filenames, or diagnostic dumps
 - verifier private data, allegation text, internal queue IDs, or admin notes

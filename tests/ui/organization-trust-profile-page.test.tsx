@@ -11,8 +11,8 @@ vi.mock('@/lib/auth', () => ({
       id: 'org-1',
       slug: 'acme',
       displayName: 'Acme Org',
-      tagline: 'This role matters because the work fixes trust in hiring.',
-      mission: 'Ship trust-first hiring',
+      tagline: 'This assignment path matters because the work makes proof easier to review.',
+      mission: 'Ship proof-first assignment review',
       workingContext: 'Remote-first team with weekly async check-ins.',
       website: 'https://acme.org',
       trustStatus: 'platform_reviewed',
@@ -53,8 +53,12 @@ describe('Organization trust page editor', () => {
     expect(screen.getByTestId('trust-editor')).toBeInTheDocument();
     expect(screen.getByText('Remote-first team with weekly async check-ins.')).toBeInTheDocument();
     expect(
-      screen.getAllByText('This role matters because the work fixes trust in hiring.').length
+      screen.getAllByText(
+        'This assignment path matters because the work makes proof easier to review.'
+      ).length
     ).toBeGreaterThan(0);
+    expect(screen.queryByText(/trust in hiring/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/trust-first hiring/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/work culture/i)).not.toBeInTheDocument();
     expect(screen.queryByText('Clarity')).not.toBeInTheDocument();
     expect(screen.queryByText('Trust')).not.toBeInTheDocument();

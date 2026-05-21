@@ -32,7 +32,7 @@ Treat these as transactional workflow email, not marketing or digest traffic:
 - Auth email verification and password reset
 - Work-email verification
 - Organization/team invitation where active
-- Candidate/assignment invitation where active
+- Proof-submission/assignment invitation where active
 - Verification request, approval, rejection, and feedback messages where active
 - Reveal, interview, decision, and engagement-verification workflow messages where active
 - Account deletion lifecycle messages where active in the product flow
@@ -42,7 +42,7 @@ Emails must support the locked MVP corridor: proof first, privacy staged, explic
 
 ## Privacy Guardrails
 
-Transactional emails may identify the action the user needs to take, but they must not include private proof content, raw evidence text, hidden candidate identity details, internal queue IDs, private storage paths, signed URLs, service-role data, secrets, diagnostic payloads, or broad profile/match-score claims.
+Transactional emails may identify the action the user needs to take, but they must not include private proof content, raw evidence text, hidden identity details before reveal consent, internal queue IDs, private storage paths, signed URLs, service-role data, secrets, diagnostic payloads, or broad profile/match-score claims.
 
 Email links should route through existing app surfaces that enforce auth, role, consent, archive, and readiness gates. Public email links may only target intentionally public surfaces such as published portfolios, public organization trust pages, or public assignment/share pages that are active under route-surface policy.
 

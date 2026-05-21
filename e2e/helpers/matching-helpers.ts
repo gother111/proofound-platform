@@ -3,7 +3,7 @@ import { Page, expect } from '@playwright/test';
 /**
  * E2E Test Helpers for Matching Engine
  *
- * Utilities for testing proof-first matching flows, rank transparency, etc.
+ * Utilities for testing proof-first matching flows and launch-safe matching visibility.
  */
 
 /**
@@ -65,16 +65,15 @@ export async function openMatchExplainer(page: Page, matchIndex = 0) {
 }
 
 /**
- * Verify match score is displayed
+ * Verify raw score artifacts are hidden on active match cards.
  */
-export async function verifyMatchScore(page: Page, matchIndex = 0) {
+export async function verifyRawScoreArtifactsHidden(page: Page, matchIndex = 0) {
   const matchCard = getMatchCard(page, matchIndex);
 
-  // Look for score indicators (percentage, number, etc.)
-  const scorePattern = /\d+%|\d+\/\d+|score|match/i;
+  const scorePattern = /\b\d{1,3}%\b|\b\d+\/\d+\b|match score|fit score/i;
   const scoreElement = matchCard.locator(`text=/${scorePattern}/`).first();
 
-  await expect(scoreElement).toBeVisible();
+  await expect(scoreElement).toHaveCount(0);
 }
 
 /**
@@ -182,14 +181,13 @@ export async function verifyMatchExplainerTabs(page: Page) {
 }
 
 /**
- * Verify rank display
+ * Verify exact rank artifacts stay hidden on active matching surfaces.
  */
-export async function verifyRankDisplay(page: Page) {
-  // Look for rank indicators
+export async function verifyExactRankArtifactsHidden(page: Page) {
   const rankPattern = /Top \d+|#\d+ of \d+|rank|position/i;
   const rankElement = page.locator(`text=/${rankPattern}/`).first();
 
-  return await rankElement.isVisible();
+  await expect(rankElement).toHaveCount(0);
 }
 
 /**

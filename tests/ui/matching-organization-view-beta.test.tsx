@@ -45,7 +45,10 @@ describe('MatchingOrganizationView launch corridor', () => {
     vi.clearAllMocks();
     searchParamAssignment = '';
     window.localStorage.clear();
-    (global as any).fetch = vi.fn();
+    (global as any).fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    });
   });
 
   it('does not render the archived beta test initiation CTA', async () => {
@@ -181,12 +184,89 @@ describe('MatchingOrganizationView launch corridor', () => {
     );
 
     expect(screen.getByText('New submissions')).toBeInTheDocument();
-    expect(screen.getAllByText('2 matches').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('2 submissions').length).toBeGreaterThan(0);
+    expect(screen.queryByText('2 matches')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /designer/i }));
 
     await waitFor(() => {
       expect(screen.queryByText('New submissions')).not.toBeInTheDocument();
     });
+  });
+
+  it('uses proof-submission fallback labels when review card labels are missing', async () => {
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: 'match-1',
+            assignmentId: 'assignment-1',
+            score: 0.76,
+            reviewStage: 'blind_review',
+            revealScope: 'blind',
+            reviewCard: null,
+            profile: {
+              skills: {},
+            },
+          },
+        ],
+      }),
+    });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect(await screen.findByText('Submission #1')).toBeInTheDocument();
+    expect(screen.queryByText('Candidate #1')).not.toBeInTheDocument();
+  });
+
+  it('keeps required-skill explanation labels proof-submission scoped', async () => {
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: 'match-skills',
+            assignmentId: 'assignment-1',
+            reviewStage: 'blind_review',
+            revealScope: 'blind',
+            reviewCard: {
+              candidateLabel: 'Submission A7F2',
+              fitSummary: {
+                headline: 'Relevant proof signals are attached.',
+                bullets: [],
+                reasonCodes: [],
+              },
+            },
+          },
+        ],
+      }),
+    });
+    (global as any).fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        proofSignals: {
+          skills: 'Clear support',
+        },
+        skillsMatch: {
+          required: [
+            {
+              skillName: 'Evidence operations',
+              requiredLevel: 3,
+              yourLevel: 4,
+              met: true,
+            },
+          ],
+          nice: [],
+        },
+      }),
+    });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    expect(await screen.findByText('Submission A7F2')).toBeInTheDocument();
+    expect(await screen.findByText('Evidence operations')).toBeInTheDocument();
+    expect(screen.getByText(/Required: Lvl 3 .* Submission has: Lvl 4/)).toBeInTheDocument();
+    expect(screen.queryByText(/Candidate has: Lvl 4/)).not.toBeInTheDocument();
   });
 });

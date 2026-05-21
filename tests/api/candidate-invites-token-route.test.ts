@@ -25,6 +25,12 @@ vi.mock('@/lib/analytics/events', () => ({
   emitAnalyticsEventAsync: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 vi.mock('@/lib/candidate-invite-policy', () => ({
   buildCandidateInvitePolicyError: vi.fn((decision: 'hold' | 'blocked') =>
     decision === 'blocked'
@@ -46,6 +52,7 @@ import { db } from '@/db';
 import { GET } from '@/app/api/candidate-invites/[token]/route';
 import { createClient } from '@/lib/supabase/server';
 import { beginCapabilityTokenRedeemSession } from '@/lib/security/capability-tokens';
+import { log } from '@/lib/log';
 
 function mockAuthUser(user: { id: string; email: string } | null) {
   (createClient as any).mockResolvedValue({
@@ -289,5 +296,22 @@ describe('GET /api/candidate-invites/[token]', () => {
       updatedAt: expect.any(Date),
     });
     expect(update.where).toHaveBeenCalledWith(expect.anything());
+  });
+
+  it('logs unexpected preview failures structurally while keeping the public response generic', async () => {
+    (db.select as any).mockImplementationOnce(() => {
+      throw new Error('invite preview query unavailable');
+    });
+
+    const response = await GET(new NextRequest('http://localhost/api/candidate-invites/token'), {
+      params: Promise.resolve({ token: 'token-value' }),
+    });
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to fetch invite' });
+    expect(log.error).toHaveBeenCalledWith('candidate_invite.preview.fetch_failed', {
+      error: 'invite preview query unavailable',
+    });
   });
 });

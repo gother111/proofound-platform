@@ -63,6 +63,8 @@ export async function GET(request: NextRequest) {
         assignmentId: conversations.assignmentId,
         participantOneId: conversations.participantOneId,
         participantTwoId: conversations.participantTwoId,
+        maskedHandleOne: conversations.maskedHandleOne,
+        maskedHandleTwo: conversations.maskedHandleTwo,
         stage: conversations.stage,
         lastMessageAt: conversations.lastMessageAt,
         createdAt: conversations.createdAt,
@@ -139,7 +141,10 @@ export async function GET(request: NextRequest) {
             displayAvatar = profile.avatarUrl;
           } else {
             // Stage 1: Masked
-            displayName = profile.persona === 'individual' ? 'Candidate' : 'Organization';
+            displayName =
+              conv.participantOneId === user.id
+                ? conv.maskedHandleTwo || 'Organization'
+                : conv.maskedHandleOne || 'Submission';
             displayAvatar = null; // Use generic avatar
           }
         }

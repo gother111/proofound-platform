@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { and, eq, or } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
 
 import { db } from '@/db';
 import {
@@ -28,8 +27,12 @@ import {
 } from '@/lib/candidate-invite-policy';
 import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
-import { pickPrioritizedOrgRepresentative } from '@/lib/messaging/conversation-access';
+import {
+  makeMaskedHandleForPersona,
+  pickPrioritizedOrgRepresentative,
+} from '@/lib/messaging/conversation-access';
 import { createClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -354,8 +357,8 @@ export async function POST(
             participantOneId: user.id,
             participantTwoId: prioritizedOrgRepId,
             stage: 'masked',
-            maskedHandleOne: `Candidate #${nanoid(6).toUpperCase()}`,
-            maskedHandleTwo: `Organization #${nanoid(6).toUpperCase()}`,
+            maskedHandleOne: makeMaskedHandleForPersona('individual'),
+            maskedHandleTwo: makeMaskedHandleForPersona('organization'),
             lastMessageAt: new Date(),
           })
           .returning({
@@ -425,7 +428,9 @@ export async function POST(
       );
     }
 
-    console.error('Failed to claim candidate invite:', error);
+    log.error('candidate_invite.claim.failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     emitLaunchTrace(trace, {
       outcome: 'failure',
       state: 'invite_claim_failed',

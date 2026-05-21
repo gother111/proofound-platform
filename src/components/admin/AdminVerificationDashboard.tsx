@@ -176,6 +176,19 @@ const DISPLAY_METADATA_KEYS = new Set([
   'workflowStatus',
 ]);
 
+const METADATA_KEY_LABEL_OVERRIDES: Record<string, string> = {
+  candidateConsentStatus: 'Proof-review participant consent status',
+};
+
+const METADATA_VALUE_LABEL_OVERRIDES: Record<string, Record<string, string>> = {
+  pendingParty: {
+    candidate: 'Proof-review participant',
+  },
+  revealStage: {
+    candidate_consented: 'Proof-review participant consented',
+  },
+};
+
 async function fetchQueueData() {
   const response = await apiFetch('/api/admin/internal-ops/queues');
 
@@ -220,7 +233,27 @@ function formatMetadataValue(value: unknown) {
 }
 
 function formatMetadataKey(key: string) {
-  return internalValueLabel(key.replace(/([a-z0-9])([A-Z])/g, '$1_$2'));
+  return (
+    METADATA_KEY_LABEL_OVERRIDES[key] ??
+    internalValueLabel(key.replace(/([a-z0-9])([A-Z])/g, '$1_$2'))
+  );
+}
+
+function formatMetadataDisplayValue(key: string, value: unknown) {
+  if (typeof value === 'string') {
+    return METADATA_VALUE_LABEL_OVERRIDES[key]?.[value] ?? formatMetadataValue(value);
+  }
+
+  return formatMetadataValue(value);
+}
+
+function formatPilotMetadataValue(key: string, value: string) {
+  return METADATA_VALUE_LABEL_OVERRIDES[key]?.[value] ?? internalValueLabel(value);
+}
+
+function formatOptionalPilotMetadataValue(metadata: Record<string, unknown>, key: string) {
+  const value = getMetadataString(metadata, key);
+  return value ? formatPilotMetadataValue(key, value) : null;
 }
 
 function getDisplayMetadataEntries(metadata: Record<string, unknown>) {
@@ -246,15 +279,18 @@ function getPilotCorridorFields(item: QueueItem) {
   }
 
   return [
-    ['Assignment', getMetadataString(item.metadata, 'assignmentStatus')],
-    ['Org trust', getMetadataString(item.metadata, 'trustTier')],
-    ['Trust page', getMetadataString(item.metadata, 'organizationTrustPageStatus')],
-    ['Reveal', getMetadataString(item.metadata, 'revealStage')],
-    ['Candidate consent', getMetadataString(item.metadata, 'candidateConsentStatus')],
-    ['Decision', getMetadataString(item.metadata, 'decisionState')],
+    ['Assignment', formatOptionalPilotMetadataValue(item.metadata, 'assignmentStatus')],
+    ['Org trust', formatOptionalPilotMetadataValue(item.metadata, 'trustTier')],
+    ['Trust page', formatOptionalPilotMetadataValue(item.metadata, 'organizationTrustPageStatus')],
+    ['Reveal', formatOptionalPilotMetadataValue(item.metadata, 'revealStage')],
+    [
+      'Proof-review participant consent',
+      formatOptionalPilotMetadataValue(item.metadata, 'candidateConsentStatus'),
+    ],
+    ['Decision', formatOptionalPilotMetadataValue(item.metadata, 'decisionState')],
     ['Decision record', getMetadataString(item.metadata, 'decisionId')],
-    ['Engagement', getMetadataString(item.metadata, 'workflowStatus')],
-    ['Pending party', getMetadataString(item.metadata, 'pendingParty')],
+    ['Engagement', formatOptionalPilotMetadataValue(item.metadata, 'workflowStatus')],
+    ['Pending party', formatOptionalPilotMetadataValue(item.metadata, 'pendingParty')],
   ]
     .filter((entry): entry is [string, string] => Boolean(entry[1]))
     .slice(0, 8);
@@ -748,7 +784,7 @@ export function AdminVerificationDashboard() {
                                     <div key={`${item.id}:pilot:${label}`} className="text-sm">
                                       <span className="font-medium text-foreground">{label}:</span>{' '}
                                       <span className="break-words text-muted-foreground">
-                                        {internalValueLabel(value)}
+                                        {value}
                                       </span>
                                     </div>
                                   ))}
@@ -818,7 +854,7 @@ export function AdminVerificationDashboard() {
                                         {formatMetadataKey(key)}:
                                       </span>{' '}
                                       <span className="break-words text-muted-foreground">
-                                        {formatMetadataValue(value)}
+                                        {formatMetadataDisplayValue(key, value)}
                                       </span>
                                     </div>
                                   ))}

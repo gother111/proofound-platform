@@ -1,7 +1,7 @@
 # Proofound MVP Launch Runbook — Aligned Rewrite
 
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 **Status:** Aligned rewrite for current MVP  
 **Date:** 2026-03-11  
@@ -48,7 +48,7 @@ Manual queues are expected in MVP for:
 - proof items flagged by ingest or redaction risk
 - verification requests requiring human handling
 - privacy / reveal disputes
-- sensitive assignment or candidate complaints
+- sensitive assignment or proof-review participant complaints
 - engagement verification edge cases
 
 ---
@@ -61,14 +61,14 @@ The product must not launch broadly until all launch-blocking gates pass.
 
 - the shipped product matches the active Project Specification scope
 - no excluded org modules are active in launch UI
-- no public candidate directory exists
+- no public people directory exists
 - no vanity counters or public popularity surfaces exist
 - ATS / HRIS integrations are not active in launch flow
 
 ### 2.2 Privacy and trust gates
 
 - blind-by-default review is enforced in production
-- reveal requires candidate consent for identity-bearing access
+- reveal requires proof-review participant consent for identity-bearing access
 - public portfolio rendering does not leak private or review-stage-only information
 - file metadata and filenames do not leak sensitive information across public or review surfaces
 - scoped verification language is honest and conservative
@@ -104,7 +104,7 @@ The product must not launch broadly until all launch-blocking gates pass.
 - AI privacy redaction tests pass.
 - AI routes reject full private file payloads.
 - AI routes reject signed URLs and tokenized links.
-- AI routes do not produce scoring, ranking, fit verdicts, or hiring recommendations.
+- AI routes do not produce scoring, ranking, fit verdicts, or workflow recommendations.
 - AI can be disabled without breaking the core corridor.
 
 ---
@@ -122,7 +122,7 @@ Minimum smoke coverage before launch and after every production deployment:
 - publish public portfolio
 - progress to readiness checkpoint
 - accept / decline reveal request
-- receive decision and candidate-visible feedback
+- receive decision and participant-visible feedback
 - export data
 - delete account
 
@@ -132,7 +132,7 @@ Minimum smoke coverage before launch and after every production deployment:
 - invite collaborator with allowed role
 - create assignment draft
 - publish assignment
-- review privacy-safe candidates
+- review privacy-safe proof submissions
 - request intro
 - request reveal
 - schedule and reschedule interview
@@ -310,7 +310,7 @@ The runbook must not assume launch support for:
 - reviewer marketplace operations
 - sponsor / bounty marketplace operations
 - enterprise org analytics suites
-- public candidate browsing
+- public people browsing
 
 ---
 

@@ -12,6 +12,7 @@ import { emitIndividualOnboardingCompleted } from '@/lib/analytics/events';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
+import { log } from '@/lib/log';
 import { validateProofPackAnchor } from '@/lib/proofs/pack-anchor';
 import { attachUploadedFile } from '@/lib/uploads/lifecycle';
 import { resolveArtifactDisplayName } from '@/lib/uploads/privacy';
@@ -1085,9 +1086,9 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       }
 
       // Log RLS warning but continue with membership creation
-      console.log(
-        'Organization inserted but RLS blocked SELECT - this is expected, continuing with membership creation'
-      );
+      log.warn('organization.onboarding.insert_select_blocked_by_rls', {
+        orgId,
+      });
     }
 
     const memberInsert = await supabase.from('organization_members').insert({
@@ -1112,7 +1113,9 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       }
 
       // Log RLS warning but continue - membership was likely created
-      console.log('Membership inserted but RLS blocked SELECT - this is expected');
+      log.warn('organization.onboarding.member_select_blocked_by_rls', {
+        orgId,
+      });
     }
 
     const personaUpdate = await supabase

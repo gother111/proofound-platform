@@ -25,7 +25,7 @@ const shortlistItem: ShortlistItem = {
     status: 'pass',
   },
   reviewCard: {
-    candidateLabel: 'Candidate A',
+    candidateLabel: 'Submission A',
     strongestProof: {
       summary: 'Reduced verification turnaround with a proof-first queue.',
       outcome: 'Review time fell from days to hours.',
@@ -54,12 +54,31 @@ describe('OrgShortlistClient launch copy', () => {
     render(<OrgShortlistClient items={[shortlistItem]} />);
 
     expect(screen.getByRole('option', { name: 'Review priority' })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Candidate label, role focus, reason')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Submission label, role focus, reason')).toBeInTheDocument();
+    expect(screen.getByText('1 proof submission')).toBeInTheDocument();
     expect(screen.getByText('Policy check: pass')).toBeInTheDocument();
 
     expect(screen.queryByRole('option', { name: /rank band/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/fairness:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/1 candidate/i)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/candidate label/i)).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/name, role focus, value/i)).not.toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/marketplace|directory|leaderboard/i);
+  });
+
+  it('keeps fallback labels proof-submission scoped', () => {
+    render(
+      <OrgShortlistClient
+        items={[
+          {
+            ...shortlistItem,
+            reviewCard: undefined,
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText('Proof submission')).toBeInTheDocument();
+    expect(screen.queryByText('Candidate')).not.toBeInTheDocument();
   });
 });

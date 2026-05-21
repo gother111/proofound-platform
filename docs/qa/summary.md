@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # QA Summary
 
@@ -80,12 +80,12 @@ Invite-only Proof Artifact Text Extraction with Google Cloud Document AI OCR is 
 - page, file-size, rate, and app/service spend caps before Document AI calls
 - disabled/expired fallback makes no Cloud Run call
 - Cloud Run max instances is `1` initially and no more than `3` during beta
-- OCR output is draft text only and does not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or change match/review/trust/hiring state
+- OCR output is draft text only and does not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or change match/review/trust/workflow state
 
 Explicitly excluded from launch evidence:
 
 - CV import wizard
-- AI scoring, ranking, shortlisting, suitability, hiring recommendation, verification decision, or trust-state decision flows
+- AI scoring, ranking, shortlisting, suitability, workflow recommendation, verification decision, or trust-state decision flows
 - Gemini skill extractor for employer review
 - taxonomy shortlist, reranker, or Cloud Vision OCR
 

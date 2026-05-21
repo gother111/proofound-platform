@@ -189,7 +189,7 @@ export function DecisionDialog({
     {
       value: 'hire' as DecisionType,
       label: 'Hire',
-      description: 'Move to engagement confirmation; hiring and verification stay distinct',
+      description: 'Move to engagement confirmation; decision and verification stay distinct',
       icon: CheckCircle2,
       color: 'text-green-600 dark:text-green-400',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
@@ -225,7 +225,7 @@ export function DecisionDialog({
     {
       value: 'withdraw' as DecisionType,
       label: 'Withdraw',
-      description: 'Close the corridor without a hiring outcome',
+      description: 'Close the corridor without an engagement outcome',
       icon: AlertTriangle,
       color: 'text-stone-700 dark:text-stone-300',
       bgColor: 'bg-stone-50 dark:bg-stone-900/20',

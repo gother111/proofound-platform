@@ -274,7 +274,7 @@ describe('matching review contract', () => {
     );
     expect(rendered.summary).toContain('Verification requirements are not fully met yet.');
     expect(rendered.sections.manual_override).toContain(
-      'A reviewer manually shortlisted this candidate.'
+      'A reviewer manually shortlisted this proof-review participant.'
     );
     expect(rendered.sections.manual_override).toContain(
       'Reviewer note: Strong proof quality in recent work sample.'
@@ -364,6 +364,7 @@ describe('matching review contract', () => {
     });
     const serialized = JSON.stringify(reviewCard);
 
+    expect(reviewCard.candidateLabel).toMatch(/^Submission [A-Z0-9]{4}$/);
     expect(reviewCard.verification.summaryLabel).toBe('2 account-side checks recorded');
     expect(reviewCard.trustLabels).toContain('Account-side checks recorded');
     expect(serialized).not.toMatch(/scoped verification records present/i);

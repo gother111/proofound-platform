@@ -19,7 +19,6 @@ import { apiFetch } from '@/lib/api/fetch';
 interface SnoozedMatch {
   id: string;
   proofFitLabel?: string;
-  matchScore?: number;
   snoozedUntil: string;
   assignment: {
     id: string;
@@ -36,13 +35,6 @@ interface SnoozedMatch {
 
 interface SnoozedMatchesListProps {
   onRestored?: () => void;
-}
-
-function legacyProofFitLabel(score?: number): string {
-  if (typeof score !== 'number' || !Number.isFinite(score)) return 'Proof review needed';
-  if (score >= 0.8) return 'Strong proof alignment';
-  if (score >= 0.6) return 'Clear proof alignment';
-  return 'Proof review needed';
 }
 
 export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
@@ -197,7 +189,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
                       variant="secondary"
                       className="bg-proofound-forest/10 text-proofound-forest border-proofound-forest/20"
                     >
-                      {match.proofFitLabel ?? legacyProofFitLabel(match.matchScore)}
+                      {match.proofFitLabel ?? 'Proof review needed'}
                     </Badge>
 
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

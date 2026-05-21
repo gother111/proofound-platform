@@ -38,6 +38,12 @@ vi.mock('@/lib/analytics/events', () => ({
   emitAnalyticsEventAsync: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 vi.mock('@/lib/candidate-invite-policy', () => ({
   buildCandidateInvitePolicyError: vi.fn((decision: 'hold' | 'blocked') =>
     decision === 'blocked'
@@ -60,6 +66,7 @@ import { db } from '@/db';
 import { POST } from '@/app/api/candidate-invites/[token]/proof-card/route';
 import { resolveCandidateInvitePolicyContext } from '@/lib/candidate-invite-policy';
 import { upsertCanonicalProofCardSubmission } from '@/lib/canonical/submissions';
+import { log } from '@/lib/log';
 
 function mockAuthUser(user: { id: string; email: string } | null) {
   (createClient as any).mockResolvedValue({
@@ -235,5 +242,81 @@ describe('POST /api/candidate-invites/[token]/proof-card', () => {
         proofSnippetId: null,
       })
     );
+  });
+
+  it('keeps public Proof Packs out of assignment proof submissions', async () => {
+    mockSelectWithLimit([
+      {
+        id: 'invite-1',
+        orgId: 'org-1',
+        flowType: 'proof_card',
+        status: 'claimed',
+        expiresAt: new Date(Date.now() + 60_000),
+        claimedByProfileId: '11111111-1111-1111-1111-111111111111',
+        assignmentId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        matchId: null,
+        conversationId: null,
+      },
+    ]);
+    mockSelectWithLimit([
+      {
+        id: '22222222-2222-4222-8222-222222222222',
+        visibility: 'public',
+        revealGate: 'none',
+        publishedAt: null,
+      },
+    ]);
+    (resolveCandidateInvitePolicyContext as any).mockResolvedValueOnce({
+      organization: { id: 'org-1', orgTrustTier: 'reviewed', trustStatus: 'platform_reviewed' },
+      assignment: { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' },
+      policyEvaluation: {
+        decision: 'allow',
+        orgTrustTier: 'reviewed',
+        reasons: [],
+      },
+    });
+
+    const request = new NextRequest('http://localhost/api/candidate-invites/token/proof-card', {
+      method: 'POST',
+      body: JSON.stringify({
+        proofPackId: '22222222-2222-4222-8222-222222222222',
+        reviewConfirmed: true,
+      }),
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ token: 'token-value' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(payload.error).toBe(
+      'Assignment proof submissions can only submit an owner-only Proof Pack. Public pages and share links are not accepted for this flow.'
+    );
+    expect(upsertCanonicalProofCardSubmission).not.toHaveBeenCalled();
+  });
+
+  it('logs unexpected proof-card submission failures structurally while keeping the public response generic', async () => {
+    (db.select as any).mockImplementationOnce(() => {
+      throw new Error('proof-card invite query unavailable');
+    });
+
+    const request = new NextRequest('http://localhost/api/candidate-invites/token/proof-card', {
+      method: 'POST',
+      body: JSON.stringify({
+        proofPackId: '22222222-2222-4222-8222-222222222222',
+        reviewConfirmed: true,
+      }),
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ token: 'token-value' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to submit Proof Card' });
+    expect(log.error).toHaveBeenCalledWith('candidate_invite.proof_card.submit_failed', {
+      error: 'proof-card invite query unavailable',
+    });
+    expect(upsertCanonicalProofCardSubmission).not.toHaveBeenCalled();
   });
 });

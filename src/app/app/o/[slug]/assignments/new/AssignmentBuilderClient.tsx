@@ -683,7 +683,7 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
                 onClick={() => setEntryMode('import')}
               >
                 <FileText className="mr-2 h-4 w-4" />
-                Import existing job description
+                Import existing assignment brief
               </Button>
             </div>
 

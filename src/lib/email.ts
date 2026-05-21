@@ -177,7 +177,7 @@ export async function sendCandidateInviteEmail(
     });
   } catch (error) {
     recordLegacyEmailFailure('candidate_invite', error);
-    throw new Error('Failed to send candidate invite email');
+    throw new Error('Failed to send submission invite email');
   }
 }
 

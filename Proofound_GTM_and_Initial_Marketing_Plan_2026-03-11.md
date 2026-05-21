@@ -1,10 +1,10 @@
 # Proofound GTM and Initial Marketing Plan
 
 Doc Class: `governance`
-Last Verified: `2026-05-19`
+Last Verified: `2026-05-21`
 Launch status: `MVP pilot ready after restore drill approval`
 
-This file restores the GTM authority document referenced by the locked MVP source of truth. It keeps GTM scope narrow: a proof-first hiring corridor for design partners who need stronger signal than CVs, not a broad marketplace launch.
+This file restores the GTM authority document referenced by the locked MVP source of truth. It keeps GTM scope narrow: a proof-first assignment review corridor for design partners who need stronger signal than CVs, not a broad marketplace launch.
 
 ## ICP and Design-Partner Target List
 
@@ -28,14 +28,14 @@ Status: `PASS`
 
 Scope:
 
-- One organization, one assignment, one proof-first candidate review corridor.
-- Candidate profile and Proof Pack review stay blind-by-default until consented reveal.
+- One organization, one assignment, one proof-first assignment review corridor.
+- Proof-submission review stays blind-by-default until consented reveal.
 - Engagement verification is treated as a separate post-hire proof checkpoint.
 
 Timeline:
 
 - Week 0: owner onboarding, assignment quality review, launch smoke confirmation.
-- Weeks 1-2: candidate supply seeding and proof review.
+- Weeks 1-2: proof-submission supply seeding and proof review.
 - Weeks 3-4: intro, interview, decision, and engagement verification follow-through.
 
 Commercial posture:
@@ -46,7 +46,7 @@ Commercial posture:
 
 Case-study terms:
 
-- No candidate identity, private evidence, employer-specific facts, or reviewer notes are published without explicit consent.
+- No proof-review participant identity, private evidence, employer-specific facts, or reviewer notes are published without explicit consent.
 - Public story focuses on stronger signal than CVs and the quality of the proof-first workflow.
 
 ## Outbound and Homepage Wedge
@@ -71,39 +71,39 @@ Founder outbound wedge:
 
 - Lead with the pain: CVs and profiles overstate signal.
 - Offer the pilot: review work evidence and proof of outcomes before intro.
-- Promise one narrow result: a cleaner first hiring corridor, not a general talent platform.
+- Promise one narrow result: a cleaner first assignment-review corridor, not a general talent platform.
 
 Outbound opening:
 
 ```text
-We are piloting Proofound with a few teams that want to hire through proof, not profile theater. The pilot centers one real assignment, blind proof review, consented reveal, and engagement verification so the hiring signal comes from the work behind the claim.
+We are piloting Proofound with a few teams that want to review through proof, not profile theater. The pilot centers one real assignment, blind proof review, consented reveal, and engagement verification so the review signal comes from the work behind the claim.
 ```
 
-## Candidate Supply-Seeding Plan
+## Proof-Submission Supply-Seeding Plan
 
 Status: `PASS`
 
 Source channels:
 
-- Known trusted candidate referrals from the founder network.
-- Mission-aligned communities where candidates can provide actual work evidence.
-- Direct outreach to candidates with public portfolios or concrete proof artifacts.
+- Known trusted proof-submission referrals from the founder network.
+- Mission-aligned communities where participants can provide actual work evidence.
+- Direct outreach to individuals with public portfolios or concrete proof artifacts.
 
 Volume assumptions:
 
-- 10 to 15 candidate leads per pilot assignment.
-- 5 to 8 candidates with enough proof evidence to review.
-- 2 to 3 intro-eligible candidates after proof and readiness checks.
+- 10 to 15 proof-submission leads per pilot assignment.
+- 5 to 8 proof-review participants with enough proof evidence to review.
+- 2 to 3 intro-eligible participants after proof and readiness checks.
 
 Readiness criteria:
 
-- Candidate has a visible work artifact, case, contribution, or outcome.
-- Candidate can explain their role and evidence boundaries.
-- Candidate consents before identity or private context is revealed.
+- The proof-review participant has a visible work artifact, case, contribution, or outcome.
+- The proof-review participant can explain their role and evidence boundaries.
+- The proof-review participant consents before identity or private context is revealed.
 
 Operating loop:
 
-- Founder reviews candidate fit daily during an active pilot.
+- Founder reviews proof-submission fit daily during an active pilot.
 - Support / verification owner tracks proof quality and privacy edge cases.
 - Assignment owner receives only the proof-first review packet until reveal.
 
@@ -116,8 +116,8 @@ Status: `PASS`
 3. Draft one assignment with business value, real outcomes, proof expectations, and practical constraints.
 4. Run the assignment through `docs/internal-ops/assignment-quality-checklist.md`.
 5. Confirm the internal verification queue owner and escalation path from `docs/internal-ops/index.md`.
-6. Seed candidate supply only after the assignment is proof-reviewable.
-7. Review candidates blind-by-default until a consented reveal is requested.
+6. Seed proof-submission supply only after the assignment is proof-reviewable.
+7. Review proof submissions blind-by-default until a consented reveal is requested.
 8. Record interview, decision, hire, and engagement verification evidence separately.
 9. Run post-pilot feedback against proof quality, signal strength, privacy handling, and time-to-decision.
 

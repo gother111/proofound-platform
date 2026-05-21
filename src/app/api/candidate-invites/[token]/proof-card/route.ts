@@ -21,6 +21,7 @@ import {
   candidateInviteVisualFixturesEnabled,
   VISUAL_CANDIDATE_INVITE_TOKENS,
 } from '@/lib/candidate-invites/visual-fixtures';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +46,7 @@ const submitProofCardSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['proofPackId'],
-        message: 'Owner-only Proof Pack ID is required.',
+        message: 'Choose an owner-only Proof Pack before submitting assignment proof.',
       });
     }
 
@@ -269,7 +270,7 @@ export async function POST(
         return NextResponse.json(
           {
             error:
-              'Assignment applications can only submit an owner-only Proof Pack. Public pages and share links are not accepted for this flow.',
+              'Assignment proof submissions can only submit an owner-only Proof Pack. Public pages and share links are not accepted for this flow.',
           },
           { status: 409 }
         );
@@ -341,7 +342,9 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Failed to submit proof card for invite:', error);
+    log.error('candidate_invite.proof_card.submit_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Failed to submit Proof Card' }, { status: 500 });
   }
 }

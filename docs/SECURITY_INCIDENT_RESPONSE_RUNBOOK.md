@@ -54,7 +54,7 @@ Do not preserve in shared docs/tickets:
 
 - passwords, session cookies, auth headers, API keys, provider tokens, service-role keys
 - private proof content, raw evidence, uploaded file contents, private storage paths, signed URLs, filenames
-- hidden candidate identity details before consent
+- hidden identity details before reveal consent
 - verifier private data, allegation text, admin notes, internal queue payloads
 - raw request/response bodies, raw AI prompts, raw model responses, diagnostic dumps
 
@@ -89,9 +89,9 @@ Verification:
 
 Examples:
 
-- candidate identity exposed before consent
+- proof-review participant identity exposed before consent
 - contact details visible in blind review
-- reveal request approved without candidate consent
+- reveal request approved without proof-review participant consent
 
 Containment:
 

@@ -79,7 +79,7 @@ Check:
 3. review queue, shortlist/matching, and proof-submission cards;
 4. reason-code explanations;
 5. intro request;
-6. reveal request and candidate consent;
+6. reveal request and proof-review participant consent;
 7. interview scheduling/reschedule;
 8. decision recording and engagement verification.
 

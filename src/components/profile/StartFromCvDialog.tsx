@@ -269,7 +269,7 @@ export function StartFromCvDialog({ surface, onApplyComplete }: StartFromCvDialo
                 <li>Use it only as optional scaffolding before creating assignment proof.</li>
               ) : null}
               <li>
-                Nothing is used for scoring, ranking, shortlisting, matching, or hiring decisions.
+                Nothing is used for scoring, ranking, shortlisting, matching, or workflow decisions.
               </li>
             </ul>
           </div>

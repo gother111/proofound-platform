@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireApiAuth } from '@/lib/api/auth';
+import { log } from '@/lib/log';
 
 type OrganizationRow = {
   id: string;
@@ -42,7 +43,10 @@ export async function GET(_request: NextRequest) {
       .limit(100);
 
     if (error) {
-      console.error('Error fetching organizations:', error);
+      log.error('organizations.list.fetch_failed', {
+        userId: user.id,
+        error: error.message,
+      });
       return NextResponse.json({ error: 'Failed to fetch organizations' }, { status: 500 });
     }
 
@@ -67,7 +71,9 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json({ organizations: normalizedOrganizations });
   } catch (error) {
-    console.error('Error in organizations API:', error);
+    log.error('organizations.list.unhandled_error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

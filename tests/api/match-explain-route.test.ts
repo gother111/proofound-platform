@@ -152,7 +152,7 @@ describe('GET /api/match/explain/[matchId]', () => {
       },
     });
     mocks.buildProofFirstReviewCard.mockReturnValue({
-      candidateLabel: 'Candidate A7F2',
+      candidateLabel: 'Submission A7F2',
       strongestProof: {
         summary: 'Proof-backed delivery signal.',
         outcome: 'Improved a launch corridor.',
@@ -247,7 +247,7 @@ describe('GET /api/match/explain/[matchId]', () => {
     expect(response.status).toBe(200);
     expect(body.reviewCard).toEqual(
       expect.objectContaining({
-        candidateLabel: 'Candidate A7F2',
+        candidateLabel: 'Submission A7F2',
         strongestProof: expect.objectContaining({
           summary: 'Proof-backed delivery signal.',
           outcome: 'Improved a launch corridor.',

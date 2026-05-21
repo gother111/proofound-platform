@@ -39,7 +39,6 @@ describe('MatchResultCard', () => {
       <MatchResultCard
         result={{
           id: 'match-individual-1',
-          score: 0.86,
           assignmentId: 'assignment-1',
           assignment: {
             role: 'Proof operations lead',
@@ -47,11 +46,11 @@ describe('MatchResultCard', () => {
             hoursMin: 24,
             hoursMax: 32,
           },
-          contributions: {
-            proof_fit: 0.91,
-            skills_fit: 0.88,
-            verification_fit: 0.84,
-          },
+          proofSignals: [
+            { key: 'proof_fit', support: 'Primary reason' },
+            { key: 'skills_fit', support: 'Primary reason' },
+            { key: 'verification_fit', support: 'Clear support' },
+          ],
         }}
         variant="blind"
       />
@@ -68,12 +67,41 @@ describe('MatchResultCard', () => {
     expect(screen.queryByText('91%')).not.toBeInTheDocument();
   });
 
+  it('keeps fallback card titles assignment and proof-submission scoped', () => {
+    render(
+      <>
+        <MatchResultCard
+          result={{
+            id: 'match-individual-fallback',
+            assignmentId: 'assignment-fallback',
+            proofSignals: [{ key: 'proof_fit', support: 'Clear support' }],
+          }}
+          variant="blind"
+        />
+        <MatchResultCard
+          result={{
+            id: 'match-org-fallback',
+            profileId: 'profile-fallback',
+            reviewStage: 'blind_review',
+            revealScope: 'blind',
+            proofSignals: [{ key: 'proof_fit', support: 'Clear support' }],
+          }}
+          variant="blind"
+        />
+      </>
+    );
+
+    expect(screen.getByText('Assignment Match')).toBeInTheDocument();
+    expect(screen.getByText('Proof Submission')).toBeInTheDocument();
+    expect(screen.queryByText('Opportunity Match')).not.toBeInTheDocument();
+    expect(screen.queryByText('Candidate Match')).not.toBeInTheDocument();
+  });
+
   it('renders proof-first org review cards without score-first clutter', () => {
     render(
       <MatchResultCard
         result={{
           id: 'match-1',
-          score: 0.82,
           profileId: 'candidate-1',
           reviewStage: 'blind_review',
           revealScope: 'blind',
@@ -84,10 +112,10 @@ describe('MatchResultCard', () => {
             status: 'pass',
           },
           reviewCard: {
-            candidateLabel: 'Candidate A7F2',
+            candidateLabel: 'Submission A7F2',
             strongestProof: {
-              summary: 'Led a privacy-safe launch proof for a complex hiring workflow.',
-              outcome: 'Reduced review time while keeping candidate identity masked.',
+              summary: 'Led a privacy-safe launch proof for a complex assignment-review workflow.',
+              outcome: 'Reduced review time while keeping identity reveal masked.',
               ownership: 'Owned the end-to-end review corridor changes.',
               anchorContext: 'Anchored in prior project work',
               freshnessLabel: 'Fresh',
@@ -112,15 +140,15 @@ describe('MatchResultCard', () => {
       />
     );
 
-    expect(screen.getByText('Candidate A7F2')).toBeInTheDocument();
+    expect(screen.getByText('Submission A7F2')).toBeInTheDocument();
     expect(screen.getByText('Blind by default')).toBeInTheDocument();
     expect(screen.getByText('High-priority proof review')).toBeInTheDocument();
     expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
     expect(
-      screen.getByText('Led a privacy-safe launch proof for a complex hiring workflow.')
+      screen.getByText('Led a privacy-safe launch proof for a complex assignment-review workflow.')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Outcome: Reduced review time while keeping candidate identity masked.')
+      screen.getByText('Outcome: Reduced review time while keeping identity reveal masked.')
     ).toBeInTheDocument();
     expect(
       screen.getByText('Ownership: Owned the end-to-end review corridor changes.')
@@ -138,6 +166,8 @@ describe('MatchResultCard', () => {
     expect(screen.queryByText('82% Match')).not.toBeInTheDocument();
     expect(screen.queryByText('Match breakdown:')).not.toBeInTheDocument();
     expect(screen.queryByText('Top 10')).not.toBeInTheDocument();
+    expect(screen.queryByText(/complex hiring workflow/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/candidate identity masked/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /snooze/i })).not.toBeInTheDocument();
   });
 
@@ -146,7 +176,6 @@ describe('MatchResultCard', () => {
       <MatchResultCard
         result={{
           id: 'match-policy-protected',
-          score: 0.82,
           profileId: 'candidate-1',
           reviewStage: 'blind_review',
           revealScope: 'blind',
@@ -157,10 +186,10 @@ describe('MatchResultCard', () => {
             status: 'suppressed',
           },
           reviewCard: {
-            candidateLabel: 'Candidate A7F2',
+            candidateLabel: 'Submission A7F2',
             strongestProof: {
-              summary: 'Led a privacy-safe launch proof for a complex hiring workflow.',
-              outcome: 'Reduced review time while keeping candidate identity masked.',
+              summary: 'Led a privacy-safe launch proof for a complex assignment-review workflow.',
+              outcome: 'Reduced review time while keeping identity reveal masked.',
               ownership: 'Owned the end-to-end review corridor changes.',
               anchorContext: 'Anchored in prior project work',
               freshnessLabel: 'Fresh',
@@ -191,23 +220,22 @@ describe('MatchResultCard', () => {
       <MatchResultCard
         result={{
           id: 'match-individual-2',
-          score: 0.86,
           assignmentId: 'assignment-2',
           assignment: {
             role: 'Proof operations lead',
             locationMode: 'remote',
           },
-          contributions: {
-            proof_fit: 0.91,
-            skills_fit: 0.88,
-            verification_fit: 0.84,
-          },
+          proofSignals: [
+            { key: 'proof_fit', support: 'Primary reason' },
+            { key: 'skills_fit', support: 'Primary reason' },
+            { key: 'verification_fit', support: 'Clear support' },
+          ],
         }}
         variant="blind"
       />
     );
 
-    expect(screen.getByText('Strong proof alignment')).toBeInTheDocument();
+    expect(screen.getByText('Proof signals available')).toBeInTheDocument();
     expect(screen.getByText('Blind by default')).toBeInTheDocument();
     expect(
       screen.getByText('Verification check visible only within this review stage')
@@ -215,6 +243,8 @@ describe('MatchResultCard', () => {
     expect(screen.queryByText(/% proof fit/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/ranking band/i)).not.toBeInTheDocument();
     expect(screen.queryByText('91%')).not.toBeInTheDocument();
+    expect(screen.queryByText('Strong proof alignment')).not.toBeInTheDocument();
+    expect(screen.queryByText('Clear proof alignment')).not.toBeInTheDocument();
     expect(screen.queryByText(/verified profile/i)).not.toBeInTheDocument();
   });
 });

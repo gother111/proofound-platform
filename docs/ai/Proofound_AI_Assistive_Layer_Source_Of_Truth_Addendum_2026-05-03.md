@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-21`
 
 # Proofound MVP AI Assistive Layer Addendum
 
@@ -14,7 +14,7 @@
 
 This addendum defines the allowed AI layer for Proofound MVP.
 
-The AI layer is not a new product direction. It is an optional assistive layer inside the existing proof-first, privacy-first hiring credibility corridor.
+The AI layer is not a new product direction. It is an optional assistive layer inside the existing proof-first assignment review corridor.
 
 The purpose of AI in the MVP is to reduce user friction and improve the quality of existing MVP objects:
 
@@ -47,7 +47,7 @@ Until those gates pass, each feature remains disabled-by-default and must fall b
 
 Proof Artifact Text Extraction using Google Cloud Document AI OCR is a separate authenticated-user beta. Start from CV may also use the guarded Document AI OCR path as an authenticated-individual beta when `START_FROM_CV_OPEN_BETA_ENABLED=true`. These beta paths are not the archived CV import wizard, not employer-side parsing, and not a broad production OCR platform.
 
-OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist candidates, or affect match, review, verification, reveal, trust-state, or hiring-decision state.
+OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist proof-review participants, or affect match, review, verification, reveal, trust-state, or workflow-decision state.
 
 Every OCR request requires explicit user consent per document and must be feature-flagged, authenticated, page-limited, file-size-limited, spend-capped, expiry-gated through the August 3, 2026 beta cutoff, and safe to disable.
 
@@ -58,11 +58,11 @@ Internal status checks, synthetic smoke tests, and provider diagnostics may exis
 Explicitly excluded from the MVP and this rollout:
 
 - archived CV import wizard and broad OCR/import flows
-- AI candidate scoring
+- AI proof-review participant scoring
 - AI ranking
 - AI shortlisting
 - AI suitability judgments
-- AI hiring recommendations
+- AI workflow recommendations
 - AI verification decisions
 - AI trust-state decisions
 - Gemini skill extractor for employer review
@@ -91,12 +91,12 @@ This layer may help users:
 
 The locked MVP definition remains unchanged:
 
-- Proofound is a proof-first, privacy-first hiring credibility corridor.
+- Proofound is a proof-first assignment review corridor.
 - Proof Packs remain the canonical proof object.
 - Public portfolios remain selected output surfaces derived from Proof Packs.
 - Assignment clarity remains central to the organization corridor.
 - Review remains blind by default.
-- Identity reveal remains candidate-consented.
+- Identity reveal remains proof-review participant consented.
 - Verification remains claim-scoped.
 - Proof and review remain explainable and auditable.
 
@@ -104,13 +104,13 @@ The locked MVP definition remains unchanged:
 
 The AI layer must not introduce:
 
-- AI candidate scoring
+- AI proof-review participant scoring
 - AI ranking
 - AI shortlist automation
-- AI hiring recommendations
+- AI workflow recommendations
 - AI fit verdicts
 - black-box review intelligence
-- automatic candidate evaluation
+- automatic proof-review participant evaluation
 - automatic reveal decisions
 - automatic verification decisions
 - full-file AI analysis by default
@@ -169,11 +169,11 @@ Allowed outputs:
 
 Hard limits:
 
-- must not produce candidate scoring rubrics
+- must not produce proof-review participant scoring rubrics
 - must not create ranking logic
 - must not introduce discriminatory criteria
-- must not use private candidate data
-- must not imply that AI evaluates candidates
+- must not use private proof-review participant data
+- must not imply that AI evaluates proof-review participants
 
 MVP status: allowed in MVP v1.
 
@@ -195,7 +195,7 @@ Allowed outputs:
 Hard limits:
 
 - must not ask for vague praise
-- must not ask the verifier to assess overall candidate quality
+- must not ask the verifier to assess overall proof-review participant quality
 - must not expose hidden private context
 - must not include verifier email or private verifier contact details in the model prompt
 - must not send the request automatically
@@ -239,7 +239,7 @@ MVP v1 ruling: postponed.
 
 Reason:
 
-- this feature is too close to candidate evaluation
+- this feature is too close to proof-review participant evaluation
 - it may be misunderstood as AI review intelligence
 - it may weaken the trust thesis if introduced before strong deterministic review semantics are proven
 
@@ -312,7 +312,7 @@ Every AI feature in MVP must satisfy all of these rules:
 
 Use this disclosure near the first AI action and in settings:
 
-> This assistant sends selected text fields to Google Gemini to suggest edits. It does not receive your full files by default, does not score candidates, and does not make hiring decisions. Review every suggestion before saving.
+> This assistant sends selected text fields to Google Gemini to suggest edits. It does not receive your full files by default, does not score proof-review participants, and does not make interview, engagement, or workflow decisions. Review every suggestion before saving.
 
 For privacy checks:
 
@@ -327,11 +327,11 @@ AI must not lead the public story.
 Do not use homepage or sales language such as:
 
 - AI-powered hiring intelligence
-- AI candidate matching
+- AI proof-review participant matching
 - AI recruiter
 - AI scoring
 - AI talent intelligence
-- automated hiring decisions
+- automated workflow decisions
 
 Allowed plain-language phrasing:
 
@@ -357,7 +357,7 @@ The AI layer is acceptable for MVP only if all criteria are met:
 - All selected features work without AI through deterministic fallback states.
 - No model call receives full private files by default.
 - No model call receives hidden identity-bearing review data.
-- No route produces score, rank, fit verdict, or hiring recommendation.
+- No route produces score, rank, fit verdict, or workflow recommendation.
 - Every model output is JSON schema validated.
 - Every AI action is rate limited.
 - Every AI action is spend-capped.

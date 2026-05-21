@@ -129,7 +129,7 @@ export const StructuredFeedbackSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['reasonCode'],
-        message: 'Candidate feedback must use a candidate-facing reason code.',
+        message: 'Proof-review participant feedback must use a participant-facing reason code.',
       });
     }
 
@@ -176,14 +176,14 @@ export const FALLBACK_COPY: Record<
       ],
     },
     organization: {
-      title: 'Candidate supply is still thin for this assignment.',
+      title: 'Qualified submission supply is still thin for this assignment.',
       detail:
         'There are not enough qualified introductions yet for this assignment. Review remains open while quality protections stay on.',
-      statusLabel: 'Candidate supply thin',
+      statusLabel: 'Submission supply thin',
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },
@@ -207,7 +207,7 @@ export const FALLBACK_COPY: Record<
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },
@@ -231,7 +231,7 @@ export const FALLBACK_COPY: Record<
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },
@@ -250,12 +250,12 @@ export const FALLBACK_COPY: Record<
     organization: {
       title: 'Verification is still in progress for this review set.',
       detail:
-        'Stronger trust actions stay paused while review can continue with conservative trust labels and blind-profile review.',
+        'Stronger trust actions stay paused while review can continue with conservative trust labels and blind-submission review.',
       statusLabel: 'Trust pending',
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },
@@ -279,7 +279,7 @@ export const FALLBACK_COPY: Record<
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },
@@ -303,7 +303,7 @@ export const FALLBACK_COPY: Record<
       nextActions: [
         'Broaden assignment scope',
         'Request more evidence on strong fits',
-        'Keep reviewing blind profiles',
+        'Keep reviewing blind submissions',
       ],
     },
   },

@@ -3,7 +3,7 @@
 const points = [
   {
     title: 'Clearer inputs',
-    body: 'Define the work, expected outcomes, and useful evidence before applications start.',
+    body: 'Define the work, expected outcomes, and useful evidence before proof submissions start.',
   },
   {
     title: 'Better early review',

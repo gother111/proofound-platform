@@ -43,6 +43,12 @@ type FeedbackApiResponse = {
   responses: FeedbackResponse[];
 };
 
+function feedbackDirectionLabel(direction: FeedbackResponse['direction']) {
+  return direction === 'candidate_to_org'
+    ? 'Participant → Organization'
+    : 'Organization → Participant';
+}
+
 async function loadFeedback(interviewId: string): Promise<FeedbackApiResponse | null> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
   const res = await fetch(`${baseUrl}/api/feedback/${interviewId}`, { cache: 'no-store' });
@@ -69,8 +75,7 @@ function ResponseList({
           <Card key={response.id}>
             <CardHeader>
               <CardTitle className="text-base">
-                {template?.name || 'Feedback'} ·{' '}
-                {response.direction === 'candidate_to_org' ? 'Candidate → Org' : 'Org → Candidate'}
+                {template?.name || 'Feedback'} · {feedbackDirectionLabel(response.direction)}
               </CardTitle>
               <p className="text-xs text-muted-foreground">
                 Shared{' '}

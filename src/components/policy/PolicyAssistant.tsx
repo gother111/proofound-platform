@@ -56,7 +56,7 @@ const explainPolicyQuestion = (question: string): Message => {
         'Your Public Page should show only launch-safe proof context that you have chosen to publish. Private notes, hidden proof, reveal-only fields, and organization review data stay private unless a specific consent flow says otherwise.',
       keyPoints: [
         'Public Page visibility is controlled separately from private profile context.',
-        'Reveal details require an active request and candidate consent.',
+        'Reveal details require an active request and proof-review participant consent.',
         'Private proof and admin review notes must not appear on public pages.',
       ],
       relatedSections: ['Privacy', 'Public Page', 'Reveal consent'],

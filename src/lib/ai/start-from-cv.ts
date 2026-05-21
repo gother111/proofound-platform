@@ -1007,7 +1007,7 @@ function buildGeminiPrompt(text: string, privacyWarnings: string[]) {
   return [
     'You are Proofound Start from CV.',
     'Convert a user-owned CV into private editable drafts only.',
-    'Do not score, rank, shortlist, match, recommend roles, infer candidate quality, infer seniority as fact, verify, or publish.',
+    'Do not score, rank, shortlist, match, recommend roles, infer proof-review participant quality, infer seniority as fact, verify, or publish.',
     'Unsupported skills must be unsupported_draft, require proof, require user confirmation, and give no trust, matching, or verification lift.',
     'Use source snippet references, not full raw text. Keep organization and institution labels private by default.',
     'Return JSON only matching the schema.',

@@ -87,7 +87,7 @@ function buildProjection() {
         {
           key: 'context',
           label: 'Context',
-          value: 'Industry: Proof-first hiring',
+          value: 'Industry: Proof-first assignment review',
           state: 'ready',
           sources: [
             {

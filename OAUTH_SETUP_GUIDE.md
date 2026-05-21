@@ -1,7 +1,7 @@
 # Connected Provider Setup Reference
 
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 This document is a retained provider setup reference. It is not a launch gate.
 
@@ -19,7 +19,7 @@ Use the authority stack in `AGENTS.md`, `Proofound_MVP_Locked_Source_of_Truth_20
 For the current MVP, operators should verify that interview scheduling works with:
 
 - assignment context visible to the organization reviewer
-- candidate consent preserved before reveal
+- proof-review participant consent preserved before reveal
 - a clear interview time or manual meeting link
 - decision and engagement-verification follow-up intact
 
@@ -65,7 +65,7 @@ When a connected provider is intentionally enabled, save the evidence in the cur
 - route tested
 - expected and actual callback result
 - scheduling result, including whether a manual fallback remains available
-- privacy review: no private proof content, candidate contact details, or hidden candidate identity leaked before consent
+- privacy review: no private proof content, proof-review participant contact details, or hidden proof-review participant identity leaked before consent
 
 ## Current Launch Checks
 

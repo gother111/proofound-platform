@@ -376,7 +376,7 @@ describe('public portfolio projection', () => {
           contextJson: {
             contextCompanySize: '11-50',
             contextFocusArea: 'Proof systems',
-            contextIndustryDomain: 'Proof-first hiring',
+            contextIndustryDomain: 'Proof-first assignment review',
             contextScope: 'global',
             contextOperatingEnvironment: 'Remote launch team',
           },
@@ -416,7 +416,7 @@ describe('public portfolio projection', () => {
           key: 'context',
           state: 'ready',
           value:
-            'Industry: Proof-first hiring · Operating environment: Remote launch team · Scope: global',
+            'Industry: Proof-first assignment review · Operating environment: Remote launch team · Scope: global',
         }),
       ],
     });

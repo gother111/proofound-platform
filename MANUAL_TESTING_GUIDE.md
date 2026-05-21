@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Manual Testing Guide
 
@@ -8,7 +8,7 @@ This guide describes the current human QA path for the locked Proofound MVP. It 
 ## Ground Rules
 
 - Use the authority order in `AGENTS.md` when manual findings conflict with older docs.
-- Treat proof-first hiring, Proof Packs, assignments, verification, consented reveal, interviews, decisions, and engagement verification as the active corridor.
+- Treat proof-first assignment review, Proof Packs, assignments, verification, consented reveal, interviews, decisions, and engagement verification as the active corridor.
 - Treat manual-link interview scheduling as the default interview path.
 - Run connected-provider checks only when a target explicitly enables that provider.
 - Record target URL, account role, viewport, result, and any remaining `UNVERIFIED` item.
@@ -34,7 +34,7 @@ Checks:
 - Signup and login have obvious primary actions and recoverable error states.
 - Footer/legal links are reachable.
 - Public individual and organization pages either render safe public projections or a safe unavailable state.
-- Public surfaces do not expose private proof, hidden verification state, candidate contact details, reveal status, or admin diagnostics.
+- Public surfaces do not expose private proof, hidden verification state, proof-review participant contact details, reveal status, or admin diagnostics.
 
 ## 2. Individual Corridor
 
@@ -76,9 +76,9 @@ Checks:
 
 - Organization onboarding/profile/trust surfaces stay focused on the current organization, not broad directory behavior.
 - Assignment list/create/edit/review/publish paths make the primary object and next action obvious.
-- Candidate proof review cards explain why a match is relevant without ranking theater or hidden identity leaks.
+- Proof-submission review cards explain why a match is relevant without ranking theater or hidden identity leaks.
 - Matching and shortlist shortcuts stay inside the assignment review corridor.
-- Intro request, reveal request, candidate consent, interview scheduling/reschedule, decision recording, hire/engage, and engagement verification are understandable.
+- Intro request, reveal request, proof-review participant consent, interview scheduling/reschedule, decision recording, engage/close, and engagement verification are understandable.
 - Team/role behavior, if active for the target, enforces current permissions.
 - Empty, loading, error, disabled, success, archived/gated, and mobile states are covered where relevant.
 

@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Proofound Backlog Dependency Map
 
@@ -18,7 +18,7 @@
 flowchart LR
   P0["Phase 0<br/>Scope lock and route-surface reduction"] --> P1["Phase 1<br/>Foundation and individual corridor integrity"]
   P1 --> P2["Phase 2<br/>Trust and review canonicalization"]
-  P2 --> P3["Phase 3<br/>Hiring corridor and assignment runtime hardening"]
+  P2 --> P3["Phase 3<br/>Assignment-review corridor and assignment runtime hardening"]
   P3 --> P4["Phase 4<br/>Pilot hardening and launch ops"]
   P4 --> P5["Phase 5<br/>Launch packaging and governance cleanup"]
 ```

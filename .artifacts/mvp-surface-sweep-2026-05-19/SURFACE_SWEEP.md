@@ -3485,3 +3485,1174 @@ Browser evidence:
 - Reframed the decision note helper so private team notes are simply not sent through workflow notifications, avoiding a candidate-facing channel promise in the dialog copy.
 - Extended launch-operations contract and launch-gate coverage so `candidate set` and `candidate-facing workflow notifications` cannot return to these active surfaces.
 - Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/launch-operations-contract.test.ts tests/scripts/launch-gate-config.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (3 files / 147 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted active-source stale-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Match Result Card Test Fixture Copy
+
+- Timestamp: 2026-05-21 01:21 CEST.
+- Continued the active test-surface sweep after finding `MatchResultCard` UI fixtures still rendered `complex hiring workflow` and `candidate identity masked` proof-story text.
+- Reframed the organization review card fixture around a complex assignment-review workflow and masked identity reveal, preserving the same rendered component behavior and score/rank guard expectations.
+- Added negative assertions in the match-result-card test so the stale hiring-workflow and candidate-identity fixture phrases cannot return to that active UI test surface.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/match-result-card.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 128 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale fixture-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Launch Fallback Submission Copy
+
+- Timestamp: 2026-05-21 01:24 CEST.
+- Continued the active launch fallback copy sweep after finding organization fallback actions and docs still sent reviewers to `blind profiles`, and the low-supply fallback still described `Candidate supply`.
+- Reframed organization fallback copy around qualified submission supply, blind submissions, and blind-submission review while preserving the same fallback modes, action counts, and conservative trust/intro behavior.
+- Updated the active launch-operations guide so the documented organization next action is `keep reviewing blind submissions`.
+- Extended launch-operations contract and launch-gate coverage so `Candidate supply`, `blind profiles`, and `blind-profile review` cannot return to the active fallback copy or launch-operations guide.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/launch-operations-contract.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 130 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale fallback-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Launch Supply-Seeding Language
+
+- Timestamp: 2026-05-21 01:29 CEST.
+- Continued the active launch-doc and final-checklist sweep after finding the master checklist, signoff template, final launch checklist label, execution checklist, and launch operations guide still used candidate-supply language.
+- Reframed active launch checklist/signoff labels around `Proof-submission supply-seeding`, and reframed final checklist/execution checklist summaries around proof-submission supply while preserving the existing GTM authority evidence pattern.
+- Reframed the launch operations risk scenario from `low candidate supply` to `low proof-submission supply`, while keeping internal fallback mode identifiers unchanged.
+- Extended launch-gate coverage so active operator docs, signoff template, and launch operations guidance require proof-submission supply wording and reject the stale candidate-supply phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts src/lib/launch/__tests__/final-launch-checklist.test.ts --reporter=verbose` (2 files / 133 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted active launch-supply wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Matching Organization Source Label Copy
+
+- Timestamp: 2026-05-21 01:33 CEST.
+- Continued the active organization matching source-surface sweep after finding the organization matching view still labeled its two-column review area as `Candidate Review Console` in source.
+- Reframed the source label as `proof-submission review console` to keep future-maintainer/source-facing wording aligned with rendered proof-submission copy.
+- Extended launch-gate coverage so active matching review source requires proof-submission review console wording and rejects the stale `Candidate Review Console`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/matching-organization-view-beta.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 128 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted active matching-review source-label scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Internal Ops Participant Privacy Guidance
+
+- Timestamp: 2026-05-21 01:35 CEST.
+- Continued the active internal-ops support-copy sweep after finding operator guidance in `src/lib/internal-ops/queue.ts` still framed reveal/privacy handling around `candidate identity` and `organization and candidate private context`.
+- Reframed the reveal summary and engagement-verification checklist around participant identity details and participant private context, keeping metadata field names and role-specific workflow state unchanged.
+- Added internal-ops queue coverage proving the projected operator details use participant-scoped privacy guidance, and extended launch-gate coverage so the stale candidate-scoped operator phrases cannot return to active support/recovery copy.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/internal-ops-queue.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 132 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted internal-ops privacy wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Verification SOP Escalation Wording
+
+- Timestamp: 2026-05-21 01:37 CEST.
+- Continued the active internal-ops SOP sweep after finding `docs/internal-ops/verification-review-sop.md` still escalated around a `candidate-facing dispute` and a `live hiring decision`.
+- Reframed those SOP escalation triggers around reveal/privacy disputes and live intro, interview, or decision paths while preserving the same owner, SLA, evidence, and audit requirements.
+- Extended launch-gate coverage so the verification SOP requires the narrower reveal/privacy and workflow-path wording and rejects the stale candidate-facing/hiring-decision phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 124 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted verification SOP wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Retained iOS Planning Detail Label
+
+- Timestamp: 2026-05-21 01:39 CEST.
+- Continued the retained mobile planning sweep after finding `docs/mobile/IOS_PARITY_MATRIX.md` still described organization flow O-09 as `Candidate Deep-Dive` under `Organization/Candidates/Detail`.
+- Reframed that post-MVP planning row as `Proof Submission Review` under `Organization/Matching/SubmissionDetail`, keeping the matrix explicitly outside active MVP launch evidence while preventing stale candidate-detail naming from becoming a future implementation seed.
+- Extended launch-gate coverage so the retained iOS parity matrix requires the proof-submission review label/module and rejects the stale candidate deep-dive label/module.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 124 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted retained iOS O-09 wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Participant-Scoped Privacy And Public Projection Copy
+
+- Timestamp: 2026-05-21 01:41 CEST.
+- Continued the active privacy/public-projection copy sweep after finding `docs/structured-logging.md` still warned against `candidate private content` and the public projection visual fixture still described `candidate-facing explanation copy`.
+- Reframed the structured logging prohibition around participant private content while preserving the stricter hidden candidate identity warning for pre-consent reveal privacy.
+- Reframed the public projection fixture evidence summary around participant-facing explanation copy, keeping the fixture public-safe and proof-submission oriented.
+- Extended launch-gate coverage so active structured logging docs require participant private content wording and active support/projection copy rejects the stale candidate-facing explanation phrase.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 124 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted participant/candidate wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Start From CV Workflow Decision Copy
+
+- Timestamp: 2026-05-21 01:43 CEST.
+- Continued the active Start From CV surface sweep after finding the rendered privacy/scaffolding bullets still said extracted CV data is not used for `hiring decisions`.
+- Reframed the user-facing guardrail around workflow decisions, preserving the existing no-publish/no-verify/no-score/no-rank/no-shortlist/no-match promises and the private draft-only behavior.
+- Added UI coverage for the dialog copy and launch-gate coverage so Start From CV keeps workflow-decision wording and rejects the stale hiring-decision phrase.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/start-from-cv-dialog.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 125 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted Start From CV decision-wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Match Card Fallback Titles
+
+- Timestamp: 2026-05-21 01:46 CEST.
+- Continued the active matching-card sweep after finding `MatchResultCard` still used fallback titles `Candidate Match` and `Opportunity Match` when assignment/review labels were missing.
+- Reframed the individual fallback as `Assignment Match` and the organization fallback as `Proof Submission`, including the older org-card return branch that is used before the generic card path.
+- Added MatchResultCard UI coverage for both fallback branches and extended launch-gate coverage so active matching review source requires the assignment/proof-submission fallbacks and rejects the stale candidate/opportunity match labels.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/match-result-card.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 129 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted matching-card fallback-title scan, and `git diff --check`. The first focused run exposed the older org-card branch, which was corrected before the passing rerun. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Organization Shortlist Proof-Submission Copy
+
+- Timestamp: 2026-05-21 01:49 CEST.
+- Continued the active organization shortlist sweep after finding `OrgShortlistClient` still used candidate-scoped count, search placeholder, empty-state, and fallback-label copy.
+- Reframed the shortlist count, search placeholder, empty-state, and missing-label fallback around proof submissions while preserving progressive reveal, assignment filtering, review-priority sorting, and the existing `candidateLabel` data contract.
+- Added OrgShortlistClient UI coverage for the proof-submission scoped copy and extended launch-gate coverage so the stale candidate placeholder/empty/fallback labels cannot return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/org-shortlist-client.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 127 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted organization shortlist copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Matching Organization Submission Count Copy
+
+- Timestamp: 2026-05-21 01:54 CEST.
+- Continued the active organization matching view sweep after finding assignment card counts still rendered `match/matches` and unlabeled review rows still fell back to `Candidate #`.
+- Reframed count copy around proof submissions and row fallback around `Submission #`, keeping `candidateCount` and review-card data contracts unchanged.
+- Added UI coverage for the matching organization view count/fallback labels and extended launch-gate coverage to require `Submission #` while rejecting old `Candidate #` and match-count expressions.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/matching-organization-view-beta.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 130 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted matching organization wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. The focused run also printed expected stderr from an intentionally unmocked explanation fetch in the new fallback-label test, while the assertions passed. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Masked Conversation Submission Handles
+
+- Timestamp: 2026-05-21 01:57 CEST.
+- Continued the active privacy/messaging sweep after finding masked conversation handles still generated `Candidate #...` for the individual side in the shared conversation resolver and two active conversation-creation routes.
+- Reframed masked individual handles as `Submission #...` while preserving `Organization #...`, participant IDs, route behavior, and the underlying candidate/profile data contracts.
+- Centralized the active route handle generation through `makeMaskedHandleForPersona` so candidate-invite claim, organization match review, and canonical conversation access use the same launch-safe masked labels.
+- Added conversation-access unit coverage, updated conversation-route fixtures, and extended launch-gate coverage so active masked conversation paths require `Submission #` and reject direct `Candidate #` handle generation.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/conversation-access.test.ts tests/api/conversations-route.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 134 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted masked-handle scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Review Card Submission Labels
+
+- Timestamp: 2026-05-21 02:00 CEST.
+- Continued the active organization review-card sweep after finding the shared review-card contract still generated stable blind labels as `Candidate XXXX`, and the organization review route privacy sanitizer still allowed a stale generic `Candidate Review` phrase.
+- Reframed generated blind review-card labels as `Submission XXXX` while preserving the existing `candidateLabel` API field name and profile/candidate data contracts.
+- Reframed the route sanitizer allowlist from `Candidate Review` to `Proof Review`, keeping the same privacy-hold behavior for uncertain identity-bearing text.
+- Updated match explain, organization review route, matching card, and explainer modal fixtures to expect the proof-submission label, and extended launch-gate coverage so active review-card source requires the `Submission` label generator and rejects the stale `Candidate` generator and `Candidate Review` allowlist.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/matching-review-contract.test.ts tests/api/match-explain-route.test.ts tests/api/org-match-review-route.test.ts tests/ui/match-result-card.test.tsx tests/ui/match-explainer-modal.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (6 files / 168 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted review-card stale-label scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Matching Visual Fixture Submission Labels
+
+- Timestamp: 2026-05-21 02:02 CEST.
+- Continued the active matching visual-fixture sweep after finding `src/lib/matching/visual-fixtures.ts` still hard-coded organization review cards as `Candidate A` through `Candidate G`.
+- Reframed those active visual review-card labels as `Submission A` through `Submission G`, keeping the existing `candidateLabel` fixture field and review-card shape stable for the API/UI visual-mode consumers.
+- Updated the organization shortlist UI fixture to use a `Submission A` label and extended the public/launch copy guardrail so active matching visual fixtures require `Submission A` and reject `Candidate A`.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/ui/org-shortlist-client.test.tsx tests/api/match-explain-route.test.ts tests/api/org-match-review-route.test.ts --reporter=verbose` (4 files / 149 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted visual-fixture stale-label scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Messaging Submission Labels
+
+- Timestamp: 2026-05-21 02:05 CEST.
+- Continued the active messaging and organization matching copy sweep after finding organization messages fixtures still rendered masked counterparts as `Candidate A/B`, conversation-detail route fixtures still used `Candidate A`, and the organization matching skill comparison still displayed `Candidate Lvl`.
+- Reframed active messaging fixtures around `Submission A/B`, keeping the same conversation shape, masked-handle field, and privacy behavior.
+- Reframed the organization matching desired-skill badge as `Submission Lvl`, preserving the same `yourLevel` data and explanation layout.
+- Extended launch-gate coverage so active conversation tests are included in the masked-handle guardrail, require `Submission A`, reject `Candidate A`, and reject `Candidate Lvl` in the active matching review UI.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/matching-organization-view-beta.test.tsx tests/routes/organization-messages-page.test.tsx tests/api/conversation-detail-routes.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 138 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted messaging/matching stale-label scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. The focused run also printed expected stderr from an intentionally unmocked explanation fetch in the matching fallback-label test, while the assertions passed. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Submission Invite Surface Label
+
+- Timestamp: 2026-05-21 02:08 CEST.
+- Continued the active launch-surface inventory sweep after finding the retained `/api/candidate-invites` launch policy still surfaced as `Candidate Invite API`.
+- Reframed the active surface-policy label and detail as `Submission Invite API` and `Submission invite and claim flows`, keeping the underlying route family, database schema, and compatibility path names unchanged.
+- Added surface-policy unit coverage for the active invite label/detail and extended launch-gate coverage so the active surface policy requires the proof-submission label while rejecting the stale candidate-invite launch label.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run src/lib/launch/__tests__/surface-policy.test.ts tests/api/launch-surface-inventory.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 142 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted invite-surface policy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Submission Invite Failure Copy
+
+- Timestamp: 2026-05-21 02:12 CEST.
+- Continued the active submission-invite API/client/email copy sweep after finding route error responses and logs still said `candidate invite(s)` for active invite failure paths.
+- Reframed failure copy to `submission invite(s)` across the organization invite routes, public invite claim/preview/workspace routes, candidate-invite client load failure logging, and legacy email send failure message, while preserving route paths, event names, exported function names, and database identifiers.
+- Extended launch-gate coverage across the active invite route/client/email files so stale `Failed to ... candidate invite` failure strings cannot return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/org-candidate-invites-route.test.ts tests/api/candidate-invite-claim-route.test.ts tests/api/candidate-invites-token-route.test.ts tests/ui/candidate-invite-client.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (5 files / 167 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted submission-invite failure-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. The focused run also printed expected launch-trace stderr from negative token-redemption tests, while the assertions passed. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Submission Invite Workspace Copy
+
+- Timestamp: 2026-05-21 02:16 CEST.
+- Continued the public submission-invite client sweep after finding completed proof-card submission still rendered `Saved privately to your candidate workspace`.
+- Reframed the completion message as `Saved privately to your submission workspace`, preserving the same owner-only Proof Pack, privacy/export/deletion controls, and assignment-review separation behavior.
+- Updated CandidateInviteClient UI coverage and extended launch-gate coverage so the active invite client requires the submission workspace phrase and rejects the stale candidate workspace phrase.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/candidate-invite-client.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 135 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted workspace-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Momentum Readiness Proof-Submission Copy
+
+- Timestamp: 2026-05-21 02:18 CEST.
+- Continued the active readiness/momentum copy sweep after finding `src/lib/momentum/summary.ts` still framed individual readiness as `Opportunity activity`, missing organization context as `hiring readiness` and `candidate pipeline`, and low organization activity as `Candidate volume`.
+- Reframed those summaries around assignment-review activity, proof-review readiness, and proof-submission volume/pipeline while preserving the existing readiness metrics, action URLs, cache behavior, and persona routing.
+- Extended the organization readiness copy guardrail so active readiness/momentum source requires the proof-submission phrases and rejects the stale opportunity/candidate/hiring-readiness phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/org-readiness-copy-guardrails.test.ts tests/lib/momentum-summary-explicit-org-context.test.ts --reporter=verbose` (2 files / 3 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted momentum-readiness copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Analytics Submission Invite Display Labels
+
+- Timestamp: 2026-05-21 02:20 CEST.
+- Continued the analytics display-copy sweep after finding `getEventDisplayName` still rendered active invite/proof-card event labels as `Candidate Invite ...` and `Candidate Proof Card Submitted`.
+- Reframed only the human-readable display labels as `Submission Invite ...` and `Submission Proof Card Submitted`, preserving the stable `candidate_invite_*` and `candidate_proof_card_submitted` event keys used for stored analytics compatibility.
+- Added focused analytics display-copy coverage for the stable-key/display-label boundary.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/analytics-display-copy.test.ts --reporter=verbose` (1 file / 1 test), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted analytics-label scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Assignment Notification Proof-Review Copy
+
+- Timestamp: 2026-05-21 02:23 CEST.
+- Continued the active notification copy sweep after finding `notifyAssignmentPublished` still created in-app assignment notifications with the title `New Opportunity` and a generic posted message.
+- Reframed the visible notification title/message as `New Assignment Review` and `posted an assignment for proof review`, preserving the `assignment_published` notification type, preference key, push behavior, entity metadata, and matching route.
+- Added focused notification-copy coverage and launch-gate coverage so the active helper requires the proof-review wording and rejects the stale opportunity title/message.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/notifications-copy.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 130 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted notification-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Assignment Brief Import Copy
+
+- Timestamp: 2026-05-21 02:26 CEST.
+- Continued the active organization assignment-builder copy sweep after finding the lean builder import button still said `Import existing job description`, and low-quality import guidance still asked for the `full job description`.
+- Reframed the visible import entry point and parser guidance around an existing assignment brief, preserving the compatibility parser, structured draft extraction behavior, source-text non-persistence, and existing job-description normalization support.
+- Updated AssignmentBuilder UI coverage, assignment-import parser coverage, and launch-gate coverage so active import copy requires assignment-brief wording and rejects the stale job-description labels/guidance.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/assignment-builder-mode-entry.test.tsx tests/lib/job-description-import.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 144 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted assignment-import copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Public Portfolio Assignment-Review Fixture Copy
+
+- Timestamp: 2026-05-21 02:29 CEST.
+- Continued the active public projection copy sweep after finding the visual individual Public Page fixture and public portfolio test fixtures still used `Proof-first hiring` and hiring-review language in public-safe context labels.
+- Reframed the public visual fixture around proof-first assignment-review research and a review panel, preserving the projection pipeline, visibility rules, public-safe evidence links, noindex behavior, and traceable-summary construction.
+- Updated public portfolio projection/UI coverage and launch-gate coverage so active public projection copy requires assignment-review wording and rejects the stale hiring-research/hiring-review fixture language.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/public-portfolio-projection.test.ts tests/ui/public-portfolio-page.test.tsx tests/ui/public-portfolio-access-consistency.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 158 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted public-projection copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Organization Trust Assignment-Review Fixture Copy
+
+- Timestamp: 2026-05-21 02:33 CEST.
+- Continued the active organization trust-page fixture sweep after finding rendered org trust/editor fixtures and public org portfolio fixtures still used `Ship trust-first hiring`, `trust in hiring`, and `trustworthy hiring`.
+- Reframed those fixtures around proof-first assignment review, proof reviewability, and assignment-path trust while preserving the organization trust-page route, lean update contract, visibility behavior, noindex metadata, and public org portfolio layout.
+- Added launch-gate coverage across the org trust page test, organization update route test, and public org portfolio test so active fixtures require assignment-review wording and reject the stale hiring-trust fixture literals.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/organization-trust-profile-page.test.tsx tests/api/organizations-route.test.ts tests/ui/public-org-portfolio-page.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 145 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted org-trust copy scan, and `git diff --check`. The first focused run exposed a guardrail false-positive from negative assertion text, which was tightened before the passing rerun. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Decision Dialog Engagement Copy
+
+- Timestamp: 2026-05-21 02:37 CEST.
+- Continued the active interview decision-dialog copy sweep after finding retained decision options still said `hiring and verification stay distinct` and `without a hiring outcome`.
+- Reframed the visible option descriptions around engagement confirmation, decision/verification separation, and engagement outcome closure while preserving the underlying `hire` decision value, workflow decision API contract, SLA handling, and dialog behavior.
+- Extended launch-gate coverage so the decision dialog requires the engagement/workflow wording and rejects the stale hiring-outcome phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 131 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted decision-dialog copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Hidden Match Assignment Fallback Copy
+
+- Timestamp: 2026-05-21 02:39 CEST.
+- Continued the active individual matching copy sweep after finding hidden matches without an assignment title still rendered the fallback label `Opportunity`.
+- Reframed the fallback to `Assignment`, preserving the hidden-match route, optimistic restore behavior, score redaction, and in-route manager layout.
+- Added rendered UI coverage for an untitled hidden match and extended launch-gate coverage so `HiddenMatchesList` requires the assignment fallback while rejecting the stale opportunity fallback.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/matching-paused-hidden-manager.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 134 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted hidden-match fallback scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Interview Fixture Engagement Copy
+
+- Timestamp: 2026-05-21 02:41 CEST.
+- Continued the active interview timeline fixture sweep after finding visual interview summaries still said `Interview coordination is active for this candidate`, `The hire decision is recorded`, and `The decision is hire`.
+- Reframed the visible fixture summaries around proof-review participants and engagement decisions while preserving the underlying `hire` decision state, engagement verification summaries, meeting-link fixtures, and corridor step model.
+- Updated timeline UI coverage and launch-gate coverage so active interview fixtures require the proof-review/engagement wording and reject the stale candidate/hire-decision phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/hiring-corridor-timeline.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 132 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted interview-fixture copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Submission Invite Reveal-Step Copy
+
+- Timestamp: 2026-05-21 02:44 CEST.
+- Continued the active submission-invite client copy sweep after finding the owner-only Proof Pack review panel still said identity-bearing reveal requires the `candidate-controlled corridor step`.
+- Reframed the visible privacy reminder as `participant-controlled reveal step`, preserving the public invite route, submission workspace behavior, communications continuation, owner-only Proof Pack submission flow, and compatibility path names.
+- Updated CandidateInviteClient UI coverage and launch-gate coverage so active invite copy requires the participant-controlled reveal wording and rejects the stale candidate-controlled corridor phrase.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/candidate-invite-client.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 138 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted submission-invite reveal-step copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Corridor Snapshot Engagement Copy
+
+- Timestamp: 2026-05-21 02:46 CEST.
+- Continued the active interview/corridor snapshot copy sweep after finding `buildHiringCorridorSnapshot` still rendered pending hire-state summaries and next actions with `hire decision` and `The decision is hire`.
+- Reframed the runtime snapshot text around engagement decisions and decision-stage separation while preserving the underlying `hire` decision state, current-step logic, engagement verification workflow, and action IDs.
+- Added focused snapshot coverage and launch-gate coverage so active corridor snapshot copy requires engagement-decision wording and rejects the stale hire-decision phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/hiring-corridor-snapshot.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 137 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted corridor-snapshot copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Admin Pilot Engagement Copy
+
+- Timestamp: 2026-05-21 02:48 CEST.
+- Continued the admin launch-ops copy sweep after finding the protected verification dashboard pilot fixture still rendered `Pilot workflow is stuck after hire decision.`
+- Reframed the queue summary as `Pilot workflow is stuck after engagement decision.`, preserving the pilot ops queue shape, engagement verification linked entity, decision metadata, private-note suppression, and narrow drilldown behavior.
+- Updated AdminVerificationDashboard UI coverage and launch-gate coverage so the active admin fixture requires engagement-decision wording and rejects the stale hire-decision summary literal.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/admin-verification-dashboard.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted admin pilot copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Early Corridor Proof-Review Participant Copy
+
+- Timestamp: 2026-05-21 02:51 CEST.
+- Continued the active corridor snapshot copy sweep after finding organization-facing early-stage runtime summaries still said `The candidate is shortlisted`, `The candidate needs to accept`, `The candidate expressed interest`, and `The candidate advanced`.
+- Reframed those organization-facing snapshot descriptions and summaries around the proof-review participant while preserving persona fields, intro state logic, decision state values, step ordering, and action IDs.
+- Added focused snapshot coverage and launch-gate coverage so early corridor copy requires `proof-review participant` and rejects the stale `The candidate ...` phrasing.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/hiring-corridor-snapshot.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 138 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted early-corridor copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Engagement Recorded Participant Copy
+
+- Timestamp: 2026-05-21 02:53 CEST.
+- Continued the active corridor snapshot copy sweep after finding the organization-facing engagement-recorded branch still said `so the candidate can complete the final verification step`.
+- Reframed that runtime next-action description as `so the proof-review participant can complete the final verification step`, preserving the engagement-recorded step, organization confirmation action, decision state, and engagement verification flow.
+- Added focused snapshot coverage and launch-gate coverage so engagement-recorded copy rejects the stale candidate-completion phrase.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/hiring-corridor-snapshot.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted engagement-recorded copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Match Review Participant Approval Copy
+
+- Timestamp: 2026-05-21 02:55 CEST.
+- Continued the active organization match-review API copy sweep after finding reveal and intro responses still said `candidate approves`, `candidate reciprocates interest`, and used fallback notification copy `The candidate`.
+- Reframed those response/fallback messages around the proof-review participant while preserving the reveal approval semantics, `waitingForCandidateApproval` field, intro workflow state, notification recipients, and database identifiers.
+- Updated org match-review route coverage and launch-gate coverage so active response copy requires proof-review participant approval/interest wording and rejects the stale candidate phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/org-match-review-route.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 149 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted match-review response copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Review Contract Participant Copy
+
+- Timestamp: 2026-05-21 03:03 CEST.
+- Continued the active matching review contract sweep after finding organization-facing reason-code strings still said `candidate’s stated focus`, `The candidate was shortlisted`, manual override copy for `this candidate`, and `pending candidate approval`.
+- Reframed the organization-facing reason-code and modal privacy explanation copy around the proof-review participant while preserving candidate-audience copy, reason-code IDs, progressive reveal stages, `candidateLabel` field shape, and full-identity consent behavior.
+- Extended matching contract, match explainer modal, and launch-gate coverage so active review contract copy requires proof-review participant wording and rejects the stale candidate approval/shortlist/focus phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/matching-review-contract.test.ts tests/ui/match-explainer-modal.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 147 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and targeted review-contract/modal copy scan. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Structured Feedback Participant Copy
+
+- Timestamp: 2026-05-21 03:05 CEST.
+- Continued the active launch-operations and feedback-schema copy sweep after finding the structured feedback validation message and active launch-ops doc still said `candidate-facing reason code`.
+- Reframed the visible validation error and launch-ops variant heading around proof-review participant-facing reason codes while preserving the `audienceVariant: 'candidate'` wire value, persisted reason-code IDs, analytics shape, and structured feedback schema.
+- Updated feedback schema and launch-gate coverage so active copy requires participant-facing wording and rejects the stale candidate-facing reason-code phrase.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/feedback-schema.test.ts tests/lib/launch-operations-contract.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 141 tests), `npm run typecheck`, `npm run lint`, and `npm run docs:freshness`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - E2E Masked Handle Submission Labels
+
+- Timestamp: 2026-05-21 03:07 CEST.
+- Continued the active E2E helper sweep after finding strict fixture seeding and cross-user masking helpers still used `Candidate #...` masked individual handles.
+- Reframed strict seeded conversation handles and cross-user masking/reveal checks around `Submission #...` while preserving organization handles, conversation schema fields, reveal-stage checks, and browser navigation flow.
+- Extended launch-gate coverage so active conversation guardrails read the strict and cross-user E2E helpers and reject stale `Candidate #` masked handles there too.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 131 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted active masked-handle scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Strict Organization Assignment-Review E2E Copy
+
+- Timestamp: 2026-05-21 03:10 CEST.
+- Continued the active strict E2E copy sweep after finding seeded organization trust fixtures still said `narrow, proof-first hiring corridor` and `review candidates through proof quality`, while the strict organization home spec still expected stale cockpit/corridor copy no longer present in the current page.
+- Reframed the seeded organization mission and tagline around a proof-first assignment review path and proof submissions, preserving the same org trust readiness fields, domain verification setup, and organization setup flow.
+- Updated the strict organization E2E expectations to assert current organization home copy (`Current review workspace`, `Review status`, and `Create the first assignment`) instead of retired cockpit/corridor labels.
+- Added launch-gate coverage so strict organization E2E copy requires assignment-review/submission wording and rejects the stale hiring-corridor/candidate/cockpit labels.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 132 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and targeted strict org E2E copy scan. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Strict Draft Assignment Review Copy
+
+- Timestamp: 2026-05-21 03:11 CEST.
+- Continued the strict organization E2E fixture sweep after finding the draft assignment copy still said the organization can `review candidates through real proof` and referenced `candidate proof expectations`.
+- Reframed the draft business value and description around reviewing proof submissions and proof-submission expectations while preserving the same assignment draft lifecycle and organization setup flow.
+- Extended strict organization launch-gate coverage so the draft fixture requires proof-submission wording and rejects the stale candidate/generic-hiring phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 132 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted strict draft copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Broad E2E Matching Assignment-Review Assertions
+
+- Timestamp: 2026-05-21 03:13 CEST.
+- Continued the active broad E2E matching sweep after finding `e2e/workflows.spec.ts` accepted `no opportunities` empty-state copy and `e2e/comprehensive_flow.spec.ts` accepted generic `matches|opportunities` visibility.
+- Reframed those assertions around current matching and assignment-review language while preserving the same page navigation, auth fallback behavior, and broad smoke-test intent.
+- Added launch-gate coverage so active broad E2E matching assertions require assignment-review wording and reject the stale `no opportunities` / `matches|opportunities` patterns.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 133 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and targeted broad E2E matching assertion scan. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Final Launch Checklist Assignment-Review Evidence
+
+- Timestamp: 2026-05-21 03:16 CEST.
+- Continued the final launch checklist verifier sweep after finding its unit-test fixture still said organizations `review candidates through proof` and its README evidence matcher still required `narrow proof-first hiring corridor`.
+- Reframed the final checklist fixture around organizations reviewing proof submissions instead of profile theater, and aligned the README matcher with the current `narrow proof-first assignment review corridor` wording while keeping the stronger-than-CV and no-public-directory evidence checks intact.
+- Added launch-gate coverage so final launch checklist definitions/tests require assignment-review/proof-submission wording and reject the stale hiring-corridor/candidate phrasing.
+- Verification passed after one focused failure exposed the overly-literal `proof instead of profile theater` matcher, which was widened to accept proof-submission wording: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run src/lib/launch/__tests__/final-launch-checklist.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 143 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and targeted final-launch checklist wording scan. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Strict Org Corridor Engagement Decision Copy
+
+- Timestamp: 2026-05-21 03:21 CEST.
+- Continued the active strict org corridor E2E copy sweep after finding the assignment outcome fixture still described validating `hiring decisions end to end`.
+- Reframed that fixture around `engagement decisions end to end` while preserving the same shortlist, reveal, interview, and assignment-outcome flow.
+- Extended launch-gate coverage so strict organization E2E copy rejects the stale `hiring decisions end to end` phrase.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 134 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted strict-org decision wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Strict Fixture Proof-Submission Seed Copy
+
+- Timestamp: 2026-05-21 03:24 CEST.
+- Continued the active strict fixture source-copy sweep after finding helper error messages and seeded proof-pack summary text still said `strict candidate proof...` and `Portfolio-ready candidate seed`.
+- Reframed those source-facing/seeded strings around proof-submission artifacts, proof-submission packs, and a proof-submission seed while preserving database table names, ownership fields, metadata keys, and strict fixture behavior.
+- Extended launch-gate coverage so strict organization E2E copy requires the proof-submission seed/helper wording and rejects the stale strict candidate-proof phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 134 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted strict fixture candidate-proof scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Organization Integration E2E Proof-Submission Review Copy
+
+- Timestamp: 2026-05-21 03:27 CEST.
+- Continued the active organization integration E2E sweep after finding the journey section still labeled O-08/O-09 as `Candidate Discovery`, described ranked assignment matches, expected score-led explainer copy, and used helper comments/fallbacks for candidate interactions, candidate deep dives, and `no candidates`.
+- Reframed the active integration journey and helper source-facing copy around proof-submission review, proof-submission matches, proof-submission detail, and no-proof-submissions empty states while preserving exported helper names, navigation, and smoke-test flow.
+- Extended launch-gate coverage so the active organization integration E2E and helper files require proof-submission wording and reject the stale candidate-discovery, ranked-match, candidate-interaction, no-candidate, and score-led explainer phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 135 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted organization integration E2E stale-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Broad E2E Match-Card Selector Scope
+
+- Timestamp: 2026-05-21 03:28 CEST.
+- Continued the active broad E2E matching sweep after finding `e2e/workflows.spec.ts` still allowed `.opportunity-card` as a match-card selector even though the active matching card exposes `data-testid="match-card"` and no active source uses that stale class.
+- Reframed the broad workflow selectors around the active `data-testid="match-card"` plus retained generic match selectors, preserving the same smoke-test behavior for matching visibility and detail opening.
+- Extended launch-gate coverage so active broad E2E matching assertions require the active match-card test id and reject the stale `.opportunity-card` fallback.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 135 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted broad E2E selector scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - GTM Supply Plan And Strict Match Copy
+
+- Timestamp: 2026-05-21 03:32 CEST.
+- Continued the active GTM/final-checklist/strict-E2E sweep after finding the GTM authority doc and checklist fixture still used `Candidate Supply-Seeding Plan`, the GTM timeline still said `candidate supply seeding`, and strict org E2E messages still said `ranked matches` / `blind candidate`.
+- Reframed the GTM plan around proof-submission supply, proof-review participants, proof-submission fit, and blind proof-submission review while preserving the same source channels, volume assumptions, readiness criteria, and founder-led operating loop.
+- Aligned the final launch checklist fixture and evidence matcher with `Proof-Submission Supply-Seeding Plan`.
+- Reframed strict E2E test names and failure messages around proof-submission matches / blind proof submissions while preserving the same `/api/match/assignment` behavior checks and variable names.
+- Extended launch-gate coverage so the final checklist, active operator docs, and strict organization E2E reject the stale candidate-supply, candidate-review-corridor, ranked-match, and blind-candidate phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run src/lib/launch/__tests__/final-launch-checklist.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 144 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted GTM/final-checklist/strict-E2E stale-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Strict Fixture Participant Source Copy
+
+- Timestamp: 2026-05-21 03:34 CEST.
+- Continued the active strict E2E helper/source-copy sweep after finding seeded organization/context/error strings still said `Strict Candidate Org`, `strict candidate experience context`, `strict candidate matching profile`, `strict candidate skills`, `strict candidate verification record`, `strict candidate matching consent obligation`, and `strict candidate profile shell`.
+- Reframed those source-facing fixture strings around proof review, proof-submission matching, proof-submission skills, and proof-submission profile shell while preserving exported helper names, database table names, column names, and legacy metadata keys that may be data-contract shaped.
+- Reframed the organization integration E2E fallback log from `Could not view candidate profile` to proof-submission detail wording.
+- Corrected a stale launch-gate assertion that still expected `Create the first assignment` in strict organization E2E copy even though the active spec asserts the current `New assignment` link.
+- Extended launch-gate coverage so strict fixtures and organization integration E2E reject the stale candidate-source strings.
+- Verification passed after the first focused launch-gate run exposed the stale `Create the first assignment` guard expectation: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 135 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted strict fixture/integration stale-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Participant Consent Privacy Wording
+
+- Timestamp: 2026-05-21 03:38 CEST.
+- Continued the active privacy/consent sweep after finding operator docs, public org trust copy, policy helper copy, and match explainer contract copy still said `candidate consent`, `candidate consented reveal`, or `hidden candidate identity details`.
+- Reframed launch checklist, accessibility guide, incident response, reveal/privacy SOP, workflow communications, alerting, analytics, Sentry/logging, public org trust, policy assistant, and explainer contract wording around proof-review participant consent and hidden identity details before reveal consent.
+- Kept the privacy invariant intact: identity-bearing access still requires explicit consent, but active copy no longer frames the review subject as a generic candidate object.
+- Extended launch-gate coverage so the privacy/consent doc and source cluster requires participant-consent wording and rejects the stale candidate-consent/candidate-identity phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 135 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted privacy/consent stale-copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Verification Checklist Consented Reveal Copy
+
+- Timestamp: 2026-05-21 03:45 CEST.
+- Continued the active verification and launch-ops copy sweep after finding route-count evidence, Resend setup guidance, vendor-processing guidance, and an empty-state visual test still used `candidate-consented reveal`, `Candidate/assignment invitation`, or `Candidate identity remains protected before reveal`.
+- Reframed those active surfaces around proof-review-participant-consented reveal, proof-review participant approval, proof-submission invitations, and identity protection before reveal while preserving the same privacy invariant, evidence route counts, email checklist structure, and visual assertion intent.
+- Extended launch-gate coverage so active verification, Resend, DPA, and organization integration E2E evidence require the new proof-review/proof-submission wording and reject the stale candidate-consented / candidate-invitation / candidate-identity phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 135 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, `git diff --check`, and targeted stale-copy scan for `candidate-consented reveal|Candidate/assignment invitation|Candidate identity remains protected before reveal` across the changed files. The targeted scan found the stale phrases only in negative guard assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Engagement Verification Participant Evidence Copy
+
+- Timestamp: 2026-05-21 03:48 CEST.
+- Continued the active internal-ops and verification-policy copy sweep after finding engagement verification evidence guidance still required `candidate confirmation`, asked whether evidence tied to the same candidate, and told operators to confirm the linked decision, candidate, and organization.
+- Reframed the engagement verification checklist, workflow communications template, and verification policy around proof-review participant confirmation plus organization confirmation while preserving the same acceptable evidence paths, pending-state discipline, and distinction between hire and engagement verification.
+- Extended launch-gate coverage so internal-ops SOPs and verification policy require proof-review participant wording and reject the stale candidate-confirmation / same-candidate checklist phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "keeps internal ops SOPs current" --reporter=verbose` (1 focused test), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 135 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, `git diff --check`, and targeted stale-copy scan for the engagement-verification candidate-confirmation phrases. The targeted scan found stale phrases only in negative guard assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Organization Empty-State Identity Copy
+
+- Timestamp: 2026-05-21 03:50 CEST.
+- Continued the active organization-facing UI sweep after finding the organization matching empty state still labeled the third corridor step `Candidate signals` and both the matching empty state and organization messages empty/header copy still said `Candidate identity...`.
+- Reframed those active organization surfaces around proof-submission signals and generic protected identity language while preserving the same assignment-first flow, consented reveal invariant, and private stage-aware message behavior.
+- Added organization messages route coverage for the protected-identity copy and extended launch-gate coverage so active matching/message review UI requires proof-submission/identity wording and rejects the stale candidate-signal/candidate-identity phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/routes/organization-messages-page.test.tsx tests/scripts/launch-gate-config.test.ts -t "organization messages page|keeps active matching review UI" --reporter=verbose` (2 files / 5 focused tests, 134 skipped), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/routes/organization-messages-page.test.tsx --reporter=verbose` (2 files / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale-copy scan, and `git diff --check`. The targeted scan found stale phrases only in negative guard assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Admin Participant Consent Label
+
+- Timestamp: 2026-05-21 03:53 CEST.
+- Continued the active admin/internal-ops surface sweep after finding the admin verification dashboard and internal-ops queue projection still rendered the `candidateConsentStatus` metadata key as `Candidate consent`.
+- Reframed the display label as `Proof-review participant consent` while preserving the underlying metadata key and existing privacy-safe metadata allowlist behavior.
+- Extended admin UI, internal-ops queue, and launch-gate coverage so the active admin/operator surfaces require proof-review participant consent wording and reject the stale candidate-consent label.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/admin-verification-dashboard.test.tsx tests/lib/internal-ops-queue.test.ts tests/scripts/launch-gate-config.test.ts -t "narrow pilot corridor|operator guidance identity-scoped|keeps internal ops SOPs current" --reporter=verbose` (3 focused tests, 148 skipped), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/admin-verification-dashboard.test.tsx tests/lib/internal-ops-queue.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 151 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale-label scan, and `git diff --check`. The targeted scan found the stale label only in negative assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Reveal Privacy Participant Dispute Wording
+
+- Timestamp: 2026-05-21 03:55 CEST.
+- Continued the active internal-ops SOP sweep after finding the reveal/privacy dispute SOP still said `a candidate disputes a reveal state or says consent was not respected`.
+- Reframed the SOP trigger around a proof-review participant disputing reveal state or consent handling while preserving the same privacy escalation path, evidence requirements, and hold conditions.
+- Extended launch-gate coverage so internal-ops SOPs require the proof-review participant trigger and reject the stale candidate-dispute sentence.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "keeps internal ops SOPs current" --reporter=verbose` (1 focused test, 134 skipped), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 135 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted SOP wording scan, and `git diff --check`. The targeted scan found the stale sentence only in a negative guard assertion. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Engagement Confirmation Status Labels
+
+- Timestamp: 2026-05-21 03:58 CEST.
+- Continued the active engagement-verification UI/contract sweep after finding `pending_candidate_confirmation` still displayed as `Awaiting candidate confirmation` / `Waiting for candidate confirmation` in workflow labels and interview/snapshot fixtures.
+- Kept the underlying `pending_candidate_confirmation` state value intact as a data contract, but reframed the human-readable labels around proof-review participant confirmation.
+- Extended launch-gate coverage so the workflow contract, hiring-corridor snapshot fixture, and organization interviews UI fixture require proof-review participant confirmation wording and reject the stale candidate-confirmation labels.
+- Verification passed after one focused guard correction moved a fixture-string assertion from implementation source to the relevant test fixture: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/hiring-corridor-snapshot.test.ts tests/ui/organization-interviews-page-actions.test.tsx tests/scripts/launch-gate-config.test.ts -t "hire distinct|confirms engagement verification state|keeps active interview pages" --reporter=verbose` (2 focused tests, 145 skipped), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/hiring-corridor-snapshot.test.ts tests/ui/organization-interviews-page-actions.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (3 files / 147 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale-label scan, and `git diff --check`. The targeted scan found stale labels only in negative guard assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Assistive AI Prompt Participant Guardrails
+
+- Timestamp: 2026-05-21 04:03 CEST.
+- Continued the active assistive-AI prompt sweep after finding assignment clarity, verification composer, and Start from CV prompt/fallback text still framed prohibited model behavior as `candidate evaluation`, `private candidates or candidate data`, `candidate quality judgment`, or `hiring decisions`.
+- Reframed the live prompt guardrails around proof-review participant evaluation/data, engagement/workflow decisions, and proof-review participant quality judgment while preserving the same no-scoring, no-ranking, no-private-context, no-verification-approval, and no-publishing safety boundaries.
+- Extended assignment clarity, verification composer, and launch-gate coverage so active assistive-AI sources require proof-review participant wording and reject the stale candidate/hiring prompt phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/assignment-clarity-route.test.ts tests/lib/verification-composer.test.ts tests/lib/start-from-cv.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 171 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Outbound Email Participant Wording
+
+- Timestamp: 2026-05-21 04:07 CEST.
+- Continued the active outbound-email sweep after finding reveal, LinkedIn pending-review, and account-verification emails still rendered visible `Candidate now visible`, `Candidate:`, or `hiring recommendation` copy.
+- Reframed those visible email strings around proof-review participants and workflow recommendations while preserving the internal `candidate` role/type names, URL routing, privacy masking, reveal approval behavior, and no-score/no-rank safety message.
+- Extended workflow email privacy and launch-gate coverage so transactional email evidence requires proof-review participant wording and rejects the stale candidate/hiring email phrases.
+- Verification passed after correcting one brittle React-serialization assertion: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/workflow-email-privacy.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 147 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted email wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Public Landing Participant Wording
+
+- Timestamp: 2026-05-21 04:10 CEST.
+- Continued the active public landing copy sweep after finding the three-step corridor section and homepage story frames still rendered `Candidates add context...` and `Candidates flatten real ability...`.
+- Reframed those public strings around proof-review participants while preserving the same Proof Pack, submission-quality, and two-sided review story.
+- Extended landing copy and launch-gate coverage so active public landing/SEO source text includes proof-review participant wording and rejects the stale candidate-led phrases; the first focused run exposed that `ThreeStepCorridorSection.tsx` was missing from the launch-gate public-copy source list, so the guard now includes it.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/landing-copy-guardrails.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 138 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted landing wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Masked Conversation Submission Labels
+
+- Timestamp: 2026-05-21 04:16 CEST.
+- Continued the active messaging and invite surface sweep after finding the conversation list API still fell back to generic `Candidate` / `Organization` masked-stage names instead of the canonical masked handles, messaging initials still special-cased `Candidate`, and submission-invite fallback/error copy still exposed `Candidate invite` phrasing.
+- Reused existing masked handle fields in the conversation list response, kept revealed-stage identity behavior unchanged, changed masked-submission initials to `S`, and reframed invite fallback/error/log wording around submission invites and participant-controlled reveal.
+- Extended conversation API, invite UI, and launch-gate coverage so active surfaces require masked handles / submission invite wording and reject the stale visible `Candidate invite`, `Candidate` masked-name fallback, and `Candidate` initials behavior while preserving internal candidate route/table names.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/conversations-route.test.ts tests/api/conversation-detail-routes.test.ts tests/ui/candidate-invite-client.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (4 files / 151 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted invite/conversation wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Locked MVP Assignment-Review Corridor Wording
+
+- Timestamp: 2026-05-21 04:19 CEST.
+- Continued the authority-doc and final-launch verifier sweep after finding a mismatch: newer active launch guards and public/operator docs require assignment-review corridor wording, but the locked MVP source and final launch checklist verifier still used `proof-first hiring corridor`, `Move candidates through the hiring corridor`, and candidate-specific acceptance/reveal wording.
+- Narrowed the locked MVP source around proof submissions, proof-review participants, participant intro/reveal approval, and the proof-first assignment review corridor while preserving the same ordered workflow and optional AI boundaries.
+- Updated the final launch checklist direct-evidence row and test fixture to match the assignment-review corridor wording, and strengthened launch-gate coverage so the old `proof-first hiring corridor` phrase cannot return to the final launch verifier.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run src/lib/launch/__tests__/final-launch-checklist.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 145 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted authority-doc/final-checklist wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - AI Reference Guardrail Participant Wording
+
+- Timestamp: 2026-05-21 04:23 CEST.
+- Continued the AI/reference-doc sweep after the active-source scan found AI assistive and temporary OCR reference docs still described prohibited behavior with `candidate data`, `candidate quality`, `hiring-decision state`, `hiring recommendations`, and broad `hiring credibility corridor` language.
+- Reframed the AI reference guardrails around proof-review participant data/evaluation, proof-review participant consented reveal, workflow recommendations, and interview/engagement/workflow decisions while preserving the same disabled-by-default, user-clicked, user-reviewed, non-decisional, spend-capped, and beta-only OCR boundaries.
+- Refreshed the touched AI reference docs and registry rows to `2026-05-21`, and added launch-gate coverage requiring the proof-review participant/workflow wording while rejecting the stale candidate/hiring guardrail phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "keeps AI reference guardrails|keeps active assistive AI prompts" --reporter=verbose` (2 focused tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 137 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted AI reference wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Remaining AI OCR Reference Wording
+
+- Timestamp: 2026-05-21 04:26 CEST.
+- Continued the AI reference-doc sweep after the remaining OCR production-beta proposal and AI document patch map still used stale `AI candidate scoring`, `hiring recommendations`, `overall candidate judgment`, `hidden candidate evaluation store`, and `auto-create hiring decisions` wording.
+- Reframed those remaining reference-spec docs around proof-review participant scoring/evaluation, workflow recommendations, workflow-decision state, and proof-review participant judgment while preserving their no-go constraints, beta-only OCR posture, and subordinate reference-spec status.
+- Refreshed the two remaining AI reference docs and their registry rows to `2026-05-21`, and expanded the AI reference launch-gate guard to include the OCR production-beta proposal and document patch map.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "keeps AI reference guardrails" --reporter=verbose` (1 focused test), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 137 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted remaining-AI-reference wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Active Backlog And QA Workflow Wording
+
+- Timestamp: 2026-05-21 04:30 CEST.
+- Continued the active docs sweep after finding the active Phase 5 backlog still said public copy should describe a `proof-first hiring corridor centered on Proof Packs`, and the active QA summary still framed OCR/AI exclusions around `hiring state` and `hiring recommendation`.
+- Reframed the Phase 5 public-copy task around the proof-first assignment review corridor and the QA AI/OCR gates around workflow state and workflow recommendations while preserving the same production-candidate gate ordering, beta-only OCR limits, and active-doc status.
+- Refreshed both docs and their registry rows to `2026-05-21`, and extended launch-gate coverage so those active docs require the updated assignment-review/workflow wording and reject the stale hiring-corridor/hiring-state phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "keeps active route-count evidence aligned|keeps launch signoff and QA guidance" --reporter=verbose` (2 focused tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 137 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted active-backlog/QA wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Project Prompt And Reference Guidance Wording
+
+- Timestamp: 2026-05-21 04:34 CEST.
+- Continued the reusable-guidance sweep after finding synced project prompts still described Proofound as a `hiring credibility corridor`, AI/OCR implementation prompt docs still used `match/review/trust/hiring state`, and the LinkedIn reference still warned against projecting LinkedIn history as `candidate proof quality`.
+- Reframed the root/project prompt pair around the proof-first assignment review corridor, the AI/OCR prompt/runbook text around workflow state, and the LinkedIn reference around proof-review participant proof quality while preserving the same authority stack, disabled-by-default AI/OCR posture, and LinkedIn-outside-launch boundary.
+- Refreshed the touched prompt/reference docs and registry rows to `2026-05-21`, fixed the Prompt sync-pair freshness warning by updating both prompt copies, and extended launch-gate coverage for the synced prompts, AI reference docs, and LinkedIn setup reference.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "legacy go/no-go|AI reference guardrails|LinkedIn verification guidance" --reporter=verbose` (3 focused tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 137 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted guidance wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings after the synced prompt update.
+
+## Continuation - Planning Env Surface Workflow Wording
+
+- Timestamp: 2026-05-21 04:38 CEST.
+- Continued the plan/env/surface-policy sweep after active plan docs still used `automated hiring recommendations` and `candidate-consented reveal`, while Start from CV env/surface-policy text still used `candidate evaluation`.
+- Reframed plan validation and Start from CV boundaries around automated workflow recommendations, proof-review-participant-consented reveal, and proof-review participant evaluation while preserving the same milestone gates, disabled-by-default beta behavior, and surface policy hard gate.
+- Refreshed `Plans.md`, `project/Plans.md`, and `docs/ENV_VARIABLES.md` plus their registry rows to `2026-05-21`, and extended launch-gate coverage for the synced plan docs, environment docs, and surface-policy copy.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "implementation contracts and milestones|environment docs|active invite surface policy" --reporter=verbose` (3 focused tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 137 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted plan/env/surface-policy wording scan, and `git diff --check`. The targeted scan found stale strings only in negative guard assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - OCR Checklist Workflow State Wording
+
+- Timestamp: 2026-05-21 04:41 CEST.
+- Continued the OCR/provider-boundary sweep after the active root/agent verification checklist pair, env docs, and retained Cloud Run OCR service reference still used hiring-state phrasing, and the service README still described itself as not a `candidate evaluation system`.
+- Reframed those OCR boundaries around proof-review participant evaluation and workflow-decision state while preserving the same draft-only, explicit-consent, no-publish, no-verify, no-score, no-rank, no-shortlist, no-recommend, and Cloud Vision exclusion constraints.
+- Refreshed `verification.md`, `agent/checklists/verification.md`, `services/gcp-cv-ocr/README.md`, and the existing `docs/ENV_VARIABLES.md` OCR boundary plus their relevant registry rows to `2026-05-21`, and extended launch-gate coverage for the synced checklist pair, env docs, and OCR service reference spec.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "legacy go/no-go|active operator docs|GCP OCR service" --reporter=verbose` (4 focused tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "environment docs|GCP OCR service" --reporter=verbose` (2 focused tests after folding in env docs), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 138 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted OCR checklist/service/env wording scan, and `git diff --check`. The targeted scan found stale strings only in negative guard assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Active Authority Assignment Review Corridor Wording
+
+- Timestamp: 2026-05-21 04:45 CEST.
+- Continued the authority-stack sweep after the locked MVP source and aligned PRD still described the active product as a `hiring credibility corridor`, included a `review candidates through proof` promise, and kept AI/OCR exclusions in candidate/hiring-decision terms.
+- Reframed the active authority docs around the proof-first assignment review corridor, proof submission review, automated workflow recommendations, proof-review participant AI exclusions, and workflow-decision state while preserving the same MVP scope, authority precedence, no-scoring/no-ranking/no-shortlisting boundaries, and optional AI/OCR release gates.
+- Refreshed `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md` and `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md` plus their registry rows to `2026-05-21`, and strengthened the authority-stack launch-gate guard so the old active authority wording cannot return.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "locked MVP authority stack" --reporter=verbose` (3 focused tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 138 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted active-authority wording scan, and `git diff --check`. The targeted scan found the stale active-authority phrases only in negative guard assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Remaining Authority Stack Workflow Wording
+
+- Timestamp: 2026-05-21 04:47 CEST.
+- Continued the authority/glossary sweep after the technical requirements, launch runbook, GTM plan, and active ubiquitous-language glossary still used `hidden candidate evaluation store`, `hiring recommendations`, `proof-first hiring corridor`, or `automated hiring recommendations` wording.
+- Reframed those active docs around proof-review participant evaluation, workflow recommendations, and the proof-first assignment review corridor while preserving the same AI table auditability/spend-cap constraints, launch AI gates, GTM design-partner scope, and reason-code explainability rule.
+- Refreshed `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, and `docs/PROOFOUND_UBIQUITOUS_LANGUAGE.md` plus their registry rows to `2026-05-21`, and extended launch-gate coverage for the remaining authority stack and glossary wording.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "locked MVP authority stack|visual style and motion docs|active operator docs" --reporter=verbose` (6 focused tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 138 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted remaining-authority/glossary wording scan, and `git diff --check`. The targeted scan found stale phrases only in negative guard assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Quick Start Reference Mirror Workflow Wording
+
+- Timestamp: 2026-05-21 04:50 CEST.
+- Continued the doc-surface sweep after the active root quick start, active Phase 2 trust-review backlog note, and two reference-spec PRD mirrors still used `proof-first hiring corridor`, `candidate proof review`, `candidate-consented reveal`, or `hiring credibility corridor` wording.
+- Reframed those docs around the proof-first assignment review corridor, proof submission review, and proof-review-participant-consented reveal while preserving the same quick-start routes, smoke-check scope, canonical source-stack warnings, and historical `master-latest` classification.
+- Refreshed `QUICK_START.md`, `docs/backlog/phase-2-trust-review.md`, `Proofound_PRD_MVP.md`, and `PRD_for_a_web_platform_MVP.md` plus their registry rows to `2026-05-21`, and extended launch-gate coverage for quick-start and reference-mirror wording.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "legacy PRD mirrors|root quick start|implementation contracts" --reporter=verbose` (3 focused tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 138 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted quick-start/reference/backlog wording scan, and `git diff --check`. The targeted scan found stale strings only in negative guard assertions or explicitly historical documents outside this active/reference-spec slice. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Production Checklist Proof Submission Wording
+
+- Timestamp: 2026-05-21 04:52 CEST.
+- Continued the launch-checklist sweep after active `PRODUCTION_CHECKLIST.md` still listed `candidate proof review cards` and `candidate consent` in the required production-candidate smoke surface.
+- Reframed that checklist item around proof submission review cards and proof-review participant consent while preserving the same production-candidate deployment posture, manual-link interview default, restore-drill ordering, and monitoring checks.
+- Refreshed `PRODUCTION_CHECKLIST.md` and its registry row to `2026-05-21`, and extended the production/provider launch-gate guard to reject the stale candidate-led checklist wording.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root production and provider docs" --reporter=verbose` (1 focused test), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 138 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted production-checklist wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning. `npm run docs:freshness` passed with no findings in this run.
+
+## Continuation - Final Launch Reveal Evidence Key Wording
+
+- Timestamp: 2026-05-21 04:55 CEST.
+- Continued the active launch-verifier sweep after `src/lib/launch/final-launch-checklist-definitions.ts` still looked up the reveal evidence row as `candidate-consented reveal`, while current verification docs use `proof-review-participant-consented reveal`.
+- Updated the final launch checklist verifier and fixture to use the proof-review-participant-consented reveal evidence key while preserving the same public portfolio safety gate, blind-review dependency, and launch-bundle precedence behavior.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run src/lib/launch/__tests__/final-launch-checklist.test.ts --reporter=verbose` (1 file / 9 tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts src/lib/launch/__tests__/final-launch-checklist.test.ts --reporter=verbose` (2 files / 147 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted final-launch reveal-key scan, and `git diff --check`. The targeted scan found stale reveal-key wording only in negative guard assertions or historical/reference files outside this active verifier path. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Active E2E Matching Score-Free Assertions
+
+- Timestamp: 2026-05-21 04:59 CEST.
+- Continued the active E2E sweep after `e2e/workflows.spec.ts` still had a no-op `should show match score` test and `e2e/helpers/matching-helpers.ts` still described visible match-score assertions, despite the launch corridor requiring proof-led, score-free matching surfaces.
+- Reframed the broad matching E2E test and helper around score-free proof-led matching, asserting raw score artifacts are absent instead of looking for score indicators, while preserving the same matching route coverage and archived-helper compatibility export name.
+- Extended the active broad E2E launch-gate guard to include `e2e/helpers/matching-helpers.ts` and reject the stale score-visible E2E phrases.
+- Verification passed: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "active broad E2E matching assertions|active organization integration E2E" --reporter=verbose` (2 focused tests), `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 138 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted E2E score-wording scan, and `git diff --check`. The first focused run exposed the guard needed to include the helper file; after that adjustment the focused guard passed. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Active Broad E2E Placeholder And Contract Cleanup
+
+- Timestamp: 2026-05-21 05:04 CEST.
+- Continued the active E2E implementation-risk sweep after the focused scan found `e2e/workflows.spec.ts` still contained multiple `expect(true).toBeTruthy()` placeholder passes and an active `Contract Attestation` section for a route that the launch corridor treats as archived.
+- Replaced the placeholder pass-through assertions with concrete launch-safe checks for login redirects, profile sections or empty state, matching filter surface or matching empty state, and interview schedule/list/empty-state coverage.
+- Reframed the contract-signing browser coverage as an archived-surface assertion: `/app/i/contracts` must not expose active contract, agreement, attestation, sign, or attest UI if the request is not redirected to login.
+- Extended launch-gate coverage so active broad workflows must keep archived contract wording and cannot reintroduce `Contract Attestation`, `should display contracts page`, or `expect(true).toBeTruthy()` placeholder checks.
+- Verification passed: focused launch-gate guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "retired contract-signing|active broad E2E matching" --reporter=verbose` (2 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 138 tests), Playwright discovery `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx playwright test e2e/workflows.spec.ts --list` (66 tests listed across configured browsers), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted placeholder/contract scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - E2E Helper Fail-Closed Test Data Cleanup
+
+- Timestamp: 2026-05-21 05:07 CEST.
+- Continued the active E2E helper sweep after `e2e/helpers/auth.ts` still returned a mock verification token and `e2e/helpers/test-data.ts` still treated seed/cleanup helpers as no-op placeholders while exposing score-led `matchScore` mock response data.
+- Changed the email verification helper to fail closed with a clear connected-inbox requirement instead of returning a fake token.
+- Changed broad seed/cleanup helpers to fail closed with a connected-adapter requirement instead of logging and silently doing nothing, so future E2E suites cannot appear seeded when they are not.
+- Replaced active mock matching response score data with proof-signal fixtures, and added a launch-gate guard that requires fail-closed helper behavior while rejecting fake verification tokens, placeholder wording, and score fields in active broad E2E helper scaffolding.
+- Verification passed: focused helper guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "active broad E2E helpers|active broad E2E matching" --reporter=verbose` (2 focused tests), direct helper typecheck `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx tsc --noEmit --incremental false --pretty false e2e/helpers/auth.ts e2e/helpers/test-data.ts`, full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted helper-placeholder/score scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Paused Match Client Score Fallback Cleanup
+
+- Timestamp: 2026-05-21 05:10 CEST.
+- Continued the active matching-surface sweep after finding `src/components/matching/SnoozedMatchesList.tsx` still accepted a `matchScore` field and derived proof-fit labels client-side, even though the `/api/match/snoozed` route and launch corridor require paused-match responses to stay free of raw score artifacts.
+- Removed the active client `matchScore` field and the score-derived `legacyProofFitLabel` fallback; paused matches now render the API-provided qualitative `proofFitLabel` or the neutral `Proof review needed` fallback.
+- Added a UI regression that injects a raw `matchScore` into the paused-match response shape and proves the client ignores it rather than deriving `Strong proof alignment` or rendering a percentage.
+- Strengthened the paused-match launch-gate guard so `SnoozedMatchesList` cannot reintroduce `matchScore?: number`, `legacyProofFitLabel`, or `match.matchScore`.
+- Verification passed: focused paused-match/API/launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/matching-paused-hidden-manager.test.tsx tests/api/match-snoozed-route.test.ts tests/scripts/launch-gate-config.test.ts -t "paused|snoozed|active broad E2E helpers|paused-match responses" --reporter=verbose` (3 files / 7 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 140 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted paused-match score-fallback scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Match Explainer Proof-Signal-Only UI Cleanup
+
+- Timestamp: 2026-05-21 05:14 CEST.
+- Continued the active matching UI score-artifact sweep after confirming the retained profile/explain APIs keep score and subscore fields internal, but `MatchExplainerModal`, `MatchResultCard`, and `MatchingOrganizationView` still accepted legacy `compositeScore` and `subscores` fallback props that could convert leaked internal fields into visible proof labels.
+- Removed `compositeScore` and `subscores` from the match explainer UI contract and stopped passing `matchExplanation.compositeScore` / `matchExplanation.subscores` from active match cards.
+- Changed organization review explanation labels to rely only on API-provided qualitative `proofSignals` with a neutral `Not available` fallback instead of deriving labels from raw subscore numbers.
+- Removed the individual match card's compensation-row fallback on `result.subscores?.compensation`, so compensation visibility is driven by visible compensation fields only.
+- Strengthened launch-gate coverage so active matching review UI cannot reintroduce `compositeScore={matchExplanation.compositeScore}`, `subscores={matchExplanation.subscores}`, `explanation.subscores`, or score-derived `fallbackScore`.
+- Verification passed: focused matching UI/launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/match-explainer-modal.test.tsx tests/ui/match-result-card.test.tsx tests/ui/matching-organization-view-beta.test.tsx tests/scripts/launch-gate-config.test.ts -t "MatchExplainerModal|MatchResultCard|MatchingOrganizationView|active matching review|retained profile matching" --reporter=verbose` (4 files / 13 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted UI fallback scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Organization Review Skill Label Wording
+
+- Timestamp: 2026-05-21 05:18 CEST.
+- Continued the organization review-console wording sweep after finding a visible required-skill explanation line still rendered `Candidate has: Lvl ...` inside `MatchingOrganizationView`.
+- Reframed that required-skill label as `Submission has: Lvl ...`, changed nearby selected-submission comments away from candidate wording, and changed the intro wait state from `Waiting for reviewer response.` to `Waiting for participant response.`.
+- Added a focused `MatchingOrganizationView` regression that loads a required-skill explanation and proves the visible text is proof-submission scoped while rejecting the old `Candidate has` wording.
+- Tightened the matching-review launch-gate guard to reject `Candidate has: Lvl`, stale selected-candidate comments, stale candidate-explanation comments, and the reviewer-response wait-state copy across active matching review files.
+- Verification passed: focused org matching/launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/matching-organization-view-beta.test.tsx tests/scripts/launch-gate-config.test.ts -t "MatchingOrganizationView|active matching review" --reporter=verbose` (2 files / 7 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted candidate-skill-label scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Interview Feedback Direction Label Wording
+
+- Timestamp: 2026-05-21 05:22 CEST.
+- Continued the active interview feedback wording sweep after `src/app/app/interviews/[id]/feedback/page.tsx` still rendered direction labels as `Candidate -> Org` / `Org -> Candidate` in the feedback response list.
+- Added a small direction-label helper so stored internal direction values continue to use the existing API shape while the visible feedback UI now renders `Participant -> Organization` and `Organization -> Participant`.
+- Tightened the interview-feedback launch-gate guard to require the participant/organization labels and reject the stale candidate/org shorthand.
+- Verification passed: focused launch-gate guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "interview feedback UI" --reporter=verbose` (1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted feedback-direction scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Admin Pilot Ops Participant Labels
+
+- Timestamp: 2026-05-21 05:27 CEST.
+- Continued the admin internal-ops sweep after the pilot corridor drilldown had already renamed the consent label but still allowed generic metadata rendering to show `Candidate Consent Status`, `Candidate Consented`, or pending party `Candidate` from stable internal metadata values.
+- Added dashboard-only metadata key/value display overrides so stored `candidateConsentStatus`, `candidate_consented`, and pending-party `candidate` values stay stable while operator-facing admin UI renders proof-review participant labels.
+- Extended `AdminVerificationDashboard` coverage to prove the pilot drilldown and audit context show proof-review participant consent/status/reveal language, hide private email and notes, and reject the stale candidate labels.
+- Strengthened the internal-ops launch-gate guard so the override table and UI test expectations cannot regress to candidate-consent/status wording.
+- Verification passed: focused admin/internal-ops run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/admin-verification-dashboard.test.tsx tests/scripts/launch-gate-config.test.ts -t "AdminVerificationDashboard|internal ops SOPs" --reporter=verbose` (2 files / 9 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted admin-label scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Match Card Score-Derived Label Cleanup
+
+- Timestamp: 2026-05-21 05:30 CEST.
+- Continued the active matching-card score-artifact sweep after `MatchResultCard` still accepted `score` / `contributions` props and derived visible `Strong proof alignment` / `Clear proof alignment` labels client-side.
+- Removed the score and contribution fallback contract from the card so it renders only API-provided qualitative `proofSignals`, with a neutral `Proof signals available` or `Proof review needed` badge instead of score-derived proof-fit labels.
+- Updated individual match-card and mobile-clarity fixtures to pass explicit qualitative proof signals instead of raw score/contribution data.
+- Strengthened the active matching-review launch-gate guard so `MatchResultCard` cannot reintroduce `score?: number`, `result.score`, `proofSignalLabel(value)`, `contributions.map`, or the score-derived alignment labels.
+- Verification passed: focused matching-card run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/match-result-card.test.tsx tests/ui/individual-matching-mobile-clarity.test.tsx tests/scripts/launch-gate-config.test.ts -t "MatchResultCard|individual matching mobile clarity|active matching review" --reporter=verbose` (3 files / 9 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted match-card score-fallback scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Active Matching E2E Rank Helper Cleanup
+
+- Timestamp: 2026-05-21 05:33 CEST.
+- Continued the active E2E helper sweep after `e2e/helpers/matching-helpers.ts` still described `rank transparency` and exported a `verifyRankDisplay` helper that searched for exact rank or position indicators.
+- Reframed the matching helper module around launch-safe matching visibility, renamed the raw-score helper to `verifyRawScoreArtifactsHidden`, and replaced the rank-display helper with `verifyExactRankArtifactsHidden` so active E2E support asserts exact rank artifacts are absent.
+- Tightened the active broad E2E launch-gate guard to require the absence-based helpers and reject `rank transparency`, `Verify rank display`, `Look for rank indicators`, and `verifyRankDisplay`.
+- Verification passed: focused broad E2E matching guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "active broad E2E matching assertions" --reporter=verbose` (1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted helper stale-rank scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Organization E2E Proof-Submission Detail Helper Cleanup
+
+- Timestamp: 2026-05-21 05:35 CEST.
+- Continued the active organization E2E helper sweep after `e2e/helpers/organization-helpers.ts` still exported `viewCandidateProfile`, used candidate/profile selectors, and the complete journey still described O-08/O-09 as candidate discovery / candidate deep dive.
+- Reframed the organization journey around proof-submission review and proof-submission detail, renamed the helper to `viewProofSubmissionDetail`, and removed the candidate-link selector from active proof-submission detail navigation.
+- Renamed the shortlist helper to `shortlistProofSubmission` and tightened the organization empty-state helper wording to `no proof submissions`.
+- Strengthened the organization integration launch-gate guard to require proof-submission detail helper language and reject `viewCandidateProfile`, candidate profile/deep-dive wording, and `a[href*="candidate"]`.
+- Verification passed: focused organization integration guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "active organization integration E2E" --reporter=verbose` (1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 139 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted organization-helper stale-candidate scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Active Match Analytics Proof-Signal Contract Cleanup
+
+- Timestamp: 2026-05-21 05:39 CEST.
+- Continued the active analytics sweep after `src/lib/analytics/constants.ts` still advertised match telemetry through public `match_score`, `pac_value`, skills score, constraints score, and verification score fields, even though the active corridor keeps ranking/score data internal and visible review surfaces reason-coded.
+- Preserved the stable analytics event keys, including `candidate_invite_*`, but changed the active match viewed/actioned property interfaces to use qualitative `proof_signals`, `review_mode: 'reason_coded'`, and `score_visibility: 'internal_ordering_only'`.
+- Extended analytics display-copy coverage with typed sample match viewed/actioned payloads that prove qualitative proof-signal telemetry is the supported shape and reject serialized score-field artifacts.
+- Added a launch-gate guard for the active analytics contract so future changes cannot reintroduce the old score-led property fields.
+- Verification passed: focused analytics run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/analytics-display-copy.test.ts tests/scripts/launch-gate-config.test.ts -t "analytics" --reporter=verbose` (2 files / 5 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 140 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Manual QA Proof-Submission Wording
+
+- Timestamp: 2026-05-21 05:42 CEST.
+- Continued the active manual-QA docs sweep after `MANUAL_TESTING_GUIDE.md` and `MANUAL_TESTING_CHECKLIST.md` still told human testers to verify `candidate proof review cards`, `candidate consent`, and a `proof-first hiring` / `hire/engage` corridor.
+- Reframed the manual testing guide around proof-first assignment review, proof-submission review cards, proof-review participant consent, and `engage/close` workflow outcomes while preserving the same route inventory and manual-link interview posture.
+- Reframed the quick checklist organization privacy item around proof-review participant consent before identity/contact reveal.
+- Refreshed both manual docs and their registry rows to `2026-05-21`, and strengthened the launch-gate manual-doc guard to require the corrected wording and reject the stale candidate/hiring phrases.
+- Verification passed: focused manual-doc guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "manual testing docs" --reporter=verbose` (1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 140 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted manual-doc stale-phrase scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Email Support Proof-Submission Review Wording
+
+- Timestamp: 2026-05-21 05:45 CEST.
+- Continued the support-operations docs sweep after `EMAIL_SUPPORT_SETUP.md` still used `Assignment Or Candidate Review Help`, referred support users to an `assignment or review queue`, and warned about `candidate private proof files`.
+- Reframed that common support template as `Assignment Or Proof-Submission Review Help`, pointed operators to the assignment or proof-submission review queue, and used proof-review participant reveal consent plus participant private proof-file wording.
+- Refreshed the active email support doc and registry row to `2026-05-21`, and strengthened the support launch-gate guard so the old candidate-review support taxonomy and private-proof wording cannot return.
+- Verification passed: focused support guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "support guidance" --reporter=verbose` (1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 140 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted email-support stale-phrase scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Alerting Engage-Close Wording
+
+- Timestamp: 2026-05-21 05:48 CEST.
+- Continued the launch-ops docs sweep after `docs/alert-configuration.md` still told operators to alert on `decision recording, including hire/engage`, while the active workflow language has moved to decision plus engage/close outcomes.
+- Reframed the alerting workflow list around `decision recording, including engage/close outcomes`, preserving the same alert scope, monitor routes, manual meeting-link posture, and privacy-safe payload guidance.
+- Refreshed the active alert configuration doc and registry row to `2026-05-21`, and strengthened the alert launch-gate guard to require engage/close wording and reject the old `hire/engage` phrase.
+- Verification passed: focused alert guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "alert configuration" --reporter=verbose` (1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 140 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted alert-doc stale-phrase scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Design Contract Assignment-Review Wording
+
+- Timestamp: 2026-05-21 05:50 CEST.
+- Continued the active design-contract sweep after `DESIGN.md` still described Proofound as a proof-first hiring corridor, listed `candidate review` as a primary UI object, and warned against admin density on `candidate-facing` surfaces.
+- Reframed the visual thesis around a proof-first, privacy-first assignment review corridor, changed the primary-object list to `proof-submission review`, and changed the density warning to public or participant-facing surfaces.
+- Refreshed the design contract and registry row to `2026-05-21`, and strengthened the visual style launch-gate guard so future UI guidance cannot drift back to hiring/candidate-review wording.
+- Verification passed: focused design guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "visual style and motion docs" --reporter=verbose` (1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 140 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted design-contract stale-phrase scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Organization E2E Fail-Closed Assignment Review
+
+- Timestamp: 2026-05-21 05:54 CEST.
+- Continued the active organization integration E2E sweep after `e2e/integration/organization-complete-journey.spec.ts` still had temporary `For now` coverage notes, an old matching-weights test name, and assignment-creation paths that caught failures instead of failing the test.
+- Reframed the profile-route check as a private-route safe-load/redirect assertion, made assignment creation fail closed in both the assignment and full-journey tests, and changed the old matching-weights case into a proof-submission review surface check that rejects score/rank tuning controls when the route loads.
+- Strengthened the active organization integration launch-gate guard so future edits cannot reintroduce the temporary placeholder comments or swallowed assignment-creation failure messages.
+- Verification passed: focused organization integration guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "keeps active organization integration E2E proof-submission scoped" --reporter=verbose` (1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 140 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted organization E2E placeholder scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - SLA Cron Stale Match Expiry Contract
+
+- Timestamp: 2026-05-21 05:57 CEST.
+- Continued the active launch-ops runtime sweep after `src/app/api/cron/sla-enforcement/route.ts` still handled expired match review windows only through an implicit one-year snooze with `For now` commentary.
+- Preserved the no-reappear behavior by keeping a 365-day suppression window, but made the cron write the canonical `stale` match lifecycle state and `staleAt` timestamp at the same time so expiry is visible to lifecycle/audit consumers without inventing an unsupported terminal `expired` match state.
+- Added API coverage proving expired proof-submission matches are marked stale and long-snoozed, and added a launch-gate guard so the route cannot drift back to temporary expiry wording or snooze-only semantics.
+- Verification passed: focused SLA cron run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/cron-sla-enforcement-route.test.ts tests/scripts/launch-gate-config.test.ts -t "sla-enforcement|SLA enforcement cron" --reporter=verbose` (2 files / 4 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 141 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted SLA cron expiry scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Privacy RLS Private Profile Fail-Closed Test
+
+- Timestamp: 2026-05-21 06:01 CEST.
+- Continued the active privacy test sweep after `tests/privacy/rls-policies.test.ts` still used a `For now` caveat and only asserted Alice could not read Bob's individual profile when the query already returned no data or an error.
+- Made the fixture create an explicit private `individual_profiles` row for Bob, then always assert Alice's authenticated query is unauthorized or empty, so a leaked private row now fails the test instead of falling through.
+- Strengthened the launch-gate privacy guard so the private fixture and fail-closed assertion are required and the old conditional soft-pass pattern cannot return.
+- Verification passed: focused launch-gate guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "privacy test guidance" --reporter=verbose` (1 focused test), `npm run test:privacy` against the configured Supabase test project after network approval (2 files / 22 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 141 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. The first unapproved privacy run failed with sandbox DNS `ENOTFOUND`; the approved rerun passed. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Analytics Proof-Fit Metric Contract Cleanup
+
+- Timestamp: 2026-05-21 06:07 CEST.
+- Continued the active analytics metric sweep after the runtime health-check path still consumed the old `metrics.pac` / `pac_acceptance` / `PAC_LIFT` contract while the active corridor exposes qualitative proof-fit acceptance lift instead of PAC/ranking language.
+- Renamed the active lift result to `ProofFitLiftResult`, changed the metric id to `PROOF_FIT_ACCEPTANCE_LIFT`, exposed high/low proof-fit acceptance fields, and kept legacy event property reads compatible while moving SQL aliases, logs, and aggregate return keys to proof-fit naming.
+- Updated the cron health-check contract and analytics metric tests to consume `proofFitLift` with `proof_fit_acceptance` / `proof_fit_contract` checks, then strengthened the launch-gate guard so the old PAC lift result, score-led sample fields, and health-check keys cannot return.
+- Verification passed: focused proof-fit run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run src/lib/analytics/__tests__/metrics.test.ts tests/api/cron-health-check-route.test.ts tests/scripts/launch-gate-config.test.ts -t "Proof-Fit|cron/health-check|active match analytics" --reporter=verbose` (3 files / 8 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 141 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale PAC-contract scan, and `git diff --check`. The targeted scan now only finds negative launch-gate assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Analytics Proof-Fit Constant and Cache Key Cleanup
+
+- Timestamp: 2026-05-21 06:09 CEST.
+- Continued the analytics contract sweep after `src/lib/analytics/constants.ts`, `src/lib/analytics/events.ts`, and `docs/alert-configuration.md` still used PAC naming for the active proof-fit business metric constant, cache key, summary comment, and non-gating alerting guidance.
+- Renamed the active threshold export to `PROOF_FIT_LIFT_TARGET_PERCENT`, renamed the metric cache key to `PROOF_FIT_LIFT: 'metrics:proof-fit:lift'`, and changed the events summary to proof-fit lift while preserving the existing stable analytics event properties.
+- Updated the alerting guidance from `TTSC/TTFQI/PAC business metric targets` to `TTSC/TTFQI/proof-fit business metric targets`, and strengthened the launch-gate guard so the old PAC threshold/cache key/comment and alerting phrase cannot return.
+- Verification passed: focused launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "active match analytics|alert configuration" --reporter=verbose` (1 file / 2 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 141 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale PAC constant/cache scan, and `git diff --check`. The targeted scan now only finds negative launch-gate assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - E2E PRD Reference Engage-Close Wording
+
+- Timestamp: 2026-05-21 06:12 CEST.
+- Continued the stale corridor-language sweep after the historical `e2e/PRD_CRITERIA_VALIDATION.md` reference still described the workflow as `hire/engage`, even though the active MVP language uses decision plus engage/close outcomes.
+- Updated the historical reference's matching-hub criteria and workflow test coverage wording to `engage/close outcomes`, refreshed its docs registry row to `2026-05-21`, and added a launch-gate guard so this reference stays historical while no longer reviving the stale workflow phrase.
+- Verification passed: focused launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "historical E2E PRD validation" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 142 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted `hire/engage` scan, and `git diff --check`. The targeted scan now only finds negative launch-gate assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Compatibility PRD Proof-Submission Review Wording
+
+- Timestamp: 2026-05-21 06:14 CEST.
+- Continued the root reference-doc sweep after `PRD_for_a_web_platform_MVP.md` still used `candidate consent` and `privacy-safe candidate review` inside its compatibility mirror summary, even though the active stack uses proof-review participant consent and proof-submission review.
+- Reframed the mirror's reveal rule to require proof-review participant consent and changed the organization capability list to `privacy-safe proof-submission review`, without changing its reference-spec status or authority position below the locked MVP stack.
+- Strengthened the legacy PRD mirror launch-gate guard so the compatibility mirror must contain proof-review participant consent and proof-submission review language and cannot drift back to stale candidate-consent/review wording.
+- Verification passed: focused launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "legacy PRD mirrors" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 142 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted candidate-consent/review mirror scan, and `git diff --check`. The targeted scan now only finds guard fixtures and negative launch-gate assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Active Authority Proof-Review Participant Wording
+
+- Timestamp: 2026-05-21 06:16 CEST.
+- Continued the active authority-stack sweep after the locked source, aligned PRD, aligned technical requirements, and launch runbook still used `candidate consent`, `candidate review record`, `candidate review, proof editing`, `non-candidate-facing`, and `candidate-visible feedback` wording in otherwise current launch requirements.
+- Reframed identity-bearing reveal rules around proof-review participant consent, changed the organization object to a proof-submission review record, changed performance guidance to proof-submission review, and changed feedback/private-note language to participant-visible feedback.
+- Strengthened the existing locked-authority launch-gate guard so these active authority docs must contain proof-review participant / proof-submission review wording and cannot drift back to stale candidate-consent/review terminology.
+- Verification passed: focused authority guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "locked MVP authority stack" --reporter=verbose` (1 file / 3 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 142 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted authority stale-phrase scan, and `git diff --check`. The targeted scan now only finds negative launch-gate assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Legacy Technical and Runbook Mirror Wording
+
+- Timestamp: 2026-05-21 06:19 CEST.
+- Continued the root mirror sweep after `PRD_TECHNICAL_REQUIREMENTS.md` and `LAUNCH_RUNBOOK.md` still used candidate-consent/review wording even though they are reference-only wrappers below the aligned active authority stack.
+- Reframed the legacy technical mirror around proof-review participant consent, proof-submission review performance, and participant-visible feedback, and reframed the legacy launch runbook around proof-review participant consent and participant-visible feedback.
+- Refreshed both docs registry rows to `2026-05-21` and added a launch-gate guard so these legacy mirrors remain reference-only and cannot drift back to candidate-consent/review terminology.
+- Verification passed: focused mirror guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "legacy technical and runbook mirrors" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 143 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale mirror phrase scan, and `git diff --check`. The targeted scan now only finds negative launch-gate assertions. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Provider Reference Proof-Review Consent Wording
+
+- Timestamp: 2026-05-21 06:22 CEST.
+- Continued the provider-reference sweep after `OAUTH_SETUP_GUIDE.md` still told launch operators to preserve `candidate consent` before reveal, even though the active privacy language is proof-review participant consent.
+- Updated the retained OAuth/provider setup reference to `proof-review participant consent preserved before reveal`, refreshed its `Last Verified` and docs registry row to `2026-05-21`, and strengthened the existing provider-doc launch-gate guard against the old phrase.
+- Verification passed: focused provider-doc guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root production and provider docs" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 143 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted provider-consent phrase scan, and `git diff --check`. The targeted scan now only finds the new wording and its negative launch-gate assertion. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Project Specification Reveal Consent Wording
+
+- Timestamp: 2026-05-21 06:24 CEST.
+- Continued the preserved-reference sweep after `Proofound_Project_Specification_2026-03-11.md` still said identity reveal requires `candidate consent`, despite AGENTS marking it reference-only below the locked MVP authority stack and the active stack now using proof-review participant consent.
+- Updated the product-rule list to require proof-review participant consent, refreshed the docs registry row to `2026-05-21`, and added a launch-gate guard proving the project specification remains reference-only while following the active privacy language.
+- Verification passed: focused project-spec guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "preserved project specification" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 144 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted reveal-consent phrase scan, and `git diff --check`. The targeted scan now finds the corrected wording plus the negative launch-gate assertion only. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Privacy Architecture Consent Wording
+
+- Timestamp: 2026-05-21 06:27 CEST.
+- Continued the root reference-spec sweep after `DATA_SECURITY_PRIVACY_ARCHITECTURE.md` still had a subprocessing clause saying organizations may not share data with third parties without `candidate consent`, even though the active privacy language now uses proof-review participant consent.
+- Updated that clause to require proof-review participant consent, refreshed the docs registry row to `2026-05-21`, and added a launch-gate guard proving the root privacy architecture reference remains reference-only while staying aligned with the active consent wording.
+- Verification passed: focused privacy-architecture guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root privacy architecture" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 145 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted privacy-architecture stale-consent scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Superseded Master PRD Consent Wording
+
+- Timestamp: 2026-05-21 06:29 CEST.
+- Continued the historical-reference sweep after `PRD_for_a_web_platform_MVP.master-latest.md` remained explicitly superseded but still had stale reveal-consent and feedback wording that could mislead future reference scans.
+- Kept the document historical and below the active authority stack, while updating the three narrow lines to proof-review participant consent and participant-visible feedback, and refreshed its docs registry row to `2026-05-21`.
+- Added a launch-gate guard proving the superseded master PRD stays historical while no longer carrying the stale candidate-consent or candidate-visible feedback phrases.
+- Verification passed: focused master-PRD guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "superseded master PRD" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 146 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale consent/feedback scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Technical Requirements Participant-Visible Feedback Wording
+
+- Timestamp: 2026-05-21 06:32 CEST.
+- Continued the active authority and mirror wording sweep after `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` and the legacy mirror still used `candidate-visible closure feedback`, `candidate-visible channels`, and `candidate notification` language in otherwise current notification and SLA requirements.
+- Updated the aligned technical requirements and mirror to require participant-visible closure feedback, keep private notes out of participant-visible channels, and describe silent shortlist handling as no proof-review participant notification before the intro corridor opens.
+- Also updated the superseded master PRD's organization-side object list from `candidate review record` to `proof-submission review record`, preserving its historical status but removing a stale future-reference seed.
+- Tightened launch-gate coverage so the active authority stack, legacy technical mirror, and superseded master PRD require the new wording and reject the stale candidate-visible/candidate-notification/candidate-review-record phrases.
+- Verification passed: focused authority/mirror/master guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "locked MVP authority stack|legacy technical and runbook mirrors|superseded master PRD" --reporter=verbose` (1 file / 5 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 146 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted stale technical wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Reveal Approval Participant Wording
+
+- Timestamp: 2026-05-21 06:35 CEST.
+- Continued the reveal-privacy wording sweep after the aligned technical requirements, legacy technical mirror, and preserved project specification still described identity-bearing reveal as requiring `candidate approval` instead of proof-review participant approval.
+- Updated those reveal rules to require proof-review participant approval before identity-bearing reveal, keeping the same reveal-stage behavior and authority ordering.
+- Tightened launch-gate coverage so the active technical requirements, legacy mirror, and preserved project specification require proof-review participant approval wording and reject the stale candidate-approval phrases.
+- Verification passed: focused authority/mirror/project-spec guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "locked MVP authority stack|legacy technical and runbook mirrors|preserved project specification" --reporter=verbose` (1 file / 5 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 146 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted reveal-approval wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Provider Manual Privacy Participant Wording
+
+- Timestamp: 2026-05-21 06:37 CEST.
+- Continued the provider and manual-QA privacy wording sweep after `OAUTH_SETUP_GUIDE.md` and `MANUAL_TESTING_GUIDE.md` still used candidate contact or hidden candidate identity language in launch-adjacent privacy checks.
+- Reframed connected-provider evidence capture and public-surface manual QA around proof-review participant contact details and hidden proof-review participant identity, while preserving the same no-private-proof/no-hidden-state/no-admin-diagnostic requirements.
+- Strengthened launch-gate coverage so provider and manual-testing docs require proof-review participant contact/identity language and reject the stale candidate contact/identity phrases.
+- Verification passed: focused provider/manual-doc guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root production and provider docs|manual testing docs" --reporter=verbose` (1 file / 2 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 146 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted contact/identity wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - GTM Authority Assignment-Review Wording
+
+- Timestamp: 2026-05-21 06:41 CEST.
+- Continued the active GTM authority sweep after `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md` still described the pilot promise as a first `hiring corridor`, referred to hidden `candidate identity`, and used outbound copy centered on teams that `want to hire through proof`.
+- Reframed the GTM privacy and outbound language around proof-review participant identity, the first assignment-review corridor, and review signal from the work behind the claim, preserving the narrow pilot positioning without reintroducing broad talent-platform framing.
+- Strengthened launch-gate coverage so the locked authority stack and active operator-doc guard require the assignment-review / proof-review participant wording and reject the stale hiring-corridor, candidate-identity, and hire-through-proof phrases.
+- Verification passed: focused GTM/operator-doc guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "locked MVP authority stack|active operator docs" --reporter=verbose` (1 file / 5 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 146 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted GTM stale-phrase scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Project Specification Assignment-Review Corridor Wording
+
+- Timestamp: 2026-05-21 06:43 CEST.
+- Continued the preserved-reference sweep after `Proofound_Project_Specification_2026-03-11.md` still had one launch-acceptance bullet saying the `hiring corridor` reaches explicit `hire` and engagement verification states.
+- Reframed that acceptance bullet around the assignment-review corridor, keeping the same explicit hire and engagement-verification acceptance semantics while preserving the document's reference-only status below the active authority stack.
+- Tightened the preserved project-spec launch-gate guard so the assignment-review corridor wording is required and the stale hiring-corridor acceptance bullet cannot return.
+- Verification passed: focused project-spec guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "preserved project specification" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 146 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted project-spec acceptance wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Core User Flows Proof-Submission Reference Wording
+
+- Timestamp: 2026-05-21 06:46 CEST.
+- Continued the root reference-spec sweep after `Proofound_Core_User_Flows_v1.md` still described organization review flows as ranked candidate matches, candidate deep-dives, candidate profiles, and candidate-stage movement, even though the file is reference-only and below the locked MVP authority stack.
+- Reframed the affected O-08 through O-16 flow labels and completion/data language around proof-submission matches, proof-submission review records, proof-review participants, assignment workflow stages, manual-link engagement confirmation, and proof-review participant profile verification.
+- Refreshed the docs registry row to `2026-05-21` and added launch-gate coverage so this root reference remains explicitly reference-only while no longer carrying stale ranked-candidate review seeds.
+- Verification passed: focused core-user-flows guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "core user flows" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 147 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted core-flows stale-wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Production Checklist LinkedIn Reveal Wording
+
+- Timestamp: 2026-05-21 06:48 CEST.
+- Continued the active launch-checklist sweep after `PRODUCTION_CHECKLIST.md` still said LinkedIn account-side checks must not grant `candidate reveal`, even though reveal readiness now needs proof-review participant consent/readiness language.
+- Reframed the LinkedIn provider note so account-side LinkedIn checks cannot grant public trust, proof-review participant reveal readiness, or intro eligibility by themselves.
+- Strengthened the production/provider-doc launch-gate guard so the corrected LinkedIn reveal-readiness line is required and `candidate reveal` cannot return to the production checklist.
+- Verification passed: focused provider-doc guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root production and provider docs" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 147 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted LinkedIn reveal wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Organization Momentum Proof-Submission Activity Copy
+
+- Timestamp: 2026-05-21 06:51 CEST.
+- Continued the active runtime-copy sweep after `src/lib/momentum/activity.ts` still emitted `New candidate match generated` for organization activity events.
+- Reframed the organization match activity event as `New proof-submission match generated`, preserving the same event type, timestamp, action URL, and assignment metadata.
+- Added direct momentum activity coverage for the organization event copy and a launch-gate guard proving the active source no longer carries the stale candidate-match phrase while the regression test keeps the negative fixture.
+- Verification passed: focused momentum/launch-gate guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/momentum-activity.test.ts tests/scripts/launch-gate-config.test.ts -t "proof-submission scoped match activity copy|organization momentum activity" --reporter=verbose` (2 files / 2 focused tests), combined launch-gate and momentum run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/lib/momentum-activity.test.ts --reporter=verbose` (2 files / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted organization activity copy scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Public Portfolio Proof Summary Share Copy
+
+- Timestamp: 2026-05-21 06:54 CEST.
+- Continued the public portfolio surface sweep after `src/app/portfolio/[handle]/CopyTextButton.tsx` still labeled the public text-pack action as `Copy recruiter summary`, which preserved recruiter-framed copy on a proof/public-portfolio surface.
+- Reframed the public portfolio share action as `Copy proof summary`, preserving the existing endpoint, loading, copied, clipboard, and error behavior.
+- Updated the public portfolio UI test to assert the proof-summary button and reject the recruiter-summary button, and added launch-gate coverage so the active button source cannot drift back to recruiter-scoped wording.
+- Verification passed: focused public portfolio render test `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/public-portfolio-page.test.tsx -t "renders public read-only view" --reporter=verbose` (1 file / 1 focused test), focused launch-gate guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/public-portfolio-page.test.tsx tests/scripts/launch-gate-config.test.ts -t "public portfolio share actions|renders public read-only view" --reporter=verbose` (launch-gate guard passed; UI filter was rerun separately with the exact test name), combined launch-gate and public portfolio run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/ui/public-portfolio-page.test.tsx --reporter=verbose` (2 files / 158 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted copy-button wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Engagement Verification Workflow Decision Copy
+
+- Timestamp: 2026-05-21 06:59 CEST.
+- Continued the internal ops runtime-copy sweep after `src/lib/engagement-verifications/service.ts` still queued engagement-verification follow-up as `Hire recorded`, which made a workflow decision sound like a confirmed hiring outcome before pilot follow-through.
+- Reframed the internal queue summary as `Workflow decision recorded. Engagement confirmation still needs pilot follow-through.`, preserving the same queue type, priority, related entity, and follow-up behavior.
+- Updated engagement-verification service coverage and added launch-gate coverage so active source requires the workflow-led queue summary while the stale `Hire recorded` phrase survives only as a negative regression assertion in tests.
+- Verification passed: focused launch-gate guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/engagement-verifications.test.ts tests/scripts/launch-gate-config.test.ts -t "creates a pending verification record|engagement verification pilot-ops" --reporter=verbose` (launch-gate guard passed; service filter was rerun separately with the exact test name), focused service test `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/engagement-verifications.test.ts -t "creates a pending engagement verification" --reporter=verbose` (1 file / 1 focused test), combined launch-gate and engagement-verification run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/lib/engagement-verifications.test.ts --reporter=verbose` (2 files / 160 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted workflow-summary wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Privacy Architecture DPA Participant Retention Wording
+
+- Timestamp: 2026-05-21 07:02 CEST.
+- Continued the root privacy-reference sweep after `DATA_SECURITY_PRIVACY_ARCHITECTURE.md` still described the organization DPA around receiving `candidate data`, retaining it after a `hiring decision`, and deleting on `candidate request`.
+- Reframed that reference DPA block around proof-review participant data, the approved assignment-review workflow, legally required engagement follow-through, and retention after the documented workflow decision or engagement outcome.
+- Strengthened the root privacy architecture launch-gate guard so the corrected participant/workflow retention language is required and the stale candidate-data/hiring-decision DPA phrases cannot return.
+- Verification passed: focused privacy architecture guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root privacy architecture" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted DPA wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Root Reference Corridor Participant Wording
+
+- Timestamp: 2026-05-21 07:04 CEST.
+- Continued the root reference sweep after `Proofound_Project_Specification_2026-03-11.md` still labeled section 9.4 as a `Hiring corridor` and listed `candidate intro acceptance` plus `candidate reveal approval`, while `DATA_SECURITY_PRIVACY_ARCHITECTURE.md` still summarized org-flow protections as `candidate data protection`.
+- Reframed the preserved project-spec corridor as the assignment-review corridor with proof-review participant intro/reveal approval steps, and aligned the privacy-architecture summary with proof-review participant data protection.
+- Strengthened the preserved project-spec and root privacy-architecture launch-gate guards so those stale root-reference phrases cannot return.
+- Verification passed: focused preserved-spec/privacy guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "preserved project specification|root privacy architecture" --reporter=verbose` (1 file / 2 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted root-reference wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Privacy Architecture Compensation And CCPA Sharing Copy
+
+- Timestamp: 2026-05-21 07:07 CEST.
+- Continued the root privacy-reference sweep after `DATA_SECURITY_PRIVACY_ARCHITECTURE.md` still used generic opportunity/application wording in user-facing privacy examples for compensation expectations and CCPA sharing.
+- Reframed the compensation-purpose copy around assignment reviews respecting compensation needs, and reframed the CCPA sharing example around organizations inside an approved proof-review workflow.
+- Strengthened the root privacy architecture launch-gate guard so the corrected assignment-review/proof-review workflow phrases are required and the stale opportunities/apply-to-organizations wording cannot return.
+- Verification passed: focused privacy architecture guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root privacy architecture" --reporter=verbose` (1 file / 1 focused test after the targeted scan caught the second stale phrase), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted privacy wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Core User Flows Assignment-Review Feed Wording
+
+- Timestamp: 2026-05-21 07:09 CEST.
+- Continued the root flow-reference sweep after `Proofound_Core_User_Flows_v1.md` still described I-11 as a recommended feed for discovering best-fit opportunities, scrolling ranked lists, inspecting match scores, and saving/applying.
+- Reframed I-11 as recommended assignment reviews, with reason-coded proof signals, privacy-safe preference data, and interest/dismiss actions inside an assignment-review context.
+- Strengthened the core user flows launch-gate guard so the assignment-review feed wording is required and the stale opportunity/ranked-score/apply copy cannot return.
+- Verification passed: focused core user flows guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root core user flows" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted core-flows feed wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Candidate Invite Proof Submission CTA Copy
+
+- Timestamp: 2026-05-21 07:12 CEST.
+- Continued the active invite UI sweep after `src/app/candidate-invite/[token]/CandidateInviteClient.tsx` still presented the proof-card invite path as `Apply`, `Apply from this assignment`, `Apply to this assignment`, and `Submit reviewed application`.
+- Reframed the visible invite CTAs and review copy around proof submission: `Submit proof`, `Submit proof for this assignment`, `Continue to proof submission`, owner-only proof-submission packets, and `Submit reviewed proof`, preserving the same routes, proof-pack submission payload, and privacy controls.
+- Updated candidate-invite UI coverage and strengthened the launch-gate invite guard so the stale apply/application wording cannot return to this active proof-submission surface.
+- Verification passed: focused invite UI and launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/candidate-invite-client.test.tsx tests/scripts/launch-gate-config.test.ts -t "structured assignment before asking an unauthenticated guest|assignment proof submissions proof-first|active submission invite failure copy" --reporter=verbose` (2 files / 3 focused tests), combined candidate-invite plus launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/candidate-invite-client.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 157 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted invite wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Public Landing Submission Readiness Copy
+
+- Timestamp: 2026-05-21 07:17 CEST.
+- Continued the active public landing sweep after `HiringTeamsSection`, `DayOneSurfacesSection`, and `ScrollytellingSection` still described the pilot review problem as applications starting/opening and weak applications.
+- Reframed those public landing examples around proof submissions starting/opening and weak submissions, preserving the same section layout, story frames, and pilot CTA behavior.
+- Updated landing copy guardrails to include the active `HiringTeamsSection` source and strengthened both UI and launch-gate checks so stale applications wording cannot return to those active public surfaces.
+- Verification passed: focused landing copy/CTA/launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/landing-copy-guardrails.test.tsx tests/ui/pilot-packaging-guardrails.test.tsx tests/scripts/launch-gate-config.test.ts -t "active public landing copy|landing CTA surfaces|active public landing and SEO copy" --reporter=verbose` (3 files / 3 focused tests after adding the active HiringTeams source to the guard), combined landing plus launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts tests/ui/landing-copy-guardrails.test.tsx tests/ui/pilot-packaging-guardrails.test.tsx --reporter=verbose` (3 files / 154 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, targeted landing applications/submissions wording scan, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Proof-Card Route Submission Error Copy
+
+- Timestamp: 2026-05-21 07:20 CEST.
+- Continued the active invite route sweep after `src/app/api/candidate-invites/[token]/proof-card/route.ts` still rejected public/share-link Proof Packs with `Assignment applications can only submit...` on the proof-submission path.
+- Reframed the rejection copy around assignment proof submissions while preserving the same owner-only Proof Pack enforcement, status code, and share-link/public-page rejection behavior.
+- Added direct API coverage for the public Proof Pack rejection path and strengthened the active submission-invite launch-gate guard by including the proof-card route and rejecting the stale application wording.
+- Verification passed: focused proof-card/launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/candidate-invite-proof-card-route.test.ts tests/scripts/launch-gate-config.test.ts -t "public Proof Packs|active submission invite failure copy" --reporter=verbose` (2 files / 2 focused tests), combined proof-card route plus launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/candidate-invite-proof-card-route.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 155 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Privacy Overview Proof-Submission Inventory Copy
+
+- Timestamp: 2026-05-21 07:22 CEST.
+- Continued the active settings/privacy sweep after `src/components/settings/PrivacyOverview.tsx` still listed match-history data as `Matches, applications, conversations` while the same card already scoped the purpose to assignment-review workflows.
+- Reframed the active privacy inventory copy as `Matches, proof submissions, conversations`, preserving the same card, controls, retention copy, and data-review behavior.
+- Updated Privacy Overview copy coverage and strengthened the active recovery/privacy launch-gate guard so stale application wording cannot return to this user-facing privacy surface.
+- Verification passed: focused privacy/launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/privacy-overview-copy.test.tsx tests/scripts/launch-gate-config.test.ts -t "data classification labels|active recovery, privacy" --reporter=verbose` (2 files / 2 focused tests), combined privacy plus launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/ui/privacy-overview-copy.test.tsx tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 153 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Workflow Contract Future-Application Boundary
+
+- Timestamp: 2026-05-21 07:25 CEST.
+- Continued the active lifecycle-contract sweep after `src/lib/workflow/contracts.ts` still described application objects as explicit candidate intent through an application surface, even though the active MVP corridor uses submission invites and intros as the launch-safe pursuit workflow.
+- Reframed `APPLICATION_VS_INTRO_CONTRACT` so application objects are explicitly future/outside the active MVP corridor, the current active pursuit path is a submission invite, and duplicate future application records cannot create a second active intro.
+- Preserved the existing internal action identifiers while updating residual lifecycle tests and the launch-gate contract guard to prevent the stale candidate/application-surface prose from returning.
+- Verification passed: focused lifecycle/launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/residual-lifecycle-contracts.test.ts tests/scripts/launch-gate-config.test.ts -t "future application objects|active interview pages" --reporter=verbose` (2 files / 2 focused tests), combined residual lifecycle plus launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/residual-lifecycle-contracts.test.ts tests/scripts/launch-gate-config.test.ts --reporter=verbose` (2 files / 161 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Root Core Flow Proof-Submission Interest
+
+- Timestamp: 2026-05-21 07:27 CEST.
+- Continued the root reference sweep after `Proofound_Core_User_Flows_v1.md` still carried an I-14 `Apply / Express Interest` flow, an application purpose/done state, a view-to-apply metric, and an O-10 duplicate-application edge case.
+- Reframed I-14 as `Submit Proof Interest`, updated the adjacent fit/detail and messaging references around interest/proof-submission wording, and changed O-10 edge cases to duplicate proof submissions.
+- Strengthened the root core user flows launch-gate guard so the proof-submission-interest wording is required and stale apply/application flow phrases cannot return.
+- Verification passed: focused root core flows guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root core user flows" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Privacy Architecture Proof-Review Workflow Examples
+
+- Timestamp: 2026-05-21 07:29 CEST.
+- Continued the root privacy architecture reference sweep after `DATA_SECURITY_PRIVACY_ARCHITECTURE.md` still used active-looking application consent language in persona data-space examples, I-14 privacy copy, delete-account UI copy, and privacy-enhancing defaults.
+- Reframed those narrative and user-facing examples around approved proof-review workflows, proof submissions shared/received, proof-submission interest, and proof submissions/messages in deletion copy.
+- Left table-name SQL examples such as `applications` untouched so this doc pass does not imply a schema migration or rewrite historical database examples without a separate schema authority pass.
+- Strengthened the root privacy architecture launch-gate guard so the corrected proof-review/proof-submission examples are required and stale application-sharing/user-facing phrases cannot return.
+- Verification passed: focused root privacy architecture guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root privacy architecture" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Data Strategy Proof-Submission Metrics
+
+- Timestamp: 2026-05-21 07:32 CEST.
+- Continued the root strategy-reference sweep after `DATA_REQUIREMENTS_AND_AI_STRATEGY.md` still modeled critical AI/ML data around applications, application rate, hires, and `hired` events.
+- Reframed the strategy metrics around proof submissions, workflow decisions, and verified engagement outcomes, including data inventory tables, volume projections, interaction labeling, progressive profiling, industry metric examples, ML event names, consent copy, collection checklist, ML deployment checklist, and break-even examples.
+- Updated the document `Last Verified` date and `docs/DOCS_REGISTRY.md` row to `2026-05-21`, and strengthened the broad reference-spec launch-gate guard to reject stale application/hire phrases in this file.
+- Verification passed: focused broad reference-spec guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "broad reference specs" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted stale strategy-term scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Root User Flow Reference Corridor Wording
+
+- Timestamp: 2026-05-21 07:38 CEST.
+- Continued the root flow-reference sweep after `Proofound_Core_User_Flows_v1.md` still had first-apply, candidate-view, candidate-volume, candidate-quality, time-to-fill, quality-of-hire, and view-to-apply wording outside the already-fixed I-14 flow.
+- Reframed those root flow references around first proof submission, proof-review participant views, proof-submission volume, proof-submission quality signals, workflow-outcome timing, quality-of-engagement proxies, and view-to-proof-submission interest.
+- Added reference metadata to `USER_FLOWS_TECHNICAL_SPECIFICATIONS.md`, updated its table of contents/examples from apply/candidate deep-dive to proof-submission interest/review, reframed deeper OKR/body metrics from first-apply and view-to-apply to proof-submission interest, and refreshed its `docs/DOCS_REGISTRY.md` date to `2026-05-21`.
+- Strengthened launch-gate coverage for the root core user flows and broad user-flow technical-spec reference.
+- Verification passed: focused root flow/reference guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "broad reference snapshots|root core user flows" --reporter=verbose` (1 file / 2 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted stale flow-term scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - User Flow Technical Spec Proof Interest Body
+
+- Timestamp: 2026-05-21 07:46 CEST.
+- Continued the broad user-flow technical-spec sweep after the deeper I-14 body still used apply/application copy, `POST /api/assignments/:id/apply`, `application_id`, and application confirmation language.
+- Reframed the I-14 body around proof-submission interest, proof-submission review timing, proof-submission interest confirmation, proof-submission navigation, `POST /api/assignments/:id/proof-interest`, and `proof_submission_id`.
+- Reframed organization reference examples from candidate coverage, candidate quality, candidate preview, candidate deep-dive APIs, recruiter candidate management, time-to-fill, and quality-of-hire proxies to proof-submission coverage, quality signals, proof-submission review APIs, reviewer management, workflow-outcome timing, and quality-of-engagement proxies.
+- Cleaned the remaining stage and feedback examples from `PATCH /api/applications/:id/stage` and `Optional feedback sharing with candidate` to proof-submission and proof-review participant wording.
+- Strengthened the broad reference launch-gate guard so the corrected proof-submission-interest wording is required and the stale apply/candidate terms cannot return to `USER_FLOWS_TECHNICAL_SPECIFICATIONS.md`.
+- Verification passed: focused broad reference guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "broad reference snapshots" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted stale technical-spec scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Privacy Architecture Canonical Role Examples
+
+- Timestamp: 2026-05-21 07:50 CEST.
+- Continued the root privacy architecture reference sweep after its RBAC examples still said individuals can apply to assignments, stewards/recruiters manage candidates, and org permissions include viewing or messaging candidates.
+- Reframed the explanatory role model around proof-submission interest, canonical `org_owner` / `org_manager` / `org_reviewer` roles, proof-submission review, and proof-review participant messaging.
+- Updated the adjacent permission-check example from legacy `owner` / `steward` / `recruiter` names to `org_owner` and `org_manager`, matching the current canonical role surface.
+- Strengthened the root privacy architecture launch-gate guard so the corrected canonical role/proof-submission wording is required and the stale apply/candidate/recruiter-era permission phrases cannot return.
+- Verification passed: focused root privacy architecture guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root privacy architecture" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted stale role/candidate permission scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Active Source Fixture Participant Wording
+
+- Timestamp: 2026-05-21 07:53 CEST.
+- Continued the active source/test surface sweep after finding a matching-card source comment still said `Org viewing candidates`, the public projection fixture said reviews avoid asking candidates to overshare, and the visual mock organization described reveal conversations for shortlisted candidates.
+- Reframed those active strings around org proof-submission review, participants, and shortlisted proof-review participants while preserving existing data contracts and rendered behavior.
+- Strengthened existing launch-gate guardrails for active matching review UI, organization trust fixtures, and recovery/privacy support copy so these candidate-scoped fixture phrases cannot return.
+- Verification passed: focused launch-gate run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "active matching review UI|organization trust fixtures|active recovery, privacy" --reporter=verbose` (1 file / 3 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted active-source stale phrase scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Privacy Architecture RLS Canonical Roles
+
+- Timestamp: 2026-05-21 07:56 CEST.
+- Continued the privacy architecture reference sweep after the lower RLS and multi-org snippets still used legacy `owner` / `steward` / `recruiter` / `viewer` role lists.
+- Reframed the assignment/application RLS examples and `org_members.role` check constraint around canonical `org_owner`, `org_manager`, and `org_reviewer` roles, preserving the historical table-name examples and avoiding runtime migration changes.
+- Strengthened the root privacy architecture launch-gate guard so canonical role snippets are required and the stale role lists cannot return.
+- Verification passed: focused root privacy architecture guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "root privacy architecture" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted old/canonical role scans, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Technical Requirements Reviewer Role Copy
+
+- Timestamp: 2026-05-21 07:59 CEST.
+- Continued the active authority-stack sweep after `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` still said `org_reviewer` can review candidates within allowed scope.
+- Reframed the active authority doc and legacy technical mirror so `org_reviewer` reviews proof submissions and contributes feedback within allowed scope.
+- Strengthened the authority-stack and legacy-mirror launch-gate guards so the proof-submission role sentence is required and the stale candidate-review sentence cannot return.
+- Verification passed: focused authority/mirror guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "locked MVP authority stack|legacy technical and runbook mirrors" --reporter=verbose` (1 file / 4 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted reviewer-role sentence scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Superseded Master PRD Corridor Statements
+
+- Timestamp: 2026-05-21 08:02 CEST.
+- Continued the historical/reference-doc sweep after `PRD_for_a_web_platform_MVP.master-latest.md` still described itself as launch-bound and repeated old hiring/candidate-review corridor statements.
+- Preserved the document's `historical` class and superseded warning, while reframing the visible PRD title, review queue, corridor heading, summary bullets, and final statement around assignment review and proof-submission review.
+- Strengthened the superseded-master-PRD launch-gate guard so the corrected historical assignment-review language is required and the old hiring/candidate-review phrases cannot return.
+- Verification passed: focused superseded-master-PRD guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "superseded master PRD" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted stale/corrected PRD phrase scans, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Active Authority Corridor Final Statement
+
+- Timestamp: 2026-05-21 08:06 CEST.
+- Continued the active authority-stack sweep after the aligned PRD still labeled section 6.5 `Hiring corridor`, and the active/legacy technical requirements final statement still described a `hiring and credibility corridor` plus `hiring-to-engagement flow`.
+- Reframed the aligned PRD subsection as `Assignment-review corridor`, and reframed active plus legacy technical requirements around a narrow proof-first assignment-review and credibility corridor with a workflow-to-engagement flow.
+- Strengthened active-authority and legacy-technical-mirror launch-gate coverage so the assignment-review/workflow-to-engagement statements are required and the stale heading/final-statement phrases cannot return.
+- Verification passed: focused authority/mirror guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "locked MVP authority stack|legacy technical and runbook mirrors" --reporter=verbose` (1 file / 4 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted stale/corrected authority wording scans, `npm run typecheck`, `npm run lint`, and `npm run docs:freshness`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Preserved Project Specification Corridor Wording
+
+- Timestamp: 2026-05-21 08:09 CEST.
+- Continued the root reference-spec sweep after `Proofound_Project_Specification_2026-03-11.md` still described the product as a hiring/candidate-review corridor in the overview, goals, organization flow, engagement verification examples, page list, phase heading, and final statement.
+- Reframed those preserved-spec statements around assignment-review, proof-submission review, proof-review participant workflow movement, matching organization plus proof-review participant confirmation, and workflow process pages.
+- Strengthened the preserved-project-spec launch-gate guard so corrected assignment-review/proof-review participant wording is required and stale hiring/candidate phrases cannot return to that root reference spec.
+- Verification passed: focused preserved-project-spec guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "preserved project specification" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted stale/corrected project-spec scans, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Active Authority Proof-Submission Review Wording
+
+- Timestamp: 2026-05-21 08:12 CEST.
+- Continued the active authority-stack sweep after the locked MVP and aligned PRD still described organization review as reviewing people/candidates, role mapping as `hiring manager`, and some matching/intro/reveal examples as candidate-scoped.
+- Reframed active authority copy around proof submissions, proof-review participants, submission labels, assignment-review owners, and matching organization plus proof-review participant confirmation while preserving the same MVP flow boundaries.
+- Strengthened locked-authority launch-gate coverage so those active source-of-truth phrases require proof-submission and participant-scoped language, and the old candidate/person/hiring-manager phrases cannot return.
+- Verification passed: focused locked-authority guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "locked MVP authority stack" --reporter=verbose` (1 file / 3 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted stale/corrected active-authority scans, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Public Directory And Launch Runbook Candidate Wording
+
+- Timestamp: 2026-05-21 08:16 CEST.
+- Continued the public-directory and runbook-language sweep after active authority, active launch runbook, and legacy mirrors still used `public candidate directory`, `public candidate browsing`, `review privacy-safe candidates`, and candidate-scoped complaint/review phrases.
+- Reframed those active and mirror surfaces around public people directory/browsing, proof submissions, and proof-review participant complaints while preserving the same non-goal and launch-gate semantics.
+- Strengthened launch-gate coverage for active authority, legacy PRD mirrors, legacy launch runbook mirror, and the superseded master PRD so candidate-directory and candidate-browsing wording cannot return to those surfaces.
+- Verification passed: focused guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "locked MVP authority stack|legacy PRD mirrors|legacy technical and runbook mirrors|superseded master PRD" --reporter=verbose` (1 file / 5 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted stale/corrected public-directory and runbook wording scans, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Preserved Project Specification Search-Index Wording
+
+- Timestamp: 2026-05-21 08:18 CEST.
+- Continued the preserved project specification sweep after its MVP exclusion list still used `public candidate search index`.
+- Reframed that exclusion as `public people search index`, preserving the same non-goal while matching the current proof-review participant and people-directory vocabulary.
+- Strengthened the preserved-project-spec launch-gate guard so the corrected people-search wording is required and the stale candidate-search phrase cannot return.
+- Verification passed: focused preserved-project-spec guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "preserved project specification" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted search-index wording scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Locked Source Search Index And Architecture Owner Wording
+
+- Timestamp: 2026-05-21 08:21 CEST.
+- Continued the source/reference wording sweep after the locked MVP still excluded an `open candidate search index`, and the reference-only architecture supplement still notified a `hiring manager` on pipeline completion.
+- Reframed the locked MVP exclusion as `open people search index` and the architecture supplement notification as `assignment-review owner`, preserving the same non-goal and reference-only workflow semantics.
+- Strengthened launch-gate coverage for the active authority stack and broad reference specs so the stale candidate-search and hiring-manager phrases cannot return to these root surfaces.
+- Verification passed: focused guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "locked MVP authority stack|broad reference specs" --reporter=verbose` (1 file / 4 focused tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted stale/corrected wording scans, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Active Backlog Phase 3 Corridor Label
+
+- Timestamp: 2026-05-21 08:24 CEST.
+- Continued the active backlog sweep after `docs/backlog/README.md`, `docs/backlog/dependency-map.md`, and `docs/backlog/phase-3-hiring-corridor.md` still displayed Phase 3 as `Hiring corridor`.
+- Reframed the active Phase 3 display/crosswalk labels as `Assignment-review corridor`, refreshed their `Last Verified` dates and DOCS_REGISTRY rows to `2026-05-21`, and kept the existing filename stable for links.
+- Strengthened the route-count/backlog launch-gate test so the assignment-review label is required and the old displayed Phase 3 hiring-corridor label cannot return.
+- Verification passed: focused backlog guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "active route-count evidence" --reporter=verbose` (1 file / 1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted Phase 3 backlog wording and registry-date scans, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Runtime Debug Output Structured Logging
+
+- Timestamp: 2026-05-21 08:28 CEST.
+- Continued the active scaffold/debug-output sweep after active runtime code still had ad hoc performance cron console output and organization onboarding success-path RLS continuation messages.
+- Replaced `/api/cron/performance-check` console output with structured `log.info` / `log.warn` / `log.error` events, preserving the same cron behavior and response contract.
+- Replaced organization onboarding RLS-continuation `console.log` messages with structured warnings that include only the organization id context.
+- Strengthened `tests/lib/runtime-debug-output-guardrails.test.ts` so the old cron/onboarding console strings cannot return to those active paths.
+- Verification passed: focused runtime debug guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (1 file / 19 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Submission Invite Proof Pack Selection
+
+- Timestamp: 2026-05-21 08:32 CEST.
+- Continued the active placeholder/scaffold sweep after the submission-invite UI still exposed a raw `Owner-only Proof Pack ID` UUID entry when no owned Proof Packs were returned.
+- Removed the raw UUID input from `CandidateInviteClient`; the invite now either lets the user choose an owned Proof Pack returned by the API or tells them to create one and return before review/submission.
+- Updated the proof-card API validation message to match the user-facing selection flow rather than asking for an ID.
+- Updated UI/API tests and launch-gate coverage so raw UUID placeholder entry and the old `Owner-only Proof Pack ID` label cannot return to active submission-invite surfaces.
+- Verification passed: focused invite API/UI run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/candidate-invite-proof-card-route.test.ts tests/ui/candidate-invite-client.test.tsx --reporter=verbose` (2 files / 12 tests), focused launch-gate invite guard `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts -t "active submission invite failure copy" --reporter=verbose` (1 focused test), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Consent And Performance Structured Logging
+
+- Timestamp: 2026-05-21 08:35 CEST.
+- Continued the active debug-output sweep after signup consent storage and performance aggregation/SLA checks still emitted routine success-path console output.
+- Replaced signup consent success logging with structured `auth.signup.consent_records_stored` logging.
+- Replaced performance aggregation and alerting check console output with structured `performance.metrics.aggregated` and `performance.alerting.sla_checked` events, and moved their catch-path messages to structured error events.
+- Strengthened `tests/lib/runtime-debug-output-guardrails.test.ts` so the old consent/performance console success strings cannot return.
+- Verification passed: focused auth/observability run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/actions/auth.test.ts tests/lib/runtime-debug-output-guardrails.test.ts tests/lib/api-observability-local-smoke.test.ts --reporter=verbose` (3 files / 41 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Legacy Analytics Structured Logging
+
+- Timestamp: 2026-05-21 08:37 CEST.
+- Continued the active debug-output sweep after the legacy analytics helper still emitted development console output with event context and console errors for failed tracking.
+- Replaced the development analytics event log with structured `analytics.legacy.event_tracked` debug logging and changed tracking failures to structured `analytics.legacy.track_failed` errors.
+- Extended the runtime debug-output guard so the old analytics console prefixes cannot return while preserving the helper's non-blocking failure behavior.
+- Verification passed: focused auth/observability run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/actions/auth.test.ts tests/lib/runtime-debug-output-guardrails.test.ts tests/lib/api-observability-local-smoke.test.ts --reporter=verbose` (3 files / 41 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Monitoring And Taxonomy Structured Errors
+
+- Timestamp: 2026-05-21 08:42 CEST.
+- Continued the active runtime diagnostics sweep after server-side monitoring and taxonomy API paths still used raw console output for best-effort failures, SLA alerts, and unhandled taxonomy exceptions.
+- Replaced performance API monitor, performance alert notification, API latency, and expertise taxonomy console diagnostics with structured `log.warn` / `log.error` events that keep behavior best-effort and avoid raw stack output in the taxonomy catch path.
+- Added API latency failure coverage and extended runtime debug-output guardrails so the old performance, latency, and taxonomy console strings cannot return to those active launch surfaces.
+- Verification passed: focused taxonomy/latency/runtime guard run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/expertise-taxonomy-route.test.ts tests/lib/api-latency-log.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (3 files / 29 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Client Performance Local Diagnostics
+
+- Timestamp: 2026-05-21 08:46 CEST.
+- Continued the active runtime diagnostics sweep after client-side web-vitals and performance tracking still used browser console output even though the launch posture keeps the archived analytics transport local-only.
+- Replaced web-vitals development console logging with a local `proofound:web-vital` browser event and replaced client performance catch-path console debugging with local `proofound:performance-diagnostic` events, preserving non-blocking instrumentation behavior.
+- Added web-vitals local instrumentation coverage, extended client performance tracker coverage, and strengthened runtime debug-output guardrails so the old client performance console messages cannot return.
+- Verification passed: focused client/runtime guard run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/lib/client-performance-tracker.test.ts tests/lib/web-vitals-local.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (3 files / 25 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted client-performance console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Compatibility API Structured Failure Logging
+
+- Timestamp: 2026-05-21 08:52 CEST.
+- Continued the active API diagnostics sweep after `/api/feature-flags`, `/api/proof-artifacts/text-extraction/status`, `/api/profile`, and `/api/organizations` still emitted raw console errors for launch-critical compatibility and feature/status failures.
+- Replaced those route catch/error paths with structured `log.error` events while preserving existing public response contracts and safe generic error bodies.
+- Added focused failure-path coverage for feature flags, OCR status, profile payload, and organization list errors, and extended runtime debug-output guardrails so the old console strings cannot return to those active API surfaces.
+- Verification passed: focused API/runtime guard run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/feature-flags-route.test.ts tests/api/profile-route.test.ts tests/api/organizations-list-route.test.ts tests/api/proof-artifact-text-extraction-routes.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (5 files / 44 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted compatibility-API console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Skill Verification Structured Failure Logging
+
+- Timestamp: 2026-05-21 08:57 CEST.
+- Continued the active verification-flow diagnostics sweep after `/api/verification/requests/skill` and `/api/verification/requests/skill/[requestId]/respond` still emitted raw console errors/warnings for canonical request creation, email delivery state, analytics, response updates, notification delivery, and route-level failures.
+- Replaced those request/response failure paths with structured `log.warn` / `log.error` events while preserving duplicate-race handling, safe public errors, non-blocking email/analytics/notification behavior, and response contracts.
+- Added focused failure-path coverage for duplicate create races, email send failures, email-state persistence failures, analytics failures, GET failures, response update failures, and notification failures, and extended runtime debug-output guardrails so the old console strings cannot return to those active verification APIs.
+- Verification passed: focused verification/runtime guard run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/expertise-skill-verification-request-route.test.ts tests/api/expertise-verification-respond-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (3 files / 50 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted verification console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning; these verification suites also printed existing Supabase GoTrue multi-instance warnings while passing.

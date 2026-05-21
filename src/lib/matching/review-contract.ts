@@ -234,55 +234,56 @@ const REASON_DICTIONARY: Record<MatchReasonCode, ReasonDictionaryEntry> = {
   },
   focus_role: {
     category: 'positive_match',
-    orgCopy: 'This role aligns with the candidate’s stated focus.',
+    orgCopy: 'This role aligns with the proof-review participant’s stated focus.',
     candidateCopy: 'This role aligns with your stated focus.',
     importance: 60,
   },
   focus_industry: {
     category: 'positive_match',
-    orgCopy: 'This industry aligns with the candidate’s stated focus.',
+    orgCopy: 'This industry aligns with the proof-review participant’s stated focus.',
     candidateCopy: 'This industry aligns with your stated focus.',
     importance: 58,
   },
   focus_org_type: {
     category: 'positive_match',
-    orgCopy: 'This organization type aligns with the candidate’s stated focus.',
+    orgCopy: 'This organization type aligns with the proof-review participant’s stated focus.',
     candidateCopy: 'This organization type aligns with your stated focus.',
     importance: 56,
   },
   shortlist_selected: {
     category: 'workflow_decision',
-    orgCopy: 'The candidate was shortlisted for deeper review.',
+    orgCopy: 'The proof-review participant was shortlisted for deeper review.',
     candidateCopy: 'You have been shortlisted for deeper review.',
     importance: 60,
   },
   passed_for_now: {
     category: 'workflow_decision',
-    orgCopy: 'The candidate remains under review but is not shortlisted right now.',
+    orgCopy: 'The proof-review participant remains under review but is not shortlisted right now.',
     candidateCopy: 'You are still under review, but not shortlisted right now.',
     importance: 55,
   },
   rejected_constraints: {
     category: 'workflow_decision',
-    orgCopy: 'The candidate was not advanced because core constraints did not line up.',
+    orgCopy:
+      'The proof-review participant was not advanced because core constraints did not line up.',
     candidateCopy: 'You were not advanced because core constraints did not line up.',
     importance: 70,
   },
   override_keep_under_review: {
     category: 'manual_override',
-    orgCopy: 'A reviewer kept this candidate under review with a manual override.',
+    orgCopy: 'A reviewer kept this proof-review participant under review with a manual override.',
     candidateCopy: 'A reviewer kept your profile under review with a manual override.',
     importance: 68,
   },
   override_shortlist_manual: {
     category: 'manual_override',
-    orgCopy: 'A reviewer manually shortlisted this candidate.',
+    orgCopy: 'A reviewer manually shortlisted this proof-review participant.',
     candidateCopy: 'A reviewer manually shortlisted your profile.',
     importance: 75,
   },
   override_reject_manual: {
     category: 'manual_override',
-    orgCopy: 'A reviewer manually closed this candidate out.',
+    orgCopy: 'A reviewer manually closed this proof-review participant out.',
     candidateCopy: 'A reviewer manually closed your profile out.',
     importance: 75,
   },
@@ -315,7 +316,7 @@ const REASON_DICTIONARY: Record<MatchReasonCode, ReasonDictionaryEntry> = {
   org_reveal_request_pending: {
     category: 'workflow_decision',
     orgCopy:
-      'A reveal request is pending candidate approval. Identity-bearing fields stay hidden until consent is granted.',
+      'A reveal request is pending proof-review participant approval. Identity-bearing fields stay hidden until consent is granted.',
     candidateCopy:
       'The organization has requested reveal. Identity-bearing fields stay hidden until you approve.',
     importance: 66,
@@ -374,7 +375,7 @@ export function sanitizeMatchReasonCodes(reasonCodes: string[]): string[] {
 
 function getStableCandidateLabel(profileId: string) {
   const suffix = profileId.replace(/-/g, '').slice(-4).toUpperCase();
-  return `Candidate ${suffix || 'ANON'}`;
+  return `Submission ${suffix || 'ANON'}`;
 }
 
 function getFreshnessLabel(state: string | null | undefined) {
@@ -2080,7 +2081,9 @@ export function buildProofFirstReviewCard(input: {
       bullets:
         fitBullets.length > 0
           ? fitBullets
-          : ['Review the strongest proof summary and corridor state for this candidate.'],
+          : [
+              'Review the strongest proof summary and corridor state for this proof-review participant.',
+            ],
       reasonCodes,
     },
     privacy: {

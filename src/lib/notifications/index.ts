@@ -228,8 +228,8 @@ export async function notifyAssignmentPublished(
   return createNotification({
     userId,
     type: 'assignment_published',
-    title: 'New Opportunity',
-    message: `${orgName} posted: ${assignmentTitle}`,
+    title: 'New Assignment Review',
+    message: `${orgName} posted an assignment for proof review: ${assignmentTitle}`,
     actionUrl: `/app/i/matching?assignment=${assignmentId}`,
     entityType: 'assignment',
     entityId: assignmentId,

@@ -96,6 +96,39 @@ describe('GET /api/cron/sla-enforcement', () => {
     expect(mocks.update).not.toHaveBeenCalled();
   });
 
+  it('marks expired proof-submission matches stale while preserving the long snooze suppression', async () => {
+    mocks.matchLimit
+      .mockResolvedValueOnce([{ id: 'match-1' }, { id: 'match-2' }])
+      .mockResolvedValueOnce([]);
+
+    const response = await GET(
+      new NextRequest('https://example.com/api/cron/sla-enforcement', {
+        headers: { authorization: 'Bearer cron-secret-value' },
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.expiredMatches).toBe(2);
+    expect(body.matchIds).toEqual(['match-1', 'match-2']);
+    expect(mocks.update).toHaveBeenCalledTimes(1);
+    expect(mocks.updateSet).toHaveBeenCalledWith({
+      lifecycleState: 'stale',
+      staleAt: expect.any(Date),
+      snoozedUntil: expect.any(Date),
+    });
+
+    const updatePayload = mocks.updateSet.mock.calls[0]?.[0] as {
+      staleAt: Date;
+      snoozedUntil: Date;
+    };
+    const daysSuppressed =
+      (updatePayload.snoozedUntil.getTime() - updatePayload.staleAt.getTime()) /
+      (24 * 60 * 60 * 1000);
+    expect(daysSuppressed).toBeCloseTo(365, 1);
+  });
+
   it('rejects requests with an invalid cron secret', async () => {
     const response = await GET(
       new NextRequest('https://example.com/api/cron/sla-enforcement', {

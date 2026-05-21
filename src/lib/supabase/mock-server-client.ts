@@ -601,7 +601,7 @@ const mockSupabaseClient = {
                   ? 'Teams coordinate across municipal partners, subcontractors, and night-shift field crews. Candidates should understand calm stakeholder updates, practical risk logs, and decisions made from incomplete site data.'
                   : null,
                 hiringProcessSummary: visualOrg
-                  ? 'One written proof assignment, privacy-safe summary review, then a focused reveal conversation for shortlisted candidates.'
+                  ? 'One written proof assignment, privacy-safe summary review, then a focused reveal conversation for shortlisted proof-review participants.'
                   : null,
                 trustStatus: visualOrg ? 'domain_verified' : null,
                 websiteVerifiedAt: visualOrg ? now : null,

@@ -73,7 +73,7 @@ We received your note about reveal or privacy handling and we are reviewing it n
 We are checking:
 
 - the current reveal stage
-- whether candidate consent was present for any identity-bearing reveal
+- whether proof-review participant consent was present for any identity-bearing reveal
 - whether any information appeared earlier than it should have
 
 If we confirm a problem, we will correct the state before closing the review.
@@ -115,7 +115,7 @@ The fastest ways to close this are:
 
 - confirmation from both sides on the same engagement fact
 - a signed agreement, SOW, invoice, offer letter, or equivalent evidence
-- matching organization confirmation plus candidate confirmation
+- matching organization confirmation plus proof-review participant confirmation
 
 Reply with the smallest item you can provide and we will take it from there.
 

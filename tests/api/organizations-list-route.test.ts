@@ -8,6 +8,14 @@ vi.mock('@/lib/api/auth', () => ({
   requireApiAuth: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
+import { log } from '@/lib/log';
+
 function mockOrganizationsResponse(
   rows: Array<{ id: string; display_name: string | null; slug: string }>,
   error: { message: string } | null = null
@@ -87,5 +95,19 @@ describe('GET /api/organizations', () => {
 
     expect(response.status).toBe(200);
     expect(payload.organizations.map((org: { id: string }) => org.id)).toEqual(['org-a', 'org-b']);
+  });
+
+  it('logs Supabase membership failures structurally while returning a safe error', async () => {
+    mockOrganizationsResponse([], { message: 'membership select failed' });
+
+    const response = await GET(new NextRequest('http://localhost/api/organizations'));
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to fetch organizations' });
+    expect(log.error).toHaveBeenCalledWith('organizations.list.fetch_failed', {
+      userId: 'user-1',
+      error: 'membership select failed',
+    });
   });
 });

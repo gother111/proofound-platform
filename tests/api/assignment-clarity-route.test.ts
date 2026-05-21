@@ -331,6 +331,12 @@ describe('assignment clarity assistant route', () => {
 
     expect(res.status).toBe(200);
     expect(prompt).toContain('[redacted protected trait]');
+    expect(prompt).toContain('proof-review participant evaluation rubrics');
+    expect(prompt).toContain(
+      'Do not refer to private proof-review participants or proof-review participant data.'
+    );
+    expect(prompt).not.toContain('candidate evaluation rubrics');
+    expect(prompt).not.toContain('private candidates or candidate data');
     expect(prompt).not.toContain('native speaker');
     expect(prompt).not.toContain('visa status');
     expect(prompt).not.toContain('disability');

@@ -33,6 +33,24 @@ describe('launch operations contract', () => {
     expect(serialized).not.toMatch(/candidate set/i);
   });
 
+  it('keeps organization fallback copy submission-led instead of profile-led', () => {
+    const serialized = JSON.stringify(FALLBACK_COPY);
+
+    for (const mode of OPERATIONAL_FALLBACK_MODE_VALUES) {
+      expect(FALLBACK_COPY[mode].organization.nextActions).toContain(
+        'Keep reviewing blind submissions'
+      );
+    }
+
+    expect(serialized).toContain('Qualified submission supply is still thin for this assignment.');
+    expect(serialized).toContain('Submission supply thin');
+    expect(serialized).toContain('blind-submission review');
+    expect(serialized).not.toMatch(/Candidate supply is still thin/i);
+    expect(serialized).not.toMatch(/Candidate supply thin/i);
+    expect(serialized).not.toMatch(/blind profiles/i);
+    expect(serialized).not.toMatch(/blind-profile review/i);
+  });
+
   it('keeps the canonical feature-flag taxonomy stable', () => {
     expect(FEATURE_FLAG_TAXONOMY_VALUES).toEqual([
       'default_on',

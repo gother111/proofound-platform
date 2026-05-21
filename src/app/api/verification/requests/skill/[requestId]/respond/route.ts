@@ -2,6 +2,7 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 
+import { log } from '@/lib/log';
 import { notifyVerificationCompleted } from '@/lib/notifications';
 import {
   extractRequestFingerprints,
@@ -197,7 +198,10 @@ export async function POST(
       responseAuthMethod: 'authenticated',
       responseActorEmail: userEmail,
     }).catch((error) => {
-      console.error('Error updating canonical verification request:', error);
+      log.error('verification.skill_response.update_failed', {
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return null;
     });
 
@@ -224,7 +228,10 @@ export async function POST(
         validated.action === 'accept'
       );
     } catch (notifError) {
-      console.error('Failed to send verification completed notification:', notifError);
+      log.error('verification.skill_response.notification_failed', {
+        requestId,
+        error: notifError instanceof Error ? notifError.message : String(notifError),
+      });
     }
 
     await writeVerificationAuditLog({
@@ -263,7 +270,9 @@ export async function POST(
       );
     }
 
-    console.error('Verification respond error:', error);
+    log.error('verification.skill_response.post_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

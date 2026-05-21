@@ -407,7 +407,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           </CardHeader>
           <CardContent>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Includes:</strong> Matches, applications, conversations
+              <strong>Includes:</strong> Matches, proof submissions, conversations
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
               <strong>Purpose:</strong> Connect you with assignment-review workflows

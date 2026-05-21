@@ -22,13 +22,13 @@ Any one of the following is acceptable:
 
 - mutual attestation from both sides on the same engagement fact
 - uploaded offer letter, signed agreement, SOW, invoice, or equivalent evidence
-- matching org confirmation plus candidate confirmation
+- matching organization confirmation plus proof-review participant confirmation
 
 Anything weaker stays pending.
 
 ## Checklist
 
-- Does the evidence tie to the same candidate, organization, and engagement fact?
+- Does the evidence tie to the same proof-review participant, organization, and engagement fact?
 - Does the evidence confirm the engagement existed, not just that interviews happened?
 - If the evidence is a document, is it safe to keep under the current privacy controls?
 - If the evidence is attestation, do both sides agree on the same fact?
@@ -36,7 +36,7 @@ Anything weaker stays pending.
 
 ## Operator steps
 
-1. Open the engagement verification record and confirm the linked decision, candidate, and organization.
+1. Open the engagement verification record and confirm the linked decision, proof-review participant, and organization.
 2. Match the available evidence against the minimum acceptable MVP list above.
 3. If the evidence is sufficient, document which acceptable path was met.
 4. If the evidence is not sufficient, keep the state pending and request the smallest missing item.

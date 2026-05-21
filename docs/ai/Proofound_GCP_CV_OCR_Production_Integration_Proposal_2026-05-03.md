@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-21`
 
 # GCP Proof Artifact OCR Production-Beta Integration Proposal
 
@@ -22,7 +22,7 @@ The approved beta shape is:
 - Cloud Run scaling: max instances `1` initially, never above `3` during beta;
 - expiry: disable-or-pay decision due by `2026-07-24` because free credits expire around `2026-08-03`.
 
-OCR output must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or hiring-decision state.
+OCR output must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or workflow-decision state.
 
 Google Cloud budgets are alerting tools only. They are not hard caps. Hard caps must be enforced in app/service code before the OCR worker calls Document AI.
 
@@ -40,7 +40,7 @@ The GCP OCR extractor can be represented as an internal production provider path
 **Explicit no-go surfaces:**
 
 - CV import wizard
-- AI candidate scoring, ranking, shortlisting, suitability judgments, hiring recommendations, verification decisions, or trust-state decisions
+- AI proof-review participant scoring, ranking, shortlisting, suitability judgments, workflow recommendations, verification decisions, or trust-state decisions
 - Gemini skill extractor for employer review
 - taxonomy shortlist or reranker
 - Cloud Vision OCR
@@ -137,8 +137,8 @@ Proposed future integration shape:
 - Return extracted text only to the authenticated owner for review.
 - Require the user to explicitly choose what becomes proof content.
 - Keep `uploadedFileId` as the authority for attachment.
-- Never use OCR output to score, rank, shortlist, recommend, or auto-create hiring decisions.
-- Never use OCR output to update match, review, verification, reveal, trust-state, or hiring-decision state.
+- Never use OCR output to score, rank, shortlist, recommend, or auto-create workflow decisions.
+- Never use OCR output to update match, review, verification, reveal, trust-state, or workflow-decision state.
 - Require explicit user consent per document before the OCR call.
 
 ## Privacy Review Outcome

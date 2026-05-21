@@ -179,6 +179,20 @@ describe('launch surface policy', () => {
     }
   });
 
+  it('keeps active invite surface labels proof-submission scoped', () => {
+    const invitePolicy = LAUNCH_API_SURFACE_POLICIES.find((policy) =>
+      policy.matches('/api/candidate-invites/token')
+    );
+
+    expect(invitePolicy).toMatchObject({
+      classification: 'active_launch_path',
+      surfaceLabel: 'Submission Invite API',
+      detail: 'Submission invite and claim flows remain active in the launch corridor.',
+    });
+    expect(invitePolicy?.surfaceLabel).not.toContain('Candidate Invite');
+    expect(invitePolicy?.detail).not.toContain('Candidate invite');
+  });
+
   it('classifies archived and active page surfaces explicitly', () => {
     expect(classifyLaunchPagePath('/')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/portfolio/alex')).toBe('active_launch_path');

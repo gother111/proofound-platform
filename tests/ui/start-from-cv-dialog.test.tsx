@@ -94,6 +94,8 @@ describe('StartFromCvDialog', () => {
     );
 
     const file = new File(['%PDF-1.7'], 'candidate-cv.pdf', { type: 'application/pdf' });
+    expect(screen.getByText(/workflow decisions/i)).toBeInTheDocument();
+    expect(screen.queryByText(/hiring decisions/i)).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('CV file'), {
       target: { files: [file] },
     });

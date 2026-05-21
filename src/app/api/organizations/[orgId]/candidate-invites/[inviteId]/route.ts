@@ -202,12 +202,12 @@ export async function PATCH(
         },
       });
     } catch (error) {
-      console.error('Failed to resend candidate invite:', error);
+      console.error('Failed to resend submission invite:', error);
     }
 
     return NextResponse.json({ success: true, status: CANDIDATE_INVITE_STATUS.PENDING });
   } catch (error) {
-    console.error('Failed to update candidate invite:', error);
-    return NextResponse.json({ error: 'Failed to update candidate invite' }, { status: 500 });
+    console.error('Failed to update submission invite:', error);
+    return NextResponse.json({ error: 'Failed to update submission invite' }, { status: 500 });
   }
 }

@@ -63,7 +63,7 @@ export default function WorkEmailVerification({
             <Text style={footerText}>
               Once verified, your profile can display a checked work-email signal that helps
               organizations review your proof with clearer context. It does not create an automated
-              score, rank, or hiring recommendation.
+              score, rank, or workflow recommendation.
             </Text>
 
             <Text style={footerText}>

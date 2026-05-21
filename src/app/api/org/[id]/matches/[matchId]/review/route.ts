@@ -1,6 +1,5 @@
 import { and, eq, or, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
 import { db } from '@/db';
@@ -42,6 +41,7 @@ import {
   syncRevealRequestTimeoutState,
   syncIntroWorkflowFromInterest,
 } from '@/lib/workflow/service';
+import { makeMaskedHandleForPersona } from '@/lib/messaging/conversation-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -156,7 +156,7 @@ function sanitizeBlindReviewString(value: unknown, fallback: string | null) {
   const hasUncertainIdentity =
     ROUTE_PRECISE_LOCATION_PATTERN.test(output) ||
     [...output.matchAll(ROUTE_FULL_NAME_PATTERN)].some(
-      (match) => !/^(Proof Pack|Proofound|Candidate Review)$/i.test(match[0].trim())
+      (match) => !/^(Proof Pack|Proofound|Proof Review)$/i.test(match[0].trim())
     );
 
   if (hasUncertainIdentity) {
@@ -593,7 +593,7 @@ export async function POST(
             }),
             message:
               requestedScope === 'full_identity'
-                ? 'Reveal request sent. Full identity remains locked until the candidate approves.'
+                ? 'Reveal request sent. Full identity remains locked until the proof-review participant approves.'
                 : 'Reveal request recorded.',
           });
         }
@@ -721,7 +721,7 @@ export async function POST(
                 fallbackState: corridor.fallbackState,
               }),
               message:
-                'Intro request recorded. Proofound will approve the introduction after the candidate reciprocates interest.',
+                'Intro request recorded. Proofound will approve the introduction after the proof-review participant reciprocates interest.',
             });
           }
 
@@ -771,8 +771,8 @@ export async function POST(
                 participantOneId: matchRow.profileId,
                 participantTwoId: user.id,
                 stage: 'masked',
-                maskedHandleOne: `Candidate #${nanoid(6).toUpperCase()}`,
-                maskedHandleTwo: `Organization #${nanoid(6).toUpperCase()}`,
+                maskedHandleOne: makeMaskedHandleForPersona('individual'),
+                maskedHandleTwo: makeMaskedHandleForPersona('organization'),
                 lastMessageAt: new Date(),
               })
               .returning({
@@ -815,7 +815,7 @@ export async function POST(
                 fallbackState: corridor.fallbackState,
               }),
               message:
-                'Introduction already approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
+                'Introduction already approved. Masked messaging is open, and full identity stays locked until the proof-review participant approves reveal.',
             });
           }
 
@@ -862,7 +862,9 @@ export async function POST(
             ]);
 
             const candidateName =
-              candidateProfile?.displayName || candidateProfile?.handle || 'The candidate';
+              candidateProfile?.displayName ||
+              candidateProfile?.handle ||
+              'The proof-review participant';
             const orgName = orgProfile?.displayName || orgProfile?.handle || 'The organization';
 
             await notifyIntroAccepted(user.id, matchRow.matchId, candidateName);
@@ -906,7 +908,7 @@ export async function POST(
               fallbackState: corridor.fallbackState,
             }),
             message:
-              'Introduction approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
+              'Introduction approved. Masked messaging is open, and full identity stays locked until the proof-review participant approves reveal.',
           });
         }
 

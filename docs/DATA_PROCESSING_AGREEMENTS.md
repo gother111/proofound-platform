@@ -49,7 +49,7 @@ Do not infer a signed agreement from this file.
 ## No-Leak Requirements By Surface
 
 - Public portfolios and organization trust pages must project only public-safe fields.
-- Matching and review must stay blind by default until candidate-consented reveal.
+- Matching and review must stay blind by default until proof-review-participant-consented reveal.
 - Reveal email, interview, decision, and engagement verification messages must not include hidden
   identity or private proof details beyond the authorized workflow state.
 - Uploads must pass quarantine, validation, and manual-review lifecycle rules before any public

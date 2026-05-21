@@ -80,6 +80,56 @@ describe('internal ops queue compatibility fallback', () => {
     expect(description).not.toContain('hiring corridor');
   });
 
+  it('keeps operator guidance identity-scoped instead of candidate-copy scoped', async () => {
+    mocks.findMany.mockResolvedValue([
+      {
+        id: 'queue-match-1',
+        queueType: 'privacy_reveal_exception',
+        linkedEntityType: 'match',
+        linkedEntityId: 'match-1',
+        status: 'open',
+        priority: 'high',
+        summary: 'Reveal state needs review.',
+        metadata: {
+          revealStage: 'consent_pending',
+          candidateConsentStatus: 'pending',
+          organizationConsentStatus: 'approved',
+        },
+        createdAt: new Date('2026-05-01T10:00:00Z'),
+        updatedAt: new Date('2026-05-01T10:00:00Z'),
+        resolvedAt: null,
+      },
+      {
+        id: 'queue-engagement-1',
+        queueType: 'pilot_ops',
+        linkedEntityType: 'engagement_verification',
+        linkedEntityId: 'engagement-1',
+        status: 'open',
+        priority: 'normal',
+        summary: 'Engagement verification is pending.',
+        metadata: {
+          workflowStatus: 'pending',
+          pendingParty: 'organization',
+        },
+        createdAt: new Date('2026-05-01T11:00:00Z'),
+        updatedAt: new Date('2026-05-01T11:00:00Z'),
+        resolvedAt: null,
+      },
+    ]);
+
+    const groups = await listInternalOpsQueueItems();
+    const serialized = JSON.stringify(groups);
+
+    expect(serialized).toContain(
+      'Inspect reveal or consent workflow state without exposing participant identity details.'
+    );
+    expect(serialized).toContain('Proof-review participant consent');
+    expect(serialized).toContain('Keep participant private context out of notes.');
+    expect(serialized).not.toContain('without exposing candidate identity');
+    expect(serialized).not.toContain('Candidate consent');
+    expect(serialized).not.toContain('organization and candidate private context');
+  });
+
   it('returns a synthetic queue item when the runtime queue table is unavailable', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mocks.findFirst.mockRejectedValue({

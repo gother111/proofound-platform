@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Launch Alert Configuration
 
@@ -22,7 +22,7 @@ Minimum launch channels:
 - Vercel deployment and cron failure notifications
 - cron-job.org notifications for externally managed observability jobs
 
-Do not put secrets, private proof content, hidden candidate identity details, signed URLs, internal queue IDs, raw logs, or diagnostic dumps in alert messages.
+Do not put secrets, private proof content, hidden identity details before reveal consent, signed URLs, internal queue IDs, raw logs, or diagnostic dumps in alert messages.
 
 ## Severity Levels
 
@@ -98,9 +98,9 @@ Alert or manually review when these active workflows fail or stall:
 - assignment create/edit/review/publish
 - shortlist/review queue generation
 - intro request
-- reveal request and candidate consent
+- reveal request and proof-review participant consent
 - interview scheduling/reschedule with manual meeting link default
-- decision recording, including hire/engage
+- decision recording, including engage/close outcomes
 - engagement verification
 - export/delete
 - internal verification, privacy/reveal dispute, risky-upload, assignment-quality, and engagement-verification queues
@@ -117,7 +117,7 @@ Do not make these launch-blocking by default:
 - LinkedIn verification as a public trust signal
 - native video-provider success when manual meeting links still work
 - broad fairness analytics dashboards
-- TTSC/TTFQI/PAC business metric targets as hard production availability checks
+- TTSC/TTFQI/proof-fit business metric targets as hard production availability checks
 
 Business metrics may be reviewed after launch, but they are not substitutes for MVP corridor smoke, privacy, route-surface, backup/restore, and go/no-go evidence.
 

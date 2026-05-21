@@ -320,9 +320,13 @@ export function buildInternalOpsQueueDetail(
     case 'conversation':
     case 'match': {
       operatorSummary =
-        'Inspect reveal or consent workflow state without exposing candidate identity.';
+        'Inspect reveal or consent workflow state without exposing participant identity details.';
       pushField(fields, 'Reveal stage', getString(metadata, 'revealStage'));
-      pushField(fields, 'Candidate consent', getString(metadata, 'candidateConsentStatus'));
+      pushField(
+        fields,
+        'Proof-review participant consent',
+        getString(metadata, 'candidateConsentStatus')
+      );
       pushField(fields, 'Organization consent', getString(metadata, 'organizationConsentStatus'));
       pushField(
         fields,
@@ -339,7 +343,11 @@ export function buildInternalOpsQueueDetail(
     case 'decision': {
       operatorSummary = 'Inspect decision workflow state needed for launch support.';
       pushField(fields, 'Decision state', getString(metadata, 'decisionState'));
-      pushField(fields, 'Candidate consent', getString(metadata, 'candidateConsentStatus'));
+      pushField(
+        fields,
+        'Proof-review participant consent',
+        getString(metadata, 'candidateConsentStatus')
+      );
       pushField(fields, 'Export status', getString(metadata, 'exportStatus'));
       checklist = [
         'Support stuck decision workflow without exposing private review notes.',
@@ -355,7 +363,7 @@ export function buildInternalOpsQueueDetail(
       pushField(fields, 'Decision record', getString(metadata, 'decisionId'));
       checklist = [
         'Support only stuck pilot workflow steps.',
-        'Keep organization and candidate private context out of notes.',
+        'Keep participant private context out of notes.',
       ];
       break;
     }

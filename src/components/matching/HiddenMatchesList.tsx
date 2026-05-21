@@ -166,7 +166,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {match.assignment.title || 'Opportunity'}
+                  {match.assignment.title || 'Assignment'}
                 </p>
                 {match.organization?.name && (
                   <p className="text-xs text-muted-foreground truncate">

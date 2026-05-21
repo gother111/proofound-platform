@@ -132,6 +132,17 @@ describe('CandidateInviteClient test_match flow', () => {
               logoUrl: null,
             },
             assignment: structuredAssignment,
+            availableProofPacks: [
+              {
+                id: '11111111-1111-4111-8111-111111111111',
+                title: 'Service design proof pack',
+                summary: 'One owner-only proof pack for this assignment.',
+                evidenceSummary: null,
+                outcomesSummary: null,
+                verificationSummary: null,
+                updatedAt: new Date().toISOString(),
+              },
+            ],
           }),
         };
       }
@@ -175,11 +186,12 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(screen.getByText(/Work email check/i)).toBeInTheDocument();
     expect(screen.getByText(/Private review first/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/does not publish a public page or broaden the application/i)
+      screen.getByText(/does not publish a public page or broaden visibility/i)
     ).toBeInTheDocument();
+    expect(screen.queryByText(/Owner-only Proof Pack ID/i)).not.toBeInTheDocument();
     expect(
-      screen.getByText(/Public Page links and legacy snippet URLs are not accepted/i)
-    ).toBeInTheDocument();
+      screen.queryByPlaceholderText(/00000000-0000-0000-0000-000000000000/)
+    ).not.toBeInTheDocument();
     const visibleText = document.body.textContent ?? '';
     expect(visibleText).not.toMatch(/cv import|resume|public directory|people search|searchable/i);
     expect(visibleText).not.toMatch(/values|causes|mission-first|purpose-fit/i);
@@ -191,13 +203,17 @@ describe('CandidateInviteClient test_match flow', () => {
       'href',
       '/onboarding?next=%2Fcandidate-invite%2Ftoken-value'
     );
+    expect(screen.getByLabelText(/owner-only proof pack/i)).toHaveValue(
+      '11111111-1111-4111-8111-111111111111'
+    );
+    expect(screen.queryByLabelText(/owner-only proof pack id/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText(/00000000-0000-0000-0000-000000000000/)
+    ).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/owner-only proof pack id/i), {
-      target: { value: '11111111-1111-4111-8111-111111111111' },
-    });
     fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
     fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
-    fireEvent.click(screen.getByRole('button', { name: /submit reviewed application/i }));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
@@ -278,7 +294,7 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(visibleText).not.toMatch(/LinkedIn|unsupported trust/i);
   });
 
-  it('shows the structured assignment before asking an unauthenticated guest to apply', async () => {
+  it('shows the structured assignment before asking an unauthenticated guest to submit proof', async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url === '/api/candidate-invites/token-value') {
         return {
@@ -329,10 +345,10 @@ describe('CandidateInviteClient test_match flow', () => {
 
     const pageText = document.body.textContent ?? '';
     expect(pageText.indexOf('Improve submission review quality')).toBeGreaterThanOrEqual(0);
-    expect(pageText.indexOf('Apply to this assignment')).toBeGreaterThan(
+    expect(pageText.indexOf('Continue to proof submission')).toBeGreaterThan(
       pageText.indexOf('Improve submission review quality')
     );
-    expect(screen.getByRole('link', { name: /apply to this assignment/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /continue to proof submission/i })).toHaveAttribute(
       'href',
       '/signup/individual?next=%2Fcandidate-invite%2Ftoken-value'
     );
@@ -372,7 +388,7 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(screen.queryByText(/Service temporarily unavailable/i)).not.toBeInTheDocument();
   });
 
-  it('keeps assignment proof applications proof-first and submits owner-only Proof Packs', async () => {
+  it('keeps assignment proof submissions proof-first and submits owner-only Proof Packs', async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url === '/api/candidate-invites/token-value') {
         return {
@@ -410,6 +426,17 @@ describe('CandidateInviteClient test_match flow', () => {
               verificationGates: ['work_email'],
               createdAt: new Date().toISOString(),
             },
+            availableProofPacks: [
+              {
+                id: '11111111-1111-4111-8111-111111111111',
+                title: 'Evidence operations proof pack',
+                summary: 'One owner-only proof pack for this assignment.',
+                evidenceSummary: null,
+                outcomesSummary: null,
+                verificationSummary: null,
+                updatedAt: new Date().toISOString(),
+              },
+            ],
           }),
         };
       }
@@ -462,13 +489,13 @@ describe('CandidateInviteClient test_match flow', () => {
     );
     expect(screen.queryByText(/generate and submit proof card/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/existing proof card token/i)).not.toBeInTheDocument();
-
-    fireEvent.change(screen.getByLabelText(/owner-only proof pack id/i), {
-      target: { value: '11111111-1111-4111-8111-111111111111' },
-    });
+    expect(screen.getByLabelText(/owner-only proof pack/i)).toHaveValue(
+      '11111111-1111-4111-8111-111111111111'
+    );
+    expect(screen.queryByLabelText(/owner-only proof pack id/i)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
     fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
-    fireEvent.click(screen.getByRole('button', { name: /submit reviewed application/i }));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
@@ -539,13 +566,18 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(apiFetchMock).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: /review assignment proof/i }));
-    expect(screen.getByRole('button', { name: /submit reviewed application/i })).toBeDisabled();
+    expect(screen.getByText(/participant-controlled reveal step/i)).toBeInTheDocument();
+    expect(screen.queryByText(/candidate-controlled corridor step/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit reviewed proof/i })).toBeDisabled();
     fireEvent.click(screen.getByLabelText(/I reviewed the visibility summary/i));
-    fireEvent.click(screen.getByRole('button', { name: /submit reviewed application/i }));
+    fireEvent.click(screen.getByRole('button', { name: /submit reviewed proof/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/saved privately to your candidate workspace/i)).toBeInTheDocument();
+      expect(screen.getByText(/saved privately to your submission workspace/i)).toBeInTheDocument();
     });
+    expect(
+      screen.queryByText(/saved privately to your candidate workspace/i)
+    ).not.toBeInTheDocument();
     expect(apiFetchMock).not.toHaveBeenCalled();
   });
 });

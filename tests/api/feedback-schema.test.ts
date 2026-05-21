@@ -61,6 +61,6 @@ describe('SubmitPayloadSchema', () => {
           authorRole: 'organization_member',
         },
       })
-    ).toThrow(/candidate-facing reason code/i);
+    ).toThrow(/participant-facing reason code/i);
   });
 });

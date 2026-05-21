@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `verification.md`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Verification Checklist (Before Merging)
 
@@ -236,7 +236,7 @@ Before any production Cloud Run OCR call:
 - Confirm production remains disabled until the smoke window starts: `GCP_CV_OCR_ENABLED=false` and no provider route is connected to user-facing CV/import flow.
 - Confirm production is enabled only for synthetic PDFs or approved invite-only Proof Artifact Text Extraction beta accounts, and only after billing, product coverage, budget alert, app-level hard-cap, privacy-review, and cleanup gates are ready.
 - Confirm OCR requires explicit consent per document.
-- Confirm OCR output is draft text only and cannot auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or change match/review/trust/hiring state.
+- Confirm OCR output is draft text only and cannot auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or change match, review, verification, reveal, trust-state, or workflow-decision state.
 - Confirm Cloud Run max instances is `1` initially and no more than `3` during beta.
 - Confirm the disable-or-pay decision is scheduled by `2026-07-24` because credits expire around `2026-08-03`.
 - Confirm Cloud Vision OCR is not enabled.

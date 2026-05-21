@@ -185,7 +185,7 @@ const preciseMatchMetrics = [
 const preciseMatchReasons = ['Process design', 'Onboarding gains', 'Regional scope'] as const;
 
 const organizationChallenges = [
-  'Too much time reviewing weak applications',
+  'Too much time reviewing weak submissions',
   'Low evidence in early screening',
   'Vague job definitions create inconsistent review',
   'Interview time gets spent finding basic evidence',
@@ -3380,7 +3380,7 @@ function MobileSystemVisual({ frame }: { frame: HomepageStoryFrame }) {
               Teams
             </p>
             <p className="mt-1 text-[0.68rem] leading-4 text-foreground/76">
-              Too many weak applications.
+              Too many weak submissions.
             </p>
           </div>
 

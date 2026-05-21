@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-21`
 
 # Proofound AI Assistive Layer Technical Requirements
 
@@ -26,7 +26,7 @@ The AI layer must be:
 - JSON-schema validated
 - safe to disable without breaking the core MVP
 
-The AI layer must not introduce AI scoring, ranking, fit judgments, or hiring recommendations.
+The AI layer must not introduce AI scoring, ranking, fit judgments, or workflow recommendations.
 
 ---
 
@@ -66,7 +66,7 @@ Technical beta requirements:
 - Cloud Run max instances set to `1` initially and never above `3` during beta
 - Document AI only; Cloud Vision OCR is excluded
 - output returned only as user-reviewable draft text
-- no automatic proof writes, publication, verification, score, rank, shortlist, match-state update, review-state update, trust-state update, or hiring recommendation
+- no automatic proof writes, publication, verification, score, rank, shortlist, match-state update, review-state update, trust-state update, or workflow recommendation
 
 Google Cloud budgets are alerting tools only. They are not hard caps. Hard caps must be enforced in the Proofound app and/or OCR worker before any Document AI call.
 
@@ -94,7 +94,7 @@ Forbidden AI endpoint patterns:
 /api/ai/recommend-candidate
 /api/ai/reviewer-intelligence
 /api/ai/shortlist
-/api/ai/hiring-decision
+/api/ai/workflow-decision
 ```
 
 Every AI endpoint must:
@@ -325,7 +325,7 @@ RLS requirements:
 - ordinary users cannot read global usage logs
 - users can only read suggestions scoped to their own entities
 - org users can only read suggestions scoped to orgs where they hold an allowed role
-- logs must not expose hidden candidate or org data
+- logs must not expose hidden proof-review participant or org data
 
 ---
 
@@ -369,7 +369,7 @@ Never send by default:
 - salary details
 - visa or residence documents
 - health, disability, race, ethnicity, religion, union, political, sexuality, family, or age-related information
-- candidate name or photo in blind-review contexts
+- proof-review participant name or photo in blind-review contexts
 - hidden employer, school, client, or location fields
 - reviewer names or emails
 - private organization notes
@@ -381,7 +381,7 @@ Never send by default:
 
 Before any model call:
 
-- candidate name becomes `[candidate]`
+- proof-review participant name becomes `[participant]`
 - organization/client names become `[organization]` or `[client]` when hidden
 - emails become `[email]`
 - phones become `[phone]`
@@ -421,7 +421,7 @@ You help organizations clarify assignments for proof-backed review.
 Rules:
 - Do not write generic job-description copy.
 - Do not add discriminatory or protected-trait criteria.
-- Do not create candidate scoring or ranking.
+- Do not create proof-review participant scoring or ranking.
 - Focus on outcomes, constraints, must-have capabilities, proof expectations, and ambiguity.
 - Return JSON only.
 ```
@@ -434,7 +434,7 @@ You draft claim-scoped verification requests.
 Rules:
 - Ask about one Proof Pack or one claim.
 - Do not ask for vague praise.
-- Do not ask the verifier to judge overall candidate quality.
+- Do not ask the verifier to judge overall proof-review participant quality.
 - Do not expose hidden private context.
 - Use concise, respectful language.
 - Return JSON only.

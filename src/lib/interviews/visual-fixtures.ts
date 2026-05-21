@@ -130,7 +130,7 @@ export function buildVisualOrgInterviewCorridorItems(): InterviewCorridorItem[] 
         nextActionLabel: 'Prepare for interview',
         nextActionDescription:
           'The interview is scheduled. Keep coordination details visible and record the outcome after the call.',
-        summary: 'Interview coordination is active for this candidate.',
+        summary: 'Interview coordination is active for this proof-review participant.',
         subjectLabel: 'Elena Proof Reviewer',
       }),
     },
@@ -161,8 +161,9 @@ export function buildVisualOrgInterviewCorridorItems(): InterviewCorridorItem[] 
         nextActionId: 'confirm_engagement',
         nextActionLabel: 'Confirm engagement',
         nextActionDescription:
-          'The hire decision is recorded. Confirm engagement details so verification can finish.',
-        summary: 'The decision is hire and engagement verification is waiting on the organization.',
+          'The engagement decision is recorded. Confirm engagement details so verification can finish.',
+        summary:
+          'The engagement decision is recorded and verification is waiting on the organization.',
         subjectLabel: 'Mira Andersson',
         decisionState: 'hire',
         engagementVerification,
@@ -255,9 +256,9 @@ export function buildVisualIndividualInterviewCorridorItems(): InterviewCorridor
         nextActionId: 'confirm_engagement',
         nextActionLabel: 'Confirm engagement',
         nextActionDescription:
-          'The hire decision is recorded. Confirm the engagement type so verification can finish.',
+          'The engagement decision is recorded. Confirm the engagement type so verification can finish.',
         summary:
-          'The decision is hire and engagement verification is waiting on your confirmation.',
+          'The engagement decision is recorded and verification is waiting on your confirmation.',
         subjectLabel: 'Northstar Evidence Studio',
         decisionState: 'hire',
         engagementVerification,

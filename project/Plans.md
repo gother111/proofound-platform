@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Plans.md`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # MVP Milestones (Proposal)
 
@@ -29,8 +29,8 @@ Validation checklist:
 
 - Proof Pack creation, evidence attachment, and proof visibility controls work end-to-end.
 - Matching preferences can be edited and persisted.
-- Matching and review surfaces return reason-coded, privacy-safe explanations without automated hiring recommendations.
-- Intro/readiness/shortlist flows preserve blind-by-default review and candidate-consented reveal.
+- Matching and review surfaces return reason-coded, privacy-safe explanations without automated workflow recommendations.
+- Intro/readiness/shortlist flows preserve blind-by-default review and proof-review-participant-consented reveal.
 - Privacy constraints are preserved (no premature identity leakage).
 
 ## Milestone 4: Organization Corridor (Trust Profile, Assignment, Review, Interview)

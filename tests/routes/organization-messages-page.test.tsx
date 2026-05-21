@@ -59,14 +59,14 @@ describe('organization messages page', () => {
               conversations: [
                 {
                   id: 'conversation-a',
-                  otherParty: { displayName: 'Candidate A', displayAvatar: null },
+                  otherParty: { displayName: 'Submission A', displayAvatar: null },
                   createdAt: '2026-01-01T00:00:00.000Z',
                   matchId: 'match-a',
                   stage: 'masked',
                 },
                 {
                   id: 'conversation-b',
-                  otherParty: { displayName: 'Candidate B', displayAvatar: null },
+                  otherParty: { displayName: 'Submission B', displayAvatar: null },
                   createdAt: '2026-01-02T00:00:00.000Z',
                   matchId: 'match-b',
                   stage: 'masked',
@@ -91,8 +91,14 @@ describe('organization messages page', () => {
   it('loads conversations with the server-provided current user', async () => {
     render(<OrgMessagesClient currentUserId="user-1" />);
 
+    expect(
+      screen.getByText(/Identity remains protected until a consented reveal/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Identity remains protected before reveal')).toBeInTheDocument();
+    expect(screen.queryByText(/Candidate identity remains protected/i)).not.toBeInTheDocument();
+
     await waitFor(() => {
-      expect(screen.getByText('Candidate A')).toBeInTheDocument();
+      expect(screen.getByText('Submission A')).toBeInTheDocument();
     });
 
     expect(screen.queryByText(/^loading\.\.\.$/i)).not.toBeInTheDocument();

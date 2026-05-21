@@ -130,7 +130,7 @@ export function MessageThread({
   // Get display name
   const displayName = otherPartyName;
   const getInitials = (name: string) => {
-    if (name === 'Candidate') return 'C';
+    if (name === 'Submission') return 'S';
     if (name === 'Organization') return 'O';
     return name
       .split(' ')

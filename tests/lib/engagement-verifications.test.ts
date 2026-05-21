@@ -168,7 +168,12 @@ describe('engagement verification service', () => {
         linkedEntityId: 'engagement-1',
         linkedEntityType: 'engagement_verification',
         queueType: 'pilot_ops',
+        summary:
+          'Workflow decision recorded. Engagement confirmation still needs pilot follow-through.',
       })
+    );
+    expect(JSON.stringify(mocks.ensureInternalOpsQueueItem.mock.calls)).not.toContain(
+      'Hire recorded. Engagement confirmation still needs pilot follow-through.'
     );
   });
 

@@ -128,7 +128,7 @@ export default async function OrganizationPortfolioPage({
     assignmentSnapshot
       ? 'A review-ready assignment is active, so proof review standards are already defined.'
       : 'Assignment standards are published before broader review starts.',
-    'Blind-by-default review stays separate from this public page until candidate consented reveal.',
+    'Blind-by-default review stays separate from this public page until proof-review participant consented reveal.',
   ];
 
   const membershipResult = user?.id

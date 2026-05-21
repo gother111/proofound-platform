@@ -62,10 +62,12 @@ describe('PrivacyOverview copy', () => {
     expect(
       screen.getByText(/Help match you with proof-led assignment reviews/i)
     ).toBeInTheDocument();
+    expect(screen.getByText(/Matches, proof submissions, conversations/i)).toBeInTheDocument();
     expect(screen.getByText(/Connect you with assignment-review workflows/i)).toBeInTheDocument();
     expect(screen.queryByText(/relevant opportunities/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/match you with opportunities/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Connect you with opportunities/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Matches, applications, conversations/i)).not.toBeInTheDocument();
 
     expect(screen.queryByText(/Tier 1/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tier 2/i)).not.toBeInTheDocument();

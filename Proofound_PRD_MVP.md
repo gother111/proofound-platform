@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Proofound MVP Executive Summary
 
@@ -8,7 +8,7 @@
 
 ## Product Promise
 
-Proofound MVP is a proof-first, privacy-first hiring credibility corridor centered on Proof Packs for individuals and lean organizations. It helps individuals turn real work into structured Proof Packs and helps organizations review people through privacy-safe, explainable evidence instead of profile theater.
+Proofound MVP is a proof-first, privacy-first assignment review corridor centered on Proof Packs for individuals and lean organizations. It helps individuals turn real work into structured Proof Packs and helps organizations review proof submissions through privacy-safe, explainable evidence instead of profile theater.
 
 ## Minimum Valuable Experience
 
@@ -23,8 +23,8 @@ Proofound MVP is a proof-first, privacy-first hiring credibility corridor center
 
 - publish a trust page
 - create one strong assignment
-- review privacy-safe proof-backed candidates
-- move one candidate through intro, reveal, interview, and decision
+- review privacy-safe proof-backed submissions
+- move one proof-review participant through intro, reveal, interview, and decision
 
 ## Canonical Launch Posture
 
@@ -38,7 +38,7 @@ Proofound MVP is a proof-first, privacy-first hiring credibility corridor center
 ## MVP Exclusions
 
 - ATS, HRIS, payroll, or contract-signing integrations
-- public candidate directory
+- public people directory
 - social-feed behavior
 - reviewer marketplace UI
 - sponsor or bounty marketplace UI

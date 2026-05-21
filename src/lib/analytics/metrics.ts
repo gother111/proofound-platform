@@ -5,7 +5,7 @@
  * - TTFQI: Time to First Qualified Introduction
  * - TTV: Time to Video Interview
  * - TTSC: Time to Signed Contract
- * - Proof Fit Lift
+ * - Proof-fit acceptance lift
  */
 
 import { db } from '@/db';
@@ -51,14 +51,14 @@ export interface TTSCResult extends MetricResult {
   target: 30; // PRD: ≤30 days
 }
 
-export interface PACLiftResult {
-  metric: 'PAC_LIFT';
-  withPAC: number; // Average match score with PAC
-  withoutPAC: number; // Average match score without PAC
+export interface ProofFitLiftResult {
+  metric: 'PROOF_FIT_ACCEPTANCE_LIFT';
+  highProofFitAcceptanceRate: number;
+  lowProofFitAcceptanceRate: number;
   lift: number; // Percentage increase
   targetLift: number; // PRD: ≥20%
   onTrack: boolean;
-  sampleSize: { withPAC: number; withoutPAC: number };
+  sampleSize: { highProofFit: number; lowProofFit: number };
   calculatedAt: Date;
 }
 
@@ -331,30 +331,34 @@ export async function calculateTTSC(
 }
 
 // ============================================================================
-// PROOF-FIT LIFT
+// PROOF-FIT ACCEPTANCE LIFT
 // ============================================================================
 
 /**
- * Calculate proof-fit lift.
+ * Calculate proof-fit acceptance lift.
  * PRD Target: at least 20% lift in acceptance rate for high-fit matches.
+ *
+ * The historical event payload used `pac_contribution`; keep reading it for
+ * compatibility, but expose the runtime metric through proof-fit terminology.
  */
-export async function calculatePACLift(startDate?: Date, endDate?: Date): Promise<PACLiftResult> {
+export async function calculateProofFitLift(
+  startDate?: Date,
+  endDate?: Date
+): Promise<ProofFitLiftResult> {
   try {
     const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = endDate || new Date();
 
-    // Legacy metric buckets retained for compatibility with existing analytics data.
+    // Legacy property buckets retained for compatibility with existing analytics data.
     const result = await db.execute(sql`
-      WITH matches_with_pac AS (
+      WITH matches_with_proof_fit AS (
         SELECT
           entity_id as match_id,
-          (properties->>'score')::float as score,
-          (properties->>'pac_contribution')::float as pac,
           CASE
-            WHEN (properties->>'pac_contribution')::float >= 0.70 THEN 'high_pac'
-            WHEN (properties->>'pac_contribution')::float < 0.30 THEN 'low_pac'
-            ELSE 'medium_pac'
-          END as pac_bucket
+            WHEN (properties->>'pac_contribution')::float >= 0.70 THEN 'high_proof_fit'
+            WHEN (properties->>'pac_contribution')::float < 0.30 THEN 'low_proof_fit'
+            ELSE 'medium_proof_fit'
+          END as proof_fit_bucket
         FROM analytics_events
         WHERE event_type = 'match_generated'
           AND occurred_at >= ${start.toISOString()}
@@ -368,48 +372,55 @@ export async function calculatePACLift(startDate?: Date, endDate?: Date): Promis
         WHERE event_type = 'match_introduced'
       )
       SELECT
-        m.pac_bucket,
-        AVG(m.score) as avg_score,
+        m.proof_fit_bucket,
         COUNT(*) as total_matches,
         COUNT(DISTINCT a.match_id) as accepted_matches,
         (COUNT(DISTINCT a.match_id)::float / COUNT(*)::float) as acceptance_rate
-      FROM matches_with_pac m
+      FROM matches_with_proof_fit m
       LEFT JOIN match_acceptance a ON m.match_id = a.match_id
-      WHERE m.pac_bucket IN ('high_pac', 'low_pac')
-      GROUP BY m.pac_bucket
+      WHERE m.proof_fit_bucket IN ('high_proof_fit', 'low_proof_fit')
+      GROUP BY m.proof_fit_bucket
     `);
 
     const rows = getRows(result) as any[];
-    const highPAC = rows.find((r) => r.pac_bucket === 'high_pac');
-    const lowPAC = rows.find((r) => r.pac_bucket === 'low_pac');
+    const highProofFit = rows.find((r) => r.proof_fit_bucket === 'high_proof_fit');
+    const lowProofFit = rows.find((r) => r.proof_fit_bucket === 'low_proof_fit');
 
-    const withPAC = highPAC ? parseFloat(highPAC.acceptance_rate) * 100 : 0;
-    const withoutPAC = lowPAC ? parseFloat(lowPAC.acceptance_rate) * 100 : 0;
-    const lift = withoutPAC > 0 ? ((withPAC - withoutPAC) / withoutPAC) * 100 : 0;
+    const highProofFitAcceptanceRate = highProofFit
+      ? parseFloat(highProofFit.acceptance_rate) * 100
+      : 0;
+    const lowProofFitAcceptanceRate = lowProofFit
+      ? parseFloat(lowProofFit.acceptance_rate) * 100
+      : 0;
+    const lift =
+      lowProofFitAcceptanceRate > 0
+        ? ((highProofFitAcceptanceRate - lowProofFitAcceptanceRate) / lowProofFitAcceptanceRate) *
+          100
+        : 0;
 
-    log.info('metrics.pac_lift.calculated', {
-      withPAC,
-      withoutPAC,
+    log.info('metrics.proof_fit_lift.calculated', {
+      highProofFitAcceptanceRate,
+      lowProofFitAcceptanceRate,
       lift,
-      sampleSizeHigh: highPAC?.total_matches || 0,
-      sampleSizeLow: lowPAC?.total_matches || 0,
+      sampleSizeHigh: highProofFit?.total_matches || 0,
+      sampleSizeLow: lowProofFit?.total_matches || 0,
     });
 
     return {
-      metric: 'PAC_LIFT',
-      withPAC,
-      withoutPAC,
+      metric: 'PROOF_FIT_ACCEPTANCE_LIFT',
+      highProofFitAcceptanceRate,
+      lowProofFitAcceptanceRate,
       lift,
       targetLift: 20,
       onTrack: lift >= 20,
       sampleSize: {
-        withPAC: parseInt(highPAC?.total_matches || '0'),
-        withoutPAC: parseInt(lowPAC?.total_matches || '0'),
+        highProofFit: parseInt(highProofFit?.total_matches || '0'),
+        lowProofFit: parseInt(lowProofFit?.total_matches || '0'),
       },
       calculatedAt: new Date(),
     };
   } catch (error) {
-    log.error('metrics.pac_lift.failed', {
+    log.error('metrics.proof_fit_lift.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
     throw error;
@@ -514,19 +525,25 @@ export async function calculateFirstTenMinuteActivationMetrics(
 
 export async function getAllMetrics(): Promise<Record<string, any>> {
   try {
-    const [ttsc, ttfqi, ttv, pac, firstTenMinuteActivation] = await Promise.all([
+    const [ttsc, ttfqi, ttv, proofFitLift, firstTenMinuteActivation] = await Promise.all([
       calculateTTSC(),
       calculateTTFQI(),
       calculateTTV(),
-      calculatePACLift(),
+      calculateProofFitLift(),
       calculateFirstTenMinuteActivationMetrics(),
     ]);
 
-    return { ttsc, ttfqi, ttv, pac, firstTenMinuteActivation };
+    return { ttsc, ttfqi, ttv, proofFitLift, firstTenMinuteActivation };
   } catch (error) {
     log.error('metrics.get_all.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return { ttsc: null, ttfqi: null, ttv: null, pac: null, firstTenMinuteActivation: null };
+    return {
+      ttsc: null,
+      ttfqi: null,
+      ttv: null,
+      proofFitLift: null,
+      firstTenMinuteActivation: null,
+    };
   }
 }

@@ -1,5 +1,7 @@
 # PROOFOUND USER FLOWS TECHNICAL SPECIFICATIONS
 
+> Doc Class: `reference-spec`
+> Last Verified: `2026-05-21`
 > Reference note: this file is reference or historical design material. It is not the canonical MVP launch contract.
 > Current precedence: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md`, then fresh repo-grounded evidence. This document is reference context only.
 
@@ -18,7 +20,7 @@ This historical reference transforms the broader 40-flow product concept into de
 - ✅ **Field-level validation rules** (format, length, required/optional)
 - ✅ **API contracts** (endpoints, request/response schemas)
 - ✅ **Data models** (database tables, relationships)
-- ✅ **Success metrics tied to OKRs** (e.g., "I-11 view→apply ≥ 30%")
+- ✅ **Success metrics tied to OKRs** (e.g., "I-11 view→proof-submission interest ≥ 30%")
 - ✅ **Empathetic, direct copy** with in-product guidance
 - ✅ **Error handling** and edge cases
 
@@ -52,7 +54,7 @@ This historical reference transforms the broader 40-flow product concept into de
 - [I-11 Recommended Feed](#i-11-recommended-feed)
 - [I-12 Search & Filter](#i-12-search--filter)
 - [I-13 Assignment Detail](#i-13-assignment-detail)
-- [I-14 Apply / Express Interest](#i-14-apply--express-interest)
+- [I-14 Submit Proof Interest](#i-14-submit-proof-interest)
 - [I-15 Messaging](#i-15-messaging)
 - [I-16 Schedule Interview](#i-16-schedule-interview)
 - [I-17 Accept Offer](#i-17-accept-offer)
@@ -70,7 +72,7 @@ This historical reference transforms the broader 40-flow product concept into de
 - [O-06 Matching Weights & Gates](#o-06-matching-weights--gates)
 - [O-07 Publish Assignment](#o-07-publish-assignment)
 - [O-08 View Ranked Matches](#o-08-view-ranked-matches)
-- [O-09 Candidate Deep-Dive](#o-09-candidate-deep-dive)
+- [O-09 Proof-Submission Review](#o-09-proof-submission-review)
 - [O-10 Shortlist (Stages)](#o-10-shortlist-stages)
 - [O-11 Messaging](#o-11-messaging)
 - [O-12 Schedule Interviews](#o-12-schedule-interviews)
@@ -1356,7 +1358,7 @@ DELETE /api/profile/experience/:id
 **Purpose**: Express purpose alignment to power values-based matching
 **Success Metrics**:
 
-- **OKR**: ≥70% complete before first apply
+- **OKR**: ≥70% complete before first proof submission
 - **OKR**: Correlation with match uplift ≥15%
 
 ### Key Fields
@@ -1585,7 +1587,7 @@ This link expires in 14 days.
 **Success Metrics**:
 
 - **OKR**: CTR (click-through to detail) ≥25%
-- **OKR**: View→apply conversion ≥30%
+- **OKR**: View→proof-submission interest conversion ≥30%
 - **OKR**: Dwell time ≥30 seconds per item
 
 ### Key Components
@@ -1717,7 +1719,7 @@ POST /api/search/save
 **Purpose**: Decide fit quickly and confidently
 **Success Metrics**:
 
-- **OKR**: View→apply conversion ≥30%
+- **OKR**: View→proof-submission interest conversion ≥30%
 - **OKR**: Time on page: 90-180 seconds (engagement sweet spot)
 
 ### Key Sections
@@ -1762,17 +1764,17 @@ You match 87% with this role:
 
 **CTA**:
 
-- Primary: "Apply to this role"
+- Primary: "Submit proof interest for this assignment"
 - Secondary: "Save for later"
 - Tertiary: "Not for me" (dismiss)
 
 ---
 
-## I-14 APPLY / EXPRESS INTEREST
+## I-14 SUBMIT PROOF INTEREST
 
 ### Overview
 
-**Purpose**: Submit targeted, low-friction application
+**Purpose**: Submit targeted, low-friction proof-submission interest
 **Success Metrics**:
 
 - **OKR**: Submission success rate ≥95%
@@ -1781,16 +1783,16 @@ You match 87% with this role:
 
 ### Key Screens
 
-**I-14-A: Pre-Apply Check**:
+**I-14-A: Pre-Submission Check**:
 
 - Show match score + any red flags
-- "Before you apply, ensure:"
+- "Before you submit proof interest, ensure:"
   - [ ] Profile is ≥80% complete
   - [ ] You have ≥1 verified skill
   - [ ] You meet all must-have requirements
 - If incomplete, show prompt: "Complete your profile first to stand out"
 
-**I-14-B: Application Form**:
+**I-14-B: Proof-Submission Interest Form**:
 
 - Auto-filled: Name, email, location from profile
 - Gating questions (from assignment):
@@ -1802,20 +1804,20 @@ You match 87% with this role:
 **I-14-C: Confirmation**:
 
 ```
-✅ Application submitted!
+✅ Proof-submission interest submitted!
 
 What happens next:
-1. [Org Name] will review your application within 5 days
-2. If interested, they'll message you to schedule an interview
+1. [Org Name] will review your proof submission within 5 days
+2. If interested, they'll message you about the next assignment-review step
 3. You'll get updates at your email: user@example.com
 
-[View my applications] [Browse more roles]
+[View my proof submissions] [Browse assignment reviews]
 ```
 
 **API**:
 
 ```typescript
-POST /api/assignments/:id/apply
+POST /api/assignments/:id/proof-interest
 {
   gating_questions: Array<{
     question_id: string,
@@ -1826,7 +1828,7 @@ POST /api/assignments/:id/apply
 }
 
 Response: {
-  application_id: string,
+  proof_submission_id: string,
   status: "submitted",
   estimated_review_time: "5 days"
 }
@@ -2581,7 +2583,7 @@ interface AuditLogResponse {
 
 ## O-05 CREATE ASSIGNMENT
 
-**OKRs**: Time-to-draft <15min, Predicted match coverage ≥20 candidates
+**OKRs**: Time-to-draft <15min, Predicted proof-submission coverage ≥20 submissions
 **Key Fields**:
 
 - `title`, `description`, `must_have_skills`, `nice_to_have_skills`
@@ -2593,19 +2595,19 @@ interface AuditLogResponse {
 
 ## O-06 MATCHING WEIGHTS & GATES
 
-**OKRs**: Shortlist rate ≥15%, Candidate quality score ≥70
+**OKRs**: Shortlist rate ≥15%, Proof-submission quality signal ≥70
 **Key Features**:
 
 - Adjust skill/values/practical weights
 - Set verification gates (e.g., "Must have ≥1 verified skill")
-- Sample candidate preview
+- Sample proof-submission preview
   **API**: `PATCH /api/assignments/:id/weights`
 
 ---
 
 ## O-07 PUBLISH ASSIGNMENT
 
-**OKRs**: Time-to-first-view <2h, Impressions-to-apply ≥5%
+**OKRs**: Time-to-first-view <2h, Impressions-to-proof-submission interest ≥5%
 **Validation**: All required fields, no duplicate titles, compliance check
 **API**: `POST /api/assignments/:id/publish`
 
@@ -2623,7 +2625,7 @@ interface AuditLogResponse {
 
 ---
 
-## O-09 CANDIDATE DEEP-DIVE
+## O-09 PROOF-SUBMISSION REVIEW
 
 **OKRs**: Time spent 2-4min (shows thorough review), Decision rate ≥80%
 **Key Sections**:
@@ -2631,7 +2633,7 @@ interface AuditLogResponse {
 - Profile overview, Skills atlas, Proofs, Verifications
 - Side-by-side with assignment requirements
 - Internal notes (private to org)
-  **API**: `GET /api/candidates/:id`, `POST /api/candidates/:id/notes`
+  **API**: `GET /api/proof-submissions/:id`, `POST /api/proof-submissions/:id/notes`
 
 ---
 
@@ -2639,7 +2641,7 @@ interface AuditLogResponse {
 
 **OKRs**: Stage conversion rates ≥50% (shortlist→interview), Time-in-stage <7 days
 **Stages**: New → Shortlisted → Interview → Offer → Hired / Closed
-**API**: `PATCH /api/applications/:id/stage`
+**API**: `PATCH /api/proof-submissions/:id/stage`
 
 ---
 
@@ -2664,7 +2666,7 @@ interface AuditLogResponse {
 
 - Scorecard (1-5 ratings on criteria)
 - Qualitative notes, Decision (advance/reject/hold)
-- Optional feedback sharing with candidate
+- Optional feedback sharing with proof-review participant
   **API**: `POST /api/interviews/:id/feedback`
 
 ---
@@ -2711,17 +2713,17 @@ interface AuditLogResponse {
 ## O-18 TEAM & PERMISSIONS
 
 **OKRs**: Permission changes <5 per month (shows good onboarding), Escalation events <1%
-**Roles**: Owner (all), Steward (manage team + assignments), Recruiter (manage candidates), Viewer (read-only)
+**Roles**: Owner (all), Steward (manage team + assignments), Reviewer (manage proof submissions), Viewer (read-only)
 **API**: `POST /api/orgs/:id/members`, `PATCH /api/orgs/:id/members/:member_id/role`
 
 ---
 
 ## O-19 ANALYTICS SNAPSHOT
 
-**OKRs**: Time-to-fill trend (target: <21 days), Quality-of-hire proxies (retention ≥80% at 90 days)
+**OKRs**: Time-to-workflow-outcome trend (target: <21 days), Quality-of-engagement proxies (retention ≥80% at 90 days)
 **Key Metrics**:
 
-- Time-to-fill, Stage conversion rates, Match quality, Diversity, Values alignment
+- Time-to-workflow-outcome, Stage conversion rates, Match quality, Diversity, Values alignment
   **API**: `GET /api/analytics/pipeline?assignment_id=xxx`
 
 ---
@@ -2738,48 +2740,48 @@ interface AuditLogResponse {
 
 # APPENDIX: SUCCESS METRICS SUMMARY TABLE
 
-| Flow ID  | Primary OKR            | Target | Secondary OKR         | Target  |
-| -------- | ---------------------- | ------ | --------------------- | ------- |
-| **I-01** | Sign-up completion     | ≥70%   | Time to first session | ≤90s    |
-| **I-02** | Drop-off at consent    | ≤5%    | Time on page          | ≤2min   |
-| **I-03** | Onboarding completion  | ≥75%   | Time to complete      | ≤5min   |
-| **I-04** | Profile completion     | ≥85%   | View-through rate     | ≥60%    |
-| **I-05** | Add ≥1 experience      | ≥80%   | CV import usage       | ≥40%    |
-| **I-06** | Complete before apply  | ≥70%   | Match uplift          | ≥15%    |
-| **I-07** | Avg skills per user    | ≥8     | Match coverage        | ≥90%    |
-| **I-08** | Attach ≥1 proof        | ≥50%   | Proof-to-verify rate  | ≥30%    |
-| **I-09** | Verification approval  | ≥65%   | Time-to-verify        | ≤7d     |
-| **I-10** | Edit frequency         | ≤1/30d | CTR uplift            | ≥20%    |
-| **I-11** | CTR (feed → detail)    | ≥25%   | View → apply          | ≥30%    |
-| **I-12** | Searches per session   | ≥1.5   | Zero-result rate      | ≤15%    |
-| **I-13** | View → apply           | ≥30%   | Time on page          | 90-180s |
-| **I-14** | Submission success     | ≥95%   | Time-to-submit        | ≤3min   |
-| **I-15** | Response time          | <24h   | Messages-to-decision  | ≤15     |
-| **I-16** | Invite → confirm       | <48h   | Reschedule rate       | <15%    |
-| **I-17** | Offer accept rate      | ≥60%   | Time-to-accept        | <3d     |
-| **I-18** | On-time delivery       | ≥85%   | Revision cycles       | <2      |
-| **I-19** | Verify request rate    | ≥70%   | Testimonial rate      | ≥50%    |
-| **I-20** | Data export SLA        | <48h   | Opt-out rate          | <5%     |
-| **O-01** | Login success          | ≥98%   | Role-context errors   | <2%     |
-| **O-02** | Time to 1st assignment | <30min | Invite acceptance     | ≥75%    |
-| **O-03** | Verification approval  | ≥80%   | Time-to-verify        | <3d     |
-| **O-04** | Profile completeness   | ≥85%   | View time             | ≥45s    |
-| **O-05** | Time-to-draft          | <15min | Match coverage        | ≥20     |
-| **O-06** | Shortlist rate         | ≥15%   | Quality score         | ≥70     |
-| **O-07** | Time-to-first-view     | <2h    | Impressions-to-apply  | ≥5%     |
-| **O-08** | View-to-action         | ≥30%   | Time-to-outreach      | ≤2d     |
-| **O-09** | Decision rate          | ≥80%   | Time spent            | 2-4min  |
-| **O-10** | Shortlist → interview  | ≥50%   | Time-in-stage         | <7d     |
-| **O-11** | Response time          | <24h   | Msg-to-interview      | ≥40%    |
-| **O-12** | Invite-to-confirm      | <24h   | No-show rate          | <10%    |
-| **O-13** | Feedback completion    | ≥90%   | Time-to-decision      | <3d     |
-| **O-14** | Offer accept rate      | ≥65%   | Time-to-accept        | <5d     |
-| **O-15** | Acceptance latency     | <48h   | Revision cycles       | <2      |
-| **O-16** | Issuance rate          | ≥60%   | Testimonial rate      | ≥40%    |
-| **O-17** | Stale posting rate     | <10%   | Edit frequency        | <1/wk   |
-| **O-18** | Permission changes     | <5/mo  | Escalation events     | <1%     |
-| **O-19** | Time-to-fill           | <21d   | 90d retention         | ≥80%    |
-| **O-20** | Billing failure        | <2%    | Export SLA            | <48h    |
+| Flow ID  | Primary OKR                      | Target | Secondary OKR                            | Target  |
+| -------- | -------------------------------- | ------ | ---------------------------------------- | ------- |
+| **I-01** | Sign-up completion               | ≥70%   | Time to first session                    | ≤90s    |
+| **I-02** | Drop-off at consent              | ≤5%    | Time on page                             | ≤2min   |
+| **I-03** | Onboarding completion            | ≥75%   | Time to complete                         | ≤5min   |
+| **I-04** | Profile completion               | ≥85%   | View-through rate                        | ≥60%    |
+| **I-05** | Add ≥1 experience                | ≥80%   | CV import usage                          | ≥40%    |
+| **I-06** | Complete before proof submission | ≥70%   | Match uplift                             | ≥15%    |
+| **I-07** | Avg skills per user              | ≥8     | Match coverage                           | ≥90%    |
+| **I-08** | Attach ≥1 proof                  | ≥50%   | Proof-to-verify rate                     | ≥30%    |
+| **I-09** | Verification approval            | ≥65%   | Time-to-verify                           | ≤7d     |
+| **I-10** | Edit frequency                   | ≤1/30d | CTR uplift                               | ≥20%    |
+| **I-11** | CTR (feed → detail)              | ≥25%   | View → proof-submission interest         | ≥30%    |
+| **I-12** | Searches per session             | ≥1.5   | Zero-result rate                         | ≤15%    |
+| **I-13** | View → proof-submission interest | ≥30%   | Time on page                             | 90-180s |
+| **I-14** | Submission success               | ≥95%   | Time-to-submit                           | ≤3min   |
+| **I-15** | Response time                    | <24h   | Messages-to-decision                     | ≤15     |
+| **I-16** | Invite → confirm                 | <48h   | Reschedule rate                          | <15%    |
+| **I-17** | Offer accept rate                | ≥60%   | Time-to-accept                           | <3d     |
+| **I-18** | On-time delivery                 | ≥85%   | Revision cycles                          | <2      |
+| **I-19** | Verify request rate              | ≥70%   | Testimonial rate                         | ≥50%    |
+| **I-20** | Data export SLA                  | <48h   | Opt-out rate                             | <5%     |
+| **O-01** | Login success                    | ≥98%   | Role-context errors                      | <2%     |
+| **O-02** | Time to 1st assignment           | <30min | Invite acceptance                        | ≥75%    |
+| **O-03** | Verification approval            | ≥80%   | Time-to-verify                           | <3d     |
+| **O-04** | Profile completeness             | ≥85%   | View time                                | ≥45s    |
+| **O-05** | Time-to-draft                    | <15min | Match coverage                           | ≥20     |
+| **O-06** | Shortlist rate                   | ≥15%   | Quality score                            | ≥70     |
+| **O-07** | Time-to-first-view               | <2h    | Impressions-to-proof-submission interest | ≥5%     |
+| **O-08** | View-to-action                   | ≥30%   | Time-to-outreach                         | ≤2d     |
+| **O-09** | Decision rate                    | ≥80%   | Time spent                               | 2-4min  |
+| **O-10** | Shortlist → interview            | ≥50%   | Time-in-stage                            | <7d     |
+| **O-11** | Response time                    | <24h   | Msg-to-interview                         | ≥40%    |
+| **O-12** | Invite-to-confirm                | <24h   | No-show rate                             | <10%    |
+| **O-13** | Feedback completion              | ≥90%   | Time-to-decision                         | <3d     |
+| **O-14** | Offer accept rate                | ≥65%   | Time-to-accept                           | <5d     |
+| **O-15** | Acceptance latency               | <48h   | Revision cycles                          | <2      |
+| **O-16** | Issuance rate                    | ≥60%   | Testimonial rate                         | ≥40%    |
+| **O-17** | Stale posting rate               | <10%   | Edit frequency                           | <1/wk   |
+| **O-18** | Permission changes               | <5/mo  | Escalation events                        | <1%     |
+| **O-19** | Time-to-workflow-outcome         | <21d   | Engagement retention                     | ≥80%    |
+| **O-20** | Billing failure                  | <2%    | Export SLA                               | <48h    |
 
 ---
 

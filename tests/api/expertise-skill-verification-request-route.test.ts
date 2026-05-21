@@ -21,8 +21,17 @@ vi.mock('@/lib/verification/canonical-requests', () => ({
   updateCanonicalSkillVerificationRequest: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
 import { requireApiAuthContext } from '@/lib/auth';
 import { sendEmail } from '@/lib/email/sender';
+import { emitVerificationRequestedAsync } from '@/lib/analytics/events';
+import { log } from '@/lib/log';
 import {
   createCanonicalSkillVerificationRequest,
   findExistingCanonicalSkillVerificationRequest,
@@ -405,6 +414,10 @@ describe('POST /api/verification/requests/skill', () => {
         emailError: 'Email service not configured',
       })
     );
+    expect(log.warn).toHaveBeenCalledWith('verification.skill_request.email_send_failed', {
+      requestId: 'canonical-request-1',
+      error: 'Email service not configured',
+    });
 
     const sentEmailPayload = (sendEmail as any).mock.calls[0][0];
     expect(sentEmailPayload.html).toContain('https://staging.proofound.io/verify/');
@@ -575,8 +588,65 @@ describe('POST /api/verification/requests/skill', () => {
       existingRequestId: 'req-race',
       existingStatus: 'pending',
     });
+    expect(log.error).toHaveBeenCalledWith('verification.skill_request.create_failed', {
+      skillId: 'skill-1',
+      error: 'duplicate key',
+    });
     expect(findExistingCanonicalSkillVerificationRequest).toHaveBeenCalledTimes(2);
     expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('logs email state persistence failures without failing the request', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.NEXT_PUBLIC_APP_URL = '';
+
+    const { supabase } = createSupabaseMock();
+    authContext.supabase = supabase;
+    (sendEmail as any).mockResolvedValue({ success: true, id: 'email-state-fail' });
+    (updateCanonicalSkillVerificationRequest as any).mockRejectedValueOnce(
+      new Error('email state update failed')
+    );
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'peer',
+        verifierEmail: 'mentor@example.com',
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(log.error).toHaveBeenCalledWith(
+      'verification.skill_request.email_state_persist_failed',
+      {
+        requestId: 'canonical-request-1',
+        error: 'email state update failed',
+      }
+    );
+  });
+
+  it('logs analytics failures without failing the request', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.NEXT_PUBLIC_APP_URL = '';
+
+    const { supabase } = createSupabaseMock();
+    authContext.supabase = supabase;
+    (sendEmail as any).mockResolvedValue({ success: true, id: 'email-analytics-fail' });
+    (emitVerificationRequestedAsync as any).mockImplementationOnce(() => {
+      throw new Error('analytics unavailable');
+    });
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'peer',
+        verifierEmail: 'mentor@example.com',
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(log.error).toHaveBeenCalledWith('verification.skill_request.analytics_emit_failed', {
+      requestId: 'canonical-request-1',
+      error: 'analytics unavailable',
+    });
   });
 });
 
@@ -676,6 +746,28 @@ describe('GET /api/verification/requests/skill', () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       verification_status: 'verified',
+    });
+  });
+
+  it('logs unexpected GET failures structurally while keeping the public response generic', async () => {
+    const supabase = {
+      from: vi.fn(() => {
+        throw new Error('skill lookup failed');
+      }),
+    };
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase,
+    });
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/verification/requests/skill?skillId=skill-1')
+    );
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('verification.skill_request.get_failed', {
+      error: 'skill lookup failed',
     });
   });
 });

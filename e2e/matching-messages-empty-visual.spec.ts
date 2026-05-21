@@ -115,9 +115,7 @@ test.describe('Matching and messages empty-state visual contract', () => {
     await stabilizeEmptyState(page);
 
     await expect(page.getByText('No conversations yet')).toBeVisible();
-    await expect(
-      page.getByText('Candidate identity remains protected before reveal')
-    ).toBeVisible();
+    await expect(page.getByText('Identity remains protected before reveal')).toBeVisible();
     await expect(page.locator('body')).not.toContainText('Start matching to begin conversations');
 
     await expect(page.locator('main')).toHaveScreenshot('organization-messages-empty.png', {

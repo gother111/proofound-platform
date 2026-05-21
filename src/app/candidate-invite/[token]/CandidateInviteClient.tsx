@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
@@ -295,7 +294,7 @@ export function CandidateInviteClient({
         setCurrentUser(null);
       }
     } catch (loadError) {
-      console.error('Failed to load candidate invite state:', loadError);
+      console.error('Failed to load submission invite state:', loadError);
       setError('This invitation link is invalid, expired, or no longer available.');
     } finally {
       setLoading(false);
@@ -340,7 +339,7 @@ export function CandidateInviteClient({
   const openProofPackReview = () => {
     const normalizedProofPackId = proofPackId.trim();
     if (!normalizedProofPackId) {
-      setError('Choose or enter the owner-only Proof Pack ID you want to submit.');
+      setError('Choose an owner-only Proof Pack before submitting assignment proof.');
       return;
     }
 
@@ -486,7 +485,7 @@ export function CandidateInviteClient({
     ? `Trial match for ${assignmentTitle}`
     : assignment
       ? assignmentTitle
-      : 'Candidate invite';
+      : 'Submission invite';
   const inviteDescription = isTestFlow
     ? `${organization.displayName} invited ${invite.maskedEmail} to start a trial match after reviewing this assignment context.`
     : assignment
@@ -568,7 +567,7 @@ export function CandidateInviteClient({
                 className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90"
               >
                 <a href="#apply">
-                  Apply
+                  Submit proof
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </a>
               </Button>
@@ -726,12 +725,12 @@ export function CandidateInviteClient({
             <div className="flex items-center gap-2">
               <Clock3 className="h-5 w-5 text-proofound-forest" />
               <h2 className="text-lg font-semibold text-proofound-charcoal">
-                Apply from this assignment
+                Submit proof for this assignment
               </h2>
             </div>
             <p className="max-w-3xl text-sm leading-6 text-proofound-charcoal/70">
-              Continue when the assignment context is clear. The next step keeps the application
-              tied to this role and asks for proof only after this context.
+              Continue when the assignment context is clear. The next step keeps the proof
+              submission tied to this role and asks for proof only after this context.
             </p>
           </div>
 
@@ -742,7 +741,7 @@ export function CandidateInviteClient({
             {!currentUser ? (
               <div className="space-y-3">
                 <p className="text-sm text-slate-700">
-                  Continue with the invited email when you are ready to apply.
+                  Continue with the invited email when you are ready to submit assignment proof.
                 </p>
                 <p className="text-xs leading-5 text-proofound-charcoal/60">
                   After account creation, privacy, export, and deletion controls are available from
@@ -754,7 +753,7 @@ export function CandidateInviteClient({
                     className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
                   >
                     <Link href={`/signup/individual?next=${nextParam}`}>
-                      Apply to this assignment
+                      Continue to proof submission
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -771,11 +770,11 @@ export function CandidateInviteClient({
                   Signed in as <strong>{currentUser.email}</strong>.
                 </p>
                 <p className="text-xs leading-5 text-proofound-charcoal/60">
-                  Starting the application does not submit proof, send verification email, or reveal
-                  additional account fields.
+                  Starting the proof submission does not submit proof, send verification email, or
+                  reveal additional account fields.
                 </p>
                 <Button onClick={claimInvite} disabled={submitting} className="w-full sm:w-auto">
-                  {isTestFlow ? 'Accept trial invite' : 'Apply to this assignment'}
+                  {isTestFlow ? 'Accept trial invite' : 'Continue to proof submission'}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -785,7 +784,7 @@ export function CandidateInviteClient({
               <div className="space-y-5">
                 <p className="text-sm text-slate-700">
                   Create or choose one owner-only Proof Pack for this assignment. The submission
-                  does not publish a public page or broaden the application beyond this assignment.
+                  does not publish a public page or broaden visibility beyond this assignment.
                 </p>
 
                 <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -824,21 +823,14 @@ export function CandidateInviteClient({
                       ) : null}
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="proof-pack-id">Owner-only Proof Pack ID</Label>
-                      <Input
-                        id="proof-pack-id"
-                        value={proofPackId}
-                        onChange={(event) => {
-                          setProofPackId(event.target.value);
-                          setReviewProofPackId('');
-                          setReviewConfirmed(false);
-                        }}
-                        placeholder="00000000-0000-0000-0000-000000000000"
-                      />
+                    <div className="space-y-3">
+                      <p className="text-sm font-semibold text-proofound-charcoal">
+                        No owner-only Proof Pack is ready for this assignment yet.
+                      </p>
                       <p className="text-xs leading-5 text-proofound-charcoal/60">
-                        Public Page links and legacy snippet URLs are not accepted in this
-                        assignment flow.
+                        Create one from your proof workspace, then return to this invite to review
+                        and submit it for this assignment. Public Page links and legacy snippet URLs
+                        are not accepted in this assignment flow.
                       </p>
                     </div>
                   )}
@@ -846,7 +838,7 @@ export function CandidateInviteClient({
                   <Button
                     variant="outline"
                     onClick={openProofPackReview}
-                    disabled={submitting}
+                    disabled={submitting || availableProofPacks.length === 0}
                     className="w-full sm:w-auto"
                   >
                     Review assignment proof
@@ -860,8 +852,8 @@ export function CandidateInviteClient({
                         Final review before submission
                       </p>
                       <p className="mt-1 text-sm leading-6 text-proofound-charcoal/70">
-                        Confirm what {organization.displayName} can see before this application is
-                        submitted.
+                        Confirm what {organization.displayName} can see before this proof submission
+                        is sent.
                       </p>
                     </div>
 
@@ -894,7 +886,7 @@ export function CandidateInviteClient({
                           Employer visibility
                         </p>
                         <p className="mt-1 leading-6 text-proofound-charcoal/75">
-                          Owner-only application packet. It does not publish your Public Page,
+                          Owner-only proof-submission packet. It does not publish your Public Page,
                           broaden visibility, expose a share link, or reveal contact details.
                         </p>
                       </div>
@@ -912,7 +904,7 @@ export function CandidateInviteClient({
                     <div className="rounded-md border border-proofound-stone bg-proofound-parchment/40 p-3 text-sm leading-6 text-proofound-charcoal/70">
                       Intro, reveal, interview, decision, and feedback states continue in
                       Communications. Identity-bearing reveal still requires the
-                      candidate-controlled corridor step.
+                      participant-controlled reveal step.
                     </div>
 
                     <label className="flex items-start gap-3 text-sm leading-6 text-proofound-charcoal/75">
@@ -947,7 +939,7 @@ export function CandidateInviteClient({
                         disabled={submitting || !reviewConfirmed}
                         className="w-full sm:w-auto"
                       >
-                        Submit reviewed application
+                        Submit reviewed proof
                       </Button>
                     </div>
                   </div>
@@ -991,7 +983,7 @@ export function CandidateInviteClient({
                     <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-700" />
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-emerald-900">
-                        Saved privately to your candidate workspace
+                        Saved privately to your submission workspace
                       </p>
                       <p className="text-sm leading-6 text-emerald-800">
                         Assignment proof is submitted for blind-first review. Your reusable Proof

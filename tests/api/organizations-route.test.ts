@@ -56,7 +56,7 @@ describe('organizations [orgId] route', () => {
     (db.query.organizations.findFirst as any).mockResolvedValue({
       id: ORG_ID,
       displayName: 'Acme Org',
-      mission: 'Ship trust-first hiring',
+      mission: 'Ship proof-first assignment review',
       tagline: 'Join a focused team',
       workingContext: 'Remote-first collaboration',
       website: 'https://example.com/',
@@ -187,7 +187,7 @@ describe('organizations [orgId] route', () => {
       buildPutRequest({
         displayName: 'Acme Org',
         whyWorkMatters: 'Join a focused team',
-        mission: 'Ship trust-first hiring',
+        mission: 'Ship proof-first assignment review',
         website: 'example.com',
         operatingContext: 'Remote-first collaboration',
       }),
@@ -199,7 +199,7 @@ describe('organizations [orgId] route', () => {
       expect.objectContaining({
         displayName: 'Acme Org',
         tagline: 'Join a focused team',
-        mission: 'Ship trust-first hiring',
+        mission: 'Ship proof-first assignment review',
         workingContext: 'Remote-first collaboration',
         orgReadiness: 'org_ready',
         website: 'https://example.com/',

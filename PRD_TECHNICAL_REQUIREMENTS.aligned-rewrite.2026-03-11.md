@@ -1,7 +1,7 @@
 # Proofound MVP Technical Requirements — Aligned Rewrite
 
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 **Status:** Aligned rewrite for current MVP  
 **Date:** 2026-03-11  
@@ -104,7 +104,7 @@ Launch requirements:
 
 - blind-by-default review
 - progressive reveal with explicit state transitions
-- candidate consent before identity-bearing reveal
+- proof-review participant consent before identity-bearing reveal
 - narrowest-wins visibility enforcement
 - separation of public portfolio surfaces from matching/review surfaces
 - PII scrubbing in logs and analytics payloads
@@ -118,7 +118,7 @@ Target posture:
 
 - fast enough for calm, usable web experience in launch pilot conditions
 - no blocking heavy client computation in proof review surfaces
-- candidate review, proof editing, and assignment drafting must feel responsive under MVP load assumptions
+- proof-submission review, proof editing, and assignment drafting must feel responsive under MVP load assumptions
 
 ### 2.4 Reliability
 
@@ -197,7 +197,7 @@ Launch requirements:
 - `ai_suggestion_cache`
 - `ai_suggestion_events`
 
-These tables support spend caps, auditability, cache reuse, and user-visible suggestion event tracking. They must not become a hidden candidate evaluation store.
+These tables support spend caps, auditability, cache reuse, and user-visible suggestion event tracking. They must not become a hidden proof-review participant evaluation store.
 
 ### 3.2 Canonical role model
 
@@ -211,7 +211,7 @@ Rules:
 
 - `org_owner` controls org configuration, member invites, publish authority, and final decision rights
 - `org_manager` can manage assignments and workflow operations within org limits
-- `org_reviewer` can review candidates and contribute feedback within allowed scope
+- `org_reviewer` can review proof submissions and contribute feedback within allowed scope
 - no complex approval matrix in MVP
 
 ### 3.3 Canonical engagement type enum
@@ -498,7 +498,7 @@ Visible when required for coordination:
 
 Rule:
 
-- candidate approval is mandatory for identity-bearing reveal
+- proof-review participant approval is mandatory for identity-bearing reveal
 
 ### 4.5 Redaction and upload safety
 
@@ -507,7 +507,7 @@ Launch requirements:
 - sanitize or quarantine identifying file metadata before review-stage display
 - treat risky artifact renders as requires-review
 - prevent raw filenames and metadata from leaking on public or review surfaces
-- keep private notes non-candidate-facing unless explicitly transformed into candidate-visible feedback
+- keep private notes hidden from proof-review participants unless explicitly transformed into participant-visible feedback
 
 ---
 
@@ -598,7 +598,7 @@ Key product rule:
 - intro expiry and decision SLA must be tracked
 - reveal timeout must be enforced
 - interview reschedule history must be auditable
-- candidate-visible closure feedback is required where policy says so
+- participant-visible closure feedback is required where policy says so
 
 ### 5.6 Notification contract
 
@@ -606,8 +606,8 @@ Launch-safe notification requirements:
 
 - in-app + email for workflow events that require response or awareness
 - no privacy-breaking payloads in email subjects or summaries
-- no candidate notification for silent org shortlist actions before intro corridor opens
-- no private notes in candidate-visible channels
+- no proof-review participant notification for silent org shortlist actions before intro corridor opens
+- no private notes in participant-visible channels
 
 ---
 
@@ -737,9 +737,9 @@ The technical requirements are considered aligned when:
 
 ## 10. Final technical statement
 
-The Proofound MVP technical contract supports a narrow, proof-first, privacy-safe hiring and credibility corridor.
+The Proofound MVP technical contract supports a narrow, proof-first, privacy-safe assignment-review and credibility corridor.
 
-It stores private context, surfaces structured proof, enforces scoped verification, preserves blind review until consented reveal, and supports a lean hiring-to-engagement flow without expanding into generic recruiting middleware.
+It stores private context, surfaces structured proof, enforces scoped verification, preserves blind review until consented reveal, and supports a lean workflow-to-engagement flow without expanding into generic recruiting middleware.
 
 ---
 

@@ -84,7 +84,7 @@ const ACTIVE_API_POLICIES = [
     classification: 'active_launch_path',
     surfaceLabel: 'Start from CV Beta API',
     detail:
-      'Start from CV routes remain hard-gated to approved guest first-proof private scaffolding, never profile-first import, employer CV parsing, or candidate evaluation.',
+      'Start from CV routes remain hard-gated to approved guest first-proof private scaffolding, never profile-first import, employer CV parsing, or proof-review participant evaluation.',
     matches: (pathname: string) => matchExactOrPrefix('/api/ai/start-from-cv')(pathname),
   },
   {
@@ -104,8 +104,8 @@ const ACTIVE_API_POLICIES = [
   },
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Candidate Invite API',
-    detail: 'Candidate invite and claim flows remain active in the launch corridor.',
+    surfaceLabel: 'Submission Invite API',
+    detail: 'Submission invite and claim flows remain active in the launch corridor.',
     matches: matchExactOrPrefix('/api/candidate-invites'),
   },
   {

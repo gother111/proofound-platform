@@ -51,7 +51,6 @@ describe('individual matching mobile clarity', () => {
       <MatchResultCard
         result={{
           id: 'visual-individual-match-1',
-          score: 0.86,
           assignmentId: 'visual-assignment-proof-ops',
           assignment: {
             role: 'Proof operations lead for a privacy-safe assignment review',
@@ -63,11 +62,11 @@ describe('individual matching mobile clarity', () => {
               'proof-systems': { level: 4 },
             },
           },
-          contributions: {
-            proof_fit: 0.91,
-            skills_fit: 0.88,
-            verification_fit: 0.84,
-          },
+          proofSignals: [
+            { key: 'proof_fit', support: 'Primary reason' },
+            { key: 'skills_fit', support: 'Primary reason' },
+            { key: 'verification_fit', support: 'Clear support' },
+          ],
         }}
         variant="blind"
         skills={[{ id: 'proof-systems', label: 'proof-systems', level: 4 }]}

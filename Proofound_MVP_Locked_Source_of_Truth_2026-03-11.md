@@ -1,7 +1,7 @@
 # Proofound MVP — Locked Source of Truth
 
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 **Status:** Locked for MVP planning and implementation  
 **Date:** 2026-03-11  
@@ -37,7 +37,7 @@ The controlling addendum is:
 
 If the AI addendum conflicts with this locked source of truth, this locked source of truth wins.
 
-This document is intentionally narrower than the broader company vision. For MVP, Proofound is a proof-backed hiring credibility corridor centered on Proof Packs. The public portfolio is a selected output surface, not the product center.
+This document is intentionally narrower than the broader company vision. For MVP, Proofound is a proof-backed assignment review corridor centered on Proof Packs. The public portfolio is a selected output surface, not the product center.
 
 ---
 
@@ -45,21 +45,21 @@ This document is intentionally narrower than the broader company vision. For MVP
 
 ### 1.1 Exact purpose of the MVP
 
-Proofound MVP is a **proof-first, privacy-first hiring credibility corridor** centered on **Proof Packs**.
+Proofound MVP is a **proof-first, privacy-first assignment review corridor** centered on **Proof Packs**.
 
 It helps:
 
 - individuals turn real work into structured Proof Packs and publish a trustworthy proof portfolio
-- organizations define clearer assignments and review people through proof-backed, explainable, privacy-safe early review instead of CV theater
+- organizations define clearer assignments and review proof submissions through proof-backed, explainable, privacy-safe early review instead of CV theater
 
 The MVP exists to solve a trust problem:
 
-- candidates struggle to present credible capability without relying on weak résumé language, pedigree, or profile performance
+- individuals struggle to present credible capability without relying on weak résumé language, pedigree, or profile performance
 - organizations struggle to distinguish real capability from polished self-claim, keyword stuffing, and AI-generated application noise
 
 ### 1.2 One-sentence product promise
 
-**Proofound helps people turn real work into structured Proof Packs, and helps organizations review candidates through proof instead of profile theater.**
+**Proofound helps people turn real work into structured Proof Packs, and helps organizations review proof submissions through proof instead of profile theater.**
 
 ### 1.3 Core wedge
 
@@ -91,7 +91,7 @@ Primary early-fit organizations:
 - mission-driven NGOs
 - startups
 - SMEs
-- schools, accelerators, programs, or small hiring teams using lean workflows
+- schools, accelerators, programs, or small assignment-review teams using lean workflows
 - teams hiring for project-shaped, outcome-shaped, or credibility-sensitive roles
 
 ### 1.5 Minimum valuable experience for each user type
@@ -111,8 +111,8 @@ A new organization can:
 
 - publish a clean trust page
 - create one strong assignment through a structured builder
-- review privacy-safe proof-backed candidate summaries
-- move one candidate through intro, reveal, interview, and decision
+- review privacy-safe proof-backed submission summaries
+- move one proof-review participant through intro, reveal, interview, and decision
 
 ---
 
@@ -132,7 +132,7 @@ The MVP is **not**:
 - a social network or content feed
 - a gamified profile product
 - a mental-health product beyond optional private check-ins and reflections
-- an AI candidate scoring, ranking, hiring recommendation, fit-verdict, or automated review decision product
+- an AI proof-review participant scoring, ranking, workflow recommendation, fit-verdict, or automated review decision product
 
 ### 2.2 Explicitly postponed to post-MVP or later
 
@@ -156,7 +156,7 @@ The following rules exist to prevent scope creep:
 - The MVP ships one clean corridor for individuals and one clean corridor for organizations.
 - The MVP emphasizes proof, trust, privacy, and matching clarity over breadth.
 - Any feature that does not strengthen proof quality, trust, shareability, or review quality should be cut or postponed.
-- Assistive AI is allowed only as optional support for proof quality, assignment clarity, verification wording, and privacy preflight. It must not introduce scoring, ranking, automated hiring recommendations, black-box review intelligence, or AI-first positioning.
+- Assistive AI is allowed only as optional support for proof quality, assignment clarity, verification wording, and privacy preflight. It must not introduce scoring, ranking, automated workflow recommendations, black-box review intelligence, or AI-first positioning.
 - “Platform vision” is allowed in the data model and object model, but not as UI sprawl.
 
 ---
@@ -625,7 +625,7 @@ Minimum acceptable MVP evidence for engagement verification:
 
 - mutual attestation from both sides on the same engagement fact
 - uploaded offer letter, signed agreement, SOW, invoice, or equivalent evidence
-- matching org confirmation plus candidate confirmation
+- matching organization confirmation plus proof-review participant confirmation
 
 This is acceptable for MVP trust purposes, but it is **not** legal contract enforcement.
 
@@ -680,7 +680,7 @@ Public portfolios are:
 The MVP does **not** include:
 
 - public people browse
-- open candidate search index
+- open people search index
 - vanity counters or visible view counts
 
 ## 9.5 Redaction rules
@@ -740,7 +740,7 @@ The system must not depend on black-box ranking language.
 
 Early review may show:
 
-- anonymized candidate label
+- anonymized submission label
 - skill clusters
 - proof summaries
 - outcome summaries
@@ -933,7 +933,7 @@ Use only three MVP roles:
 Suggested real-world mapping:
 
 - HR / recruiter → `org_manager`
-- hiring manager → `org_manager` or `org_reviewer`
+- assignment-review owner → `org_manager` or `org_reviewer`
 - executive sponsor → `org_reviewer` unless they need management permissions
 - peer / future teammate → `org_reviewer`
 
@@ -950,7 +950,7 @@ The assignment builder is structured around clarity, not job-description fluff.
    What responsibilities, deliverables, and outcomes matter?
 
 3. **What proof would convince you**  
-   What evidence, skills, or signals would make this candidate credible?
+   What evidence, skills, or signals would make this proof submission credible?
 
 4. **What practical constraints apply**  
    Engagement type, location, timezone, timing, compensation posture if included.
@@ -962,17 +962,17 @@ The assignment builder is structured around clarity, not job-description fluff.
 
 The org sees proof-backed, anonymized summaries.
 
-### Step 5 — Move candidates through the hiring corridor
+### Step 5 — Move proof-review participants through the assignment-review workflow
 
 The org workflow is:
 
 - shortlist
 - intro request
-- candidate intro acceptance
+- proof-review participant intro acceptance
 - reveal request
-- candidate reveal approval
+- proof-review participant reveal approval
 - interview round(s)
-- final decision
+- final workflow decision
 - engagement record
 - engagement verification
 - optional proof issuance
@@ -987,12 +987,12 @@ The MVP includes a clear hiring conclusion step.
 
 Canonical org-side sequence:
 
-1. Review privacy-safe candidate summaries
+1. Review privacy-safe submission summaries
 2. Shortlist
 3. Request intro
-4. Candidate accepts intro
+4. Proof-review participant accepts intro
 5. Request reveal
-6. Candidate approves reveal
+6. Proof-review participant approves reveal
 7. Interview round 1
 8. Interview round 2+ if needed
 9. Final decision
@@ -1194,8 +1194,8 @@ The product should support those people participating through the lightweight ro
 
 ### Recommended MVP mapping
 
-- required author or approver: HR / recruiter or hiring manager
-- second required author or approver: hiring manager or recruiter
+- required author or approver: HR / recruiter or assignment-review owner
+- second required author or approver: assignment-review owner or recruiter
 - optional reviewer: executive sponsor
 - optional reviewer: future teammate / peer
 
@@ -1228,7 +1228,7 @@ The following rules are non-negotiable for MVP.
 
 - Blind-by-default review is mandatory.
 - Progressive reveal is mandatory.
-- Identity-bearing reveal requires candidate consent.
+- Identity-bearing reveal requires proof-review participant consent.
 - Public publication must never override review-stage privacy.
 - Field-level visibility and narrowest-wins must be enforced across all surfaces.
 - PII must not leak via metadata, logs, analytics, filenames, or public rendering.
@@ -1253,7 +1253,7 @@ The following rules are non-negotiable for MVP.
 
 - No ATS / HRIS / payroll / contract-signing integration in MVP.
 - No enterprise org suite in MVP.
-- No public candidate directory in MVP.
+- No public people directory in MVP.
 - No reviewer marketplace UI in MVP.
 - No sponsor marketplace UI in MVP.
 - No Zen expansion beyond optional private check-ins and reflections.
@@ -1364,7 +1364,7 @@ Specific cleanup tasks:
 - replace any “Lite = 3 skills + 1 proof overall” logic where it implies serious trust readiness
 - delete or move broad org-surface requirements to post-MVP appendix
 - delete any visible vanity metrics from public or owner-facing MVP surfaces
-- remove any language that suggests public candidate browsing
+- remove any language that suggests public people browsing
 - keep proof-first day-1 activation as the primary UX promise, with a fast portfolio output as the first visible reward
 - ensure technical requirements and implementation tasks treat privacy / RLS proof as launch-critical
 
@@ -1372,10 +1372,10 @@ Specific cleanup tasks:
 
 ## 21. Final locked MVP statement
 
-Proofound MVP is a narrow, proof-first hiring credibility corridor centered on Proof Packs.
+Proofound MVP is a narrow, proof-first assignment review corridor centered on Proof Packs.
 
 It helps individuals turn real work into structured Proof Packs and publish a trustworthy proof portfolio.
-It helps organizations define clearer assignments and review people through privacy-safe, explainable proof-backed early review.
+It helps organizations define clearer assignments and review proof submissions through privacy-safe, explainable proof-backed early review.
 It includes private contextual scaffolding, bounded verification, and an explicit intro-to-engagement corridor.
 It excludes generic HR SaaS sprawl, public marketplace sprawl, vanity mechanics, and integration-heavy replacement ambitions.
 
@@ -1401,7 +1401,7 @@ Invite-only production beta:
 
 - Proof Artifact Text Extraction using Google Cloud Document AI OCR
 
-The OCR beta is not CV import. OCR output is draft text only and must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or hiring-decision state.
+The OCR beta is not CV import. OCR output is draft text only and must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or workflow-decision state.
 
 OCR requires explicit user consent per document and must be feature-flagged, invite-gated, page-limited, file-size-limited, spend-capped, and safe to disable. Google Cloud budgets are alerts only; hard caps must be enforced in app/service code. Cloud Run max instances starts at `1` and must not exceed `3` during beta.
 
@@ -1410,7 +1410,7 @@ The temporary Google Cloud credit window is expected to expire around `2026-08-0
 Excluded:
 
 - CV import wizard
-- AI candidate scoring, ranking, shortlisting, suitability judgments, hiring recommendations, verification decisions, or trust-state decisions
+- AI proof-review participant scoring, ranking, shortlisting, suitability judgments, workflow recommendations, verification decisions, or trust-state decisions
 - Gemini skill extractor for employer review
 - taxonomy shortlist or reranker
 - Cloud Vision OCR
@@ -1420,7 +1420,7 @@ Excluded:
 
 ## Appendix B. Narrow Optional AI Addendum
 
-This appendix does not rewrite the MVP definition. It only permits a small optional assistive layer inside the existing proof-first hiring corridor.
+This appendix does not rewrite the MVP definition. It only permits a small optional assistive layer inside the existing proof-first assignment review corridor.
 
 Allowed AI support is limited to:
 

@@ -14,6 +14,7 @@ import { and, gte, desc, isNotNull, sql } from 'drizzle-orm';
 import { EMAIL_CONFIG } from '@/lib/email/config';
 import { resolveCanonicalSiteUrl } from '@/lib/env';
 import { INTERNAL_OPS_HREF } from '@/lib/launch/surface-policy';
+import { log } from '@/lib/log';
 
 // SLA thresholds in milliseconds
 export const SLA_THRESHOLDS = {
@@ -94,11 +95,15 @@ export async function checkPerformanceSLAs(): Promise<AlertResult> {
       }
     }
 
-    console.log(
-      `[Performance Alerting] Checked ${latestMetrics.size} metrics, found ${violations.length} violations, created ${alertsCreated} new alerts`
-    );
+    log.info('performance.alerting.sla_checked', {
+      metricsChecked: latestMetrics.size,
+      violations: violations.length,
+      alertsCreated,
+    });
   } catch (error) {
-    console.error('[Performance Alerting] Error checking SLAs:', error);
+    log.error('performance.alerting.sla_check_failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 
   return { alertsCreated, violations };
@@ -222,7 +227,12 @@ export async function sendAlertNotifications(violations: AlertResult['violations
       await sendSlackAlert(violations);
     }
   } catch (error) {
-    console.error('[Performance Alerting] Error sending notifications:', error);
+    log.error('performance.alerting.notification_send_failed', {
+      error: error instanceof Error ? error.message : String(error),
+      violations: violations.length,
+      criticalViolations: criticalViolations.length,
+      highViolations: highViolations.length,
+    });
   }
 }
 

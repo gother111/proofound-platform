@@ -63,16 +63,8 @@ function assignmentStatusLabel(status: string) {
   return ASSIGNMENT_STATUS_LABELS[status] ?? status;
 }
 
-function proofEvidenceLabel(value: number | undefined) {
-  if (value === undefined) return 'Not available';
-  if (value >= 0.85) return 'Strong';
-  if (value >= 0.65) return 'Clear';
-  if (value >= 0.4) return 'Partial';
-  return 'Needs more proof';
-}
-
 function proofEvidenceSignalLabel(explanation: any, key: string) {
-  return explanation.proofSignals?.[key] ?? proofEvidenceLabel(explanation.subscores?.[key]);
+  return explanation.proofSignals?.[key] ?? 'Not available';
 }
 
 export function MatchingOrganizationView({
@@ -227,7 +219,7 @@ export function MatchingOrganizationView({
     }
   });
 
-  // Keep selected candidate in sync with tab change or list changes
+  // Keep the selected proof submission in sync with tab changes or list changes.
   useEffect(() => {
     if (filteredMatches.length > 0) {
       const matchExists = filteredMatches.some((m: any) => m.id === activeMatchId);
@@ -239,7 +231,7 @@ export function MatchingOrganizationView({
     }
   }, [activeSegment, filteredMatches, activeMatchId]);
 
-  // Fetch candidate explanation when selected candidate changes
+  // Fetch the proof-submission explanation when the selected submission changes.
   useEffect(() => {
     if (!activeMatchId || explanations[activeMatchId]) return;
 
@@ -418,7 +410,7 @@ export function MatchingOrganizationView({
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                     <span>{assignmentStatusLabel(assignment.status)}</span>
                     <span>
-                      {count} match{count !== 1 ? 'es' : ''}
+                      {count} submission{count !== 1 ? 's' : ''}
                     </span>
                   </div>
                 </button>
@@ -537,7 +529,7 @@ export function MatchingOrganizationView({
                 </button>
               </div>
 
-              {/* Two-Column Candidate Review Console */}
+              {/* Two-column proof-submission review console */}
               {filteredMatches.length === 0 ? (
                 <div className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-white/40 border border-dashed border-proofound-stone/60 rounded-xl">
                   <ListChecks className="h-8 w-8 text-muted-foreground/60 mb-2" />
@@ -574,7 +566,7 @@ export function MatchingOrganizationView({
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-semibold text-sm text-proofound-charcoal">
-                              {match.reviewCard?.candidateLabel || `Candidate #${index + 1}`}
+                              {match.reviewCard?.candidateLabel || `Submission #${index + 1}`}
                             </span>
 
                             {match.corridorState === 'intro_approved' ? (
@@ -683,7 +675,7 @@ export function MatchingOrganizationView({
                                       Intro requested
                                     </Badge>
                                     <p className="text-[10px] text-muted-foreground mt-1">
-                                      Waiting for reviewer response.
+                                      Waiting for participant response.
                                     </p>
                                   </div>
                                 ) : (
@@ -843,7 +835,7 @@ export function MatchingOrganizationView({
                                                     {skill.skillName}
                                                   </p>
                                                   <p className="text-[10px] text-muted-foreground">
-                                                    Required: Lvl {skill.requiredLevel} • Candidate
+                                                    Required: Lvl {skill.requiredLevel} • Submission
                                                     has: Lvl {skill.yourLevel}
                                                   </p>
                                                 </div>
@@ -878,7 +870,7 @@ export function MatchingOrganizationView({
                                                   variant="secondary"
                                                   className="text-[10px] font-normal"
                                                 >
-                                                  Candidate Lvl {skill.yourLevel}
+                                                  Submission Lvl {skill.yourLevel}
                                                 </Badge>
                                               </div>
                                             )

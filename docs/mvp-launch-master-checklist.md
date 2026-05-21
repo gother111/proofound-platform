@@ -94,7 +94,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 ## 3. Privacy, Trust, Verification, And Safety
 
 - [ ] Blind-by-default review is enforced in production.
-- [ ] Reveal requires explicit candidate consent for identity-bearing access.
+- [ ] Reveal requires explicit proof-review participant consent for identity-bearing access.
 - [ ] Reveal stages and state transitions remain canonical and auditable.
 - [ ] Public portfolio rendering does not leak private or review-only information.
 - [ ] File metadata and original filenames do not leak across public, review, queue, or email surfaces.
@@ -214,7 +214,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] Pilot terms, pricing, and case-study expectations are documented.
 - [ ] Founder outbound messaging matches the locked product wedge.
 - [ ] Homepage messaging matches the same wedge as outbound messaging.
-- [ ] Candidate supply-seeding plan exists for the chosen corridor.
+- [ ] Proof-submission supply-seeding plan exists for the chosen corridor.
 - [ ] Org onboarding playbook exists for the pilot motion.
 - [ ] Support and escalation expectations are clear for launch partners.
 - [ ] There is no hidden dependency on non-launch integrations to make the MVP appear usable.

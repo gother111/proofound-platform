@@ -180,8 +180,8 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Failed to list candidate invites:', error);
-    return NextResponse.json({ error: 'Failed to load candidate invites' }, { status: 500 });
+    console.error('Failed to list submission invites:', error);
+    return NextResponse.json({ error: 'Failed to load submission invites' }, { status: 500 });
   }
 }
 
@@ -408,7 +408,7 @@ export async function POST(
             },
           });
         } catch (error) {
-          console.error('Candidate invite email send failed:', error);
+          console.error('Submission invite email send failed:', error);
         }
       })
     );
@@ -421,7 +421,7 @@ export async function POST(
       assignmentId,
     });
   } catch (error) {
-    console.error('Failed to create candidate invites:', error);
-    return NextResponse.json({ error: 'Failed to create candidate invites' }, { status: 500 });
+    console.error('Failed to create submission invites:', error);
+    return NextResponse.json({ error: 'Failed to create submission invites' }, { status: 500 });
   }
 }

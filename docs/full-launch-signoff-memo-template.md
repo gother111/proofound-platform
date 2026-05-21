@@ -65,7 +65,7 @@ Notes:
   - Evidence: `<link or note>`
 - Outbound and homepage wedge aligned: `YES` / `NO`
   - Evidence: `<link or note>`
-- Candidate supply-seeding plan ready: `YES` / `NO`
+- Proof-submission supply-seeding plan ready: `YES` / `NO`
   - Evidence: `<link or note>`
 - Org onboarding playbook ready: `YES` / `NO`
   - Evidence: `<link or note>`

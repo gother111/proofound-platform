@@ -184,8 +184,8 @@ function OrganizationMessagesPageContent({ currentUserId }: OrgMessagesClientPro
         <div className="space-y-1">
           <h1 className="font-display text-2xl font-semibold text-proofound-charcoal">Messages</h1>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            Assignment conversations stay private and stage-aware. Candidate identity remains
-            protected until a consented reveal opens the next step.
+            Assignment conversations stay private and stage-aware. Identity remains protected until
+            a consented reveal opens the next step.
           </p>
         </div>
       </header>
@@ -240,7 +240,7 @@ function OrganizationMessagesPageContent({ currentUserId }: OrgMessagesClientPro
                 </p>
                 <p className="inline-flex items-center gap-2 pt-2 text-xs font-medium text-proofound-charcoal/70">
                   <Lock className="h-3.5 w-3.5" />
-                  Candidate identity remains protected before reveal
+                  Identity remains protected before reveal
                 </p>
               </div>
             </div>

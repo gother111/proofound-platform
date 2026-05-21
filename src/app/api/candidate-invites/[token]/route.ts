@@ -20,6 +20,7 @@ import {
   buildVisualCandidateInviteResponse,
   candidateInviteVisualFixturesEnabled,
 } from '@/lib/candidate-invites/visual-fixtures';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -249,7 +250,9 @@ export async function GET(
 
     return response;
   } catch (error) {
-    console.error('Failed to fetch candidate invite:', error);
+    log.error('candidate_invite.preview.fetch_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Failed to fetch invite' }, { status: 500 });
   }
 }

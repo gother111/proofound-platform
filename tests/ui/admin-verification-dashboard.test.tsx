@@ -119,7 +119,7 @@ const pilotWorkflowPayload = {
           priority: 'high',
           linkedEntityType: 'engagement_verification',
           linkedEntityId: '66666666-6666-4666-8666-666666666666',
-          summary: 'Pilot workflow is stuck after hire decision.',
+          summary: 'Pilot workflow is stuck after engagement decision.',
           metadata: {
             assignmentStatus: 'published',
             trustTier: 'verified',
@@ -323,7 +323,10 @@ describe('AdminVerificationDashboard', () => {
 
     render(<AdminVerificationDashboard />);
 
-    await screen.findByText('Pilot workflow is stuck after hire decision.');
+    await screen.findByText('Pilot workflow is stuck after engagement decision.');
+    expect(
+      screen.queryByText('Pilot workflow is stuck after hire decision.')
+    ).not.toBeInTheDocument();
 
     expect(screen.getByText('Pilot corridor')).toBeInTheDocument();
     expect(screen.getByText('Assignment:')).toBeInTheDocument();
@@ -334,8 +337,15 @@ describe('AdminVerificationDashboard', () => {
     expect(screen.getByText('Hire')).toBeInTheDocument();
     expect(screen.getByText('Engagement:')).toBeInTheDocument();
     expect(screen.getByText('Pending Both Confirmations')).toBeInTheDocument();
+    expect(screen.getByText('Proof-review participant consent:')).toBeInTheDocument();
+    expect(screen.getByText('Proof-review participant consent status:')).toBeInTheDocument();
+    expect(screen.getAllByText('Proof-review participant consented').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Candidate consent:')).not.toBeInTheDocument();
+    expect(screen.queryByText('Candidate Consent Status:')).not.toBeInTheDocument();
     expect(screen.getByText('Pending party:')).toBeInTheDocument();
-    expect(screen.getByText('Candidate')).toBeInTheDocument();
+    expect(screen.getAllByText('Proof-review participant').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Candidate')).not.toBeInTheDocument();
+    expect(screen.queryByText('Candidate Consented')).not.toBeInTheDocument();
     expect(screen.queryByText('candidate@example.com')).not.toBeInTheDocument();
     expect(screen.queryByText('Candidate private notes')).not.toBeInTheDocument();
   });

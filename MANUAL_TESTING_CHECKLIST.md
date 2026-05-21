@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Manual Testing Checklist
 
@@ -42,7 +42,7 @@ Use this as the quick human smoke checklist for the locked MVP corridor. It comp
 - [ ] `/app/o/<slug>/matching` and `/app/o/<slug>/shortlist` route into the active assignment/review corridor instead of broad marketplace behavior.
 - [ ] `/app/o/<slug>/communications` covers intro, reveal, interview, decision, and engagement-verification communications.
 - [ ] `/app/o/<slug>/interviews` supports interview scheduling/reschedule/cancel/complete and decision follow-up with manual links.
-- [ ] Organization pages preserve role permissions, privacy ceilings, and candidate consent before identity/contact reveal.
+- [ ] Organization pages preserve role permissions, privacy ceilings, and proof-review participant consent before identity/contact reveal.
 
 ## Internal / Admin / Ops
 

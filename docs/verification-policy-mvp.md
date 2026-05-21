@@ -237,7 +237,7 @@ Minimum viable acceptable proofs in MVP:
 - mutual attestation from both sides on the same engagement record
 - uploaded signed agreement or uploaded sent agreement evidence
 - uploaded invoice, statement of work, offer letter, or equivalent engagement artifact
-- a matching combination of an org confirmation plus a candidate confirmation on the same engagement fact
+- a matching combination of an organization confirmation plus a proof-review participant confirmation on the same engagement fact
 
 Interpretation rules:
 

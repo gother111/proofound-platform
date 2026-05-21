@@ -177,10 +177,11 @@ describe('Assignment builder lean corridor', () => {
     expect(await screen.findByText(/lean assignment corridor/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create from scratch/i })).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /import existing job description/i })
+      screen.getByRole('button', { name: /import existing assignment brief/i })
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /import existing job description/i }));
+    fireEvent.click(screen.getByRole('button', { name: /import existing assignment brief/i }));
     expect(screen.getByLabelText(/existing assignment brief/i)).toBeInTheDocument();
+    expect(document.body.textContent ?? '').not.toContain('Import existing job description');
     expect(document.body.textContent ?? '').not.toContain('Existing job description');
     expect(screen.getAllByText('Why this role exists').length).toBeGreaterThan(0);
     expect(screen.getByText('What work will actually be done')).toBeInTheDocument();
@@ -228,7 +229,7 @@ Full-time
     render(await renderAssignmentBuilderPage());
 
     fireEvent.click(
-      await screen.findByRole('button', { name: /import existing job description/i })
+      await screen.findByRole('button', { name: /import existing assignment brief/i })
     );
     fireEvent.change(screen.getByLabelText(/existing assignment brief/i), {
       target: { value: pastedJobDescription },
@@ -273,7 +274,7 @@ Full-time
     render(await renderAssignmentBuilderPage());
 
     fireEvent.click(
-      await screen.findByRole('button', { name: /import existing job description/i })
+      await screen.findByRole('button', { name: /import existing assignment brief/i })
     );
     fireEvent.change(screen.getByLabelText(/existing assignment brief/i), {
       target: { value: 'Need a strong operator.' },
@@ -283,7 +284,8 @@ Full-time
     expect(
       await screen.findByText(/too short to turn into a useful assignment draft/i)
     ).toBeInTheDocument();
-    expect(screen.getByText(/Paste the full job description/i)).toBeInTheDocument();
+    expect(screen.getByText(/Paste the full assignment brief/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Paste the full job description/i)).not.toBeInTheDocument();
   });
 
   it('advances through the lean corridor and ends in internal review routing', async () => {

@@ -15,7 +15,14 @@ vi.mock('@/lib/verification/canonical-requests', () => ({
   updateCanonicalSkillVerificationRequest: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { requireApiAuthContext } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { notifyVerificationCompleted } from '@/lib/notifications';
 import {
   getCanonicalSkillVerificationRequestById,
@@ -319,5 +326,145 @@ describe('POST /api/verification/requests/skill/[requestId]/respond', () => {
         }),
       })
     );
+  });
+
+  it('logs update failures structurally while keeping the public response generic', async () => {
+    const requestId = '11111111-1111-4111-8111-111111111111';
+    const verificationRequest = {
+      id: requestId,
+      requester_profile_id: '22222222-2222-4222-8222-222222222222',
+      verifier_profile_id: null,
+      verifier_email: 'verifier@example.com',
+      verifier_relationship: 'peer',
+      request_kind: 'generic_verification',
+      attestation_request: null,
+      status: 'pending',
+      integrity_status: 'clear',
+      integrity_reason: null,
+      integrity_meta: {},
+      integrity_flagged_at: null,
+      risk_signals: {},
+      requester_ip_hash: null,
+      requester_user_agent_hash: null,
+    };
+
+    const supabase = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              email: 'verifier@example.com',
+            },
+          },
+          error: null,
+        }),
+      },
+    };
+
+    (getCanonicalSkillVerificationRequestById as any).mockResolvedValue(verificationRequest);
+    (updateCanonicalSkillVerificationRequest as any).mockRejectedValueOnce(
+      new Error('canonical update failed')
+    );
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: '44444444-4444-4444-8444-444444444444' },
+      supabase,
+    });
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verification/requests/skill/${requestId}/respond`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'accept',
+        }),
+      }),
+      { params: Promise.resolve({ requestId }) }
+    );
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: 'Failed to update verification request',
+    });
+    expect(log.error).toHaveBeenCalledWith('verification.skill_response.update_failed', {
+      requestId,
+      error: 'canonical update failed',
+    });
+  });
+
+  it('logs notification failures without failing a recorded response', async () => {
+    const requestId = '11111111-1111-4111-8111-111111111111';
+    const verificationRequest = {
+      id: requestId,
+      requester_profile_id: '22222222-2222-4222-8222-222222222222',
+      verifier_profile_id: null,
+      verifier_email: 'verifier@example.com',
+      verifier_relationship: 'peer',
+      request_kind: 'generic_verification',
+      attestation_request: null,
+      status: 'pending',
+      integrity_status: 'clear',
+      integrity_reason: null,
+      integrity_meta: {},
+      integrity_flagged_at: null,
+      risk_signals: {},
+      requester_ip_hash: null,
+      requester_user_agent_hash: null,
+    };
+
+    const supabase = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              email: 'verifier@example.com',
+            },
+          },
+          error: null,
+        }),
+      },
+      from: vi.fn(() => ({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                display_name: 'Requester Person',
+                handle: 'requester-person',
+              },
+              error: null,
+            }),
+          }),
+        }),
+      })),
+    };
+
+    (getCanonicalSkillVerificationRequestById as any).mockResolvedValue(verificationRequest);
+    (updateCanonicalSkillVerificationRequest as any).mockResolvedValue({
+      ...verificationRequest,
+      status: 'accepted',
+      response_auth_method: 'authenticated',
+      response_actor_email: 'verifier@example.com',
+    });
+    (notifyVerificationCompleted as any).mockRejectedValueOnce(
+      new Error('notification delivery failed')
+    );
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: '44444444-4444-4444-8444-444444444444' },
+      supabase,
+    });
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verification/requests/skill/${requestId}/respond`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'accept',
+        }),
+      }),
+      { params: Promise.resolve({ requestId }) }
+    );
+
+    expect(response.status).toBe(200);
+    expect(log.error).toHaveBeenCalledWith('verification.skill_response.notification_failed', {
+      requestId,
+      error: 'notification delivery failed',
+    });
   });
 });

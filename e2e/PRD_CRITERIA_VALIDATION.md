@@ -54,13 +54,13 @@ Current launch proof lives in the strict MVP E2E suites, route inventory tests, 
 **PRD Criteria:**
 
 - [x] Current MVP: organizations review proof-backed, privacy-safe matches with reason-code explanations.
-- [x] Current MVP: intro, reveal, interview, decision, hire/engage, and engagement verification stay inside the locked corridor.
+- [x] Current MVP: intro, reveal, interview, decision, engage/close outcomes, and engagement verification stay inside the locked corridor.
 - [x] Historical/post-MVP: broad marketplace matching, snooze-style queue management, and fairness-note product surfaces are not launch evidence.
 
 **Test Coverage:**
 
 - `e2e/strict/org-corridor.strict.spec.ts`: strict organization corridor.
-- `npm run test:launch:workflow`: review, intro, reveal, interview, decision, hire/engage, and engagement verification route behavior.
+- `npm run test:launch:workflow`: review, intro, reveal, interview, decision, engage/close outcomes, and engagement verification route behavior.
 - `npm run test:launch:org-corridor`: organization match review and corridor contracts.
 - Historical broad matching specs live under `e2e/archive/non_mvp_matching_pac/`.
 

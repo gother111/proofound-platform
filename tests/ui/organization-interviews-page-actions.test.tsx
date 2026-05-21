@@ -252,7 +252,7 @@ describe('organization interviews page actions', () => {
         engagementVerification: {
           ...initialInterview.engagementVerification,
           status: 'pending_candidate_confirmation',
-          statusLabel: 'Awaiting candidate confirmation',
+          statusLabel: 'Awaiting proof-review participant confirmation',
           engagementType: 'full_time',
           organizationConfirmedAt: new Date().toISOString(),
         },
@@ -260,7 +260,7 @@ describe('organization interviews page actions', () => {
       engagementVerification: {
         ...initialInterview.engagementVerification,
         status: 'pending_candidate_confirmation',
-        statusLabel: 'Awaiting candidate confirmation',
+        statusLabel: 'Awaiting proof-review participant confirmation',
         engagementType: 'full_time',
         organizationConfirmedAt: new Date().toISOString(),
       },
@@ -334,7 +334,9 @@ describe('organization interviews page actions', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Engagement: Awaiting candidate confirmation')).toBeInTheDocument();
+      expect(
+        screen.getByText('Engagement: Awaiting proof-review participant confirmation')
+      ).toBeInTheDocument();
     });
   });
 

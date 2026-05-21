@@ -104,7 +104,7 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     mocks.getReviewCardProofPackMap.mockResolvedValue(new Map());
     mocks.getReviewCardProofPackMapForMatchedOrg.mockResolvedValue(new Map());
     mocks.buildProofFirstReviewCard.mockReturnValue({
-      candidateLabel: 'Candidate A7F2',
+      candidateLabel: 'Submission A7F2',
       strongestProof: {
         summary: 'Proof-backed review signal.',
         outcome: 'Outcome summary.',
@@ -220,7 +220,7 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(body.corridorState).toBe('intro_hold');
     expect(body.reviewCard).toEqual(
       expect.objectContaining({
-        candidateLabel: 'Candidate A7F2',
+        candidateLabel: 'Submission A7F2',
       })
     );
     expect(mocks.getOrCreateIntroWorkflow).not.toHaveBeenCalled();
@@ -326,7 +326,7 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
 
   it('redacts blind review-card free text at the route boundary before reveal', async () => {
     mocks.buildProofFirstReviewCard.mockReturnValue({
-      candidateLabel: 'Candidate A7F2',
+      candidateLabel: 'Submission A7F2',
       strongestProof: {
         summary:
           'Jane Doe shipped this at Acme Climate AB. Email jane@example.com, call +46 70 123 45 67, see https://linkedin.com/in/janedoe and Jane_Doe_CV.pdf.',
@@ -446,7 +446,7 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(body.visibleIdentityFields).toEqual([]);
     expect(body.reviewCard).toEqual(
       expect.objectContaining({
-        candidateLabel: 'Candidate A7F2',
+        candidateLabel: 'Submission A7F2',
       })
     );
     expect(body.conversationId).toBe('conversation-1');
@@ -781,7 +781,7 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(mocks.getOrCreateIntroWorkflow).not.toHaveBeenCalled();
   });
 
-  it('records reveal requests as pending candidate approval without unlocking identity', async () => {
+  it('records reveal requests as pending participant approval without unlocking identity', async () => {
     mocks.getOrgMembershipRole.mockResolvedValue('org_reviewer');
     mocks.resolveCanonicalCorridor.mockReturnValue({
       progressiveRevealStage: 'stage2_contextual_reveal',
@@ -850,10 +850,11 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(body.waitingForCandidateApproval).toBe(true);
     expect(body.reviewCard).toEqual(
       expect.objectContaining({
-        candidateLabel: 'Candidate A7F2',
+        candidateLabel: 'Submission A7F2',
       })
     );
-    expect(body.message).toContain('candidate approves');
+    expect(body.message).toContain('proof-review participant approves');
+    expect(body.message).not.toContain('candidate approves');
     expect(mocks.recordRevealEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         actorRole: 'org_reviewer',

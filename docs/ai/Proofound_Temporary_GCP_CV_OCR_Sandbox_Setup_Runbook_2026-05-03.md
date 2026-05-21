@@ -1,5 +1,5 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-05-04`
+> Last Verified: `2026-05-21`
 
 # GCP Proof Artifact OCR Production-Beta Setup Runbook
 
@@ -355,7 +355,7 @@ Rules:
 - Env changes require a redeploy before they affect Vercel deployments.
 - Missing base URL, missing secret, expired timestamp, budget exhaustion, or disabled flag must result in no Cloud Run call.
 - The OCR provider path uses the Cloud Run service account with Google ADC for Document AI. Do not add Google API keys, browser-created Gemini keys, or service account JSON for this path.
-- OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, or affect match/review/trust/hiring state.
+- OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, or affect match/review/trust/workflow state.
 
 ---
 

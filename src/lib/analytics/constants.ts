@@ -175,10 +175,10 @@ export const TTFQI_TARGET_HOURS = 72;
 export const TTV_TARGET_DAYS = 7;
 
 /**
- * Proof Fit Lift
+ * Proof-fit acceptance lift
  * Target: top-decile proof-fit matches show at least 20% higher intro acceptance
  */
-export const PAC_LIFT_TARGET_PERCENT = 20;
+export const PROOF_FIT_LIFT_TARGET_PERCENT = 20;
 
 // ============================================================================
 // COHORT DEFINITIONS
@@ -242,15 +242,29 @@ export interface ProfileActivatedProperties {
 }
 
 /**
+ * Qualitative support levels for proof-review match telemetry.
+ * Scores may still exist inside matching internals, but launch analytics should not
+ * expose them as the product contract.
+ */
+export type ProofSignalSupport =
+  | 'primary_reason'
+  | 'clear_support'
+  | 'needs_review'
+  | 'limited_signal';
+
+export interface MatchProofSignalProperty {
+  key: 'skills' | 'proof' | 'constraints' | 'verification' | string;
+  support: ProofSignalSupport;
+}
+
+/**
  * Standard properties for match viewed event
  */
 export interface MatchViewedProperties {
   match_id: string;
-  match_score: number;
-  pac_value: number; // Legacy proof-fit lift value
-  skills_score: number;
-  constraints_score: number;
-  verification_score: number;
+  proof_signals: MatchProofSignalProperty[];
+  review_mode: 'reason_coded';
+  score_visibility: 'internal_ordering_only';
   assignment_id?: string;
 }
 
@@ -261,8 +275,8 @@ export interface MatchActionedProperties {
   match_id: string;
   action: 'introduce' | 'pass' | 'snooze';
   reason?: string; // For pass/snooze
-  match_score: number;
-  pac_value: number;
+  review_mode: 'reason_coded';
+  score_visibility: 'internal_ordering_only';
 }
 
 /**
@@ -289,7 +303,7 @@ export const CacheKey = {
   TTFQI_MEDIAN: 'metrics:ttfqi:median',
   TTV_MEDIAN: 'metrics:ttv:median',
   TTSC_MEDIAN: 'metrics:ttsc:median',
-  PAC_LIFT: 'metrics:pac:lift',
+  PROOF_FIT_LIFT: 'metrics:proof-fit:lift',
 } as const;
 
 /**
@@ -377,10 +391,10 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.ATTESTATION_PROVIDED]: 'Attestation Provided',
     [EventType.SKILL_PROOF_ADDED]: 'Skill Proof Added',
     [EventType.SKILL_PROOF_DELETED]: 'Skill Proof Deleted',
-    [EventType.CANDIDATE_INVITE_SENT]: 'Candidate Invite Sent',
-    [EventType.CANDIDATE_INVITE_OPENED]: 'Candidate Invite Opened',
-    [EventType.CANDIDATE_INVITE_CLAIMED]: 'Candidate Invite Claimed',
-    [EventType.CANDIDATE_PROOF_CARD_SUBMITTED]: 'Candidate Proof Card Submitted',
+    [EventType.CANDIDATE_INVITE_SENT]: 'Submission Invite Sent',
+    [EventType.CANDIDATE_INVITE_OPENED]: 'Submission Invite Opened',
+    [EventType.CANDIDATE_INVITE_CLAIMED]: 'Submission Invite Claimed',
+    [EventType.CANDIDATE_PROOF_CARD_SUBMITTED]: 'Submission Proof Card Submitted',
     [EventType.PROOF_ARTIFACT_CREATED]: 'Proof Artifact Created',
     [EventType.PROOF_ARTIFACT_UPDATED]: 'Proof Artifact Updated',
     [EventType.PROOF_ARTIFACT_DELETED]: 'Proof Artifact Deleted',

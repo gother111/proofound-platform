@@ -125,7 +125,7 @@ export function OrgShortlistClient({ items }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Badge variant="outline">
-            {filtered.length} candidate{filtered.length === 1 ? '' : 's'}
+            {filtered.length} proof submission{filtered.length === 1 ? '' : 's'}
           </Badge>
           <Badge variant="secondary">Progressive reveal</Badge>
         </div>
@@ -173,7 +173,7 @@ export function OrgShortlistClient({ items }: Props) {
               id="shortlist-search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Candidate label, role focus, reason"
+              placeholder="Submission label, role focus, reason"
               className="h-9 w-56"
             />
           </div>
@@ -183,7 +183,7 @@ export function OrgShortlistClient({ items }: Props) {
       {filtered.length === 0 ? (
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">
-            No shortlisted candidates match these filters right now.
+            No shortlisted proof submissions match these filters right now.
           </p>
         </Card>
       ) : (
@@ -193,7 +193,7 @@ export function OrgShortlistClient({ items }: Props) {
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-proofound-charcoal">
-                    {item.reviewCard?.candidateLabel || 'Candidate'}
+                    {item.reviewCard?.candidateLabel || 'Proof submission'}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {item.reviewCard?.fitSummary.headline ||

@@ -1,7 +1,7 @@
 # Environment Variables Reference
 
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 Complete guide to launch-active environment variables used in Proofound, including which features require which variables and how to configure them. Historical or archived variables may appear in old reports, but they are not launch requirements unless listed here as active.
 
@@ -1185,7 +1185,7 @@ GCP_CV_OCR_CLOUD_RUN_PUBLIC_INVOCATION=false
 - The app route also requires `FF_PROOF_ARTIFACT_OCR_BETA` audience eligibility, so global enablement alone is not sufficient.
 - Accepted source MIME types are PDF, PNG, and JPG/JPEG only; browser CV import OCR remains separately disabled.
 - OCR requires explicit user consent per document.
-- OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or hiring-decision state.
+- OCR output is draft text only. It must not auto-publish, auto-verify, auto-score, auto-rank, shortlist, recommend, or affect match, review, verification, reveal, trust-state, or workflow-decision state.
 - Use a future `GCP_CV_OCR_EXPIRES_AT` for any temporary smoke window. Default to `2026-08-01T00:00:00Z` so the beta expires before the current credit cutoff window.
 - The disable-or-pay timeline is: review on `2026-07-15`, disabled-mode drill on `2026-07-25`, final disable-or-paid decision on `2026-08-01`, free-credit expiry on `2026-08-03`.
 - Google Cloud budget alerts must be set at 25%, 50%, 75%, 90%, and 100%. Budgets are alerts only, not hard caps.
@@ -1211,7 +1211,7 @@ npm run ocr:production:smoke
 
 ### START_FROM_CV_BETA_ENABLED
 
-**Purpose**: Disabled-by-default Start from CV beta. This is an individual onboarding helper that turns a user-owned CV into private editable drafts. It can run as an authenticated-individual open beta when `START_FROM_CV_OPEN_BETA_ENABLED=true`, or as a legacy invite-scoped beta when the open-beta flag is off. It is not CV screening, candidate evaluation, employer-side parsing, matching, ranking, shortlisting, verification, trust state, or public portfolio publication.
+**Purpose**: Disabled-by-default Start from CV beta. This is an individual onboarding helper that turns a user-owned CV into private editable drafts. It can run as an authenticated-individual open beta when `START_FROM_CV_OPEN_BETA_ENABLED=true`, or as a legacy invite-scoped beta when the open-beta flag is off. It is not CV screening, proof-review participant evaluation, employer-side parsing, matching, ranking, shortlisting, verification, trust state, or public portfolio publication.
 
 **Format**:
 

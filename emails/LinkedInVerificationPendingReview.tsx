@@ -42,7 +42,7 @@ export default function LinkedInVerificationPendingReview({
 
             <Section style={detailsBox}>
               <Text style={detailLine}>
-                <strong>Candidate:</strong> {candidateName}
+                <strong>Proof-review participant:</strong> {candidateName}
               </Text>
               <Text style={detailLine}>
                 <strong>Email:</strong> {candidateEmail || 'Not available'}

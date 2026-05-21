@@ -33,8 +33,8 @@ export async function getMomentumSummaryForIndividual(userId: string): Promise<M
     persona: 'individual',
     marketActivityLow: readiness.marketActivityLow,
     summary: readiness.marketActivityLow
-      ? 'Opportunity activity is currently low. Strengthen proof readiness and verification checks for the next intro.'
-      : 'Opportunity activity is healthy. Keep strengthening proof readiness to move intros forward faster.',
+      ? 'Assignment-review activity is currently low. Strengthen proof readiness and verification checks for the next intro.'
+      : 'Assignment-review activity is healthy. Keep strengthening proof readiness to move intros forward faster.',
     topActions: readiness.topActions,
     updates,
     metrics: {
@@ -59,13 +59,13 @@ export async function getMomentumSummaryForOrganization(
       persona: 'organization',
       marketActivityLow: true,
       summary:
-        'No explicit organization context found. Open a specific organization to view hiring readiness insights.',
+        'No explicit organization context found. Open a specific organization to view proof-review readiness insights.',
       topActions: [
         {
           id: 'open-org-context',
           title: 'Open an organization',
           description:
-            'Organization readiness and candidate pipeline insights require an explicit organization context.',
+            'Organization readiness and proof-submission pipeline insights require an explicit organization context.',
           priority: 'high',
           category: 'assignment',
           actionUrl: '/app/o',
@@ -117,8 +117,8 @@ export async function getMomentumSummaryForOrganization(
     persona: 'organization',
     marketActivityLow: readiness.marketActivityLow,
     summary: readiness.marketActivityLow
-      ? 'Candidate volume is currently low. Tighten assignment readiness and proof gates before requesting more intros.'
-      : 'Pipeline activity is healthy. Focus on readiness actions to accelerate shortlist and interview conversion.',
+      ? 'Proof-submission volume is currently low. Tighten assignment readiness and proof gates before requesting more intros.'
+      : 'Proof-review pipeline activity is healthy. Focus on readiness actions to accelerate shortlist and interview conversion.',
     topActions: readiness.topActions,
     updates,
     metrics: {

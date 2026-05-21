@@ -240,7 +240,7 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
         ],
       },
       reviewCard: {
-        candidateLabel: 'Candidate A',
+        candidateLabel: 'Submission A',
         strongestProof: {
           summary:
             'Led the deployment of a new proof-verification framework across 4 cross-functional team workflows.',
@@ -304,7 +304,7 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
         ],
       },
       reviewCard: {
-        candidateLabel: 'Candidate B',
+        candidateLabel: 'Submission B',
         strongestProof: {
           summary:
             'Architected a highly resilient systems integration platform compliant with ISO 27001 standards.',
@@ -367,7 +367,7 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
         ],
       },
       reviewCard: {
-        candidateLabel: 'Candidate C',
+        candidateLabel: 'Submission C',
         strongestProof: {
           summary:
             'Designed and launched the analytics dashboard that serves over 50,000 active monthly users.',
@@ -430,7 +430,7 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
         ],
       },
       reviewCard: {
-        candidateLabel: 'Candidate D',
+        candidateLabel: 'Submission D',
         strongestProof: {
           summary:
             'Created and open-sourced a React-based Tailwind CSS components library with 10k+ stars.',
@@ -493,7 +493,7 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
         ],
       },
       reviewCard: {
-        candidateLabel: 'Candidate E',
+        candidateLabel: 'Submission E',
         strongestProof: {
           summary: 'Migrated legacy container orchestrator to AWS EKS with zero downtime.',
           outcome: 'Reduced hosting bill by 35% and increased deployment speed 3x.',
@@ -564,7 +564,7 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
         ],
       },
       reviewCard: {
-        candidateLabel: 'Candidate F',
+        candidateLabel: 'Submission F',
         strongestProof: {
           summary:
             'Authored and structured the entire developer documentation portal for a fintech startup.',
@@ -637,7 +637,7 @@ export function buildVisualOrgMatches(assignmentId: string): any[] {
         ],
       },
       reviewCard: {
-        candidateLabel: 'Candidate G',
+        candidateLabel: 'Submission G',
         strongestProof: {
           summary:
             'Designed Playwright test framework checking critical user checkout and onboarding paths.',

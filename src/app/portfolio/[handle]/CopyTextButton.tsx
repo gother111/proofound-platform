@@ -38,7 +38,7 @@ export function CopyTextButton({ endpoint = '/api/portfolio/text-pack' }: CopyTe
       ) : (
         <Clipboard className="h-4 w-4" />
       )}
-      {loading ? 'Preparing...' : copied ? 'Copied' : 'Copy recruiter summary'}
+      {loading ? 'Preparing...' : copied ? 'Copied' : 'Copy proof summary'}
     </Button>
   );
 }

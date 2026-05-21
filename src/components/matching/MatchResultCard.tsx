@@ -13,7 +13,7 @@ import {
 } from '@/lib/matching/explainer-contract';
 import { skillDisplayLabel } from '@/lib/copy/labels';
 
-const CONTRIBUTION_LABELS: Record<string, string> = {
+const PROOF_SIGNAL_LABELS: Record<string, string> = {
   skills_fit: 'Skills',
   proof_fit: 'Proof',
   constraints_fit: 'Practical',
@@ -25,13 +25,6 @@ const CONTRIBUTION_LABELS: Record<string, string> = {
   recency: 'Recent',
   evidence: 'Evidence',
 };
-
-function proofSignalLabel(value: number): string {
-  if (value >= 0.85) return 'Primary reason';
-  if (value >= 0.65) return 'Clear support';
-  if (value >= 0.4) return 'Needs review';
-  return 'Limited signal';
-}
 
 function reviewBandLabel(label?: string | null): string | null {
   if (!label) return null;
@@ -46,9 +39,6 @@ type DeferredComponent = ComponentType<any>;
 interface MatchResultCardProps {
   result: {
     id?: string; // Match ID for fetching detailed explanation
-    score?: number;
-    subscores?: Record<string, number>;
-    contributions?: Record<string, number>;
     proofSignals?: Array<{ key: string; support: string }>;
     profileId?: string;
     assignmentId?: string;
@@ -120,7 +110,7 @@ export function MatchResultCard({
   onHide,
   skills = [],
 }: MatchResultCardProps) {
-  const isOrgView = !!result.profileId; // Org viewing candidates
+  const isOrgView = !!result.profileId; // Org reviewing proof submissions
   const data = isOrgView ? result.profile : result.assignment;
   const [matchExplanation, setMatchExplanation] = useState<any>(null);
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
@@ -142,25 +132,10 @@ export function MatchResultCard({
     (result.profile as any)?.visibility?.showExactSalary === true ||
     (data as any)?.showExactSalary === true;
 
-  const proofFitLabel = (() => {
-    const score =
-      typeof result.score === 'number' && Number.isFinite(result.score) ? result.score : 0;
-    if (score >= 0.8) return 'Strong proof alignment';
-    if (score >= 0.6) return 'Clear proof alignment';
-    return 'Proof review needed';
-  })();
-
-  const contributions = Object.entries(result.contributions ?? {})
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3);
-  const proofSignals =
-    result.proofSignals ??
-    contributions.map(([key, value]) => ({
-      key,
-      support: proofSignalLabel(value),
-    }));
+  const proofSignals = result.proofSignals ?? [];
+  const proofFitLabel = proofSignals.length > 0 ? 'Proof signals available' : 'Proof review needed';
   const contributionLabel = (key: string) =>
-    CONTRIBUTION_LABELS[key] ||
+    PROOF_SIGNAL_LABELS[key] ||
     key.replace(/[_-]+/g, ' ').replace(/^\w/, (char) => char.toUpperCase());
   useEffect(() => {
     if (!matchExplanation || MatchExplainerModalView) {
@@ -325,7 +300,7 @@ export function MatchResultCard({
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="space-y-1">
               <h4 className="text-base font-semibold text-proofound-charcoal">
-                {orgReviewCard?.candidateLabel || 'Candidate'}
+                {orgReviewCard?.candidateLabel || 'Proof Submission'}
               </h4>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{privacyCue}</Badge>
@@ -343,7 +318,6 @@ export function MatchResultCard({
               matchExplanation && MatchExplainerModalView ? (
                 <MatchExplainerModalView
                   matchId={matchExplanation.matchId}
-                  compositeScore={matchExplanation.compositeScore}
                   rank={matchExplanation.rank}
                   totalCandidates={matchExplanation.totalCandidates}
                   rankBand={matchExplanation.rankBand}
@@ -352,7 +326,6 @@ export function MatchResultCard({
                   fairnessWarning={matchExplanation.fairness?.warning}
                   reasonSummary={matchExplanation.reasonSummary}
                   reasonSections={matchExplanation.reasonSections}
-                  subscores={matchExplanation.subscores}
                   proofSignals={matchExplanation.proofSignals}
                   skillsMatch={matchExplanation.skillsMatch}
                   constraints={matchExplanation.constraints}
@@ -485,11 +458,11 @@ export function MatchResultCard({
           <div className="min-w-0">
             {isOrgView ? (
               <h4 className="mb-1 break-words text-base font-medium text-proofound-charcoal">
-                {variant === 'revealed' ? 'John Doe' : 'Candidate Match'}
+                {variant === 'revealed' ? 'John Doe' : 'Proof Submission'}
               </h4>
             ) : (
               <h4 className="mb-2 break-words text-base font-semibold leading-6 text-proofound-charcoal">
-                {result.assignment?.role || 'Opportunity Match'}
+                {result.assignment?.role || 'Assignment Match'}
               </h4>
             )}
 
@@ -513,7 +486,6 @@ export function MatchResultCard({
                   <>
                     <MatchExplainerModalView
                       matchId={matchExplanation.matchId}
-                      compositeScore={matchExplanation.compositeScore}
                       rank={matchExplanation.rank}
                       totalCandidates={matchExplanation.totalCandidates}
                       rankBand={matchExplanation.rankBand}
@@ -522,7 +494,6 @@ export function MatchResultCard({
                       fairnessWarning={matchExplanation.fairness?.warning}
                       reasonSummary={matchExplanation.reasonSummary}
                       reasonSections={matchExplanation.reasonSections}
-                      subscores={matchExplanation.subscores}
                       proofSignals={matchExplanation.proofSignals}
                       skillsMatch={matchExplanation.skillsMatch}
                       constraints={matchExplanation.constraints}
@@ -607,7 +578,7 @@ export function MatchResultCard({
           )}
 
           {/* Compensation */}
-          {(data?.compMin || data?.compMax || result.subscores?.compensation !== undefined) && (
+          {(data?.compMin || data?.compMax) && (
             <div className="flex min-w-0 items-start gap-2">
               <DollarSign className="mt-0.5 h-3 w-3 shrink-0" />
               <span className="min-w-0 break-words">

@@ -68,7 +68,7 @@ export const HOMEPAGE_STORY_FRAMES: HomepageStoryFrame[] = [
   {
     id: 'challenges',
     title: 'To modern challenges',
-    body: 'Organizations waste time reviewing weak submissions. Candidates flatten real ability into bullets or overshare to compensate. Proofound gives both sides a more modern starting point.',
+    body: 'Organizations waste time reviewing weak submissions. Proof-review participants flatten real ability into bullets or overshare to compensate. Proofound gives both sides a more modern starting point.',
     microcopy: 'Stronger proof solves real problems on both sides.',
   },
 ];

@@ -1,8 +1,8 @@
 # Proofound Design Contract
 
 > Doc Class: `working-design`
-> Last Verified: `2026-05-19`
-> Last Updated: `2026-05-19`
+> Last Verified: `2026-05-21`
+> Last Updated: `2026-05-21`
 > Purpose: Give humans and agents one repo-native visual source of truth for UI work without overriding the locked MVP product authority.
 
 ## 1. How to use this document
@@ -52,7 +52,7 @@ The core emotional target is: "I can see real work clearly, and I can trust what
 
 ## 3. Core visual thesis
 
-Proofound is a proof-first, privacy-first hiring corridor. The design should communicate that before the user reads detailed copy.
+Proofound is a proof-first, privacy-first assignment review corridor. The design should communicate that before the user reads detailed copy.
 
 That means:
 
@@ -61,7 +61,7 @@ That means:
 - public portfolio surfaces should feel calm and composed, not self-promotional
 - organization surfaces should feel credible and structured, not corporate or bloated
 - product UI should privilege clarity, sequence, and trust over density
-- every active surface should make the primary object obvious: Proof Pack, assignment, candidate review, reveal request, interview, decision, verification, export, or deletion
+- every active surface should make the primary object obvious: Proof Pack, assignment, proof-submission review, reveal request, interview, decision, verification, export, or deletion
 - every active surface should make the primary next action obvious and safe
 
 Design rule:
@@ -421,7 +421,7 @@ The UI should speak as if it respects the user's work, time, and uncertainty.
 - use gradients, glows, and animation as a substitute for hierarchy
 - overload surfaces with metrics, pills, and badges
 - make every page look like the landing page
-- let admin visual density leak into public or candidate-facing surfaces
+- let admin visual density leak into public or participant-facing surfaces
 
 ## 11. Agent instructions
 

@@ -15,6 +15,7 @@ import { headers } from 'next/headers';
 import type { AuthError } from '@supabase/supabase-js';
 import { resolveUserHomePath } from '@/lib/auth';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
+import { log } from '@/lib/log';
 import { z } from 'zod';
 import { mapSignUpValidationError, signUpSchema } from './auth.schema';
 import { CONSENT_TYPES, getPolicyVersionForConsentType } from '@/lib/privacy/consent-contract';
@@ -350,7 +351,9 @@ export async function signUp(
             )
           );
 
-          console.log('GDPR consent records stored successfully for user:', signUpResult.user.id);
+          log.info('auth.signup.consent_records_stored', {
+            userId: signUpResult.user.id,
+          });
         } catch (consentError) {
           console.error('CRITICAL: GDPR consent storage failed:', consentError);
           throw new Error(

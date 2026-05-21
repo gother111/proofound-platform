@@ -109,7 +109,7 @@ const SECTION_PATTERNS: Array<{ key: SectionKey; patterns: RegExp[] }> = [
 ];
 
 const LOW_QUALITY_GUIDANCE = [
-  'Paste the full job description, including title, responsibilities, requirements, and practical constraints.',
+  'Paste the full assignment brief, including title, responsibilities, proof expectations, and practical constraints.',
   'Use a source with enough detail to separate role purpose, real work, proof expectations, and logistics.',
 ];
 
@@ -556,11 +556,11 @@ export function extractAssignmentDraftFromJobDescription(
     draft,
     guidance: draft.missingFields.length
       ? [
-          'Review the imported draft before saving. The pasted job description is source material only.',
+          'Review the imported draft before saving. The pasted assignment brief is source material only.',
           'Confirm missing or unclear fields before internal review.',
         ]
       : [
-          'Review the imported draft before saving. The pasted job description is source material only.',
+          'Review the imported draft before saving. The pasted assignment brief is source material only.',
         ],
     sourceStats,
   };

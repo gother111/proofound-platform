@@ -1358,13 +1358,13 @@ function buildMockPublicIndividualPortfolioProjection(): PublicIndividualPortfol
       id: 'visual-public-pack-research',
       scope: 'public_safe',
       status: 'published',
-      title: 'Built a lightweight research evidence system for hiring reviews',
+      title: 'Built a lightweight research evidence system for assignment reviews',
       summary:
-        'Created a repeatable way to compare claims, artifacts, and reviewer notes without asking candidates to overshare.',
+        'Created a repeatable way to compare claims, artifacts, and reviewer notes without asking participants to overshare.',
       ownershipStatement:
-        'Designed the evidence taxonomy, drafted reviewer language, and tested the flow with a small hiring panel.',
+        'Designed the evidence taxonomy, drafted reviewer language, and tested the flow with a small review panel.',
       evidenceSummary:
-        'Public-safe artifacts include a rubric extract and candidate-facing explanation copy.',
+        'Public-safe artifacts include a rubric extract and participant-facing explanation copy.',
       outcomesSummary:
         'Reviewers reported clearer tradeoffs and fewer generic strong-candidate notes.',
       verificationStatus: 'partially_verified',
@@ -1373,7 +1373,7 @@ function buildMockPublicIndividualPortfolioProjection(): PublicIndividualPortfol
       proofQualityScore: 84,
       schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
       artifactCount: 2,
-      contextLabel: 'Proof-first hiring research',
+      contextLabel: 'Proof-first assignment-review research',
       selectedEvidence: [
         {
           title: 'Rubric extract',
@@ -1412,7 +1412,7 @@ function buildMockPublicIndividualPortfolioProjection(): PublicIndividualPortfol
         sources: [
           {
             id: 'visual-public-pack-research',
-            label: 'Proof Pack: Proof-first hiring research',
+            label: 'Proof Pack: Proof-first assignment-review research',
             detail: 'Evidence taxonomy and reviewer language',
           },
         ],

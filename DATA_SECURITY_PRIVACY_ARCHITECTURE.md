@@ -457,7 +457,7 @@ async function requirePermission(userId: string, resourceId: string, action: str
     where: and(eq(orgMembers.userId, userId), eq(orgMembers.orgId, assignment.orgId)),
   });
 
-  if (!orgMember || !['owner', 'steward', 'recruiter'].includes(orgMember.role)) {
+  if (!orgMember || !['org_owner', 'org_manager'].includes(orgMember.role)) {
     throw new Error('Forbidden');
   }
 
@@ -747,33 +747,32 @@ async function forceLogout(userId: string) {
 
 ```typescript
 type UserRole =
-  | 'individual' // Can create profile, apply to assignments
+  | 'individual' // Can create profile and submit proof interest for assignments
   | 'org_member' // Can view org dashboard
   | 'admin'; // Platform admin (support, moderation)
 
 type OrgRole =
-  | 'owner' // Full control (billing, delete org)
-  | 'steward' // Manage team, assignments, candidates
-  | 'recruiter' // Manage assignments, candidates (no team mgmt)
-  | 'viewer'; // Read-only access
+  | 'org_owner' // Full control (billing, delete org)
+  | 'org_manager' // Manage team, assignments, and proof-submission review
+  | 'org_reviewer'; // Review proof submissions within allowed scope
 ```
 
 **Permission Matrix**:
 
-| Action                  | Individual | Org Member | Owner | Steward | Recruiter | Viewer | Admin |
-| ----------------------- | ---------- | ---------- | ----- | ------- | --------- | ------ | ----- |
-| **View own profile**    | ✅         | ✅         | ✅    | ✅      | ✅        | ✅     | ✅    |
-| **Edit own profile**    | ✅         | ✅         | ✅    | ✅      | ✅        | ✅     | ❌    |
-| **View org dashboard**  | ❌         | ✅         | ✅    | ✅      | ✅        | ✅     | ✅    |
-| **Create assignment**   | ❌         | ❌         | ✅    | ✅      | ✅        | ❌     | ❌    |
-| **Edit assignment**     | ❌         | ❌         | ✅    | ✅      | ✅        | ❌     | ❌    |
-| **View candidates**     | ❌         | ❌         | ✅    | ✅      | ✅        | ✅     | ❌    |
-| **Message candidates**  | ❌         | ❌         | ✅    | ✅      | ✅        | ❌     | ❌    |
-| **Invite team members** | ❌         | ❌         | ✅    | ✅      | ❌        | ❌     | ❌    |
-| **Manage billing**      | ❌         | ❌         | ✅    | ❌      | ❌        | ❌     | ❌    |
-| **Delete org**          | ❌         | ❌         | ✅    | ❌      | ❌        | ❌     | ❌    |
-| **View any profile**    | ❌         | ❌         | ❌    | ❌      | ❌        | ❌     | ✅    |
-| **Moderate content**    | ❌         | ❌         | ❌    | ❌      | ❌        | ❌     | ✅    |
+| Action                                | Individual | Org Member | Org Owner | Org Manager | Org Reviewer | Admin |
+| ------------------------------------- | ---------- | ---------- | --------- | ----------- | ------------ | ----- |
+| **View own profile**                  | ✅         | ✅         | ✅        | ✅          | ✅           | ✅    |
+| **Edit own profile**                  | ✅         | ✅         | ✅        | ✅          | ✅           | ❌    |
+| **View org dashboard**                | ❌         | ✅         | ✅        | ✅          | ✅           | ✅    |
+| **Create assignment**                 | ❌         | ❌         | ✅        | ✅          | ❌           | ❌    |
+| **Edit assignment**                   | ❌         | ❌         | ✅        | ✅          | ❌           | ❌    |
+| **View proof submissions**            | ❌         | ❌         | ✅        | ✅          | ✅           | ❌    |
+| **Message proof-review participants** | ❌         | ❌         | ✅        | ✅          | ❌           | ❌    |
+| **Invite team members**               | ❌         | ❌         | ✅        | ✅          | ❌           | ❌    |
+| **Manage billing**                    | ❌         | ❌         | ✅        | ❌          | ❌           | ❌    |
+| **Delete org**                        | ❌         | ❌         | ✅        | ❌          | ❌           | ❌    |
+| **View any profile**                  | ❌         | ❌         | ❌        | ❌          | ❌           | ✅    |
+| **Moderate content**                  | ❌         | ❌         | ❌        | ❌          | ❌           | ✅    |
 
 ---
 
@@ -1089,7 +1088,7 @@ CREATE POLICY "org_members_can_create_assignments"
       SELECT 1 FROM org_members
       WHERE org_id = assignments.org_id
         AND user_id = auth.uid()
-        AND role IN ('owner', 'steward', 'recruiter')
+        AND role IN ('org_owner', 'org_manager')
     )
   );
 
@@ -1101,7 +1100,7 @@ CREATE POLICY "org_members_can_update_assignments"
       SELECT 1 FROM org_members
       WHERE org_id = assignments.org_id
         AND user_id = auth.uid()
-        AND role IN ('owner', 'steward', 'recruiter')
+        AND role IN ('org_owner', 'org_manager')
     )
   );
 ```
@@ -1146,7 +1145,7 @@ CREATE POLICY "org_can_update_application_status"
       JOIN org_members om ON om.org_id = a.org_id
       WHERE a.id = applications.assignment_id
         AND om.user_id = auth.uid()
-        AND om.role IN ('owner', 'steward', 'recruiter')
+        AND om.role IN ('org_owner', 'org_manager')
     )
   );
 ```
@@ -1217,27 +1216,27 @@ describe('RLS Policies', () => {
 
 ### 7.1 Individual vs Organization Data Separation
 
-**Principle**: Individuals and organizations have separate data spaces that never overlap except through explicit matching/application flows.
+**Principle**: Individuals and organizations have separate data spaces that never overlap except through approved proof-review workflows.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                  INDIVIDUAL SPACE                       │
 │  - Profile data                                         │
 │  - Skills & experience                                  │
-│  - Applications submitted                               │
+│  - Proof submissions shared                             │
 │  - Messages received                                    │
 └─────────────────────────────────────────────────────────┘
                         ↓ ↑
               Controlled Interactions:
               - Matching (algorithm decides)
-              - Applications (individual initiates)
+              - Proof-review workflow (participant initiates)
               - Messaging (after match)
                         ↓ ↑
 ┌─────────────────────────────────────────────────────────┐
 │                 ORGANIZATION SPACE                      │
 │  - Org profile                                          │
 │  - Assignments posted                                   │
-│  - Applications received                                │
+│  - Proof submissions received                           │
 │  - Messages sent                                        │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -1287,7 +1286,7 @@ CREATE TABLE org_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id),
   org_id UUID REFERENCES organizations(id),
-  role TEXT CHECK (role IN ('owner', 'steward', 'recruiter', 'viewer')),
+  role TEXT CHECK (role IN ('org_owner', 'org_manager', 'org_reviewer')),
   UNIQUE(user_id, org_id) -- User can only have one role per org
 );
 
@@ -1512,8 +1511,8 @@ We'll use this to create your account.
 ```
 Step 3: Compensation Expectations
 
-We ask this so we only show you opportunities that match your needs.
-This information is only shared with organizations you apply to.
+We ask this so assignment reviews can respect your compensation needs.
+This information is only shared with organizations inside an approved proof-review workflow.
 
 [Paid] [Volunteer] [Both]
 ```
@@ -1539,7 +1538,7 @@ This information is only shared with organizations you apply to.
 **Privacy Measures**:
 
 - ✅ **Private by Default**: Proofs default to "private" visibility
-- ✅ **User Controls Sharing**: User explicitly shares with each application
+- ✅ **User Controls Sharing**: User explicitly shares with each approved proof-review workflow
 - ✅ **Encrypted Storage**: Files encrypted at rest in Supabase Storage
 - ✅ **Expiring Links**: Signed URLs expire after 1 hour
 
@@ -1597,7 +1596,7 @@ other purpose, and you won't be added to any mailing lists.
 
 ---
 
-#### I-11: Recommended Feed (Matching)
+#### I-11: Recommended Assignment Reviews
 
 **Privacy Measures**:
 
@@ -1612,13 +1611,13 @@ other purpose, and you won't be added to any mailing lists.
 
 ---
 
-#### I-14: Apply / Express Interest
+#### I-14: Submit Proof Interest
 
 **Privacy Measures**:
 
 - ✅ **Explicit Consent**: "Share my profile with [Org Name]?" checkbox
 - ✅ **Selective Sharing**: Choose which proofs to attach
-- ✅ **Application Withdrawal**: Users can withdraw anytime
+- ✅ **Proof-Submission Withdrawal**: Users can withdraw anytime
 
 **Privacy Risks**:
 
@@ -1629,15 +1628,15 @@ other purpose, and you won't be added to any mailing lists.
 **User Transparency**:
 
 ```
-Before you apply:
+Before you submit proof interest:
 
 ✓ [Org Name] will see your profile, skills, and attached proofs
-✓ They'll use this to evaluate your application
-✓ You can withdraw your application anytime
+✓ They'll use this to evaluate your proof submission inside the approved assignment-review workflow
+✓ You can withdraw your proof-submission interest anytime
 
 ☐ I consent to sharing my profile with [Org Name]
 
-[Submit Application]
+[Submit Proof Interest]
 ```
 
 ---
@@ -2358,8 +2357,8 @@ Give users **full transparency and control** over their data:
   <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
 
   <Alert variant="danger">
-    ⚠️ Deleting your account will: • Remove your profile, skills, and experience • Delete all
-    applications and messages • Revoke all verifications • This cannot be undone
+    ⚠️ Deleting your account will: • Remove your profile, skills, and experience • Delete all proof
+    submissions and messages • Revoke all verifications • This cannot be undone
   </Alert>
 
   <Button variant="danger" onClick={handleDeleteAccount}>
@@ -2793,27 +2792,27 @@ await db.delete(messages).where(
 
 ### 17.4 Data Processing Agreement (DPA) with Organizations
 
-**When org receives candidate data**, they become a data processor:
+**When org receives proof-review participant data**, they become a data processor:
 
 ```
 DATA PROCESSING AGREEMENT
 
-1. Purpose: Organization receives candidate data solely for hiring purposes.
+1. Purpose: Organization receives proof-review participant data solely for the approved assignment-review workflow and legally required engagement follow-through.
 
 2. Data Categories:
-   - Candidate name, email, skills, experience
+   - Proof-review participant name, email, skills, experience
    - Application materials (resume, proofs)
 
 3. Retention:
-   - Organization may keep data for 12 months after hiring decision
-   - Must delete upon candidate request (GDPR Art. 17)
+   - Organization may keep data for 12 months after the documented workflow decision or engagement outcome
+   - Must delete upon proof-review participant request (GDPR Art. 17)
 
 4. Security:
    - Organization must use reasonable security measures
    - Notify Proofound of data breaches within 72 hours
 
 5. Subprocessing:
-   - Organization may not share data with third parties without candidate consent
+   - Organization may not share data with third parties without proof-review participant consent
 
 6. Audit Rights:
    - Proofound may audit organization's data handling practices
@@ -2855,9 +2854,9 @@ function DoNotSellPage() {
       <Alert>✅ Proofound does not sell your personal information to third parties.</Alert>
 
       <p>
-        We share your data only in these cases: • With organizations you apply to (with your
-        consent) • With service providers (Supabase, Vercel) for platform operation • Anonymized
-        data for analytics (no personal identifiers)
+        We share your data only in these cases: • With organizations inside an approved proof-review
+        workflow (with your consent) • With service providers (Supabase, Vercel) for platform
+        operation • Anonymized data for analytics (no personal identifiers)
       </p>
 
       <p>
@@ -3046,13 +3045,13 @@ const DEFAULT_PRIVACY_SETTINGS = {
 
 **Principle**: Most privacy-protective option by default, users can relax if they want.
 
-| Setting                | Default          | Why                                          |
-| ---------------------- | ---------------- | -------------------------------------------- |
-| **Profile visibility** | Network          | Safer than public, still allows matching     |
-| **Proof visibility**   | Private          | Users explicitly share with each application |
-| **Messaging**          | Masked (Stage 1) | Protects identity until mutual reveal        |
-| **Marketing emails**   | Opt-out          | User must opt-in (GDPR/CCPA requirement)     |
-| **ML training**        | Opt-in           | User consents to AI/ML use                   |
+| Setting                | Default          | Why                                                           |
+| ---------------------- | ---------------- | ------------------------------------------------------------- |
+| **Profile visibility** | Network          | Safer than public, still allows matching                      |
+| **Proof visibility**   | Private          | Users explicitly share inside approved proof-review workflows |
+| **Messaging**          | Masked (Stage 1) | Protects identity until mutual reveal                         |
+| **Marketing emails**   | Opt-out          | User must opt-in (GDPR/CCPA requirement)                      |
+| **ML training**        | Opt-in           | User consents to AI/ML use                                    |
 
 ---
 
@@ -3163,7 +3162,7 @@ Due to length constraints, I'll provide a summary table. Full review available o
 | **I-19** Post-Engagement   | 🟢 Low                 | Verification with consent                        | ✅ GDPR               |
 | **I-20** Account & Privacy | 🔴 High                | Data export, deletion, privacy dashboard         | ✅ GDPR, CCPA         |
 
-_(Organization flows O-01 through O-20 have similar privacy measures, focusing on org data isolation and candidate data protection)_
+_(Organization flows O-01 through O-20 have similar privacy measures, focusing on org data isolation and proof-review participant data protection)_
 
 ---
 

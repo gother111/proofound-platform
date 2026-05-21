@@ -43,7 +43,7 @@ Not allowed in analytics payloads:
 - raw user-agent strings
 - emails, names, phone numbers, or precise addresses
 - private proof content, raw evidence, uploaded file contents, storage paths, signed URLs, or filenames
-- hidden candidate identity details before reveal consent
+- hidden identity details before reveal consent
 - verifier private data, allegation text, admin notes, internal queue IDs, or diagnostic dumps
 - broad match-score, ranking, fairness-note, or public-directory claims that imply non-MVP behavior
 

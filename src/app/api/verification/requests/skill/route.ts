@@ -5,6 +5,7 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { buildBlindSafeVerificationRequestEmail } from '@/lib/email/privacy';
 import { sendEmail } from '@/lib/email/sender';
 import { resolveCanonicalSiteUrl } from '@/lib/env';
+import { log } from '@/lib/log';
 import {
   VERIFICATION_INTEGRITY_REASONS,
   assessVerificationRequestIntegrity,
@@ -257,7 +258,13 @@ export async function POST(request: NextRequest) {
       linkToken = createdRequest.rawToken;
       verificationRequest = mapCanonicalSkillVerificationRequestRecord(createdRequest.record);
     } catch (createRequestError) {
-      console.error('Error creating canonical verification request:', createRequestError);
+      log.error('verification.skill_request.create_failed', {
+        skillId,
+        error:
+          createRequestError instanceof Error
+            ? createRequestError.message
+            : String(createRequestError),
+      });
       const existingDuringRace = await findExistingActiveVerificationRequest({
         requesterProfileId: user.id,
         skillId,
@@ -298,7 +305,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!emailResult.success) {
-      console.warn('Failed to send verification email:', emailResult.error);
+      log.warn('verification.skill_request.email_send_failed', {
+        requestId: verificationRequest.id,
+        error: emailResult.error || 'unknown_email_delivery_error',
+      });
     }
 
     await updateCanonicalSkillVerificationRequest({
@@ -307,7 +317,10 @@ export async function POST(request: NextRequest) {
       emailSent: emailResult.success,
       emailError: emailResult.success ? null : emailResult.error || 'unknown_email_delivery_error',
     }).catch((updateError) => {
-      console.error('Failed to persist canonical verification email delivery state:', updateError);
+      log.error('verification.skill_request.email_state_persist_failed', {
+        requestId: verificationRequest.id,
+        error: updateError instanceof Error ? updateError.message : String(updateError),
+      });
     });
 
     await writeVerificationAuditLog({
@@ -338,7 +351,10 @@ export async function POST(request: NextRequest) {
         request_kind: requestMode.requestKind,
       });
     } catch (analyticsError) {
-      console.error('Failed to emit attestation_requested event:', analyticsError);
+      log.error('verification.skill_request.analytics_emit_failed', {
+        requestId: verificationRequest.id,
+        error: analyticsError instanceof Error ? analyticsError.message : String(analyticsError),
+      });
     }
 
     return NextResponse.json(
@@ -358,7 +374,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error('Verification request POST error:', error);
+    log.error('verification.skill_request.post_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -404,7 +422,9 @@ export async function GET(request: NextRequest) {
       requests: canonicalRequests,
     });
   } catch (error) {
-    console.error('Verification GET error:', error);
+    log.error('verification.skill_request.get_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -42,7 +42,7 @@ describe('/api/cron/health-check', () => {
     vi.mocked(getAllMetrics).mockResolvedValue({
       ttsc: { value: 34 },
       ttfqi: { value: 90 },
-      pac: { lift: 10 },
+      proofFitLift: { lift: 10 },
       ttv: null,
       firstTenMinuteActivation: null,
     });
@@ -54,15 +54,15 @@ describe('/api/cron/health-check', () => {
     expect(payload.status).toBe('warning');
     expect(payload.checks.ttsc.status).toBe('warning');
     expect(payload.checks.ttfqi.status).toBe('warning');
-    expect(payload.checks.pac_acceptance.status).toBe('warning');
-    expect(payload.checks.pac_contract.status).toBe('warning');
+    expect(payload.checks.proof_fit_acceptance.status).toBe('warning');
+    expect(payload.checks.proof_fit_contract.status).toBe('warning');
   });
 
-  it('uses the pac metric key returned by getAllMetrics', async () => {
+  it('uses the proof-fit metric key returned by getAllMetrics', async () => {
     vi.mocked(getAllMetrics).mockResolvedValue({
       ttsc: null,
       ttfqi: null,
-      pac: { lift: 18 },
+      proofFitLift: { lift: 18 },
       ttv: null,
       firstTenMinuteActivation: null,
     });
@@ -72,7 +72,7 @@ describe('/api/cron/health-check', () => {
 
     expect(response.status).toBe(200);
     expect(payload.status).toBe('warning');
-    expect(payload.checks.pac_acceptance.status).toBe('warning');
-    expect(payload.checks.pac_contract.status).toBe('healthy');
+    expect(payload.checks.proof_fit_acceptance.status).toBe('warning');
+    expect(payload.checks.proof_fit_contract.status).toBe('healthy');
   });
 });

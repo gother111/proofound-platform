@@ -46,7 +46,7 @@ Never log:
 - raw request or response bodies
 - email addresses, names, phone numbers, precise addresses, or raw IP/user-agent strings
 - private proof content, raw evidence, uploaded file contents, filenames, or private storage paths
-- hidden candidate identity details before reveal consent
+- hidden identity details before reveal consent
 - verifier private data, allegation text, admin notes, or internal queue item payloads
 - raw AI prompts, raw model responses, provider keys, or private document text
 - broad match-score/ranking/fairness payloads that imply archived or post-MVP behavior
@@ -87,7 +87,7 @@ log.error('assignment.publish.failed', {
 });
 ```
 
-Do not include the request body, candidate private content, proof text, file paths, or hidden identity details.
+Do not include the request body, participant private content, proof text, file paths, or hidden identity details.
 
 ## Safe Debugging Pattern
 

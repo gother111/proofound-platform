@@ -96,6 +96,8 @@ describe('GET /api/conversations', () => {
               assignmentId: 'assignment-1',
               participantOneId: 'candidate-user',
               participantTwoId: 'org-user-secret',
+              maskedHandleOne: 'Submission #ABC123',
+              maskedHandleTwo: 'Organization #XYZ789',
               stage: 'masked',
               lastMessageAt: '2026-03-12T10:00:00.000Z',
               createdAt: '2026-03-12T09:00:00.000Z',
@@ -126,7 +128,7 @@ describe('GET /api/conversations', () => {
       id: 'conversation-1',
       otherParty: {
         id: null,
-        displayName: 'Organization',
+        displayName: 'Organization #XYZ789',
         displayAvatar: null,
       },
       stage: 'masked',
@@ -148,6 +150,8 @@ describe('GET /api/conversations', () => {
               assignmentId: 'assignment-1',
               participantOneId: 'candidate-user',
               participantTwoId: 'org-user-revealed',
+              maskedHandleOne: 'Submission #ABC123',
+              maskedHandleTwo: 'Organization #XYZ789',
               stage: 'revealed',
               lastMessageAt: '2026-03-12T10:00:00.000Z',
               createdAt: '2026-03-12T09:00:00.000Z',
@@ -224,7 +228,7 @@ describe('POST /api/conversations', () => {
       orgId: '33333333-3333-4333-8333-333333333333',
       candidateId: 'candidate-user',
       orgParticipantId: 'org-user',
-      maskedHandleOne: 'Candidate #ABC123',
+      maskedHandleOne: 'Submission #ABC123',
       maskedHandleTwo: 'Organization #XYZ789',
     });
 
@@ -255,7 +259,7 @@ describe('POST /api/conversations', () => {
       orgId: '33333333-3333-4333-8333-333333333333',
       candidateId: 'candidate-user',
       orgParticipantId: 'org-user',
-      maskedHandleOne: 'Candidate #ABC123',
+      maskedHandleOne: 'Submission #ABC123',
       maskedHandleTwo: 'Organization #XYZ789',
     });
     vi.mocked(ensureConversationForMatch).mockResolvedValue({

@@ -21,9 +21,9 @@ export class ConversationAccessError extends Error {
   }
 }
 
-function maskedHandleForPersona(persona: string | null | undefined): string {
+export function makeMaskedHandleForPersona(persona: string | null | undefined): string {
   if (persona === 'individual') {
-    return `Candidate #${nanoid(6).toUpperCase()}`;
+    return `Submission #${nanoid(6).toUpperCase()}`;
   }
 
   return `Organization #${nanoid(6).toUpperCase()}`;
@@ -120,8 +120,8 @@ export async function resolveConversationParticipantsForMatch(
     orgId: matchRecord.orgId,
     candidateId: matchRecord.candidateId,
     orgParticipantId,
-    maskedHandleOne: maskedHandleForPersona(personaById.get(matchRecord.candidateId)),
-    maskedHandleTwo: maskedHandleForPersona(personaById.get(orgParticipantId)),
+    maskedHandleOne: makeMaskedHandleForPersona(personaById.get(matchRecord.candidateId)),
+    maskedHandleTwo: makeMaskedHandleForPersona(personaById.get(orgParticipantId)),
   };
 }
 

@@ -39,19 +39,11 @@ import { motion } from 'framer-motion';
 
 interface MatchExplainerProps {
   matchId: string;
-  compositeScore?: number;
   rank?: number;
   totalCandidates?: number;
   rankBand?: string;
   rankMode?: 'exact' | 'band';
   exactRankAvailable?: boolean;
-
-  subscores?: {
-    skills?: number;
-    constraints?: number;
-    recency?: number;
-    evidence?: number;
-  };
   proofSignals?: {
     skills?: string;
     constraints?: string;
@@ -108,21 +100,10 @@ interface MatchExplainerProps {
   trigger?: React.ReactNode;
 }
 
-function proofSignalLabel(value?: number): string {
-  const normalized = Number.isFinite(value) ? Number(value) : 0;
-  if (normalized >= 0.85) return 'Strong proof support';
-  if (normalized >= 0.65) return 'Clear support';
-  if (normalized >= 0.4) return 'Needs reviewer judgment';
-  return 'Limited signal';
-}
-
-function fitBandLabel(label?: string | null, fallbackScore?: number): string {
+function fitBandLabel(label?: string | null): string {
   if (label && !/^top\s*\d+/i.test(label) && !/^#\d+/i.test(label)) {
     return label;
   }
-  const normalized = Number.isFinite(fallbackScore) ? Number(fallbackScore) : 0;
-  if (normalized >= 0.85) return 'Strong proof-fit band';
-  if (normalized >= 0.65) return 'Clear proof-fit band';
   return 'Proof review needed';
 }
 
@@ -138,12 +119,10 @@ function privacySafeWarning(message?: string | null): string | null {
 
 export function MatchExplainerModal({
   matchId,
-  compositeScore,
   rank,
   rankBand,
   rankMode,
   exactRankAvailable,
-  subscores = {},
   proofSignals = {},
   skillsMatch,
   constraints,
@@ -155,13 +134,13 @@ export function MatchExplainerModal({
 }: MatchExplainerProps) {
   const [open, setOpen] = useState(false);
   const explainerContract = buildMatchExplainerContract();
-  const fitBand = fitBandLabel(reviewCard?.fitBand ?? rankBand, compositeScore);
+  const fitBand = fitBandLabel(reviewCard?.fitBand ?? rankBand);
   const warning = privacySafeWarning(fairnessWarning);
   const evidenceSignals = {
-    skills: proofSignals.skills ?? proofSignalLabel(subscores.skills),
-    constraints: proofSignals.constraints ?? proofSignalLabel(subscores.constraints),
-    recency: proofSignals.recency ?? proofSignalLabel(subscores.recency),
-    evidence: proofSignals.evidence ?? proofSignalLabel(subscores.evidence),
+    skills: proofSignals.skills,
+    constraints: proofSignals.constraints,
+    recency: proofSignals.recency,
+    evidence: proofSignals.evidence,
   };
 
   // Default trigger
@@ -279,8 +258,8 @@ export function MatchExplainerModal({
           <div className="rounded-xl border border-proofound-stone bg-white p-4">
             <h4 className="mb-3 text-sm font-semibold text-foreground">Privacy-safe explanation</h4>
             <p className="mb-3 text-sm text-muted-foreground">
-              Blind-by-default review keeps identity-bearing details hidden until the candidate
-              consents to reveal.
+              Blind-by-default review keeps identity-bearing details hidden until the proof-review
+              participant consents to reveal.
             </p>
             <ul className="space-y-2 text-sm text-foreground">
               {reasonSummary.map((item, index) => (
@@ -344,7 +323,7 @@ export function MatchExplainerModal({
           <TabsContent value="overview" className="space-y-4 pt-4">
             <h4 className="mb-3 text-sm font-semibold text-foreground">Review signals by area</h4>
 
-            {(proofSignals.skills || subscores.skills !== undefined) && (
+            {proofSignals.skills && (
               <div className="rounded-lg border border-proofound-stone bg-white p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -358,7 +337,7 @@ export function MatchExplainerModal({
               </div>
             )}
 
-            {(proofSignals.constraints || subscores.constraints !== undefined) && (
+            {proofSignals.constraints && (
               <div className="rounded-lg border border-proofound-stone bg-white p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -374,7 +353,7 @@ export function MatchExplainerModal({
               </div>
             )}
 
-            {(proofSignals.recency || subscores.recency !== undefined) && (
+            {proofSignals.recency && (
               <div className="rounded-lg border border-proofound-stone bg-white p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -388,7 +367,7 @@ export function MatchExplainerModal({
               </div>
             )}
 
-            {(proofSignals.evidence || subscores.evidence !== undefined) && (
+            {proofSignals.evidence && (
               <div className="rounded-lg border border-proofound-stone bg-white p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">

@@ -135,6 +135,15 @@ describe('RLS Privacy Policies', () => {
     });
 
     test("❌ User A cannot read User B's private profile data", async () => {
+      const serviceClient = createServiceRoleClient();
+      const { error: setupError } = await serviceClient.from('individual_profiles').upsert({
+        user_id: bob.id,
+        headline: 'Bob private headline',
+        bio: 'Bob private biography',
+        visibility: 'private',
+      });
+      expect(setupError).toBeNull();
+
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
 
       // Try to read Bob's profile
@@ -144,12 +153,7 @@ describe('RLS Privacy Policies', () => {
         .eq('user_id', bob.id)
         .single();
 
-      // Note: Based on policies.sql, individual_profiles can be read if visibility = 'public'
-      // For now, we test that Alice cannot directly access Bob's data without proper visibility
-      // The actual behavior depends on the visibility setting
-      if (error || !data) {
-        expectUnauthorized(data, error, "Alice should not see Bob's private individual profile");
-      }
+      expectUnauthorized(data, error, "Alice should not see Bob's private individual profile");
     });
 
     test('❌ Unauthenticated users cannot read profiles directly', async () => {
