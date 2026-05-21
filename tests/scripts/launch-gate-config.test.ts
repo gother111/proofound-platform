@@ -1295,6 +1295,22 @@ describe('launch gate package configuration', () => {
     }
   });
 
+  it('does not allow the active go/no-go gate to be bypassed by environment flags', () => {
+    const goNoGoScript = fs.readFileSync(path.join(repoRoot, 'scripts/go-no-go-check.ts'), 'utf8');
+    const strictGateRunner = fs.readFileSync(
+      path.join(repoRoot, 'scripts/run-mvp-strict-gates.mjs'),
+      'utf8'
+    );
+    const legacyGoNoGoScript = fs.readFileSync(
+      path.join(repoRoot, 'scripts/archive/legacy_go_no_go/go-no-go-check.archived.mjs'),
+      'utf8'
+    );
+
+    expect(goNoGoScript).not.toContain('SKIP_GO_NOGO');
+    expect(strictGateRunner).not.toContain('SKIP_GO_NOGO');
+    expect(legacyGoNoGoScript).toContain('SKIP_GO_NOGO');
+  });
+
   it('keeps root production and provider docs aligned with manual-link launch posture', () => {
     const productionChecklist = fs.readFileSync(
       path.join(repoRoot, 'PRODUCTION_CHECKLIST.md'),

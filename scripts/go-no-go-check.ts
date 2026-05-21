@@ -22,7 +22,6 @@ loadEnv({ path: '.env.local', quiet: true });
 loadEnv({ quiet: true });
 
 const BASE_URL = normalizeLaunchBaseUrl(process.env.BASE_URL || 'http://localhost:3000');
-const SKIP = process.env.SKIP_GO_NOGO === '1';
 const ARTIFACT_PATH =
   process.env.LAUNCH_SMOKE_ARTIFACT_PATH || '.artifacts/launch-smoke-report.json';
 const RUN_SMOKE_DIRECT = process.env.GO_NO_GO_DIRECT_SMOKE !== '0';
@@ -478,11 +477,6 @@ function checkRestoreReadiness() {
 }
 
 async function main() {
-  if (SKIP) {
-    console.log('SKIP_GO_NOGO=1 set, skipping gate.');
-    return;
-  }
-
   console.log(`Running Go/No-Go gates against ${BASE_URL}`);
   checkFiles();
   checkSafeModeFlags();
