@@ -832,6 +832,14 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to emit first match shown event:');
   });
 
+  it('keeps core matching adjacency fallback failures on structured server logging', () => {
+    const source = readSource('src/lib/core/matching/adjacency.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('matching.adjacency.explicit_fetch_failed');
+    expect(source).not.toContain('[Adjacency] Failed to fetch explicit adjacencies:');
+  });
+
   it('keeps Start from CV status failures on structured server logging', () => {
     const source = readSource('src/app/api/ai/start-from-cv/status/route.ts');
 

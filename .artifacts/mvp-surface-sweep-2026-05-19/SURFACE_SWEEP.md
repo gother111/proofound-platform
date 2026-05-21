@@ -4981,3 +4981,11 @@ Browser evidence:
 - Replaced those diagnostics with structured `admin.*` log events while preserving fail-closed authorization behavior, mock-admin test gates, organization role normalization, redirect behavior, whitelist/invitation auto-grant behavior, and success audit-style info events.
 - Extended runtime debug-output guardrails so the old admin authorization console strings cannot return.
 - Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 60 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted admin-auth console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Core Matching Adjacency Structured Logging
+
+- Timestamp: 2026-05-21 15:39 CEST.
+- Continued the active matching diagnostics sweep after the core skill-adjacency scorer still emitted a raw console error when explicit adjacency rows could not be fetched.
+- Replaced that diagnostic with structured `matching.adjacency.explicit_fetch_failed` logging while preserving the existing fallback to hierarchy-only matching, empty adjacency maps, scoring behavior, and cache clearing behavior.
+- Extended runtime debug-output guardrails so the old adjacency console string cannot return.
+- Verification passed: focused adjacency/runtime guard run `npm test -- --run src/lib/core/matching/__tests__/adjacency.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 76 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted adjacency console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
