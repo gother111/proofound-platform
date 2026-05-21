@@ -1,5 +1,5 @@
 import { and, eq, inArray } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 
 import { db } from '@/db';
 import { assignments, conversations, matches, organizationMembers, profiles } from '@/db/schema';
@@ -10,6 +10,8 @@ type ConversationParticipantRecord = {
   role: string | null | undefined;
   state?: string | null | undefined;
 };
+
+const makeMaskedHandleId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 6);
 
 export class ConversationAccessError extends Error {
   constructor(
@@ -23,10 +25,10 @@ export class ConversationAccessError extends Error {
 
 export function makeMaskedHandleForPersona(persona: string | null | undefined): string {
   if (persona === 'individual') {
-    return `Submission #${nanoid(6).toUpperCase()}`;
+    return `Submission #${makeMaskedHandleId()}`;
   }
 
-  return `Organization #${nanoid(6).toUpperCase()}`;
+  return `Organization #${makeMaskedHandleId()}`;
 }
 
 export function pickPrioritizedOrgRepresentative<T extends ConversationParticipantRecord>(
