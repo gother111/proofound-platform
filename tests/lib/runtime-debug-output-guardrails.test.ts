@@ -900,6 +900,19 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Error checking policy consent:');
   });
 
+  it('keeps privacy helper failures on structured server logging', () => {
+    const sources = [
+      readSource('src/lib/privacy/policy-versions.ts'),
+      readSource('src/lib/privacy/visibility.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('privacy.policy_consent.check_failed');
+    expect(sources).toContain('privacy.visibility.matched_relationship_check_failed');
+    expect(sources).not.toContain('Failed to check policy consent:');
+    expect(sources).not.toContain('Failed to check matched relationship:');
+  });
+
   it('keeps admin audit and internal-ops queue failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/admin/audit/route.ts'),

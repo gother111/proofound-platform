@@ -4949,3 +4949,11 @@ Browser evidence:
 - Replaced those diagnostics with structured `login.*`, `onboarding.page.*`, and `auth.callback.*` log events while preserving redirect sanitization, mock-login reachability, expected missing-session handling, OAuth/email/recovery callback routing, and safe `next` handling.
 - Extended runtime debug-output guardrails so the old auth-entry route console strings cannot return.
 - Verification passed: focused auth-entry/runtime guard run `npm test -- --run tests/routes/login-next-sanitizer.test.tsx tests/routes/onboarding-page.test.ts tests/api/auth-callback-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (4 files / 69 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted auth-entry route console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Privacy Helper Structured Logging
+
+- Timestamp: 2026-05-21 15:20 CEST.
+- Continued the active privacy diagnostics sweep after policy consent checks and matched-relationship visibility checks still emitted raw console diagnostics on failure.
+- Replaced those diagnostics with structured `privacy.*` log events while preserving fail-closed consent behavior and fail-closed `match_only` visibility behavior.
+- Added focused helper coverage for consent-check fallback and matched-relationship lookup fallback, and extended runtime debug-output guardrails so the old privacy helper console strings cannot return.
+- Verification passed: focused privacy-helper/runtime guard run `npm test -- --run tests/lib/privacy-helpers-logging.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 60 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted privacy-helper console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
