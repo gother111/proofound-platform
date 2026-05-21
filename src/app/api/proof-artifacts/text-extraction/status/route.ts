@@ -54,7 +54,7 @@ export async function GET() {
     log.error('proof_artifact_ocr.status.failed', {
       error: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: 'Failed to load OCR beta status' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to load text extraction status' }, { status: 500 });
   }
 }
 

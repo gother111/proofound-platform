@@ -237,7 +237,7 @@ export async function POST(
       }
 
       if (!inviterProfile.isBetaTesting) {
-        return NextResponse.json({ error: 'Beta testing access is required.' }, { status: 403 });
+        return NextResponse.json({ error: 'Early access is required.' }, { status: 403 });
       }
     }
 

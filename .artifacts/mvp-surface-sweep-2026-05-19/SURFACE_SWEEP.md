@@ -5260,3 +5260,12 @@ Browser evidence:
 - Routed `logError` through `proofound:client-diagnostic` as `global_error_handler.error` when running in the browser, preserving safe user-message extraction while removing raw console output from the shared helper.
 - Extended runtime debug-output guardrails so the old middleware strings and global error-handler console call cannot return.
 - Verification passed: focused middleware/runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts src/lib/__tests__/middleware-fail-closed.test.ts src/lib/__tests__/middleware-csrf.test.ts src/lib/__tests__/security-headers.test.ts` (4 files / 133 tests), runtime guard rerun `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 91 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted infrastructure console classification scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Active Launch Copy Drift
+
+- Timestamp: 2026-05-21 18:00 CEST.
+- Continued the active non-archive wording and route-drift sweep after diagnostics cleanup exposed a smaller set of launch-copy issues in active user/API surfaces.
+- Replaced user-facing or API-facing "beta", "mock", "launch role", and "stuck MVP handoff" wording with launch-safe product language across OCR text extraction errors, Start from CV denial copy, visual-fixture match 404s, candidate-invite access denial, organization collaborator invite labels, admin queue support text, and launch-surface policy labels.
+- Added runtime source guardrails so the exact active-copy regressions cannot return.
+- Verified route drift remained closed with `npm run test:launch:routes`.
+- Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 92 tests), launch route inventory `npm run test:launch:routes` (4 files / 20 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted active-copy string scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

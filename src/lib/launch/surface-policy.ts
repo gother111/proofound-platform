@@ -82,14 +82,14 @@ const ACTIVE_API_POLICIES = [
   },
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Start from CV Beta API',
+    surfaceLabel: 'Start from CV API',
     detail:
       'Start from CV routes remain hard-gated to approved guest first-proof private scaffolding, never profile-first import, employer CV parsing, or proof-review participant evaluation.',
     matches: (pathname: string) => matchExactOrPrefix('/api/ai/start-from-cv')(pathname),
   },
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Proof Artifact OCR Beta API',
+    surfaceLabel: 'Proof Artifact OCR API',
     detail:
       'Invite-only Proof Artifact OCR routes remain active only for draft text extraction on user-owned proof artifacts.',
     matches: (pathname: string) => matchExactOrPrefix('/api/proof-artifacts')(pathname),

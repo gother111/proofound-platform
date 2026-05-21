@@ -244,7 +244,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
                   : 'border-proofound-forest/30 bg-proofound-parchment text-proofound-forest'
               )}
             >
-              {isExpanded ? 'Beta testing' : 'Beta'}
+              {isExpanded ? 'Early access' : 'Early'}
             </div>
           ) : null}
           <button

@@ -777,7 +777,7 @@ export function AdminVerificationDashboard() {
                                     Pilot corridor
                                   </p>
                                   <p className="text-sm text-muted-foreground">
-                                    Read-only workflow state for stuck MVP handoff support.
+                                    Read-only workflow state for stuck handoff support.
                                   </p>
                                 </div>
                                 <div className="mt-3 grid gap-2 md:grid-cols-2">

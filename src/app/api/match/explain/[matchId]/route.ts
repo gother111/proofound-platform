@@ -87,7 +87,7 @@ export async function GET(
       const mockMatches = buildVisualOrgMatches('11111111-1111-4111-8111-111111111111');
       const foundMock = mockMatches.find((m) => m.id === matchId);
       if (!foundMock) {
-        return NextResponse.json({ error: 'Mock match not found' }, { status: 404 });
+        return NextResponse.json({ error: 'Match not found' }, { status: 404 });
       }
 
       // Format skillsMatch

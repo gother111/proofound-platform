@@ -341,6 +341,35 @@ describe('runtime debug output guardrails', () => {
     expect(errorHandlerSource).not.toContain('console.error(`[${context}]`');
   });
 
+  it('keeps active launch copy free of unfinished beta and mock wording', () => {
+    const sources = [
+      readSource('src/app/api/proof-artifacts/[artifactId]/text-extraction/route.ts'),
+      readSource('src/app/api/proof-artifacts/text-extraction/status/route.ts'),
+      readSource('src/app/api/ai/start-from-cv/_route-helpers.ts'),
+      readSource('src/app/api/match/explain/[matchId]/route.ts'),
+      readSource('src/app/api/org/[id]/matches/[matchId]/review/route.ts'),
+      readSource('src/app/api/organizations/[orgId]/candidate-invites/route.ts'),
+      readSource('src/components/app/LeftNav.tsx'),
+      readSource('src/components/org/OrgCollaboratorInviteCard.tsx'),
+      readSource('src/components/admin/AdminVerificationDashboard.tsx'),
+      readSource('src/lib/launch/surface-policy.ts'),
+    ].join('\n');
+
+    expect(sources).toContain('Early access');
+    expect(sources).toContain(
+      'Text extraction supports PDF, PNG, and JPG/JPEG proof artifacts only.'
+    );
+    expect(sources).toContain('Match not found');
+    expect(sources).not.toContain('OCR beta supports');
+    expect(sources).not.toContain('Failed to load OCR beta status');
+    expect(sources).not.toContain('Start from CV beta is not available');
+    expect(sources).not.toContain('Mock match not found');
+    expect(sources).not.toContain('Beta testing access is required');
+    expect(sources).not.toContain('Beta API');
+    expect(sources).not.toContain('Launch role');
+    expect(sources).not.toContain('stuck MVP handoff support');
+  });
+
   it('keeps remaining infrastructure console output confined to structured sink utilities', () => {
     const middlewareSource = readSource('src/middleware.ts');
     const structuredLogSource = readSource('src/lib/log.ts');
