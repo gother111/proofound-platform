@@ -1,19 +1,19 @@
 /**
- * Next Actions Calculator
+ * Organization readiness next actions
  *
- * Generates intelligent action recommendations based on assignment and matching data.
- * PRD Reference: Part 5 O8 - Company Dashboard Analytics Tiles
+ * Generates proof-first readiness actions based on assignment and submission data.
+ * PRD Reference: Organization assignment-review readiness
  */
 
 import { db } from '@/db';
 import { assignments, matches } from '@/db/schema';
-import { eq, and, lt, gte, sql } from 'drizzle-orm';
+import { eq, and, lt, sql } from 'drizzle-orm';
 import { getRows } from '@/lib/db/rows';
 
 export interface NextAction {
   id: string;
   priority: 'critical' | 'high' | 'medium' | 'low';
-  category: 'assignment' | 'candidate' | 'matching' | 'process';
+  category: 'assignment' | 'matching' | 'process';
   title: string;
   description: string;
   actionLabel: string;
@@ -22,13 +22,22 @@ export interface NextAction {
 }
 
 /**
- * Calculate suggested next actions for an organization
+ * Calculate proof-first next actions for an organization.
  */
-export async function calculateNextActions(organizationId: string): Promise<NextAction[]> {
+export async function calculateNextActions(
+  organizationId: string,
+  organizationSlug?: string | null
+): Promise<NextAction[]> {
   const actions: NextAction[] = [];
-  const now = new Date();
+  const orgAssignmentPath = organizationSlug
+    ? `/app/o/${encodeURIComponent(organizationSlug)}/assignments`
+    : '/app/o';
+  const assignmentReviewPath = (assignmentId: string) =>
+    organizationSlug
+      ? `${orgAssignmentPath}/${encodeURIComponent(assignmentId)}/review`
+      : orgAssignmentPath;
 
-  // 1. Check for stale assignments (>14 days, no shortlist)
+  // 1. Check for stale assignments (>14 days, no proof submissions).
   const staleAssignments = await db.query.assignments.findMany({
     where: and(
       eq(assignments.orgId, organizationId),
@@ -38,7 +47,7 @@ export async function calculateNextActions(organizationId: string): Promise<Next
   });
 
   for (const assignment of staleAssignments) {
-    // Check if there are any matches for this assignment
+    // Check if there are any proof-submission matches for this assignment.
     const matchCount = await db
       .select({ count: sql<number>`count(*)` })
       .from(matches)
@@ -49,16 +58,16 @@ export async function calculateNextActions(organizationId: string): Promise<Next
         id: `stale-assignment-${assignment.id}`,
         priority: 'high',
         category: 'assignment',
-        title: 'No matches for assignment',
-        description: `"${assignment.role || 'Untitled'}" has been active for 14+ days with no matches. Consider adjusting criteria.`,
-        actionLabel: 'Review Criteria',
-        actionUrl: `/o/${organizationId}/assignments/${assignment.id}/edit`,
+        title: 'Assignment needs proof-submission context',
+        description: `"${assignment.role || 'Untitled'}" has been active for 14+ days without proof submissions. Review assignment scope, proof expectations, or publish readiness.`,
+        actionLabel: 'Review assignment',
+        actionUrl: assignmentReviewPath(assignment.id),
         metadata: { assignmentId: assignment.id },
       });
     }
   }
 
-  // 2. Check for weak assignment fit signals (average score <0.5)
+  // 2. Check for weak proof-alignment bands without exposing raw score artifacts.
   const lowQualityAssignments = await db.execute(sql`
     SELECT 
       a.id as assignment_id,
@@ -75,16 +84,15 @@ export async function calculateNextActions(organizationId: string): Promise<Next
   `);
 
   for (const row of getRows(lowQualityAssignments) as any[]) {
-    const avgScore = Math.round(parseFloat(row.avg_score) * 100);
     actions.push({
       id: `low-quality-${row.assignment_id}`,
       priority: 'medium',
       category: 'matching',
-      title: 'Assignment fit signals need review',
-      description: `"${row.role || 'Untitled'}" is producing weak proof-alignment signals (${avgScore}% average). Tighten required skills, proof gates, or assignment scope.`,
+      title: 'Proof alignment needs review',
+      description: `"${row.role || 'Untitled'}" is producing weak proof-alignment signals. Tighten required skills, proof gates, or assignment scope.`,
       actionLabel: 'Review assignment',
-      actionUrl: `/o/${organizationId}/assignments/${row.assignment_id}/edit?tab=weights`,
-      metadata: { assignmentId: row.assignment_id, avgScore },
+      actionUrl: assignmentReviewPath(row.assignment_id),
+      metadata: { assignmentId: row.assignment_id, proofAlignmentState: 'weak' },
     });
   }
 
