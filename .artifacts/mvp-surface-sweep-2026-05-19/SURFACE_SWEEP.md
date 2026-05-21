@@ -4965,3 +4965,11 @@ Browser evidence:
 - Replaced those diagnostics with structured `organization.*` log events while preserving organization slug creation, fallback organization provisioning, owner membership creation, profile-persona best-effort behavior, canonical team filtering, and active-role stats.
 - Extended runtime debug-output guardrails so the old organization helper console strings cannot return.
 - Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 59 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted organization-helper console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Internal Ops Queue Compatibility Logging
+
+- Timestamp: 2026-05-21 15:31 CEST.
+- Continued the active launch-ops/admin diagnostics sweep after the internal operations queue compatibility fallback still emitted a raw console warning when the queue table or pre-migration constraints were unavailable.
+- Replaced that diagnostic with structured `internal_ops_queue.*.compatibility_fallback` logging while preserving synthetic fallback queue items, empty queue groups, uploaded-file privacy metadata sanitization, and pre-migration constraint tolerance.
+- Updated focused queue tests to mock and assert the structured logger, and extended runtime debug-output guardrails so the old raw fallback warning cannot return.
+- Verification passed: focused internal-ops/runtime guard run `npm test -- --run tests/lib/internal-ops-queue.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 68 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted internal-ops queue console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

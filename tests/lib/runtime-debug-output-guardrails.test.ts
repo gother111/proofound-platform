@@ -918,6 +918,7 @@ describe('runtime debug output guardrails', () => {
       readSource('src/app/api/admin/audit/route.ts'),
       readSource('src/app/api/admin/internal-ops/queues/route.ts'),
       readSource('src/app/api/admin/internal-ops/queues/[id]/route.ts'),
+      readSource('src/lib/internal-ops/queue.ts'),
     ].join('\n');
 
     expect(sources).toContain("import { log } from '@/lib/log'");
@@ -925,10 +926,14 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('admin.internal_ops_queues.list_failed');
     expect(sources).toContain('admin.internal_ops_queue_item.get_failed');
     expect(sources).toContain('admin.internal_ops_queue_item.update_failed');
+    expect(sources).toContain('internal_ops_queue.${operation}.compatibility_fallback');
     expect(sources).not.toContain('Error fetching audit logs');
     expect(sources).not.toContain('Error fetching operations queues');
     expect(sources).not.toContain('Error fetching operations queue item');
     expect(sources).not.toContain('Error updating operations queue item');
+    expect(sources).not.toContain(
+      'console.warn(`internal_ops_queue.${operation}.compatibility_fallback`'
+    );
   });
 
   it('keeps admin organization trust-tier failures on structured server logging', () => {

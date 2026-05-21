@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   update: vi.fn(),
   insert: vi.fn(),
+  logWarn: vi.fn(),
 }));
 
 vi.mock('@/db', () => ({
@@ -58,6 +59,12 @@ vi.mock('@/db/schema', () => ({
     createdAt: Symbol('internal_ops_queue_items.created_at'),
     updatedAt: Symbol('internal_ops_queue_items.updated_at'),
     resolvedAt: Symbol('internal_ops_queue_items.resolved_at'),
+  },
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    warn: mocks.logWarn,
   },
 }));
 
@@ -131,7 +138,6 @@ describe('internal ops queue compatibility fallback', () => {
   });
 
   it('returns a synthetic queue item when the runtime queue table is unavailable', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mocks.findFirst.mockRejectedValue({
       code: '42P01',
       message: 'relation "internal_ops_queue_items" does not exist',
@@ -166,17 +172,29 @@ describe('internal ops queue compatibility fallback', () => {
     );
     expect(mocks.insert).not.toHaveBeenCalled();
     expect(mocks.update).not.toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalledWith(
-      'internal_ops_queue.ensure.compatibility_fallback',
-      expect.objectContaining({
+    expect(mocks.logWarn).toHaveBeenCalledWith('internal_ops_queue.ensure.compatibility_fallback', {
+      error: expect.objectContaining({
         code: '42P01',
-      })
-    );
-    warnSpy.mockRestore();
+      }),
+    });
+  });
+
+  it('keeps compatibility fallback diagnostics on structured server logging', async () => {
+    mocks.findMany.mockRejectedValue({
+      code: '42703',
+      message: 'column internal_ops_queue_items.priority does not exist',
+    });
+
+    await listInternalOpsQueueItems();
+
+    expect(mocks.logWarn).toHaveBeenCalledWith('internal_ops_queue.list.compatibility_fallback', {
+      error: expect.objectContaining({
+        code: '42703',
+      }),
+    });
   });
 
   it('returns empty queue groups when the runtime queue table is unavailable', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mocks.findMany.mockRejectedValue({
       code: '42P01',
       message: 'relation "internal_ops_queue_items" does not exist',
@@ -190,13 +208,11 @@ describe('internal ops queue compatibility fallback', () => {
       expect.objectContaining({ id: 'correction_revocation', items: [], openCount: 0 }),
       expect.objectContaining({ id: 'pilot_ops', items: [], openCount: 0 }),
     ]);
-    expect(warnSpy).toHaveBeenCalledWith(
-      'internal_ops_queue.list.compatibility_fallback',
-      expect.objectContaining({
+    expect(mocks.logWarn).toHaveBeenCalledWith('internal_ops_queue.list.compatibility_fallback', {
+      error: expect.objectContaining({
         code: '42P01',
-      })
-    );
-    warnSpy.mockRestore();
+      }),
+    });
   });
 
   it('projects only privacy-safe metadata and operator detail for listed queue items', async () => {
@@ -269,7 +285,6 @@ describe('internal ops queue compatibility fallback', () => {
   });
 
   it('falls back cleanly when uploaded_file is rejected by a pre-migration DB constraint', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mocks.findFirst.mockResolvedValue(null);
 
     const returning = vi.fn().mockRejectedValue({
@@ -304,13 +319,11 @@ describe('internal ops queue compatibility fallback', () => {
       })
     );
     expect(JSON.stringify(result)).not.toContain('Jane_Doe_Resume.pdf');
-    expect(warnSpy).toHaveBeenCalledWith(
-      'internal_ops_queue.ensure.compatibility_fallback',
-      expect.objectContaining({
+    expect(mocks.logWarn).toHaveBeenCalledWith('internal_ops_queue.ensure.compatibility_fallback', {
+      error: expect.objectContaining({
         code: '23514',
-      })
-    );
-    warnSpy.mockRestore();
+      }),
+    });
   });
 
   it('updates queue item status, resolution fields, and latest operator note', async () => {

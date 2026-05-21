@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
 import { internalOpsQueueItems } from '@/db/schema';
 import { isSchemaCompatibilityError } from '@/lib/db/schemaCompatibility';
+import { log } from '@/lib/log';
 import type {
   canonicalInternalOpsQueueEntityTypes,
   canonicalInternalOpsQueuePriorities,
@@ -463,7 +464,7 @@ function isInternalOpsQueueCompatibilityError(error: unknown) {
 }
 
 function warnCompatibilityFallback(operation: 'ensure' | 'list', error: unknown) {
-  console.warn(`internal_ops_queue.${operation}.compatibility_fallback`, error);
+  log.warn(`internal_ops_queue.${operation}.compatibility_fallback`, { error });
 }
 
 function buildCompatibilityFallbackItem(
