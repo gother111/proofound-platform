@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import type { VerificationComposerProofPackOption } from '@/lib/verification/request-feed';
 import {
   CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS,
@@ -219,7 +220,7 @@ export function VerificationRequestComposerDialog({
 
       setDraft(body as ComposerDraft);
     } catch (error) {
-      console.error('Failed to draft verification request:', error);
+      dispatchClientErrorDiagnostic('verifications.composer.draft_failed', error);
       toast.error('Failed to draft verification request.');
     } finally {
       setDrafting(false);
@@ -266,7 +267,7 @@ export function VerificationRequestComposerDialog({
       onOpenChange(false);
       onSent?.();
     } catch (error) {
-      console.error('Failed to send drafted verification request:', error);
+      dispatchClientErrorDiagnostic('verifications.composer.send_failed', error);
       toast.error('Failed to send verification request.');
     } finally {
       setSending(false);

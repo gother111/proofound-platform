@@ -496,6 +496,25 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Error responding to verification:');
   });
 
+  it('keeps verification composer dialog failures on client diagnostics without console output', () => {
+    const sources = [
+      readSource('src/app/app/i/verifications/components/VerificationRequestComposerDialog.tsx'),
+      readSource('src/app/app/i/verifications/components/CustomVerificationRequestDialog.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(sources).toContain('verifications.composer.draft_failed');
+    expect(sources).toContain('verifications.composer.send_failed');
+    expect(sources).toContain('verifications.custom_dialog.artifacts_load_failed');
+    expect(sources).toContain('verifications.custom_dialog.send_failed');
+    expect(sources).not.toContain('Failed to draft verification request:');
+    expect(sources).not.toContain('Failed to send drafted verification request:');
+    expect(sources).not.toContain('Failed to load custom verification artifacts:');
+    expect(sources).not.toContain('Failed to send custom verification request:');
+  });
+
   it('keeps candidate invite route failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/candidate-invites/[token]/route.ts'),

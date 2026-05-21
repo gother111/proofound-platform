@@ -5115,3 +5115,12 @@ Browser evidence:
 - Preserved bundle detail error display, selected-artifact cancel behavior, response error display, completion callback behavior, pending state cleanup, and toast messages.
 - Extended runtime debug-output guardrails so the old verification-dialog console strings cannot return.
 - Verification passed: focused verification/runtime guard run `npm test -- --run tests/ui/verifications-client.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 86 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted verification-dialog console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Verification Composer Client Diagnostics
+
+- Timestamp: 2026-05-21 16:41 CEST.
+- Continued the active individual verification center sweep after the AI-assisted verification composer and custom verification request dialog still emitted raw console diagnostics for draft, send, artifact-load, and custom-request failures.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using `verifications.composer.*` and `verifications.custom_dialog.*` event names.
+- Preserved AI composer fallback behavior, draft review gating, custom artifact loading, verifier email hints, custom request submission, success callbacks, and toast messages.
+- Extended runtime debug-output guardrails so the old verification-composer console strings cannot return.
+- Verification passed: focused verification/runtime guard run `npm test -- --run tests/ui/custom-verification-request-dialog.test.tsx tests/ui/verifications-client.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (3 files / 88 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted verification-composer console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
