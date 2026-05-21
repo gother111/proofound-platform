@@ -9,6 +9,7 @@ import {
   LAUNCH_MONITOR_DEFINITIONS,
   LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
   LAUNCH_MONITOR_STATUS_VALUES,
+  isLocalLaunchBaseUrl,
   type LaunchReadinessState,
   type LaunchSmokeFreshnessState,
   type LaunchMonitorDefinition,
@@ -334,14 +335,19 @@ function buildSmokeArtifactStatusRows(
   artifact: Awaited<ReturnType<typeof readLaunchSmokeArtifactFromFile>>,
   artifactPath: string,
   lastSuccessfulByMonitorKey: Map<string, string | null>,
-  now: Date
+  now: Date,
+  baseUrl?: string
 ) {
   return getSmokeArtifactMonitorDefinitions().map((definition) =>
-    mapResultToStatusRow(runSmokeArtifactMonitor(definition, artifact, artifactPath, now), now, {
-      lastSuccessfulCheckedAt: lastSuccessfulByMonitorKey.get(definition.monitorKey) ?? null,
-      evidenceSource: 'persisted',
-      refreshState: 'not_applicable',
-    })
+    mapResultToStatusRow(
+      runSmokeArtifactMonitor(definition, artifact, artifactPath, now, baseUrl),
+      now,
+      {
+        lastSuccessfulCheckedAt: lastSuccessfulByMonitorKey.get(definition.monitorKey) ?? null,
+        evidenceSource: 'persisted',
+        refreshState: 'not_applicable',
+      }
+    )
   );
 }
 
@@ -533,9 +539,14 @@ function runSmokeArtifactMonitor(
   definition: Extract<LaunchMonitorDefinition, { kind: 'smoke_artifact' }>,
   artifact: Awaited<ReturnType<typeof readLaunchSmokeArtifactFromFile>>,
   artifactPath: string,
-  now: Date
+  now: Date,
+  baseUrl?: string
 ): SyntheticMonitorResult {
-  const artifactEvaluation = evaluateLaunchSmokeArtifact(artifact, { now });
+  const artifactEvaluation = evaluateLaunchSmokeArtifact(artifact, {
+    now,
+    baseUrl,
+    requireTargetBaseUrl: baseUrl ? !isLocalLaunchBaseUrl(baseUrl) : false,
+  });
   const smokeCheck = getLaunchSmokeCheckStatus(artifact, definition.smokeScenarioId);
   const checkedAt = now.toISOString();
 
@@ -568,17 +579,20 @@ function runSmokeArtifactMonitor(
   }
 
   const stale = artifactEvaluation.state === 'stale';
+  const targetBindingBlocked =
+    artifactEvaluation.state === 'missing_target' || artifactEvaluation.state === 'wrong_target';
   const artifactDeclaredFailing =
     artifactEvaluation.state === 'fresh_failing' &&
     artifactEvaluation.failingScenarioIds.length === 0 &&
     artifactEvaluation.incompleteScenarioIds.length === 0;
-  const status = stale
-    ? 'fail'
-    : artifactDeclaredFailing
+  const status =
+    stale || targetBindingBlocked
       ? 'fail'
-      : smokeCheck.status === 'pass'
-        ? 'pass'
-        : smokeCheck.status;
+      : artifactDeclaredFailing
+        ? 'fail'
+        : smokeCheck.status === 'pass'
+          ? 'pass'
+          : smokeCheck.status;
 
   return {
     monitorKey: definition.monitorKey,
@@ -587,24 +601,30 @@ function runSmokeArtifactMonitor(
     severity: definition.severity,
     responseTimeMs: smokeCheck.durationMs,
     expectedState: definition.expectedState,
-    observedState: stale
-      ? 'smoke_artifact_stale'
-      : artifactDeclaredFailing
-        ? 'smoke_artifact_check_failed'
+    observedState: targetBindingBlocked
+      ? artifactEvaluation.state
+      : stale
+        ? 'smoke_artifact_stale'
+        : artifactDeclaredFailing
+          ? 'smoke_artifact_check_failed'
+          : status === 'pass'
+            ? smokeCheck.expectedState
+            : 'smoke_artifact_check_failed',
+    failureClass: targetBindingBlocked
+      ? artifactEvaluation.state
+      : stale
+        ? 'smoke_artifact_stale'
         : status === 'pass'
-          ? smokeCheck.expectedState
-          : 'smoke_artifact_check_failed',
-    failureClass: stale
-      ? 'smoke_artifact_stale'
-      : status === 'pass'
-        ? null
-        : definition.failureClass,
+          ? null
+          : definition.failureClass,
     details: {
       artifactPath,
       artifactSchemaVersion: artifact.schemaVersion,
       artifactGeneratedAt: artifact.generatedAt,
       artifactAgeMinutes: artifactEvaluation.ageMinutes,
       freshnessThresholdMinutes: artifactEvaluation.freshnessThresholdMinutes,
+      artifactTargetBaseUrl: artifactEvaluation.targetBaseUrl,
+      requestedBaseUrl: artifactEvaluation.requestedBaseUrl,
       smokeArtifactState: artifactEvaluation.state,
       smokeStatus: smokeCheck.status,
       smokeMessage: smokeCheck.message ?? null,
@@ -612,7 +632,7 @@ function runSmokeArtifactMonitor(
       smokeFreshnessState: stale ? 'stale' : 'fresh',
     },
     checkedAt,
-    blocking: stale || status !== 'pass',
+    blocking: stale || targetBindingBlocked || status !== 'pass',
   };
 }
 
@@ -669,7 +689,12 @@ export async function runLaunchSyntheticMonitors(
   const lastSuccessfulByMonitorKey = await getLastSuccessfulMonitorRunMap();
   const smokeArtifact = await readLaunchSmokeArtifactFromFile(params.artifactPath);
   const generatedAt = now;
-  const smokeArtifactEvaluation = evaluateLaunchSmokeArtifact(smokeArtifact, { now: generatedAt });
+  const requireTargetBaseUrl = !isLocalLaunchBaseUrl(params.baseUrl);
+  const smokeArtifactEvaluation = evaluateLaunchSmokeArtifact(smokeArtifact, {
+    now: generatedAt,
+    baseUrl: params.baseUrl,
+    requireTargetBaseUrl,
+  });
   const smokeFreshnessState: Exclude<LaunchSmokeFreshnessState, 'missing'> =
     smokeArtifactEvaluation.stale ? 'stale' : 'fresh';
 
@@ -680,7 +705,13 @@ export async function runLaunchSyntheticMonitors(
     }
 
     results.push(
-      runSmokeArtifactMonitor(definition, smokeArtifact, params.artifactPath, generatedAt)
+      runSmokeArtifactMonitor(
+        definition,
+        smokeArtifact,
+        params.artifactPath,
+        generatedAt,
+        params.baseUrl
+      )
     );
   }
 

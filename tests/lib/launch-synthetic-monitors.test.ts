@@ -51,7 +51,7 @@ function buildPersistedStatusRow(monitorKey: string, overrides: Record<string, u
   };
 }
 
-function buildSmokeArtifact(generatedAt: string) {
+function buildSmokeArtifact(generatedAt: string, targetBaseUrl = 'https://example.com') {
   const checks = LAUNCH_SMOKE_MATRIX.map((scenario) => ({
     id: scenario.id,
     corridor: scenario.corridor,
@@ -67,6 +67,11 @@ function buildSmokeArtifact(generatedAt: string) {
   return {
     schemaVersion: 2,
     generatedAt,
+    targetBaseUrl,
+    executionMode:
+      targetBaseUrl.includes('localhost') || targetBaseUrl.includes('127.0.0.1')
+        ? ('local' as const)
+        : ('live' as const),
     freshnessThresholdMinutes: 60,
     expiresAt: new Date(new Date(generatedAt).getTime() + 60 * 60_000).toISOString(),
     overallStatus: 'pass' as const,
@@ -177,6 +182,92 @@ describe('launch synthetic monitor persistence', () => {
       )
     ).toBe(true);
     expect(db.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('blocks live monitor readiness when smoke artifact lacks live target binding', async () => {
+    const unboundArtifact: Record<string, unknown> = buildSmokeArtifact('2026-03-12T10:00:00.000Z');
+    delete unboundArtifact.targetBaseUrl;
+    delete unboundArtifact.executionMode;
+
+    (fs.readFile as any).mockResolvedValue(JSON.stringify(unboundArtifact));
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+        if (url.endsWith('/api/health')) {
+          return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+        }
+
+        return new Response('ok', { status: 200 });
+      })
+    );
+
+    const result = await getCurrentLaunchSyntheticStatus(
+      {
+        baseUrl: 'https://example.com',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        persist: false,
+      },
+      new Date('2026-03-12T10:59:00.000Z')
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.readinessState).toBe('blocked');
+    expect(
+      result.rows
+        .filter((row) => row.monitorGroup === 'synthetic-smoke')
+        .every(
+          (row) =>
+            row.observedState === 'missing_target' &&
+            row.failureClass === 'missing_target' &&
+            row.status === 'fail' &&
+            row.blocking === true &&
+            row.details.smokeArtifactState === 'missing_target'
+        )
+    ).toBe(true);
+  });
+
+  it('blocks live monitor readiness when smoke artifact target differs from base URL', async () => {
+    (fs.readFile as any).mockResolvedValue(
+      JSON.stringify(buildSmokeArtifact('2026-03-12T10:00:00.000Z', 'https://other.example'))
+    );
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+        if (url.endsWith('/api/health')) {
+          return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+        }
+
+        return new Response('ok', { status: 200 });
+      })
+    );
+
+    const result = await getCurrentLaunchSyntheticStatus(
+      {
+        baseUrl: 'https://example.com',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        persist: false,
+      },
+      new Date('2026-03-12T10:59:00.000Z')
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.readinessState).toBe('blocked');
+    expect(
+      result.rows
+        .filter((row) => row.monitorGroup === 'synthetic-smoke')
+        .every(
+          (row) =>
+            row.observedState === 'wrong_target' &&
+            row.failureClass === 'wrong_target' &&
+            row.status === 'fail' &&
+            row.blocking === true &&
+            row.details.smokeArtifactState === 'wrong_target'
+        )
+    ).toBe(true);
   });
 
   it('runs live monitors without crashing when persistence is requested but db.execute is unavailable', async () => {
