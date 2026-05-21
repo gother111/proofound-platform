@@ -79,12 +79,14 @@ export function getEmailStatus() {
 
 export function getEmailProviderDependencyStatus() {
   const missing = EMAIL_PROVIDER_REQUIRED_ENV.filter((envName) => !process.env[envName]?.trim());
+  const deliverySkipped = shouldSkipTransactionalEmailDelivery();
 
   return {
-    ok: missing.length === 0,
+    ok: missing.length === 0 && !deliverySkipped,
     required: true,
-    configured: missing.length === 0,
+    configured: missing.length === 0 && !deliverySkipped,
     missing: [...missing],
+    deliverySkipped,
     provider: 'resend' as const,
   };
 }

@@ -426,6 +426,36 @@ describe('/api/monitoring/launch-status', () => {
         required: true,
         configured: false,
         missing: ['RESEND_API_KEY'],
+        deliverySkipped: false,
+        provider: 'resend',
+      })
+    );
+    expect(body.notReadyReasons).toEqual([
+      expect.objectContaining({
+        code: 'missing_email_provider_dependency',
+        source: 'dependency',
+        monitorKeys: ['email_provider_dependency'],
+      }),
+    ]);
+  });
+
+  it('blocks launch status when transactional email delivery is explicitly skipped', async () => {
+    vi.stubEnv('PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY', 'true');
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.ok).toBe(false);
+    expect(body.readinessState).toBe('blocked');
+    expect(body.dependencies.emailProvider).toEqual(
+      expect.objectContaining({
+        ok: false,
+        required: true,
+        configured: false,
+        missing: [],
+        deliverySkipped: true,
         provider: 'resend',
       })
     );

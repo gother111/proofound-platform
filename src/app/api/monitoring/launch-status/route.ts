@@ -98,12 +98,13 @@ export async function GET(request: Request) {
         required: emailProviderDependency.required,
         configured: emailProviderDependency.configured,
         missing: emailProviderDependency.missing,
+        deliverySkipped: emailProviderDependency.deliverySkipped,
         provider: emailProviderDependency.provider,
       };
       dependencyReasons.push({
         code: 'missing_email_provider_dependency' as const,
         message:
-          'Launch readiness is blocked because the transactional email provider is not configured.',
+          'Launch readiness is blocked because the transactional email provider is not configured for live delivery.',
         monitorKeys: ['email_provider_dependency'],
         source: 'dependency' as const,
         freshnessState: 'missing' as const,
