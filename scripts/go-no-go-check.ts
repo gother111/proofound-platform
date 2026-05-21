@@ -370,7 +370,15 @@ async function checkLocalPerfStatusFallback(data: PerfStatusPayload) {
 }
 
 async function maybeRunSynthetics() {
-  if (!RUN_SYNTHETICS) return;
+  if (!RUN_SYNTHETICS) {
+    if (!isLocalLaunchBaseUrl()) {
+      fail(
+        'GO_NO_GO_RUN_SYNTHETICS=0 is only allowed for local go/no-go runs; production-candidate targets must run launch synthetic checks.'
+      );
+    }
+    console.log('Local go/no-go target detected; skipping direct launch synthetic checks.');
+    return;
+  }
 
   const response = await fetch(`${BASE_URL}/api/cron/launch-synthetic-checks`, {
     headers: internalOpsHeaders(),

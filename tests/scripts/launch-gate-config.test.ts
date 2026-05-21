@@ -168,6 +168,12 @@ describe('launch gate package configuration', () => {
     }
     expect(launchStatus).toContain('INTERNAL_API_SECRET or CRON_SECRET is required');
     expect(goNoGo).toContain('INTERNAL_API_SECRET or CRON_SECRET is required');
+    expect(goNoGo).toContain('GO_NO_GO_RUN_SYNTHETICS=0 is only allowed for local go/no-go runs');
+    expectTextBefore(
+      goNoGo,
+      'GO_NO_GO_RUN_SYNTHETICS=0 is only allowed for local go/no-go runs',
+      'fetch(`${BASE_URL}/api/cron/launch-synthetic-checks`'
+    );
     expect(finalRunner).toContain('INTERNAL_API_SECRET or CRON_SECRET is required');
     expect(strictGateRunner).toContain('INTERNAL_API_SECRET/CRON_SECRET');
     expect(strictGateRunner).not.toContain("'CRON_SECRET',");
@@ -1410,6 +1416,9 @@ describe('launch gate package configuration', () => {
     );
 
     expect(goNoGoScript).not.toContain('SKIP_GO_NOGO');
+    expect(goNoGoScript).toContain('if (!RUN_SYNTHETICS)');
+    expect(goNoGoScript).toContain('if (!isLocalLaunchBaseUrl())');
+    expect(goNoGoScript).toContain('production-candidate targets must run launch synthetic checks');
     expect(strictGateRunner).not.toContain('SKIP_GO_NOGO');
     expect(legacyGoNoGoScript).toContain('SKIP_GO_NOGO');
   });
