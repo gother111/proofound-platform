@@ -556,7 +556,10 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (analyticsError) {
-        console.error('Failed to emit first match shown event:', analyticsError);
+        log.error('match.profile.first_match_event_failed', {
+          userId: user.id,
+          error: analyticsError,
+        });
       }
     }
 

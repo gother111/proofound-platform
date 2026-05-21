@@ -751,6 +751,14 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Match explanation error:');
   });
 
+  it('keeps profile matching analytics failures on structured server logging', () => {
+    const source = readSource('src/app/api/core/matching/profile/handler.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('match.profile.first_match_event_failed');
+    expect(source).not.toContain('Failed to emit first match shown event:');
+  });
+
   it('keeps organization detail and profile visibility failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/organizations/[orgId]/route.ts'),
