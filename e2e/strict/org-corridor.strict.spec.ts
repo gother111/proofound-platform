@@ -308,19 +308,25 @@ test.describe('Strict Authenticated Org Corridor', () => {
 
     await loginWithUi(page, orgOwner);
     await gotoWithReadyState(page, `/app/o/${organization.slug}/home`, async () => {
-      await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: organization.displayName, exact: true })
+      ).toBeVisible();
     });
     await expect(page.getByLabel('Collaborator email')).toBeVisible();
     await expect(page.getByLabel('Launch role')).toBeVisible();
 
     await gotoWithReadyState(page, `/app/o/${organization.slug}/profile`, async () => {
       await expect(
-        page.getByRole('main').getByRole('heading', { name: 'Organization Profile', exact: true })
+        page
+          .getByRole('main')
+          .getByRole('heading', { name: 'Organization Trust Page', exact: true })
       ).toBeVisible();
     });
 
     await gotoWithReadyState(page, `/app/o/${organization.slug}/home`, async () => {
-      await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: organization.displayName, exact: true })
+      ).toBeVisible();
     });
     await dismissBlockingOverlays(page);
     const inviteDiagnostics: string[] = [];
@@ -451,9 +457,9 @@ test.describe('Strict Authenticated Org Corridor', () => {
           ).toBeVisible({ timeout: 30_000 });
         }
         await dismissBlockingOverlays(reviewerPage);
-        await expect(
-          reviewerPage.getByText('You are currently signed in as Reviewer.')
-        ).toBeVisible({ timeout: 30_000 });
+        await expect(reviewerPage.getByText('Signed in as Reviewer')).toBeVisible({
+          timeout: 30_000,
+        });
         await reviewerPage.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => null);
       } catch (error) {
         await attachPageDebug(testInfo, 'reviewer-invite-flow-failure', reviewerPage);
@@ -506,7 +512,8 @@ test.describe('Strict Authenticated Org Corridor', () => {
           {
             outcomeType: 'continuous',
             title: 'Run the authenticated org corridor',
-            description: 'Validate shortlist, reveal, interview, and hiring decisions end to end.',
+            description:
+              'Validate shortlist, reveal, interview, and engagement decisions end to end.',
             metrics: [{ name: 'Milestones', target: '5', unit: 'count', current: '0' }],
             successCriteria: 'Deliver the full launch-binding corridor with consented reveal.',
           },
@@ -607,7 +614,7 @@ test.describe('Strict Authenticated Org Corridor', () => {
       const rankedMatchesText = await rankedMatchesResponse.text();
       expect(
         rankedMatchesResponse.ok(),
-        `ranked matches response (${rankedMatchesResponse.status()}): ${rankedMatchesText}`
+        `proof-submission matches response (${rankedMatchesResponse.status()}): ${rankedMatchesText}`
       ).toBeTruthy();
       rankedMatchesPayload = JSON.parse(rankedMatchesText) as typeof rankedMatchesPayload;
 
@@ -620,7 +627,7 @@ test.describe('Strict Authenticated Org Corridor', () => {
     const blindMatch = (rankedMatchesPayload.items ?? [])[0];
     expect(
       blindMatch,
-      `ranked matches should include at least one blind candidate: ${JSON.stringify(
+      `proof-submission matches should include at least one blind proof submission: ${JSON.stringify(
         rankedMatchesPayload
       )}`
     ).toBeTruthy();
@@ -633,39 +640,23 @@ test.describe('Strict Authenticated Org Corridor', () => {
     expect(blindMatch?.profile?.displayName ?? null).toBeNull();
     expect(blindMatch?.profile?.handle ?? null).toBeNull();
 
-    const explanationTrigger = page.getByTestId('match-explainer-trigger').first();
     await gotoWithReadyState(
       page,
       `/app/o/${organization.slug}/assignments?matching=${encodeURIComponent(assignmentId)}`,
       async () => {
         await dismissBlockingOverlays(page);
-        await expect(explanationTrigger).toBeVisible({ timeout: 30_000 });
+        await expect(page.getByText(/Review queue \(/)).toBeVisible({ timeout: 30_000 });
+        await expect(page.getByText('Proof review', { exact: true })).toBeVisible({
+          timeout: 30_000,
+        });
+        await expect(page.getByText('Proof Alignment Details')).toBeVisible({ timeout: 30_000 });
       }
     );
     await expect(page.getByText(candidate.displayName)).toHaveCount(0);
     await expect(page.getByText(candidate.email)).toHaveCount(0);
 
     await dismissBlockingOverlays(page);
-    const whyThisMatchHeading = page.getByTestId('match-explainer-title');
-    let explainerOpened = false;
-    for (let attempt = 0; attempt < 2 && !explainerOpened; attempt += 1) {
-      if (attempt === 0) {
-        await explanationTrigger.click();
-      } else {
-        await explanationTrigger.click({ force: true });
-      }
-
-      try {
-        await expect(whyThisMatchHeading).toBeVisible({ timeout: 3_000 });
-        await expect(whyThisMatchHeading).toHaveText('Why This Proof Match?');
-        explainerOpened = true;
-      } catch {
-        explainerOpened = false;
-      }
-    }
-    if (explainerOpened) {
-      await page.keyboard.press('Escape');
-    }
+    await expect(page.getByText('Blind by default')).toBeVisible();
     await expect(page.getByText(candidate.displayName)).toHaveCount(0);
 
     const refreshedMatchesResponse = await browserRequestJson(
