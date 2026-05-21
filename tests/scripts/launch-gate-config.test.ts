@@ -123,6 +123,15 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps perf budgets tied to the launch-critical assignments route', () => {
+    const perfBudgets = fs.readFileSync(path.join(repoRoot, 'scripts/perf-budgets.mjs'), 'utf8');
+
+    expect(perfBudgets).toContain("path: '/api/health'");
+    expect(perfBudgets).toContain("path: '/api/assignments'");
+    expect(perfBudgets).toContain('expectedStatuses: [401, 403]');
+    expect(perfBudgets).toContain('API ${path} p95');
+  });
+
   it('keeps the locked MVP authority stack fresh and visibly classified', () => {
     const docsRegistry = compactWhitespace(
       fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8')
