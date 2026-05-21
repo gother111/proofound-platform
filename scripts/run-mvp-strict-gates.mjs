@@ -70,6 +70,7 @@ const commandTimeouts = {
   'prod-dependency-audit': 5 * 60 * 1000,
   'all-dependency-audit': 5 * 60 * 1000,
   'playwright-install': 12 * 60 * 1000,
+  'github-workflows': 2 * 60 * 1000,
   'docs-freshness': 5 * 60 * 1000,
   lint: 10 * 60 * 1000,
   typecheck: 15 * 60 * 1000,
@@ -542,6 +543,12 @@ async function main() {
       label: 'Install Playwright Chromium',
       command: 'npx',
       commandArgs: ['playwright', 'install', '--with-deps', 'chromium'],
+    });
+    await runGateCommand({
+      id: 'github-workflows',
+      label: 'Validate GitHub workflows',
+      command: 'npm',
+      commandArgs: ['run', 'ci:workflows'],
     });
     await runGateCommand({
       id: 'docs-freshness',

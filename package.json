@@ -86,6 +86,7 @@
     "launch:validate": "node --import tsx ./scripts/final-launch-validation.ts",
     "go:no-go": "node --import tsx ./scripts/go-no-go-check.ts",
     "deploy:readiness:strict": "FORCE_STRICT_DEPLOY_CHECK=true node ./scripts/check-deploy-readiness.mjs",
+    "ci:workflows": "node ./scripts/check-github-workflows.mjs",
     "geo:audit": "node ./scripts/geo-audit.mjs",
     "gates:mvp:strict": "node ./scripts/run-mvp-strict-gates.mjs",
     "vercel:preflight": "node ./scripts/vercel-preflight.mjs",

@@ -84,6 +84,9 @@ jobs:
         if: github.event_name != 'push'
         run: node ./scripts/check-landing-pr-scope.mjs
 
+      - name: Validate GitHub workflows
+        run: npm run ci:workflows
+
       - name: Detect landing-sensitive changes
         id: landing_changes
         if: github.event_name != 'push'
