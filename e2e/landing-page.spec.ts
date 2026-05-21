@@ -74,20 +74,20 @@ test.describe('Landing Page', () => {
     const ctaSection = page.getByTestId('landing-final-cta-section');
     await ctaSection.scrollIntoViewIfNeeded();
     await expect(
-      ctaSection.getByRole('heading', { name: /Build hiring on stronger proof/i })
+      ctaSection.getByRole('heading', { name: /Build proof-first review/i })
     ).toBeVisible();
     await expect(
       ctaSection.getByRole('button', { name: /Create your proof portfolio/i }).last()
     ).toBeVisible();
     await expect(
-      ctaSection.getByRole('button', { name: /Explore evidence-based hiring/i })
+      ctaSection.getByRole('button', { name: /Explore proof-first review/i })
     ).toBeVisible();
 
     const footer = page.getByTestId('landing-footer-section');
     await footer.scrollIntoViewIfNeeded();
     await expect(footer).toBeVisible();
     await expect(
-      footer.getByText(/Evidence-based hiring for a world with too much polished signal/i)
+      footer.getByText(/Evidence-based assignment review for a world with too much polish/i)
     ).toBeVisible();
     await expect(footer.getByRole('link', { name: /Cookies/i })).toBeVisible();
     await expect(footer.getByRole('link', { name: /Cookie settings/i })).toBeVisible();
