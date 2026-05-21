@@ -599,6 +599,23 @@ describe('canonical custom verification routes', () => {
     });
   });
 
+  it('logs email hint route failures with structured diagnostics', async () => {
+    const authError = new Error('auth unavailable');
+    vi.mocked(requireAuth).mockRejectedValueOnce(authError);
+
+    const response = await getEmailHint(
+      new NextRequest(
+        'http://localhost/api/verification/requests/email-hint?email=founder@example.com'
+      )
+    );
+
+    expect(response.status).toBe(500);
+    expect(log.error).toHaveBeenCalledWith('verification.email_hint.get_failed', {
+      error: authError,
+    });
+    expect(JSON.stringify(vi.mocked(log.error).mock.calls)).not.toContain('founder@example.com');
+  });
+
   it('expires canonical bundles when public links are stale', async () => {
     vi.mocked(getCanonicalBundleById).mockResolvedValue(
       makeCanonicalBundle({

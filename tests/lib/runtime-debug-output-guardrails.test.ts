@@ -417,4 +417,28 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Custom verification request GET error:');
     expect(sources).not.toContain('Custom verification request PATCH error:');
   });
+
+  it('keeps verification request feed and email hint failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/verification/requests/route.ts'),
+      readSource('src/app/api/verification/requests/email-hint/route.ts'),
+      readSource('src/lib/verification/request-feed.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('verification.requests.get_failed');
+    expect(sources).toContain('verification.email_hint.get_failed');
+    expect(sources).toContain('verification.request_feed.skill_details_load_failed');
+    expect(sources).toContain('verification.request_feed.requester_profiles_load_failed');
+    expect(sources).toContain('verification.request_feed.impact_stories_load_failed');
+    expect(sources).not.toContain('Verification requests route error:');
+    expect(sources).not.toContain('Email hint GET error:');
+    expect(sources).not.toContain('Failed to load canonical verification skill details:');
+    expect(sources).not.toContain(
+      'Failed to load requester profiles for canonical verification requests:'
+    );
+    expect(sources).not.toContain(
+      'Failed to load impact story titles for canonical verification requests:'
+    );
+  });
 });

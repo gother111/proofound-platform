@@ -1,5 +1,6 @@
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
 import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
+import { log } from '@/lib/log';
 import {
   listCanonicalBundlesForOwner,
   type CanonicalBundleArtifactType,
@@ -775,19 +776,25 @@ export async function loadVerificationRequestFeed(params: {
   ]);
 
   if (skillDetailsResult.error) {
-    console.error('Failed to load canonical verification skill details:', skillDetailsResult.error);
+    log.error('verification.request_feed.skill_details_load_failed', {
+      error: skillDetailsResult.error,
+      userId: params.userId,
+      skillCount: skillIds.length,
+    });
   }
   if (requesterProfilesResult.error) {
-    console.error(
-      'Failed to load requester profiles for canonical verification requests:',
-      requesterProfilesResult.error
-    );
+    log.error('verification.request_feed.requester_profiles_load_failed', {
+      error: requesterProfilesResult.error,
+      userId: params.userId,
+      requesterProfileCount: requesterProfileIds.length,
+    });
   }
   if (impactStoriesResult.error) {
-    console.error(
-      'Failed to load impact story titles for canonical verification requests:',
-      impactStoriesResult.error
-    );
+    log.error('verification.request_feed.impact_stories_load_failed', {
+      error: impactStoriesResult.error,
+      userId: params.userId,
+      impactStoryCount: impactStoryIds.length,
+    });
   }
 
   const skillDetailsById = new Map<string, SkillDetailsRecord>();
