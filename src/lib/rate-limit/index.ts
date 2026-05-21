@@ -7,6 +7,7 @@
 
 import { kv } from '@vercel/kv';
 import { NextRequest } from 'next/server';
+import { log } from '@/lib/log';
 
 export interface RateLimitConfig {
   /**
@@ -247,7 +248,10 @@ export async function rateLimit(
       reset,
     };
   } catch (error) {
-    console.error('[RateLimit] Error checking rate limit for profile:', identifier, error);
+    log.error('rate_limit.provider_check_failed', {
+      identifier,
+      error,
+    });
     return unavailableResult(finalConfig, 'provider_error');
   }
 }

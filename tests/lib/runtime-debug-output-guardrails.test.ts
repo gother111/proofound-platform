@@ -775,6 +775,14 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Live launch-status refresh failed; returning persisted status');
   });
 
+  it('keeps rate-limit provider failures on structured server logging', () => {
+    const source = readSource('src/lib/rate-limit/index.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('rate_limit.provider_check_failed');
+    expect(source).not.toContain('[RateLimit] Error checking rate limit for profile:');
+  });
+
   it('keeps organization detail and profile visibility failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/organizations/[orgId]/route.ts'),

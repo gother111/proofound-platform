@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
+const logErrorMock = vi.hoisted(() => vi.fn());
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: logErrorMock,
+  },
+}));
+
 const originalNodeEnv = process.env.NODE_ENV;
 
 function restoreNodeEnv() {
@@ -270,6 +278,34 @@ describe('Rate Limiting', () => {
       expect(allowed).toBe(false);
       expect(result.unavailable).toBe(true);
       expect(result.failureReason).toBe('missing_configuration');
+    });
+
+    it('logs provider errors with structured diagnostics and fails closed for strict profiles', async () => {
+      const providerError = new Error('kv unavailable');
+      const incr = vi.fn().mockRejectedValue(providerError);
+
+      vi.doMock('@vercel/kv', () => ({
+        kv: { incr, expire: vi.fn(), ttl: vi.fn() },
+      }));
+      process.env.KV_REST_API_URL = 'https://kv.example.test';
+      process.env.KV_REST_API_TOKEN = 'kv-token';
+
+      const { RATE_LIMITS, checkRateLimit } = await import('@/lib/rate-limit/index');
+      const { allowed, result } = await checkRateLimit(
+        new NextRequest('https://proofound.io/api/user/password', {
+          method: 'POST',
+          headers: { 'x-forwarded-for': '203.0.113.9' },
+        }),
+        RATE_LIMITS.auth
+      );
+
+      expect(allowed).toBe(false);
+      expect(result.unavailable).toBe(true);
+      expect(result.failureReason).toBe('provider_error');
+      expect(logErrorMock).toHaveBeenCalledWith('rate_limit.provider_check_failed', {
+        identifier: 'auth',
+        error: providerError,
+      });
     });
   });
 
