@@ -650,4 +650,27 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to emit skill_deleted event:');
     expect(sources).not.toContain('User skill DELETE error:');
   });
+
+  it('keeps user skill proof API failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/expertise/user-skills/[id]/proofs/route.ts'),
+      readSource('src/app/api/expertise/user-skills/[id]/proofs/[proofId]/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('expertise.user_skill_proofs.canonical_create_failed');
+    expect(sources).toContain('expertise.user_skill_proofs.readiness_sync_failed');
+    expect(sources).toContain('expertise.user_skill_proofs.post_failed');
+    expect(sources).toContain('expertise.user_skill_proofs.get_failed');
+    expect(sources).toContain('expertise.user_skill_proof.legacy_delete_failed');
+    expect(sources).toContain('expertise.user_skill_proof.delete_failed');
+    expect(sources).toContain('expertise.user_skill_proof.delete_route_failed');
+    expect(sources).not.toContain('Error creating canonical proof:');
+    expect(sources).not.toContain('Failed to sync readiness milestones after proof creation:');
+    expect(sources).not.toContain('Proof POST error:');
+    expect(sources).not.toContain('Proof GET error:');
+    expect(sources).not.toContain('Failed to delete compatibility skill_proofs row:');
+    expect(sources).not.toContain('Error deleting proof:');
+    expect(sources).not.toContain('Proof DELETE error:');
+  });
 });

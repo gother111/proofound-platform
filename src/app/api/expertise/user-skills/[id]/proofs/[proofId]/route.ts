@@ -10,6 +10,7 @@ import { db } from '@/db';
 import { proofArtifacts } from '@/db/schema';
 import { and, eq, or } from 'drizzle-orm';
 import { deleteUploadedFile, deleteUploadedFileByOwnedStoragePath } from '@/lib/uploads/lifecycle';
+import { log } from '@/lib/log';
 
 /**
  * DELETE /api/expertise/user-skills/[id]/proofs/[proofId]
@@ -57,7 +58,9 @@ export async function DELETE(
           .eq('profile_id', user.id);
 
         if (legacyDeleteError) {
-          console.warn('Failed to delete compatibility skill_proofs row:', legacyDeleteError);
+          log.warn('expertise.user_skill_proof.legacy_delete_failed', {
+            error: legacyDeleteError,
+          });
         }
       }
 
@@ -92,7 +95,7 @@ export async function DELETE(
     const { error: deleteError } = await supabase.from('skill_proofs').delete().eq('id', proofId);
 
     if (deleteError) {
-      console.error('Error deleting proof:', deleteError);
+      log.error('expertise.user_skill_proof.delete_failed', { error: deleteError });
       return NextResponse.json({ error: 'Failed to delete proof' }, { status: 500 });
     }
 
@@ -115,7 +118,7 @@ export async function DELETE(
       success: true,
     });
   } catch (error) {
-    console.error('Proof DELETE error:', error);
+    log.error('expertise.user_skill_proof.delete_route_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

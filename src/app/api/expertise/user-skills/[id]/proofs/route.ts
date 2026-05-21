@@ -8,6 +8,7 @@ import { attachUploadedFile } from '@/lib/uploads/lifecycle';
 import { resolveArtifactDisplayName } from '@/lib/uploads/privacy';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { listCanonicalSkillProofRowsForOwnerSkill } from '@/lib/proofs/canonical-pack';
+import { log } from '@/lib/log';
 
 type ApiAuthContext = NonNullable<Awaited<ReturnType<typeof requireApiAuthContext>>>;
 
@@ -228,7 +229,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         importedFrom: validated.uploadedFileId ? 'skill-proof-upload' : 'skill-proof-form',
       });
     } catch (proofError) {
-      console.error('Error creating canonical proof:', proofError);
+      log.error('expertise.user_skill_proofs.canonical_create_failed', { error: proofError });
       return NextResponse.json({ error: 'Failed to create proof' }, { status: 500 });
     }
 
@@ -243,7 +244,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         syncReadinessMilestones(user.id, { source: 'proof_added' })
       )
       .catch((readinessError) => {
-        console.error('Failed to sync readiness milestones after proof creation:', readinessError);
+        log.error('expertise.user_skill_proofs.readiness_sync_failed', {
+          error: readinessError,
+        });
       });
 
     await revalidatePublicPortfolioByProfileId(user.id);
@@ -267,7 +270,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         { status: 400 }
       );
     }
-    console.error('Proof POST error:', error);
+    log.error('expertise.user_skill_proofs.post_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -301,7 +304,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ proofs });
   } catch (error) {
-    console.error('Proof GET error:', error);
+    log.error('expertise.user_skill_proofs.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
