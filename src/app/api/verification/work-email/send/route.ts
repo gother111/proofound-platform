@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { z } from 'zod';
 import { buildWorkflowView, syncWorkEmailVerificationRequested } from '@/lib/workflow/service';
 import { hashWorkEmailVerificationToken } from '@/lib/verification/work-email-token';
+import { log } from '@/lib/log';
 
 const SendWorkEmailVerificationSchema = z.object({
   workEmail: z.string().email('Invalid email address'),
@@ -87,7 +88,11 @@ export async function POST(request: NextRequest) {
     );
 
     if (updateError) {
-      console.error('Error updating profile with work email:', updateError);
+      log.error('verification.work_email_send.profile_update_failed', {
+        userId: user.id,
+        orgId: orgId || null,
+        error: updateError.message ?? String(updateError),
+      });
 
       // Check if this is a unique constraint violation (shouldn't happen here since verified=false, but handle it anyway)
       if (updateError.code === '23505' || updateError.message?.includes('unique')) {
@@ -113,7 +118,12 @@ export async function POST(request: NextRequest) {
     try {
       await sendWorkEmailVerification(workEmail, token, userName);
     } catch (emailError) {
-      console.error('Error sending verification email:', emailError);
+      log.error('verification.work_email_send.email_send_failed', {
+        userId: user.id,
+        orgId: orgId || null,
+        recipientDomain: normalizedEmail.split('@')[1] ?? null,
+        error: emailError instanceof Error ? emailError.message : String(emailError),
+      });
       return NextResponse.json({ error: 'Failed to send verification email' }, { status: 500 });
     }
 
@@ -126,7 +136,11 @@ export async function POST(request: NextRequest) {
         requestExpiresAt: expiresAt,
       });
     } catch (workflowError) {
-      console.error('Failed to sync canonical verification workflow:', workflowError);
+      log.warn('verification.work_email_send.workflow_sync_failed', {
+        userId: user.id,
+        orgId: orgId || null,
+        error: workflowError instanceof Error ? workflowError.message : String(workflowError),
+      });
     }
 
     return NextResponse.json({
@@ -147,7 +161,9 @@ export async function POST(request: NextRequest) {
         : null,
     });
   } catch (error) {
-    console.error('Error in work email verification send:', error);
+    log.error('verification.work_email_send.failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -7,6 +7,7 @@ import {
   getLatestWorkEmailVerification,
   recordVerificationTransition,
 } from '@/lib/workflow/service';
+import { log } from '@/lib/log';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -87,7 +88,10 @@ export async function GET(request: NextRequest) {
       .eq('user_id', profile.user_id);
 
     if (updateError) {
-      console.error('Error updating profile after work email verification:', updateError);
+      log.error('verification.work_email_verify.profile_update_failed', {
+        profileId: profile.user_id,
+        error: updateError.message ?? String(updateError),
+      });
 
       // Handle unique constraint violation (PostgreSQL error code 23505)
       // This catches race conditions where two users verify the same email simultaneously
@@ -107,7 +111,10 @@ export async function GET(request: NextRequest) {
         verifierEmail: profile.work_email,
       });
     } catch (reconcileError) {
-      console.error('Work email contradiction reconciliation failed:', reconcileError);
+      log.warn('verification.work_email_verify.contradiction_reconcile_failed', {
+        profileId: profile.user_id,
+        error: reconcileError instanceof Error ? reconcileError.message : String(reconcileError),
+      });
     }
 
     let updatedVerificationRecord = null;
@@ -126,7 +133,10 @@ export async function GET(request: NextRequest) {
           });
         }
       } catch (workflowError) {
-        console.error('Failed to sync canonical work email verification:', workflowError);
+        log.warn('verification.work_email_verify.workflow_sync_failed', {
+          profileId: profile.user_id,
+          error: workflowError instanceof Error ? workflowError.message : String(workflowError),
+        });
       }
     }
 
@@ -148,7 +158,9 @@ export async function GET(request: NextRequest) {
         : null,
     });
   } catch (error) {
-    console.error('Error in work email verification:', error);
+    log.error('verification.work_email_verify.failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

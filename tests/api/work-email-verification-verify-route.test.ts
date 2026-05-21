@@ -23,9 +23,18 @@ vi.mock('@/lib/workflow/service', () => ({
   recordVerificationTransition: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
 import { createClient } from '@/lib/supabase/server';
 import { GET } from '@/app/api/verification/work-email/verify/route';
 import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
+import { getLatestWorkEmailVerification } from '@/lib/workflow/service';
+import { log } from '@/lib/log';
 
 describe('GET /api/verification/work-email/verify', () => {
   beforeEach(() => {
@@ -125,6 +134,160 @@ describe('GET /api/verification/work-email/verify', () => {
     expect(reconcileVerifierContradictions).toHaveBeenCalledWith({
       verifierProfileId: 'user-1',
       verifierEmail: 'person@acme.org',
+    });
+  });
+
+  it('logs profile update failures structurally while keeping the public response generic', async () => {
+    const profileRow = {
+      user_id: 'user-1',
+      work_email: 'person@acme.org',
+      work_email_token_expires: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      work_email_org_id: null,
+    };
+
+    let fromCall = 0;
+    const tokenLookupQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: profileRow,
+        error: null,
+      }),
+    };
+    const existingVerifiedQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      neq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      }),
+    };
+    const updateQuery = {
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({
+        error: { message: 'profile update unavailable' },
+      }),
+    };
+    const supabase = {
+      from: vi.fn(() => {
+        if (fromCall === 0) {
+          fromCall += 1;
+          return tokenLookupQuery;
+        }
+        if (fromCall === 1) {
+          fromCall += 1;
+          return existingVerifiedQuery;
+        }
+        if (fromCall === 2) {
+          fromCall += 1;
+          return updateQuery;
+        }
+        throw new Error(`Unexpected from() call index ${fromCall}`);
+      }),
+    } as any;
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await GET(
+      new NextRequest('https://proofound.io/api/verification/work-email/verify?token=token-123')
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Failed to verify work email' });
+    expect(log.error).toHaveBeenCalledWith('verification.work_email_verify.profile_update_failed', {
+      profileId: 'user-1',
+      error: 'profile update unavailable',
+    });
+  });
+
+  it('logs best-effort reconciliation and workflow failures structurally while preserving success', async () => {
+    const profileRow = {
+      user_id: '11111111-1111-4111-8111-111111111111',
+      work_email: 'person@acme.org',
+      work_email_token_expires: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      work_email_org_id: null,
+    };
+
+    let fromCall = 0;
+    const tokenLookupQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: profileRow,
+        error: null,
+      }),
+    };
+    const existingVerifiedQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      neq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      }),
+    };
+    const updateQuery = {
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({
+        error: null,
+      }),
+    };
+    const supabase = {
+      from: vi.fn(() => {
+        if (fromCall === 0) {
+          fromCall += 1;
+          return tokenLookupQuery;
+        }
+        if (fromCall === 1) {
+          fromCall += 1;
+          return existingVerifiedQuery;
+        }
+        if (fromCall === 2) {
+          fromCall += 1;
+          return updateQuery;
+        }
+        throw new Error(`Unexpected from() call index ${fromCall}`);
+      }),
+    } as any;
+    (createClient as any).mockResolvedValue(supabase);
+    vi.mocked(reconcileVerifierContradictions).mockRejectedValueOnce(
+      new Error('reconcile unavailable')
+    );
+    vi.mocked(getLatestWorkEmailVerification).mockRejectedValueOnce(
+      new Error('workflow unavailable')
+    );
+
+    const response = await GET(
+      new NextRequest('https://proofound.io/api/verification/work-email/verify?token=token-123')
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(log.warn).toHaveBeenCalledWith(
+      'verification.work_email_verify.contradiction_reconcile_failed',
+      {
+        profileId: '11111111-1111-4111-8111-111111111111',
+        error: 'reconcile unavailable',
+      }
+    );
+    expect(log.warn).toHaveBeenCalledWith('verification.work_email_verify.workflow_sync_failed', {
+      profileId: '11111111-1111-4111-8111-111111111111',
+      error: 'workflow unavailable',
+    });
+  });
+
+  it('logs unexpected route failures structurally while keeping the public response generic', async () => {
+    (createClient as any).mockRejectedValueOnce(new Error('supabase unavailable'));
+
+    const response = await GET(
+      new NextRequest('https://proofound.io/api/verification/work-email/verify?token=token-123')
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('verification.work_email_verify.failed', {
+      error: 'supabase unavailable',
     });
   });
 });

@@ -343,4 +343,29 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to resend submission invite:');
     expect(sources).not.toContain('Failed to update submission invite:');
   });
+
+  it('keeps work-email verification route failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/verification/work-email/send/route.ts'),
+      readSource('src/app/api/verification/work-email/verify/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('verification.work_email_send.profile_update_failed');
+    expect(sources).toContain('verification.work_email_send.email_send_failed');
+    expect(sources).toContain('verification.work_email_send.workflow_sync_failed');
+    expect(sources).toContain('verification.work_email_send.failed');
+    expect(sources).toContain('verification.work_email_verify.profile_update_failed');
+    expect(sources).toContain('verification.work_email_verify.contradiction_reconcile_failed');
+    expect(sources).toContain('verification.work_email_verify.workflow_sync_failed');
+    expect(sources).toContain('verification.work_email_verify.failed');
+    expect(sources).not.toContain('Error updating profile with work email:');
+    expect(sources).not.toContain('Error sending verification email:');
+    expect(sources).not.toContain('Failed to sync canonical verification workflow:');
+    expect(sources).not.toContain('Error in work email verification send:');
+    expect(sources).not.toContain('Error updating profile after work email verification:');
+    expect(sources).not.toContain('Work email contradiction reconciliation failed:');
+    expect(sources).not.toContain('Failed to sync canonical work email verification:');
+    expect(sources).not.toContain('Error in work email verification:');
+  });
 });
