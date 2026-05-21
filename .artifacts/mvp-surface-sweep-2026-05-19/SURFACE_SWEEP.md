@@ -5070,3 +5070,12 @@ Browser evidence:
 - Preserved the existing empty-list fallback, loading state completion, engagement confirmation flows, interview edit/cancel/complete/no-show behavior, calendar downloads, and decision dialog wiring.
 - Added focused client-diagnostic coverage and extended runtime debug-output guardrails so the old interview-load console string cannot return.
 - Verification passed: focused client/interview/runtime guard run `npm test -- --run tests/lib/client-diagnostics.test.ts tests/ui/individual-interviews-page-clarity.test.tsx tests/ui/organization-interviews-page-actions.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (4 files / 77 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted interview/client-diagnostic console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Messages Client Diagnostics
+
+- Timestamp: 2026-05-21 16:22 CEST.
+- Continued the active communications workflow surface sweep after both individual and organization messages clients still emitted raw console diagnostics for conversation list loading, thread loading, and message sending failures.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using persona-specific `messages.*` event names.
+- Preserved conversation loading, URL conversation selection, thread loading, optimistic sent-message append, failed-send propagation back to the realtime thread, organization current-user injection, and existing loading states.
+- Extended runtime debug-output guardrails so the old messages console strings cannot return.
+- Verification passed: focused messages/runtime guard run `npm test -- --run tests/routes/organization-messages-page.test.tsx tests/ui/deferred-messages-client.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (3 files / 76 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted messages-client console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

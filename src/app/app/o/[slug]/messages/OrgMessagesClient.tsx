@@ -16,6 +16,7 @@ import type { RealtimeMessageThreadProps } from '@/components/messaging/Realtime
 import { type Message } from '@/components/messaging/MessageThread';
 import { Lock, MessageSquare } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { LoadingOrganizationMessages } from './DeferredOrgMessagesClient';
 
 type OrgMessagesClientProps = {
@@ -58,7 +59,7 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
         setConversations(transformedConversations);
       }
     } catch (error) {
-      console.error('Failed to load conversations:', error);
+      dispatchClientErrorDiagnostic('messages.organization.conversations_load_failed', error);
     } finally {
       setIsLoadingConversations(false);
     }
@@ -101,7 +102,7 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
           setMessages(transformedMessages);
         }
       } catch (error) {
-        console.error('Failed to load messages:', error);
+        dispatchClientErrorDiagnostic('messages.organization.thread_load_failed', error);
       } finally {
         setIsLoadingMessages(false);
       }
@@ -164,7 +165,7 @@ function OrganizationMessagesPageContent({ currentUserId, hideHeader }: OrgMessa
         setMessages((prev) => [...prev, normalizedMessage]);
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
+      dispatchClientErrorDiagnostic('messages.organization.send_failed', error);
       throw error;
     }
   };

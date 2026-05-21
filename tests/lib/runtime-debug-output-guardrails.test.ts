@@ -420,6 +420,26 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to load interviews:');
   });
 
+  it('keeps messages client failures on client diagnostics without console output', () => {
+    const sources = [
+      readSource('src/app/app/i/messages/MessagesClient.tsx'),
+      readSource('src/app/app/o/[slug]/messages/OrgMessagesClient.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(sources).toContain('messages.individual.conversations_load_failed');
+    expect(sources).toContain('messages.individual.thread_load_failed');
+    expect(sources).toContain('messages.individual.send_failed');
+    expect(sources).toContain('messages.organization.conversations_load_failed');
+    expect(sources).toContain('messages.organization.thread_load_failed');
+    expect(sources).toContain('messages.organization.send_failed');
+    expect(sources).not.toContain('Failed to load conversations:');
+    expect(sources).not.toContain('Failed to load messages:');
+    expect(sources).not.toContain('Failed to send message:');
+  });
+
   it('keeps candidate invite route failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/candidate-invites/[token]/route.ts'),
