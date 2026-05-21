@@ -103,7 +103,7 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
       key: 'active_assignments',
       label: 'Active assignments available',
       pass: totalActiveAssignments > 0,
-      notes: 'At least one active assignment is needed for candidate flow.',
+      notes: 'At least one active assignment is needed for the proof-review flow.',
     },
     {
       key: 'requirements_coverage',
@@ -121,7 +121,7 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
         totalActiveAssignments === 0
           ? false
           : assignmentWithVerificationGates / totalActiveAssignments >= 0.5,
-      notes: 'Verification gates reduce unanchored candidate flow.',
+      notes: 'Verification gates reduce unanchored proof-review flow.',
     },
     {
       key: 'scope_quality',

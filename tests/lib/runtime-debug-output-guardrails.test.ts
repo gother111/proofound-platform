@@ -352,6 +352,8 @@ describe('runtime debug output guardrails', () => {
       readSource('src/components/app/LeftNav.tsx'),
       readSource('src/components/org/OrgCollaboratorInviteCard.tsx'),
       readSource('src/components/admin/AdminVerificationDashboard.tsx'),
+      readSource('src/lib/portfolio/public-projection.ts'),
+      readSource('src/lib/readiness/organization.ts'),
       readSource('src/lib/launch/surface-policy.ts'),
     ].join('\n');
 
@@ -368,6 +370,10 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Beta API');
     expect(sources).not.toContain('Launch role');
     expect(sources).not.toContain('stuck MVP handoff support');
+    expect(sources).not.toContain('generic strong-candidate notes');
+    expect(sources).not.toContain('private candidate notes');
+    expect(sources).not.toContain('Review candidate work through structured evidence');
+    expect(sources).not.toContain('candidate flow');
   });
 
   it('keeps remaining infrastructure console output confined to structured sink utilities', () => {

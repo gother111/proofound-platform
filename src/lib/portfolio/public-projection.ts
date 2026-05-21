@@ -1366,7 +1366,7 @@ function buildMockPublicIndividualPortfolioProjection(): PublicIndividualPortfol
       evidenceSummary:
         'Public-safe artifacts include a rubric extract and participant-facing explanation copy.',
       outcomesSummary:
-        'Reviewers reported clearer tradeoffs and fewer generic strong-candidate notes.',
+        'Reviewers reported clearer tradeoffs and fewer generic participant-fit notes.',
       verificationStatus: 'partially_verified',
       verificationSummary: 'Peer-attested with public artifacts available.',
       freshnessState: 'recent',
@@ -1382,7 +1382,7 @@ function buildMockPublicIndividualPortfolioProjection(): PublicIndividualPortfol
           artifactKind: 'link',
           issuedAt: '2026-01-18T00:00:00.000Z',
           description: 'A short public extract of the rubric used to separate claims from proof.',
-          semanticsNote: 'Supports the claim; does not reveal private candidate notes.',
+          semanticsNote: 'Supports the claim; does not reveal private reviewer notes.',
         },
       ],
     },
@@ -1785,7 +1785,7 @@ function buildMockPublicOrganizationPortfolioProjection(): PublicOrganizationPor
     role: 'Proof-first product reviewer',
     engagementType: 'full_time',
     businessValue: 'Improve review quality through clearer proof expectations.',
-    description: 'Review candidate work through structured evidence and launch-safe summaries.',
+    description: 'Review proof submissions through structured evidence and launch-safe summaries.',
     expectedImpact: 'Shortlists become more explainable, privacy-safe, and grounded in real work.',
     outcomes: ['Clarify proof expectations', 'Reduce vague review decisions'],
   };
