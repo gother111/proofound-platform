@@ -23,6 +23,7 @@ export const dynamic = 'force-dynamic';
 const truthyEnvValues = new Set(['1', 'true', 'yes', 'on']);
 const forbiddenLiveLaunchBooleanEnvKeys = [
   'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+  'MOCK_ORG_MODE',
   'MOCK_ADMIN_MODE',
   'MOBILE_MOCK_AUTH',
   'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK',

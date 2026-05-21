@@ -473,6 +473,7 @@ describe('/api/monitoring/launch-status', () => {
     vi.stubEnv('KV_REST_API_URL', 'https://kv.example.test');
     vi.stubEnv('KV_REST_API_TOKEN', 'kv-token');
     vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('MOCK_ORG_MODE', 'true');
     vi.stubEnv('MOCK_PLATFORM_ROLE', 'platform_admin');
     vi.stubEnv('PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK', '1');
     vi.stubEnv('PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE', '1');
@@ -491,6 +492,7 @@ describe('/api/monitoring/launch-status', () => {
         required: true,
         forbiddenKeys: expect.arrayContaining([
           'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+          'MOCK_ORG_MODE',
           'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK',
           'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE',
           'DEBUG_INGEST_URL',

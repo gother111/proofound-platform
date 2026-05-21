@@ -36,5 +36,6 @@ describe('vercel-preflight', () => {
     expect(script).toContain("'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE'");
     expect(script).toContain("'DEBUG_INGEST_URL'");
     expect(script).toContain("'NEXT_PUBLIC_USE_MOCK_SUPABASE'");
+    expect(script).toContain("'MOCK_ORG_MODE'");
   });
 });

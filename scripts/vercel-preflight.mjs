@@ -83,6 +83,7 @@ const compareKeys = [
 const forbiddenEnvByTarget = {
   production: [
     'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+    'MOCK_ORG_MODE',
     'MOCK_ADMIN_MODE',
     'MOCK_PLATFORM_ROLE',
     'MOBILE_MOCK_AUTH',
@@ -95,6 +96,7 @@ const forbiddenEnvByTarget = {
   ],
   preview: [
     'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+    'MOCK_ORG_MODE',
     'MOCK_ADMIN_MODE',
     'MOCK_PLATFORM_ROLE',
     'MOBILE_MOCK_AUTH',

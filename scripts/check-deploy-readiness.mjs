@@ -52,6 +52,7 @@ const liveDeployDetected = productionDeployDetected || stagingDeployDetected;
 const enabledMockModes = [];
 if (truthy(env.NEXT_PUBLIC_USE_MOCK_SUPABASE))
   enabledMockModes.push('NEXT_PUBLIC_USE_MOCK_SUPABASE');
+if (truthy(env.MOCK_ORG_MODE)) enabledMockModes.push('MOCK_ORG_MODE');
 if (truthy(env.MOCK_ADMIN_MODE)) enabledMockModes.push('MOCK_ADMIN_MODE');
 if (truthy(env.MOBILE_MOCK_AUTH)) enabledMockModes.push('MOBILE_MOCK_AUTH');
 const mockPlatformRole = String(env.MOCK_PLATFORM_ROLE ?? '').trim();

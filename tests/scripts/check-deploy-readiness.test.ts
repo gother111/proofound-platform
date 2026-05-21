@@ -88,10 +88,12 @@ describe('check-deploy-readiness', () => {
       NODE_ENV: 'development',
       FORCE_STRICT_DEPLOY_CHECK: 'true',
       NEXT_PUBLIC_USE_MOCK_SUPABASE: 'true',
+      MOCK_ORG_MODE: 'true',
     });
 
     expect(result.status).toBe(1);
     expect(`${result.stdout}${result.stderr}`).toContain('NEXT_PUBLIC_USE_MOCK_SUPABASE');
+    expect(`${result.stdout}${result.stderr}`).toContain('MOCK_ORG_MODE');
   });
 
   it('fails strict readiness when transactional email delivery is skipped', () => {
