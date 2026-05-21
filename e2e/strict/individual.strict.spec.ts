@@ -317,11 +317,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     await expect(page.getByRole('heading', { name: 'Matching' })).toBeVisible();
 
     await page.goto('/app/i/home');
-    await expect(
-      page.getByRole('heading', {
-        name: /Review and manage your proof portfolio|Build your proof-first profile/,
-      })
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Welcome back/i })).toBeVisible();
     await expect(
       page.getByText(/Your proof records are structured|Start by creating your first proof record/i)
     ).toBeVisible();
