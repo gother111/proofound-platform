@@ -16,4 +16,13 @@ describe('vercel-preflight', () => {
     expect(script).toContain('process.env.VERCEL_PROJECT_ID');
     expect(script).toContain('Vercel project id resolves to');
   });
+
+  it('keeps Vercel env preflight aligned with launch dependency requirements', () => {
+    const script = fs.readFileSync(path.join(repoRoot, 'scripts/vercel-preflight.mjs'), 'utf8');
+
+    expect(script).toContain("'RESEND_API_KEY'");
+    expect(script).toContain("'KV_REST_API_URL'");
+    expect(script).toContain("'KV_REST_API_TOKEN'");
+    expect(script).toContain("'CRON_SECRET'");
+  });
 });
