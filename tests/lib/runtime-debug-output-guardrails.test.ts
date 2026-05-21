@@ -706,4 +706,23 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('public text pack failed');
     expect(sources).not.toContain('text pack failed');
   });
+
+  it('keeps organization visibility failures on structured server logging', () => {
+    const source = readSource('src/app/api/organizations/[orgId]/visibility/route.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('organization.visibility.get_failed');
+    expect(source).toContain('organization.visibility.get_route_failed');
+    expect(source).toContain('organization.visibility.read_failed');
+    expect(source).toContain('organization.visibility.update_failed');
+    expect(source).toContain('organization.visibility.create_failed');
+    expect(source).toContain('organization.visibility.publication_update_failed');
+    expect(source).toContain('organization.visibility.put_route_failed');
+    expect(source).not.toContain('Error fetching visibility settings:');
+    expect(source).not.toContain('Error in visibility GET:');
+    expect(source).not.toContain('Error updating visibility settings:');
+    expect(source).not.toContain('Error creating visibility settings:');
+    expect(source).not.toContain('Error updating org publication settings:');
+    expect(source).not.toContain('Error in visibility PUT:');
+  });
 });

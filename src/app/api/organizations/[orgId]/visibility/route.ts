@@ -7,6 +7,7 @@ import { resolveRequestedPublicPortfolioState } from '@/lib/portfolio/public-con
 import { and, eq } from 'drizzle-orm';
 import { portfolioPublicationStates } from '@/db/schema';
 import { normalizeAuthorizedOrgRole } from '@/lib/authz';
+import { log } from '@/lib/log';
 
 type VisibilityLevel = 'public' | 'post_match' | 'post_conversation_start' | 'internal_only';
 
@@ -135,7 +136,7 @@ export async function GET(
       .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching visibility settings:', error);
+      log.error('organization.visibility.get_failed', { orgId, error });
       return NextResponse.json({ error: 'Failed to fetch visibility settings' }, { status: 500 });
     }
 
@@ -152,7 +153,7 @@ export async function GET(
       visibility: mapRowToClientVisibility(visibility as Record<string, unknown> | null),
     });
   } catch (error) {
-    console.error('Error in visibility GET:', error);
+    log.error('organization.visibility.get_route_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -210,11 +211,16 @@ export async function PUT(
       );
     }
 
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from('organization_field_visibility')
       .select('*')
       .eq('org_id', orgId)
       .single();
+
+    if (existingError && existingError.code !== 'PGRST116') {
+      log.error('organization.visibility.read_failed', { orgId, error: existingError });
+      return NextResponse.json({ error: 'Failed to fetch visibility settings' }, { status: 500 });
+    }
 
     const current = mapRowToClientVisibility(existing as Record<string, unknown> | null);
     const merged: VisibilitySettings = {
@@ -242,7 +248,7 @@ export async function PUT(
         .single();
 
       if (error) {
-        console.error('Error updating visibility settings:', error);
+        log.error('organization.visibility.update_failed', { orgId, error });
         return NextResponse.json(
           { error: 'Failed to update visibility settings' },
           { status: 500 }
@@ -259,7 +265,7 @@ export async function PUT(
         .single();
 
       if (error) {
-        console.error('Error creating visibility settings:', error);
+        log.error('organization.visibility.create_failed', { orgId, error });
         return NextResponse.json(
           { error: 'Failed to create visibility settings' },
           { status: 500 }
@@ -281,7 +287,10 @@ export async function PUT(
       .eq('id', orgId);
 
     if (organizationUpdate.error) {
-      console.error('Error updating org publication settings:', organizationUpdate.error);
+      log.error('organization.visibility.publication_update_failed', {
+        orgId,
+        error: organizationUpdate.error,
+      });
       return NextResponse.json(
         { error: 'Failed to update organization visibility settings' },
         { status: 500 }
@@ -301,7 +310,7 @@ export async function PUT(
         previousPublicationState?.indexingState !== publication.indexingState,
     });
   } catch (error) {
-    console.error('Error in visibility PUT:', error);
+    log.error('organization.visibility.put_route_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
