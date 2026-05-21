@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel } from '@/lib/copy/labels';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -452,7 +453,7 @@ export function AdminVerificationDashboard() {
           setData(nextData);
         }
       } catch (error) {
-        console.error('Failed to load operations queues', {
+        dispatchClientDiagnostic('admin.operations_queues.load_failed', {
           errorName: error instanceof Error ? error.name : typeof error,
         });
         if (mounted) {
@@ -536,7 +537,7 @@ export function AdminVerificationDashboard() {
         action.successMessage ?? `Queue item moved to ${formatQueueStatus(nextStatus)}.`
       );
     } catch (error) {
-      console.error('Failed to update operations queue item', {
+      dispatchClientDiagnostic('admin.operations_queues.update_failed', {
         errorName: error instanceof Error ? error.name : typeof error,
       });
       toast.error(error instanceof Error ? error.message : 'Failed to update queue item');

@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel } from '@/lib/copy/labels';
 import type { AdminAuditListEntry } from '@/lib/audit/admin-audit-list';
 
@@ -84,7 +85,7 @@ export function AuditLogTable() {
       const json = await res.json();
       setData(json);
     } catch (error) {
-      console.error('Audit history load failed', {
+      dispatchClientDiagnostic('admin.audit_history.load_failed', {
         errorName: error instanceof Error ? error.name : typeof error,
       });
       setError('Audit history could not be loaded. Try again in a moment.');
@@ -137,7 +138,7 @@ export function AuditLogTable() {
       }
       setBreakGlassPreview((await res.json()) as OrgAuditPreviewResponse);
     } catch (error) {
-      console.error('break_glass_org_audit.preview.failed', {
+      dispatchClientDiagnostic('admin.break_glass_org_audit.preview_failed', {
         errorName: error instanceof Error ? error.name : typeof error,
       });
       setBreakGlassError('Break-glass preview could not be loaded. Check the id and reason.');

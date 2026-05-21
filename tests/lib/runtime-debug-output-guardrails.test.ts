@@ -274,6 +274,30 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to extract average color');
   });
 
+  it('keeps active admin, assignment review, and spotlight diagnostics off raw console output', () => {
+    const sources = [
+      readSource('src/components/admin/AdminVerificationDashboard.tsx'),
+      readSource('src/components/admin/audit/AuditLogTable.tsx'),
+      readSource('src/components/assignments/AssignmentReviewClient.tsx'),
+      readSource('src/components/ui/spotlight-provider.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain('admin.operations_queues.load_failed');
+    expect(sources).toContain('admin.operations_queues.update_failed');
+    expect(sources).toContain('admin.audit_history.load_failed');
+    expect(sources).toContain('admin.break_glass_org_audit.preview_failed');
+    expect(sources).toContain('assignment_review.client_fetch_failed');
+    expect(sources).toContain('assignment_review.publish_failed');
+    expect(sources).toContain('spotlight.provider_missing');
+    expect(sources).not.toContain("console.error('Failed to load operations queues'");
+    expect(sources).not.toContain("console.error('Failed to update operations queue item'");
+    expect(sources).not.toContain("console.error('Audit history load failed'");
+    expect(sources).not.toContain("console.error('break_glass_org_audit.preview.failed'");
+    expect(sources).not.toContain("console.error('Client fetch failed'");
+    expect(sources).not.toContain("console.error('Failed to publish:'");
+    expect(sources).not.toContain('console.warn(');
+  });
+
   it('keeps client verification link fixtures behind the explicit visual fixture gate', () => {
     const fixtureSource = readSource('src/lib/verification/visual-link-fixtures.ts');
     const pageSources = [

@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { engagementTypeLabel } from '@/lib/copy/labels';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface Assignment {
   id: string;
@@ -132,7 +133,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
           setAssignment(null);
         }
       } catch (error) {
-        console.error('Client fetch failed', error);
+        dispatchClientErrorDiagnostic('assignment_review.client_fetch_failed', error);
         setAssignment(null);
       } finally {
         setIsLoading(false);
@@ -185,7 +186,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
         );
       }
     } catch (error) {
-      console.error('Failed to publish:', error);
+      dispatchClientErrorDiagnostic('assignment_review.publish_failed', error);
       setPublishBlocks([
         {
           blockCode: 'publish_request_failed',
