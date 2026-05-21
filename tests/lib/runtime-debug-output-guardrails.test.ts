@@ -933,4 +933,21 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to demote previous owner:');
     expect(source).not.toContain('Failed to activate new owner membership:');
   });
+
+  it('keeps assignment server-action failures on structured server logging', () => {
+    const source = readSource('src/actions/assignment.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('assignment.action.create_failed');
+    expect(source).toContain('assignment.action.create_unexpected_failed');
+    expect(source).toContain('assignment.action.update_failed');
+    expect(source).toContain('assignment.action.update_unexpected_failed');
+    expect(source).toContain('business_value');
+    expect(source).toContain('expected_impact');
+    expect(source).toContain('must_have_skills');
+    expect(source).not.toContain('Failed to create assignment:');
+    expect(source).not.toContain('Unexpected error creating assignment:');
+    expect(source).not.toContain('Failed to update assignment:');
+    expect(source).not.toContain('Unexpected error updating assignment:');
+  });
 });
