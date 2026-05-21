@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type StartFromCvBetaStatus = {
   visible: boolean;
@@ -31,7 +32,7 @@ export function useStartFromCvBetaStatus() {
             : [],
         });
       } catch (error) {
-        console.error('Failed to load Start from CV beta status', error);
+        dispatchClientErrorDiagnostic('feature_flags.start_from_cv_status.load_failed', error);
       }
     };
 

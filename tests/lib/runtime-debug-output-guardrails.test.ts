@@ -152,6 +152,24 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain("process.env.VERCEL_ENV !== 'production'");
   });
 
+  it('keeps client feature-flag status hooks on client diagnostics without console output', () => {
+    const sources = [
+      readSource('src/hooks/useProofArtifactOcrBetaStatus.ts'),
+      readSource('src/hooks/useStartFromCvBetaStatus.ts'),
+      readSource('src/hooks/useAssistiveAiFlag.ts'),
+    ].join('\n');
+
+    expect(sources).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(sources).toContain('feature_flags.proof_artifact_ocr_status.load_failed');
+    expect(sources).toContain('feature_flags.start_from_cv_status.load_failed');
+    expect(sources).toContain('feature_flags.assistive_ai.load_failed');
+    expect(sources).not.toContain('Failed to load proof artifact OCR beta status');
+    expect(sources).not.toContain('Failed to load Start from CV beta status');
+    expect(sources).not.toContain('Failed to load assistive AI feature flag');
+  });
+
   it('keeps client verification link fixtures behind the explicit visual fixture gate', () => {
     const fixtureSource = readSource('src/lib/verification/visual-link-fixtures.ts');
     const pageSources = [

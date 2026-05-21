@@ -5188,3 +5188,12 @@ Browser evidence:
 - Preserved match explanation loading, visible-fields consent flow, verification gate fallback, paused/hidden optimistic rollback, warm match refreshes, snooze success/failure toasts, consent failure toast, and organization selected-match explanation loading.
 - Extended runtime debug-output guardrails so the old matching interaction console strings cannot return.
 - Verification passed: focused matching/runtime guard run `npm test -- --run tests/ui/match-result-card.test.tsx tests/ui/matching-paused-hidden-manager.test.tsx tests/ui/matching-organization-view-beta.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (4 files / 97 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted matching interaction console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Client Feature Flag Diagnostics
+
+- Timestamp: 2026-05-21 17:09 CEST.
+- Continued the active client hook sweep after the Proof Artifact OCR beta, Start from CV beta, and assistive AI feature-flag hooks still emitted raw console diagnostics when their status requests failed.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using `feature_flags.*` event names.
+- Preserved default-off behavior, Start from CV blocker normalization, OCR limit defaults, assistive AI disabled fallback, and the local invalid-URL guard.
+- Extended runtime debug-output guardrails so the old feature-flag hook console strings cannot return.
+- Verification passed: focused hook-consuming UI/runtime guard run `npm test -- --run tests/ui/individual-setup-proof-first.test.tsx tests/ui/profile-context-cv-import.test.tsx tests/ui/portfolio-visibility-card-ai.test.tsx tests/ui/verifications-client.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (5 files / 114 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted feature-flag hook console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
