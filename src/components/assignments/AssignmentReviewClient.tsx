@@ -210,8 +210,45 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
 
   if (!assignment) {
     return (
-      <div className="p-6">
-        <p>Assignment not found</p>
+      <div className="min-h-screen bg-japandi-bg p-4 sm:p-6">
+        <div className="mx-auto max-w-3xl">
+          <Card className="border-proofound-stone/80 bg-white/85 p-5 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-proofound-parchment text-amber-700">
+                <AlertCircle className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div className="min-w-0 space-y-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Assignment review
+                  </p>
+                  <h1 className="mt-2 text-2xl font-semibold text-foreground">
+                    Assignment review unavailable
+                  </h1>
+                </div>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  This assignment could not be opened for this organization. It may have been moved,
+                  deleted, or no longer available to your current role.
+                </p>
+                <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/60 p-3 text-sm leading-6 text-muted-foreground">
+                  No proof submissions, candidate details, or review-stage data are shown from this
+                  unavailable state.
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button onClick={() => router.push(`/app/o/${slug}/assignments`)}>
+                    Back to assignments
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push(`/app/o/${slug}/assignments/new`)}
+                  >
+                    Create assignment
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
     );
   }

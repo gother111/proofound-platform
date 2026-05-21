@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { AssignmentReviewClient } from '@/components/assignments/AssignmentReviewClient';
 
@@ -48,6 +48,10 @@ const baseAssignment = {
 describe('AssignmentReviewClient', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('summarizes publish readiness before the section cards', () => {
@@ -114,5 +118,39 @@ describe('AssignmentReviewClient', () => {
       screen.getByText(/Remove unsupported trust requirements before publishing this assignment/i)
     ).toBeInTheDocument();
     expect(document.body.textContent ?? '').not.toMatch(/LinkedIn/i);
+  });
+
+  it('shows a privacy-safe unavailable state when assignment review cannot load', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        json: async () => ({}),
+      }))
+    );
+
+    render(
+      <AssignmentReviewClient initialAssignment={null} assignmentId="assignment-1" slug="acme" />
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: /Assignment review unavailable/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /No proof submissions, candidate details, or review-stage data are shown from this unavailable state/i
+      )
+    ).toBeInTheDocument();
+    expect(document.body.textContent ?? '').not.toMatch(/assignment-1/i);
+
+    fireEvent.click(screen.getByRole('button', { name: /Back to assignments/i }));
+    expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments');
+
+    fireEvent.click(screen.getByRole('button', { name: /Create assignment/i }));
+    expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments/new');
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith('/api/assignments/assignment-1?orgSlug=acme');
+    });
   });
 });
