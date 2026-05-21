@@ -417,6 +417,8 @@ function HeroResumeSheet({ compact = false }: { compact?: boolean }) {
         alt=""
         fill
         sizes={compact ? '10.5rem' : '22rem'}
+        priority
+        fetchPriority="high"
         className="pointer-events-none select-none object-contain drop-shadow-[0_18px_40px_rgba(55,45,30,0.14)]"
       />
     </div>
@@ -442,6 +444,17 @@ function HeroResumeStack({
     >
       <HeroResumePaperPile compact={compact} />
       <HeroResumeSheet compact={compact} />
+      <div
+        aria-hidden="true"
+        className={cn(
+          'absolute z-20 rotate-[4deg] rounded-[0.45rem] border border-proofound-stone/60 bg-proofound-parchment text-center font-medium text-proofound-forest/72 shadow-[0_8px_18px_-16px_rgba(55,45,30,0.35)]',
+          compact
+            ? 'right-[-7.8%] top-[34%] flex h-[25%] w-[21.5%] items-center justify-center px-1 text-[0.38rem] leading-[1.05]'
+            : 'right-[-7.7%] top-[33.8%] flex h-[25%] w-[21.5%] items-center justify-center px-2 text-[0.8rem] leading-[1.05]'
+        )}
+      >
+        Results note
+      </div>
     </div>
   );
 }
@@ -3566,7 +3579,7 @@ function MobileStoryVisual({
   const state = deriveStoryState(frame.id);
 
   if (frame.id === 'hero') {
-    return <MobileHeroProofDossier />;
+    return <HeroResumeStack compact />;
   }
 
   if (state.isSystem) {
@@ -3574,53 +3587,6 @@ function MobileStoryVisual({
   }
 
   return <MobileProofSignalVisual frame={frame} />;
-}
-
-function MobileHeroProofDossier() {
-  return (
-    <div
-      aria-label="Proof Pack with artifact, privacy, and review states"
-      role="img"
-      className="relative mx-auto aspect-[5/4] w-full max-w-[15rem]"
-    >
-      <div className="absolute inset-x-[10%] bottom-[8%] top-[13%] rotate-[-5deg] rounded-[1.15rem] border border-proofound-stone/40 bg-[#EEE4D4] shadow-[0_18px_34px_-26px_rgba(86,98,79,0.28)]" />
-      <div className="absolute inset-x-[8%] bottom-[10%] top-[9%] rotate-[3deg] rounded-[1.15rem] border border-proofound-forest/16 bg-[#DDE4D5] shadow-[0_16px_30px_-26px_rgba(86,98,79,0.24)]" />
-      <div className="absolute inset-x-[11%] bottom-[8%] top-[3%] rounded-[1.05rem] border border-proofound-stone/45 bg-[#FFFCF6] p-2.5 shadow-[0_18px_34px_-26px_rgba(45,51,48,0.28)]">
-        <div className="flex items-start justify-between gap-2 border-b border-proofound-stone/35 pb-2">
-          <div>
-            <p className="text-[0.55rem] font-semibold uppercase tracking-[0.16em] text-foreground/50">
-              Proof Pack
-            </p>
-            <p className="mt-1 font-display text-[0.95rem] leading-none text-foreground">
-              Work claim
-            </p>
-          </div>
-          <div className="rounded-full border border-proofound-forest/14 bg-proofound-sage/18 px-2 py-1 text-[0.52rem] font-medium text-proofound-forest/78">
-            Reviewable
-          </div>
-        </div>
-
-        <div className="mt-2 space-y-1.5">
-          {[
-            ['Context', 'Anchored'],
-            ['Artifacts', 'Attached'],
-            ['Privacy', 'Controlled'],
-          ].map(([label, value]) => (
-            <div
-              key={label}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-[0.52rem]"
-            >
-              <div className="min-w-0">
-                <p className="font-medium text-foreground/48">{label}</p>
-                <div className="mt-1 h-1.5 rounded-full bg-proofound-stone/38" />
-              </div>
-              <span className="font-medium text-foreground/62">{value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function MobileStoryCard({
@@ -3674,7 +3640,10 @@ function MobileStoryCard({
                 aria-hidden="true"
                 className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.54),rgba(255,255,255,0.06))]"
               />
-              <MobileHeroProofDossier />
+              <HeroResumeStack
+                compact
+                className="max-w-[16.1rem] [@media(max-height:760px)]:max-w-[12.9rem] [@media(max-height:700px)]:max-w-[12.7rem] [@media(max-width:370px)]:max-w-[13.35rem] [@media(max-width:370px)_and_(max-height:760px)]:max-w-[12.65rem]"
+              />
             </div>
             <div aria-hidden="true" className="hidden w-[4.1rem] shrink-0 space-y-2 sm:block">
               {['Proof', 'Context', 'Review'].map((item) => (
