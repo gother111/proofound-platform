@@ -960,6 +960,18 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to hide match:');
   });
 
+  it('keeps privacy settings client failures on client diagnostics without console output', () => {
+    const source = readSource('src/app/app/i/settings/privacy/PrivacySettingsClient.tsx');
+
+    expect(source).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(source).toContain('privacy_settings.client.visibility_fetch_failed');
+    expect(source).toContain('privacy_settings.client.visibility_save_failed');
+    expect(source).not.toContain('Failed to fetch visibility settings:');
+    expect(source).not.toContain('Failed to save visibility settings:');
+  });
+
   it('keeps match explanation failures on structured server logging', () => {
     const source = readSource('src/app/api/match/explain/[matchId]/route.ts');
 

@@ -8,6 +8,7 @@ import { AuditLogTable } from '@/components/privacy/AuditLogTable';
 import { DeleteAccountSection } from '@/components/privacy/DeleteAccountSection';
 import { toast } from 'sonner';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { PrivacySettingsLoadingShell } from './PrivacySettingsLoadingShell';
 
 export function PrivacySettingsClient() {
@@ -24,7 +25,7 @@ export function PrivacySettingsClient() {
           setInitialVisibility(data);
         }
       } catch (error) {
-        console.error('Failed to fetch visibility settings:', error);
+        dispatchClientErrorDiagnostic('privacy_settings.client.visibility_fetch_failed', error);
         toast.error('Failed to load privacy settings');
       } finally {
         setLoading(false);
@@ -48,7 +49,7 @@ export function PrivacySettingsClient() {
 
       return Promise.resolve();
     } catch (error) {
-      console.error('Failed to save visibility settings:', error);
+      dispatchClientErrorDiagnostic('privacy_settings.client.visibility_save_failed', error);
       return Promise.reject(error);
     }
   };
