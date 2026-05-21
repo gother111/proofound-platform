@@ -12,6 +12,7 @@ import { db } from '@/db';
 import { organizations, organizationTrustTierTransitions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { logAdminActionInTransaction } from '@/lib/audit/admin-logger';
+import { log } from '@/lib/log';
 
 const OrgTrustTierSchema = z.object({
   trustTier: z.enum(['unreviewed', 'basic_trusted', 'reviewed', 'restricted']).optional(),
@@ -194,12 +195,15 @@ export async function POST(
       message: buildTrustTierMessage(trustTier),
     });
   } catch (error) {
-    console.error('Failed to update organization verification:', error);
-
     // Check if this is a redirect
     if (error && typeof error === 'object' && 'digest' in error) {
       throw error;
     }
+
+    log.error('admin.organization_verify.update_failed', {
+      orgId: (await params).orgId,
+      errorName: error instanceof Error ? error.name : typeof error,
+    });
 
     return NextResponse.json(
       { error: 'Failed to update organization verification' },

@@ -5,6 +5,7 @@ import { POST } from '@/app/api/admin/organizations/[orgId]/verify/route';
 import { logAdminActionInTransaction } from '@/lib/audit/admin-logger';
 import { requireBreakGlassPlatformAdminJson } from '@/lib/authz';
 import { db } from '@/db';
+import { log } from '@/lib/log';
 
 vi.mock('@/lib/authz', async () => {
   const actual = await vi.importActual<typeof import('@/lib/authz')>('@/lib/authz');
@@ -26,6 +27,12 @@ vi.mock('@/db', () => ({
     update: vi.fn(),
     insert: vi.fn(),
     transaction: vi.fn(),
+  },
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
   },
 }));
 
@@ -196,6 +203,10 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
         targetId: orgId,
       })
     );
+    expect(log.error).toHaveBeenCalledWith('admin.organization_verify.update_failed', {
+      orgId,
+      errorName: 'Error',
+    });
   });
 
   it('returns 400 for invalid trust-tier request bodies', async () => {

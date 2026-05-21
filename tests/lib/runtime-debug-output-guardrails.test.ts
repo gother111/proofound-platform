@@ -790,4 +790,12 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Error fetching operations queue item');
     expect(sources).not.toContain('Error updating operations queue item');
   });
+
+  it('keeps admin organization trust-tier failures on structured server logging', () => {
+    const source = readSource('src/app/api/admin/organizations/[orgId]/verify/route.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('admin.organization_verify.update_failed');
+    expect(source).not.toContain('Failed to update organization verification:');
+  });
 });
