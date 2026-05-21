@@ -4941,3 +4941,11 @@ Browser evidence:
 - Replaced those diagnostics with structured `tour.*` log events while preserving auth checks, profile update verification, app-shell revalidation, reset semantics, status response shape, and client-facing error messages.
 - Added focused action coverage for completion success, completion verification failure, reset failure, and status failure/success behavior, and extended runtime debug-output guardrails so the old tour console strings cannot return.
 - Verification passed: focused tour/runtime guard run `npm test -- --run tests/actions/tour.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 60 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted tour-action console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Auth Entry Route Structured Logging
+
+- Timestamp: 2026-05-21 15:17 CEST.
+- Continued the active auth/public entry diagnostics sweep after login, onboarding, and auth-callback routes still emitted raw console diagnostics for login auth checks, home-path resolution, onboarding auth-user loading, OAuth exchange, and verifier-contradiction reconciliation.
+- Replaced those diagnostics with structured `login.*`, `onboarding.page.*`, and `auth.callback.*` log events while preserving redirect sanitization, mock-login reachability, expected missing-session handling, OAuth/email/recovery callback routing, and safe `next` handling.
+- Extended runtime debug-output guardrails so the old auth-entry route console strings cannot return.
+- Verification passed: focused auth-entry/runtime guard run `npm test -- --run tests/routes/login-next-sanitizer.test.tsx tests/routes/onboarding-page.test.ts tests/api/auth-callback-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (4 files / 69 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted auth-entry route console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

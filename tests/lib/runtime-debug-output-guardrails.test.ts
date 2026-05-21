@@ -1000,4 +1000,26 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to reset tour:');
     expect(source).not.toContain('Failed to get tour status:');
   });
+
+  it('keeps active auth entry route failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/login/page.tsx'),
+      readSource('src/app/onboarding/page.tsx'),
+      readSource('src/app/auth/callback/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('login.auth_check.failed');
+    expect(sources).toContain('login.auth_client.failed');
+    expect(sources).toContain('login.home_path.resolve_failed');
+    expect(sources).toContain('onboarding.page.auth_user_load_failed');
+    expect(sources).toContain('auth.callback.contradiction_reconcile_failed');
+    expect(sources).toContain('auth.callback.exchange_failed');
+    expect(sources).not.toContain('Auth check failed on login page:');
+    expect(sources).not.toContain('Error checking authentication on login page:');
+    expect(sources).not.toContain('Error resolving home path:');
+    expect(sources).not.toContain('Failed to load authenticated user for onboarding:');
+    expect(sources).not.toContain('Auth callback contradiction reconciliation failed:');
+    expect(sources).not.toContain('Failed to exchange OAuth code for session:');
+  });
 });

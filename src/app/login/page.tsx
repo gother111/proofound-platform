@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { SignIn } from '@/components/auth/SignIn';
 import { resolveUserHomePath } from '@/lib/auth';
 import { sendDebugIngest } from '@/lib/debug-ingest';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 // Force Node.js runtime so server helpers (Supabase + crypto) run outside Edge
@@ -56,7 +57,7 @@ export default async function LoginPage({
         data: { hasUser },
       });
     } catch (authError) {
-      console.error('Auth check failed on login page:', authError);
+      log.warn('login.auth_check.failed', { error: authError });
       sendDebugIngest({
         sessionId: 'debug-session',
         runId: 'launch-readiness',
@@ -67,7 +68,7 @@ export default async function LoginPage({
       });
     }
   } catch (error) {
-    console.error('Error checking authentication on login page:', error);
+    log.error('login.auth_client.failed', { error });
   }
 
   // If already logged in, redirect to appropriate home based on persona.
@@ -77,7 +78,7 @@ export default async function LoginPage({
     try {
       homePath = await resolveUserHomePath(supabase);
     } catch (resolveError) {
-      console.error('Error resolving home path:', resolveError);
+      log.error('login.home_path.resolve_failed', { error: resolveError });
     }
 
     if (homePath) {
