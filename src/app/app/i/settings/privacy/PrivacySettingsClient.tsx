@@ -63,7 +63,9 @@ export function PrivacySettingsClient() {
       <div className="mx-auto w-full min-w-0 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold text-foreground mb-2">Privacy Settings</h1>
-          <p className="text-muted-foreground">Control who can see your profile information</p>
+          <p className="text-muted-foreground">
+            Control Public Page details, assignment-review visibility, and data controls
+          </p>
         </div>
 
         <div className="space-y-6">

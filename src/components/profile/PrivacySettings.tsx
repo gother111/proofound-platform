@@ -301,8 +301,8 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
                 >
                   <TabsList>
                     <TabsTrigger value="public">Public</TabsTrigger>
-                    <TabsTrigger value="network_only">Connections</TabsTrigger>
-                    <TabsTrigger value="match_only">After match</TabsTrigger>
+                    <TabsTrigger value="network_only">Trusted review context</TabsTrigger>
+                    <TabsTrigger value="match_only">Assignment review</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -348,13 +348,13 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
                 </p>
               </div>
               <div className="rounded-md border border-proofound-stone p-3">
-                <p className="font-medium text-foreground">Connections</p>
+                <p className="font-medium text-foreground">Trusted review context</p>
                 <p className="text-muted-foreground">
                   {visibilitySummary.network_only.join(', ') || 'Nothing yet'}
                 </p>
               </div>
               <div className="rounded-md border border-proofound-stone p-3">
-                <p className="font-medium text-foreground">After match</p>
+                <p className="font-medium text-foreground">Assignment review</p>
                 <p className="text-muted-foreground">
                   {visibilitySummary.match_only.join(', ') || 'Nothing yet'}
                 </p>
@@ -371,7 +371,7 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
                 Preview as public
               </Button>
               <Button variant="outline" size="sm" onClick={() => setPreviewMode('match_only')}>
-                Preview after match
+                Preview assignment review
               </Button>
             </div>
           </CardContent>

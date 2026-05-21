@@ -62,8 +62,22 @@ describe('PrivacyOverview copy', () => {
     expect(
       screen.getByText(/Help match you with proof-led assignment reviews/i)
     ).toBeInTheDocument();
+    expect(screen.getByText('Trusted review context')).toBeInTheDocument();
+    expect(screen.getByText('Assignment review')).toBeInTheDocument();
+    expect(screen.getByText(/what stays private until assignment review/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Available only inside assignment-review surfaces/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Provide context for Proof Packs and assignment-specific review/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/Matches, proof submissions, conversations/i)).toBeInTheDocument();
     expect(screen.getByText(/Connect you with assignment-review workflows/i)).toBeInTheDocument();
+    expect(screen.queryByText('Connections')).not.toBeInTheDocument();
+    expect(screen.queryByText('After match')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Visible to matched organizations/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/sharing your profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Showcase your work and impact/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/relevant opportunities/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/match you with opportunities/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Connect you with opportunities/i)).not.toBeInTheDocument();

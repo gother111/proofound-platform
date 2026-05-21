@@ -4,9 +4,9 @@
  * Allows users to set granular visibility for profile fields
  *
  * Visibility levels per PRD Part 5, F4:
- * - public: Visible to all organizations
+ * - public: Visible on the Public Page
  * - network_only: Visible to trusted network/link contexts
- * - match_only: Only visible after mutual interest
+ * - match_only: Only visible in assignment-review contexts when reveal rules allow it
  * - private: Never shown to organizations
  *
  * PRD References:
@@ -44,21 +44,21 @@ const visibilityOptions = [
     value: 'public' as const,
     label: 'Public',
     icon: Users,
-    description: 'Visible to everyone',
+    description: 'Visible on your Public Page',
     color: 'text-blue-600',
   },
   {
     value: 'network_only' as const,
-    label: 'Connections',
+    label: 'Trusted review context',
     icon: Eye,
-    description: 'Visible to your trusted network and matched organizations',
+    description: 'Visible only in trusted review contexts',
     color: 'text-amber-600',
   },
   {
     value: 'match_only' as const,
-    label: 'After match',
+    label: 'Assignment review',
     icon: Eye,
-    description: 'Only visible after mutual interest is confirmed',
+    description: 'Only visible when assignment-review access and reveal rules allow it',
     color: 'text-emerald-600',
   },
   {

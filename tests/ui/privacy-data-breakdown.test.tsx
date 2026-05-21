@@ -44,8 +44,10 @@ describe('privacy data breakdown', () => {
 
     expect(global.fetch).toHaveBeenCalledWith('/api/user/data-inventory');
     expect(screen.getByText('Proof and verification')).toBeInTheDocument();
-    expect(screen.getByText('Matching activity')).toBeInTheDocument();
+    expect(screen.getByText('Assignment-review activity')).toBeInTheDocument();
     expect(screen.getByText('Product activity')).toBeInTheDocument();
+    expect(screen.queryByText('Professional information')).not.toBeInTheDocument();
+    expect(screen.queryByText('Matching activity')).not.toBeInTheDocument();
     expect(screen.getAllByText('6 records')).toHaveLength(2);
     expect(screen.getByText('3 records')).toBeInTheDocument();
     expect(screen.getByText('1 record')).toBeInTheDocument();

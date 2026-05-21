@@ -174,8 +174,8 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
                 Your Privacy Controls
               </h2>
               <p className="break-words text-proofound-charcoal/70 dark:text-muted-foreground mb-4">
-                Proofound is built with privacy at its core. Here&apos;s what data we collect and
-                how you control it.
+                Review what can appear on your Public Page, what stays private until assignment
+                review, and where export or deletion controls live.
               </p>
               <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                 <Button
@@ -214,7 +214,8 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
           <CardHeader>
             <CardTitle className="text-xl font-['Crimson_Pro']">What others can see</CardTitle>
             <CardDescription>
-              Visibility summary across Public, Connections, After match, and Private sections
+              Visibility summary across Public Page, trusted review context, assignment review, and
+              private sections
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -224,11 +225,11 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
                 <p className="text-muted-foreground">{visibilityCounts.public} sections</p>
               </div>
               <div className="rounded-lg border p-3">
-                <p className="font-medium">Connections</p>
+                <p className="font-medium">Trusted review context</p>
                 <p className="text-muted-foreground">{visibilityCounts.network_only} sections</p>
               </div>
               <div className="rounded-lg border p-3">
-                <p className="font-medium">After match</p>
+                <p className="font-medium">Assignment review</p>
                 <p className="text-muted-foreground">{visibilityCounts.match_only} sections</p>
               </div>
               <div className="rounded-lg border p-3">
@@ -249,7 +250,8 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
         <CardHeader>
           <CardTitle className="text-lg font-['Crimson_Pro']">Quick privacy fixes</CardTitle>
           <CardDescription>
-            Three fast actions to review and correct visibility before sharing your profile.
+            Three fast actions to review Public Page and assignment-review visibility before sharing
+            proof.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-2 md:grid-cols-3">
@@ -346,7 +348,8 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
               <strong>Purpose:</strong> Help match you with proof-led assignment reviews
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-              <strong>Visibility:</strong> Visible to matched organizations
+              <strong>Visibility:</strong> Available only inside assignment-review surfaces that
+              match your visibility and reveal state
             </p>
           </CardContent>
         </Card>
@@ -378,7 +381,8 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
               <strong>Includes:</strong> Projects, experiences, impact stories
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Purpose:</strong> Showcase your work and impact
+              <strong>Purpose:</strong> Provide context for Proof Packs and assignment-specific
+              review
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
               <strong>Retention:</strong> 90 days after account deletion

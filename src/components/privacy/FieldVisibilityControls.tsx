@@ -119,9 +119,19 @@ const VISIBILITY_OPTIONS: Array<{
   description: string;
   icon: any;
 }> = [
-  { value: 'public', label: 'Public', description: 'Visible to everyone', icon: Globe },
-  { value: 'network', label: 'Network', description: 'Visible to connections only', icon: Users },
-  { value: 'private', label: 'Private', description: 'Visible to matched orgs', icon: Lock },
+  { value: 'public', label: 'Public', description: 'Visible on your Public Page', icon: Globe },
+  {
+    value: 'network',
+    label: 'Trusted review context',
+    description: 'Visible only in trusted review contexts',
+    icon: Users,
+  },
+  {
+    value: 'private',
+    label: 'Assignment review',
+    description: 'Visible only when assignment-review access and reveal rules allow it',
+    icon: Lock,
+  },
   { value: 'hidden', label: 'Hidden', description: 'Completely hidden', icon: EyeOff },
 ];
 
@@ -304,7 +314,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
             Field-Level Privacy Controls
           </CardTitle>
           <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-            Control who can see each part of your profile
+            Control Public Page fields and assignment-review visibility
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -393,29 +403,43 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
             {/* Audience Preview Tab */}
             <TabsContent value="preview" className="space-y-4 mt-6">
               <div className="grid grid-cols-1 gap-2 sm:flex">
-                {(['public', 'network', 'matched'] as const).map((audience) => (
-                  <Button
-                    key={audience}
-                    variant={activePreview === audience ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setActivePreview(audience)}
-                    className={
-                      activePreview === audience
-                        ? 'w-full bg-proofound-forest text-white sm:w-auto'
-                        : 'w-full sm:w-auto'
-                    }
-                  >
-                    {audience === 'public' && <Globe className="w-4 h-4 mr-2" />}
-                    {audience === 'network' && <Users className="w-4 h-4 mr-2" />}
-                    {audience === 'matched' && <Lock className="w-4 h-4 mr-2" />}
-                    {audience.charAt(0).toUpperCase() + audience.slice(1)}
-                  </Button>
-                ))}
+                {(['public', 'network', 'matched'] as const).map((audience) => {
+                  const audienceLabel =
+                    audience === 'public'
+                      ? 'Public Page'
+                      : audience === 'network'
+                        ? 'Trusted review'
+                        : 'Assignment review';
+                  return (
+                    <Button
+                      key={audience}
+                      variant={activePreview === audience ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivePreview(audience)}
+                      className={
+                        activePreview === audience
+                          ? 'w-full bg-proofound-forest text-white sm:w-auto'
+                          : 'w-full sm:w-auto'
+                      }
+                    >
+                      {audience === 'public' && <Globe className="w-4 h-4 mr-2" />}
+                      {audience === 'network' && <Users className="w-4 h-4 mr-2" />}
+                      {audience === 'matched' && <Lock className="w-4 h-4 mr-2" />}
+                      {audienceLabel}
+                    </Button>
+                  );
+                })}
               </div>
 
               <div className="border border-proofound-stone dark:border-border rounded-lg p-4 bg-japandi-bg dark:bg-background/50">
                 <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3">
-                  Visible to {activePreview} audience:
+                  Visible in{' '}
+                  {activePreview === 'public'
+                    ? 'Public Page'
+                    : activePreview === 'network'
+                      ? 'trusted review'
+                      : 'assignment review'}
+                  :
                 </h4>
                 <div className="space-y-2">
                   {PROFILE_FIELDS.map((field) => {

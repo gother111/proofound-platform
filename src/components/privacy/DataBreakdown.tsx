@@ -242,8 +242,8 @@ function buildDataCategories(counts: DataInventoryPayload['counts'] = {}): DataC
     },
     {
       id: 'professional',
-      name: 'Professional information',
-      description: 'Skills, experience, projects, and education',
+      name: 'Proof context information',
+      description: 'Skills, experience, projects, and education used as Proof Pack context',
       icon: <Briefcase className="h-5 w-5" />,
       count: counts.professional ?? 0,
       tier: 'Semi-Public',
@@ -273,12 +273,12 @@ function buildDataCategories(counts: DataInventoryPayload['counts'] = {}): DataC
     },
     {
       id: 'matching',
-      name: 'Matching activity',
-      description: 'Match records and interest signals connected to your account',
+      name: 'Assignment-review activity',
+      description: 'Review records and interest signals connected to assignment workflows',
       icon: <BarChart3 className="h-5 w-5" />,
       count: counts.matching ?? 0,
       tier: 'Semi-Public',
-      items: ['Match records', 'Interest signals', 'Assignment-related matching activity'],
+      items: ['Assignment review records', 'Interest signals', 'Assignment-related activity'],
     },
     {
       id: 'activity',

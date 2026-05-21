@@ -54,15 +54,15 @@ const VISIBILITY_OPTIONS = [
   },
   {
     value: 'network_only' as IndividualVisibilityLevel,
-    label: 'Connections',
-    description: 'Visible to your connections',
+    label: 'Trusted review context',
+    description: 'Visible only in trusted review contexts',
     icon: Users,
     color: 'text-blue-600',
   },
   {
     value: 'match_only' as IndividualVisibilityLevel,
-    label: 'After match',
-    description: 'Visible after a mutual match',
+    label: 'Assignment review',
+    description: 'Visible only after assignment-review access applies',
     icon: Handshake,
     color: 'text-amber-600',
   },
@@ -317,9 +317,9 @@ export function IndividualFieldVisibilityControls({
             <div className="text-sm text-blue-900 dark:text-blue-100">
               <p className="font-medium mb-1">Privacy first</p>
               <p className="text-xs">
-                Your privacy settings are applied everywhere your profile appears. Organizations and
-                other viewers only see sections based on your visibility choices. You can change
-                these settings anytime.
+                Your privacy settings apply to Public Page and assignment-review surfaces.
+                Organizations only see sections allowed by your visibility choices and reveal state.
+                You can change these settings anytime.
               </p>
             </div>
           </div>

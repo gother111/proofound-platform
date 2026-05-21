@@ -609,11 +609,13 @@ export function ProfileView({ data }: ProfileViewProps) {
                         className="w-16 h-16 mx-auto mb-4"
                         style={{ color: 'rgb(122, 146, 120)' }}
                       />
-                      <h3 className="text-2xl font-display font-semibold mb-2">Living Network</h3>
+                      <h3 className="text-2xl font-display font-semibold mb-2">
+                        Review relationships
+                      </h3>
                       <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-                        Your network is fluid and dynamic. Connections that no longer hold mutual
-                        value naturally dissolve, ensuring your network always reflects authentic,
-                        active relationships.
+                        Launch review relationships stay assignment-bound and proof-first. This area
+                        is reserved for consented intros, reveal decisions, and interview follow-up
+                        rather than a broad social graph.
                       </p>
                     </div>
 
@@ -624,8 +626,10 @@ export function ProfileView({ data }: ProfileViewProps) {
                           style={{ color: 'rgb(122, 146, 120)' }}
                         />
                         <p className="text-sm text-muted-foreground mb-1">People</p>
-                        <p className="text-2xl font-semibold">127</p>
-                        <p className="text-xs text-muted-foreground mt-1">Active connections</p>
+                        <p className="text-2xl font-semibold">Held</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Consented intro contacts only
+                        </p>
                       </div>
                       <div className="text-center p-4 bg-muted/20 rounded-xl">
                         <Briefcase
@@ -633,8 +637,10 @@ export function ProfileView({ data }: ProfileViewProps) {
                           style={{ color: 'rgb(198, 123, 92)' }}
                         />
                         <p className="text-sm text-muted-foreground mb-1">Organizations</p>
-                        <p className="text-2xl font-semibold">18</p>
-                        <p className="text-xs text-muted-foreground mt-1">Active connections</p>
+                        <p className="text-2xl font-semibold">Held</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Assignment-review context only
+                        </p>
                       </div>
                       <div className="text-center p-4 bg-muted/20 rounded-xl">
                         <GraduationCap
@@ -642,8 +648,10 @@ export function ProfileView({ data }: ProfileViewProps) {
                           style={{ color: 'rgb(92, 139, 137)' }}
                         />
                         <p className="text-sm text-muted-foreground mb-1">Institutions</p>
-                        <p className="text-2xl font-semibold">5</p>
-                        <p className="text-xs text-muted-foreground mt-1">Active connections</p>
+                        <p className="text-2xl font-semibold">Held</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Verification context only
+                        </p>
                       </div>
                     </div>
 
@@ -655,11 +663,10 @@ export function ProfileView({ data }: ProfileViewProps) {
                         }}
                       >
                         <Network className="w-4 h-4 mr-2" />
-                        Visualize Network Graph
+                        Open review relationships
                       </Button>
                       <p className="text-xs text-muted-foreground mt-3">
-                        See how your connections relate to each other and discover new proof-review
-                        conversations
+                        Review relationships appear only after assignment-specific workflow steps.
                       </p>
                     </div>
                   </GlassCard>
