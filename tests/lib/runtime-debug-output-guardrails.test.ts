@@ -655,6 +655,7 @@ describe('runtime debug output guardrails', () => {
       readSource('src/app/api/interviews/edit/route.ts'),
       readSource('src/app/api/interviews/cancel/route.ts'),
       readSource('src/app/api/interviews/complete/route.ts'),
+      readSource('src/app/actions/interviews.ts'),
     ].join('\n');
 
     expect(sources).toContain("import { log } from '@/lib/log'");
@@ -664,11 +665,13 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('interviews.cancel.failed');
     expect(sources).toContain('interviews.complete.feedback_invites_failed');
     expect(sources).toContain('interviews.complete.failed');
+    expect(sources).toContain('interview.schedule.analytics_emit_failed');
     expect(sources).not.toContain('Failed to fetch interviews:');
     expect(sources).not.toContain('Interview edit error:');
     expect(sources).not.toContain('Interview cancellation error:');
     expect(sources).not.toContain('Interview completion feedback invites failed');
     expect(sources).not.toContain('Interview completion failed');
+    expect(sources).not.toContain('Failed to emit interview_scheduled event:');
   });
 
   it('keeps feedback API failures on structured server logging', () => {

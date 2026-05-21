@@ -4989,3 +4989,11 @@ Browser evidence:
 - Replaced that diagnostic with structured `matching.adjacency.explicit_fetch_failed` logging while preserving the existing fallback to hierarchy-only matching, empty adjacency maps, scoring behavior, and cache clearing behavior.
 - Extended runtime debug-output guardrails so the old adjacency console string cannot return.
 - Verification passed: focused adjacency/runtime guard run `npm test -- --run src/lib/core/matching/__tests__/adjacency.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 76 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted adjacency console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Interview Schedule Analytics Structured Logging
+
+- Timestamp: 2026-05-21 15:42 CEST.
+- Continued the active interview workflow diagnostics sweep after the schedule server action still emitted a raw console error when best-effort `interview_scheduled` analytics emission failed.
+- Replaced that diagnostic with structured `interview.schedule.analytics_emit_failed` logging while preserving successful interview creation, compatibility insert retries, manual/provider meeting-link persistence, best-effort post-schedule messaging, and the existing success response.
+- Extended runtime debug-output guardrails so the old analytics console string cannot return.
+- Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 61 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted interview action console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

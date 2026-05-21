@@ -709,7 +709,12 @@ export async function scheduleInterview(input: z.input<typeof ScheduleInterviewS
         days_since_match: daysSinceMatch,
       });
     } catch (analyticsError) {
-      console.error('Failed to emit interview_scheduled event:', analyticsError);
+      log.error('interview.schedule.analytics_emit_failed', {
+        matchId: data.matchId,
+        interviewId: interview.id,
+        errorMessage:
+          analyticsError instanceof Error ? analyticsError.message : String(analyticsError),
+      });
     }
 
     await postInterviewUpdateMessageBestEffort({
