@@ -107,7 +107,7 @@ function commandName(name) {
 function redactOutput(value) {
   return String(value)
     .replace(/(Bearer\s+)[A-Za-z0-9._~+/-]+/gi, '$1[REDACTED]')
-    .replace(/(CRON_SECRET=)[^\s]+/gi, '$1[REDACTED]');
+    .replace(/((?:INTERNAL_API_SECRET|CRON_SECRET)=)[^\s]+/gi, '$1[REDACTED]');
 }
 
 function writeStatusFiles() {
@@ -306,7 +306,6 @@ const requiredEnv = [
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
   'DATABASE_URL',
-  'CRON_SECRET',
 ];
 
 const providerConnectedRequired =
@@ -334,6 +333,9 @@ function enforceEnvironment() {
   );
   if (!siteUrlPresent) {
     missing.push('NEXT_PUBLIC_SITE_URL/SITE_URL');
+  }
+  if (!process.env.INTERNAL_API_SECRET?.trim() && !process.env.CRON_SECRET?.trim()) {
+    missing.push('INTERNAL_API_SECRET/CRON_SECRET');
   }
 
   const enabledMockModes = [

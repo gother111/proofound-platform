@@ -142,6 +142,10 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'src/lib/launch/final-launch-validation-runner.ts'),
       'utf8'
     );
+    const strictGateRunner = fs.readFileSync(
+      path.join(repoRoot, 'scripts/run-mvp-strict-gates.mjs'),
+      'utf8'
+    );
     const fullLaunchValidation = fs.readFileSync(
       path.join(repoRoot, 'src/lib/launch/full-launch-validation.ts'),
       'utf8'
@@ -157,6 +161,7 @@ describe('launch gate package configuration', () => {
       finalRunner,
       fullLaunchValidation,
       finalLaunchChecklist,
+      strictGateRunner,
     ]) {
       expect(source).toContain('INTERNAL_API_SECRET');
       expect(source).toContain('CRON_SECRET');
@@ -164,6 +169,8 @@ describe('launch gate package configuration', () => {
     expect(launchStatus).toContain('INTERNAL_API_SECRET or CRON_SECRET is required');
     expect(goNoGo).toContain('INTERNAL_API_SECRET or CRON_SECRET is required');
     expect(finalRunner).toContain('INTERNAL_API_SECRET or CRON_SECRET is required');
+    expect(strictGateRunner).toContain('INTERNAL_API_SECRET/CRON_SECRET');
+    expect(strictGateRunner).not.toContain("'CRON_SECRET',");
   });
 
   it('keeps external BASE_URL Playwright runs from starting local web servers in CI', () => {
