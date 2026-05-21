@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Testing Strategy
 
@@ -84,6 +84,8 @@ This document defines the current testing architecture for Proofound and the com
   - `npm run monitor:launch`
 - Performance budgets:
   - `npm run perf:budgets`
+- Launch status:
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`
 - Go / No-Go:
   - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 - End-to-end strict gate runner:
@@ -127,6 +129,7 @@ This document defines the current testing architecture for Proofound and the com
 | Launch smoke contract   | `npm run test:launch:smoke`                                                       |
 | Launch monitor sweep    | `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch` |
 | Perf budget gate        | `BASE_URL=<production-candidate-url> npm run perf:budgets`                        |
+| Launch status gate      | `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`  |
 | Go/No-Go gate           | `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`       |
 | Final launch validation | `BASE_URL=<production-candidate-url> npm run launch:validate`                     |
 
@@ -192,9 +195,10 @@ fresh backup/restore evidence from `docs/production-readiness-checklist.md`.
 16. `npm run test:e2e:privacy:strict`
 17. `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
 18. `BASE_URL=<production-candidate-url> npm run perf:budgets`
-19. `npm run db:backup:checkpoint`
-20. `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
-21. `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
+19. `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`
+20. `npm run db:backup:checkpoint`
+21. `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
+22. `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 
 Run `npm run test:e2e:providers:advisory` only when connected-provider scheduling is intentionally
 in scope for the target.

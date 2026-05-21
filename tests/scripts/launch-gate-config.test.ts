@@ -3010,21 +3010,30 @@ describe('launch gate package configuration', () => {
   });
 
   it('keeps the testing strategy aligned with production-candidate launch gates', () => {
+    const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8');
     const testingStrategy = fs.readFileSync(
       path.join(repoRoot, 'docs/testing-strategy.md'),
       'utf8'
     );
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
-    expect(testingStrategy).toContain('Last Verified: `2026-05-19`');
+    expect(readme).toContain('Last Verified: `2026-05-21`');
+    expect(readme).toContain('npm run launch:status');
+    expect(docsRegistry).toContain(
+      '| `README.md`                                                                                             | `active`         | `root`        | `repo+live`         | `2026-05-21`'
+    );
+    expect(testingStrategy).toContain('Last Verified: `2026-05-21`');
     expect(testingStrategy).toContain('BASE_URL=<production-candidate-url>');
+    expect(testingStrategy).toContain(
+      'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status'
+    );
     expect(testingStrategy).toContain('fresh backup/restore evidence');
     expect(testingStrategy).toContain('manual-link interview');
     expect(compactWhitespace(testingStrategy)).toContain('posture remains the locked MVP default');
     expect(testingStrategy).not.toContain('STRICT_PROVIDER_E2E_REQUIRE_BOTH');
     expect(testingStrategy).not.toContain('both Zoom and Google connected');
     expect(docsRegistry).toContain(
-      '| `docs/testing-strategy.md`                                                                              | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+      '| `docs/testing-strategy.md`                                                                              | `active`         | `docs`        | `repo+live`         | `2026-05-21`'
     );
   });
 
@@ -3645,7 +3654,7 @@ describe('launch gate package configuration', () => {
     );
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
-    expect(deploymentChecklist).toContain('Last Verified: `2026-05-19`');
+    expect(deploymentChecklist).toContain('Last Verified: `2026-05-21`');
     expect(deploymentChecklist).toContain('locked Proofound MVP corridor');
     expect(deploymentChecklist).toContain('production-candidate');
     expect(deploymentChecklist).toContain('npm run db:drift-check');
@@ -3658,6 +3667,9 @@ describe('launch gate package configuration', () => {
     expect(deploymentChecklist).toContain('public.app_migration_ledger');
     expect(deploymentChecklist).toContain('Do not use `npm run db:push`');
     expect(deploymentChecklist).toContain('/api/monitoring/launch-status');
+    expect(deploymentChecklist).toContain(
+      'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status'
+    );
     expect(deploymentChecklist).toContain('/api/monitoring/perf-status');
     expect(deploymentChecklist).toContain('/api/assignments');
     expect(deploymentChecklist).toContain('proof-submission review');
@@ -3670,7 +3682,7 @@ describe('launch gate package configuration', () => {
     expect(deploymentChecklist).not.toContain('Match scores displayed');
     expect(deploymentChecklist).not.toContain('candidate proof review');
     expect(docsRegistry).toContain(
-      '| `docs/DEPLOYMENT_CHECKLIST.md`                                                                          | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+      '| `docs/DEPLOYMENT_CHECKLIST.md`                                                                          | `active`         | `docs`        | `repo+live`         | `2026-05-21`'
     );
   });
 
