@@ -101,7 +101,7 @@ export function LandingHeroHeadline() {
 const DESKTOP_CARD_FRAME = 'w-[31rem] max-w-[31rem] aspect-[31/42]';
 const MOBILE_CARD_FRAME = 'w-full max-w-[14rem] aspect-[31/42]';
 const GLASS_SHELL =
-  'border border-white/55 bg-white/60 shadow-[0_22px_80px_-44px_rgba(45,51,48,0.4)] backdrop-blur-[24px]';
+  'border border-proofound-stone/35 bg-[#FDFBF7] shadow-[0_12px_40px_-28px_rgba(86,98,79,0.18)]';
 const STORY_COPY_EXIT_Y = -760;
 const STORY_COPY_ENTER_Y = 760;
 
@@ -115,12 +115,12 @@ const proofArtifacts = [
 
 const profileModules = [
   {
-    title: 'Reduced onboarding time by 31%',
+    title: 'Shortened the onboarding handoff',
     context:
       'Rebuilt the operations handoff across four markets and cut friction inside the first 14 days.',
   },
   {
-    title: 'Recovered €420k of working time',
+    title: 'Recovered working time across teams',
     context:
       'Consolidated fragmented workflows into one evidence-led delivery model with clearer ownership.',
   },
@@ -177,8 +177,8 @@ const assignmentProofSignals = [
 ] as const;
 
 const preciseMatchMetrics = [
-  { value: '3 / 4', label: 'outcomes', icon: BarChart3 },
-  { value: '2', label: 'verified', icon: ShieldCheck },
+  { value: 'Mapped', label: 'outcomes', icon: BarChart3 },
+  { value: 'Checked', label: 'verified', icon: ShieldCheck },
   { value: 'Clear', label: 'readiness', icon: TrendingUp },
 ] as const;
 
@@ -219,11 +219,11 @@ const blindExperienceRows = [
 
 const structuredProfileSummary = [
   {
-    label: 'Scale',
+    label: 'Scope',
     items: [
-      { label: 'Team led', value: '12', icon: UsersRound },
-      { label: 'Team size', value: '40', icon: Building2 },
-      { label: 'Partner orgs', value: '8', icon: Handshake },
+      { label: 'Team led', value: 'Team', icon: UsersRound },
+      { label: 'Org context', value: 'Growth', icon: Building2 },
+      { label: 'Partner orgs', value: 'Partner', icon: Handshake },
     ],
   },
   {
@@ -244,7 +244,7 @@ const outcomeExperienceRows = [
       'Led cross-functional operations improvements',
       'Improved internal systems and workflows',
     ],
-    outcome: 'Reduced onboarding time by 31%',
+    outcome: 'Shortened the onboarding handoff',
     ownership: 'Owned',
     skills: [
       { label: 'Process design', icon: SquareStack },
@@ -263,7 +263,7 @@ const outcomeExperienceRows = [
       'Managed systems across global operations',
       'Supported process coordination and delivery',
     ],
-    outcome: 'Recovered €420k of working time',
+    outcome: 'Recovered working time across teams',
     ownership: 'Co-owned',
     skills: [
       { label: 'Vendor ops', icon: Handshake },
@@ -792,7 +792,7 @@ function StackSheets({
             delay: delayedReveal ? 0.62 + index * 0.06 : 0,
           }}
           className={cn(
-            'absolute inset-0 -z-10 rounded-[2rem] border border-black/8 bg-white/72 shadow-[0_38px_80px_-48px_rgba(45,51,48,0.42),0_0_0_1px_rgba(255,255,255,0.55)_inset] backdrop-blur-[18px]',
+            'absolute inset-0 -z-10 rounded-[2rem] border border-proofound-stone/30 bg-[#FAF8F4] shadow-[0_18px_48px_-32px_rgba(86,98,79,0.14)]',
             compact ? MOBILE_CARD_FRAME : DESKTOP_CARD_FRAME
           )}
           aria-hidden="true"
@@ -1339,7 +1339,7 @@ function ProofPackCard({
             animate={{ opacity: 1 - clamp01(privacyExitProgress) }}
             exit={{ opacity: 0 }}
             transition={STORY_TRANSITION}
-            className="absolute inset-0 z-20 overflow-hidden rounded-[2rem] border border-white/70 bg-white/10 backdrop-blur-[1.5px]"
+            className="absolute inset-0 z-20 overflow-hidden rounded-[2rem] border border-white/70 bg-white/8"
           >
             <div
               aria-hidden="true"
@@ -1392,7 +1392,7 @@ function ProofPackCard({
                 transition={
                   shouldReduceMotion ? { duration: 0 } : { ...STORY_TRANSITION, delay: 0.15 }
                 }
-                className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-[2rem] border border-white/78 bg-white/38 shadow-[0_24px_70px_-32px_rgba(28,77,58,0.6),0_0_0_1px_rgba(255,255,255,0.45)_inset] backdrop-blur-[18px]"
+                className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-[2rem] border border-proofound-stone/28 bg-[#F8F5EF] shadow-[0_14px_36px_-26px_rgba(86,98,79,0.16),0_0_0_1px_rgba(255,255,255,0.45)_inset]"
               >
                 <div
                   aria-hidden="true"
@@ -1808,7 +1808,7 @@ function AssessmentCard({ state, compact = false }: { state: StoryState; compact
         { label: 'Evidence fit', value: 'High' },
         { label: 'Verification depth', value: 'Strong' },
         { label: 'Scope match', value: 'Clear' },
-        { label: 'Decision clarity', value: '87%' },
+        { label: 'Review clarity', value: 'Visible' },
       ]
     : [
         { label: 'Outcome evidence', value: 'Mapped' },
@@ -2069,6 +2069,20 @@ function HeroToBlindBackground({
             <source src="/hero-transition-video/hero-to-blind.mp4" type="video/mp4" />
           </video>
         ) : null}
+        <div
+          aria-hidden="true"
+          className="absolute right-[3.9%] top-[31.5%] z-20 hidden h-[7.4rem] w-[6.4rem] rounded-[0.7rem] border border-[#cfbd9d]/70 bg-[#E7D8BD]/95 px-3 py-3 text-center shadow-[0_10px_24px_-18px_rgba(45,51,48,0.25)] lg:block"
+          style={{ opacity: 1 - clampedProgress }}
+        >
+          <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-foreground/62">
+            Review
+          </p>
+          <p className="mt-2 text-[0.7rem] leading-4 text-proofound-forest/78">
+            method
+            <br />
+            noted
+          </p>
+        </div>
       </>
 
       <div
@@ -3175,7 +3189,7 @@ function EarlyOrganizerStoryScene({
               y: mix(-150, -1000, compatToPrecisionProgress),
             }}
           >
-            <div className="pointer-events-auto rounded-[2rem] border border-white/40 bg-[#f5f0e7]/46 px-8 py-7 shadow-[0_22px_70px_-48px_rgba(45,51,48,0.38)] backdrop-blur-[10px]">
+            <div className="pointer-events-auto rounded-[2rem] border border-proofound-stone/30 bg-[#F5F0E7]/92 px-8 py-7 shadow-[0_12px_36px_-28px_rgba(86,98,79,0.16)]">
               <SystemCenterCopy
                 frame={compatibilityFrame}
                 state={deriveStoryState('compatibility')}
@@ -3367,79 +3381,79 @@ function DesktopScene({
 
 function MobileSystemVisual({ frame }: { frame: HomepageStoryFrame }) {
   const isChallenges = frame.id === 'challenges';
-
-  if (isChallenges) {
-    return (
-      <div className="mx-auto w-full max-w-[17.5rem] overflow-hidden rounded-[1.45rem] border border-white/62 bg-white/46 p-3 shadow-[0_18px_50px_-38px_rgba(45,51,48,0.35)]">
-        <div className="grid grid-cols-[minmax(0,1fr)_5.8rem_minmax(0,1fr)] items-stretch gap-2">
-          <div className="rounded-[1.1rem] border border-white/62 bg-white/58 p-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-proofound-terracotta/12 text-proofound-terracotta">
-              <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
-            </div>
-            <p className="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-foreground/52">
-              Teams
-            </p>
-            <p className="mt-1 text-[0.68rem] leading-4 text-foreground/76">
-              Too many weak submissions.
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center justify-center rounded-[1.2rem] border border-proofound-forest/12 bg-proofound-sage/14 px-2 py-3 text-center">
-            <SquareStack className="h-5 w-5 text-proofound-forest/78" aria-hidden="true" />
-            <p className="mt-2 font-display text-[1.12rem] leading-[0.95] text-foreground">
-              Better starting point
-            </p>
-            <p className="mt-2 text-[0.54rem] leading-3 text-muted-foreground">
-              Less noise before review.
-            </p>
-          </div>
-
-          <div className="rounded-[1.1rem] border border-white/62 bg-white/58 p-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-proofound-sage/20 text-proofound-forest">
-              <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
-            </div>
-            <p className="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-foreground/52">
-              People
-            </p>
-            <p className="mt-1 text-[0.68rem] leading-4 text-foreground/76">
-              Real ability flattened.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const systemSteps = isChallenges
+    ? [
+        {
+          label: 'Organizations',
+          body: 'Too many weak submissions reach the first review.',
+          icon: Building2,
+          tone: 'terracotta',
+        },
+        {
+          label: 'Proofound corridor',
+          body: 'Assignment, proof, privacy, and review move in one line.',
+          icon: SquareStack,
+          tone: 'forest',
+        },
+        {
+          label: 'Participants',
+          body: 'Real ability is no longer flattened into bullets.',
+          icon: UserRound,
+          tone: 'sage',
+        },
+      ]
+    : [
+        {
+          label: 'Assignment',
+          body: 'Scope, context, outcomes.',
+          icon: Briefcase,
+          tone: 'forest',
+        },
+        {
+          label: 'Shared language',
+          body: 'Compare work to proof.',
+          icon: Blend,
+          tone: 'sage',
+        },
+        {
+          label: 'Proof Pack',
+          body: 'Artifacts and trust.',
+          icon: ShieldCheck,
+          tone: 'forest',
+        },
+      ];
 
   return (
-    <div className="mx-auto w-full max-w-[17.5rem] overflow-hidden rounded-[1.45rem] border border-white/62 bg-white/46 p-3 shadow-[0_18px_50px_-38px_rgba(45,51,48,0.35)]">
-      <div className="grid grid-cols-[minmax(0,1fr)_5.8rem_minmax(0,1fr)] items-stretch gap-2">
-        <div className="rounded-[1.1rem] border border-white/62 bg-white/58 p-2">
-          <Briefcase className="h-4 w-4 text-proofound-forest/76" aria-hidden="true" />
-          <p className="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-foreground/52">
-            Assignment
-          </p>
-          <p className="mt-1 text-[0.68rem] leading-4 text-foreground/76">
-            Scope, context, outcomes.
-          </p>
-        </div>
-
-        <div className="flex flex-col items-center justify-center rounded-[1.2rem] border border-proofound-forest/12 bg-proofound-sage/14 px-2 py-3 text-center">
-          <Blend className="h-5 w-5 text-proofound-forest/78" aria-hidden="true" />
-          <p className="mt-2 font-display text-[1.12rem] leading-[0.95] text-foreground">
-            Shared language
-          </p>
-          <p className="mt-2 text-[0.54rem] leading-3 text-muted-foreground">
-            Compare work to proof.
-          </p>
-        </div>
-
-        <div className="rounded-[1.1rem] border border-white/62 bg-white/58 p-2">
-          <ShieldCheck className="h-4 w-4 text-proofound-forest/76" aria-hidden="true" />
-          <p className="mt-2 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-foreground/52">
-            Proof pack
-          </p>
-          <p className="mt-1 text-[0.68rem] leading-4 text-foreground/76">Artifacts and trust.</p>
-        </div>
+    <div className="mx-auto w-full max-w-[18.5rem] overflow-hidden rounded-[1.55rem] border border-proofound-stone/35 bg-[#F8F3EA] p-3 shadow-[0_18px_48px_-36px_rgba(86,98,79,0.18)]">
+      <div className="grid gap-2">
+        {systemSteps.map(({ label, body, icon: Icon, tone }, index) => (
+          <div
+            key={label}
+            className={cn(
+              'grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-3 rounded-[1.05rem] border px-3 py-2.5',
+              index === 1
+                ? 'border-proofound-forest/18 bg-proofound-sage/16'
+                : 'border-white/70 bg-white/58'
+            )}
+          >
+            <div
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-full',
+                tone === 'terracotta'
+                  ? 'bg-proofound-terracotta/12 text-proofound-terracotta'
+                  : 'bg-proofound-forest/10 text-proofound-forest'
+              )}
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[0.63rem] font-semibold uppercase tracking-[0.16em] text-foreground/50">
+                {label}
+              </p>
+              <p className="mt-1 text-[0.76rem] leading-5 text-foreground/78">{body}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -3448,15 +3462,26 @@ function MobileSystemVisual({ frame }: { frame: HomepageStoryFrame }) {
 function MobileProofSignalVisual({ frame }: { frame: HomepageStoryFrame }) {
   const state = deriveStoryState(frame.id);
   const isVerified = state.hasVerification;
+  const proofRows = isVerified
+    ? [
+        { label: 'Method', value: 'Checked', icon: ShieldCheck },
+        { label: 'Artifacts', value: 'Attached', icon: FileText },
+        { label: 'Readiness', value: 'Visible', icon: CheckCircle2 },
+      ]
+    : [
+        { label: 'Work', value: 'Scoped', icon: Briefcase },
+        { label: 'Context', value: 'Anchored', icon: SquareStack },
+        { label: 'Review', value: 'Readable', icon: FileText },
+      ];
 
   return (
-    <div className="mx-auto w-full max-w-[17rem] rounded-[1.45rem] border border-white/62 bg-white/58 p-4 shadow-[0_18px_50px_-38px_rgba(45,51,48,0.34)]">
-      <div className="flex items-center gap-3">
+    <div className="mx-auto w-full max-w-[18rem] rounded-[1.45rem] border border-white/70 bg-white/62 p-3.5 shadow-[0_18px_46px_-36px_rgba(86,98,79,0.2)]">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
         <div
           className={cn(
             'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border bg-white/70',
             isVerified
-              ? 'border-emerald-200 text-emerald-700'
+              ? 'border-proofound-forest/18 text-proofound-forest'
               : 'border-white/70 text-proofound-forest'
           )}
         >
@@ -3470,41 +3495,39 @@ function MobileProofSignalVisual({ frame }: { frame: HomepageStoryFrame }) {
           <p className="font-display text-[1rem] leading-tight text-foreground">
             Senior Operations Professional
           </p>
-          <p className="mt-1 text-[0.6rem] uppercase tracking-[0.18em] text-foreground/45">
-            {isVerified ? 'Verified proof' : 'Outcome proof'}
+          <p className="mt-1 text-[0.6rem] font-medium uppercase tracking-[0.18em] text-foreground/45">
+            {isVerified ? 'Verified proof layer' : 'Outcome proof layer'}
           </p>
         </div>
       </div>
 
-      <div className="mt-4 rounded-[1.1rem] border border-border/45 bg-proofound-parchment/38 p-3">
+      <div className="mt-3 rounded-[1.05rem] border border-border/45 bg-proofound-parchment/42 p-3">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[0.56rem] font-semibold uppercase tracking-[0.24em] text-foreground/46">
-            Proof snapshot
+          <p className="text-[0.56rem] font-semibold uppercase tracking-[0.2em] text-foreground/46">
+            Proof view
           </p>
-          <span className="rounded-full border border-white/70 bg-white/52 px-2 py-0.5 text-[0.52rem] text-proofound-forest/78">
+          <span className="whitespace-nowrap rounded-full border border-white/70 bg-white/58 px-2 py-0.5 text-[0.52rem] text-proofound-forest/78">
             Reviewable
           </span>
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-          {[
-            { label: 'Team', value: '12', icon: UsersRound },
-            { label: 'Scale', value: '200+', icon: Building2 },
-            { label: 'Outcome', value: '31%', icon: TrendingUp },
-          ].map(({ label, value, icon: Icon }) => (
+        <div className="mt-3 grid gap-2">
+          {proofRows.map(({ label, value, icon: Icon }) => (
             <div
               key={label}
-              className="rounded-[0.85rem] border border-white/58 bg-white/58 px-2 py-2 shadow-[0_10px_24px_-22px_rgba(45,51,48,0.3)]"
+              className="grid grid-cols-[1.75rem_minmax(0,1fr)_auto] items-center gap-2 rounded-[0.85rem] border border-white/62 bg-white/60 px-2.5 py-2 shadow-[0_10px_24px_-22px_rgba(45,51,48,0.22)]"
             >
-              <Icon className="mx-auto h-3.5 w-3.5 text-proofound-forest/72" aria-hidden="true" />
-              <p className="mt-1 font-display text-sm leading-none text-foreground">{value}</p>
-              <p className="mt-1 text-[0.5rem] text-muted-foreground">{label}</p>
+              <Icon className="h-3.5 w-3.5 text-proofound-forest/72" aria-hidden="true" />
+              <p className="text-[0.64rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                {label}
+              </p>
+              <p className="text-[0.72rem] font-medium text-foreground/78">{value}</p>
             </div>
           ))}
         </div>
-        <div className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-[0.95rem] border border-white/58 bg-white/42 px-2.5 py-2">
+        <div className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-[0.95rem] border border-white/58 bg-white/46 px-2.5 py-2">
           <SquareStack className="h-4 w-4 text-proofound-forest/72" aria-hidden="true" />
           <div className="min-w-0">
-            <p className="truncate text-[0.62rem] font-medium text-foreground/78">
+            <p className="text-[0.62rem] font-medium leading-4 text-foreground/78">
               Outcome record, artifacts, and trust method stay together.
             </p>
           </div>
@@ -3521,7 +3544,7 @@ function MobileProofSignalVisual({ frame }: { frame: HomepageStoryFrame }) {
             className={cn(
               'rounded-full border px-2 py-1 text-[0.55rem]',
               isVerified
-                ? 'border-emerald-200 bg-emerald-50/70 text-emerald-900/72'
+                ? 'border-proofound-forest/16 bg-proofound-sage/18 text-proofound-forest/78'
                 : 'border-border/55 bg-white/48 text-foreground/66'
             )}
           >
@@ -3543,7 +3566,7 @@ function MobileStoryVisual({
   const state = deriveStoryState(frame.id);
 
   if (frame.id === 'hero') {
-    return <HeroResumeStack compact />;
+    return <MobileHeroProofDossier />;
   }
 
   if (state.isSystem) {
@@ -3551,6 +3574,53 @@ function MobileStoryVisual({
   }
 
   return <MobileProofSignalVisual frame={frame} />;
+}
+
+function MobileHeroProofDossier() {
+  return (
+    <div
+      aria-label="Proof Pack with artifact, privacy, and review states"
+      role="img"
+      className="relative mx-auto aspect-[5/4] w-full max-w-[15rem]"
+    >
+      <div className="absolute inset-x-[10%] bottom-[8%] top-[13%] rotate-[-5deg] rounded-[1.15rem] border border-proofound-stone/40 bg-[#EEE4D4] shadow-[0_18px_34px_-26px_rgba(86,98,79,0.28)]" />
+      <div className="absolute inset-x-[8%] bottom-[10%] top-[9%] rotate-[3deg] rounded-[1.15rem] border border-proofound-forest/16 bg-[#DDE4D5] shadow-[0_16px_30px_-26px_rgba(86,98,79,0.24)]" />
+      <div className="absolute inset-x-[11%] bottom-[8%] top-[3%] rounded-[1.05rem] border border-proofound-stone/45 bg-[#FFFCF6] p-2.5 shadow-[0_18px_34px_-26px_rgba(45,51,48,0.28)]">
+        <div className="flex items-start justify-between gap-2 border-b border-proofound-stone/35 pb-2">
+          <div>
+            <p className="text-[0.55rem] font-semibold uppercase tracking-[0.16em] text-foreground/50">
+              Proof Pack
+            </p>
+            <p className="mt-1 font-display text-[0.95rem] leading-none text-foreground">
+              Work claim
+            </p>
+          </div>
+          <div className="rounded-full border border-proofound-forest/14 bg-proofound-sage/18 px-2 py-1 text-[0.52rem] font-medium text-proofound-forest/78">
+            Reviewable
+          </div>
+        </div>
+
+        <div className="mt-2 space-y-1.5">
+          {[
+            ['Context', 'Anchored'],
+            ['Artifacts', 'Attached'],
+            ['Privacy', 'Controlled'],
+          ].map(([label, value]) => (
+            <div
+              key={label}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-[0.52rem]"
+            >
+              <div className="min-w-0">
+                <p className="font-medium text-foreground/48">{label}</p>
+                <div className="mt-1 h-1.5 rounded-full bg-proofound-stone/38" />
+              </div>
+              <span className="font-medium text-foreground/62">{value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function MobileStoryCard({
@@ -3571,37 +3641,58 @@ function MobileStoryCard({
 
   if (isHero) {
     return (
-      <article className="relative isolate flex min-h-[calc(100svh-5.4rem)] flex-col overflow-hidden rounded-[2rem] border border-white/70 bg-white/68 px-4 pb-4 pt-5 shadow-[0_22px_74px_-46px_rgba(45,51,48,0.42)] backdrop-blur-[22px] [@media(max-height:760px)]:pb-3 [@media(max-height:760px)]:pt-4 [@media(max-height:700px)]:min-h-[calc(100svh-5rem)] [@media(max-height:700px)]:rounded-[1.6rem]">
+      <article className="relative isolate flex min-h-[calc(100svh-8.65rem)] flex-col overflow-hidden rounded-[1.7rem] border border-proofound-stone/35 bg-[#FDFBF7] px-4 pb-4 pt-4 shadow-[0_20px_64px_-44px_rgba(86,98,79,0.22)] sm:rounded-[2rem] [@media(max-height:760px)]:pb-3 [@media(max-height:760px)]:pt-3 [@media(max-height:700px)]:min-h-[calc(100svh-7.4rem)] [@media(max-height:700px)]:rounded-[1.45rem]">
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[linear-gradient(155deg,rgba(255,255,255,0.88)_0%,rgba(247,242,233,0.58)_52%,rgba(226,235,223,0.44)_100%)]"
+          className="absolute inset-0 -z-10 bg-[linear-gradient(158deg,rgba(255,255,255,0.94)_0%,rgba(247,242,233,0.66)_48%,rgba(226,235,223,0.5)_100%)]"
         />
-        <div className="flex min-h-0 flex-1 flex-col justify-between gap-4 [@media(max-height:760px)]:gap-3">
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-4 top-0 -z-10 h-px bg-gradient-to-r from-transparent via-proofound-forest/18 to-transparent"
+        />
+        <div className="flex min-h-0 flex-1 flex-col justify-between gap-3.5 [@media(max-height:760px)]:gap-3">
           <div className="space-y-3">
-            <h1 className="max-w-[20rem] font-display text-[2.75rem] leading-[0.86] text-foreground sm:text-5xl [@media(max-height:760px)]:text-[2.42rem] [@media(max-height:700px)]:text-[2.05rem]">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[0.66rem] font-medium uppercase tracking-[0.22em] text-proofound-forest/72">
+                Proofound
+              </p>
+              <p className="whitespace-nowrap rounded-full border border-proofound-forest/12 bg-proofound-sage/14 px-2.5 py-1 text-[0.62rem] font-medium text-proofound-forest/78">
+                Privacy-first
+              </p>
+            </div>
+            <h1 className="max-w-[18rem] font-display text-[2.48rem] leading-[0.88] text-foreground [overflow-wrap:anywhere] sm:max-w-[22rem] sm:text-[3.35rem] [@media(max-height:760px)]:text-[2.24rem] [@media(max-height:700px)]:text-[2rem]">
               Proof behind the claim
             </h1>
-            <p className="max-w-[20.5rem] text-[1rem] leading-7 text-muted-foreground [@media(max-height:760px)]:text-[0.94rem] [@media(max-height:760px)]:leading-6 [@media(max-height:700px)]:text-[0.92rem]">
+            <p className="max-w-[21rem] text-[0.96rem] leading-6 text-muted-foreground sm:text-[1rem] sm:leading-7 [@media(max-height:760px)]:text-[0.92rem] [@media(max-height:760px)]:leading-6 [@media(max-height:700px)]:text-[0.88rem]">
               {frame.body}
             </p>
           </div>
 
-          <div className="relative overflow-hidden rounded-[1.7rem] border border-white/66 bg-proofound-parchment/52 px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.58)] [@media(max-height:760px)]:py-2.5 [@media(max-height:700px)]:rounded-[1.35rem] [@media(max-width:370px)]:py-3">
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.52),rgba(255,255,255,0.05))]"
-            />
-            <HeroResumeStack
-              compact
-              className="max-w-[16.1rem] [@media(max-height:760px)]:max-w-[12.9rem] [@media(max-height:700px)]:max-w-[12.7rem] [@media(max-width:370px)]:max-w-[13.35rem] [@media(max-width:370px)_and_(max-height:760px)]:max-w-[12.65rem]"
-            />
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
+            <div className="relative overflow-hidden rounded-[1.45rem] border border-white/70 bg-proofound-parchment/52 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.58)] [@media(max-height:760px)]:py-2 [@media(max-height:700px)]:rounded-[1.25rem] [@media(max-width:370px)]:py-2.5">
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.54),rgba(255,255,255,0.06))]"
+              />
+              <MobileHeroProofDossier />
+            </div>
+            <div aria-hidden="true" className="hidden w-[4.1rem] shrink-0 space-y-2 sm:block">
+              {['Proof', 'Context', 'Review'].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-[0.9rem] border border-proofound-forest/12 bg-white/56 px-2 py-2 text-center text-[0.58rem] font-medium text-proofound-forest/78 shadow-[0_8px_22px_-20px_rgba(86,98,79,0.22)]"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid gap-2.5 [@media(max-height:760px)]:gap-2">
+          <div className="grid gap-2 [@media(max-height:760px)]:gap-1.5">
             <a
               href="/signup/organization"
               onClick={() => onOrganizationSignup?.()}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-proofound-forest px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_-22px_rgba(28,77,58,0.56)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 [@media(max-height:760px)]:min-h-11 [@media(max-height:760px)]:py-2.5"
+              className="inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-proofound-forest px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_-22px_rgba(28,77,58,0.56)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 [@media(max-height:760px)]:min-h-11 [@media(max-height:760px)]:py-2.5"
             >
               Request a pilot
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -3609,7 +3700,7 @@ function MobileStoryCard({
             <a
               href="/signup/individual"
               onClick={() => onIndividualSignup?.()}
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-border/80 bg-white/76 px-5 py-3 text-sm font-medium text-foreground shadow-[0_12px_26px_-24px_rgba(45,51,48,0.34)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 [@media(max-height:760px)]:min-h-11 [@media(max-height:760px)]:py-2.5"
+              className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full border border-border/80 bg-white/64 px-5 py-2.5 text-sm font-medium text-foreground shadow-[0_12px_26px_-24px_rgba(45,51,48,0.3)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0"
             >
               Create your proof portfolio
             </a>
@@ -3619,26 +3710,52 @@ function MobileStoryCard({
     );
   }
 
+  const isPrivacyFrame = frame.id === 'verification';
+  const isCorridorFrame = frame.id === 'compatibility';
+  const isClosingFrame = frame.id === 'challenges';
+
   return (
     <article
       className={cn(
-        'relative space-y-4 overflow-hidden rounded-[1.55rem] border bg-white/70 p-4 shadow-[0_18px_60px_-40px_rgba(45,51,48,0.35)] backdrop-blur-md sm:space-y-5 sm:rounded-[2rem] sm:p-5',
-        index % 2 === 0 ? 'mr-2 border-white/70' : 'ml-2 border-proofound-forest/14 bg-white/74'
+        'relative overflow-hidden border p-4 shadow-[0_18px_60px_-42px_rgba(86,98,79,0.16)] sm:p-5',
+        isCorridorFrame
+          ? 'space-y-4 rounded-[0.95rem] border-proofound-forest/18 bg-[#F4F0E8]'
+          : isPrivacyFrame
+            ? 'space-y-4 rounded-[1.75rem] border-proofound-forest/16 bg-[#F8F6EF]'
+            : isClosingFrame
+              ? 'space-y-5 rounded-[1.25rem] border-proofound-stone/35 bg-[#EEE8DD]'
+              : 'space-y-4 rounded-[1.55rem] border-proofound-stone/28 bg-[#FDFBF8] sm:space-y-5 sm:rounded-[2rem]',
+        index % 2 === 0 ? 'mr-1.5' : 'ml-1.5'
       )}
     >
       <div
         aria-hidden="true"
-        className="absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-proofound-forest/18 to-transparent"
+        className={cn(
+          'absolute top-0 h-px bg-gradient-to-r from-transparent to-transparent',
+          isCorridorFrame
+            ? 'inset-x-0 via-proofound-forest/28'
+            : 'inset-x-4 via-proofound-forest/18'
+        )}
       />
-      <div className="flex items-start gap-3">
+      <div
+        className={cn(
+          'flex items-start gap-3',
+          isCorridorFrame ? 'border-b border-proofound-forest/12 pb-4' : ''
+        )}
+      >
         <span
           aria-hidden="true"
-          className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-proofound-forest/12 bg-proofound-sage/16 text-[0.65rem] font-medium text-proofound-forest/78"
+          className={cn(
+            'mt-1 flex h-8 w-8 shrink-0 items-center justify-center border text-[0.65rem] font-medium text-proofound-forest/78',
+            isCorridorFrame
+              ? 'rounded-[0.65rem] border-proofound-forest/18 bg-white/44'
+              : 'rounded-full border-proofound-forest/12 bg-proofound-sage/16'
+          )}
         >
           {storyNumber}
         </span>
         <div className="min-w-0 space-y-3">
-          <h2 className="font-display text-[1.8rem] leading-tight text-foreground sm:text-3xl">
+          <h2 className="font-display text-[1.8rem] leading-tight text-foreground [overflow-wrap:anywhere] sm:text-3xl">
             {frame.title}
           </h2>
           <p className="text-[0.96rem] leading-7 text-muted-foreground sm:text-base">
@@ -3649,7 +3766,12 @@ function MobileStoryCard({
 
       <div
         className={cn(
-          'rounded-[1.35rem] border border-white/60 bg-[linear-gradient(180deg,rgba(247,242,233,0.72),rgba(255,255,255,0.36))] px-3 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.56)] sm:rounded-[1.7rem]'
+          'border border-white/60 bg-[linear-gradient(180deg,rgba(247,242,233,0.72),rgba(255,255,255,0.36))] px-3 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.56)]',
+          isCorridorFrame
+            ? 'rounded-[0.8rem]'
+            : isClosingFrame
+              ? 'rounded-[1rem] bg-white/28'
+              : 'rounded-[1.35rem] sm:rounded-[1.7rem]'
         )}
       >
         <MobileStoryVisual frame={frame} reduceMotion={reduceMotion} />
@@ -3806,7 +3928,7 @@ function StoryProgressIndicator({ activeIndex }: { activeIndex: number }) {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute bottom-8 left-1/2 z-30 hidden -translate-x-1/2 items-center gap-4 rounded-full border border-white/80 bg-[#f6f2ea]/94 px-4 py-2.5 text-foreground/80 shadow-[0_22px_54px_-30px_rgba(45,51,48,0.56)] backdrop-blur-[18px] lg:flex"
+      className="pointer-events-none absolute bottom-8 left-1/2 z-30 hidden -translate-x-1/2 items-center gap-4 rounded-full border border-proofound-stone/35 bg-proofound-parchment px-4 py-2.5 text-foreground/80 shadow-[0_4px_16px_-8px_rgba(86,98,79,0.12)] lg:flex"
     >
       <span className="tabular-nums text-[0.68rem] font-medium uppercase tracking-[0.24em] text-foreground/70">
         {currentLabel} / {totalLabel}
@@ -4357,9 +4479,9 @@ export function ScrollytellingSection({
       className="relative scroll-mt-24"
       data-testid="landing-story-section"
     >
-      <div className="px-4 pb-12 pt-[4.75rem] md:px-8 lg:hidden">
+      <div className="px-4 pb-14 pt-[4.75rem] md:px-8 lg:hidden">
         <div
-          className="relative mx-auto max-w-2xl space-y-6 before:absolute before:left-[1.65rem] before:top-[calc(100svh-3.5rem)] before:hidden before:h-[calc(100%-100svh+2rem)] before:w-px before:bg-gradient-to-b before:from-proofound-forest/18 before:to-transparent sm:before:block"
+          className="relative mx-auto max-w-2xl space-y-5 before:absolute before:left-[1.65rem] before:top-[calc(100svh-7.2rem)] before:hidden before:h-[calc(100%-100svh+6rem)] before:w-px before:bg-gradient-to-b before:from-proofound-forest/18 before:to-transparent sm:space-y-6 sm:before:block"
           data-testid="landing-mobile-story"
         >
           {mobileFrames.map((frame, index) => {

@@ -35,8 +35,8 @@ const NetworkBackground = () => {
           backgroundSize: '40px 40px',
         }}
       />
-      <div className="absolute right-[-5%] top-[-10%] h-[42rem] w-[42rem] rounded-full bg-proofound-forest/10 blur-[130px]" />
-      <div className="absolute bottom-[-12%] left-[-6%] h-[34rem] w-[34rem] rounded-full bg-proofound-terracotta/12 blur-[110px]" />
+      <div className="absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(86,98,79,0.08),rgba(86,98,79,0))]" />
+      <div className="absolute inset-x-0 bottom-0 h-56 bg-[linear-gradient(0deg,rgba(139,74,54,0.08),rgba(139,74,54,0))]" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(28,77,58,0),rgba(28,77,58,0.03))] opacity-60" />
     </div>
   );
@@ -82,7 +82,7 @@ export function ProofoundLanding({
       <NetworkBackground />
 
       <header
-        className="fixed left-0 right-0 top-0 z-[80] border-b border-black/8 bg-[#f6f2ea] px-3 py-2.5 shadow-[0_18px_48px_-42px_rgba(45,51,48,0.48)] md:px-8 md:py-4"
+        className="fixed left-0 right-0 top-0 z-[80] border-b border-proofound-stone/40 bg-[#f6f2ea] px-3 py-2.5 shadow-[0_1px_0_rgba(213,202,186,0.45)] md:px-8 md:py-4"
         data-testid="landing-header"
       >
         <div className="mx-auto flex max-w-[88rem] items-center justify-between gap-3 rounded-full px-1 py-0 md:gap-6 md:px-4">
@@ -144,7 +144,7 @@ export function ProofoundLanding({
             <Link
               href="/signup"
               onClick={() => onGetStarted?.()}
-              className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full bg-[#65755d] px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5c6b54] hover:shadow-[0_20px_36px_-22px_rgba(101,117,93,0.78)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] active:translate-y-0 sm:px-5 sm:py-3 sm:text-sm lg:hidden"
+              className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full bg-proofound-forest px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(86,98,79,0.72)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/88 hover:shadow-[0_20px_36px_-22px_rgba(86,98,79,0.78)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] active:translate-y-0 sm:px-5 sm:py-3 sm:text-sm lg:hidden"
             >
               <span>Start</span>
               <ArrowRight className="hidden h-4 w-4 sm:block" aria-hidden="true" />
@@ -152,7 +152,7 @@ export function ProofoundLanding({
             <Link
               href="/signup/organization"
               onClick={() => onOrganizationSignup?.()}
-              className="hidden min-h-11 items-center gap-2 whitespace-nowrap rounded-full bg-[#65755d] px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(101,117,93,0.72)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#5c6b54] hover:shadow-[0_20px_36px_-22px_rgba(101,117,93,0.78)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] active:translate-y-0 sm:px-5 sm:py-3 sm:text-sm md:px-6 lg:inline-flex"
+              className="hidden min-h-11 items-center gap-2 whitespace-nowrap rounded-full bg-proofound-forest px-3.5 py-2.5 text-[0.8rem] font-medium text-white shadow-[0_16px_30px_-20px_rgba(86,98,79,0.72)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-proofound-forest/88 hover:shadow-[0_20px_36px_-22px_rgba(86,98,79,0.78)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f6f2ea] active:translate-y-0 sm:px-5 sm:py-3 sm:text-sm md:px-6 lg:inline-flex"
             >
               <span>Request a pilot</span>
               <ArrowRight className="hidden h-4 w-4 sm:block" aria-hidden="true" />

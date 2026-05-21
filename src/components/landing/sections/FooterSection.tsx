@@ -17,10 +17,10 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
     <footer
       id="footer"
       data-testid="landing-footer-section"
-      className="border-t border-white/35 px-6 pb-12 pt-10 md:px-10"
+      className="relative z-10 scroll-mt-28 border-t border-proofound-stone/35 bg-[#F1ECE3] px-6 pb-12 pt-10 md:px-10"
     >
-      <div className="mx-auto max-w-7xl">
-        <div className="rounded-[2rem] border border-white/55 bg-white/58 px-5 py-6 backdrop-blur-[18px] md:px-8 md:py-7">
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="rounded-[2rem] border border-proofound-stone/30 bg-[#FAF8F4] px-5 py-6 shadow-sm md:px-8 md:py-7">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div className="space-y-3">
               <Link href="/" className="inline-flex items-center gap-3" aria-label="Proofound home">
