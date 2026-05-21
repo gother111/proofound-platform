@@ -26,11 +26,18 @@ vi.mock('@/lib/launch/trace', () => ({
   emitLaunchTrace: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/portfolio/org/[slug]/export/route';
 import { createClient } from '@/lib/supabase/server';
 import { fetchOrganizationTrustExportData } from '@/lib/portfolio/export-data';
 import { generateOrganizationProfilePdf } from '@/lib/portfolio/pdf';
 import { emitLaunchTrace } from '@/lib/launch/trace';
+import { log } from '@/lib/log';
 
 function mockSupabase({
   user,
@@ -282,6 +289,9 @@ describe('/api/portfolio/org/[slug]/export', () => {
         state: 'org_export_failed',
       })
     );
+    expect(log.error).toHaveBeenCalledWith('portfolio.org_export.failed', {
+      error: expect.any(Error),
+    });
   });
 
   it('returns a format-neutral error when PDF export generation fails', async () => {

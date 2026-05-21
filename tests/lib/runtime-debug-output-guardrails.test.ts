@@ -673,4 +673,37 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Error deleting proof:');
     expect(sources).not.toContain('Proof DELETE error:');
   });
+
+  it('keeps portfolio API failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/portfolio/export/route.ts'),
+      readSource('src/app/api/portfolio/public/[handle]/export/route.ts'),
+      readSource('src/app/api/portfolio/org/[slug]/export/route.ts'),
+      readSource('src/app/api/portfolio/visibility/route.ts'),
+      readSource('src/app/api/portfolio/public/[handle]/summary/route.ts'),
+      readSource('src/app/api/portfolio/text-pack/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('portfolio.export.analytics_failed');
+    expect(sources).toContain('portfolio.export.failed');
+    expect(sources).toContain('portfolio.public_export.failed');
+    expect(sources).toContain('portfolio.org_export.failed');
+    expect(sources).toContain('portfolio.visibility.get_failed');
+    expect(sources).toContain('portfolio.visibility.update_failed');
+    expect(sources).toContain('portfolio.visibility.profile_state_update_failed');
+    expect(sources).toContain('portfolio.visibility.post_failed');
+    expect(sources).toContain('portfolio.public_summary.failed');
+    expect(sources).toContain('portfolio.text_pack.failed');
+    expect(sources).not.toContain('portfolio export analytics failed');
+    expect(sources).not.toContain('portfolio export failed');
+    expect(sources).not.toContain('public portfolio export failed');
+    expect(sources).not.toContain('organization portfolio export failed');
+    expect(sources).not.toContain('visibility get failed');
+    expect(sources).not.toContain('visibility update failed');
+    expect(sources).not.toContain('portfolio state update failed');
+    expect(sources).not.toContain('visibility post failed');
+    expect(sources).not.toContain('public text pack failed');
+    expect(sources).not.toContain('text pack failed');
+  });
 });

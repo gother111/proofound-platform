@@ -30,12 +30,19 @@ vi.mock('@/lib/launch/trace', () => ({
   emitLaunchTrace: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/portfolio/export/route';
 import { createClient } from '@/lib/supabase/server';
 import { fetchTrustExportData } from '@/lib/portfolio/export-data';
 import { generateTrustPdf } from '@/lib/portfolio/pdf';
 import { emitPortfolioPdfExportSucceeded } from '@/lib/analytics/events';
 import { emitLaunchTrace } from '@/lib/launch/trace';
+import { log } from '@/lib/log';
 
 function mockSupabaseUser(user: { id: string } | null) {
   (createClient as any).mockResolvedValue({
@@ -146,8 +153,6 @@ describe('/api/portfolio/export', () => {
   });
 
   it('still returns PDF when analytics emission fails', async () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
     mockSupabaseUser({ id: 'user-1' });
     (fetchTrustExportData as any).mockResolvedValue({
       schemaVersion: 'proofound.portfolio-export.v1',
@@ -212,11 +217,9 @@ describe('/api/portfolio/export', () => {
     expect(bytes.length).toBeGreaterThan(0);
 
     await Promise.resolve();
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'portfolio export analytics failed',
-      expect.any(Error)
-    );
-    consoleErrorSpy.mockRestore();
+    expect(log.error).toHaveBeenCalledWith('portfolio.export.analytics_failed', {
+      error: expect.any(Error),
+    });
   });
 
   it('returns canonical JSON when format=json is requested', async () => {
@@ -369,5 +372,8 @@ describe('/api/portfolio/export', () => {
         state: 'portfolio_export_failed',
       })
     );
+    expect(log.error).toHaveBeenCalledWith('portfolio.export.failed', {
+      error: expect.any(Error),
+    });
   });
 });

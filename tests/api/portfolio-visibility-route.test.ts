@@ -29,10 +29,17 @@ vi.mock('@/lib/portfolio/public-invalidation', () => ({
   revalidatePublicPortfolioByProfileId: vi.fn(),
 }));
 
-import { POST } from '@/app/api/portfolio/visibility/route';
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
+import { GET, POST } from '@/app/api/portfolio/visibility/route';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { computePortfolioPublicationState } from '@/lib/proof-trust/snapshots';
+import { log } from '@/lib/log';
 
 function request(body: Record<string, unknown>) {
   return new NextRequest('http://localhost/api/portfolio/visibility', {
@@ -268,5 +275,43 @@ describe('POST /api/portfolio/visibility privacy preflight', () => {
         search_indexing_enabled_at: null,
       })
     );
+  });
+
+  it('logs visibility fetch failures with structured diagnostics', async () => {
+    const routeError = new Error('session unavailable');
+    vi.mocked(createClient).mockRejectedValueOnce(routeError);
+
+    const response = await GET();
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to fetch visibility' });
+    expect(log.error).toHaveBeenCalledWith('portfolio.visibility.get_failed', {
+      error: routeError,
+    });
+  });
+
+  it('logs visibility profile-state update failures with structured diagnostics', async () => {
+    const profileUpdateError = new Error('profile update failed');
+    const supabase = buildSupabase();
+    supabase.__mocks.profileUpdate.mockReturnValueOnce({
+      eq: vi.fn().mockResolvedValue({ error: profileUpdateError }),
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const response = await POST(
+      request({
+        publicPageEnabled: true,
+        searchIndexingEnabled: false,
+        header: true,
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to save visibility' });
+    expect(log.error).toHaveBeenCalledWith('portfolio.visibility.profile_state_update_failed', {
+      error: profileUpdateError,
+    });
   });
 });

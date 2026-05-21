@@ -10,9 +10,16 @@ vi.mock('@/lib/portfolio/pdf', () => ({
   generateTrustPdf: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/portfolio/public/[handle]/export/route';
 import { generateTrustPdf } from '@/lib/portfolio/pdf';
 import { resolvePublicIndividualPortfolioAccessByHandle } from '@/lib/portfolio/public-projection';
+import { log } from '@/lib/log';
 
 function buildAccessibleAccess() {
   return {
@@ -188,6 +195,9 @@ describe('/api/portfolio/public/[handle]/export', () => {
 
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ error: 'Failed to generate export' });
+    expect(log.error).toHaveBeenCalledWith('portfolio.public_export.failed', {
+      error: expect.any(Error),
+    });
   });
 
   it('returns the same neutral error when text export generation fails', async () => {

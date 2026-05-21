@@ -11,6 +11,7 @@ import { generateTrustPdf } from '@/lib/portfolio/pdf';
 import { buildTextPack } from '@/lib/portfolio/text-pack';
 import { emitPortfolioPdfExportSucceeded } from '@/lib/analytics/events';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
+import { log } from '@/lib/log';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -102,7 +103,7 @@ export async function GET(request: Request) {
       source: 'portfolio_export_route',
       handle: data.profile.handle,
     }).catch((analyticsError) => {
-      console.error('portfolio export analytics failed', analyticsError);
+      log.error('portfolio.export.analytics_failed', { error: analyticsError });
     });
 
     const exportedHandle = data.profile.handle;
@@ -116,11 +117,7 @@ export async function GET(request: Request) {
 
     return respondWithPdf(bytes, 'proofound-trust.pdf');
   } catch (error) {
-    console.error('portfolio export failed', {
-      name: error instanceof Error ? error.name : 'UnknownError',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      error,
-    });
+    log.error('portfolio.export.failed', { error });
     emitLaunchTrace(trace, {
       outcome: 'failure',
       state: 'portfolio_export_failed',
