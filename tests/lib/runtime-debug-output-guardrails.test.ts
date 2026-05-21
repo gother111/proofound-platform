@@ -473,4 +473,14 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Error fetching individual profile:');
     expect(source).not.toContain('Error in verification status API:');
   });
+
+  it('keeps verification integrity helper failures on structured server logging', () => {
+    const source = readSource('src/lib/verification/integrity.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('verification.integrity.admin_client_unavailable');
+    expect(source).toContain('verification.integrity.audit_log_insert_failed');
+    expect(source).not.toContain('verification integrity admin client unavailable:');
+    expect(source).not.toContain('verification audit log insert failed:');
+  });
 });

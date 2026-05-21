@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { log } from '@/lib/log';
 import { hashPII } from '@/lib/utils/privacy';
 
 export const VERIFICATION_INTEGRITY_REASONS = {
@@ -76,7 +77,7 @@ function createAdminClientSafe() {
   try {
     return createAdminClient();
   } catch (error) {
-    console.warn('verification integrity admin client unavailable:', error);
+    log.warn('verification.integrity.admin_client_unavailable', { error });
     return null;
   }
 }
@@ -435,6 +436,11 @@ export async function writeVerificationAuditLog(params: {
 
     await adminClient.from('audit_logs').insert(payload);
   } catch (error) {
-    console.error('verification audit log insert failed:', error);
+    log.error('verification.integrity.audit_log_insert_failed', {
+      error,
+      action: params.action,
+      targetType: params.targetType,
+      targetId: params.targetId,
+    });
   }
 }
