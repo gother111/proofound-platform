@@ -5169,3 +5169,13 @@ Browser evidence:
 - Preserved privacy-summary counts, full-page section focus behavior, data export alerts, Public Page visibility toggles, save behavior, AI privacy-preflight fallback copy, and manual checklist fallback behavior.
 - Extended runtime debug-output guardrails so the old settings privacy/publication console strings cannot return.
 - Verification passed: focused settings privacy/runtime guard run `npm test -- --run tests/ui/privacy-overview-copy.test.tsx tests/ui/portfolio-visibility-card-ai.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (3 files / 89 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted settings privacy/publication console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Realtime Messaging Diagnostics
+
+- Timestamp: 2026-05-21 17:02 CEST.
+- Continued the active messaging workflow sweep after the shared realtime hook and realtime thread component still emitted raw console diagnostics for presence, typing indicator, read receipt, conversation refresh, and send failures.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using `messages.realtime.*` and `messages.thread.*` event names.
+- Preserved realtime subscription behavior, connection status UI, typing lifecycle, read-receipt updates, mark-all-read behavior, conversation reveal-state refreshes, optimistic sent-message append, and existing failed-send toast.
+- Kept presence diagnostics redacted to self/other plus count instead of logging raw presence payloads or user identifiers.
+- Extended runtime debug-output guardrails so the old realtime messaging console strings cannot return.
+- Verification passed: focused messaging/runtime guard run `npm test -- --run tests/routes/organization-messages-page.test.tsx tests/ui/deferred-messages-client.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (3 files / 87 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted realtime messaging console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

@@ -440,6 +440,33 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to send message:');
   });
 
+  it('keeps realtime messaging failures on client diagnostics without console output', () => {
+    const sources = [
+      readSource('src/hooks/useRealtimeMessages.ts'),
+      readSource('src/components/messaging/RealtimeMessageThread.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain('dispatchClientDiagnostic');
+    expect(sources).toContain('messages.realtime.presence_joined');
+    expect(sources).toContain('messages.realtime.presence_left');
+    expect(sources).toContain('messages.realtime.typing_indicator_failed');
+    expect(sources).toContain('messages.realtime.mark_read_failed');
+    expect(sources).toContain('messages.realtime.mark_read_unexpected_failed');
+    expect(sources).toContain('messages.realtime.mark_all_read_failed');
+    expect(sources).toContain('messages.realtime.mark_all_read_unexpected_failed');
+    expect(sources).toContain('messages.thread.conversation_refresh_failed');
+    expect(sources).toContain('messages.thread.send_failed');
+    expect(sources).not.toContain('User joined:');
+    expect(sources).not.toContain('User left:');
+    expect(sources).not.toContain('Failed to send typing indicator:');
+    expect(sources).not.toContain('Failed to mark message as read:');
+    expect(sources).not.toContain('Error marking message as read:');
+    expect(sources).not.toContain('Failed to mark all messages as read:');
+    expect(sources).not.toContain('Error marking all messages as read:');
+    expect(sources).not.toContain('Failed to refresh conversation state:');
+    expect(sources).not.toContain('Failed to send message:');
+  });
+
   it('keeps candidate invite client failures on client diagnostics without console output', () => {
     const source = readSource('src/app/candidate-invite/[token]/CandidateInviteClient.tsx');
 

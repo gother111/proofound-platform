@@ -7,6 +7,7 @@ import type {
   RealtimePresenceLeavePayload,
 } from '@supabase/realtime-js';
 import { toast } from 'sonner';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 export interface Message {
   id: string;
@@ -132,14 +133,20 @@ export function useRealtimeMessages({
         'presence',
         { event: 'join' },
         ({ key, newPresences }: RealtimePresenceJoinPayload<PresenceState>) => {
-          console.log('User joined:', key, newPresences);
+          dispatchClientDiagnostic('messages.realtime.presence_joined', {
+            participant: key === userId ? 'self' : 'other',
+            count: newPresences.length,
+          });
         }
       )
       .on(
         'presence',
         { event: 'leave' },
         ({ key, leftPresences }: RealtimePresenceLeavePayload<PresenceState>) => {
-          console.log('User left:', key, leftPresences);
+          dispatchClientDiagnostic('messages.realtime.presence_left', {
+            participant: key === userId ? 'self' : 'other',
+            count: leftPresences.length,
+          });
         }
       )
       .subscribe(async (status: string) => {
@@ -182,7 +189,7 @@ export function useRealtimeMessages({
           typing,
         });
       } catch (error) {
-        console.error('Failed to send typing indicator:', error);
+        dispatchClientErrorDiagnostic('messages.realtime.typing_indicator_failed', error);
       }
     },
     [channel, disabled, userId]
@@ -241,10 +248,10 @@ export function useRealtimeMessages({
           .is('read_at', null);
 
         if (error) {
-          console.error('Failed to mark message as read:', error);
+          dispatchClientErrorDiagnostic('messages.realtime.mark_read_failed', error);
         }
       } catch (error) {
-        console.error('Error marking message as read:', error);
+        dispatchClientErrorDiagnostic('messages.realtime.mark_read_unexpected_failed', error);
       }
     },
     [conversationId, disabled, supabase]
@@ -263,10 +270,10 @@ export function useRealtimeMessages({
         .is('read_at', null);
 
       if (error) {
-        console.error('Failed to mark all messages as read:', error);
+        dispatchClientErrorDiagnostic('messages.realtime.mark_all_read_failed', error);
       }
     } catch (error) {
-      console.error('Error marking all messages as read:', error);
+      dispatchClientErrorDiagnostic('messages.realtime.mark_all_read_unexpected_failed', error);
     }
   }, [conversationId, disabled, userId, supabase]);
 

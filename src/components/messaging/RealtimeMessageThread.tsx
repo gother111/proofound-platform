@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Wifi, WifiOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 export interface RealtimeMessageThreadProps {
   conversationId: string;
@@ -74,7 +75,7 @@ export function RealtimeMessageThread({
         otherPartyAvatar: data.otherParticipant?.avatarUrl || otherPartyAvatar,
       });
     } catch (error) {
-      console.error('Failed to refresh conversation state:', error);
+      dispatchClientErrorDiagnostic('messages.thread.conversation_refresh_failed', error);
     }
   }, [conversationId, otherPartyAvatar, otherPartyName]);
 
@@ -205,7 +206,7 @@ export function RealtimeMessageThread({
 
       setMessages((prev) => [...prev, optimisticMessage]);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      dispatchClientErrorDiagnostic('messages.thread.send_failed', error);
       toast.error('Failed to send message. Please try again.');
     }
   };
