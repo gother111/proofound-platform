@@ -986,4 +986,18 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to update assignment:');
     expect(source).not.toContain('Unexpected error updating assignment:');
   });
+
+  it('keeps tour server-action failures on structured server logging', () => {
+    const source = readSource('src/actions/tour.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('tour.complete.verify_failed');
+    expect(source).toContain('tour.complete.failed');
+    expect(source).toContain('tour.reset.failed');
+    expect(source).toContain('tour.status.failed');
+    expect(source).not.toContain('Tour completion update may have failed - profile not updated');
+    expect(source).not.toContain('Failed to complete tour:');
+    expect(source).not.toContain('Failed to reset tour:');
+    expect(source).not.toContain('Failed to get tour status:');
+  });
 });

@@ -4933,3 +4933,11 @@ Browser evidence:
 - Replaced those diagnostics with structured `onboarding.*` log events while preserving proof-first validation, launch-trace outcomes, handle conflict handling, private context anchoring, Proof Pack writes, file-upload attachment behavior, organization RLS tolerance, and generic client-facing errors.
 - Added focused action coverage for individual Proof Pack insert failures and organization owner insert failures, and extended runtime debug-output guardrails so the old onboarding console strings cannot return.
 - Verification passed: focused onboarding/runtime guard run `npm test -- --run tests/actions/onboarding.test.ts tests/actions/onboarding-private-context-scaffolding.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (3 files / 66 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted onboarding-action console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Tour Action Structured Logging
+
+- Timestamp: 2026-05-21 15:14 CEST.
+- Continued the active first-run/settings diagnostics sweep after `src/actions/tour.ts` still emitted raw console diagnostics for tour completion verification, completion failures, reset failures, and status-load failures.
+- Replaced those diagnostics with structured `tour.*` log events while preserving auth checks, profile update verification, app-shell revalidation, reset semantics, status response shape, and client-facing error messages.
+- Added focused action coverage for completion success, completion verification failure, reset failure, and status failure/success behavior, and extended runtime debug-output guardrails so the old tour console strings cannot return.
+- Verification passed: focused tour/runtime guard run `npm test -- --run tests/actions/tour.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 60 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted tour-action console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
