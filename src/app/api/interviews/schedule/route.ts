@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
       count: transformedInterviews.length,
     });
   } catch (error: any) {
-    console.error('Failed to fetch interviews:', error);
+    log.error('interviews.schedule.list_failed', { error });
     return NextResponse.json({ error: 'Failed to fetch interviews' }, { status: 500 });
   }
 }

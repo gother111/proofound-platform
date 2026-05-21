@@ -574,4 +574,27 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Error fetching messages:');
     expect(sources).not.toContain('Error sending message:');
   });
+
+  it('keeps interview API failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/interviews/route.ts'),
+      readSource('src/app/api/interviews/schedule/route.ts'),
+      readSource('src/app/api/interviews/edit/route.ts'),
+      readSource('src/app/api/interviews/cancel/route.ts'),
+      readSource('src/app/api/interviews/complete/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('interviews.list.failed');
+    expect(sources).toContain('interviews.schedule.list_failed');
+    expect(sources).toContain('interviews.edit.failed');
+    expect(sources).toContain('interviews.cancel.failed');
+    expect(sources).toContain('interviews.complete.feedback_invites_failed');
+    expect(sources).toContain('interviews.complete.failed');
+    expect(sources).not.toContain('Failed to fetch interviews:');
+    expect(sources).not.toContain('Interview edit error:');
+    expect(sources).not.toContain('Interview cancellation error:');
+    expect(sources).not.toContain('Interview completion feedback invites failed');
+    expect(sources).not.toContain('Interview completion failed');
+  });
 });

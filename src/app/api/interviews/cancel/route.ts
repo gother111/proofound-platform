@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { log } from '@/lib/log';
 import {
   canManageInterviewAsOrgAdmin,
   postInterviewUpdateMessageBestEffort,
@@ -175,7 +176,7 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error: any) {
-    console.error('Interview cancellation error:', error);
+    log.error('interviews.cancel.failed', { error });
 
     if (error.name === 'ZodError') {
       return NextResponse.json(

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { createClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 import {
   canManageInterviewAsOrgAdmin,
   postInterviewUpdateMessageBestEffort,
@@ -199,7 +200,7 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error: any) {
-    console.error('Interview edit error:', error);
+    log.error('interviews.edit.failed', { error });
 
     if (error.name === 'ZodError') {
       return NextResponse.json(

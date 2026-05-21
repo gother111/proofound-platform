@@ -7,6 +7,7 @@ import {
   canManageInterviewAsOrgAdmin,
   postInterviewUpdateMessageBestEffort,
 } from '@/lib/interviews/messaging';
+import { log } from '@/lib/log';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -33,6 +34,12 @@ vi.mock('@/lib/workflow/service', () => ({
     timestamps: {},
     allowedActions: [],
   }),
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
 }));
 
 describe('POST /api/interviews/cancel', () => {
@@ -103,6 +110,31 @@ describe('POST /api/interviews/cancel', () => {
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
+    expect(canManageInterviewAsOrgAdmin).not.toHaveBeenCalled();
+  });
+
+  it('logs validation failures with structured diagnostics', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: orgAdminId } },
+          error: null,
+        }),
+      },
+      from: vi.fn(),
+    } as any);
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/interviews/cancel', {
+        method: 'POST',
+        body: JSON.stringify({ interviewId: 'not-a-uuid' }),
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(log.error).toHaveBeenCalledWith('interviews.cancel.failed', {
+      error: expect.objectContaining({ name: 'ZodError' }),
+    });
     expect(canManageInterviewAsOrgAdmin).not.toHaveBeenCalled();
   });
 

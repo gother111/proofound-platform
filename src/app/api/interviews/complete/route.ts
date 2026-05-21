@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { withWorkflowMutationIdempotency } from '@/lib/api/workflow-idempotency';
+import { log } from '@/lib/log';
 import {
   getFeedbackReminderSchedule,
   issueFeedbackInvites,
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
         try {
           feedbackInvites = await issueFeedbackInvites(body.interviewId);
         } catch (feedbackError) {
-          console.warn('Interview completion feedback invites failed', feedbackError);
+          log.warn('interviews.complete.feedback_invites_failed', { error: feedbackError });
           feedbackInviteWarning = 'Feedback invites could not be issued immediately.';
         }
 
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error: any) {
-    console.error('Interview completion failed', error);
+    log.error('interviews.complete.failed', { error });
 
     if (error.name === 'ZodError') {
       return NextResponse.json(

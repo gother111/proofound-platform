@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   resolveFeedbackFollowUpState: vi.fn(),
   recordInterviewTransition: vi.fn(),
   buildWorkflowView: vi.fn(),
+  logWarn: vi.fn(),
+  logError: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -23,6 +25,13 @@ vi.mock('@/lib/feedback/service', () => ({
 vi.mock('@/lib/workflow/service', () => ({
   recordInterviewTransition: mocks.recordInterviewTransition,
   buildWorkflowView: mocks.buildWorkflowView,
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    warn: mocks.logWarn,
+    error: mocks.logError,
+  },
 }));
 
 import { POST } from '@/app/api/interviews/complete/route';
@@ -114,7 +123,8 @@ describe('POST /api/interviews/complete', () => {
   });
 
   it('returns success even if feedback invite issuance fails after completion', async () => {
-    mocks.issueFeedbackInvites.mockRejectedValue(new Error('schema cache drift'));
+    const feedbackError = new Error('schema cache drift');
+    mocks.issueFeedbackInvites.mockRejectedValue(feedbackError);
 
     const response = await POST(
       buildRequest({ interviewId: '11111111-1111-4111-8111-111111111111' })
@@ -134,6 +144,9 @@ describe('POST /api/interviews/complete', () => {
       issuedInvites: 0,
       warning: 'Feedback invites could not be issued immediately.',
       overallState: 'due',
+    });
+    expect(mocks.logWarn).toHaveBeenCalledWith('interviews.complete.feedback_invites_failed', {
+      error: feedbackError,
     });
   });
 
@@ -181,5 +194,21 @@ describe('POST /api/interviews/complete', () => {
         state: 'completed',
       })
     );
+  });
+
+  it('logs completion failures with structured diagnostics', async () => {
+    const routeError = new Error('auth lookup failed');
+    mocks.createClient.mockRejectedValue(routeError);
+
+    const response = await POST(
+      buildRequest({ interviewId: '11111111-1111-4111-8111-111111111111' })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Unexpected error' });
+    expect(mocks.logError).toHaveBeenCalledWith('interviews.complete.failed', {
+      error: routeError,
+    });
   });
 });
