@@ -3027,6 +3027,7 @@ describe('launch gate package configuration', () => {
       'docs/backlog/phase-4-pilot-hardening.md',
       'docs/qa/summary.md',
       'docs/mvp-launch-master-checklist.md',
+      'agent/checklists/verification.md',
     ];
     const localhostFinalGate =
       /BASE_URL=http:\/\/localhost:3000[^\n`]*(?:test:launch:smoke|perf:budgets|monitor:launch|launch:status|launch:validate|go:no-go)/;

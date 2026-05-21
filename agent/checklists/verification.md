@@ -156,19 +156,18 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `npm run test:e2e:org:strict`
   - `npm run test:e2e:privacy:strict`
   - `npm run test:e2e:providers:advisory` only if connected-provider scheduling is intentionally in scope for the target
-  - `BASE_URL=http://localhost:3000 npm run perf:budgets`
-  - `BASE_URL=http://localhost:3000 npm run monitor:launch`
-  - `BASE_URL=http://localhost:3000 npm run launch:status`
-  - `BASE_URL=http://localhost:3000 npm run go:no-go`
+  - `BASE_URL=<production-candidate-url> npm run perf:budgets`
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 - The strict gate writes per-command logs and status JSON under `.artifacts/mvp-strict-gates/`.
 - Any timeout is a failed gate and must not be treated as launch-ready.
 - CI also runs perf budgets and go/no-go gates after starting the app. (source: .github/workflows/ci.yml)
-- Perf budgets: `BASE_URL=http://localhost:3000 npm run perf:budgets` (source: scripts/perf-budgets.mjs)
-- Launch smoke artifact: `BASE_URL=http://localhost:3000 npm run test:launch:smoke` (source: package.json, scripts/launch-smoke-runner.ts)
-- Launch synthetic monitors: `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch` (source: package.json, scripts/run-launch-synthetic-monitors.ts)
-- Go/no-go: `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run go:no-go` (source: scripts/go-no-go-check.ts)
-  - Localhost runs prove local parity only: they require a fresh launch smoke artifact, healthy `/api/monitoring/perf-status`, healthy `/api/monitoring/launch-status`, required evidence files, required safe-mode flags, and restore-drill tooling. (source: scripts/go-no-go-check.ts)
-  - Production-candidate runs additionally require a fresh passing restore verification report, defaulting to `.artifacts/launch-restore-report.json`, with readable `summary.json` and `row-fingerprint.json` checkpoint evidence. (source: scripts/go-no-go-check.ts, docs/launch-restore-drill.md)
+- Perf budgets: `BASE_URL=<production-candidate-url> npm run perf:budgets` (source: scripts/perf-budgets.mjs)
+- Launch smoke artifact: `BASE_URL=<production-candidate-url> npm run test:launch:smoke` (source: package.json, scripts/launch-smoke-runner.ts)
+- Launch synthetic monitors: `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch` (source: package.json, scripts/run-launch-synthetic-monitors.ts)
+- Go/no-go: `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go` (source: scripts/go-no-go-check.ts)
+  - Localhost runs prove local parity only and are not final launch evidence. Production-candidate runs additionally require a fresh passing restore verification report, defaulting to `.artifacts/launch-restore-report.json`, with readable `summary.json` and `row-fingerprint.json` checkpoint evidence. (source: scripts/go-no-go-check.ts, docs/launch-restore-drill.md)
 
 ## Migration and Data Safety (Before Production DDL)
 
@@ -273,7 +272,7 @@ Fail condition: any real or pilot data is processed outside invite-only Proof Ar
 - If changes touch launch operations, feature flags, feedback contracts, fallback states, or admin rollout metrics:
   - Run `npx vitest run tests/api/feedback-schema.test.ts`
   - Run `npm run test:launch:smoke`
-  - Run `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
+  - Run `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
   - Run `npm run docs:freshness`
 - Manual smoke expectations for launch-safe behavior:
   - qualified intro corridor can be disabled without breaking portfolio, browse, export, delete, or unpublish
