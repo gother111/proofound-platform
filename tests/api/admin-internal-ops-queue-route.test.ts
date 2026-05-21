@@ -63,8 +63,15 @@ vi.mock('@/lib/audit/admin-logger', () => ({
   logAdminAction: (...args: any[]) => mocks.logAdminActionMock(...args),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/admin/internal-ops/queues/route';
 import { GET as GET_ITEM, PATCH } from '@/app/api/admin/internal-ops/queues/[id]/route';
+import { log } from '@/lib/log';
 
 describe('internal ops queue admin routes', () => {
   beforeEach(() => {
@@ -178,6 +185,9 @@ describe('internal ops queue admin routes', () => {
     expect(body).not.toHaveProperty('details');
     expect(JSON.stringify(body)).not.toContain('user-uploads-private');
     expect(JSON.stringify(body)).not.toContain('Jane Doe Resume.pdf');
+    expect(log.error).toHaveBeenCalledWith('admin.internal_ops_queues.list_failed', {
+      errorName: 'Error',
+    });
   });
 
   it('returns a sanitized queue detail projection for a single internal ops item', async () => {
@@ -274,6 +284,9 @@ describe('internal ops queue admin routes', () => {
     expect(body.details).toBeUndefined();
     expect(JSON.stringify(body)).not.toContain('user-uploads-private');
     expect(JSON.stringify(body)).not.toContain('Jane Doe Resume.pdf');
+    expect(log.error).toHaveBeenCalledWith('admin.internal_ops_queue_item.get_failed', {
+      errorName: 'Error',
+    });
   });
 
   it('updates non-upload queue status through the generic PATCH route and emits an audit event', async () => {
@@ -576,5 +589,8 @@ describe('internal ops queue admin routes', () => {
     expect(body.details).toBeUndefined();
     expect(JSON.stringify(body)).not.toContain('user-uploads-private');
     expect(JSON.stringify(body)).not.toContain('Jane Doe Resume.pdf');
+    expect(log.error).toHaveBeenCalledWith('admin.internal_ops_queue_item.update_failed', {
+      errorName: 'Error',
+    });
   });
 });

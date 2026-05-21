@@ -9,6 +9,7 @@ import {
   transitionInternalOpsQueueItem,
 } from '@/lib/internal-ops/queue';
 import { logAdminAction } from '@/lib/audit/admin-logger';
+import { log } from '@/lib/log';
 import { reviewUploadedFileQueueItem, UploadReviewError } from '@/lib/uploads/review';
 
 const paramsSchema = z.object({
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return jsonError(error.message, 503);
     }
 
-    console.error('Error fetching operations queue item', {
+    log.error('admin.internal_ops_queue_item.get_failed', {
       errorName: error instanceof Error ? error.name : typeof error,
     });
     return jsonError('Failed to fetch operations queue item', 500);
@@ -157,7 +158,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return jsonError(error.message, status);
     }
 
-    console.error('Error updating operations queue item', {
+    log.error('admin.internal_ops_queue_item.update_failed', {
       errorName: error instanceof Error ? error.name : typeof error,
     });
     return jsonError('Failed to update operations queue item', 500);

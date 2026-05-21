@@ -4,6 +4,7 @@ import { adminAuditLog, profiles } from '@/db/schema';
 import { ilike, or, desc, sql, eq, and, gte, lte } from 'drizzle-orm';
 import { adminListGuard } from '../_utils';
 import { toAdminAuditListEntry } from '@/lib/audit/admin-audit-list';
+import { log } from '@/lib/log';
 
 export async function GET(request: NextRequest) {
   try {
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching audit logs', {
+    log.error('admin.audit.list_failed', {
       errorName: error instanceof Error ? error.name : typeof error,
     });
     return NextResponse.json({ error: 'Failed to fetch audit logs' }, { status: 500 });

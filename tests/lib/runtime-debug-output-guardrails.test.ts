@@ -772,4 +772,22 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to fetch current user:');
     expect(sources).not.toContain('Error checking policy consent:');
   });
+
+  it('keeps admin audit and internal-ops queue failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/admin/audit/route.ts'),
+      readSource('src/app/api/admin/internal-ops/queues/route.ts'),
+      readSource('src/app/api/admin/internal-ops/queues/[id]/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('admin.audit.list_failed');
+    expect(sources).toContain('admin.internal_ops_queues.list_failed');
+    expect(sources).toContain('admin.internal_ops_queue_item.get_failed');
+    expect(sources).toContain('admin.internal_ops_queue_item.update_failed');
+    expect(sources).not.toContain('Error fetching audit logs');
+    expect(sources).not.toContain('Error fetching operations queues');
+    expect(sources).not.toContain('Error fetching operations queue item');
+    expect(sources).not.toContain('Error updating operations queue item');
+  });
 });
