@@ -501,7 +501,9 @@ npm run vercel:deploy:prebuilt:production
 - Apply database migrations explicitly via `npm run db:migrate` (do not use `db:push` for production)
 - Verify email sending works
 - Test auth flows end-to-end
-- Verify `https://proofound.io/api/health` returns the deployed commit SHA
+- Verify `https://proofound.io/api/health` returns the minimal public contract with
+  `status:"ok"`. Confirm the deployed commit SHA through Vercel deployment metadata or the
+  prebuilt workflow summary, not the public health payload.
 
 ### Database Migrations on Deploy
 

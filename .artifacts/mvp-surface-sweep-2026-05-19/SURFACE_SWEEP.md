@@ -5269,3 +5269,11 @@ Browser evidence:
 - Added runtime source guardrails so the exact active-copy regressions cannot return.
 - Verified route drift remained closed with `npm run test:launch:routes`.
 - Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 92 tests), launch route inventory `npm run test:launch:routes` (4 files / 20 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted active-copy string scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Public Health Documentation Drift
+
+- Timestamp: 2026-05-21 18:05 CEST.
+- Continued active doc/readiness sweep after README still instructed operators to verify deployed commit SHA through the public `/api/health` route.
+- Corrected README to match the current public health route contract: `/api/health` is minimal liveness only (`status` and `timestamp`), while commit verification belongs in Vercel deployment metadata or the prebuilt workflow summary.
+- Added launch-gate guardrail coverage so active operator docs cannot reintroduce public health commit-SHA expectations that contradict `tests/api/public-health-route.test.ts`.
+- Verification passed: focused docs/health guard run `npm test -- --run tests/scripts/launch-gate-config.test.ts tests/api/public-health-route.test.ts` (2 files / 153 tests), targeted active-doc scan for health commit-SHA guidance, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

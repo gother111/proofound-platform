@@ -1811,6 +1811,39 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps public health docs aligned with the minimal liveness contract', () => {
+    const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8');
+    const deploymentGuide = fs.readFileSync(
+      path.join(repoRoot, 'docs/deployment-guide.md'),
+      'utf8'
+    );
+    const verificationChecklist = fs.readFileSync(
+      path.join(repoRoot, 'agent/checklists/verification.md'),
+      'utf8'
+    );
+    const publicHealthRoute = fs.readFileSync(
+      path.join(repoRoot, 'src/app/api/health/route.ts'),
+      'utf8'
+    );
+    const publicHealthTest = fs.readFileSync(
+      path.join(repoRoot, 'tests/api/public-health-route.test.ts'),
+      'utf8'
+    );
+    const docs = [readme, deploymentGuide, verificationChecklist].join('\n');
+
+    expect(publicHealthRoute).toContain('status');
+    expect(publicHealthRoute).toContain('timestamp');
+    expect(publicHealthTest).toContain(
+      "expect(Object.keys(body).sort()).toEqual(['status', 'timestamp'])"
+    );
+    expect(docs).toContain('minimal public contract');
+    expect(docs).toContain('Vercel deployment metadata');
+    expect(docs).toContain('prebuilt workflow summary');
+    expect(docs).not.toContain('api/health` returns the deployed commit SHA');
+    expect(docs).not.toContain('api/health` reports the deployed commit SHA');
+    expect(docs).not.toContain('api/health` exposes the deployed commit SHA');
+  });
+
   it('keeps SLA enforcement cron expiry explicit and lifecycle-aware', () => {
     const slaCronRoute = fs.readFileSync(
       path.join(repoRoot, 'src/app/api/cron/sla-enforcement/route.ts'),
