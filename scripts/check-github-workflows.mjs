@@ -69,6 +69,26 @@ function validateWorkflow(file, errors) {
       addError(errors, file, `job "${jobId}" must define at least one step.`);
     }
   }
+
+  if (path.basename(file) === 'retry-vercel-deploy.yml') {
+    if (source.includes('run-mvp-strict-gates.mjs')) {
+      addError(
+        errors,
+        file,
+        'retry deploy workflow must stay deploy-specific; run the strict MVP gate in CI or Strict Quality instead.'
+      );
+    }
+
+    const retryJob = parsed.jobs['retry-deploy'];
+    const timeoutMinutes = Number(retryJob?.['timeout-minutes']);
+    if (Number.isFinite(timeoutMinutes) && timeoutMinutes > 60) {
+      addError(
+        errors,
+        file,
+        `retry deploy workflow timeout must stay at or below 60 minutes, got ${timeoutMinutes}.`
+      );
+    }
+  }
 }
 
 function main() {
