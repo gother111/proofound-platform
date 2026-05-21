@@ -4,6 +4,7 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { matches, assignments, organizations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,7 +82,7 @@ export async function GET() {
       scoreVisibility: 'internal_ordering_only',
     });
   } catch (error) {
-    console.error('Failed to fetch hidden matches:', error);
+    log.error('match.hide.list_failed', { error });
     return NextResponse.json({ error: 'Failed to fetch hidden matches' }, { status: 500 });
   }
 }
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to hide match:', error);
+    log.error('match.hide.update_failed', { error });
     return NextResponse.json({ error: 'Failed to hide match' }, { status: 500 });
   }
 }
@@ -177,7 +178,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to unhide match:', error);
+    log.error('match.hide.delete_failed', { error });
     return NextResponse.json({ error: 'Failed to unhide match' }, { status: 500 });
   }
 }

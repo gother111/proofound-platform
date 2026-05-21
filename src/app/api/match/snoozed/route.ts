@@ -3,6 +3,7 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { matches, assignments, organizations } from '@/db/schema';
 import { eq, and, isNotNull, gt } from 'drizzle-orm';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,7 +72,7 @@ export async function GET() {
       scoreVisibility: 'internal_ordering_only',
     });
   } catch (error) {
-    console.error('Error fetching snoozed matches:', error);
+    log.error('match.snoozed.list_failed', { error });
     return NextResponse.json({ error: 'Failed to fetch snoozed matches' }, { status: 500 });
   }
 }

@@ -4803,3 +4803,11 @@ Browser evidence:
 - Hardened PUT so a non-`PGRST116` visibility read failure now returns a safe 500 instead of falling through to the create path.
 - Added focused coverage for structured GET read failures, PUT read failures, and organization publication update failures, and extended runtime debug-output guardrails so the old organization visibility console strings cannot return.
 - Verification passed: focused organization-visibility/runtime guard run `npm test -- --run tests/api/organization-visibility-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 49 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted organization visibility console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Match Hide And Paused API Structured Logging
+
+- Timestamp: 2026-05-21 10:48 CEST.
+- Continued the active matching diagnostics sweep after `/api/match/hide` and `/api/match/snoozed` still emitted raw console diagnostics for hidden-match list, hide, unhide, and paused-match list failures.
+- Replaced those diagnostics with structured `match.hide.*` and `match.snoozed.*` log events while preserving authentication checks, match ownership checks, score redaction, proof-fit labels, matching-feed revalidation, and safe response contracts.
+- Added focused coverage for hidden-match list failures, hide/unhide update failures, and paused-match list failures, and extended runtime debug-output guardrails so the old matching console strings cannot return.
+- Verification passed: focused matching/runtime guard run `npm test -- --run tests/api/match-hide-route.test.ts tests/api/match-snoozed-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (3 files / 48 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted matching console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

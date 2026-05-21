@@ -51,7 +51,14 @@ vi.mock('drizzle-orm', () => ({
   isNotNull: mocks.isNotNull,
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/match/snoozed/route';
+import { log } from '@/lib/log';
 
 describe('GET /api/match/snoozed', () => {
   beforeEach(() => {
@@ -112,5 +119,17 @@ describe('GET /api/match/snoozed', () => {
     });
     expect(body.matches[0]).not.toHaveProperty('matchScore');
     expect(body.matches[0]).not.toHaveProperty('score');
+  });
+
+  it('logs paused-match list failures with structured diagnostics', async () => {
+    const routeError = new Error('snoozed match list failed');
+    mocks.orderBy.mockRejectedValueOnce(routeError);
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to fetch snoozed matches' });
+    expect(log.error).toHaveBeenCalledWith('match.snoozed.list_failed', { error: routeError });
   });
 });

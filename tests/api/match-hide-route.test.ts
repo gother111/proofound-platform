@@ -64,8 +64,15 @@ vi.mock('next/cache', () => ({
   revalidatePath: mocks.revalidatePath,
 }));
 
-import { GET, POST } from '@/app/api/match/hide/route';
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
+import { DELETE, GET, POST } from '@/app/api/match/hide/route';
 import { db } from '@/db';
+import { log } from '@/lib/log';
 
 describe('/api/match/hide', () => {
   beforeEach(() => {
@@ -129,6 +136,18 @@ describe('/api/match/hide', () => {
     expect(body.matches[0]).not.toHaveProperty('score');
   });
 
+  it('logs hidden-match list failures with structured diagnostics', async () => {
+    const routeError = new Error('hidden match list failed');
+    mocks.orderBy.mockRejectedValueOnce(routeError);
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to fetch hidden matches' });
+    expect(log.error).toHaveBeenCalledWith('match.hide.list_failed', { error: routeError });
+  });
+
   it('returns 400 for malformed JSON before match lookup or update', async () => {
     const response = await POST(
       new NextRequest('http://localhost/api/match/hide', {
@@ -141,5 +160,38 @@ describe('/api/match/hide', () => {
     await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
     expect(mocks.findMatch).not.toHaveBeenCalled();
     expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('logs hide update failures with structured diagnostics', async () => {
+    const routeError = new Error('hide update failed');
+    mocks.updateSet.mockReturnValueOnce({ where: vi.fn().mockRejectedValue(routeError) });
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/match/hide', {
+        method: 'POST',
+        body: JSON.stringify({ matchId: 'match-1' }),
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to hide match' });
+    expect(log.error).toHaveBeenCalledWith('match.hide.update_failed', { error: routeError });
+  });
+
+  it('logs unhide update failures with structured diagnostics', async () => {
+    const routeError = new Error('unhide update failed');
+    mocks.updateSet.mockReturnValueOnce({ where: vi.fn().mockRejectedValue(routeError) });
+
+    const response = await DELETE(
+      new NextRequest('http://localhost/api/match/hide?matchId=match-1', {
+        method: 'DELETE',
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to unhide match' });
+    expect(log.error).toHaveBeenCalledWith('match.hide.delete_failed', { error: routeError });
   });
 });

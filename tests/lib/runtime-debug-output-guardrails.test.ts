@@ -725,4 +725,21 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Error updating org publication settings:');
     expect(source).not.toContain('Error in visibility PUT:');
   });
+
+  it('keeps match hide and paused-match failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/match/hide/route.ts'),
+      readSource('src/app/api/match/snoozed/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('match.hide.list_failed');
+    expect(sources).toContain('match.hide.update_failed');
+    expect(sources).toContain('match.hide.delete_failed');
+    expect(sources).toContain('match.snoozed.list_failed');
+    expect(sources).not.toContain('Failed to fetch hidden matches:');
+    expect(sources).not.toContain('Failed to hide match:');
+    expect(sources).not.toContain('Failed to unhide match:');
+    expect(sources).not.toContain('Error fetching snoozed matches:');
+  });
 });
