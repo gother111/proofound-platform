@@ -201,7 +201,18 @@ describe('runtime debug output guardrails', () => {
   it('keeps identity reveal success paths from logging conversation identifiers', () => {
     const source = readSource('src/lib/messaging/identity-reveal.ts');
 
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('messaging.identity_reveal.email_context_unresolved');
+    expect(source).toContain('messaging.identity_reveal.organization_route_unresolved');
+    expect(source).toContain('messaging.identity_reveal.email_send_failed');
+    expect(source).toContain('messaging.identity_reveal.trigger_failed');
+    expect(source).toContain('messaging.identity_reveal.status_check_failed');
     expect(source).not.toContain('Identity revealed for conversation');
+    expect(source).not.toContain('Failed to resolve role-safe identity reveal email context');
+    expect(source).not.toContain('Failed to resolve organization route for identity reveal email');
+    expect(source).not.toContain('Failed to send identity revealed emails:');
+    expect(source).not.toContain('Identity reveal error:');
+    expect(source).not.toContain('Check identity reveal error:');
   });
 
   it('keeps Supabase client selection quiet outside explicit logger surfaces', () => {
