@@ -330,7 +330,10 @@ export async function choosePersona(formData: FormData) {
     .eq('id', user.id);
 
   if (error) {
-    console.error('Failed to update persona:', error);
+    log.error('onboarding.persona.update_failed', {
+      userId: user.id,
+      error,
+    });
     return { error: 'Failed to update persona. Please try again.' };
   }
 
@@ -559,7 +562,10 @@ export async function completeIndividualOnboarding(formData: FormData) {
         return { error: 'Handle already taken. Please choose another.' };
       }
 
-      console.error('Failed to update profile during onboarding:', profileUpdate.error);
+      log.error('onboarding.individual.profile_update_failed', {
+        userId: user.id,
+        error: profileUpdate.error,
+      });
       emitLaunchTrace(trace, {
         outcome: 'failure',
         state: 'portfolio_publish_profile_update_failed',
@@ -577,10 +583,10 @@ export async function completeIndividualOnboarding(formData: FormData) {
     });
 
     if (individualInsert.error) {
-      console.error(
-        'Failed to create individual profile during onboarding:',
-        individualInsert.error
-      );
+      log.error('onboarding.individual.profile_insert_failed', {
+        userId: user.id,
+        error: individualInsert.error,
+      });
       emitLaunchTrace(trace, {
         outcome: 'failure',
         state: 'portfolio_publish_profile_insert_failed',
@@ -599,10 +605,10 @@ export async function completeIndividualOnboarding(formData: FormData) {
     });
 
     if (matchingProfileInsert.error) {
-      console.error(
-        'Failed to persist matching preferences during onboarding:',
-        matchingProfileInsert.error
-      );
+      log.error('onboarding.individual.matching_profile_failed', {
+        userId: user.id,
+        error: matchingProfileInsert.error,
+      });
       emitLaunchTrace(trace, {
         outcome: 'failure',
         state: 'portfolio_publish_matching_profile_failed',
@@ -666,7 +672,11 @@ export async function completeIndividualOnboarding(formData: FormData) {
     }
 
     if (contextInsertError) {
-      console.error('Failed to create onboarding context:', contextInsertError);
+      log.error('onboarding.individual.context_insert_failed', {
+        userId: user.id,
+        contextType,
+        error: contextInsertError,
+      });
       emitLaunchTrace(trace, {
         outcome: 'failure',
         state: 'portfolio_publish_context_insert_failed',
@@ -774,7 +784,11 @@ export async function completeIndividualOnboarding(formData: FormData) {
     });
 
     if (proofArtifactInsert.error) {
-      console.error('Failed to create onboarding proof artifact:', proofArtifactInsert.error);
+      log.error('onboarding.individual.proof_artifact_insert_failed', {
+        userId: user.id,
+        contextType,
+        error: proofArtifactInsert.error,
+      });
       emitLaunchTrace(trace, {
         outcome: 'failure',
         state: 'portfolio_publish_proof_artifact_failed',
@@ -878,7 +892,12 @@ export async function completeIndividualOnboarding(formData: FormData) {
     });
 
     if (proofPackInsert.error) {
-      console.error('Failed to create onboarding proof pack:', proofPackInsert.error);
+      log.error('onboarding.individual.proof_pack_insert_failed', {
+        userId: user.id,
+        contextType,
+        artifactId,
+        error: proofPackInsert.error,
+      });
       emitLaunchTrace(trace, {
         outcome: 'failure',
         state: 'portfolio_publish_proof_pack_failed',
@@ -903,7 +922,13 @@ export async function completeIndividualOnboarding(formData: FormData) {
     });
 
     if (proofPackItemInsert.error) {
-      console.error('Failed to attach onboarding proof to proof pack:', proofPackItemInsert.error);
+      log.error('onboarding.individual.proof_pack_item_insert_failed', {
+        userId: user.id,
+        contextType,
+        artifactId,
+        packId,
+        error: proofPackItemInsert.error,
+      });
       emitLaunchTrace(trace, {
         outcome: 'failure',
         state: 'portfolio_publish_proof_pack_item_failed',
@@ -922,7 +947,10 @@ export async function completeIndividualOnboarding(formData: FormData) {
         verifierProfileId: user.id,
       });
     } catch (reconcileError) {
-      console.error('Individual onboarding contradiction reconciliation failed:', reconcileError);
+      log.warn('onboarding.individual.contradiction_reconcile_failed', {
+        userId: user.id,
+        error: reconcileError,
+      });
     }
 
     await syncReadinessMilestones(user.id, { source: 'individual_onboarding_completed' });
@@ -960,7 +988,10 @@ export async function completeIndividualOnboarding(formData: FormData) {
       },
     };
   } catch (error: any) {
-    console.error('Individual onboarding error:', error);
+    log.error('onboarding.individual.unexpected_failed', {
+      userId: user.id,
+      error,
+    });
     emitLaunchTrace(trace, {
       outcome: 'failure',
       state: 'portfolio_publish_unhandled_error',
@@ -1081,7 +1112,10 @@ export async function completeOrganizationOnboarding(formData: FormData) {
         !orgInsert.error.message?.includes('row-level security') &&
         !orgInsert.error.message?.includes('new row violates')
       ) {
-        console.error('Organization onboarding insert error:', orgInsert.error);
+        log.error('onboarding.organization.insert_failed', {
+          orgId,
+          error: orgInsert.error,
+        });
         return { error: 'Failed to create organization. Please try again.' };
       }
 
@@ -1108,7 +1142,11 @@ export async function completeOrganizationOnboarding(formData: FormData) {
         !memberInsert.error.message?.includes('row-level security') &&
         !memberInsert.error.message?.includes('new row violates')
       ) {
-        console.error('Failed to add organization owner:', memberInsert.error);
+        log.error('onboarding.organization.owner_insert_failed', {
+          orgId,
+          userId: user.id,
+          error: memberInsert.error,
+        });
         return { error: 'Failed to create organization. Please try again.' };
       }
 
@@ -1124,7 +1162,11 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       .eq('id', user.id);
 
     if (personaUpdate.error) {
-      console.error('Failed to update persona after organization onboarding:', personaUpdate.error);
+      log.warn('onboarding.organization.persona_update_failed', {
+        orgId,
+        userId: user.id,
+        error: personaUpdate.error,
+      });
     }
 
     const orgVisibilityUpsert = await supabase.from('organization_field_visibility').upsert({
@@ -1134,10 +1176,10 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     });
 
     if (orgVisibilityUpsert.error) {
-      console.error(
-        'Failed to apply day-1 organization visibility defaults:',
-        orgVisibilityUpsert.error
-      );
+      log.warn('onboarding.organization.visibility_defaults_failed', {
+        orgId,
+        error: orgVisibilityUpsert.error,
+      });
     }
 
     const publicPortfolioPath = `/portfolio/org/${encodeURIComponent(orgSlug)}`;
@@ -1156,7 +1198,10 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       publicPortfolioUrl: buildPublicPortfolioUrl(publicPortfolioPath),
     };
   } catch (error: any) {
-    console.error('Organization onboarding error:', error);
+    log.error('onboarding.organization.unexpected_failed', {
+      userId: user.id,
+      error,
+    });
     emitLaunchTrace(trace, {
       outcome: 'failure',
       state: 'org_portfolio_publish_unhandled_error',

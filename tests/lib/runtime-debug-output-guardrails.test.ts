@@ -252,6 +252,42 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Membership inserted but RLS blocked SELECT');
   });
 
+  it('keeps onboarding action failures on structured server logging', () => {
+    const source = readSource('src/actions/onboarding.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('onboarding.persona.update_failed');
+    expect(source).toContain('onboarding.individual.profile_update_failed');
+    expect(source).toContain('onboarding.individual.profile_insert_failed');
+    expect(source).toContain('onboarding.individual.matching_profile_failed');
+    expect(source).toContain('onboarding.individual.context_insert_failed');
+    expect(source).toContain('onboarding.individual.proof_artifact_insert_failed');
+    expect(source).toContain('onboarding.individual.proof_pack_insert_failed');
+    expect(source).toContain('onboarding.individual.proof_pack_item_insert_failed');
+    expect(source).toContain('onboarding.individual.contradiction_reconcile_failed');
+    expect(source).toContain('onboarding.individual.unexpected_failed');
+    expect(source).toContain('onboarding.organization.insert_failed');
+    expect(source).toContain('onboarding.organization.owner_insert_failed');
+    expect(source).toContain('onboarding.organization.persona_update_failed');
+    expect(source).toContain('onboarding.organization.visibility_defaults_failed');
+    expect(source).toContain('onboarding.organization.unexpected_failed');
+    expect(source).not.toContain('Failed to update persona:');
+    expect(source).not.toContain('Failed to update profile during onboarding:');
+    expect(source).not.toContain('Failed to create individual profile during onboarding:');
+    expect(source).not.toContain('Failed to persist matching preferences during onboarding:');
+    expect(source).not.toContain('Failed to create onboarding context:');
+    expect(source).not.toContain('Failed to create onboarding proof artifact:');
+    expect(source).not.toContain('Failed to create onboarding proof pack:');
+    expect(source).not.toContain('Failed to attach onboarding proof to proof pack:');
+    expect(source).not.toContain('Individual onboarding contradiction reconciliation failed:');
+    expect(source).not.toContain('Individual onboarding error:');
+    expect(source).not.toContain('Organization onboarding insert error:');
+    expect(source).not.toContain('Failed to add organization owner:');
+    expect(source).not.toContain('Failed to update persona after organization onboarding:');
+    expect(source).not.toContain('Failed to apply day-1 organization visibility defaults:');
+    expect(source).not.toContain('Organization onboarding error:');
+  });
+
   it('keeps active consent and performance success paths on structured logging', () => {
     const sources = [
       readSource('src/actions/auth.ts'),
