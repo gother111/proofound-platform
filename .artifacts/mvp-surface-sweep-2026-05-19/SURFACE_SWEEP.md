@@ -5160,3 +5160,12 @@ Browser evidence:
 - Preserved copy success state, public/owner endpoint selection, individual PDF error copy, organization PDF authorization/not-found copy, blob validation, generated filename behavior, and existing user-facing alerts.
 - Extended runtime debug-output guardrails so the old public portfolio action console strings cannot return.
 - Verification passed: focused public portfolio/runtime guard run `npm test -- --run tests/ui/public-portfolio-page.test.tsx tests/ui/public-org-portfolio-page.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (3 files / 94 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted public-portfolio action console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Settings Privacy Publication Diagnostics
+
+- Timestamp: 2026-05-21 16:59 CEST.
+- Continued the active settings privacy/publication surface sweep after Privacy Overview and the Public Page visibility card still emitted raw console diagnostics for visibility-summary load, data export, visibility load/save, and privacy preflight failures.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using `settings.*` event names.
+- Preserved privacy-summary counts, full-page section focus behavior, data export alerts, Public Page visibility toggles, save behavior, AI privacy-preflight fallback copy, and manual checklist fallback behavior.
+- Extended runtime debug-output guardrails so the old settings privacy/publication console strings cannot return.
+- Verification passed: focused settings privacy/runtime guard run `npm test -- --run tests/ui/privacy-overview-copy.test.tsx tests/ui/portfolio-visibility-card-ai.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (3 files / 89 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted settings privacy/publication console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

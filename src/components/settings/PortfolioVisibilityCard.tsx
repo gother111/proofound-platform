@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { useAssistiveAiFlag } from '@/hooks/useAssistiveAiFlag';
 
 type VisibilityFlags = {
@@ -82,7 +83,7 @@ export function PortfolioVisibilityCard() {
           setPublicPageEnabled(data.publicPageEnabled !== false);
         }
       } catch (e) {
-        console.error(e);
+        dispatchClientErrorDiagnostic('settings.portfolio_visibility.load_failed', e);
       } finally {
         setLoading(false);
       }
@@ -108,7 +109,7 @@ export function PortfolioVisibilityCard() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (e) {
-      console.error(e);
+      dispatchClientErrorDiagnostic('settings.portfolio_visibility.save_failed', e);
       alert('Could not save visibility. Please try again.');
     } finally {
       setSaving(false);
@@ -139,7 +140,7 @@ export function PortfolioVisibilityCard() {
       }
       setPreflightMessage(formatPrivacyPreflightMessage(payload));
     } catch (e) {
-      console.error(e);
+      dispatchClientErrorDiagnostic('settings.portfolio_visibility.privacy_check_failed', e);
       setPreflightMessage(
         'Manual checklist: remove private contact details, hidden identity terms, original filenames, private URLs, and unsupported sensitive details before publishing.'
       );

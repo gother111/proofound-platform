@@ -20,6 +20,7 @@ import { AuditLogTable } from './AuditLogTable';
 import { DeleteAccount } from './DeleteAccount';
 import { VisibilitySettingsModal } from '../privacy/VisibilitySettingsModal';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
 import { buildUserExportDownloadFilename } from '@/lib/privacy/export-download';
 
@@ -92,7 +93,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
         });
         setVisibilityCounts(counts);
       } catch (error) {
-        console.error('Failed to load visibility summary', error);
+        dispatchClientErrorDiagnostic('settings.privacy_overview.visibility_summary_failed', error);
       }
     })();
   }, []);
@@ -116,7 +117,7 @@ export function PrivacyOverview({ userId, fullPageNavigation = false }: PrivacyO
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Failed to export data:', error);
+      dispatchClientErrorDiagnostic('settings.privacy_overview.export_failed', error);
       alert('Failed to export data. Please try again.');
     } finally {
       setIsExporting(false);

@@ -922,6 +922,25 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('console.error(e)');
   });
 
+  it('keeps settings privacy and publication failures on client diagnostics without console output', () => {
+    const sources = [
+      readSource('src/components/settings/PrivacyOverview.tsx'),
+      readSource('src/components/settings/PortfolioVisibilityCard.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(sources).toContain('settings.privacy_overview.visibility_summary_failed');
+    expect(sources).toContain('settings.privacy_overview.export_failed');
+    expect(sources).toContain('settings.portfolio_visibility.load_failed');
+    expect(sources).toContain('settings.portfolio_visibility.save_failed');
+    expect(sources).toContain('settings.portfolio_visibility.privacy_check_failed');
+    expect(sources).not.toContain('Failed to load visibility summary');
+    expect(sources).not.toContain('Failed to export data:');
+    expect(sources).not.toContain('console.error(e)');
+  });
+
   it('keeps organization visibility failures on structured server logging', () => {
     const source = readSource('src/app/api/organizations/[orgId]/visibility/route.ts');
 
