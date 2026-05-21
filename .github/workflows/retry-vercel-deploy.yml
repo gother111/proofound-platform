@@ -44,7 +44,7 @@ jobs:
       STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: 'false'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 2
 
@@ -71,7 +71,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.freshness.outputs.current == 'true'
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: '.nvmrc'
           cache: npm
