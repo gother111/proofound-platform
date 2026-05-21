@@ -25,4 +25,16 @@ describe('vercel-preflight', () => {
     expect(script).toContain("'KV_REST_API_TOKEN'");
     expect(script).toContain("'CRON_SECRET'");
   });
+
+  it('rejects launch-bypass env keys from Vercel production and preview targets', () => {
+    const script = fs.readFileSync(path.join(repoRoot, 'scripts/vercel-preflight.mjs'), 'utf8');
+
+    expect(script).toContain('forbiddenEnvByTarget');
+    expect(script).toContain('Forbidden ${target} env keys');
+    expect(script).toContain("'PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY'");
+    expect(script).toContain("'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK'");
+    expect(script).toContain("'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE'");
+    expect(script).toContain("'DEBUG_INGEST_URL'");
+    expect(script).toContain("'NEXT_PUBLIC_USE_MOCK_SUPABASE'");
+  });
 });

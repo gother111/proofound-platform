@@ -80,6 +80,33 @@ const compareKeys = [
   'EMAIL_FROM',
 ];
 
+const forbiddenEnvByTarget = {
+  production: [
+    'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+    'MOCK_ADMIN_MODE',
+    'MOCK_PLATFORM_ROLE',
+    'MOBILE_MOCK_AUTH',
+    'PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY',
+    'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK',
+    'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE',
+    'DEBUG_INGEST_ENABLED',
+    'DEBUG_INGEST_URL',
+    'NEXT_PUBLIC_DEBUG_INGEST_URL',
+  ],
+  preview: [
+    'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+    'MOCK_ADMIN_MODE',
+    'MOCK_PLATFORM_ROLE',
+    'MOBILE_MOCK_AUTH',
+    'PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY',
+    'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK',
+    'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE',
+    'DEBUG_INGEST_ENABLED',
+    'DEBUG_INGEST_URL',
+    'NEXT_PUBLIC_DEBUG_INGEST_URL',
+  ],
+};
+
 function hashValue(value) {
   if (value == null) return 'MISSING';
   const digest = createHash('sha256').update(String(value)).digest('hex').slice(0, 12);
@@ -218,6 +245,17 @@ async function main() {
       failures.push(`Missing ${target} env keys: ${missingKeys.join(', ')}`);
     } else {
       console.log(`OK ${target} env presence (${requiredKeys.length} keys)`);
+    }
+  }
+
+  for (const [target, forbiddenKeys] of Object.entries(forbiddenEnvByTarget)) {
+    const keySet = targetKeyMap.get(target) ?? new Set();
+    const presentForbiddenKeys = forbiddenKeys.filter((key) => keySet.has(key));
+
+    if (presentForbiddenKeys.length > 0) {
+      failures.push(`Forbidden ${target} env keys: ${presentForbiddenKeys.join(', ')}`);
+    } else {
+      console.log(`OK ${target} forbidden env absence (${forbiddenKeys.length} keys)`);
     }
   }
 
