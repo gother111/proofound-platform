@@ -2255,7 +2255,7 @@ Give users **full transparency and control** over their data:
     <Row label="Profile info" value="Name, email, bio, skills" />
     <Row label="Experience" value="3 roles, 2 education entries" />
     <Row label="Verifications" value="2 verified skills" />
-    <Row label="Applications" value="5 submitted" />
+    <Row label="Proof submissions" value="5 submitted" />
     <Row label="Messages" value="23 sent, 18 received" />
     <Row label="Analytics events" value="187 events (last 90 days)" />
   </DataTable>
@@ -3212,17 +3212,17 @@ _(Organization flows O-01 through O-20 have similar privacy measures, focusing o
 
 ## APPENDIX B: DATA RETENTION POLICY
 
-| Data Type                   | Retention Period | After Retention   | Reason                |
-| --------------------------- | ---------------- | ----------------- | --------------------- |
-| **Active profiles**         | Indefinite       | N/A               | User account          |
-| **Deleted profiles (soft)** | 30 days          | Hard delete       | GDPR grace period     |
-| **Applications**            | 2 years          | Archive/anonymize | Hiring records        |
-| **Messages**                | 3 years          | Delete            | Communication records |
-| **Analytics events**        | 2 years          | Anonymize         | ML training           |
-| **Audit logs**              | 7 years          | Archive           | Legal/compliance      |
-| **Payment records**         | 7 years          | Archive           | Tax/legal             |
-| **Consent records**         | Indefinite       | N/A               | Legal proof           |
-| **Verification records**    | Indefinite       | N/A               | Trust signal          |
+| Data Type                   | Retention Period | After Retention   | Reason                    |
+| --------------------------- | ---------------- | ----------------- | ------------------------- |
+| **Active profiles**         | Indefinite       | N/A               | User account              |
+| **Deleted profiles (soft)** | 30 days          | Hard delete       | GDPR grace period         |
+| **Proof submissions**       | 2 years          | Archive/anonymize | Assignment-review records |
+| **Messages**                | 3 years          | Delete            | Communication records     |
+| **Analytics events**        | 2 years          | Anonymize         | ML training               |
+| **Audit logs**              | 7 years          | Archive           | Legal/compliance          |
+| **Payment records**         | 7 years          | Archive           | Tax/legal                 |
+| **Consent records**         | Indefinite       | N/A               | Legal proof               |
+| **Verification records**    | Indefinite       | N/A               | Trust signal              |
 
 ---
 
