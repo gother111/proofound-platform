@@ -1035,4 +1035,21 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Auth callback contradiction reconciliation failed:');
     expect(sources).not.toContain('Failed to exchange OAuth code for session:');
   });
+
+  it('keeps organization helper drift warnings on structured server logging', () => {
+    const sources = [
+      readSource('src/lib/orgs.ts'),
+      readSource('src/lib/organizations/team.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('organization.context.persona_upsert_failed');
+    expect(sources).toContain('organization.team.non_canonical_member_role_skipped');
+    expect(sources).toContain('organization.team.non_canonical_stats_role_skipped');
+    expect(sources).not.toContain('[ensureOrgContextForUser] upsert persona failed');
+    expect(sources).not.toContain('[organizations.team] skipping member with non-canonical role');
+    expect(sources).not.toContain(
+      '[organizations.team] skipping team stats row with non-canonical role'
+    );
+  });
 });

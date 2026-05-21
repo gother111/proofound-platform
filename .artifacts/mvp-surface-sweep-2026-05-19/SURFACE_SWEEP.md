@@ -4957,3 +4957,11 @@ Browser evidence:
 - Replaced those diagnostics with structured `privacy.*` log events while preserving fail-closed consent behavior and fail-closed `match_only` visibility behavior.
 - Added focused helper coverage for consent-check fallback and matched-relationship lookup fallback, and extended runtime debug-output guardrails so the old privacy helper console strings cannot return.
 - Verification passed: focused privacy-helper/runtime guard run `npm test -- --run tests/lib/privacy-helpers-logging.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 60 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted privacy-helper console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Organization Helper Structured Logging Wrap-Up
+
+- Timestamp: 2026-05-21 15:25 CEST.
+- Finished one final bounded organization diagnostics slice after the organization context helper and team helper still emitted raw console warnings for persona upsert drift and non-canonical membership-role drift.
+- Replaced those diagnostics with structured `organization.*` log events while preserving organization slug creation, fallback organization provisioning, owner membership creation, profile-persona best-effort behavior, canonical team filtering, and active-role stats.
+- Extended runtime debug-output guardrails so the old organization helper console strings cannot return.
+- Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 59 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted organization-helper console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
