@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { POST as CREATE_SKILL } from '@/app/api/expertise/user-skills/route';
-import { PATCH } from '@/app/api/expertise/user-skills/[id]/route';
+import { GET, POST as CREATE_SKILL } from '@/app/api/expertise/user-skills/route';
+import { DELETE, PATCH } from '@/app/api/expertise/user-skills/[id]/route';
 import { requireApiAuthContext } from '@/lib/auth';
+import { log } from '@/lib/log';
 
 vi.mock('@/lib/auth', () => ({
   requireApiAuthContext: vi.fn(),
@@ -14,7 +15,17 @@ vi.mock('@/lib/analytics/events', () => ({
   emitSkillDeletedAsync: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 const params = { params: Promise.resolve({ id: 'skill-1' }) };
+
+function createGetRequest() {
+  return new NextRequest('http://localhost/api/expertise/user-skills');
+}
 
 function createPatchRequest(body: Record<string, unknown>) {
   return new NextRequest('http://localhost/api/expertise/user-skills/skill-1', {
@@ -45,6 +56,61 @@ function createRawPatchRequest(body: string) {
     body,
   });
 }
+
+function createDeleteRequest() {
+  return new NextRequest('http://localhost/api/expertise/user-skills/skill-1', {
+    method: 'DELETE',
+  });
+}
+
+describe('GET /api/expertise/user-skills', () => {
+  const authContext: { user: { id: string }; supabase: { from: ReturnType<typeof vi.fn> } } = {
+    user: { id: 'user-1' },
+    supabase: {
+      from: vi.fn(),
+    },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(requireApiAuthContext).mockImplementation(async () => authContext as any);
+  });
+
+  it('logs skill list failures with structured diagnostics', async () => {
+    const listError = new Error('skills query failed');
+    authContext.supabase.from = vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn().mockResolvedValue({
+          data: null,
+          error: listError,
+        }),
+      })),
+    }));
+
+    const response = await GET(createGetRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to fetch skills' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skills.list_failed', {
+      error: listError,
+    });
+  });
+
+  it('logs route-level skill list failures with structured diagnostics', async () => {
+    const routeError = new Error('auth context unavailable');
+    vi.mocked(requireApiAuthContext).mockRejectedValue(routeError);
+
+    const response = await GET(createGetRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skills.get_failed', {
+      error: routeError,
+    });
+  });
+});
 
 function createSupabaseMock() {
   let updatePayload: Record<string, unknown> | null = null;
@@ -181,6 +247,38 @@ describe('PATCH /api/expertise/user-skills/[id]', () => {
     expect(supabase.from).not.toHaveBeenCalled();
     expect(skillsTable.update).not.toHaveBeenCalled();
   });
+
+  it('logs skill update failures with structured diagnostics', async () => {
+    const updateError = new Error('skill update failed');
+    authContext.supabase = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({
+            data: { id: 'skill-1' },
+            error: null,
+          }),
+        })),
+        update: vi.fn(() => ({
+          eq: vi.fn().mockReturnThis(),
+          select: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({
+            data: null,
+            error: updateError,
+          }),
+        })),
+      })),
+    };
+
+    const response = await PATCH(createPatchRequest({ level: 4 }), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to update skill' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skill.update_failed', {
+      error: updateError,
+    });
+  });
 });
 
 describe('POST /api/expertise/user-skills', () => {
@@ -206,5 +304,140 @@ describe('POST /api/expertise/user-skills', () => {
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body' });
     expect(authContext.supabase.from).not.toHaveBeenCalled();
+  });
+
+  it('logs skill creation failures with structured diagnostics', async () => {
+    const createError = new Error('skill insert failed');
+    authContext.supabase.from = vi.fn((table: string) => {
+      if (table === 'skills_taxonomy') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({
+              data: { code: 'typescript', name_i18n: { en: 'TypeScript' } },
+              error: null,
+            }),
+          })),
+        };
+      }
+
+      if (table === 'skills') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          })),
+          insert: vi.fn(() => ({
+            select: vi.fn(() => ({
+              single: vi.fn().mockResolvedValue({
+                data: null,
+                error: createError,
+              }),
+            })),
+          })),
+        };
+      }
+
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    const response = await CREATE_SKILL(
+      createRawPostRequest(
+        JSON.stringify({
+          skill_code: 'typescript',
+          level: 4,
+        })
+      )
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to create skill' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skills.create_failed', {
+      error: createError,
+    });
+  });
+
+  it('logs route-level skill creation failures with structured diagnostics', async () => {
+    const routeError = new Error('auth context unavailable');
+    vi.mocked(requireApiAuthContext).mockRejectedValue(routeError);
+
+    const response = await CREATE_SKILL(
+      createRawPostRequest(
+        JSON.stringify({
+          skill_code: 'typescript',
+          level: 4,
+        })
+      )
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skills.post_failed', {
+      error: routeError,
+    });
+  });
+});
+
+describe('DELETE /api/expertise/user-skills/[id]', () => {
+  const authContext: { user: { id: string }; supabase: { from: ReturnType<typeof vi.fn> } } = {
+    user: { id: 'user-1' },
+    supabase: {
+      from: vi.fn(),
+    },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(requireApiAuthContext).mockImplementation(async () => authContext as any);
+  });
+
+  it('logs skill deletion failures with structured diagnostics', async () => {
+    const deleteError = new Error('skill delete failed');
+    const deleteQuery: any = {
+      eq: vi.fn().mockReturnThis(),
+    };
+    deleteQuery.eq.mockReturnValueOnce(deleteQuery).mockResolvedValueOnce({ error: deleteError });
+    authContext.supabase.from = vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: {
+            id: 'skill-1',
+            skill_id: 'typescript',
+            taxonomy: { name_i18n: { en: 'TypeScript' } },
+          },
+          error: null,
+        }),
+      })),
+      delete: vi.fn(() => deleteQuery),
+    }));
+
+    const response = await DELETE(createDeleteRequest(), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to delete skill' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skill.delete_failed', {
+      error: deleteError,
+    });
+  });
+
+  it('logs route-level skill deletion failures with structured diagnostics', async () => {
+    const routeError = new Error('auth context unavailable');
+    vi.mocked(requireApiAuthContext).mockRejectedValue(routeError);
+
+    const response = await DELETE(createDeleteRequest(), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('expertise.user_skill.delete_route_failed', {
+      error: routeError,
+    });
   });
 });

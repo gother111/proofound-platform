@@ -617,4 +617,37 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Feedback submit failed');
     expect(sources).not.toContain('Feedback token lookup failed');
   });
+
+  it('keeps user skills API failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/expertise/user-skills/route.ts'),
+      readSource('src/app/api/expertise/user-skills/[id]/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('expertise.user_skills.list_failed');
+    expect(sources).toContain('expertise.user_skills.get_failed');
+    expect(sources).toContain('expertise.user_skills.create_failed');
+    expect(sources).toContain('expertise.user_skills.readiness_sync_failed');
+    expect(sources).toContain('expertise.user_skills.analytics_emit_failed');
+    expect(sources).toContain('expertise.user_skills.post_failed');
+    expect(sources).toContain('expertise.user_skill.update_failed');
+    expect(sources).toContain('expertise.user_skill.update_analytics_failed');
+    expect(sources).toContain('expertise.user_skill.patch_failed');
+    expect(sources).toContain('expertise.user_skill.delete_failed');
+    expect(sources).toContain('expertise.user_skill.delete_analytics_failed');
+    expect(sources).toContain('expertise.user_skill.delete_route_failed');
+    expect(sources).not.toContain('Error fetching user skills:');
+    expect(sources).not.toContain('User skills API error:');
+    expect(sources).not.toContain('Error creating skill:');
+    expect(sources).not.toContain('Failed to check/emit profile activation:');
+    expect(sources).not.toContain('Failed to emit skill_added event:');
+    expect(sources).not.toContain('User skills POST error:');
+    expect(sources).not.toContain('Error updating skill:');
+    expect(sources).not.toContain('Failed to emit skill_updated event:');
+    expect(sources).not.toContain('User skill PATCH error:');
+    expect(sources).not.toContain('Error deleting skill:');
+    expect(sources).not.toContain('Failed to emit skill_deleted event:');
+    expect(sources).not.toContain('User skill DELETE error:');
+  });
 });
