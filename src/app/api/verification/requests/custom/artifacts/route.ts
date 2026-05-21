@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { createClient } from '@/lib/supabase/server';
 import { parseCustomSkillName } from '@/lib/verification/custom-verification';
 
@@ -76,10 +77,10 @@ async function loadSkillsForArtifacts(
     };
   }
 
-  console.warn(
-    'Falling back to manual taxonomy lookup for custom verification artifact skills:',
-    primaryResult.error
-  );
+  log.warn('verification.custom_artifacts.skills_taxonomy_join_failed', {
+    error: primaryResult.error,
+    profileId,
+  });
 
   const fallbackSkillsResult = await supabase
     .from('skills')
@@ -270,7 +271,7 @@ export async function GET() {
     const total = Object.values(artifacts).reduce((sum, group) => sum + group.length, 0);
     return NextResponse.json({ total, artifacts });
   } catch (error) {
-    console.error('Custom verification artifacts GET error:', error);
+    log.error('verification.custom_artifacts.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

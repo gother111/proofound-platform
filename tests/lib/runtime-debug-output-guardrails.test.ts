@@ -368,4 +368,53 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to sync canonical work email verification:');
     expect(sources).not.toContain('Error in work email verification:');
   });
+
+  it('keeps custom verification request routes on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/verification/requests/custom/route.ts'),
+      readSource('src/app/api/verification/requests/custom/artifacts/route.ts'),
+      readSource('src/app/api/verification/requests/bundles/[requestId]/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('verification.custom_request.selected_skills_taxonomy_join_failed');
+    expect(sources).toContain('verification.custom_request.selected_skills_load_failed');
+    expect(sources).toContain('verification.custom_request.email_state_persist_failed');
+    expect(sources).toContain('verification.custom_request.email_send_failed');
+    expect(sources).toContain('verification.custom_request.post_failed');
+    expect(sources).toContain('verification.custom_artifacts.skills_taxonomy_join_failed');
+    expect(sources).toContain('verification.custom_artifacts.get_failed');
+    expect(sources).toContain('verification.custom_bundle.get_failed');
+    expect(sources).toContain('verification.custom_bundle.patch_failed');
+    expect(sources).not.toContain(
+      'Falling back to manual taxonomy lookup for selected skills in custom verification request:'
+    );
+    expect(sources).not.toContain(
+      'Falling back to manual taxonomy lookup for custom verification artifact skills:'
+    );
+    expect(sources).not.toContain(
+      'Failed to load selected skills for custom verification request:'
+    );
+    expect(sources).not.toContain(
+      'Failed to validate experiences for custom verification request:'
+    );
+    expect(sources).not.toContain('Failed to validate education for custom verification request:');
+    expect(sources).not.toContain(
+      'Failed to validate impact stories for custom verification request:'
+    );
+    expect(sources).not.toContain('Failed to validate projects for custom verification request:');
+    expect(sources).not.toContain(
+      'Failed to validate volunteering for custom verification request:'
+    );
+    expect(sources).not.toContain(
+      'Failed to validate active canonical skill verification requests:'
+    );
+    expect(sources).not.toContain('Could not resolve verifier profile via admin client');
+    expect(sources).not.toContain('Failed to persist bundle email delivery state:');
+    expect(sources).not.toContain('Custom verification email failed to send:');
+    expect(sources).not.toContain('Custom verification request POST error:');
+    expect(sources).not.toContain('Custom verification artifacts GET error:');
+    expect(sources).not.toContain('Custom verification request GET error:');
+    expect(sources).not.toContain('Custom verification request PATCH error:');
+  });
 });

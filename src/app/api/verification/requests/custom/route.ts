@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/auth';
 import { buildBlindSafeVerificationRequestEmail } from '@/lib/email/privacy';
 import { sendEmail } from '@/lib/email/sender';
 import { resolveCanonicalSiteUrl } from '@/lib/env';
+import { log } from '@/lib/log';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -107,10 +108,11 @@ async function loadSelectedSkills(
     };
   }
 
-  console.warn(
-    'Falling back to manual taxonomy lookup for selected skills in custom verification request:',
-    primaryResult.error
-  );
+  log.warn('verification.custom_request.selected_skills_taxonomy_join_failed', {
+    error: primaryResult.error,
+    profileId,
+    selectedSkillCount: selectedSkillIds.length,
+  });
 
   const fallbackSkillsResult = await supabase
     .from('skills')
@@ -287,10 +289,11 @@ export async function POST(request: NextRequest) {
       );
 
       if (skillsError) {
-        console.error(
-          'Failed to load selected skills for custom verification request:',
-          skillsError
-        );
+        log.error('verification.custom_request.selected_skills_load_failed', {
+          error: skillsError,
+          userId: user.id,
+          selectedSkillCount: groupedArtifacts.skill.length,
+        });
         return NextResponse.json(
           { error: 'Failed to validate selected artifacts' },
           { status: 500 }
@@ -312,10 +315,11 @@ export async function POST(request: NextRequest) {
 
       const acceptedSkillRequests = (
         await listCanonicalSkillVerificationRequestsForOwner(user.id).catch((error) => {
-          console.error(
-            'Failed to validate accepted canonical skill verification requests:',
-            error
-          );
+          log.error('verification.custom_request.accepted_skill_requests_load_failed', {
+            error,
+            userId: user.id,
+            selectedSkillCount: groupedArtifacts.skill.length,
+          });
           return [];
         })
       ).map(mapCanonicalSkillVerificationRequestRecord);
@@ -358,7 +362,11 @@ export async function POST(request: NextRequest) {
         .eq('verified', false);
 
       if (error) {
-        console.error('Failed to validate experiences for custom verification request:', error);
+        log.error('verification.custom_request.experiences_validate_failed', {
+          error,
+          userId: user.id,
+          selectedArtifactCount: groupedArtifacts.experience.length,
+        });
         return NextResponse.json(
           { error: 'Failed to validate selected artifacts' },
           { status: 500 }
@@ -386,7 +394,11 @@ export async function POST(request: NextRequest) {
         .eq('verified', false);
 
       if (error) {
-        console.error('Failed to validate education for custom verification request:', error);
+        log.error('verification.custom_request.education_validate_failed', {
+          error,
+          userId: user.id,
+          selectedArtifactCount: groupedArtifacts.education.length,
+        });
         return NextResponse.json(
           { error: 'Failed to validate selected artifacts' },
           { status: 500 }
@@ -418,7 +430,11 @@ export async function POST(request: NextRequest) {
         .eq('verified', false);
 
       if (error) {
-        console.error('Failed to validate impact stories for custom verification request:', error);
+        log.error('verification.custom_request.impact_stories_validate_failed', {
+          error,
+          userId: user.id,
+          selectedArtifactCount: groupedArtifacts.impact_story.length,
+        });
         return NextResponse.json(
           { error: 'Failed to validate selected artifacts' },
           { status: 500 }
@@ -446,7 +462,11 @@ export async function POST(request: NextRequest) {
         .eq('verified', false);
 
       if (error) {
-        console.error('Failed to validate projects for custom verification request:', error);
+        log.error('verification.custom_request.projects_validate_failed', {
+          error,
+          userId: user.id,
+          selectedArtifactCount: groupedArtifacts.project.length,
+        });
         return NextResponse.json(
           { error: 'Failed to validate selected artifacts' },
           { status: 500 }
@@ -474,7 +494,11 @@ export async function POST(request: NextRequest) {
         .eq('verified', false);
 
       if (error) {
-        console.error('Failed to validate volunteering for custom verification request:', error);
+        log.error('verification.custom_request.volunteering_validate_failed', {
+          error,
+          userId: user.id,
+          selectedArtifactCount: groupedArtifacts.volunteering.length,
+        });
         return NextResponse.json(
           { error: 'Failed to validate selected artifacts' },
           { status: 500 }
@@ -515,7 +539,11 @@ export async function POST(request: NextRequest) {
     if (selectedSkillIds.length > 0) {
       const existingSkillRequests = (
         await listCanonicalSkillVerificationRequestsForOwner(user.id).catch((error) => {
-          console.error('Failed to validate active canonical skill verification requests:', error);
+          log.error('verification.custom_request.active_skill_requests_load_failed', {
+            error,
+            userId: user.id,
+            selectedSkillCount: selectedSkillIds.length,
+          });
           return [];
         })
       ).map(mapCanonicalSkillVerificationRequestRecord);
@@ -549,7 +577,10 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
       verifierProfileId = data?.id || null;
     } catch (_error) {
-      console.warn('Could not resolve verifier profile via admin client');
+      log.warn('verification.custom_request.verifier_profile_lookup_failed', {
+        error: _error,
+        userId: user.id,
+      });
     }
 
     const { data: requesterProfile } = await supabase
@@ -608,11 +639,20 @@ export async function POST(request: NextRequest) {
       emailSent: emailResult.success,
       emailError: emailResult.success ? null : emailResult.error || 'unknown_email_delivery_error',
     }).catch((error) => {
-      console.error('Failed to persist bundle email delivery state:', error);
+      log.error('verification.custom_request.email_state_persist_failed', {
+        error,
+        userId: user.id,
+        bundleId: bundle.bundleId,
+      });
     });
 
     if (!emailResult.success) {
-      console.warn('Custom verification email failed to send:', emailResult.error);
+      log.warn('verification.custom_request.email_send_failed', {
+        error: emailResult.error,
+        userId: user.id,
+        bundleId: bundle.bundleId,
+        selectedArtifactCount: selectedArtifacts.length,
+      });
     }
 
     return NextResponse.json(
@@ -632,7 +672,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Custom verification request POST error:', error);
+    log.error('verification.custom_request.post_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
