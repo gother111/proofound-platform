@@ -1162,4 +1162,12 @@ describe('runtime debug output guardrails', () => {
     expect(source).toContain('assignment.review_page.server_fetch_failed');
     expect(source).not.toContain('SSR fetch failed');
   });
+
+  it('keeps individual home metrics fallback failures on structured server logging', () => {
+    const source = readSource('src/app/app/i/home/page.tsx');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('individual.home.metrics_load_failed');
+    expect(source).not.toContain('Failed to load proof home metrics:');
+  });
 });

@@ -5045,3 +5045,11 @@ Browser evidence:
 - Replaced that diagnostic with structured `assignment.review_page.server_fetch_failed` logging while preserving cookie forwarding, org-slug scoping, no-store fetch behavior, and the existing null-assignment fallback into the review client.
 - Extended runtime debug-output guardrails so the old SSR fetch console string cannot return.
 - Verification passed: focused runtime/route-inventory guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts tests/api/launch-page-inventory.test.ts` (2 files / 72 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted assignment-review console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Individual Home Metrics Structured Logging
+
+- Timestamp: 2026-05-21 16:12 CEST.
+- Continued the active individual MVP surface sweep after the server-rendered individual home page still emitted a raw console error when proof-home dashboard metrics failed to load.
+- Replaced that diagnostic with structured `individual.home.metrics_load_failed` logging while preserving the existing default metric fallback and readiness-step rendering behavior.
+- Extended runtime debug-output guardrails so the old proof-home metrics console string cannot return.
+- Verification passed: focused runtime/route-inventory guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts tests/api/launch-page-inventory.test.ts` (2 files / 73 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted individual-home console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

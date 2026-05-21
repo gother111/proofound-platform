@@ -17,6 +17,7 @@ import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +56,7 @@ export default async function IndividualHomePage() {
   try {
     metrics = await getDashboardMetrics();
   } catch (error) {
-    console.error('Failed to load proof home metrics:', error);
+    log.error('individual.home.metrics_load_failed', { error });
     // Fallback to default values if metrics fail to load
     metrics = {
       proofStoriesCount: 0,
