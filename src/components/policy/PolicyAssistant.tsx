@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Send, Sparkles, Shield, Info, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 
 interface Message {
   id: string;
@@ -130,7 +131,7 @@ export function PolicyAssistant() {
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('policy.assistant.ask.failed', {
+      dispatchClientDiagnostic('policy.assistant.ask_failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
 

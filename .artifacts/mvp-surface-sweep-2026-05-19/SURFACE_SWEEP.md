@@ -5233,3 +5233,12 @@ Browser evidence:
 - Preserved admin queue toasts, break-glass preview failure copy, assignment review fallback content and publish blocks, and spotlight no-op fallback behavior.
 - Extended runtime debug-output guardrails so the old admin, assignment review, and spotlight console call shapes cannot return.
 - Verification passed: focused active-surface/runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts tests/ui/admin-verification-dashboard.test.tsx tests/ui/admin-audit-log-table.test.tsx tests/ui/assignment-review-client.test.tsx` (4 files / 103 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted active-surface console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Policy Assistant Diagnostics
+
+- Timestamp: 2026-05-21 17:43 CEST.
+- Continued the active component diagnostics sweep after the plain-language policy assistant still emitted a raw console diagnostic for policy-question handling failures.
+- Replaced that diagnostic with a `proofound:client-diagnostic` event through the shared client diagnostic helper using `policy.assistant.ask_failed`.
+- Preserved the local policy explanation fallback, user-facing assistant error message, and toast behavior.
+- Extended runtime debug-output guardrails so the old policy assistant console string cannot return.
+- Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 88 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted policy assistant console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

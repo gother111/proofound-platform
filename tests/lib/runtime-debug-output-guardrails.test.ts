@@ -298,6 +298,14 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('console.warn(');
   });
 
+  it('keeps policy assistant diagnostics off raw console output', () => {
+    const source = readSource('src/components/policy/PolicyAssistant.tsx');
+
+    expect(source).toContain('policy.assistant.ask_failed');
+    expect(source).not.toContain('policy.assistant.ask.failed');
+    expect(source).not.toContain("console.error('policy.assistant.ask.failed'");
+  });
+
   it('keeps client verification link fixtures behind the explicit visual fixture gate', () => {
     const fixtureSource = readSource('src/lib/verification/visual-link-fixtures.ts');
     const pageSources = [
