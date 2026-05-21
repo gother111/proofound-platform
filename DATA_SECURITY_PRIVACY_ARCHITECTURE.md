@@ -774,6 +774,9 @@ type OrgRole =
 | **View any profile**                  | ❌         | ❌         | ❌        | ❌          | ❌           | ✅    |
 | **Moderate content**                  | ❌         | ❌         | ❌        | ❌          | ❌           | ✅    |
 
+Assignment-review access is limited to approved proof submissions and messages within the
+organization member's allowed role scope.
+
 ---
 
 ### 5.2 Attribute-Based Access Control (ABAC)
@@ -2801,7 +2804,7 @@ DATA PROCESSING AGREEMENT
 
 2. Data Categories:
    - Proof-review participant name, email, skills, experience
-   - Application materials (resume, proofs)
+   - Proof submission materials (resume, proofs)
 
 3. Retention:
    - Organization may keep data for 12 months after the documented workflow decision or engagement outcome
