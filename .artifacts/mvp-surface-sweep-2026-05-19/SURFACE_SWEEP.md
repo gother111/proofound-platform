@@ -5151,3 +5151,12 @@ Browser evidence:
 - Preserved data-inventory fallback content and export button visibility, account-history loading behavior, delete-account confirmation/reset behavior, field-visibility save propagation, and existing user-facing alerts/toasts.
 - Updated focused data-breakdown coverage to assert the client diagnostic event instead of suppressing console output, and extended runtime debug-output guardrails so the old privacy child console strings cannot return.
 - Verification passed: focused privacy/runtime guard run `npm test -- --run tests/ui/privacy-data-breakdown.test.tsx tests/ui/privacy-audit-log-mobile-clarity.test.tsx tests/ui/privacy-visibility-copy.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (4 files / 82 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted privacy-child console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Public Portfolio Action Diagnostics
+
+- Timestamp: 2026-05-21 16:56 CEST.
+- Continued the active public portfolio surface sweep after the individual proof-summary copy button, individual trust-PDF button, and organization trust-PDF button still emitted raw console diagnostics for copy/download failures.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using `portfolio.*` event names.
+- Preserved copy success state, public/owner endpoint selection, individual PDF error copy, organization PDF authorization/not-found copy, blob validation, generated filename behavior, and existing user-facing alerts.
+- Extended runtime debug-output guardrails so the old public portfolio action console strings cannot return.
+- Verification passed: focused public portfolio/runtime guard run `npm test -- --run tests/ui/public-portfolio-page.test.tsx tests/ui/public-org-portfolio-page.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (3 files / 94 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted public-portfolio action console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

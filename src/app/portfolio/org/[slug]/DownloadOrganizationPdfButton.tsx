@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { cn } from '@/lib/utils';
 
 export function DownloadOrganizationPdfButton({
@@ -73,7 +74,7 @@ export function DownloadOrganizationPdfButton({
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('organization portfolio pdf download failed', err);
+      dispatchClientErrorDiagnostic('portfolio.organization_pdf.download_failed', err);
       alert(
         err instanceof Error && err.message
           ? err.message

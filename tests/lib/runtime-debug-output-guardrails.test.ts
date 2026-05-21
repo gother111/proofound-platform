@@ -904,6 +904,24 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('text pack failed');
   });
 
+  it('keeps public portfolio action failures on client diagnostics without console output', () => {
+    const sources = [
+      readSource('src/app/portfolio/[handle]/CopyTextButton.tsx'),
+      readSource('src/app/portfolio/[handle]/DownloadPdfButton.tsx'),
+      readSource('src/app/portfolio/org/[slug]/DownloadOrganizationPdfButton.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(sources).toContain('portfolio.public_text_pack.copy_failed');
+    expect(sources).toContain('portfolio.public_pdf.download_failed');
+    expect(sources).toContain('portfolio.organization_pdf.download_failed');
+    expect(sources).not.toContain('portfolio pdf download failed');
+    expect(sources).not.toContain('organization portfolio pdf download failed');
+    expect(sources).not.toContain('console.error(e)');
+  });
+
   it('keeps organization visibility failures on structured server logging', () => {
     const source = readSource('src/app/api/organizations/[orgId]/visibility/route.ts');
 
