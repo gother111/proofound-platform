@@ -122,7 +122,7 @@ Run or cite the strongest available automated checks:
 - `npm run test:e2e:providers:advisory` only if connected-provider scheduling is intentionally in scope for the target
 - `npm run test:a11y:strict`
 - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
-- `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+- `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 
 For protected launch-status and go/no-go checks, `INTERNAL_API_SECRET=<secret>` may replace
 `CRON_SECRET=<secret>`.

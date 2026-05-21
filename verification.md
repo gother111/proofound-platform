@@ -123,14 +123,14 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `BASE_URL=<production-candidate-url> npm run perf:budgets`
   - `BASE_URL=<production-candidate-url> npm run monitor:launch`
   - `BASE_URL=<production-candidate-url> npm run launch:status`
-  - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 - For protected launch-status and go/no-go checks, `INTERNAL_API_SECRET=<secret>` may replace
   `CRON_SECRET=<secret>`.
 - CI also runs perf budgets and go/no-go gates after starting the app. (source: .github/workflows/ci.yml)
 - Perf budgets: `BASE_URL=<production-candidate-url> npm run perf:budgets` (source: scripts/perf-budgets.mjs)
 - Launch smoke artifact: `BASE_URL=<production-candidate-url> npm run test:launch:smoke` (source: package.json, scripts/launch-smoke-runner.ts)
 - Launch synthetic monitors: `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch` (source: package.json, scripts/run-launch-synthetic-monitors.ts)
-- Go/no-go: `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go` (source: scripts/go-no-go-check.ts)
+- Go/no-go: `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go` (source: scripts/go-no-go-check.ts)
   - Requires a fresh launch smoke artifact, healthy `/api/monitoring/perf-status`, healthy `/api/monitoring/launch-status`, required evidence files, required safe-mode flags, and restore-drill assets. (source: scripts/go-no-go-check.ts)
 
 ## Migration and Data Safety (Before Production DDL)

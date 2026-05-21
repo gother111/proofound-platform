@@ -87,7 +87,7 @@ flow:
 ```bash
 BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch
 BASE_URL=<production-candidate-url> npm run perf:budgets
-BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go
+BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go
 ```
 
 For protected launch-status and go/no-go checks, `INTERNAL_API_SECRET=<secret>` may replace

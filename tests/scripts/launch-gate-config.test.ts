@@ -1224,6 +1224,7 @@ describe('launch gate package configuration', () => {
       } else if (docPath === 'verification.md') {
         expect(content).toContain('Last Verified: `2026-05-21`');
         expect(content).toContain('INTERNAL_API_SECRET=<secret>');
+        expect(content).not.toContain('SUS_STUDY_COMPLETE');
         expect(content).toContain(
           'change match, review, verification, reveal, trust-state, or workflow-decision state'
         );
@@ -1334,6 +1335,16 @@ describe('launch gate package configuration', () => {
     expect(goNoGoScript).toContain('summary.json');
     expect(goNoGoScript).toContain('row-fingerprint.json');
     expect(goNoGoScript).not.toContain('SUS_STUDY_COMPLETE');
+    for (const content of [
+      verificationChecklist,
+      launchMasterChecklist,
+      deploymentChecklist,
+      productionReadinessChecklist,
+      releaseChecklist,
+      phaseExitChecklist,
+    ]) {
+      expect(content).not.toContain('SUS_STUDY_COMPLETE');
+    }
 
     expect(restoreDrill).toContain(
       'Production-candidate `npm run go:no-go` additionally requires a fresh passing restore verification report'
@@ -3497,6 +3508,7 @@ describe('launch gate package configuration', () => {
     expect(manualDocs).toContain('proof-review participant contact details');
     expect(manualDocs).toContain('Proof-submission review cards');
     expect(manualGuide).toContain('INTERNAL_API_SECRET=<secret>');
+    expect(manualGuide).not.toContain('SUS_STUDY_COMPLETE');
     expect(manualDocs).toContain('engage/close');
     expect(manualDocs).not.toContain('/app/i/expertise');
     expect(manualDocs).not.toContain('/admin/fairness');
@@ -3915,6 +3927,7 @@ describe('launch gate package configuration', () => {
     expect(setupSupabase).toContain('Do not use dashboard SQL paste');
     expect(setupSupabase).toContain('Supabase MCP can be useful for read-only inspection');
     expect(setupSupabase).toContain('INTERNAL_API_SECRET=<secret>');
+    expect(setupSupabase).not.toContain('SUS_STUDY_COMPLETE');
     expect(setupSupabase).toContain('Proof Packs');
     expect(setupSupabase).not.toContain('cjpfrgmsxwxhuomnvciq');
     expect(setupSupabase).not.toContain('This is safe because MCP only runs');
