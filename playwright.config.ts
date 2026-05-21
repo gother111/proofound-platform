@@ -16,9 +16,13 @@ const parsedBaseURL = (() => {
 const baseURLPort = parsedBaseURL?.port ? Number.parseInt(parsedBaseURL.port, 10) : NaN;
 const webServerPort = Number.isFinite(baseURLPort) ? baseURLPort : configuredPort;
 const baseURL = configuredBaseURL || `http://127.0.0.1:${webServerPort}`;
+const configuredBaseURLIsExternal = Boolean(
+  parsedBaseURL && !['localhost', '127.0.0.1', '::1'].includes(parsedBaseURL.hostname)
+);
 const reuseExistingServer =
-  !process.env.CI &&
-  (Boolean(configuredBaseURL) || process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === '1');
+  configuredBaseURLIsExternal ||
+  (!process.env.CI &&
+    (Boolean(configuredBaseURL) || process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === '1'));
 const webServerCommand =
   playwrightServerMode === 'prod'
     ? `PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY=1 PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK=1 PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE=1 npm run start -- -p ${webServerPort}`

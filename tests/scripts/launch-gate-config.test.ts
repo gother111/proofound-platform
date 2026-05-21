@@ -132,6 +132,21 @@ describe('launch gate package configuration', () => {
     expect(perfBudgets).toContain('API ${path} p95');
   });
 
+  it('keeps external BASE_URL Playwright runs from starting local web servers in CI', () => {
+    const configs = [
+      'playwright.config.ts',
+      'playwright.a11y.config.ts',
+      'playwright.a11y.strict.config.ts',
+    ].map((file) => fs.readFileSync(path.join(repoRoot, file), 'utf8'));
+
+    for (const content of configs) {
+      expect(content).toContain("!['localhost', '127.0.0.1', '::1'].includes");
+      expect(content).toMatch(
+        /(?:const reuseExistingServer =[\s\S]*(?:configuredBaseURLIsExternal|baseURLIsExternal))|(?:reuseExistingServer:\s*(?:configuredBaseURLIsExternal|baseURLIsExternal))/
+      );
+    }
+  });
+
   it('keeps the locked MVP authority stack fresh and visibly classified', () => {
     const docsRegistry = compactWhitespace(
       fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8')
@@ -5998,7 +6013,14 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'scripts/launch-smoke-runner.ts'),
       'utf8'
     );
+    const smokeRunnerEnv = fs.readFileSync(
+      path.join(repoRoot, 'src/lib/launch/smoke-runner-env.ts'),
+      'utf8'
+    );
 
-    expectTextBefore(launchSmokeRunner, '...sharedEnv,', '...scenario.runner.env,');
+    expect(launchSmokeRunner).toContain('buildLaunchSmokeScenarioEnv');
+    expectTextBefore(smokeRunnerEnv, '...sharedEnv,', '...scenarioEnv,');
+    expect(smokeRunnerEnv).toContain('PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY');
+    expect(smokeRunnerEnv).toContain("executionMode === 'live'");
   });
 });
