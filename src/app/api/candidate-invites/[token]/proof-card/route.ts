@@ -208,6 +208,13 @@ export async function POST(
       invite.assignmentId
     );
 
+    if (!invite.assignmentId) {
+      return NextResponse.json(
+        { error: 'This invite is missing assignment context.' },
+        { status: 409 }
+      );
+    }
+
     if (invite.assignmentId && !assignment) {
       return NextResponse.json({ error: 'Assignment not found.' }, { status: 404 });
     }

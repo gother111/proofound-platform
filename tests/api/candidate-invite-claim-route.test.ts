@@ -115,6 +115,8 @@ describe('POST /api/candidate-invites/[token]/claim', () => {
       {
         id: 'invite-1',
         orgId: 'org-1',
+        assignmentId: 'assignment-1',
+        flowType: 'proof_card',
         inviteeEmailNormalized: 'candidate@example.com',
         status: 'pending',
         expiresAt: new Date(Date.now() + 60_000),
@@ -141,6 +143,8 @@ describe('POST /api/candidate-invites/[token]/claim', () => {
       {
         id: 'invite-1',
         orgId: 'org-1',
+        assignmentId: 'assignment-1',
+        flowType: 'proof_card',
         inviteeEmailNormalized: 'candidate@example.com',
         status: 'pending',
         expiresAt: new Date(Date.now() + 60_000),
@@ -153,6 +157,15 @@ describe('POST /api/candidate-invites/[token]/claim', () => {
         persona: 'individual',
       },
     ]);
+    (resolveCandidateInvitePolicyContext as any).mockResolvedValueOnce({
+      organization: { id: 'org-1', orgTrustTier: 'reviewed', trustStatus: 'platform_reviewed' },
+      assignment: { id: 'assignment-1' },
+      policyEvaluation: {
+        decision: 'allow',
+        orgTrustTier: 'reviewed',
+        reasons: [],
+      },
+    });
 
     const updateWhere = vi.fn().mockResolvedValue(undefined);
     const updateSet = vi.fn().mockReturnValue({ where: updateWhere });
@@ -176,6 +189,48 @@ describe('POST /api/candidate-invites/[token]/claim', () => {
         redeemSessionNonce: null,
       })
     );
+  });
+
+  it('blocks claiming an invite that is missing assignment context', async () => {
+    mockAuthUser({
+      id: '11111111-1111-1111-1111-111111111111',
+      email: 'candidate@example.com',
+    });
+
+    mockSelectWithLimit([
+      {
+        id: 'invite-1',
+        orgId: 'org-1',
+        assignmentId: null,
+        flowType: 'proof_card',
+        inviteeEmailNormalized: 'candidate@example.com',
+        status: 'pending',
+        expiresAt: new Date(Date.now() + 60_000),
+        invitedBy: 'org-rep-1',
+        claimedByProfileId: null,
+        claimedAt: null,
+        acceptedAt: null,
+        matchId: null,
+        conversationId: null,
+      },
+    ]);
+    mockSelectWithLimit([
+      {
+        id: '11111111-1111-1111-1111-111111111111',
+        persona: 'individual',
+      },
+    ]);
+
+    const request = new NextRequest('http://localhost/api/candidate-invites/token/claim', {
+      method: 'POST',
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ token: 'token-value' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(payload).toEqual({ error: 'This invite is missing assignment context.' });
+    expect(db.update).not.toHaveBeenCalled();
   });
 
   it('creates test match and conversation for test_match invite acceptance', async () => {

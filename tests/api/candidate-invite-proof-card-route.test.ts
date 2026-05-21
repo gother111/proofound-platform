@@ -112,14 +112,14 @@ describe('POST /api/candidate-invites/[token]/proof-card', () => {
         status: 'claimed',
         expiresAt: new Date(Date.now() + 60_000),
         claimedByProfileId: '11111111-1111-1111-1111-111111111111',
-        assignmentId: null,
+        assignmentId: 'assignment-1',
         matchId: null,
         conversationId: null,
       },
     ]);
     (resolveCandidateInvitePolicyContext as any).mockResolvedValueOnce({
       organization: { id: 'org-1', orgTrustTier: 'restricted', trustStatus: 'platform_reviewed' },
-      assignment: null,
+      assignment: { id: 'assignment-1' },
       policyEvaluation: {
         decision: 'blocked',
         orgTrustTier: 'restricted',
@@ -142,6 +142,39 @@ describe('POST /api/candidate-invites/[token]/proof-card', () => {
     expect(response.status).toBe(403);
     expect(payload.code).toBe('INVITE_PROOF_SUBMISSION_BLOCKED');
     expect(payload.details.reasons).toContain('org_trust_restricted');
+  });
+
+  it('blocks proof-card submission when the invite has no assignment context', async () => {
+    mockSelectWithLimit([
+      {
+        id: 'invite-1',
+        orgId: 'org-1',
+        flowType: 'proof_card',
+        status: 'claimed',
+        expiresAt: new Date(Date.now() + 60_000),
+        claimedByProfileId: '11111111-1111-1111-1111-111111111111',
+        assignmentId: null,
+        matchId: null,
+        conversationId: null,
+      },
+    ]);
+
+    const request = new NextRequest('http://localhost/api/candidate-invites/token/proof-card', {
+      method: 'POST',
+      body: JSON.stringify({
+        proofPackId: '22222222-2222-4222-8222-222222222222',
+        reviewConfirmed: true,
+      }),
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ token: 'token-value' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(payload).toEqual({ error: 'This invite is missing assignment context.' });
+    expect(upsertCanonicalProofCardSubmission).not.toHaveBeenCalled();
+    expect(db.execute).not.toHaveBeenCalled();
   });
 
   it('requires explicit final visibility review confirmation', async () => {

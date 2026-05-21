@@ -388,6 +388,81 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(screen.queryByText(/Service temporarily unavailable/i)).not.toBeInTheDocument();
   });
 
+  it('pauses proof submission when an invite is missing structured assignment context', async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (url === '/api/candidate-invites/token-value') {
+        return {
+          ok: true,
+          json: async () => ({
+            invite: {
+              id: 'invite-1',
+              status: 'claimed',
+              flowType: 'proof_card',
+              assignmentId: null,
+              maskedEmail: 'ca***@example.com',
+              expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+              claimedAt: new Date().toISOString(),
+              claimedByCurrentUser: true,
+              acceptedAt: null,
+              acceptedByCurrentUser: false,
+              communicationsUrl: null,
+              proofSubmittedAt: null,
+            },
+            organization: {
+              id: 'org-1',
+              slug: 'acme',
+              displayName: 'Acme Org',
+              logoUrl: null,
+            },
+            assignment: null,
+            availableProofPacks: [
+              {
+                id: '11111111-1111-4111-8111-111111111111',
+                title: 'Service design proof pack',
+                summary: 'One owner-only proof pack for this assignment.',
+                evidenceSummary: null,
+                outcomesSummary: null,
+                verificationSummary: null,
+                updatedAt: new Date().toISOString(),
+              },
+            ],
+          }),
+        };
+      }
+
+      if (url === '/api/user/me') {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'user-1',
+            email: 'candidate@example.com',
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+
+    vi.stubGlobal('fetch', fetchMock as any);
+
+    render(<CandidateInviteClient token="token-value" />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Proof submission paused/i)).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/missing the structured assignment context required/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /continue to proof submission/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /review assignment proof/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/owner-only proof pack/i)).not.toBeInTheDocument();
+  });
+
   it('keeps assignment proof submissions proof-first and submits owner-only Proof Packs', async () => {
     const fetchMock = vi.fn().mockImplementation(async (url: string) => {
       if (url === '/api/candidate-invites/token-value') {
