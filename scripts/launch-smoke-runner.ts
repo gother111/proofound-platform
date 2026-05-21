@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 import {
   LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
@@ -18,6 +19,7 @@ import {
   type LaunchSmokeCheckResult,
 } from '../src/lib/launch/smoke-artifact';
 import { buildAiLaunchSmokeState } from '../src/lib/launch/ai-smoke-state';
+import { buildLaunchSmokeScenarioEnv } from '../src/lib/launch/smoke-runner-env';
 
 function readArg(flag: string) {
   const index = process.argv.indexOf(flag);
@@ -195,10 +197,12 @@ async function main() {
         message = `${scenario.label} failed`;
       }
     } else {
-      const scenarioEnv = {
-        ...sharedEnv,
-        ...scenario.runner.env,
-      };
+      const scenarioEnv = buildLaunchSmokeScenarioEnv({
+        executionMode,
+        baseUrl,
+        sharedEnv,
+        scenarioEnv: scenario.runner.env,
+      });
       commandReleaseBaseUrl = getCommandReleaseBaseUrl(scenarioEnv, baseUrl);
 
       for (const preCommand of scenario.runner.preCommands ?? []) {
@@ -279,10 +283,12 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(
-    'Launch smoke runner failed:',
-    error instanceof Error ? error.message : String(error)
-  );
-  process.exit(1);
-});
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  main().catch((error) => {
+    console.error(
+      'Launch smoke runner failed:',
+      error instanceof Error ? error.message : String(error)
+    );
+    process.exit(1);
+  });
+}
