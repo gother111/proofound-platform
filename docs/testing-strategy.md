@@ -106,32 +106,32 @@ This document defines the current testing architecture for Proofound and the com
 
 ## Command Matrix
 
-| Goal                    | Command                                                                           |
-| ----------------------- | --------------------------------------------------------------------------------- |
-| Lint                    | `npm run lint`                                                                    |
-| Typecheck               | `npm run typecheck`                                                               |
-| Unit/API baseline       | `npm run test`                                                                    |
-| Build                   | `npm run build`                                                                   |
-| E2E full suite          | `npm run test:e2e`                                                                |
-| Auth contract (mock)    | `npm run test:e2e:auth`                                                           |
-| Auth contract (real)    | `npm run test:e2e:auth:real`                                                      |
-| Seed public org trust   | `npm run seed:public-org-trust-fixture`                                           |
-| Org trust smoke         | `npm run test:e2e:org-trust:smoke`                                                |
-| A11y baseline           | `npm run test:a11y`                                                               |
-| A11y strict             | `npm run test:a11y:strict`                                                        |
-| Strict quality guard    | `npm run test:strict:quality`                                                     |
-| Strict individual flow  | `npm run test:e2e:individual:strict`                                              |
-| Strict org flow         | `npm run test:e2e:org:strict`                                                     |
-| Strict privacy flow     | `npm run test:e2e:privacy:strict`                                                 |
-| Provider advisory flow  | `npm run test:e2e:providers:advisory`                                             |
-| Privacy/RLS baseline    | `npm run test:privacy`                                                            |
-| Privacy/RLS extended    | `npm run test:privacy:extended`                                                   |
-| Launch smoke contract   | `npm run test:launch:smoke`                                                       |
-| Launch monitor sweep    | `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch` |
-| Perf budget gate        | `BASE_URL=<production-candidate-url> npm run perf:budgets`                        |
-| Launch status gate      | `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`  |
-| Go/No-Go gate           | `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`       |
-| Final launch validation | `BASE_URL=<production-candidate-url> npm run launch:validate`                     |
+| Goal                    | Command                                                                            |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| Lint                    | `npm run lint`                                                                     |
+| Typecheck               | `npm run typecheck`                                                                |
+| Unit/API baseline       | `npm run test`                                                                     |
+| Build                   | `npm run build`                                                                    |
+| E2E full suite          | `npm run test:e2e`                                                                 |
+| Auth contract (mock)    | `npm run test:e2e:auth`                                                            |
+| Auth contract (real)    | `npm run test:e2e:auth:real`                                                       |
+| Seed public org trust   | `npm run seed:public-org-trust-fixture`                                            |
+| Org trust smoke         | `npm run test:e2e:org-trust:smoke`                                                 |
+| A11y baseline           | `npm run test:a11y`                                                                |
+| A11y strict             | `npm run test:a11y:strict`                                                         |
+| Strict quality guard    | `npm run test:strict:quality`                                                      |
+| Strict individual flow  | `npm run test:e2e:individual:strict`                                               |
+| Strict org flow         | `npm run test:e2e:org:strict`                                                      |
+| Strict privacy flow     | `npm run test:e2e:privacy:strict`                                                  |
+| Provider advisory flow  | `npm run test:e2e:providers:advisory`                                              |
+| Privacy/RLS baseline    | `npm run test:privacy`                                                             |
+| Privacy/RLS extended    | `npm run test:privacy:extended`                                                    |
+| Launch smoke contract   | `npm run test:launch:smoke`                                                        |
+| Launch monitor sweep    | `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`  |
+| Perf budget gate        | `BASE_URL=<production-candidate-url> npm run perf:budgets`                         |
+| Launch status gate      | `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`   |
+| Go/No-Go gate           | `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`        |
+| Final launch validation | `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:validate` |
 
 ## Final Launch Validation
 
@@ -149,8 +149,9 @@ The broader evidence-backed operational checklist is generated separately with
 The command runs the launch-critical gates in this order: deploy readiness, lint, typecheck,
 production build, launch surface inventory, launch page inventory, privacy/RLS, upload privacy,
 organization corridor workflow, export/delete, strict org corridor E2E when the environment has the
-required real Supabase/site settings, launch smoke when `BASE_URL` is set, then
-`npm audit --omit=dev`.
+required real Supabase/site settings, launch smoke and perf budgets when `BASE_URL` is set,
+authenticated launch monitors, launch status, and go/no-go when `BASE_URL` and `CRON_SECRET` are set,
+then `npm audit --omit=dev`.
 
 `FAIL` and `UNVERIFIED` are not treated as pass states. Any P0 `FAIL` or `UNVERIFIED` produces a
 `NO_GO` verdict and a non-zero exit. `NOT APPLICABLE` is reserved for gates whose trigger is
@@ -162,10 +163,10 @@ Local run:
 npm run launch:validate
 ```
 
-Staging or local production-server run:
+Production-candidate or protected local production-server run:
 
 ```bash
-BASE_URL=<production-candidate-url> npm run launch:validate
+BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:validate
 ```
 
 For strict org corridor E2E to run instead of reporting `UNVERIFIED`, the environment must use real

@@ -3027,6 +3027,9 @@ describe('launch gate package configuration', () => {
     expect(testingStrategy).toContain(
       'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status'
     );
+    expect(testingStrategy).toContain(
+      'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:validate'
+    );
     expect(testingStrategy).toContain('fresh backup/restore evidence');
     expect(testingStrategy).toContain('manual-link interview');
     expect(compactWhitespace(testingStrategy)).toContain('posture remains the locked MVP default');

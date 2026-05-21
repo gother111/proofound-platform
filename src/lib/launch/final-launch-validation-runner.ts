@@ -131,6 +131,11 @@ function hasAnyEnv(env: NodeJS.ProcessEnv, names: readonly string[]) {
   return names.some((name) => Boolean(env[name]?.trim()));
 }
 
+function hasCronSecret(env: NodeJS.ProcessEnv) {
+  const value = env.CRON_SECRET?.trim();
+  return Boolean(value && value.toLowerCase() !== 'undefined' && value.toLowerCase() !== 'null');
+}
+
 export function environmentSupportsStrictOrgCorridor(env: NodeJS.ProcessEnv = process.env) {
   const missing = strictOrgCorridorRequiredEnvGroups.flatMap((group) =>
     hasAnyEnv(env, group) ? [] : [group.join('/')]
@@ -156,7 +161,21 @@ export function buildFinalLaunchValidationGates(
   const env = options.env ?? process.env;
   const baseUrl = env.BASE_URL?.trim();
   const outputDir = options.outputDir ?? '.artifacts/launch-validation-current';
+  const launchSmokeArtifactPath = path.join(outputDir, 'launch-smoke-report.json');
   const strictOrgSupport = environmentSupportsStrictOrgCorridor(env);
+  const cronSecretConfigured = hasCronSecret(env);
+  const protectedLaunchGateSkip = baseUrl
+    ? cronSecretConfigured
+      ? undefined
+      : {
+          status: 'UNVERIFIED' as const,
+          reason:
+            'CRON_SECRET is required for authenticated production-candidate launch-status, monitor, and go/no-go gates.',
+        }
+    : {
+        status: 'NOT APPLICABLE' as const,
+        reason: 'BASE_URL is not configured, so this production-candidate gate is not run.',
+      };
 
   return [
     {
@@ -256,7 +275,7 @@ export function buildFinalLaunchValidationGates(
               '--base-url',
               baseUrl,
               '--artifact',
-              path.join(outputDir, 'launch-smoke-report.json'),
+              launchSmokeArtifactPath,
             ],
             15 * ONE_MINUTE,
             { BASE_URL: baseUrl }
@@ -268,6 +287,72 @@ export function buildFinalLaunchValidationGates(
             status: 'NOT APPLICABLE',
             reason: 'BASE_URL is not configured, so launch smoke is not run by this command.',
           },
+    },
+    {
+      id: 'perf_budgets',
+      label: 'Performance budgets',
+      priority: 'P0',
+      command: baseUrl
+        ? npmCommand(['run', 'perf:budgets'], 10 * ONE_MINUTE, { BASE_URL: baseUrl })
+        : undefined,
+      skip: baseUrl
+        ? undefined
+        : {
+            status: 'NOT APPLICABLE',
+            reason:
+              'BASE_URL is not configured, so performance budgets are not run by this command.',
+          },
+    },
+    {
+      id: 'launch_synthetics',
+      label: 'Launch synthetic monitors',
+      priority: 'P0',
+      command:
+        baseUrl && cronSecretConfigured
+          ? npmCommand(
+              [
+                'run',
+                'monitor:launch',
+                '--',
+                '--base-url',
+                baseUrl,
+                '--artifact',
+                launchSmokeArtifactPath,
+              ],
+              10 * ONE_MINUTE,
+              {
+                BASE_URL: baseUrl,
+                LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
+              }
+            )
+          : undefined,
+      skip: protectedLaunchGateSkip,
+    },
+    {
+      id: 'launch_status',
+      label: 'Authenticated launch status',
+      priority: 'P0',
+      command:
+        baseUrl && cronSecretConfigured
+          ? npmCommand(['run', 'launch:status'], 5 * ONE_MINUTE, {
+              BASE_URL: baseUrl,
+              LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
+            })
+          : undefined,
+      skip: protectedLaunchGateSkip,
+    },
+    {
+      id: 'go_no_go',
+      label: 'Go/No-Go',
+      priority: 'P0',
+      command:
+        baseUrl && cronSecretConfigured
+          ? npmCommand(['run', 'go:no-go'], 10 * ONE_MINUTE, {
+              BASE_URL: baseUrl,
+              LAUNCH_SMOKE_ARTIFACT_PATH: launchSmokeArtifactPath,
+            })
+          : undefined,
+      skip: protectedLaunchGateSkip,
     },
     {
       id: 'production_dependency_audit',

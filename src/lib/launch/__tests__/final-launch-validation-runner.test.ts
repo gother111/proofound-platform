@@ -28,6 +28,7 @@ describe('final launch validation runner', () => {
         ...process.env,
         ...strictEnv,
         BASE_URL: 'http://localhost:3000',
+        CRON_SECRET: 'cron-secret',
       },
       outputDir: '.artifacts/launch-validation-test',
     });
@@ -46,6 +47,10 @@ describe('final launch validation runner', () => {
       'export_delete_tests',
       'strict_org_corridor_e2e',
       'launch_smoke',
+      'perf_budgets',
+      'launch_synthetics',
+      'launch_status',
+      'go_no_go',
       'production_dependency_audit',
     ]);
 
@@ -53,6 +58,16 @@ describe('final launch validation runner', () => {
     expect(gates.find((gate) => gate.id === 'launch_smoke')?.command?.display).toContain(
       '--base-url http://localhost:3000'
     );
+    expect(gates.find((gate) => gate.id === 'perf_budgets')?.command?.display).toBe(
+      'npm run perf:budgets'
+    );
+    expect(gates.find((gate) => gate.id === 'launch_synthetics')?.command?.display).toContain(
+      'npm run monitor:launch'
+    );
+    expect(gates.find((gate) => gate.id === 'launch_status')?.command?.display).toBe(
+      'npm run launch:status'
+    );
+    expect(gates.find((gate) => gate.id === 'go_no_go')?.command?.display).toBe('npm run go:no-go');
   });
 
   it('does not silently pass skipped launch gates', () => {
@@ -78,6 +93,42 @@ describe('final launch validation runner', () => {
     expect(gates.find((gate) => gate.id === 'launch_smoke')?.skip).toMatchObject({
       status: 'NOT APPLICABLE',
     });
+    expect(gates.find((gate) => gate.id === 'perf_budgets')?.skip).toMatchObject({
+      status: 'NOT APPLICABLE',
+    });
+    expect(gates.find((gate) => gate.id === 'launch_synthetics')?.skip).toMatchObject({
+      status: 'NOT APPLICABLE',
+    });
+    expect(gates.find((gate) => gate.id === 'launch_status')?.skip).toMatchObject({
+      status: 'NOT APPLICABLE',
+    });
+    expect(gates.find((gate) => gate.id === 'go_no_go')?.skip).toMatchObject({
+      status: 'NOT APPLICABLE',
+    });
+  });
+
+  it('blocks production-candidate authenticated gates when CRON_SECRET is missing', () => {
+    const gates = buildFinalLaunchValidationGates({
+      env: {
+        ...process.env,
+        ...strictEnv,
+        BASE_URL: 'https://preview.proofound.example',
+        CRON_SECRET: '',
+      },
+      outputDir: '.artifacts/launch-validation-test',
+    });
+
+    expect(gates.find((gate) => gate.id === 'launch_smoke')?.command?.display).toContain(
+      '--base-url https://preview.proofound.example'
+    );
+    expect(gates.find((gate) => gate.id === 'perf_budgets')?.command?.display).toBe(
+      'npm run perf:budgets'
+    );
+    for (const gateId of ['launch_synthetics', 'launch_status', 'go_no_go']) {
+      expect(gates.find((gate) => gate.id === gateId)?.skip).toMatchObject({
+        status: 'UNVERIFIED',
+      });
+    }
   });
 
   it('treats P0 UNVERIFIED as a blocking no-go state', () => {
@@ -137,7 +188,7 @@ describe('final launch validation runner', () => {
     expect(path.basename(result.reportPath)).toBe(FINAL_LAUNCH_VALIDATION_REPORT_FILE_NAME);
     expect(commands.verdict).toBe('NO_GO');
     expect(commands.statusCounts.UNVERIFIED).toBe(1);
-    expect(commands.statusCounts['NOT APPLICABLE']).toBe(1);
+    expect(commands.statusCounts['NOT APPLICABLE']).toBe(5);
     expect(commands.p0BlockingGateIds).toContain('strict_org_corridor_e2e');
     expect(report).toContain('| 12 | P0 | Strict org corridor E2E | UNVERIFIED |');
     expect(report).toContain('| 13 | P0 | Launch smoke | NOT APPLICABLE |');
