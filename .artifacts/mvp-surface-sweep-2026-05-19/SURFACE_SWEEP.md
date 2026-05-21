@@ -4843,3 +4843,12 @@ Browser evidence:
 - Replaced that diagnostic with structured `admin.organization_verify.update_failed` logging while preserving break-glass admin authorization, redirect rethrow behavior, transaction-scoped organization update plus trust-tier transition plus admin audit write, and generic client-facing errors.
 - Added focused coverage for structured logging when the admin audit write fails inside the transaction, and extended runtime debug-output guardrails so the old admin organization verification console string cannot return.
 - Verification passed: focused admin organization verification/runtime guard run `npm test -- --run tests/api/admin-organizations-verify-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 52 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted admin verification console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Match Explanation Structured Logging And Landing Copy Gate
+
+- Timestamp: 2026-05-21 14:18 CEST.
+- Continued the active matching diagnostics sweep after `/api/match/explain/[matchId]` still emitted raw console diagnostics for unexpected match explanation failures.
+- Replaced that diagnostic with structured `match.explain.get_failed` logging while preserving auth checks, org membership checks, blind-safe review cards, reason-coded explanation output, rank-band-only score visibility, and generic client-facing errors.
+- Restored the active public landing copy contract required by the launch gate by including the exact `Too many weak submissions.` proof-review line in the mobile scrollytelling system visual.
+- Added focused coverage for structured match explanation failure diagnostics and extended runtime debug-output guardrails so the old match explanation console string cannot return.
+- Verification passed: focused match explanation/runtime guard run `npm test -- --run tests/api/match-explain-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 50 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted match explanation console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

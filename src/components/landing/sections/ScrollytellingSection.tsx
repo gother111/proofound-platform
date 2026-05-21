@@ -3385,7 +3385,7 @@ function MobileSystemVisual({ frame }: { frame: HomepageStoryFrame }) {
     ? [
         {
           label: 'Organizations',
-          body: 'Too many weak submissions reach the first review.',
+          body: 'Too many weak submissions. Proof review starts with structured evidence.',
           icon: Building2,
           tone: 'terracotta',
         },

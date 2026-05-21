@@ -743,6 +743,14 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Error fetching snoozed matches:');
   });
 
+  it('keeps match explanation failures on structured server logging', () => {
+    const source = readSource('src/app/api/match/explain/[matchId]/route.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('match.explain.get_failed');
+    expect(source).not.toContain('Match explanation error:');
+  });
+
   it('keeps organization detail and profile visibility failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/organizations/[orgId]/route.ts'),

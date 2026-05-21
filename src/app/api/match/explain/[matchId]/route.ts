@@ -24,6 +24,7 @@ import {
 import { buildMatchExplainerContract } from '@/lib/matching/explainer-contract';
 import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
 import { buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
+import { log } from '@/lib/log';
 
 const visualAssignmentFixturesEnabled = () =>
   isMockSupabaseEnabled() &&
@@ -404,7 +405,7 @@ export async function GET(
 
     return NextResponse.json(explanation);
   } catch (error) {
-    console.error('Match explanation error:', error);
+    log.error('match.explain.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

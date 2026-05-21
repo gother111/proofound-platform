@@ -65,7 +65,14 @@ vi.mock('@/lib/matching/match-score-contract', () => ({
   resolveEffectiveScoreState: mocks.resolveEffectiveScoreState,
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '@/app/api/match/explain/[matchId]/route';
+import { log } from '@/lib/log';
 
 const baseMatchRow = {
   id: 'match-1',
@@ -280,5 +287,21 @@ describe('GET /api/match/explain/[matchId]', () => {
     expect(body.rank).toBeUndefined();
     expect(body.rankMode).toBe('band');
     expect(body.exactRankAvailable).toBe(false);
+  });
+
+  it('logs unexpected explanation failures with structured diagnostics', async () => {
+    const routeError = new Error('raw match explanation detail');
+    mocks.dbExecute.mockReset();
+    mocks.dbExecute.mockRejectedValueOnce(routeError);
+
+    const response = await GET(new NextRequest('https://example.com/api/match/explain/match-1'), {
+      params: Promise.resolve({ matchId: 'match-1' }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('match.explain.get_failed', { error: routeError });
+    expect(JSON.stringify(body)).not.toContain('raw match explanation detail');
   });
 });
