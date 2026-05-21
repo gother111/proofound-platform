@@ -56,7 +56,15 @@ vi.mock('@/lib/verification/canonical-bundles', () => ({
   updateCanonicalBundleDeliveryState: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
 import { requireApiAuthContext } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendEmail } from '@/lib/email/sender';
 import { writeVerificationAuditLog } from '@/lib/verification/integrity';
@@ -263,6 +271,28 @@ describe('sent verification request delete and resend routes', () => {
     });
   });
 
+  it('logs skill cancellation failures with structured diagnostics', async () => {
+    const cancelError = new Error('skill cancel failed');
+    vi.mocked(getCanonicalSkillVerificationRequestById).mockResolvedValue(
+      makeCanonicalSkillRequest({
+        id: '44444444-4444-4444-9444-444444444444',
+        skill_id: 'skill-failed-cancel',
+      })
+    );
+    vi.mocked(updateCanonicalSkillVerificationRequest).mockRejectedValueOnce(cancelError);
+
+    const { request, params } = makeRequest('skill', '44444444-4444-4444-9444-444444444444');
+    const response = await DELETE(request, { params });
+
+    expect(response.status).toBe(500);
+    expect(log.error).toHaveBeenCalledWith('verification.sent_requests.skill_cancel_failed', {
+      error: cancelError,
+      userId: 'user-1',
+      requestId: '44444444-4444-4444-9444-444444444444',
+      skillId: 'skill-failed-cancel',
+    });
+  });
+
   it('deletes requester-owned failed impact verification requests', async () => {
     vi.mocked(getCanonicalImpactVerificationRequestById).mockResolvedValue(
       makeCanonicalImpactRequest({
@@ -286,6 +316,28 @@ describe('sent verification request delete and resend routes', () => {
       })
     );
     expect(writeVerificationAuditLog).toHaveBeenCalledTimes(1);
+  });
+
+  it('logs impact cancellation failures with structured diagnostics', async () => {
+    const cancelError = new Error('impact cancel failed');
+    vi.mocked(getCanonicalImpactVerificationRequestById).mockResolvedValue(
+      makeCanonicalImpactRequest({
+        id: '55555555-5555-4555-9555-555555555555',
+        impact_story_id: 'story-failed-cancel',
+      })
+    );
+    vi.mocked(updateCanonicalImpactVerificationRequest).mockRejectedValueOnce(cancelError);
+
+    const { request, params } = makeRequest('impact_story', '55555555-5555-4555-9555-555555555555');
+    const response = await DELETE(request, { params });
+
+    expect(response.status).toBe(500);
+    expect(log.error).toHaveBeenCalledWith('verification.sent_requests.impact_cancel_failed', {
+      error: cancelError,
+      userId: 'user-1',
+      requestId: '55555555-5555-4555-9555-555555555555',
+      impactStoryId: 'story-failed-cancel',
+    });
   });
 
   it('resends pending skill verification requests without cloning', async () => {
@@ -347,6 +399,66 @@ describe('sent verification request delete and resend routes', () => {
     );
     expect(sendEmail).toHaveBeenCalledTimes(1);
     expect(writeVerificationAuditLog).toHaveBeenCalledTimes(1);
+  });
+
+  it('logs requester and skill name lookup fallbacks during skill resend', async () => {
+    const requesterError = new Error('profile lookup failed');
+    const skillError = new Error('skill lookup failed');
+    vi.mocked(getCanonicalSkillVerificationRequestById).mockResolvedValue(
+      makeCanonicalSkillRequest({
+        id: '99999999-9999-4999-9999-999999999999',
+        skill_id: 'skill-lookup-fallback',
+      })
+    );
+
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'profiles') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: requesterError,
+                }),
+              })),
+            })),
+          } as any;
+        }
+
+        if (table === 'skills') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: skillError,
+                }),
+              })),
+            })),
+          } as any;
+        }
+
+        throw new Error(`Unexpected table ${table}`);
+      }),
+    } as any);
+
+    const { request, params } = makeRequest('skill', '99999999-9999-4999-9999-999999999999');
+    const response = await POST(request, { params });
+
+    expect(response.status).toBe(200);
+    expect(log.warn).toHaveBeenCalledWith(
+      'verification.sent_requests.requester_name_lookup_failed',
+      {
+        error: requesterError,
+        userId: 'user-1',
+      }
+    );
+    expect(log.warn).toHaveBeenCalledWith('verification.sent_requests.skill_name_lookup_failed', {
+      error: skillError,
+      skillId: 'skill-lookup-fallback',
+    });
+    expect(JSON.stringify(vi.mocked(log.warn).mock.calls)).not.toContain('mentor@example.com');
   });
 
   it('resends declined skill verification requests by cloning a new pending request', async () => {
@@ -480,6 +592,67 @@ describe('sent verification request delete and resend routes', () => {
     expect(writeVerificationAuditLog).toHaveBeenCalledTimes(1);
   });
 
+  it('logs skill resend clone failures with structured diagnostics', async () => {
+    const cloneError = new Error('skill clone failed');
+    vi.mocked(getCanonicalSkillVerificationRequestById).mockResolvedValue(
+      makeCanonicalSkillRequest({
+        id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        skill_id: 'skill-clone-failed',
+        verifier_email: 'reviewer@example.com',
+        status: 'declined',
+      })
+    );
+    vi.mocked(createCanonicalSkillVerificationRequest).mockRejectedValueOnce(cloneError);
+
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'profiles') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { display_name: 'Requester Name' },
+                  error: null,
+                }),
+              })),
+            })),
+          } as any;
+        }
+
+        if (table === 'skills') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    skill_id: 'custom-1-2-3-review',
+                    name_i18n: { en: 'Review' },
+                    taxonomy: null,
+                  },
+                  error: null,
+                }),
+              })),
+            })),
+          } as any;
+        }
+
+        throw new Error(`Unexpected table ${table}`);
+      }),
+    } as any);
+
+    const { request, params } = makeRequest('skill', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+    const response = await POST(request, { params });
+
+    expect(response.status).toBe(500);
+    expect(log.error).toHaveBeenCalledWith('verification.sent_requests.skill_clone_failed', {
+      error: cloneError,
+      userId: 'user-1',
+      sourceRequestId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      skillId: 'skill-clone-failed',
+    });
+    expect(JSON.stringify(vi.mocked(log.error).mock.calls)).not.toContain('reviewer@example.com');
+  });
+
   it('resends pending impact verification requests without cloning', async () => {
     vi.mocked(getCanonicalImpactVerificationRequestById).mockResolvedValue(
       makeCanonicalImpactRequest({
@@ -535,5 +708,62 @@ describe('sent verification request delete and resend routes', () => {
     );
     expect(sendEmail).toHaveBeenCalledTimes(1);
     expect(writeVerificationAuditLog).toHaveBeenCalledTimes(1);
+  });
+
+  it('logs impact resend clone failures with structured diagnostics', async () => {
+    const cloneError = new Error('impact clone failed');
+    vi.mocked(getCanonicalImpactVerificationRequestById).mockResolvedValue(
+      makeCanonicalImpactRequest({
+        id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        impact_story_id: 'story-clone-failed',
+        verifier_email: 'reviewer@example.com',
+        status: 'declined',
+      })
+    );
+    vi.mocked(createCanonicalImpactVerificationRequest).mockRejectedValueOnce(cloneError);
+
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'profiles') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { display_name: 'Requester Name' },
+                  error: null,
+                }),
+              })),
+            })),
+          } as any;
+        }
+
+        if (table === 'impact_stories') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { title: 'Impact Story Title' },
+                  error: null,
+                }),
+              })),
+            })),
+          } as any;
+        }
+
+        throw new Error(`Unexpected table ${table}`);
+      }),
+    } as any);
+
+    const { request, params } = makeRequest('impact_story', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+    const response = await POST(request, { params });
+
+    expect(response.status).toBe(500);
+    expect(log.error).toHaveBeenCalledWith('verification.sent_requests.impact_clone_failed', {
+      error: cloneError,
+      userId: 'user-1',
+      sourceRequestId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      impactStoryId: 'story-clone-failed',
+    });
+    expect(JSON.stringify(vi.mocked(log.error).mock.calls)).not.toContain('reviewer@example.com');
   });
 });

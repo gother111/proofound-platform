@@ -441,4 +441,26 @@ describe('runtime debug output guardrails', () => {
       'Failed to load impact story titles for canonical verification requests:'
     );
   });
+
+  it('keeps sent verification request actions on structured server logging', () => {
+    const source = readSource('src/lib/verification/sent-request-actions.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('verification.sent_requests.requester_name_lookup_failed');
+    expect(source).toContain('verification.sent_requests.skill_name_lookup_failed');
+    expect(source).toContain('verification.sent_requests.skill_clone_failed');
+    expect(source).toContain('verification.sent_requests.skill_cancel_failed');
+    expect(source).toContain('verification.sent_requests.impact_clone_failed');
+    expect(source).toContain('verification.sent_requests.impact_cancel_failed');
+    expect(source).not.toContain('Failed to fetch requester display name for resend:');
+    expect(source).not.toContain('Failed to fetch skill name for resend:');
+    expect(source).not.toContain(
+      'Failed to clone canonical skill verification request for resend:'
+    );
+    expect(source).not.toContain('Failed to cancel skill verification request:');
+    expect(source).not.toContain(
+      'Failed to clone canonical impact verification request for resend:'
+    );
+    expect(source).not.toContain('Failed to cancel impact verification request:');
+  });
 });
