@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Documentation.md`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Documentation (Status + Index)
 
@@ -827,7 +827,7 @@ How to verify:
 - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`
 - Final launch gate parity (against the intended production-candidate URL):
   - `BASE_URL=<production-candidate-url> npm run perf:budgets`
-  - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true npm run go:no-go`
+  - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 - Perf-status source validation:
   - With no analytics rows in the 24h window, `/api/monitoring/perf-status` should return `source: "probe"`.
   - With at least one `api_latency` analytics row present, `/api/monitoring/perf-status` should return `source: "analytics_events"`.

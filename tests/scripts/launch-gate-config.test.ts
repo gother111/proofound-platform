@@ -1227,14 +1227,21 @@ describe('launch gate package configuration', () => {
         expect(content).toContain('Last Verified: `2026-05-21`');
         expect(content).toContain('Proofound is a proof-first assignment review corridor');
         expect(content).not.toContain('hiring credibility corridor');
-      } else if (docPath === 'verification.md') {
+      } else if (
+        docPath === 'Documentation.md' ||
+        docPath === 'metrics.md' ||
+        docPath === 'project/Documentation.md' ||
+        docPath === 'verification.md'
+      ) {
         expect(content).toContain('Last Verified: `2026-05-21`');
-        expect(content).toContain('INTERNAL_API_SECRET=<secret>');
         expect(content).not.toContain('SUS_STUDY_COMPLETE');
-        expect(content).toContain(
-          'change match, review, verification, reveal, trust-state, or workflow-decision state'
-        );
-        expect(content).not.toContain('change match/review/trust/hiring state');
+        if (docPath === 'verification.md') {
+          expect(content).toContain('INTERNAL_API_SECRET=<secret>');
+          expect(content).toContain(
+            'change match, review, verification, reveal, trust-state, or workflow-decision state'
+          );
+          expect(content).not.toContain('change match/review/trust/hiring state');
+        }
       } else {
         expect(content).toContain('Last Verified: `2026-05-19`');
       }
@@ -1247,7 +1254,12 @@ describe('launch gate package configuration', () => {
         .find((line) => line.includes(`| \`${docPath}\``));
       if (docPath === 'Prompt.md' || docPath === 'project/Prompt.md') {
         expect(registryLine).toContain('| `2026-05-21`');
-      } else if (docPath === 'verification.md') {
+      } else if (
+        docPath === 'Documentation.md' ||
+        docPath === 'metrics.md' ||
+        docPath === 'project/Documentation.md' ||
+        docPath === 'verification.md'
+      ) {
         expect(registryLine).toContain('| `2026-05-21`');
       } else {
         expect(registryLine).toContain('| `2026-05-19`');
