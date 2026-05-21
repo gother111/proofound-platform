@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { PUT } from '@/app/api/organizations/[orgId]/route';
+import { GET, PUT } from '@/app/api/organizations/[orgId]/route';
 import { db } from '@/db';
 import { requireApiAuthContext } from '@/lib/auth';
+import { log } from '@/lib/log';
 
 vi.mock('@/lib/auth', () => ({
   requireApiAuthContext: vi.fn(),
@@ -16,6 +17,12 @@ vi.mock('@/db', () => ({
       organizations: { findFirst: vi.fn() },
     },
     update: vi.fn(),
+  },
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
   },
 }));
 
@@ -80,6 +87,23 @@ describe('organizations [orgId] route', () => {
           })),
         })),
       },
+    });
+  });
+
+  it('logs organization fetch failures with structured diagnostics', async () => {
+    const routeError = new Error('organization lookup failed');
+    (db.query.organizations.findFirst as any).mockRejectedValueOnce(routeError);
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/organizations/${ORG_ID}`),
+      params
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to fetch organization' });
+    expect(log.error).toHaveBeenCalledWith('organization.detail.get_failed', {
+      error: routeError,
     });
   });
 
@@ -205,6 +229,24 @@ describe('organizations [orgId] route', () => {
         website: 'https://example.com/',
       })
     );
+  });
+
+  it('logs organization update failures with structured diagnostics', async () => {
+    const routeError = new Error('organization update failed');
+    const where = vi.fn().mockReturnValue({
+      returning: vi.fn().mockRejectedValue(routeError),
+    });
+    const set = vi.fn().mockReturnValue({ where });
+    (db.update as any).mockReturnValue({ set });
+
+    const response = await PUT(buildPutRequest({ displayName: 'Acme Org' }), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to update organization' });
+    expect(log.error).toHaveBeenCalledWith('organization.detail.update_failed', {
+      error: routeError,
+    });
   });
 
   it('rejects unsupported non-MVP organization fields', async () => {

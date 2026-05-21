@@ -6,6 +6,7 @@ import { organizations } from '@/db/schema';
 import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 import { requireApiAuthContext } from '@/lib/auth';
 import { ensureOrganizationPrincipal } from '@/lib/authz';
+import { log } from '@/lib/log';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import { resolveOrganizationReadiness } from '@/lib/organizations/trust-profile';
 
@@ -47,7 +48,7 @@ export async function GET(
 
     return NextResponse.json({ organization: org });
   } catch (error) {
-    console.error('Error fetching organization:', error);
+    log.error('organization.detail.get_failed', { error });
     return NextResponse.json({ error: 'Failed to fetch organization' }, { status: 500 });
   }
 }
@@ -190,7 +191,7 @@ export async function PUT(
 
     return NextResponse.json({ organization: updatedOrg });
   } catch (error) {
-    console.error('Error updating organization:', error);
+    log.error('organization.detail.update_failed', { error });
     return NextResponse.json({ error: 'Failed to update organization' }, { status: 500 });
   }
 }

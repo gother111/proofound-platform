@@ -742,4 +742,21 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to unhide match:');
     expect(sources).not.toContain('Error fetching snoozed matches:');
   });
+
+  it('keeps organization detail and profile visibility failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/organizations/[orgId]/route.ts'),
+      readSource('src/app/api/profile/visibility/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('organization.detail.get_failed');
+    expect(sources).toContain('organization.detail.update_failed');
+    expect(sources).toContain('profile.visibility.get_failed');
+    expect(sources).toContain('profile.visibility.update_failed');
+    expect(sources).not.toContain('Error fetching organization:');
+    expect(sources).not.toContain('Error updating organization:');
+    expect(sources).not.toContain('Error fetching visibility settings:');
+    expect(sources).not.toContain('Error updating visibility settings:');
+  });
 });
