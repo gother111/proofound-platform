@@ -4,6 +4,7 @@ import { Upload, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import imageCompression from 'browser-image-compression';
 import { toast } from 'sonner';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface AvatarUploadProps {
   avatar: string | null;
@@ -59,7 +60,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
       };
       reader.readAsDataURL(compressed);
     } catch (compressionError) {
-      console.error('Image compression failed:', compressionError);
+      dispatchClientErrorDiagnostic('profile.avatar.compression_failed', compressionError);
       setError('Could not compress image for upload');
       setIsUploading(false);
     }

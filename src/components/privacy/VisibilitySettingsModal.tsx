@@ -18,6 +18,7 @@ import {
 import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import { FieldVisibilityControls } from './FieldVisibilityControls';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface VisibilitySettingsModalProps {
   open: boolean;
@@ -39,7 +40,9 @@ export function VisibilitySettingsModal({
       apiFetch('/api/user/me')
         .then((res) => res.json())
         .then((data) => setCurrentUserId(data.id))
-        .catch(console.error);
+        .catch((error) => {
+          dispatchClientErrorDiagnostic('privacy.visibility_modal.user_load_failed', error);
+        });
     } else if (userId) {
       setCurrentUserId(userId);
     }

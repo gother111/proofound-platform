@@ -22,6 +22,7 @@ import {
   PROOF_FILE_ACCEPT_ATTRIBUTE,
 } from '@/lib/proofs/constants';
 import { uploadFile, validateFile } from '@/lib/upload';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 export type FirstProofSkillOption = {
   id: string;
@@ -149,7 +150,7 @@ export function FirstProofDialog({
         fileName: result.artifactDisplayName || result.fileName || file.name,
       }));
     } catch (error) {
-      console.error('First proof upload failed:', error);
+      dispatchClientErrorDiagnostic('proofs.first_proof.upload_failed', error);
       setUploadError('Upload failed. Please try again.');
     } finally {
       setUploading(false);
@@ -222,7 +223,7 @@ export function FirstProofDialog({
       const error = (await response.json()) as { error?: string; message?: string };
       setFormError(error.message || error.error || 'Failed to save proof. Please try again.');
     } catch (error) {
-      console.error('First proof submit failed:', error);
+      dispatchClientErrorDiagnostic('proofs.first_proof.submit_failed', error);
       setFormError('Failed to save proof. Please try again.');
     } finally {
       setSubmitting(false);

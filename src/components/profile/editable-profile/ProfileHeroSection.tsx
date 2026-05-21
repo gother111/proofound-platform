@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import type { ProfileData } from '@/types/profile';
 
 type PendingState = {
@@ -44,7 +45,7 @@ export function ProfileHeroSection({
           setDominantColor(`rgba(${color.value[0]}, ${color.value[1]}, ${color.value[2]}, 0.15)`);
         })
         .catch((e) => {
-          console.warn('Failed to extract average color', e);
+          dispatchClientErrorDiagnostic('profile.hero.average_color_failed', e);
         });
     }
   }, [profile.basicInfo.avatar]);

@@ -41,6 +41,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { generateEmbedCodeFromUrl, generateShareText } from '@/lib/profile/snippet-generator';
 import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
+import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 
 type ProfileType = 'individual' | 'organization';
 
@@ -182,7 +183,7 @@ export function ShareProfileDialog({
             : 'Your Public Page link is ready to share',
       });
     } catch (error) {
-      console.error('profile.snippet.generate.failed', {
+      dispatchClientDiagnostic('profile.snippet.generate_failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       toast({

@@ -232,6 +232,48 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to parse saved filters:');
   });
 
+  it('keeps active decision, proof, profile privacy, and share diagnostics off raw console output', () => {
+    const sources = [
+      readSource('src/components/decisions/DecisionDialog.tsx'),
+      readSource('src/components/privacy/RedactModeToggle.tsx'),
+      readSource('src/components/privacy/VisibilitySettingsModal.tsx'),
+      readSource('src/components/privacy/FieldVisibilityControls.tsx'),
+      readSource('src/components/proofs/FirstProofDialog.tsx'),
+      readSource('src/components/profile/AvatarUpload.tsx'),
+      readSource('src/components/profile/ShareProfileDialog.tsx'),
+      readSource('src/components/profile/PrivacySettings.tsx'),
+      readSource('src/components/profile/editable-profile/ProfileHeroSection.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain('decision.window.fetch_failed');
+    expect(sources).toContain('decision.submit_failed');
+    expect(sources).toContain('privacy.redact_mode.toggle_failed');
+    expect(sources).toContain('privacy.visibility_modal.user_load_failed');
+    expect(sources).toContain('privacy.field_controls.load_failed');
+    expect(sources).toContain('privacy.field_controls.save_failed');
+    expect(sources).toContain('proofs.first_proof.upload_failed');
+    expect(sources).toContain('proofs.first_proof.submit_failed');
+    expect(sources).toContain('profile.avatar.compression_failed');
+    expect(sources).toContain('profile.snippet.generate_failed');
+    expect(sources).toContain('profile.privacy_summary_flag.load_failed');
+    expect(sources).toContain('profile.privacy_settings.load_failed');
+    expect(sources).toContain('profile.privacy_settings.save_failed');
+    expect(sources).toContain('profile.hero.average_color_failed');
+    expect(sources).not.toContain('decision.window.fetch.failed');
+    expect(sources).not.toContain('decision.submit.failed');
+    expect(sources).not.toContain('Failed to toggle redact mode:');
+    expect(sources).not.toContain('.catch(console.error)');
+    expect(sources).not.toContain('Failed to fetch privacy settings:');
+    expect(sources).not.toContain('Failed to save privacy settings:');
+    expect(sources).not.toContain('First proof upload failed:');
+    expect(sources).not.toContain('First proof submit failed:');
+    expect(sources).not.toContain('Image compression failed:');
+    expect(sources).not.toContain('profile.snippet.generate.failed');
+    expect(sources).not.toContain('Failed to load privacy summary feature flag');
+    expect(sources).not.toContain('Failed to load privacy settings:');
+    expect(sources).not.toContain('Failed to extract average color');
+  });
+
   it('keeps client verification link fixtures behind the explicit visual fixture gate', () => {
     const fixtureSource = readSource('src/lib/verification/visual-link-fixtures.ts');
     const pageSources = [

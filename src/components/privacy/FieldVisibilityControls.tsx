@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, EyeOff, Lock, Globe, Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type VisibilityLevel = 'public' | 'network' | 'private' | 'hidden';
 
@@ -149,7 +150,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
         setRedactMode(data.redactMode || false);
       }
     } catch (error) {
-      console.error('Failed to fetch privacy settings:', error);
+      dispatchClientErrorDiagnostic('privacy.field_controls.load_failed', error);
       toast.error('Failed to load privacy settings');
     } finally {
       setIsLoading(false);
@@ -194,7 +195,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
 
       toast.success('Privacy settings saved successfully');
     } catch (error) {
-      console.error('Failed to save privacy settings:', error);
+      dispatchClientErrorDiagnostic('privacy.field_controls.save_failed', error);
       toast.error('Failed to save privacy settings');
     } finally {
       setIsSaving(false);

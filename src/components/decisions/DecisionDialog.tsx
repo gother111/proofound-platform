@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { CheckCircle2, ArrowRight, Clock, XCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientDiagnostic } from '@/lib/client-diagnostics';
 
 interface DecisionDialogProps {
   isOpen: boolean;
@@ -79,8 +80,7 @@ export function DecisionDialog({
         deadline: data.deadline,
       });
     } catch (error) {
-      console.error('decision.window.fetch.failed', {
-        interviewId,
+      dispatchClientDiagnostic('decision.window.fetch_failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       toast({
@@ -142,8 +142,7 @@ export function DecisionDialog({
       setDecision(null);
       setFeedback('');
     } catch (error) {
-      console.error('decision.submit.failed', {
-        interviewId,
+      dispatchClientDiagnostic('decision.submit_failed', {
         decision,
         error: error instanceof Error ? error.message : 'Unknown error',
       });

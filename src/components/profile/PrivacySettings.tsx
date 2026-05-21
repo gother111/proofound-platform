@@ -20,6 +20,7 @@ import { VisibilityPreview } from '../privacy/VisibilityPreview';
 import { toast } from 'sonner';
 import { Shield, Eye } from 'lucide-react';
 import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface FieldVisibilitySettings {
   avatar: VisibilityLevel;
@@ -82,7 +83,7 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
         const payload = await response.json();
         setPrivacySummaryEnabled(payload?.flags?.privacySummary !== false);
       } catch (error) {
-        console.error('Failed to load privacy summary feature flag', error);
+        dispatchClientErrorDiagnostic('profile.privacy_summary_flag.load_failed', error);
       }
     };
 
@@ -114,7 +115,7 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
         }
       }
     } catch (error) {
-      console.error('Failed to load privacy settings:', error);
+      dispatchClientErrorDiagnostic('profile.privacy_settings.load_failed', error);
     }
   }, []);
 
@@ -151,7 +152,7 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
 
       toast.success('Privacy settings saved successfully');
     } catch (error) {
-      console.error('Failed to save privacy settings:', error);
+      dispatchClientErrorDiagnostic('profile.privacy_settings.save_failed', error);
       toast.error('Failed to save privacy settings');
     } finally {
       setIsSaving(false);
