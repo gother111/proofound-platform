@@ -7,6 +7,36 @@
 
 import { test, expect } from '@playwright/test';
 
+test.describe.configure({ mode: 'serial' });
+
+async function gotoIndividualHome(page: import('@playwright/test').Page) {
+  await page.addInitScript(() => {
+    localStorage.setItem('proofound-cookie-consent', 'v1.0.2025-11-06-accepted');
+  });
+  await page.goto('/app/i/home');
+  await expect(page.getByRole('navigation', { name: 'Primary navigation' })).toBeVisible({
+    timeout: 15000,
+  });
+}
+
+async function openCommandPalette(page: import('@playwright/test').Page) {
+  await gotoIndividualHome(page);
+  await page.evaluate(() => {
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'k',
+        ctrlKey: true,
+        bubbles: true,
+      })
+    );
+  });
+
+  const dialog = page.getByRole('dialog', { name: 'Command palette' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByPlaceholder('Type a command or search...')).toBeFocused();
+  return dialog;
+}
+
 test.describe('Keyboard Navigation', () => {
   test('Skip to main content link should work', async ({ page }) => {
     await page.goto('/');
@@ -90,16 +120,63 @@ test.describe('Keyboard Navigation', () => {
     await page.keyboard.press('Enter');
   });
 
-  test.skip('Dialog/Modal should trap focus', async () => {
-    // Pending until a stable active MVP dialog fixture is wired into the a11y suite.
+  test('Command palette dialog should trap focus', async ({ page }) => {
+    const dialog = await openCommandPalette(page);
+
+    await page.keyboard.press('Tab');
+
+    const focusStayedInsideDialog = await dialog.evaluate((node) =>
+      node.contains(document.activeElement)
+    );
+    expect(focusStayedInsideDialog).toBe(true);
   });
 
-  test.skip('Dropdown menus should be keyboard accessible', async () => {
-    // Pending until a stable active MVP dropdown fixture is wired into the a11y suite.
+  test('Profile menu should be keyboard accessible', async ({ page }) => {
+    await gotoIndividualHome(page);
+
+    const profileMenuButton = page.getByRole('button', { name: 'Open profile menu' });
+    await profileMenuButton.focus();
+    await expect(profileMenuButton).toBeFocused();
+
+    await page.keyboard.press('Enter');
+
+    const menu = page.getByRole('menu', { name: 'Profile menu' });
+    await expect(menu).toBeVisible();
+
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('menuitem', { name: 'Account settings' })).toBeFocused();
   });
 
-  test.skip('Tables should be keyboard navigable', async () => {
-    // Pending until an active MVP table/grid fixture is wired into the a11y suite.
+  test('Account history table or empty state should be keyboard reachable', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('proofound-cookie-consent', 'v1.0.2025-11-06-accepted');
+    });
+    await page.goto('/app/i/settings/audit-log');
+    await expect(page.getByRole('heading', { name: 'Account history' })).toBeVisible({
+      timeout: 15000,
+    });
+
+    const table = page.locator('table');
+    const emptyState = page.getByText('No activity recorded yet');
+    await expect
+      .poll(async () => (await table.count()) + (await emptyState.count()), {
+        timeout: 15000,
+      })
+      .toBeGreaterThan(0);
+
+    if ((await table.count()) > 0) {
+      await expect(table.getByText('Date and time')).toBeVisible();
+      await expect(table.getByText('Event').first()).toBeVisible();
+
+      const detailsSummary = table.locator('summary').first();
+      if ((await detailsSummary.count()) > 0) {
+        await detailsSummary.focus();
+        await expect(detailsSummary).toBeFocused();
+      }
+      return;
+    }
+
+    await expect(emptyState).toBeVisible();
   });
 });
 
@@ -149,8 +226,21 @@ test.describe('Focus Management', () => {
     expect(tabCount).toBeLessThan(maxTabs);
   });
 
-  test.skip('Focus should return to trigger after closing modal', async () => {
-    // Pending until a stable active MVP dialog fixture is wired into the a11y suite.
+  test('Command palette should close on Escape and release focus', async ({ page }) => {
+    const dialog = await openCommandPalette(page);
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+
+    await page.keyboard.press('Tab');
+    const focusStayedInsideDialog = await page.evaluate(() =>
+      Boolean(
+        document
+          .querySelector('[role="dialog"][aria-label="Command palette"]')
+          ?.contains(document.activeElement)
+      )
+    );
+    expect(focusStayedInsideDialog).toBe(false);
   });
 });
 

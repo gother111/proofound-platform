@@ -141,7 +141,10 @@ export function AuditLogTable({ title = 'Account history' }: AuditLogTableProps)
 
     return (
       <details className="mt-2">
-        <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+        <summary
+          className="cursor-pointer rounded-sm text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+          tabIndex={0}
+        >
           More information
         </summary>
         <dl className="mt-2 grid gap-1 rounded bg-muted p-2 text-xs">
