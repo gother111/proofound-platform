@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { BellOff, Calendar, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface SnoozeDialogProps {
   open: boolean;
@@ -80,7 +81,7 @@ export function SnoozeDialog({
       onOpenChange(false);
       if (onSnoozed) onSnoozed();
     } catch (error) {
-      console.error('Failed to snooze match:', error);
+      dispatchClientErrorDiagnostic('matching.snooze_dialog.snooze_failed', error);
       toast.error('Failed to snooze match. Please try again.');
     } finally {
       setIsSubmitting(false);

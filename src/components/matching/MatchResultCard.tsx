@@ -11,6 +11,7 @@ import {
   MATCH_EXPLAINER_TEST_IDS,
   MATCH_EXPLAINER_TRIGGER_LABEL,
 } from '@/lib/matching/explainer-contract';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { skillDisplayLabel } from '@/lib/copy/labels';
 
 const PROOF_SIGNAL_LABELS: Record<string, string> = {
@@ -203,7 +204,7 @@ export function MatchResultCard({
         setMatchExplanation(data);
       }
     } catch (error) {
-      console.error('Failed to fetch match explanation:', error);
+      dispatchClientErrorDiagnostic('matching.result_card.explanation_fetch_failed', error);
     } finally {
       setIsLoadingExplanation(false);
     }
@@ -221,7 +222,7 @@ export function MatchResultCard({
         setIsConsentDialogOpen(true);
       }
     } catch (error) {
-      console.error('Failed to fetch visible fields:', error);
+      dispatchClientErrorDiagnostic('matching.result_card.visible_fields_fetch_failed', error);
     }
   };
 
@@ -248,7 +249,7 @@ export function MatchResultCard({
             }
           }
         } catch (error) {
-          console.error('Failed to check verification gates:', error);
+          dispatchClientErrorDiagnostic('matching.result_card.gates_check_failed', error);
         }
       }
 

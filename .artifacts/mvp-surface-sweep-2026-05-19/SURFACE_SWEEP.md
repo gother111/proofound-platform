@@ -5179,3 +5179,12 @@ Browser evidence:
 - Kept presence diagnostics redacted to self/other plus count instead of logging raw presence payloads or user identifiers.
 - Extended runtime debug-output guardrails so the old realtime messaging console strings cannot return.
 - Verification passed: focused messaging/runtime guard run `npm test -- --run tests/routes/organization-messages-page.test.tsx tests/ui/deferred-messages-client.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (3 files / 87 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted realtime messaging console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Matching Interaction Diagnostics
+
+- Timestamp: 2026-05-21 17:06 CEST.
+- Continued the active matching workflow sweep after match cards, paused/hidden match managers, snooze dialog, consent-to-share dialog, and organization matching view still emitted raw console diagnostics for explanation, visible-fields, gate, snooze, restore, consent, and warm-refresh failures.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using `matching.*` event names.
+- Preserved match explanation loading, visible-fields consent flow, verification gate fallback, paused/hidden optimistic rollback, warm match refreshes, snooze success/failure toasts, consent failure toast, and organization selected-match explanation loading.
+- Extended runtime debug-output guardrails so the old matching interaction console strings cannot return.
+- Verification passed: focused matching/runtime guard run `npm test -- --run tests/ui/match-result-card.test.tsx tests/ui/matching-paused-hidden-manager.test.tsx tests/ui/matching-organization-view-beta.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (4 files / 97 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted matching interaction console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

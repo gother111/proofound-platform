@@ -26,6 +26,7 @@ import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff, Shield, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConsentExplainer } from '@/components/workflow/ConsentExplainer';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface ConsentToShareDialogProps {
   isOpen: boolean;
@@ -88,7 +89,7 @@ export function ConsentToShareDialog({
 
       onClose();
     } catch (error) {
-      console.error('Failed to record consent:', error);
+      dispatchClientErrorDiagnostic('matching.consent_to_share.record_failed', error);
       toast({
         title: 'Failed to record consent',
         description: 'Please try again',

@@ -1024,6 +1024,44 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to hide match:');
   });
 
+  it('keeps matching interaction failures on client diagnostics without console output', () => {
+    const sources = [
+      readSource('src/components/matching/MatchResultCard.tsx'),
+      readSource('src/components/matching/SnoozedMatchesList.tsx'),
+      readSource('src/components/matching/HiddenMatchesList.tsx'),
+      readSource('src/components/matching/SnoozeDialog.tsx'),
+      readSource('src/components/matching/ConsentToShareDialog.tsx'),
+      readSource('src/components/matching/MatchingOrganizationView.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(sources).toContain('matching.result_card.explanation_fetch_failed');
+    expect(sources).toContain('matching.result_card.visible_fields_fetch_failed');
+    expect(sources).toContain('matching.result_card.gates_check_failed');
+    expect(sources).toContain('matching.snoozed_matches.load_failed');
+    expect(sources).toContain('matching.snoozed_matches.warm_after_unsnooze_failed');
+    expect(sources).toContain('matching.snoozed_matches.unsnooze_failed');
+    expect(sources).toContain('matching.hidden_matches.load_failed');
+    expect(sources).toContain('matching.hidden_matches.warm_after_unhide_failed');
+    expect(sources).toContain('matching.hidden_matches.unhide_failed');
+    expect(sources).toContain('matching.snooze_dialog.snooze_failed');
+    expect(sources).toContain('matching.consent_to_share.record_failed');
+    expect(sources).toContain('matching.organization_view.explanation_fetch_failed');
+    expect(sources).not.toContain('Failed to fetch match explanation:');
+    expect(sources).not.toContain('Failed to fetch visible fields:');
+    expect(sources).not.toContain('Failed to check verification gates:');
+    expect(sources).not.toContain('Failed to fetch snoozed matches:');
+    expect(sources).not.toContain('Warm matches fetch failed after unsnooze');
+    expect(sources).not.toContain('Error unsnoozing match:');
+    expect(sources).not.toContain('Failed to fetch hidden matches:');
+    expect(sources).not.toContain('Warm matches fetch failed after unhide:');
+    expect(sources).not.toContain('Failed to unhide match:');
+    expect(sources).not.toContain('Failed to snooze match:');
+    expect(sources).not.toContain('Failed to record consent:');
+  });
+
   it('keeps privacy settings client failures on client diagnostics without console output', () => {
     const source = readSource('src/app/app/i/settings/privacy/PrivacySettingsClient.tsx');
 

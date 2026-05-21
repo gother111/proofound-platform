@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, Bell, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface SnoozedMatch {
   id: string;
@@ -55,7 +56,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         setMatches(data.matches || []);
       }
     } catch (error) {
-      console.error('Failed to fetch snoozed matches:', error);
+      dispatchClientErrorDiagnostic('matching.snoozed_matches.load_failed', error);
     } finally {
       setLoading(false);
     }
@@ -86,7 +87,9 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
-      }).catch((err) => console.error('Warm matches fetch failed after unsnooze', err));
+      }).catch((err) =>
+        dispatchClientErrorDiagnostic('matching.snoozed_matches.warm_after_unsnooze_failed', err)
+      );
 
       await Promise.allSettled([
         onRestored?.(),
@@ -94,7 +97,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
         Promise.resolve().then(() => router.refresh()),
       ]);
     } catch (error) {
-      console.error('Error unsnoozing match:', error);
+      dispatchClientErrorDiagnostic('matching.snoozed_matches.unsnooze_failed', error);
       // Rollback optimistic removal if API failed
       setMatches(prevMatches);
       toast.error('Failed to unsnooze match', {

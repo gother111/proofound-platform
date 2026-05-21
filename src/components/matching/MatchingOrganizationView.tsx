@@ -25,6 +25,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { getOrganizationRecoveryActions } from '@/lib/ui/recovery-actions';
 import { CardGridSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -244,7 +245,7 @@ export function MatchingOrganizationView({
           setExplanations((prev) => ({ ...prev, [activeMatchId]: data }));
         }
       } catch (error) {
-        console.error('Failed to fetch match explanation:', error);
+        dispatchClientErrorDiagnostic('matching.organization_view.explanation_fetch_failed', error);
       } finally {
         setIsLoadingExplanation(false);
       }
