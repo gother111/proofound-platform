@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { requestPasswordReset, signInWithOAuth, signUp, verifyEmail } from '@/actions/auth';
 import { resolveCanonicalSiteUrl } from '@/lib/env';
+import { log } from '@/lib/log';
 
 // Mock dependencies
 vi.mock('next/headers', () => ({
@@ -76,6 +77,15 @@ vi.mock('@/lib/utils/privacy', () => ({
 
 vi.mock('@/lib/analytics/events', () => ({
   emitUserSignup: vi.fn(),
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    debug: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  },
 }));
 
 const sendEmailMock = vi.fn();
@@ -168,6 +178,9 @@ describe('Auth Actions', () => {
 
       expect(result.success).toBe(true);
       expect(result.error).toBeNull();
+      expect(log.warn).toHaveBeenCalledWith('auth.signup.profile_trigger_missing', {
+        userId: 'new-user-id',
+      });
 
       // Verify auth.signUp called with correct persona
       expect(mockSupabase.auth.signUp).toHaveBeenCalledWith(
@@ -200,6 +213,12 @@ describe('Auth Actions', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('valid email');
+      expect(log.warn).toHaveBeenCalledWith(
+        'auth.signup.validation_failed',
+        expect.objectContaining({
+          persona: 'individual',
+        })
+      );
     });
 
     it('fails closed when the canonical public site url is unavailable', async () => {
@@ -237,6 +256,12 @@ describe('Auth Actions', () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('temporarily unable to send verification emails');
       expect(createAdminClientMock).not.toHaveBeenCalled();
+      expect(log.error).toHaveBeenCalledWith(
+        'auth.signup.provider_failed',
+        expect.objectContaining({
+          error: expect.objectContaining({ status: 429 }),
+        })
+      );
     });
 
     it('falls back to admin generateLink + Resend API when Supabase cannot send confirmation email', async () => {
@@ -272,6 +297,33 @@ describe('Auth Actions', () => {
           text: expect.stringContaining('Verify email:'),
         })
       );
+    });
+
+    it('logs structured fallback-link failures without exposing form payloads', async () => {
+      mockSupabase.auth.signUp.mockResolvedValue({
+        data: { user: null },
+        error: { message: 'Error sending confirmation email', status: 500 },
+      });
+      generateLinkMock.mockResolvedValue({
+        data: null,
+        error: { message: 'admin link unavailable', status: 500 },
+      });
+
+      const formData = new FormData();
+      formData.append('email', 'fallback-failed@example.com');
+      formData.append('password', 'password123');
+      formData.append('persona', 'individual');
+      formData.append('gdprConsent', 'true');
+      formData.append('marketingOptIn', 'false');
+
+      const result = await signUp(undefined, formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('temporarily unable to send verification emails');
+      expect(log.error).toHaveBeenCalledWith('auth.fallback_link.generate_failed', {
+        type: 'signup',
+        error: expect.objectContaining({ message: 'admin link unavailable' }),
+      });
     });
   });
 
@@ -342,6 +394,20 @@ describe('Auth Actions', () => {
         });
       }
     );
+
+    it('logs unexpected OAuth exceptions as structured diagnostics', async () => {
+      mockSupabase.auth.signInWithOAuth.mockRejectedValueOnce(new Error('OAuth exploded'));
+
+      const formData = new FormData();
+      formData.append('provider', 'google');
+
+      const result = await signInWithOAuth(undefined, formData);
+
+      expect(result.error).toContain('OAuth exploded');
+      expect(log.error).toHaveBeenCalledWith('auth.oauth.failed', {
+        error: expect.any(Error),
+      });
+    });
   });
 
   describe('requestPasswordReset', () => {
@@ -367,6 +433,10 @@ describe('Auth Actions', () => {
 
       expect(result).toEqual({ success: true });
       expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledOnce();
+      expect(log.warn).toHaveBeenCalledWith('auth.password_reset.masked_provider_error', {
+        status: 429,
+        message: 'Too many requests',
+      });
     });
 
     it('returns success when provider reset call succeeds', async () => {

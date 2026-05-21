@@ -278,6 +278,43 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('[Performance Alerting] Error sending notifications:');
   });
 
+  it('keeps auth action failures on structured server logging', () => {
+    const source = readSource('src/actions/auth.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('auth.signup.validation_failed');
+    expect(source).toContain('auth.signup.provider_failed');
+    expect(source).toContain('auth.signup.profile_trigger_missing');
+    expect(source).toContain('auth.signup.consent_records_insert_failed');
+    expect(source).toContain('auth.signup.consent_storage_failed');
+    expect(source).toContain('auth.signup.analytics_emit_failed');
+    expect(source).toContain('auth.signup.failed');
+    expect(source).toContain('auth.signin.failed');
+    expect(source).toContain('auth.verification.resend_failed');
+    expect(source).toContain('auth.verification.resend_exception');
+    expect(source).toContain('auth.password_reset.masked_provider_error');
+    expect(source).toContain('auth.fallback_link.generate_failed');
+    expect(source).toContain('auth.fallback_link.missing_action_link');
+    expect(source).toContain('auth.fallback_link.email_send_failed');
+    expect(source).toContain('auth.fallback_link.flow_failed');
+    expect(source).toContain('auth.oauth.failed');
+    expect(source).not.toContain('SignUp Validation Failed:');
+    expect(source).not.toContain('Supabase SignUp Error:');
+    expect(source).not.toContain('Profile trigger did not fire, creating profile manually');
+    expect(source).not.toContain('Failed to store consent records:');
+    expect(source).not.toContain('CRITICAL: GDPR consent storage failed:');
+    expect(source).not.toContain('Failed to track signup event:');
+    expect(source).not.toContain('Sign-up failed:');
+    expect(source).not.toContain('Sign-in failed:');
+    expect(source).not.toContain('Failed to resend verification email:');
+    expect(source).not.toContain('Password reset request throttled or masked:');
+    expect(source).not.toContain('Fallback generateLink failed for');
+    expect(source).not.toContain('Fallback generateLink missing action_link for');
+    expect(source).not.toContain('Fallback auth email send failed for');
+    expect(source).not.toContain('Fallback auth email flow failed for');
+    expect(source).not.toContain('OAuth sign-in failed:');
+  });
+
   it('keeps API latency monitoring failures on structured logging', () => {
     const source = readSource('src/lib/monitoring/api-latency.ts');
 

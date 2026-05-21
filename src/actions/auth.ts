@@ -135,7 +135,10 @@ export async function signUp(
 
     const result = signUpSchema.safeParse(data);
     if (!result.success) {
-      console.error('SignUp Validation Failed:', result.error.format());
+      log.warn('auth.signup.validation_failed', {
+        issues: result.error.format(),
+        persona: normalizedPersona ?? null,
+      });
       emitLaunchTrace(trace, {
         outcome: 'rejected',
         state: 'signup_validation_failed',
@@ -177,7 +180,7 @@ export async function signUp(
     });
 
     if (error) {
-      console.error('Supabase SignUp Error:', error);
+      log.error('auth.signup.provider_failed', { error });
       if (/already registered/i.test(error.message)) {
         emitLaunchTrace(trace, {
           outcome: 'rejected',
@@ -260,7 +263,9 @@ export async function signUp(
 
       if (!profileCheck) {
         // Trigger didn't fire - create profile manually as fallback
-        console.warn('Profile trigger did not fire, creating profile manually');
+        log.warn('auth.signup.profile_trigger_missing', {
+          userId: signUpResult.user.id,
+        });
         await supabase.from('profiles').insert({
           id: signUpResult.user.id,
           persona: result.data.persona,
@@ -327,7 +332,10 @@ export async function signUp(
             .insert(consentRecords);
 
           if (consentError) {
-            console.error('Failed to store consent records:', consentError);
+            log.error('auth.signup.consent_records_insert_failed', {
+              error: consentError,
+              userId: signUpResult.user.id,
+            });
             throw new Error(
               `GDPR compliance error: Failed to store consent records - ${consentError.message}`
             );
@@ -355,7 +363,10 @@ export async function signUp(
             userId: signUpResult.user.id,
           });
         } catch (consentError) {
-          console.error('CRITICAL: GDPR consent storage failed:', consentError);
+          log.error('auth.signup.consent_storage_failed', {
+            error: consentError,
+            userId: signUpResult.user?.id ?? null,
+          });
           throw new Error(
             `GDPR compliance error: Unable to store required consent records. Signup cannot proceed.`
           );
@@ -371,7 +382,10 @@ export async function signUp(
         });
       } catch (analyticsError) {
         // Log but don't fail signup
-        console.error('Failed to track signup event:', analyticsError);
+        log.warn('auth.signup.analytics_emit_failed', {
+          error: analyticsError,
+          userId: signUpResult.user.id,
+        });
       }
     }
 
@@ -390,7 +404,7 @@ export async function signUp(
       success: true,
     };
   } catch (error) {
-    console.error('Sign-up failed:', error);
+    log.error('auth.signup.failed', { error });
     emitLaunchTrace(trace, {
       outcome: 'failure',
       state: 'signup_unhandled_error',
@@ -453,7 +467,7 @@ export async function signIn(
     if (isRedirectError(error)) {
       throw error;
     }
-    console.error('Sign-in failed:', error);
+    log.error('auth.signin.failed', { error });
     return { error: mapUnexpectedAuthError(error, 'log in') };
   }
 }
@@ -508,13 +522,13 @@ async function resendVerificationEmail(
     });
 
     if (error) {
-      console.error('Failed to resend verification email:', error);
+      log.warn('auth.verification.resend_failed', { error });
       return false;
     }
 
     return true;
   } catch (resendError) {
-    console.error('Failed to resend verification email:', resendError);
+    log.warn('auth.verification.resend_exception', { error: resendError });
     return false;
   }
 }
@@ -596,7 +610,7 @@ export async function requestPasswordReset(formData: FormData) {
 
     // Keep response non-enumerating and resilient to transient provider throttling.
     if (shouldTreatPasswordResetErrorAsSuccess(error)) {
-      console.warn('Password reset request throttled or masked:', {
+      log.warn('auth.password_reset.masked_provider_error', {
         status: error.status,
         message: error.message,
       });
@@ -676,13 +690,18 @@ async function sendAuthLinkFallbackViaResend(params: {
     const { data, error } = await adminSupabase.auth.admin.generateLink(generatePayload as any);
 
     if (error) {
-      console.error(`Fallback generateLink failed for ${params.type}:`, error);
+      log.error('auth.fallback_link.generate_failed', {
+        type: params.type,
+        error,
+      });
       return false;
     }
 
     const actionLink = data?.properties?.action_link;
     if (!actionLink) {
-      console.error(`Fallback generateLink missing action_link for ${params.type}`);
+      log.error('auth.fallback_link.missing_action_link', {
+        type: params.type,
+      });
       return false;
     }
 
@@ -695,13 +714,19 @@ async function sendAuthLinkFallbackViaResend(params: {
     });
 
     if (!sendResult.success) {
-      console.error(`Fallback auth email send failed for ${params.type}:`, sendResult.error);
+      log.error('auth.fallback_link.email_send_failed', {
+        type: params.type,
+        error: sendResult.error,
+      });
       return false;
     }
 
     return true;
   } catch (fallbackError) {
-    console.error(`Fallback auth email flow failed for ${params.type}:`, fallbackError);
+    log.error('auth.fallback_link.flow_failed', {
+      type: params.type,
+      error: fallbackError,
+    });
     return false;
   }
 }
@@ -809,7 +834,7 @@ export async function signInWithOAuth(
     if (isRedirectError(error)) {
       throw error;
     }
-    console.error('OAuth sign-in failed:', error);
+    log.error('auth.oauth.failed', { error });
     return { error: mapUnexpectedOAuthError(error) };
   }
 }
