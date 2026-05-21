@@ -9,6 +9,7 @@ const requiredEnv = {
   DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
   KV_REST_API_URL: 'https://kv.example.test',
   KV_REST_API_TOKEN: 'kv-token',
+  RESEND_API_KEY: 're_test_key',
 };
 
 function runReadiness(env: NodeJS.ProcessEnv) {
@@ -68,6 +69,17 @@ describe('check-deploy-readiness', () => {
 
     expect(result.status).toBe(1);
     expect(`${result.stdout}${result.stderr}`).toContain('KV_REST_API_TOKEN');
+  });
+
+  it('fails strict readiness when transactional email provider config is missing', () => {
+    const result = runReadiness({
+      ...requiredEnv,
+      FORCE_STRICT_DEPLOY_CHECK: 'true',
+      RESEND_API_KEY: '',
+    });
+
+    expect(result.status).toBe(1);
+    expect(`${result.stdout}${result.stderr}`).toContain('RESEND_API_KEY');
   });
 
   it('fails strict readiness when mock Supabase is enabled', () => {

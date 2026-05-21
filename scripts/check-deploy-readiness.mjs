@@ -67,6 +67,10 @@ if (!env.SUPABASE_SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY');
 if (!(env.NEXT_PUBLIC_SITE_URL || env.SITE_URL)) missing.push('NEXT_PUBLIC_SITE_URL/SITE_URL');
 if (!env.DATABASE_URL) missing.push('DATABASE_URL');
 
+if (strict && !env.RESEND_API_KEY) {
+  missing.push('RESEND_API_KEY');
+}
+
 if ((productionDeployDetected || stagingDeployDetected) && !env.KV_REST_API_URL) {
   missing.push('KV_REST_API_URL');
 }
