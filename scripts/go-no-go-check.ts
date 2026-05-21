@@ -248,12 +248,18 @@ function ensureLaunchSmokeArtifact() {
   }
 
   let artifact = readLaunchSmokeArtifact();
-  let evaluation = evaluateLaunchSmokeArtifact(artifact, { baseUrl: BASE_URL });
+  let evaluation = evaluateLaunchSmokeArtifact(artifact, {
+    baseUrl: BASE_URL,
+    requireTargetBaseUrl: !isLocalLaunchBaseUrl(),
+  });
 
   if (evaluation.state !== 'fresh_passing') {
     runLaunchSmokeRunner(evaluation.message);
     artifact = readLaunchSmokeArtifact();
-    evaluation = evaluateLaunchSmokeArtifact(artifact, { baseUrl: BASE_URL });
+    evaluation = evaluateLaunchSmokeArtifact(artifact, {
+      baseUrl: BASE_URL,
+      requireTargetBaseUrl: !isLocalLaunchBaseUrl(),
+    });
   }
 
   if (evaluation.state !== 'fresh_passing') {

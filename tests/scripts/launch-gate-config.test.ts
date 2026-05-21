@@ -1346,6 +1346,7 @@ describe('launch gate package configuration', () => {
     expect(goNoGoScript).toContain('LAUNCH_RESTORE_REPORT_PATH');
     expect(goNoGoScript).toContain('.artifacts/launch-restore-report.json');
     expect(goNoGoScript).toContain('isLocalLaunchBaseUrl');
+    expect(goNoGoScript).toContain('requireTargetBaseUrl: !isLocalLaunchBaseUrl()');
     expect(goNoGoScript).toContain(
       'production-candidate go/no-go requires a restore verification report'
     );
