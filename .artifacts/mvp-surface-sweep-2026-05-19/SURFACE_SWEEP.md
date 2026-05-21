@@ -5061,3 +5061,12 @@ Browser evidence:
 - Replaced those diagnostics with local `proofound:api-diagnostic` browser events for failed token requests and missing token payloads while preserving fail-closed behavior, token caching, retry-on-CSRF-mismatch behavior, credentials forwarding, and workflow idempotency keys.
 - Added focused coverage proving CSRF-token fetch failures still block the protected request and emit the local diagnostic, and extended runtime debug-output guardrails so the old CSRF console strings cannot return.
 - Verification passed: focused API/runtime guard run `npm test -- --run src/lib/__tests__/api-fetch.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 74 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted API-fetch console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Interview Client Diagnostics
+
+- Timestamp: 2026-05-21 16:19 CEST.
+- Continued the active interview workflow surface sweep after both individual and organization interview pages still emitted raw console diagnostics when corridor items failed to load.
+- Added a reusable client-only diagnostic helper that dispatches local `proofound:client-diagnostic` browser events with safe error messages, then wired the individual and organization interview load fallbacks to `interviews.individual.load_failed` and `interviews.organization.load_failed`.
+- Preserved the existing empty-list fallback, loading state completion, engagement confirmation flows, interview edit/cancel/complete/no-show behavior, calendar downloads, and decision dialog wiring.
+- Added focused client-diagnostic coverage and extended runtime debug-output guardrails so the old interview-load console string cannot return.
+- Verification passed: focused client/interview/runtime guard run `npm test -- --run tests/lib/client-diagnostics.test.ts tests/ui/individual-interviews-page-clarity.test.tsx tests/ui/organization-interviews-page-actions.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (4 files / 77 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted interview/client-diagnostic console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

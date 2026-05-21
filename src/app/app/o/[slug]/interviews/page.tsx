@@ -43,6 +43,7 @@ import {
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { internalValueLabel } from '@/lib/copy/labels';
 import type { HiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 
@@ -112,7 +113,7 @@ export default function OrganizationInterviewsPage() {
       const data = await getInterviewCorridorItems({ perspective: 'organization' });
       setInterviews((data.items as Interview[]) || []);
     } catch (error) {
-      console.error('Failed to load interviews:', error);
+      dispatchClientErrorDiagnostic('interviews.organization.load_failed', error);
       setInterviews([]);
     } finally {
       setIsLoading(false);

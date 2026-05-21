@@ -407,6 +407,19 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Error fetching CSRF token');
   });
 
+  it('keeps interview page load failures on client diagnostics without console output', () => {
+    const sources = [
+      readSource('src/lib/client-diagnostics.ts'),
+      readSource('src/app/app/i/interviews/page.tsx'),
+      readSource('src/app/app/o/[slug]/interviews/page.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain('proofound:client-diagnostic');
+    expect(sources).toContain('interviews.individual.load_failed');
+    expect(sources).toContain('interviews.organization.load_failed');
+    expect(sources).not.toContain('Failed to load interviews:');
+  });
+
   it('keeps candidate invite route failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/candidate-invites/[token]/route.ts'),

@@ -22,6 +22,7 @@ import {
 } from '@/lib/interviews/calendar';
 import { apiFetch } from '@/lib/api/fetch';
 import { internalValueLabel } from '@/lib/copy/labels';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import type { HiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 import { toast } from 'sonner';
 
@@ -80,7 +81,7 @@ export default function InterviewsPage() {
       const data = await getInterviewCorridorItems({ perspective: 'individual' });
       setInterviews((data.items as Interview[]) || []);
     } catch (error) {
-      console.error('Failed to load interviews:', error);
+      dispatchClientErrorDiagnostic('interviews.individual.load_failed', error);
       setInterviews([]); // Set empty array on error
     } finally {
       setIsLoading(false);
