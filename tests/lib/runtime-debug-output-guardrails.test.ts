@@ -759,4 +759,17 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Error fetching visibility settings:');
     expect(sources).not.toContain('Error updating visibility settings:');
   });
+
+  it('keeps current-user and consent-check failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/user/me/route.ts'),
+      readSource('src/app/api/user/consent/check/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('user.me.get_failed');
+    expect(sources).toContain('user.consent_check.get_failed');
+    expect(sources).not.toContain('Failed to fetch current user:');
+    expect(sources).not.toContain('Error checking policy consent:');
+  });
 });

@@ -10,6 +10,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getConsentCheck } from '@/lib/workflow/service';
+import { log } from '@/lib/log';
 
 export async function GET() {
   try {
@@ -29,7 +30,7 @@ export async function GET() {
 
     return NextResponse.json(consentStatus);
   } catch (error) {
-    console.error('Error checking policy consent:', error);
+    log.error('user.consent_check.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
