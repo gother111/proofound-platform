@@ -5029,3 +5029,11 @@ Browser evidence:
 - Replaced those diagnostics with structured `profile.*` log events while preserving fail-soft profile loading, schema-drift tolerance for verification summaries, empty profile fallback behavior, activation tracking best-effort behavior, and requester-email snapshot fallback.
 - Extended runtime debug-output guardrails so the old profile data console strings cannot return.
 - Verification passed: focused profile/runtime guard run `npm test -- --run tests/actions/profile.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 75 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted profile-action console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Root Layout I18n Fallback Structured Logging
+
+- Timestamp: 2026-05-21 16:03 CEST.
+- Continued the active app infrastructure diagnostics sweep after the root layout still emitted a raw console error when `next-intl` messages failed to load.
+- Replaced that diagnostic with structured `root_layout.i18n_messages_load_failed` logging while preserving request-time rendering for nonce CSP, empty-message fallback behavior, the app shell providers, and page render continuity.
+- Extended runtime debug-output guardrails so the old i18n console string cannot return.
+- Verification passed: focused runtime/launch guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts tests/scripts/launch-gate-config.test.ts` (2 files / 215 tests), targeted root-layout console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

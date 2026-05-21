@@ -1146,4 +1146,12 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to get profile data:');
     expect(source).not.toContain('impact verification: unable to resolve requester auth email');
   });
+
+  it('keeps root layout i18n fallback failures on structured server logging', () => {
+    const source = readSource('src/app/layout.tsx');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('root_layout.i18n_messages_load_failed');
+    expect(source).not.toContain('Failed to load i18n messages:');
+  });
 });

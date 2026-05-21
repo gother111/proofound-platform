@@ -8,6 +8,7 @@ import { GlobalErrorHandler } from '@/components/GlobalErrorHandler';
 import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
 import { TransitionProvider } from '@/components/ui/transition-provider';
 import { RootClientEnhancements } from '@/components/root/RootClientEnhancements';
+import { log } from '@/lib/log';
 
 /**
  * Root Layout Component
@@ -57,7 +58,9 @@ export default async function RootLayout({
   try {
     messages = await getMessages();
   } catch (error) {
-    console.error('Failed to load i18n messages:', error);
+    log.error('root_layout.i18n_messages_load_failed', {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     // Fallback to empty messages object to prevent page crash
     // The app will still work, just without translations
   }
