@@ -126,8 +126,31 @@ async function getProjectByName(name) {
 
 async function readLocalProjectLink() {
   const projectJsonPath = path.join(process.cwd(), '.vercel', 'project.json');
-  const raw = await fs.readFile(projectJsonPath, 'utf8');
-  return JSON.parse(raw);
+  try {
+    const raw = await fs.readFile(projectJsonPath, 'utf8');
+    return {
+      ...JSON.parse(raw),
+      source: projectJsonPath,
+    };
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      throw error;
+    }
+
+    const projectId = process.env.VERCEL_PROJECT_ID;
+    if (!projectId) {
+      throw new Error(
+        '.vercel/project.json was not found and VERCEL_PROJECT_ID is not set.'
+      );
+    }
+
+    return {
+      orgId: process.env.VERCEL_ORG_ID ?? '',
+      projectId,
+      projectName: process.env.VERCEL_PROJECT_NAME ?? canonicalProjectName,
+      source: 'VERCEL_PROJECT_ID',
+    };
+  }
 }
 
 async function main() {
@@ -138,15 +161,27 @@ async function main() {
   const failures = [];
 
   const localLink = await readLocalProjectLink();
-  console.log('Local Vercel link:', localLink.projectName, localLink.projectId);
+  console.log(
+    'Vercel project link:',
+    localLink.projectName,
+    localLink.projectId,
+    `(${localLink.source})`
+  );
 
   if (localLink.projectName !== canonicalProjectName) {
     failures.push(
-      `Local .vercel/project.json points to ${localLink.projectName}, expected ${canonicalProjectName}`
+      `Vercel project link points to ${localLink.projectName}, expected ${canonicalProjectName}`
     );
   }
 
   const canonicalProject = await api(`/v9/projects/${localLink.projectId}`);
+  const actualProjectName = canonicalProject?.name ?? '';
+  if (actualProjectName && actualProjectName !== canonicalProjectName) {
+    failures.push(
+      `Vercel project id resolves to ${actualProjectName}, expected ${canonicalProjectName}`
+    );
+  }
+
   const actualProductionBranch =
     canonicalProject?.link?.productionBranch ?? canonicalProject?.productionBranch ?? '';
 
