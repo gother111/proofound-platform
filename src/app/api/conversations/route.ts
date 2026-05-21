@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
       nextOffset: hasMore ? offset + limit : null,
     });
   } catch (error) {
-    console.error('Get conversations error:', error);
+    log.error('conversations.list.failed', { error });
     return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
   }
 }
@@ -261,9 +261,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Create conversation error:', error);
     log.error('conversation.create.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error,
     });
     return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 });
   }

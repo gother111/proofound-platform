@@ -62,7 +62,11 @@ vi.mock('@/lib/log', () => ({
 
 import { db } from '@/db';
 import { createClient } from '@/lib/supabase/server';
-import { POST as updateConversation } from '@/app/api/conversations/[conversationId]/route';
+import { log } from '@/lib/log';
+import {
+  GET as getConversation,
+  POST as updateConversation,
+} from '@/app/api/conversations/[conversationId]/route';
 import {
   GET as getConversationMessages,
   POST as sendConversationMessage,
@@ -105,6 +109,23 @@ describe('conversation detail routes', () => {
     expect(response.status).toBe(400);
     expect(body).toEqual({ error: 'Invalid JSON body' });
     expect(db.query.conversations.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('logs conversation detail load failures with structured diagnostics', async () => {
+    const loadError = new Error('conversation detail unavailable');
+    (db.query.conversations.findFirst as any).mockRejectedValue(loadError);
+
+    const response = await getConversation(
+      new NextRequest('http://localhost/api/conversations/conversation-1'),
+      { params: Promise.resolve({ conversationId: 'conversation-1' }) }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('conversation.detail.get_failed', {
+      error: loadError,
+    });
   });
 
   it('returns 400 for malformed JSON when sending conversation messages', async () => {
@@ -188,5 +209,22 @@ describe('conversation detail routes', () => {
       },
     });
     expect(body.hasMore).toBe(false);
+  });
+
+  it('logs message fetch failures with structured diagnostics', async () => {
+    const messagesError = new Error('message query unavailable');
+    (db.query.conversations.findFirst as any).mockRejectedValue(messagesError);
+
+    const response = await getConversationMessages(
+      new NextRequest('http://localhost/api/conversations/conversation-1/messages'),
+      { params: Promise.resolve({ conversationId: 'conversation-1' }) }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Internal server error' });
+    expect(log.error).toHaveBeenCalledWith('conversation.messages.get_failed', {
+      error: messagesError,
+    });
   });
 });

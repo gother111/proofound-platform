@@ -541,4 +541,26 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to send verification notification email:');
     expect(source).not.toContain('Verify POST error:');
   });
+
+  it('keeps conversation API failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/conversations/route.ts'),
+      readSource('src/app/api/conversations/[conversationId]/route.ts'),
+      readSource('src/app/api/conversations/[conversationId]/messages/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('conversations.list.failed');
+    expect(sources).toContain('conversation.create.failed');
+    expect(sources).toContain('conversation.detail.get_failed');
+    expect(sources).toContain('conversation.detail.update_failed');
+    expect(sources).toContain('conversation.messages.get_failed');
+    expect(sources).toContain('message.send_failed');
+    expect(sources).not.toContain('Get conversations error:');
+    expect(sources).not.toContain('Create conversation error:');
+    expect(sources).not.toContain('Error fetching conversation:');
+    expect(sources).not.toContain('Error updating conversation:');
+    expect(sources).not.toContain('Error fetching messages:');
+    expect(sources).not.toContain('Error sending message:');
+  });
 });

@@ -167,7 +167,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       conversationStage: conversation.stage,
     });
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    log.error('conversation.messages.get_failed', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -310,9 +310,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error sending message:', error);
     log.error('message.send_failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error,
       conversationId: (await params).conversationId,
     });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

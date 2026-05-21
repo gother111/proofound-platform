@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 const dbSelectMock = vi.hoisted(() => vi.fn());
+const logErrorMock = vi.hoisted(() => vi.fn());
+const logInfoMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -25,6 +27,13 @@ vi.mock('@/lib/messaging/conversation-access', () => ({
   },
   ensureConversationForMatch: vi.fn(),
   resolveConversationParticipantsForMatch: vi.fn(),
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: logErrorMock,
+    info: logInfoMock,
+  },
 }));
 
 import { createClient } from '@/lib/supabase/server';
@@ -187,6 +196,23 @@ describe('GET /api/conversations', () => {
       stage: 'revealed',
     });
   });
+
+  it('logs list failures with structured diagnostics', async () => {
+    const listError = new Error('conversation list unavailable');
+    mockAuthenticatedUser('candidate-user');
+    dbSelectMock.mockImplementationOnce(() => {
+      throw listError;
+    });
+
+    const response = await GET(new NextRequest('https://proofound.io/api/conversations'));
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to fetch conversations' });
+    expect(logErrorMock).toHaveBeenCalledWith('conversations.list.failed', {
+      error: listError,
+    });
+  });
 });
 
 describe('POST /api/conversations', () => {
@@ -293,6 +319,32 @@ describe('POST /api/conversations', () => {
         participantOneId: 'candidate-user',
         participantTwoId: 'org-user',
       },
+    });
+  });
+
+  it('logs create failures with structured diagnostics', async () => {
+    const createError = new Error('participant lookup unavailable');
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'candidate-user' } },
+          error: null,
+        }),
+      },
+    } as any);
+    vi.mocked(resolveConversationParticipantsForMatch).mockRejectedValue(createError);
+
+    const response = await POST(
+      makeRequest({
+        matchId: '11111111-1111-4111-8111-111111111111',
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: 'Failed to create conversation' });
+    expect(logErrorMock).toHaveBeenCalledWith('conversation.create.failed', {
+      error: createError,
     });
   });
 });
