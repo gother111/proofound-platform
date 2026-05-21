@@ -5242,3 +5242,12 @@ Browser evidence:
 - Preserved the local policy explanation fallback, user-facing assistant error message, and toast behavior.
 - Extended runtime debug-output guardrails so the old policy assistant console string cannot return.
 - Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 88 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted policy assistant console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Legacy Client Helper Diagnostics
+
+- Timestamp: 2026-05-21 17:46 CEST.
+- Continued the low-level client helper sweep after the legacy assignment builder, profile localStorage helper, and realtime message read helper still emitted raw console diagnostics.
+- Replaced those diagnostics with `proofound:client-diagnostic` events using `assignment_builder.legacy.*`, `profile_storage.*`, and `messages.realtime.mark_message_read_failed` event names.
+- Preserved legacy assignment submission toasts, empty-profile fallback behavior, profile storage quota fallback, profile clear fallback, and non-blocking realtime read-receipt behavior.
+- Extended runtime debug-output guardrails so the old legacy helper and realtime console strings cannot return.
+- Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 89 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted helper console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

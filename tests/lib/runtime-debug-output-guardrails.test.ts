@@ -306,6 +306,27 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain("console.error('policy.assistant.ask.failed'");
   });
 
+  it('keeps legacy client helpers and realtime diagnostics off raw console output', () => {
+    const sources = [
+      readSource('src/components/matching/AssignmentBuilder.tsx'),
+      readSource('src/lib/profileStorage.ts'),
+      readSource('src/lib/messaging/realtime.ts'),
+    ].join('\n');
+
+    expect(sources).toContain('assignment_builder.legacy.create_rejected');
+    expect(sources).toContain('assignment_builder.legacy.create_failed');
+    expect(sources).toContain('profile_storage.load_failed');
+    expect(sources).toContain('profile_storage.quota_exceeded');
+    expect(sources).toContain('messages.realtime.mark_message_read_failed');
+    expect(sources).not.toContain('console.error(result.details)');
+    expect(sources).not.toContain('console.error(error)');
+    expect(sources).not.toContain('localStorage is not available');
+    expect(sources).not.toContain('Error loading profile from localStorage:');
+    expect(sources).not.toContain('Error saving profile to localStorage:');
+    expect(sources).not.toContain('Error clearing profile from localStorage:');
+    expect(sources).not.toContain('Error marking message as read:');
+  });
+
   it('keeps client verification link fixtures behind the explicit visual fixture gate', () => {
     const fixtureSource = readSource('src/lib/verification/visual-link-fixtures.ts');
     const pageSources = [
