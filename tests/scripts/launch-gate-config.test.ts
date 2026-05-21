@@ -1223,6 +1223,7 @@ describe('launch gate package configuration', () => {
         expect(content).not.toContain('hiring credibility corridor');
       } else if (docPath === 'verification.md') {
         expect(content).toContain('Last Verified: `2026-05-21`');
+        expect(content).toContain('INTERNAL_API_SECRET=<secret>');
         expect(content).toContain(
           'change match, review, verification, reveal, trust-state, or workflow-decision state'
         );
@@ -1422,6 +1423,7 @@ describe('launch gate package configuration', () => {
     );
     expect(productionChecklist).toContain('Authenticated `/api/monitoring/perf-status`');
     expect(productionChecklist).toContain('BASE_URL=<production-candidate-url>');
+    expect(productionChecklist).toContain('INTERNAL_API_SECRET=<target-secret>');
     expect(productionChecklist).toContain('proof submission review cards');
     expect(productionChecklist).toContain('proof-review participant consent');
     expect(productionChecklist).toContain(
@@ -3015,6 +3017,7 @@ describe('launch gate package configuration', () => {
     expect(releaseBatchFlow).toContain(
       'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go'
     );
+    expect(releaseBatchFlow).toContain('INTERNAL_API_SECRET=<secret>');
     expect(verificationChecklist).toContain(
       'Confirm launch readiness separately with the current release and production-readiness checklists'
     );
@@ -3116,6 +3119,12 @@ describe('launch gate package configuration', () => {
       expect(content).not.toMatch(placeholderResultClaim);
       expect(content).not.toContain('Gate parity (with local server at `http://localhost:3000`)');
     }
+    const performanceTesting = fs.readFileSync(
+      path.join(repoRoot, 'docs/performance-testing.md'),
+      'utf8'
+    );
+    expect(performanceTesting).toContain('Last Verified: `2026-05-21`');
+    expect(performanceTesting).toContain('INTERNAL_API_SECRET=<secret>');
   });
 
   it('keeps environment docs from making connected providers launch-blocking by default', () => {
@@ -3478,6 +3487,7 @@ describe('launch gate package configuration', () => {
     expect(manualDocs).toContain('proof-first assignment review');
     expect(manualDocs).toContain('proof-review participant contact details');
     expect(manualDocs).toContain('Proof-submission review cards');
+    expect(manualGuide).toContain('INTERNAL_API_SECRET=<secret>');
     expect(manualDocs).toContain('engage/close');
     expect(manualDocs).not.toContain('/app/i/expertise');
     expect(manualDocs).not.toContain('/admin/fairness');
@@ -3880,7 +3890,7 @@ describe('launch gate package configuration', () => {
     const setupSupabase = fs.readFileSync(path.join(repoRoot, 'SETUP_SUPABASE.md'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
-    expect(setupSupabase).toContain('Last Verified: `2026-05-19`');
+    expect(setupSupabase).toContain('Last Verified: `2026-05-21`');
     expect(setupSupabase).toContain('locked Proofound');
     expect(setupSupabase).toContain('MVP corridor');
     expect(setupSupabase).toContain('docs/ENV_VARIABLES.md');
@@ -3895,6 +3905,7 @@ describe('launch gate package configuration', () => {
     expect(setupSupabase).toContain('Do not use direct schema-push commands');
     expect(setupSupabase).toContain('Do not use dashboard SQL paste');
     expect(setupSupabase).toContain('Supabase MCP can be useful for read-only inspection');
+    expect(setupSupabase).toContain('INTERNAL_API_SECRET=<secret>');
     expect(setupSupabase).toContain('Proof Packs');
     expect(setupSupabase).not.toContain('cjpfrgmsxwxhuomnvciq');
     expect(setupSupabase).not.toContain('This is safe because MCP only runs');
@@ -3902,7 +3913,7 @@ describe('launch gate package configuration', () => {
     expect(setupSupabase).not.toContain('awesome platform');
     expect(setupSupabase).not.toContain('🎉');
     expect(docsRegistry).toContain(
-      '| `SETUP_SUPABASE.md`                                                                                     | `active`         | `root`        | `repo+live`         | `2026-05-19`'
+      '| `SETUP_SUPABASE.md`                                                                                     | `active`         | `root`        | `repo+live`         | `2026-05-21`'
     );
   });
 

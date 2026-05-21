@@ -52,6 +52,8 @@ or `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md`.
   - authenticated `/api/monitoring/launch-status`
   - authenticated `/api/monitoring/perf-status`
   - final `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
+- For the protected launch-status and go/no-go checks, `INTERNAL_API_SECRET=<secret>` may replace
+  `CRON_SECRET=<secret>`.
 - Note:
   - If Vercel Git auto-deploys are still enabled for production, Vercel can still create cloud-build deployments until that setting is intentionally disabled.
 

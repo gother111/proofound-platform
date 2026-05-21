@@ -151,6 +151,8 @@ Run the best relevant checks available for the target. Record pass/fail and exac
 - [ ] Authenticated `/api/monitoring/perf-status`, including `/api/assignments` latency samples.
 - [ ] `.artifacts/launch-restore-report.json` exists, is fresh, and points to readable checkpoint evidence.
 - [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<target-secret> npm run go:no-go`
+- [ ] Protected launch-status and go/no-go checks may use `INTERNAL_API_SECRET=<target-secret>`
+      instead of `CRON_SECRET=<target-secret>`.
 
 ## Browser Checks
 

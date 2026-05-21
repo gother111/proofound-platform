@@ -124,4 +124,7 @@ Run or cite the strongest available automated checks:
 - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
 - `BASE_URL=<production-candidate-url> SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 
+For protected launch-status and go/no-go checks, `INTERNAL_API_SECRET=<secret>` may replace
+`CRON_SECRET=<secret>`.
+
 If a check cannot run, record the exact reason and the manual evidence that partially covers it. Do not convert that into a launch `PASS`.

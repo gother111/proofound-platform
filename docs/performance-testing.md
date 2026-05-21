@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Performance Testing Guide
 
@@ -24,6 +24,9 @@ What it checks (`scripts/perf-budgets.mjs`):
 
 - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
 
+For protected launch-status and go/no-go checks, `INTERNAL_API_SECRET=<secret>` may be used instead
+of `CRON_SECRET=<secret>`.
+
 What it checks (`scripts/go-no-go-check.ts`):
 
 - `/api/monitoring/perf-status` returns `ok`, including the required `/api/assignments` latency sample gate.
@@ -46,6 +49,8 @@ What it checks (`scripts/go-no-go-check.ts`):
    - `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 4. Run go/no-go:
    - `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
+   - `INTERNAL_API_SECRET=<secret>` may replace `CRON_SECRET=<secret>` for protected launch-status
+     and go/no-go auth.
 
 ## Optional Deeper Analysis
 
