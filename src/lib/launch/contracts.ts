@@ -25,6 +25,7 @@ export const LAUNCH_NOT_READY_REASON_CODE_VALUES = [
   'missing_persisted_monitor_evidence',
   'missing_rate_limit_dependency',
   'missing_email_provider_dependency',
+  'forbidden_launch_environment_config',
   'ai_raw_prompt_logging_enabled',
   'ai_budget_cap_not_configured',
   'ai_budget_exhausted',

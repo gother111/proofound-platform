@@ -468,6 +468,45 @@ describe('/api/monitoring/launch-status', () => {
     ]);
   });
 
+  it('blocks launch status when live target env contains forbidden bypass keys', async () => {
+    vi.stubEnv('VERCEL_ENV', 'preview');
+    vi.stubEnv('KV_REST_API_URL', 'https://kv.example.test');
+    vi.stubEnv('KV_REST_API_TOKEN', 'kv-token');
+    vi.stubEnv('NEXT_PUBLIC_USE_MOCK_SUPABASE', 'true');
+    vi.stubEnv('MOCK_PLATFORM_ROLE', 'platform_admin');
+    vi.stubEnv('PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK', '1');
+    vi.stubEnv('PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE', '1');
+    vi.stubEnv('DEBUG_INGEST_URL', 'https://debug.example/ingest');
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(buildStatus());
+
+    const response = await GET(authenticatedRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.ok).toBe(false);
+    expect(body.readinessState).toBe('blocked');
+    expect(body.dependencies.forbiddenLiveLaunchEnv).toEqual(
+      expect.objectContaining({
+        ok: false,
+        required: true,
+        forbiddenKeys: expect.arrayContaining([
+          'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+          'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK',
+          'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE',
+          'DEBUG_INGEST_URL',
+          'MOCK_PLATFORM_ROLE',
+        ]),
+      })
+    );
+    expect(body.notReadyReasons).toEqual([
+      expect.objectContaining({
+        code: 'forbidden_launch_environment_config',
+        source: 'dependency',
+        monitorKeys: ['launch_environment_config'],
+      }),
+    ]);
+  });
+
   it('blocks launch status when GCP OCR is enabled without an expiry date', async () => {
     vi.stubEnv('GCP_CV_OCR_ENABLED', 'true');
     vi.stubEnv('GCP_CV_OCR_EXPIRES_AT', '');

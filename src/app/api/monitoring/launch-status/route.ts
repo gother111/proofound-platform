@@ -20,6 +20,54 @@ import type {
 
 export const dynamic = 'force-dynamic';
 
+const truthyEnvValues = new Set(['1', 'true', 'yes', 'on']);
+const forbiddenLiveLaunchBooleanEnvKeys = [
+  'NEXT_PUBLIC_USE_MOCK_SUPABASE',
+  'MOCK_ADMIN_MODE',
+  'MOBILE_MOCK_AUTH',
+  'PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK',
+  'PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE',
+  'DEBUG_INGEST_ENABLED',
+] as const;
+const forbiddenLiveLaunchPresenceEnvKeys = [
+  'DEBUG_INGEST_URL',
+  'NEXT_PUBLIC_DEBUG_INGEST_URL',
+] as const;
+
+function isTruthyEnvValue(value: string | undefined) {
+  return truthyEnvValues.has((value ?? '').trim().toLowerCase());
+}
+
+function isLiveLaunchTarget() {
+  const vercelEnv = process.env.VERCEL_ENV?.trim().toLowerCase();
+  const appEnv = (process.env.NEXT_PUBLIC_APP_ENV || process.env.APP_ENV)?.trim().toLowerCase();
+
+  return (
+    vercelEnv === 'production' ||
+    vercelEnv === 'preview' ||
+    appEnv === 'production' ||
+    appEnv === 'staging'
+  );
+}
+
+function getForbiddenLiveLaunchEnvKeys() {
+  if (!isLiveLaunchTarget()) {
+    return [];
+  }
+
+  const forbiddenKeys: string[] = [
+    ...forbiddenLiveLaunchBooleanEnvKeys.filter((key) => isTruthyEnvValue(process.env[key])),
+    ...forbiddenLiveLaunchPresenceEnvKeys.filter((key) => Boolean(process.env[key]?.trim())),
+  ];
+  const mockPlatformRole = process.env.MOCK_PLATFORM_ROLE?.trim();
+
+  if (mockPlatformRole === 'platform_admin' || mockPlatformRole === 'super_admin') {
+    forbiddenKeys.push('MOCK_PLATFORM_ROLE');
+  }
+
+  return forbiddenKeys;
+}
+
 export async function GET(request: Request) {
   const unauthorized = requireInternalOpsRequest(request);
   if (unauthorized) {
@@ -69,6 +117,7 @@ export async function GET(request: Request) {
     const gcpOcrSummary = await resolveGcpCvOcrSafeStatus({ probeProvider: false });
     const rateLimitDependency = getRateLimitDependencyStatus();
     const emailProviderDependency = getEmailProviderDependencyStatus();
+    const forbiddenLiveLaunchEnvKeys = getForbiddenLiveLaunchEnvKeys();
     const dependencyReasons = [];
     const dependencies: Record<string, unknown> = {};
 
@@ -108,6 +157,25 @@ export async function GET(request: Request) {
         monitorKeys: ['email_provider_dependency'],
         source: 'dependency' as const,
         freshnessState: 'missing' as const,
+        checkedAt: [report.generatedAt],
+        lastSuccessfulCheckedAt: [null],
+        liveRefreshAttempted: report.liveRefresh.attempted,
+      });
+    }
+
+    if (forbiddenLiveLaunchEnvKeys.length > 0) {
+      dependencies.forbiddenLiveLaunchEnv = {
+        ok: false,
+        required: true,
+        forbiddenKeys: forbiddenLiveLaunchEnvKeys,
+      };
+      dependencyReasons.push({
+        code: 'forbidden_launch_environment_config' as const,
+        message:
+          'Launch readiness is blocked because live target environment contains local, mock, or debug-only configuration keys.',
+        monitorKeys: ['launch_environment_config'],
+        source: 'dependency' as const,
+        freshnessState: 'fresh' as const,
         checkedAt: [report.generatedAt],
         lastSuccessfulCheckedAt: [null],
         liveRefreshAttempted: report.liveRefresh.attempted,
