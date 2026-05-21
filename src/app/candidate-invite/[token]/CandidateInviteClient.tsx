@@ -27,6 +27,7 @@ import {
   internalValueLabel,
   skillDisplayLabel,
 } from '@/lib/copy/labels';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 type InviteState = {
   id: string;
@@ -294,7 +295,7 @@ export function CandidateInviteClient({
         setCurrentUser(null);
       }
     } catch (loadError) {
-      console.error('Failed to load submission invite state:', loadError);
+      dispatchClientErrorDiagnostic('candidate_invite.client.load_failed', loadError);
       setError('This invitation link is invalid, expired, or no longer available.');
     } finally {
       setLoading(false);
@@ -329,7 +330,7 @@ export function CandidateInviteClient({
 
       await loadState();
     } catch (claimError) {
-      console.error('Failed to claim invite:', claimError);
+      dispatchClientErrorDiagnostic('candidate_invite.client.claim_failed', claimError);
       setError('Failed to claim invite.');
     } finally {
       setSubmitting(false);
@@ -409,7 +410,7 @@ export function CandidateInviteClient({
       setReviewConfirmed(false);
       await loadState();
     } catch (submitError) {
-      console.error('Failed to submit assignment proof:', submitError);
+      dispatchClientErrorDiagnostic('candidate_invite.client.proof_submit_failed', submitError);
       setError('Failed to submit assignment proof.');
     } finally {
       setSubmitting(false);

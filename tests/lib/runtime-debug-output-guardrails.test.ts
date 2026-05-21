@@ -440,6 +440,20 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to send message:');
   });
 
+  it('keeps candidate invite client failures on client diagnostics without console output', () => {
+    const source = readSource('src/app/candidate-invite/[token]/CandidateInviteClient.tsx');
+
+    expect(source).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(source).toContain('candidate_invite.client.load_failed');
+    expect(source).toContain('candidate_invite.client.claim_failed');
+    expect(source).toContain('candidate_invite.client.proof_submit_failed');
+    expect(source).not.toContain('Failed to load submission invite state:');
+    expect(source).not.toContain('Failed to claim invite:');
+    expect(source).not.toContain('Failed to submit assignment proof:');
+  });
+
   it('keeps candidate invite route failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/candidate-invites/[token]/route.ts'),
