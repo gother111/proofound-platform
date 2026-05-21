@@ -319,6 +319,8 @@ describe('runtime debug output guardrails', () => {
       readSource('src/app/api/candidate-invites/[token]/claim/route.ts'),
       readSource('src/app/api/candidate-invites/[token]/proof-card/route.ts'),
       readSource('src/app/api/candidate-invites/[token]/workspace/route.ts'),
+      readSource('src/app/api/organizations/[orgId]/candidate-invites/route.ts'),
+      readSource('src/app/api/organizations/[orgId]/candidate-invites/[inviteId]/route.ts'),
     ].join('\n');
 
     expect(sources).toContain("import { log } from '@/lib/log'");
@@ -326,9 +328,19 @@ describe('runtime debug output guardrails', () => {
     expect(sources).toContain('candidate_invite.claim.failed');
     expect(sources).toContain('candidate_invite.proof_card.submit_failed');
     expect(sources).toContain('candidate_invite.workspace.fetch_failed');
+    expect(sources).toContain('org_candidate_invites.list_failed');
+    expect(sources).toContain('org_candidate_invites.email_send_failed');
+    expect(sources).toContain('org_candidate_invites.create_failed');
+    expect(sources).toContain('org_candidate_invites.resend_email_failed');
+    expect(sources).toContain('org_candidate_invites.update_failed');
     expect(sources).not.toContain('Failed to fetch submission invite:');
     expect(sources).not.toContain('Failed to claim submission invite:');
     expect(sources).not.toContain('Failed to submit proof card for invite:');
     expect(sources).not.toContain('Failed to fetch submission invite workspace:');
+    expect(sources).not.toContain('Failed to list submission invites:');
+    expect(sources).not.toContain('Submission invite email send failed:');
+    expect(sources).not.toContain('Failed to create submission invites:');
+    expect(sources).not.toContain('Failed to resend submission invite:');
+    expect(sources).not.toContain('Failed to update submission invite:');
   });
 });

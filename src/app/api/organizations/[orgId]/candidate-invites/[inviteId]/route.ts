@@ -19,6 +19,7 @@ import {
   issueCapabilityToken,
   revokeCapabilityTokenById,
 } from '@/lib/security/capability-tokens';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -202,12 +203,19 @@ export async function PATCH(
         },
       });
     } catch (error) {
-      console.error('Failed to resend submission invite:', error);
+      log.warn('org_candidate_invites.resend_email_failed', {
+        orgId,
+        inviteId: invite.id,
+        recipientDomain: invite.inviteeEmail.split('@')[1] ?? null,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     return NextResponse.json({ success: true, status: CANDIDATE_INVITE_STATUS.PENDING });
   } catch (error) {
-    console.error('Failed to update submission invite:', error);
+    log.error('org_candidate_invites.update_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: 'Failed to update submission invite' }, { status: 500 });
   }
 }

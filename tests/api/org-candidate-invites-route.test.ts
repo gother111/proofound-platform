@@ -21,6 +21,13 @@ vi.mock('@/lib/analytics/events', () => ({
   emitAnalyticsEventAsync: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
 vi.mock('@/lib/security/capability-tokens', () => ({
   CAPABILITY_BINDINGS: {
     EMAIL_HASH: 'email_hash',
@@ -52,9 +59,10 @@ vi.mock('@/lib/candidate-invite-policy', () => ({
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { sendCandidateInviteEmail } from '@/lib/email';
-import { POST } from '@/app/api/organizations/[orgId]/candidate-invites/route';
+import { GET, POST } from '@/app/api/organizations/[orgId]/candidate-invites/route';
 import { PATCH } from '@/app/api/organizations/[orgId]/candidate-invites/[inviteId]/route';
 import { resolveCandidateInvitePolicyContext } from '@/lib/candidate-invite-policy';
+import { log } from '@/lib/log';
 
 function mockAuthenticatedUser(
   membership: { role: string; state?: string | null; status?: string | null } | null,
@@ -105,6 +113,35 @@ function mockUpdateWithWhere() {
   (db.update as any).mockReturnValueOnce({ set });
   return { set, where };
 }
+
+describe('GET /api/organizations/[orgId]/candidate-invites', () => {
+  const orgId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuthenticatedUser({ role: 'org_manager', state: 'active', status: null });
+  });
+
+  it('logs unexpected list failures structurally while keeping the public response generic', async () => {
+    (db.update as any).mockImplementationOnce(() => {
+      throw new Error('invite expiry update unavailable');
+    });
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/organizations/org/candidate-invites'),
+      {
+        params: Promise.resolve({ orgId }),
+      }
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to load submission invites' });
+    expect(log.error).toHaveBeenCalledWith('org_candidate_invites.list_failed', {
+      error: 'invite expiry update unavailable',
+    });
+  });
+});
 
 describe('POST /api/organizations/[orgId]/candidate-invites', () => {
   const orgId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
@@ -223,6 +260,38 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
     expect(payload.createdCount).toBe(1);
     expect(insertValues).toHaveBeenCalledTimes(1);
     expect(sendCandidateInviteEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it('logs email delivery failures structurally while preserving invite creation success', async () => {
+    mockAuthenticatedUser({ role: 'org_manager', state: 'active', status: null });
+    mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
+    mockSelectWithWhere([]); // no existing invite
+
+    const insertValues = vi.fn().mockResolvedValue(undefined);
+    (db.insert as any).mockReturnValue({
+      values: insertValues,
+    });
+    (sendCandidateInviteEmail as any).mockRejectedValueOnce(new Error('resend unavailable'));
+
+    const request = new NextRequest('http://localhost/api/organizations/org/candidate-invites', {
+      method: 'POST',
+      body: JSON.stringify({
+        emails: ['candidate@example.com'],
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(log.warn).toHaveBeenCalledWith('org_candidate_invites.email_send_failed', {
+      orgId,
+      flowType: 'proof_card',
+      assignmentId: null,
+      recipientDomain: 'example.com',
+      error: 'resend unavailable',
+    });
   });
 
   it('keeps proof-card invites tied to an assignment when provided', async () => {
@@ -364,6 +433,28 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
     expect(payload.error).toBe('CANDIDATE_INVITE_BLOCKED');
     expect(payload.details.reasons).toContain('sponsor_commercial_path_required');
   });
+
+  it('logs unexpected create failures structurally while keeping the public response generic', async () => {
+    (db.select as any).mockImplementationOnce(() => {
+      throw new Error('organization lookup unavailable');
+    });
+
+    const request = new NextRequest('http://localhost/api/organizations/org/candidate-invites', {
+      method: 'POST',
+      body: JSON.stringify({
+        emails: ['candidate@example.com'],
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to create submission invites' });
+    expect(log.error).toHaveBeenCalledWith('org_candidate_invites.create_failed', {
+      error: 'organization lookup unavailable',
+    });
+  });
 });
 
 describe('PATCH /api/organizations/[orgId]/candidate-invites/[inviteId]', () => {
@@ -400,5 +491,30 @@ describe('PATCH /api/organizations/[orgId]/candidate-invites/[inviteId]', () => 
     expect(db.select).toHaveBeenCalledTimes(1);
     expect(db.update).toHaveBeenCalledTimes(1);
     expect(sendCandidateInviteEmail).not.toHaveBeenCalled();
+  });
+
+  it('logs unexpected update failures structurally while keeping the public response generic', async () => {
+    (db.update as any).mockImplementationOnce(() => {
+      throw new Error('stale invite update unavailable');
+    });
+
+    const request = new NextRequest(
+      'http://localhost/api/organizations/org/candidate-invites/invite',
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ action: 'resend' }),
+      }
+    );
+
+    const response = await PATCH(request, {
+      params: Promise.resolve({ orgId, inviteId }),
+    });
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({ error: 'Failed to update submission invite' });
+    expect(log.error).toHaveBeenCalledWith('org_candidate_invites.update_failed', {
+      error: 'stale invite update unavailable',
+    });
   });
 });
