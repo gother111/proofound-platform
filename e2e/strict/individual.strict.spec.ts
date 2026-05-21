@@ -10,6 +10,7 @@ import {
   createRuntimeOrganization,
   createRuntimeUser,
   apiDeleteJson,
+  getCsrfToken,
   loginWithUi,
   seedPortfolioReadyCandidate,
   type StrictFixtureState,
@@ -415,6 +416,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     await page.context().clearCookies();
     await loginWithUi(page, individualUser);
+    await getCsrfToken(page.request, { forceRefresh: true });
 
     const revealApprovalResponse = await apiPostJson(
       page.request,
@@ -431,6 +433,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     await page.context().clearCookies();
     await loginWithUi(page, orgUser);
+    await getCsrfToken(page.request, { forceRefresh: true });
 
     const scheduledAt = new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString();
     const scheduleInterviewResponse = await apiPostJson(page.request, '/api/interviews/schedule', {
