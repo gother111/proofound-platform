@@ -889,4 +889,48 @@ describe('runtime debug output guardrails', () => {
     expect(source).toContain('admin.organization_verify.update_failed');
     expect(source).not.toContain('Failed to update organization verification:');
   });
+
+  it('keeps organization server-action failures on structured server logging', () => {
+    const source = readSource('src/actions/org.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('organization.action.update.deprecated');
+    expect(source).toContain('organization.action.update_failed');
+    expect(source).toContain('organization.action.reload_after_update_failed');
+    expect(source).toContain('organization.invite.existing_check_failed');
+    expect(source).toContain('organization.invite.create_failed');
+    expect(source).toContain('organization.invite.organization_load_failed');
+    expect(source).toContain('organization.invite.email_delivery_unconfirmed');
+    expect(source).toContain('organization.invitation_accept.non_canonical_role');
+    expect(source).toContain('organization.invitation_accept.membership_activate_failed');
+    expect(source).toContain('organization.invitation_accept.member_insert_failed');
+    expect(source).toContain('organization.invitation_accept.status_update_failed');
+    expect(source).toContain('organization.member.remove_failed');
+    expect(source).toContain('organization.ownership_transfer.memberships_load_failed');
+    expect(source).toContain('organization.ownership_transfer.initiate_update_failed');
+    expect(source).toContain('organization.ownership_transfer.target_load_failed');
+    expect(source).toContain('organization.ownership_transfer.previous_owner_demote_failed');
+    expect(source).toContain('organization.ownership_transfer.target_activate_failed');
+    expect(source).not.toContain('Deprecated: updateOrganization server action is legacy.');
+    expect(source).not.toContain('Failed to update organization:');
+    expect(source).not.toContain('Failed to load organization after update:');
+    expect(source).not.toContain('Unexpected organization update error:');
+    expect(source).not.toContain('Failed to check existing invitation:');
+    expect(source).not.toContain('Failed to create invitation:');
+    expect(source).not.toContain('Failed to load organization for invite:');
+    expect(source).not.toContain('Org invite email delivery could not be confirmed:');
+    expect(source).not.toContain('Unexpected invite member error:');
+    expect(source).not.toContain('Invitation contains non-canonical role:');
+    expect(source).not.toContain('Failed to activate invited membership:');
+    expect(source).not.toContain('Failed to add member:');
+    expect(source).not.toContain('Failed to update invitation status:');
+    expect(source).not.toContain('Unexpected invitation acceptance error:');
+    expect(source).not.toContain('Failed to remove member:');
+    expect(source).not.toContain('Unexpected remove member error:');
+    expect(source).not.toContain('Failed to load memberships for ownership transfer:');
+    expect(source).not.toContain('Failed to update target ownership transfer record:');
+    expect(source).not.toContain('Failed to load target ownership transfer membership:');
+    expect(source).not.toContain('Failed to demote previous owner:');
+    expect(source).not.toContain('Failed to activate new owner membership:');
+  });
 });

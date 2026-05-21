@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { acceptOwnershipTransfer, initiateOwnershipTransfer } from '@/actions/org';
 import { requireAuth } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { createClient } from '@/lib/supabase/server';
 
 vi.mock('@/lib/auth', () => ({
@@ -20,6 +21,13 @@ vi.mock('@/lib/email', () => ({
   sendOrgInviteEmail: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
+
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
@@ -34,6 +42,7 @@ vi.mock('@/lib/security/capability-tokens', () => ({
 function buildSupabaseMock(config: {
   membershipLookups?: Array<any>;
   membershipLists?: Array<any>;
+  membershipListErrors?: Array<any>;
   updates?: Array<{ error: any }>;
 }) {
   let membershipLookupIndex = 0;
@@ -56,9 +65,12 @@ function buildSupabaseMock(config: {
                       }),
                     };
                   },
-                  in: vi.fn().mockResolvedValue({
-                    data: config.membershipLists?.[membershipListIndex++] ?? [],
-                    error: null,
+                  in: vi.fn().mockImplementation(() => {
+                    const index = membershipListIndex++;
+                    return Promise.resolve({
+                      data: config.membershipLists?.[index] ?? [],
+                      error: config.membershipListErrors?.[index] ?? null,
+                    });
                   }),
                 };
               },
@@ -103,6 +115,28 @@ describe('canonical organization membership actions', () => {
     const result = await initiateOwnershipTransfer('org-1', 'target-user');
 
     expect(result).toEqual({ error: 'Only organization owners can transfer ownership' });
+  });
+
+  it('logs ownership transfer membership load failures structurally', async () => {
+    (requireAuth as any).mockResolvedValue({ id: 'owner-user' });
+    vi.mocked(createClient).mockResolvedValue(
+      buildSupabaseMock({
+        membershipLookups: [{ id: 'owner-membership', role: 'org_owner', state: 'active' }],
+        membershipListErrors: [{ message: 'membership query failed' }],
+      }) as any
+    );
+
+    const result = await initiateOwnershipTransfer('org-1', 'target-user');
+
+    expect(result).toEqual({ error: 'Failed to initiate ownership transfer' });
+    expect(log.error).toHaveBeenCalledWith(
+      'organization.ownership_transfer.memberships_load_failed',
+      {
+        orgId: 'org-1',
+        targetUserId: 'target-user',
+        error: { message: 'membership query failed' },
+      }
+    );
   });
 
   it('accepts ownership transfer and activates the pending owner', async () => {

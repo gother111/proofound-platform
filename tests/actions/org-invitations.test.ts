@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendOrgInviteEmail } from '@/lib/email';
+import { log } from '@/lib/log';
 import { revalidatePath } from 'next/cache';
 import { issueCapabilityToken, redeemCapabilityToken } from '@/lib/security/capability-tokens';
 
@@ -22,6 +23,13 @@ vi.mock('@/lib/supabase/admin', () => ({
 
 vi.mock('@/lib/email', () => ({
   sendOrgInviteEmail: vi.fn(),
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
 }));
 
 vi.mock('next/cache', () => ({
@@ -383,6 +391,14 @@ describe('organization invitations', () => {
     expect(invitationInsert).toHaveBeenCalled();
     expect(auditInsert).toHaveBeenCalled();
     expect(revalidatePath).toHaveBeenCalledWith('/app/o/proofound/members');
+    expect(log.warn).toHaveBeenCalledWith(
+      'organization.invite.email_delivery_unconfirmed',
+      expect.objectContaining({
+        orgId: 'org-1',
+        role: 'org_reviewer',
+        error: expect.any(Error),
+      })
+    );
   });
 
   it('rejects org_owner invites so launch roles stay canonical', async () => {
@@ -609,5 +625,10 @@ describe('organization invitations', () => {
     const result = await acceptInvitation('raw-token');
 
     expect(result).toEqual({ error: 'Invitation role is invalid' });
+    expect(log.error).toHaveBeenCalledWith('organization.invitation_accept.non_canonical_role', {
+      invitationId: 'invite-1',
+      orgId: 'org-1',
+      role: 'admin',
+    });
   });
 });
