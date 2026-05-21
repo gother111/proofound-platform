@@ -56,6 +56,9 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/assignments/invite')).toMatchObject({
       surfaceLabel: 'Assignments API',
     });
+    expect(getArchivedApiPolicy('/api/assignments/assignment-1/pipeline')).toMatchObject({
+      surfaceLabel: 'Assignment Pipeline API',
+    });
     expect(getArchivedApiPolicy('/api/messages')).toMatchObject({
       surfaceLabel: 'Messages API',
     });
@@ -150,6 +153,10 @@ describe('launch surface policy', () => {
   it('keeps representative corridor APIs active', () => {
     const activePaths = [
       '/api/assignments',
+      '/api/assignments/assignment-1',
+      '/api/assignments/assignment-1/expertise-matrix',
+      '/api/assignments/assignment-1/outcomes',
+      '/api/assignments/assignment-1/publish',
       '/api/candidate-invites/token',
       '/api/conversations',
       '/api/decisions',

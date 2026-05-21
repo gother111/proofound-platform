@@ -100,7 +100,8 @@ const ACTIVE_API_POLICIES = [
     detail: 'Assignment drafting, publishing, and review remain inside the locked launch corridor.',
     matches: (pathname: string) =>
       matchExactOrPrefix('/api/assignments')(pathname) &&
-      !matchExactOrPrefix('/api/assignments/invite')(pathname),
+      !matchExactOrPrefix('/api/assignments/invite')(pathname) &&
+      !/^\/api\/assignments\/[^/]+\/pipeline$/.test(pathname),
   },
   {
     classification: 'active_launch_path',
@@ -374,6 +375,13 @@ const ARCHIVED_API_POLICIES = [
     surfaceLabel: 'Assignments API',
     detail: 'Stakeholder assignment invite flows are archived outside the locked launch MVP.',
     matches: matchExactOrPrefix('/api/assignments/invite'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Assignment Pipeline API',
+    detail:
+      'Generic assignment pipeline steps are archived outside the locked launch MVP corridor; launch uses assignment review, intro, reveal, interview, and decision routes instead.',
+    matches: (pathname: string) => /^\/api\/assignments\/[^/]+\/pipeline$/.test(pathname),
   },
   {
     classification: 'archived',

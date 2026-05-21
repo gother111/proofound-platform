@@ -22,7 +22,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/assignments/[id]',
   '/api/assignments/[id]/expertise-matrix',
   '/api/assignments/[id]/outcomes',
-  '/api/assignments/[id]/pipeline',
   '/api/assignments/[id]/publish',
   '/api/candidate-invites/[token]',
   '/api/candidate-invites/[token]/claim',
@@ -211,9 +210,10 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/organizations/[orgId]/projects',
   '/api/organizations/[orgId]/structure',
   '/api/organizations/[orgId]/test-matches',
+  '/api/assignments/[id]/pipeline',
 ] as const;
 
-const ALLOWED_ARCHIVED_COMPILED_ROUTES = [] as const;
+const ALLOWED_ARCHIVED_COMPILED_ROUTES = ['/api/assignments/[id]/pipeline'] as const;
 
 async function collectRoutePaths(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });

@@ -73,14 +73,14 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### assignments
 
-| Methods            | Path                                     | Auth Tier | Launch Surface | Notes | Source                                                   |
-| ------------------ | ---------------------------------------- | --------- | -------------- | ----- | -------------------------------------------------------- |
-| `GET\|POST`        | `/api/assignments`                       | `session` | `active MVP`   | -     | `src/app/api/assignments/route.ts`                       |
-| `GET\|PUT\|DELETE` | `/api/assignments/[id]`                  | `session` | `active MVP`   | -     | `src/app/api/assignments/[id]/route.ts`                  |
-| `GET\|POST`        | `/api/assignments/[id]/expertise-matrix` | `session` | `active MVP`   | -     | `src/app/api/assignments/[id]/expertise-matrix/route.ts` |
-| `GET\|POST`        | `/api/assignments/[id]/outcomes`         | `session` | `active MVP`   | -     | `src/app/api/assignments/[id]/outcomes/route.ts`         |
-| `GET\|POST`        | `/api/assignments/[id]/pipeline`         | `session` | `active MVP`   | -     | `src/app/api/assignments/[id]/pipeline/route.ts`         |
-| `POST`             | `/api/assignments/[id]/publish`          | `session` | `active MVP`   | -     | `src/app/api/assignments/[id]/publish/route.ts`          |
+| Methods            | Path                                     | Auth Tier | Launch Surface           | Notes                                                      | Source                                                   |
+| ------------------ | ---------------------------------------- | --------- | ------------------------ | ---------------------------------------------------------- | -------------------------------------------------------- |
+| `GET\|POST`        | `/api/assignments`                       | `session` | `active MVP`             | -                                                          | `src/app/api/assignments/route.ts`                       |
+| `GET\|PUT\|DELETE` | `/api/assignments/[id]`                  | `session` | `active MVP`             | -                                                          | `src/app/api/assignments/[id]/route.ts`                  |
+| `GET\|POST`        | `/api/assignments/[id]/expertise-matrix` | `session` | `active MVP`             | -                                                          | `src/app/api/assignments/[id]/expertise-matrix/route.ts` |
+| `GET\|POST`        | `/api/assignments/[id]/outcomes`         | `session` | `active MVP`             | -                                                          | `src/app/api/assignments/[id]/outcomes/route.ts`         |
+| `GET\|POST`        | `/api/assignments/[id]/pipeline`         | `session` | `archived compatibility` | generic pipeline steps are outside the locked MVP corridor | `src/app/api/assignments/[id]/pipeline/route.ts`         |
+| `POST`             | `/api/assignments/[id]/publish`          | `session` | `active MVP`             | -                                                          | `src/app/api/assignments/[id]/publish/route.ts`          |
 
 ### candidate-invites
 
