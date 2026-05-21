@@ -783,6 +783,20 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('[RateLimit] Error checking rate limit for profile:');
   });
 
+  it('keeps shared auth helper failures on structured server logging', () => {
+    const source = readSource('src/lib/auth.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('auth.current_user.profile_load_failed');
+    expect(source).toContain('auth.user_organizations.load_failed');
+    expect(source).toContain('auth.active_organization.load_failed');
+    expect(source).toContain('auth.organization_role.verify_failed');
+    expect(source).not.toContain('Failed to load profile for current user:');
+    expect(source).not.toContain('Failed to load organizations for user:');
+    expect(source).not.toContain('Failed to load active organization:');
+    expect(source).not.toContain('Failed to verify organization role:');
+  });
+
   it('keeps organization detail and profile visibility failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/organizations/[orgId]/route.ts'),

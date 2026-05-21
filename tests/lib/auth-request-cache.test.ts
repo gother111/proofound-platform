@@ -1,9 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const createClientMock = vi.fn();
+const logErrorMock = vi.hoisted(() => vi.fn());
 const redirectMock = vi.fn((path: string) => {
   throw new Error(`REDIRECT:${path}`);
 });
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: logErrorMock,
+  },
+}));
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: (...args: unknown[]) => createClientMock(...args),
@@ -14,20 +21,24 @@ vi.mock('next/navigation', () => ({
 }));
 
 type QueryResult<T> = {
-  data: T;
-  error: null;
+  data: T | null;
+  error: Error | null;
 };
 
 function createAwaitableBuilder<T>(result: QueryResult<T>) {
+  let currentResult = result;
   const builder = {
     select: vi.fn(() => builder),
     eq: vi.fn(() => builder),
-    maybeSingle: vi.fn(async () => result),
-    single: vi.fn(async () => result),
+    maybeSingle: vi.fn(async () => currentResult),
+    single: vi.fn(async () => currentResult),
+    setResult: (nextResult: QueryResult<T>) => {
+      currentResult = nextResult;
+    },
     then: (
       onfulfilled?: (value: QueryResult<T>) => unknown,
       onrejected?: (reason: unknown) => unknown
-    ) => Promise.resolve(result).then(onfulfilled, onrejected),
+    ) => Promise.resolve(currentResult).then(onfulfilled, onrejected),
   };
 
   return builder;
@@ -133,6 +144,7 @@ function createSupabaseStub(options?: {
     builders: {
       profileBuilder,
       organizationBuilder,
+      organizationMembersBuilder,
     },
   };
 }
@@ -256,5 +268,64 @@ describe('auth request-scoped caching', () => {
     const auth = await loadAuthModule();
 
     await expect(auth.resolveUserHomePath()).resolves.toBe('/app/o/acme%2Fteam/home');
+  });
+
+  it('logs current-user profile lookup failures with structured diagnostics', async () => {
+    const { supabase, builders } = createSupabaseStub();
+    const profileError = new Error('profile lookup failed');
+    builders.profileBuilder.setResult({ data: null, error: profileError });
+    createClientMock.mockResolvedValue(supabase);
+    const auth = await loadAuthModule();
+
+    await expect(auth.getCurrentUser()).resolves.toBeNull();
+    expect(logErrorMock).toHaveBeenCalledWith('auth.current_user.profile_load_failed', {
+      error: profileError,
+    });
+  });
+
+  it('logs user-organization lookup failures with structured diagnostics', async () => {
+    const { supabase, builders } = createSupabaseStub();
+    const orgError = new Error('organization lookup failed');
+    builders.organizationMembersBuilder.setResult({ data: null, error: orgError });
+    createClientMock.mockResolvedValue(supabase);
+    const auth = await loadAuthModule();
+
+    await expect(auth.getUserOrganizations('user-1')).resolves.toEqual([]);
+    expect(logErrorMock).toHaveBeenCalledWith('auth.user_organizations.load_failed', {
+      error: orgError,
+      userId: 'user-1',
+    });
+  });
+
+  it('logs active organization lookup failures with structured diagnostics', async () => {
+    const { supabase, builders } = createSupabaseStub();
+    const activeOrgError = new Error('active organization failed');
+    builders.organizationBuilder.setResult({ data: null, error: activeOrgError });
+    createClientMock.mockResolvedValue(supabase);
+    const auth = await loadAuthModule();
+
+    await expect(auth.getActiveOrg('acme', 'user-1')).resolves.toBeNull();
+    expect(logErrorMock).toHaveBeenCalledWith('auth.active_organization.load_failed', {
+      error: activeOrgError,
+      slug: 'acme',
+      userId: 'user-1',
+    });
+  });
+
+  it('logs organization role verification failures with structured diagnostics', async () => {
+    const { supabase, builders } = createSupabaseStub();
+    const roleError = new Error('role lookup failed');
+    builders.organizationMembersBuilder.setResult({ data: null, error: roleError });
+    createClientMock.mockResolvedValue(supabase);
+    const auth = await loadAuthModule();
+
+    await expect(auth.assertOrgRole('org-1', 'user-1', ['org_owner'])).rejects.toThrow(
+      'Unable to verify permissions'
+    );
+    expect(logErrorMock).toHaveBeenCalledWith('auth.organization_role.verify_failed', {
+      error: roleError,
+      orgId: 'org-1',
+      userId: 'user-1',
+    });
   });
 });

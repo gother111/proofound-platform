@@ -6,6 +6,7 @@ import {
   normalizeAuthorizedOrgRole,
   normalizeMembershipState,
 } from '@/lib/authz';
+import { log } from '@/lib/log';
 import { redirect } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import * as React from 'react';
@@ -232,7 +233,7 @@ async function getCurrentUserWithClient(supabase: SupabaseClient): Promise<Profi
     .maybeSingle();
 
   if (error) {
-    console.error('Failed to load profile for current user:', error);
+    log.error('auth.current_user.profile_load_failed', { error });
     return null;
   }
 
@@ -328,7 +329,7 @@ const getUserOrganizationsCached = cache(async (userId: string) => {
     .eq('state', 'active');
 
   if (error) {
-    console.error('Failed to load organizations for user:', error);
+    log.error('auth.user_organizations.load_failed', { error, userId });
     return [];
   }
 
@@ -433,7 +434,7 @@ const getActiveOrgCached = cache(async (slug: string, userId: string) => {
     .maybeSingle();
 
   if (error) {
-    console.error('Failed to load active organization:', error);
+    log.error('auth.active_organization.load_failed', { error, slug, userId });
     return null;
   }
 
@@ -545,7 +546,7 @@ export async function assertOrgRole(orgId: string, userId: string, roles: OrgRol
     .maybeSingle();
 
   if (error) {
-    console.error('Failed to verify organization role:', error);
+    log.error('auth.organization_role.verify_failed', { error, orgId, userId });
     throw new Error('Unable to verify permissions');
   }
 
