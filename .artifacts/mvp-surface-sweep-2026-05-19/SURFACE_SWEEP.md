@@ -5037,3 +5037,11 @@ Browser evidence:
 - Replaced that diagnostic with structured `root_layout.i18n_messages_load_failed` logging while preserving request-time rendering for nonce CSP, empty-message fallback behavior, the app shell providers, and page render continuity.
 - Extended runtime debug-output guardrails so the old i18n console string cannot return.
 - Verification passed: focused runtime/launch guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts tests/scripts/launch-gate-config.test.ts` (2 files / 215 tests), targeted root-layout console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Assignment Review SSR Fetch Structured Logging
+
+- Timestamp: 2026-05-21 16:08 CEST.
+- Continued the active organization assignment surface sweep after the server-rendered assignment review page still emitted a raw console error when its authenticated SSR assignment fetch failed.
+- Replaced that diagnostic with structured `assignment.review_page.server_fetch_failed` logging while preserving cookie forwarding, org-slug scoping, no-store fetch behavior, and the existing null-assignment fallback into the review client.
+- Extended runtime debug-output guardrails so the old SSR fetch console string cannot return.
+- Verification passed: focused runtime/route-inventory guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts tests/api/launch-page-inventory.test.ts` (2 files / 72 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted assignment-review console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

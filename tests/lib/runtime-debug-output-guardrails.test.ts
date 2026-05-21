@@ -1154,4 +1154,12 @@ describe('runtime debug output guardrails', () => {
     expect(source).toContain('root_layout.i18n_messages_load_failed');
     expect(source).not.toContain('Failed to load i18n messages:');
   });
+
+  it('keeps assignment review page server fetch failures on structured logging', () => {
+    const source = readSource('src/app/app/o/[slug]/assignments/[id]/review/page.tsx');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('assignment.review_page.server_fetch_failed');
+    expect(source).not.toContain('SSR fetch failed');
+  });
 });
