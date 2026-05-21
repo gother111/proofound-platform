@@ -2849,6 +2849,33 @@ describe('launch gate package configuration', () => {
     );
   });
 
+  it('keeps active security evidence docs pointed at existing current or historical sources', () => {
+    const securityScanResults = fs.readFileSync(
+      path.join(repoRoot, 'docs/security-scan-results.md'),
+      'utf8'
+    );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
+
+    expect(securityScanResults).toContain('Last Verified: `2026-05-21`');
+    expect(securityScanResults).toContain('docs/CURRENT_TRUTH.md');
+    expect(securityScanResults).toContain('docs/verification-checklist.md');
+    expect(securityScanResults).toContain('docs/production-readiness-checklist.md');
+    expect(securityScanResults).toContain('DATA_SECURITY_PRIVACY_ARCHITECTURE.md');
+    expect(securityScanResults).toContain('docs/security-audit-report.md');
+    expect(securityScanResults).toContain('SECURITY_REVIEW_REPORT.md');
+    expect(securityScanResults).toMatch(/historical\s+reports only/);
+    expect(securityScanResults).not.toContain('docs/SECURITY_PRIVACY_AUDIT.md');
+    expect(securityScanResults).not.toContain('docs/SECURITY_PRIVACY_CHECKLIST.md');
+    expect(securityScanResults).not.toContain('docs/DATA_SECURITY_PRIVACY_ARCHITECTURE.md');
+    expect(fs.existsSync(path.join(repoRoot, 'docs/CURRENT_TRUTH.md'))).toBe(true);
+    expect(fs.existsSync(path.join(repoRoot, 'docs/verification-checklist.md'))).toBe(true);
+    expect(fs.existsSync(path.join(repoRoot, 'docs/production-readiness-checklist.md'))).toBe(true);
+    expect(fs.existsSync(path.join(repoRoot, 'DATA_SECURITY_PRIVACY_ARCHITECTURE.md'))).toBe(true);
+    expect(docsRegistry).toContain(
+      '| `docs/security-scan-results.md`                                                                         | `active`         | `docs`        | `repo+live`         | `2026-05-21`'
+    );
+  });
+
   it('keeps GEO audit scope aligned with active public launch surfaces', () => {
     const geoAudit = fs.readFileSync(path.join(repoRoot, 'agent/runbooks/geo-audit.md'), 'utf8');
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');

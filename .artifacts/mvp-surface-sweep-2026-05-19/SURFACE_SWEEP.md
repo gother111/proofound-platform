@@ -5277,3 +5277,11 @@ Browser evidence:
 - Corrected README to match the current public health route contract: `/api/health` is minimal liveness only (`status` and `timestamp`), while commit verification belongs in Vercel deployment metadata or the prebuilt workflow summary.
 - Added launch-gate guardrail coverage so active operator docs cannot reintroduce public health commit-SHA expectations that contradict `tests/api/public-health-route.test.ts`.
 - Verification passed: focused docs/health guard run `npm test -- --run tests/scripts/launch-gate-config.test.ts tests/api/public-health-route.test.ts` (2 files / 153 tests), targeted active-doc scan for health commit-SHA guidance, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Security Evidence Reference Integrity
+
+- Timestamp: 2026-05-21 18:08 CEST.
+- Continued the active documentation integrity sweep after `docs/security-scan-results.md` still pointed future operators at nonexistent `docs/SECURITY_PRIVACY_AUDIT.md`, `docs/SECURITY_PRIVACY_CHECKLIST.md`, and `docs/DATA_SECURITY_PRIVACY_ARCHITECTURE.md` paths.
+- Repointed the active security evidence index to existing current sources (`docs/CURRENT_TRUTH.md`, `docs/verification-checklist.md`, production/launch checklists, and root `DATA_SECURITY_PRIVACY_ARCHITECTURE.md`) and marked older security report files as historical context only.
+- Updated `docs/DOCS_REGISTRY.md` and added launch-gate guardrail coverage so the active security index keeps using existing current or explicitly historical sources.
+- Verification passed: focused launch-gate guard run `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 152 tests), targeted stale security-reference scan, `npm run docs:freshness`, `npm run typecheck`, `npm run lint`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

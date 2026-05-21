@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Security Scan Results
 
@@ -38,9 +38,10 @@ Use these current sources instead of historical all-green summaries:
 - `docs/production-readiness-checklist.md` and
   `docs/mvp-launch-master-checklist.md` for production-candidate backup,
   restore, internal monitoring, and final signoff requirements.
-- `docs/SECURITY_PRIVACY_AUDIT.md`, `docs/SECURITY_PRIVACY_CHECKLIST.md`, and
-  `docs/DATA_SECURITY_PRIVACY_ARCHITECTURE.md` for security/privacy review
-  context.
+- `DATA_SECURITY_PRIVACY_ARCHITECTURE.md` for reference security/privacy
+  architecture context, read below the locked MVP authority stack.
+- `docs/security-audit-report.md` and `SECURITY_REVIEW_REPORT.md` are historical
+  reports only; use them for context, not current launch evidence.
 - `.artifacts/mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md` for the current
   end-to-end MVP surface sweep findings, fixes, and remaining risks.
 
