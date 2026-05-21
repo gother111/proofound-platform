@@ -327,6 +327,35 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Error marking message as read:');
   });
 
+  it('keeps middleware and global error diagnostics structured', () => {
+    const middlewareSource = readSource('src/middleware.ts');
+    const errorHandlerSource = readSource('src/lib/error-handler.ts');
+
+    expect(middlewareSource).toContain('writeMiddlewareDiagnostic');
+    expect(middlewareSource).toContain('middleware.rate_limit_check_failed');
+    expect(middlewareSource).toContain('middleware.unexpected_error');
+    expect(middlewareSource).not.toContain('[middleware] rate limit check failed');
+    expect(middlewareSource).not.toContain('[middleware] unexpected error');
+    expect(errorHandlerSource).toContain('global_error_handler.error');
+    expect(errorHandlerSource).toContain('proofound:client-diagnostic');
+    expect(errorHandlerSource).not.toContain('console.error(`[${context}]`');
+  });
+
+  it('keeps remaining infrastructure console output confined to structured sink utilities', () => {
+    const middlewareSource = readSource('src/middleware.ts');
+    const structuredLogSource = readSource('src/lib/log.ts');
+    const legacyLoggerSource = readSource('src/lib/logger.ts');
+
+    expect(middlewareSource).toContain('writeMiddlewareDiagnostic');
+    expect(middlewareSource).toContain('JSON.stringify({');
+    expect(structuredLogSource).toContain('sanitizeLogPayload');
+    expect(structuredLogSource).toContain('JSON.stringify(entry)');
+    expect(legacyLoggerSource).toContain('sanitizeContext');
+    expect(legacyLoggerSource).toContain('JSON.stringify({');
+    expect(structuredLogSource).not.toContain("console.error('Error");
+    expect(legacyLoggerSource).not.toContain("console.error('Error");
+  });
+
   it('keeps client verification link fixtures behind the explicit visual fixture gate', () => {
     const fixtureSource = readSource('src/lib/verification/visual-link-fixtures.ts');
     const pageSources = [

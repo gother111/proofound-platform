@@ -5251,3 +5251,12 @@ Browser evidence:
 - Preserved legacy assignment submission toasts, empty-profile fallback behavior, profile storage quota fallback, profile clear fallback, and non-blocking realtime read-receipt behavior.
 - Extended runtime debug-output guardrails so the old legacy helper and realtime console strings cannot return.
 - Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 89 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted helper console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Middleware Error Handler Diagnostics
+
+- Timestamp: 2026-05-21 17:51 CEST.
+- Continued the infrastructure diagnostics sweep after middleware still emitted ad hoc raw console strings for rate-limit and unexpected errors, and the generic error handler still wrote direct console diagnostics.
+- Added a middleware-local structured diagnostic writer using `middleware.rate_limit_check_failed` and `middleware.unexpected_error`, preserving API fail-closed behavior and page fallback behavior.
+- Routed `logError` through `proofound:client-diagnostic` as `global_error_handler.error` when running in the browser, preserving safe user-message extraction while removing raw console output from the shared helper.
+- Extended runtime debug-output guardrails so the old middleware strings and global error-handler console call cannot return.
+- Verification passed: focused middleware/runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts src/lib/__tests__/middleware-fail-closed.test.ts src/lib/__tests__/middleware-csrf.test.ts src/lib/__tests__/security-headers.test.ts` (4 files / 133 tests), runtime guard rerun `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 91 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted infrastructure console classification scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

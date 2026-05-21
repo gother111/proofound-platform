@@ -76,6 +76,37 @@ function buildContentSecurityPolicy(nonce?: string): string {
   ].join('; ');
 }
 
+function getMiddlewareErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return 'unknown';
+}
+
+function writeMiddlewareDiagnostic(
+  event: string,
+  requestId: string,
+  pathname: string,
+  error: unknown,
+  meta: Record<string, unknown> = {}
+) {
+  console.error(
+    JSON.stringify({
+      level: 'error',
+      event,
+      requestId,
+      path: pathname,
+      error: getMiddlewareErrorMessage(error),
+      ...meta,
+    })
+  );
+}
+
 function buildNonceRequestHeaders(request: NextRequest, nonce: string): Headers {
   const requestHeaders = new Headers(request.headers);
   const csp = buildContentSecurityPolicy(nonce);
@@ -385,14 +416,25 @@ export async function middleware(request: NextRequest) {
         }
       } catch (error) {
         if (isApiRoute) {
-          console.error(
-            '[middleware] rate limit check failed; failing closed for API route',
-            error
+          writeMiddlewareDiagnostic(
+            'middleware.rate_limit_check_failed',
+            requestId,
+            pathname,
+            error,
+            { failMode: 'api_fail_closed' }
           );
           return buildFailClosedApiResponse(request, requestId);
         }
 
-        console.error('[middleware] rate limit check failed; continuing without throttle', error);
+        writeMiddlewareDiagnostic(
+          'middleware.rate_limit_check_failed',
+          requestId,
+          pathname,
+          error,
+          {
+            failMode: 'page_continue_without_throttle',
+          }
+        );
       }
     }
 
@@ -496,7 +538,9 @@ export async function middleware(request: NextRequest) {
     applySecurityHeaders(response, request, pageNonce);
     return response;
   } catch (error) {
-    console.error('[middleware] unexpected error', error);
+    writeMiddlewareDiagnostic('middleware.unexpected_error', requestId, pathname, error, {
+      failMode: isApiRoute ? 'api_fail_closed' : 'page_continue_with_security_headers',
+    });
 
     if (isApiRoute) {
       return buildFailClosedApiResponse(request, requestId);
