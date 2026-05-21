@@ -13,6 +13,8 @@ const getCanonicalImpactVerificationRequestByTokenMock = vi.fn();
 const updateCanonicalImpactVerificationRequestMock = vi.fn();
 const emitVerificationProvidedMock = vi.fn();
 const ensureInternalOpsQueueItemMock = vi.fn();
+const logErrorMock = vi.fn();
+const logWarnMock = vi.fn();
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: () => createClientMock(),
@@ -62,6 +64,13 @@ vi.mock('@/lib/analytics/events', () => ({
 
 vi.mock('@/lib/internal-ops/queue', () => ({
   ensureInternalOpsQueueItem: (...args: any[]) => ensureInternalOpsQueueItemMock(...args),
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: (...args: any[]) => logErrorMock(...args),
+    warn: (...args: any[]) => logWarnMock(...args),
+  },
 }));
 
 import { GET, POST } from '@/app/api/verify/[token]/route';
@@ -770,6 +779,32 @@ describe('verify token route', () => {
     expect(body.error).toBe('Verification request not found or invalid token');
   });
 
+  it('GET logs canonical skill lookup failures with structured diagnostics', async () => {
+    const lookupError = new Error('skill lookup unavailable');
+    createClientMock.mockReturnValue(createClientWithAuth(null));
+    createAdminClientMock.mockReturnValue(createAdminClient());
+    beginCapabilityTokenRedeemSessionMock.mockResolvedValue({
+      ok: false,
+      reason: 'unused',
+    });
+    getCanonicalImpactVerificationRequestByTokenMock.mockResolvedValue({ data: null, error: null });
+    getCanonicalSkillVerificationRequestByTokenMock.mockResolvedValue({
+      data: null,
+      error: lookupError,
+    });
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toBe('Internal server error');
+    expect(logErrorMock).toHaveBeenCalledWith('verify_token.skill.lookup_failed', {
+      error: lookupError,
+    });
+  });
+
   it('POST returns 404 for revoked canonical skill tokens', async () => {
     createClientMock.mockReturnValue(createClientWithAuth(null));
     createAdminClientMock.mockReturnValue(createAdminClient());
@@ -892,5 +927,106 @@ describe('verify token route', () => {
     expect(response.status).toBe(404);
     expect(body.error).toBe('Verification request not found or invalid token');
     expect(updateCanonicalSkillVerificationRequestMock).not.toHaveBeenCalled();
+  });
+
+  it('POST keeps skill notification email failures non-blocking and structured', async () => {
+    const emailError = new Error('email provider unavailable');
+    createClientMock.mockReturnValue(createClientWithAuth(null));
+    createAdminClientMock.mockReturnValue(createAdminClient());
+    sendEmailMock.mockRejectedValue(emailError);
+    getCanonicalImpactVerificationRequestByTokenMock.mockResolvedValue({ data: null, error: null });
+    getCanonicalSkillVerificationRequestByTokenMock.mockResolvedValue({
+      data: {
+        id: 'skill-request-1',
+        skill_id: 'skill-1',
+        requester_profile_id: 'user-1',
+        requester_email_snapshot: 'requester@example.com',
+        verifier_email: 'verifier@example.com',
+        verifier_source: 'peer',
+        verifier_relationship: 'Peer reviewer',
+        verifier_profile_id: null,
+        request_kind: 'generic_verification',
+        attestation_request: null,
+        attestation_response: null,
+        message: 'Please verify this skill.',
+        status: 'pending',
+        requires_authenticated_verifier: false,
+        integrity_status: 'clear',
+        integrity_reason: null,
+        integrity_meta: {},
+        integrity_flagged_at: null,
+        risk_signals: {},
+        requester_ip_hash: null,
+        requester_user_agent_hash: null,
+        created_at: '2026-02-24T00:00:00.000Z',
+        expires_at: '2099-02-24T00:00:00.000Z',
+        source_request_table: 'verification_records',
+        source_request_id: 'skill-request-1',
+        skills: {
+          taxonomy: {
+            name_i18n: {
+              en: 'System Design',
+            },
+          },
+        },
+      },
+      error: null,
+    });
+    updateCanonicalSkillVerificationRequestMock.mockImplementation(
+      async (payload: Record<string, unknown>) => ({
+        id: 'skill-request-1',
+        skill_id: 'skill-1',
+        requester_profile_id: 'user-1',
+        requester_email_snapshot: 'requester@example.com',
+        verifier_email: 'verifier@example.com',
+        verifier_source: 'peer',
+        verifier_relationship: 'Peer reviewer',
+        verifier_profile_id: null,
+        request_kind: 'generic_verification',
+        attestation_request: null,
+        attestation_response: payload.attestationResponse ?? null,
+        message: 'Please verify this skill.',
+        status: payload.status,
+        requires_authenticated_verifier: false,
+        integrity_status: 'clear',
+        integrity_reason: null,
+        integrity_meta: {},
+        integrity_flagged_at: null,
+        risk_signals: {},
+        requester_ip_hash: null,
+        requester_user_agent_hash: null,
+        created_at: '2026-02-24T00:00:00.000Z',
+        responded_at: payload.respondedAt,
+        response_message: payload.responseMessage,
+        expires_at: '2099-02-24T00:00:00.000Z',
+        skills: {
+          taxonomy: {
+            name_i18n: {
+              en: 'System Design',
+            },
+          },
+        },
+      })
+    );
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verify/${TOKEN}`, {
+        method: 'POST',
+        headers: {
+          cookie: 'pf_cap_skill_verification_response=skill-nonce',
+        },
+        body: JSON.stringify({ action: 'accept', message: 'Confirmed.' }),
+      }),
+      { params: Promise.resolve({ token: TOKEN }) }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(logWarnMock).toHaveBeenCalledWith('verify_token.skill.notification_email_failed', {
+      error: emailError,
+      requestId: 'skill-request-1',
+    });
+    expect(JSON.stringify(logWarnMock.mock.calls)).not.toContain('verifier@example.com');
   });
 });

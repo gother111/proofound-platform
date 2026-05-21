@@ -497,4 +497,48 @@ describe('runtime debug output guardrails', () => {
     );
     expect(source).not.toContain('reconcileVerifierContradictions failed:');
   });
+
+  it('keeps public verify token failures on structured server logging', () => {
+    const source = readSource('src/app/api/verify/[token]/route.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('verify_token.impact.lookup_failed');
+    expect(source).toContain('verify_token.impact.story_context_failed');
+    expect(source).toContain('verify_token.impact.requester_profile_failed');
+    expect(source).toContain('verify_token.impact.lookup_fallback_failed');
+    expect(source).toContain('verify_token.impact.update_failed');
+    expect(source).toContain('verify_token.impact.story_verified_update_failed');
+    expect(source).toContain('verify_token.impact.notification_email_failed');
+    expect(source).toContain('verify_token.impact.submit_fallback_failed');
+    expect(source).toContain('verify_token.skill.admin_client_unavailable');
+    expect(source).toContain('verify_token.skill.lookup_failed');
+    expect(source).toContain('verify_token.skill.submit_lookup_failed');
+    expect(source).toContain('verify_token.skill.requester_profile_failed');
+    expect(source).toContain('verify_token.skill.proofs_lookup_failed');
+    expect(source).toContain('verify_token.skill.update_failed');
+    expect(source).toContain('verify_token.skill.analytics_emit_failed');
+    expect(source).toContain('verify_token.skill.notification_email_failed');
+    expect(source).toContain('verify_token.get_failed');
+    expect(source).toContain('verify_token.post_failed');
+    expect(source).not.toContain('Impact verification lookup error:');
+    expect(source).not.toContain('Impact story context lookup error:');
+    expect(source).not.toContain('Impact requester profile lookup error:');
+    expect(source).not.toContain('Impact verification lookup failed, continuing to skill lookup:');
+    expect(source).not.toContain(
+      'Skill verification admin client unavailable; falling back to request-scoped client'
+    );
+    expect(source).not.toContain('Skill verification lookup failed:');
+    expect(source).not.toContain('Skill requester profile lookup error:');
+    expect(source).not.toContain('Skill proof lookup error:');
+    expect(source).not.toContain('Verify GET error:');
+    expect(source).not.toContain('Failed to update canonical impact verification request:');
+    expect(source).not.toContain('Failed to mark impact story verified:');
+    expect(source).not.toContain('Failed to send impact verification notification email:');
+    expect(source).not.toContain('Impact verification submit failed, continuing to skill flow:');
+    expect(source).not.toContain('Skill verification submit lookup failed:');
+    expect(source).not.toContain('Error updating canonical skill verification:');
+    expect(source).not.toContain('Failed to emit attestation_provided event:');
+    expect(source).not.toContain('Failed to send verification notification email:');
+    expect(source).not.toContain('Verify POST error:');
+  });
 });
