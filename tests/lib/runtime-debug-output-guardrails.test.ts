@@ -312,4 +312,23 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('TTI tracking error:');
     expect(sources).not.toContain('Performance measurement error:');
   });
+
+  it('keeps candidate invite route failures on structured server logging', () => {
+    const sources = [
+      readSource('src/app/api/candidate-invites/[token]/route.ts'),
+      readSource('src/app/api/candidate-invites/[token]/claim/route.ts'),
+      readSource('src/app/api/candidate-invites/[token]/proof-card/route.ts'),
+      readSource('src/app/api/candidate-invites/[token]/workspace/route.ts'),
+    ].join('\n');
+
+    expect(sources).toContain("import { log } from '@/lib/log'");
+    expect(sources).toContain('candidate_invite.preview.fetch_failed');
+    expect(sources).toContain('candidate_invite.claim.failed');
+    expect(sources).toContain('candidate_invite.proof_card.submit_failed');
+    expect(sources).toContain('candidate_invite.workspace.fetch_failed');
+    expect(sources).not.toContain('Failed to fetch submission invite:');
+    expect(sources).not.toContain('Failed to claim submission invite:');
+    expect(sources).not.toContain('Failed to submit proof card for invite:');
+    expect(sources).not.toContain('Failed to fetch submission invite workspace:');
+  });
 });

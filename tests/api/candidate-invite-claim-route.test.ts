@@ -20,6 +20,8 @@ vi.mock('@/lib/analytics/events', () => ({
 vi.mock('@/lib/log', () => ({
   log: {
     error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
   },
 }));
 
