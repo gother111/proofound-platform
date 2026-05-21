@@ -155,7 +155,7 @@ export function ProfileHeroSection({
                       <Edit3 className="w-4 h-4 text-muted-foreground/60 mt-1 group-hover/tagline:text-[#7A9278]" />
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Add a tagline</p>
-                        <p className="text-xs text-muted-foreground/60">
+                        <p className="text-xs text-muted-foreground">
                           A brief statement that captures who you are and what you care about
                         </p>
                       </div>
