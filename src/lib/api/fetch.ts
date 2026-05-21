@@ -18,6 +18,40 @@ const WORKFLOW_MUTATION_PATHS = [
 let cachedTokenByOrigin = new Map<string, string>();
 let pendingTokenByOrigin = new Map<string, Promise<string>>();
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return 'unknown';
+}
+
+function dispatchApiDiagnostic(
+  reason: 'csrf_token_request_failed' | 'csrf_token_missing',
+  detail: Record<string, unknown> = {}
+): void {
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
+    return;
+  }
+
+  try {
+    window.dispatchEvent(
+      new CustomEvent('proofound:api-diagnostic', {
+        detail: {
+          reason,
+          ...detail,
+        },
+      })
+    );
+  } catch {
+    // Diagnostics must never affect API request control flow.
+  }
+}
+
 function toOriginCacheKey(input: RequestInfo | URL): string {
   const fallbackOrigin =
     typeof window !== 'undefined' && window.location?.origin ? window.location.origin : '';
@@ -136,20 +170,23 @@ async function fetchCsrfToken(originKey: string, forceRefresh = false): Promise<
         },
       });
       if (!res.ok) {
-        console.warn('Failed to fetch CSRF token', res.status);
+        dispatchApiDiagnostic('csrf_token_request_failed', { status: res.status });
         throw new Error(CSRF_TOKEN_FETCH_ERROR);
       }
 
       const data = (await res.json()) as { token?: unknown };
       const token = typeof data.token === 'string' ? data.token.trim() : '';
       if (!token) {
+        dispatchApiDiagnostic('csrf_token_missing');
         throw new Error(CSRF_TOKEN_FETCH_ERROR);
       }
 
       cachedTokenByOrigin.set(originKey, token);
       return token;
     } catch (err) {
-      console.error('Error fetching CSRF token', err);
+      if (getErrorMessage(err) !== CSRF_TOKEN_FETCH_ERROR) {
+        dispatchApiDiagnostic('csrf_token_request_failed', { error: getErrorMessage(err) });
+      }
       throw new Error(CSRF_TOKEN_FETCH_ERROR);
     } finally {
       pendingTokenByOrigin.delete(originKey);

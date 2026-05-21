@@ -55,6 +55,7 @@ describe('apiFetch', () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(new Response(JSON.stringify({ error: 'unavailable' }), { status: 503 }));
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
 
     vi.stubGlobal('fetch', fetchMock);
     const { apiFetch, __resetCsrfCacheForTests } = await import('@/lib/api/fetch');
@@ -67,6 +68,15 @@ describe('apiFetch', () => {
     // Only token endpoint fetch should run. Protected endpoint fetch should not be attempted.
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(String(fetchMock.mock.calls[0][0])).toContain('/api/csrf-token?ts=');
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'proofound:api-diagnostic',
+        detail: {
+          reason: 'csrf_token_request_failed',
+          status: 503,
+        },
+      })
+    );
   });
 
   it('retries once after CSRF 403 with refreshed token', async () => {

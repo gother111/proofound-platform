@@ -397,6 +397,16 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Performance measurement error:');
   });
 
+  it('keeps client API CSRF initialization diagnostics local and console-free', () => {
+    const source = readSource('src/lib/api/fetch.ts');
+
+    expect(source).toContain('proofound:api-diagnostic');
+    expect(source).toContain('csrf_token_request_failed');
+    expect(source).toContain('csrf_token_missing');
+    expect(source).not.toContain('Failed to fetch CSRF token');
+    expect(source).not.toContain('Error fetching CSRF token');
+  });
+
   it('keeps candidate invite route failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/candidate-invites/[token]/route.ts'),

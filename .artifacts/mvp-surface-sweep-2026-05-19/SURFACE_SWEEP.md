@@ -5053,3 +5053,11 @@ Browser evidence:
 - Replaced that diagnostic with structured `individual.home.metrics_load_failed` logging while preserving the existing default metric fallback and readiness-step rendering behavior.
 - Extended runtime debug-output guardrails so the old proof-home metrics console string cannot return.
 - Verification passed: focused runtime/route-inventory guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts tests/api/launch-page-inventory.test.ts` (2 files / 73 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted individual-home console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Client API CSRF Diagnostics
+
+- Timestamp: 2026-05-21 16:16 CEST.
+- Continued the active shared client infrastructure sweep after `apiFetch` still emitted raw console diagnostics when CSRF token initialization failed for mutating API requests.
+- Replaced those diagnostics with local `proofound:api-diagnostic` browser events for failed token requests and missing token payloads while preserving fail-closed behavior, token caching, retry-on-CSRF-mismatch behavior, credentials forwarding, and workflow idempotency keys.
+- Added focused coverage proving CSRF-token fetch failures still block the protected request and emit the local diagnostic, and extended runtime debug-output guardrails so the old CSRF console strings cannot return.
+- Verification passed: focused API/runtime guard run `npm test -- --run src/lib/__tests__/api-fetch.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 74 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted API-fetch console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
