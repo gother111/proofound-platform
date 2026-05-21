@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { CheckCircle2, Mail, Loader2, AlertCircle } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface WorkEmailVerificationFormProps {
   onSuccess: () => void;
@@ -60,7 +61,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
 
       setOrganizations(normalizedOrganizations);
     } catch (err) {
-      console.error('Error fetching organizations:', err);
+      dispatchClientErrorDiagnostic('settings.work_email.organizations_fetch_failed', err);
       // Don't show error, just allow optional org selection
     } finally {
       setLoadingOrgs(false);

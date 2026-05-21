@@ -190,6 +190,48 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Application error:');
   });
 
+  it('keeps active profile, settings, onboarding, tour, and matching diagnostics off raw console output', () => {
+    const sources = [
+      readSource('src/hooks/useProfileData.ts'),
+      readSource('src/components/onboarding/OrganizationSetup.tsx'),
+      readSource('src/components/tour/TourProvider.tsx'),
+      readSource('src/components/tour/GuidedTour.tsx'),
+      readSource('src/components/settings/SettingsContent.tsx'),
+      readSource('src/components/settings/WorkEmailVerificationForm.tsx'),
+      readSource('src/components/settings/AuditLogViewer.tsx'),
+      readSource('src/components/matching/EnhancedMatchFilters.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain('profile.data.load_failed');
+    expect(sources).toContain('profile.data.action_failed');
+    expect(sources).toContain('onboarding.organization.existing_check_failed');
+    expect(sources).toContain('tour.status_check_failed');
+    expect(sources).toContain('tour.joyride_error');
+    expect(sources).toContain('settings.user_email.fetch_failed');
+    expect(sources).toContain('settings.tour_reset_failed');
+    expect(sources).toContain('settings.work_email.organizations_fetch_failed');
+    expect(sources).toContain('settings.audit_log.load_failed');
+    expect(sources).toContain('matching.filters.saved_parse_failed');
+    expect(sources).not.toContain('Failed to load profile data:');
+    expect(sources).not.toContain('Profile action failed:');
+    expect(sources).not.toContain('Error checking for existing organization:');
+    expect(sources).not.toContain('Tour status check failed:');
+    expect(sources).not.toContain('Failed to check tour status:');
+    expect(sources).not.toContain('Failed to toggle mock mode');
+    expect(sources).not.toContain('Failed to mark tour as completed:');
+    expect(sources).not.toContain('Failed to mark tour as skipped:');
+    expect(sources).not.toContain('Invalid selector for tour:');
+    expect(sources).not.toContain('Tour: Some target elements may not be available');
+    expect(sources).not.toContain('Tour error:');
+    expect(sources).not.toContain('Failed to fetch user email:');
+    expect(sources).not.toContain('Tour reset error:');
+    expect(sources).not.toContain('Failed to reset tour:');
+    expect(sources).not.toContain('Error fetching organizations:');
+    expect(sources).not.toContain('audit_log.load.failed');
+    expect(sources).not.toContain('audit_log.export.failed');
+    expect(sources).not.toContain('Failed to parse saved filters:');
+  });
+
   it('keeps client verification link fixtures behind the explicit visual fixture gate', () => {
     const fixtureSource = readSource('src/lib/verification/visual-link-fixtures.ts');
     const pageSources = [

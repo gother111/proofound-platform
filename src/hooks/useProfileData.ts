@@ -29,6 +29,7 @@ import {
   deleteVolunteering as deleteVolunteeringAction,
   toggleRedactMode as toggleRedactModeAction,
 } from '@/actions/profile';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { toast } from 'sonner';
 
 interface PendingState {
@@ -177,7 +178,7 @@ export function useProfileData(
             continue;
           }
 
-          console.error('Failed to load profile data:', error);
+          dispatchClientErrorDiagnostic('profile.data.load_failed', error);
           if (isBackgroundRefresh) {
             return;
           }
@@ -206,7 +207,7 @@ export function useProfileData(
       try {
         return await fn();
       } catch (error) {
-        console.error('Profile action failed:', error);
+        dispatchClientErrorDiagnostic('profile.data.action_failed', error);
         toast.error(getErrorMessage(error));
         return undefined;
       } finally {

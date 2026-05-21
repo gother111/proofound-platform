@@ -21,6 +21,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Joyride, { CallBackProps, STATUS, EVENTS, ACTIONS } from 'react-joyride';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { individualTourSteps, organizationTourSteps, tourStyles } from './tourSteps';
 import { toast } from 'sonner';
 
@@ -59,7 +60,7 @@ export function GuidedTour({ persona, shouldRun, onComplete, onSkip }: GuidedTou
         const element = document.querySelector(selector);
         return element !== null;
       } catch (error) {
-        console.warn(`Invalid selector for tour: ${selector}`, error);
+        dispatchClientErrorDiagnostic('tour.invalid_selector', error);
         return true; // Assume exists if selector is invalid
       }
     });
@@ -100,11 +101,10 @@ export function GuidedTour({ persona, shouldRun, onComplete, onSkip }: GuidedTou
         const delay = Math.min(baseDelay * Math.pow(2, attemptCount - 1), maxDelay);
         setTimeout(tryStartTour, delay);
       } else {
-        // Max attempts reached, log warning but start anyway
-        console.warn(
-          'Tour: Some target elements may not be available, but starting tour anyway.',
-          'This may cause some steps to not highlight correctly.'
-        );
+        dispatchClientDiagnostic('tour.targets_unavailable_after_retries', {
+          attempts: maxAttempts,
+          persona,
+        });
         setRun(true);
       }
     };
@@ -117,7 +117,7 @@ export function GuidedTour({ persona, shouldRun, onComplete, onSkip }: GuidedTou
     return () => {
       clearTimeout(initialTimer);
     };
-  }, [shouldRun, checkElementsAvailable]);
+  }, [shouldRun, checkElementsAvailable, persona]);
 
   const handleJoyrideCallback = useCallback(
     (data: CallBackProps) => {
@@ -137,9 +137,14 @@ export function GuidedTour({ persona, shouldRun, onComplete, onSkip }: GuidedTou
         toast.info('Tour skipped. You can restart it anytime from Settings.');
       }
 
-      // Log errors
       if (type === EVENTS.ERROR) {
-        console.error('Tour error:', data);
+        dispatchClientDiagnostic('tour.joyride_error', {
+          action,
+          index: data.index,
+          lifecycle: data.lifecycle,
+          status,
+          stepTarget: typeof data.step?.target === 'string' ? data.step.target : 'element',
+        });
       }
     },
     [onComplete, onSkip]

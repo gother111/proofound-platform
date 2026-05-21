@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SlidersHorizontal, X, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface ActiveFilters {
   skillDomains: string[];
@@ -86,7 +87,7 @@ export function EnhancedMatchFilters({
       try {
         setSavedFilters(JSON.parse(saved));
       } catch (error) {
-        console.error('Failed to parse saved filters:', error);
+        dispatchClientErrorDiagnostic('matching.filters.saved_parse_failed', error);
       }
     }
   }, []);

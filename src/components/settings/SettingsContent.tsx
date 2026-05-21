@@ -9,6 +9,7 @@ import { VerificationStatus } from './VerificationStatus';
 import { EmailManager } from './EmailManager';
 import { PasswordChangeForm } from './PasswordChangeForm';
 import { resetTour } from '@/actions/tour';
+import { dispatchClientDiagnostic, dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { RotateCcw, Loader2, Calendar, Shield } from 'lucide-react';
@@ -40,7 +41,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
           setUserEmail(data.email);
         }
       } catch (error) {
-        console.error('Failed to fetch user email:', error);
+        dispatchClientErrorDiagnostic('settings.user_email.fetch_failed', error);
       } finally {
         setIsLoadingEmail(false);
       }
@@ -71,12 +72,14 @@ export function SettingsContent({ userId }: SettingsContentProps) {
         }, 1000);
       } else {
         const errorMessage = result.error || 'Failed to reset tour. Please try again.';
-        console.error('Tour reset error:', errorMessage);
+        dispatchClientDiagnostic('settings.tour_reset_failed', {
+          error: errorMessage,
+        });
         toast.error(errorMessage);
         setIsResettingTour(false);
       }
     } catch (error) {
-      console.error('Failed to reset tour:', error);
+      dispatchClientErrorDiagnostic('settings.tour_reset_unexpected_failed', error);
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       toast.error('Failed to reset tour', {
         description: errorMessage,
@@ -146,7 +149,12 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                       fetch('/api/user/email')
                         .then((res) => res.json())
                         .then((data) => setUserEmail(data.email))
-                        .catch(console.error);
+                        .catch((error) => {
+                          dispatchClientErrorDiagnostic(
+                            'settings.user_email.refresh_failed',
+                            error
+                          );
+                        });
                     }}
                   />
                 )}

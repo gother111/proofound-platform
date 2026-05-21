@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { completeOrganizationOnboarding } from '@/actions/onboarding';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { createClient } from '@/lib/supabase/client';
 import { CheckCircle, Copy, ExternalLink } from 'lucide-react';
 
@@ -56,7 +57,7 @@ export function OrganizationSetup() {
           }
         }
       } catch (err) {
-        console.error('Error checking for existing organization:', err);
+        dispatchClientErrorDiagnostic('onboarding.organization.existing_check_failed', err);
       } finally {
         setCheckingExisting(false);
       }
