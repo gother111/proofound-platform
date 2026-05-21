@@ -4705,3 +4705,11 @@ Browser evidence:
 - Replaced those diagnostics with structured `verification.sent_requests.*` warning/error events while preserving fallback requester/skill labels, clone failure responses, and cancellation failure responses.
 - Added focused coverage for lookup fallback logging, skill/impact clone failures, and skill/impact cancellation failures, and extended runtime debug-output guardrails so the old sent-request console strings cannot return.
 - Verification passed: focused sent-request/runtime guard run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/expertise-verifications-sent-delete-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (2 files / 43 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted sent-request console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Verification Status Structured Logging
+
+- Timestamp: 2026-05-21 09:37 CEST.
+- Continued the active account-side verification diagnostics sweep after `/api/verification/status` still emitted raw console diagnostics for profile fetch failures and route-level failures.
+- Replaced those diagnostics with structured `verification.status.profile_fetch_failed` and `verification.status.get_failed` events while preserving unauthorized, missing-profile, missing-column, and generic error response behavior.
+- Added focused failure-path assertions and extended runtime debug-output guardrails so the old verification-status console strings cannot return.
+- Verification passed: focused status/runtime guard run `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/api/verification-status-route.test.ts tests/lib/runtime-debug-output-guardrails.test.ts --reporter=verbose` (2 files / 41 tests), full launch-gate config `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vitest run tests/scripts/launch-gate-config.test.ts --reporter=verbose` (1 file / 150 tests), targeted verification-status console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

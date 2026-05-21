@@ -463,4 +463,14 @@ describe('runtime debug output guardrails', () => {
     );
     expect(source).not.toContain('Failed to cancel impact verification request:');
   });
+
+  it('keeps verification status route failures on structured server logging', () => {
+    const source = readSource('src/app/api/verification/status/route.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('verification.status.profile_fetch_failed');
+    expect(source).toContain('verification.status.get_failed');
+    expect(source).not.toContain('Error fetching individual profile:');
+    expect(source).not.toContain('Error in verification status API:');
+  });
 });
