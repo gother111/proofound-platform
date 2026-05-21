@@ -118,7 +118,9 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     await loginWithUi(page, individualUser);
 
     await page.goto('/app/i/profile');
-    await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
+    await expect(
+      page.locator('[data-testid="individual-profile-root"], [data-testid="guided-profile-setup"]')
+    ).toBeVisible();
 
     const readinessResponse = await page.request.get('/api/individual/readiness');
     expect(readinessResponse.ok()).toBeTruthy();
@@ -299,10 +301,12 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     await page.goto('/app/i/home');
     await expect(
-      page.getByRole('heading', { name: 'Verify strongest proof record' })
+      page.getByRole('heading', {
+        name: /Review and manage your proof portfolio|Build your proof-first profile/,
+      })
     ).toBeVisible();
     await expect(
-      page.getByText(/your proof is ready for context, trust, and visibility review\./i)
+      page.getByText(/Your proof records are structured|Start by creating your first proof record/i)
     ).toBeVisible();
   });
 
