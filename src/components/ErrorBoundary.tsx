@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -31,7 +32,7 @@ interface ErrorBoundaryState {
  * Error Handling:
  * - Catches JavaScript errors in child component tree
  * - Reports to Sentry for monitoring and debugging
- * - Logs to console in development
+ * - Emits local diagnostics in development
  * - Provides reset functionality
  *
  * UX Considerations:
@@ -68,14 +69,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         });
       })
       .catch((reportingError) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Failed to report ErrorBoundary exception:', reportingError);
-        }
+        dispatchClientErrorDiagnostic('error_boundary.sentry_report_failed', reportingError);
       });
 
-    // Log to console in development
+    // Emit local diagnostics in development without writing to the console.
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error caught by ErrorBoundary:', error, errorInfo);
+      dispatchClientErrorDiagnostic('error_boundary.caught', error);
     }
   }
 

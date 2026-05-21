@@ -5197,3 +5197,12 @@ Browser evidence:
 - Preserved default-off behavior, Start from CV blocker normalization, OCR limit defaults, assistive AI disabled fallback, and the local invalid-URL guard.
 - Extended runtime debug-output guardrails so the old feature-flag hook console strings cannot return.
 - Verification passed: focused hook-consuming UI/runtime guard run `npm test -- --run tests/ui/individual-setup-proof-first.test.tsx tests/ui/profile-context-cv-import.test.tsx tests/ui/portfolio-visibility-card-ai.test.tsx tests/ui/verifications-client.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (5 files / 114 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted feature-flag hook console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Client Recovery Telemetry Diagnostics
+
+- Timestamp: 2026-05-21 17:24 CEST.
+- Continued the active client recovery and telemetry sweep after the dashboard load-time hook, shared React error boundary, and app-level error boundary still emitted raw console diagnostics for performance measurements and recovery/reporting failures.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using `dashboard.load_time.*`, `error_boundary.*`, and `app.error_boundary.*` event names.
+- Preserved dashboard slow-load warning telemetry, development-only dashboard measurements, lazy Sentry exception capture, component fallback UI, app error reset behavior, and development-only technical details.
+- Extended runtime debug-output guardrails so the old dashboard and error-boundary console strings cannot return.
+- Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 84 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted client recovery telemetry console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

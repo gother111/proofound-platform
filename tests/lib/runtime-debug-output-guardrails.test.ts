@@ -170,6 +170,26 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Failed to load assistive AI feature flag');
   });
 
+  it('keeps client recovery and dashboard telemetry on client diagnostics without console output', () => {
+    const sources = [
+      readSource('src/hooks/useDashboardLoadTime.ts'),
+      readSource('src/components/ErrorBoundary.tsx'),
+      readSource('src/app/error.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain('dispatchClientErrorDiagnostic');
+    expect(sources).toContain('dashboard.load_time.measured');
+    expect(sources).toContain('dashboard.load_time.report_failed');
+    expect(sources).toContain('error_boundary.sentry_report_failed');
+    expect(sources).toContain('error_boundary.caught');
+    expect(sources).toContain('app.error_boundary.caught');
+    expect(sources).not.toContain('[Dashboard Load Time]');
+    expect(sources).not.toContain('Failed to report dashboard load time:');
+    expect(sources).not.toContain('Failed to report ErrorBoundary exception:');
+    expect(sources).not.toContain('Error caught by ErrorBoundary:');
+    expect(sources).not.toContain('Application error:');
+  });
+
   it('keeps client verification link fixtures behind the explicit visual fixture gate', () => {
     const fixtureSource = readSource('src/lib/verification/visual-link-fixtures.ts');
     const pageSources = [
