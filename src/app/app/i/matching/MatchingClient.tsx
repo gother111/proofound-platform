@@ -11,6 +11,7 @@ import { SnoozedMatchesList } from '@/components/matching/SnoozedMatchesList';
 import { HiddenMatchesList } from '@/components/matching/HiddenMatchesList';
 import { CardGridSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { Search } from 'lucide-react';
 
 const MATCHING_DATA_TIMEOUT_MS = 10000;
@@ -138,7 +139,7 @@ export function MatchingClient() {
 
       if (!profileRes.ok) {
         const errorData = await profileRes.json().catch(() => ({}));
-        console.error('Failed to load matching profile:', errorData);
+        dispatchClientErrorDiagnostic('matching.client.profile_load_failed', errorData);
         throw new Error(errorData.message || 'Failed to load matching profile');
       }
 
@@ -166,7 +167,7 @@ export function MatchingClient() {
 
         if (!matchesRes.ok) {
           const errorData = matchesPayload || {};
-          console.error('Failed to load matches:', errorData);
+          dispatchClientErrorDiagnostic('matching.client.matches_load_failed', errorData);
           throw new Error(errorData.message || 'Failed to load matches');
         }
 
@@ -180,12 +181,12 @@ export function MatchingClient() {
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        console.error('Matching data request timed out');
+        dispatchClientErrorDiagnostic('matching.client.load_timeout', error);
         setLoadError(
           'Matching is taking longer than usual. You can retry or review your proof readiness.'
         );
       } else {
-        console.error('Error loading matching data:', error);
+        dispatchClientErrorDiagnostic('matching.client.load_failed', error);
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to load matching data';
         setLoadError(errorMessage);
@@ -208,7 +209,7 @@ export function MatchingClient() {
     }
     refreshTimer.current = setTimeout(() => {
       fetchMatches().catch((err) => {
-        console.error('Failed to refresh matches after restore:', err);
+        dispatchClientErrorDiagnostic('matching.client.restore_refresh_failed', err);
         toast.error('Could not refresh matches. Please try again.');
       });
     }, 120);
@@ -486,7 +487,7 @@ export function MatchingClient() {
                       body: JSON.stringify({ matchId: match.id }),
                     });
                   } catch (error) {
-                    console.error('Failed to hide match:', error);
+                    dispatchClientErrorDiagnostic('matching.client.hide_failed', error);
                   }
                 }
 

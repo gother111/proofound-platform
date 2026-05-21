@@ -940,6 +940,26 @@ describe('runtime debug output guardrails', () => {
     expect(sources).not.toContain('Error fetching snoozed matches:');
   });
 
+  it('keeps matching client failures on client diagnostics without console output', () => {
+    const source = readSource('src/app/app/i/matching/MatchingClient.tsx');
+
+    expect(source).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(source).toContain('matching.client.profile_load_failed');
+    expect(source).toContain('matching.client.matches_load_failed');
+    expect(source).toContain('matching.client.load_timeout');
+    expect(source).toContain('matching.client.load_failed');
+    expect(source).toContain('matching.client.restore_refresh_failed');
+    expect(source).toContain('matching.client.hide_failed');
+    expect(source).not.toContain('Failed to load matching profile:');
+    expect(source).not.toContain('Failed to load matches:');
+    expect(source).not.toContain('Matching data request timed out');
+    expect(source).not.toContain('Error loading matching data:');
+    expect(source).not.toContain('Failed to refresh matches after restore:');
+    expect(source).not.toContain('Failed to hide match:');
+  });
+
   it('keeps match explanation failures on structured server logging', () => {
     const source = readSource('src/app/api/match/explain/[matchId]/route.ts');
 
