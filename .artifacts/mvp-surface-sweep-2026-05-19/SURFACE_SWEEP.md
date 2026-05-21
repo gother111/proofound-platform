@@ -5097,3 +5097,12 @@ Browser evidence:
 - Preserved draft hydration fallback toast, autosave interval behavior, publish-review save flow, related outcomes/expertise sync, transition locking, and review-route navigation.
 - Extended runtime debug-output guardrails so the old assignment-builder console strings cannot return.
 - Verification passed: focused runtime guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts` (1 file / 72 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted assignment-builder console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Verification Center Client Diagnostics
+
+- Timestamp: 2026-05-21 16:32 CEST.
+- Continued the active individual verification center sweep after the top-level verification client still emitted raw console diagnostics when sent verification request delete or resend actions threw.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using `verifications.client.*` event names.
+- Preserved delete/resend API behavior, bundle-cancel routing, refresh behavior for resent bundle/new requests, toast messages, and pending button-state cleanup.
+- Extended runtime debug-output guardrails so the old verification center console strings cannot return.
+- Verification passed: focused verification/runtime guard run `npm test -- --run tests/ui/verifications-client.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 85 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted verification-client console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

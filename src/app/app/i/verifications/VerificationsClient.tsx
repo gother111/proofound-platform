@@ -28,6 +28,7 @@ import type {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { verificationStatusLabel } from '@/lib/copy/labels';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import { RespondDialog } from './components/RespondDialog';
 import { BundleCancelDialog } from './components/BundleCancelDialog';
 import { VerificationRequestComposerDialog } from './components/VerificationRequestComposerDialog';
@@ -302,7 +303,7 @@ export function VerificationsClient({
 
       toast.error(body.error || 'Failed to delete verification request.');
     } catch (error) {
-      console.error('Failed to delete sent verification request:', error);
+      dispatchClientErrorDiagnostic('verifications.client.sent_request_delete_failed', error);
       toast.error('Failed to delete verification request.');
     } finally {
       setDeletingRequestIds((prev) => {
@@ -359,7 +360,7 @@ export function VerificationsClient({
           : 'Verification request resent.'
       );
     } catch (error) {
-      console.error('Failed to resend sent verification request:', error);
+      dispatchClientErrorDiagnostic('verifications.client.sent_request_resend_failed', error);
       toast.error('Failed to resend verification request.');
     } finally {
       setResendingRequestIds((prev) => {

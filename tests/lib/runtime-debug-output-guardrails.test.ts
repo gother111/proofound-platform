@@ -467,6 +467,18 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to save assignment:');
   });
 
+  it('keeps verification center client failures on client diagnostics without console output', () => {
+    const source = readSource('src/app/app/i/verifications/VerificationsClient.tsx');
+
+    expect(source).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(source).toContain('verifications.client.sent_request_delete_failed');
+    expect(source).toContain('verifications.client.sent_request_resend_failed');
+    expect(source).not.toContain('Failed to delete sent verification request:');
+    expect(source).not.toContain('Failed to resend sent verification request:');
+  });
+
   it('keeps candidate invite route failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/candidate-invites/[token]/route.ts'),
