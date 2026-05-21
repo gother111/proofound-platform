@@ -56,6 +56,7 @@ import {
 } from '@/lib/verification/integrity';
 import { getClaimTemplateLabel } from '@/lib/verification/scoped-contract';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
+import { log } from '@/lib/log';
 import type {
   ProfileData,
   BasicInfo,
@@ -82,6 +83,10 @@ import type {
   Volunteering as VolunteeringType,
   FieldVisibility,
 } from '@/types/profile';
+
+function profileActionErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
 function coerceDateOnlyString(value: unknown): string | null {
   if (!value) {
@@ -118,7 +123,10 @@ async function checkAndEmitProfileActivation(userId: string): Promise<void> {
   try {
     await syncReadinessMilestones(userId, { source: 'profile_updated' });
   } catch (error) {
-    console.error('Profile activation check failed:', error);
+    log.error('profile.activation_check_failed', {
+      userId,
+      errorMessage: profileActionErrorMessage(error),
+    });
     // Don't throw - activation tracking shouldn't break profile updates
   }
 }
@@ -179,7 +187,10 @@ export async function getProfileData(): Promise<ProfileData> {
         })
         .onConflictDoNothing();
     } catch (error) {
-      console.error('Failed to ensure profiles row exists:', error);
+      log.error('profile.data.ensure_profile_row_failed', {
+        userId: user.id,
+        errorMessage: profileActionErrorMessage(error),
+      });
       // Continue - downstream queries may still work if the profile already exists.
     }
 
@@ -203,7 +214,10 @@ export async function getProfileData(): Promise<ProfileData> {
       [profile] = profileRows;
       [profileBasics] = profileBasicsRows;
     } catch (error) {
-      console.error('Failed to fetch profile shell rows:', error);
+      log.error('profile.data.shell_rows_failed', {
+        userId: user.id,
+        errorMessage: profileActionErrorMessage(error),
+      });
       // Continue with empty profile
     }
 
@@ -217,7 +231,10 @@ export async function getProfileData(): Promise<ProfileData> {
           })
           .returning();
       } catch (error) {
-        console.error('Failed to create profile row:', error);
+        log.error('profile.data.create_profile_row_failed', {
+          userId: user.id,
+          errorMessage: profileActionErrorMessage(error),
+        });
         // Continue - profile might already exist
       }
 
@@ -229,7 +246,10 @@ export async function getProfileData(): Promise<ProfileData> {
             .where(eq(individualProfiles.userId, user.id))
             .limit(1);
         } catch (error) {
-          console.error('Failed to fetch profile after create:', error);
+          log.error('profile.data.fetch_after_create_failed', {
+            userId: user.id,
+            errorMessage: profileActionErrorMessage(error),
+          });
           profile = null;
         }
       }
@@ -336,7 +356,10 @@ export async function getProfileData(): Promise<ProfileData> {
         },
       }) ?? Promise.resolve(null)) as Promise<any>,
     ]).catch((error) => {
-      console.error('Failed to fetch profile related data:', error);
+      log.error('profile.data.related_rows_failed', {
+        userId: user.id,
+        errorMessage: profileActionErrorMessage(error),
+      });
       return [[], [], [], [], [], null] as const;
     });
 
@@ -365,7 +388,10 @@ export async function getProfileData(): Promise<ProfileData> {
       .catch((error) => {
         const verificationMarkers = ['verification_records', 'created_at'];
         if (!isSchemaDriftError(error, verificationMarkers)) {
-          console.error('Failed to fetch impact verification summaries:', error);
+          log.error('profile.data.impact_verification_summary_failed', {
+            userId: user.id,
+            errorMessage: profileActionErrorMessage(error),
+          });
         }
         return [];
       });
@@ -374,7 +400,10 @@ export async function getProfileData(): Promise<ProfileData> {
       'individual_profile',
       user.id
     ).catch((error) => {
-      console.error('Failed to fetch canonical proof pack summary:', error);
+      log.error('profile.data.canonical_proof_summary_failed', {
+        userId: user.id,
+        errorMessage: profileActionErrorMessage(error),
+      });
       return [];
     });
 
@@ -387,7 +416,10 @@ export async function getProfileData(): Promise<ProfileData> {
       .limit(1)
       .then((rows) => rows[0]?.effectiveState ?? null)
       .catch((error) => {
-        console.error('Failed to fetch portfolio publication state:', error);
+        log.error('profile.data.publication_state_failed', {
+          userId: user.id,
+          errorMessage: profileActionErrorMessage(error),
+        });
         return null;
       });
 
@@ -660,7 +692,9 @@ export async function getProfileData(): Promise<ProfileData> {
     ) {
       throw error;
     }
-    console.error('Failed to get profile data:', error);
+    log.error('profile.data.get_failed', {
+      errorMessage: profileActionErrorMessage(error),
+    });
     // Return empty profile structure instead of throwing
     // This prevents the page from crashing completely
     return {
@@ -1460,7 +1494,9 @@ async function resolveRequesterEmailSnapshot(): Promise<string | null> {
     const { data: authUserData } = await supabase.auth.getUser();
     return normalizeEmail(authUserData.user?.email || null);
   } catch (authContextError) {
-    console.warn('impact verification: unable to resolve requester auth email', authContextError);
+    log.warn('profile.impact_verification.requester_email_resolve_failed', {
+      errorMessage: profileActionErrorMessage(authContextError),
+    });
     return null;
   }
 }

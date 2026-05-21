@@ -1118,4 +1118,32 @@ describe('runtime debug output guardrails', () => {
     expect(source).toContain('learning.coursera.fallback_used');
     expect(source).not.toContain('Coursera API failed, using fallback data');
   });
+
+  it('keeps profile data fallback failures on structured server logging', () => {
+    const source = readSource('src/actions/profile.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('profile.activation_check_failed');
+    expect(source).toContain('profile.data.ensure_profile_row_failed');
+    expect(source).toContain('profile.data.shell_rows_failed');
+    expect(source).toContain('profile.data.create_profile_row_failed');
+    expect(source).toContain('profile.data.fetch_after_create_failed');
+    expect(source).toContain('profile.data.related_rows_failed');
+    expect(source).toContain('profile.data.impact_verification_summary_failed');
+    expect(source).toContain('profile.data.canonical_proof_summary_failed');
+    expect(source).toContain('profile.data.publication_state_failed');
+    expect(source).toContain('profile.data.get_failed');
+    expect(source).toContain('profile.impact_verification.requester_email_resolve_failed');
+    expect(source).not.toContain('Profile activation check failed:');
+    expect(source).not.toContain('Failed to ensure profiles row exists:');
+    expect(source).not.toContain('Failed to fetch profile shell rows:');
+    expect(source).not.toContain('Failed to create profile row:');
+    expect(source).not.toContain('Failed to fetch profile after create:');
+    expect(source).not.toContain('Failed to fetch profile related data:');
+    expect(source).not.toContain('Failed to fetch impact verification summaries:');
+    expect(source).not.toContain('Failed to fetch canonical proof pack summary:');
+    expect(source).not.toContain('Failed to fetch portfolio publication state:');
+    expect(source).not.toContain('Failed to get profile data:');
+    expect(source).not.toContain('impact verification: unable to resolve requester auth email');
+  });
 });
