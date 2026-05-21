@@ -1226,12 +1226,14 @@ describe('launch gate package configuration', () => {
     );
     const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
-    expect(releaseChecklist).toContain('Last Verified: `2026-05-19`');
+    expect(releaseChecklist).toContain('Last Verified: `2026-05-21`');
     expect(releaseChecklist).toContain('docs/production-readiness-checklist.md');
     expect(releaseChecklist).toContain('docs/backlog/phase-exit-checklist.md');
     expect(releaseChecklist).toContain('mvp-surface-sweep-2026-05-19/SURFACE_SWEEP.md');
     expect(releaseChecklist).toContain('BASE_URL=<production-candidate-url>');
     expect(releaseChecklist).toContain('npm run monitor:launch');
+    expect(releaseChecklist).toContain('npm run launch:status');
+    expect(releaseChecklist).toContain('npm run perf:budgets');
     expect(releaseChecklist).toContain('npm run db:backup:checkpoint');
     expect(releaseChecklist).toContain('npm run db:restore:verify');
     expectTextBefore(
@@ -1244,7 +1246,7 @@ describe('launch gate package configuration', () => {
       'manual-link interview posture remains the locked MVP default'
     );
     expect(docsRegistry).toContain(
-      '| `docs/release-checklist.md`                                                                             | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+      '| `docs/release-checklist.md`                                                                             | `active`         | `docs`        | `repo+live`         | `2026-05-21`'
     );
   });
 
@@ -1302,6 +1304,16 @@ describe('launch gate package configuration', () => {
     );
     expect(launchMasterChecklist).toContain(
       'npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json'
+    );
+    expect(launchMasterChecklist).toContain(
+      'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status'
+    );
+    expect(phaseExitChecklist).toContain('Last Verified: `2026-05-21`');
+    expect(phaseExitChecklist).toContain(
+      'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status'
+    );
+    expect(phaseExitChecklist).toContain(
+      'BASE_URL=<production-candidate-url> npm run perf:budgets'
     );
     for (const content of [
       deploymentChecklist,
@@ -3125,13 +3137,13 @@ describe('launch gate package configuration', () => {
     expect(envDocs).not.toContain('**Required Vars**:\n\n- `GOOGLE_CLIENT_ID`');
     expect(envDocs).not.toContain('Make provider flows launch-blocking with real tokens');
 
-    expect(launchMasterChecklist).toContain('Last Verified: `2026-05-19`');
+    expect(launchMasterChecklist).toContain('Last Verified: `2026-05-21`');
     expect(launchMasterChecklist).toContain('STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false');
     expect(launchMasterChecklist).toContain('BASE_URL=<production-candidate-url>');
     expect(launchMasterChecklist).not.toContain('BASE_URL=http://localhost:3000');
     expect(launchMasterChecklist).toContain('valid only for connected-provider advisory runs');
     expect(docsRegistry).toContain(
-      '| `docs/mvp-launch-master-checklist.md`                                                                   | `active`         | `docs`        | `repo+live`         | `2026-05-19`'
+      '| `docs/mvp-launch-master-checklist.md`                                                                   | `active`         | `docs`        | `repo+live`         | `2026-05-21`'
     );
   });
 

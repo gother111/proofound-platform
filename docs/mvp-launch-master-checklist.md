@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Proofound MVP Launch Master Checklist
 
@@ -129,6 +129,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 - [ ] `npm run test:privacy:extended`
 - [ ] `BASE_URL=<production-candidate-url> npm run perf:budgets`
 - [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
+- [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`
 - [ ] `npm run db:backup:checkpoint`
 - [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json`
 - [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`

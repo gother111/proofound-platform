@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Release Checklist
 
@@ -35,6 +35,7 @@ go/no-go evidence.
 - [ ] `npm run test:e2e:privacy:strict`
 - [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch`
 - [ ] `BASE_URL=<production-candidate-url> npm run perf:budgets`
+- [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status`
 - [ ] `npm run db:backup:checkpoint` against the production-candidate target.
 - [ ] `npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/launch-restore-report.json` against an isolated recovery target.
 - [ ] `BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go`
