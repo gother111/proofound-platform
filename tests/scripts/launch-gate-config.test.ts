@@ -1322,6 +1322,7 @@ describe('launch gate package configuration', () => {
       path.join(repoRoot, 'docs/backlog/phase-exit-checklist.md'),
       'utf8'
     );
+    const docsRegistry = fs.readFileSync(path.join(repoRoot, 'docs/DOCS_REGISTRY.md'), 'utf8');
 
     expect(goNoGoScript).toContain('LAUNCH_RESTORE_REPORT_PATH');
     expect(goNoGoScript).toContain('.artifacts/launch-restore-report.json');
@@ -1337,6 +1338,8 @@ describe('launch gate package configuration', () => {
     expect(restoreDrill).toContain(
       'Production-candidate `npm run go:no-go` additionally requires a fresh passing restore verification report'
     );
+    expect(restoreDrill).toContain('Last Verified: `2026-05-21`');
+    expect(restoreDrill).toContain('INTERNAL_API_SECRET=<secret>');
     expect(restoreDrill).toContain('--out .artifacts/launch-restore-report.json');
     expect(restoreDrill).toContain('summary.json');
     expect(restoreDrill).toContain('row-fingerprint.json');
@@ -1352,6 +1355,9 @@ describe('launch gate package configuration', () => {
       'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status'
     );
     expect(launchMasterChecklist).toContain('INTERNAL_API_SECRET=<secret>');
+    expect(launchMasterChecklist).toContain(
+      'BASE_URL=<production-candidate-url> INTERNAL_API_SECRET=<secret> npm run launch:validate'
+    );
     expect(phaseExitChecklist).toContain('Last Verified: `2026-05-21`');
     expect(phaseExitChecklist).toContain(
       'BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run launch:status'
@@ -1376,6 +1382,9 @@ describe('launch gate package configuration', () => {
       );
     }
     expect(productionReadinessChecklist).toContain('Last Verified: `2026-05-21`');
+    expect(docsRegistry).toContain(
+      '| `docs/launch-restore-drill.md`                                                                          | `active`         | `docs`        | `repo+live`         | `2026-05-21`'
+    );
   });
 
   it('does not allow the active go/no-go gate to be bypassed by environment flags', () => {

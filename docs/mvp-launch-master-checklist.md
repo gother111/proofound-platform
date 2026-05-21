@@ -226,7 +226,7 @@ Use this checklist for the final launch review. Do not treat older partial check
 
 ## 9. Launch Evidence Bundle And Signoff
 
-- [ ] `BASE_URL=<production-candidate-url> npm run launch:validate`
+- [ ] `BASE_URL=<production-candidate-url> INTERNAL_API_SECRET=<secret> npm run launch:validate`
 - [ ] `npm run launch:checklist`
 - [ ] A fresh dated launch-validation directory exists for the intended release review.
 - [ ] The fresh bundle includes:
@@ -282,7 +282,7 @@ npm run db:restore:verify -- --checkpoint <checkpoint-dir> --out .artifacts/laun
 BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run monitor:launch
 BASE_URL=<production-candidate-url> npm run perf:budgets
 BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go
-BASE_URL=<production-candidate-url> npm run launch:validate
+BASE_URL=<production-candidate-url> INTERNAL_API_SECRET=<secret> npm run launch:validate
 npm run launch:checklist
 ```
 

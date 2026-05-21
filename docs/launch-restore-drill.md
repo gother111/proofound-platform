@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-21`
 
 # Launch Restore Drill
 
@@ -102,6 +102,9 @@ npm run db:restore:verify -- --checkpoint /tmp/proofound-db-checkpoints/2026-03-
 ```bash
 BASE_URL=<production-candidate-url> CRON_SECRET=<secret> npm run go:no-go
 ```
+
+`INTERNAL_API_SECRET=<secret>` may replace `CRON_SECRET=<secret>` for the protected launch-status
+and go/no-go checks.
 
 ## Pass Criteria
 
