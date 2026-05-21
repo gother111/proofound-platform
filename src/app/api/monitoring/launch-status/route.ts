@@ -7,6 +7,7 @@ import { getEmailProviderDependencyStatus } from '@/lib/email/config';
 import { resolveGcpCvOcrSafeStatus } from '@/lib/expertise/gcp-cv-ocr-status';
 import { buildLaunchStatusReport } from '@/lib/launch/status-report';
 import { getRateLimitDependencyStatus } from '@/lib/rate-limit/index';
+import { log } from '@/lib/log';
 import {
   getHttpMonitorKeysNeedingRefresh,
   getLaunchSyntheticStatusWithFreshHttpRevalidation,
@@ -45,7 +46,10 @@ export async function GET(request: Request) {
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown live refresh error';
-        console.error('Live launch-status refresh failed; returning persisted status', error);
+        log.error('launch_status.live_refresh_failed', {
+          error,
+          monitorKeys: refreshMonitorKeys,
+        });
         liveRefreshOverride = {
           attempted: true,
           refreshedMonitorKeys: refreshMonitorKeys,

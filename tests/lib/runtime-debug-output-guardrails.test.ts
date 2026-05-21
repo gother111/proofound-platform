@@ -767,6 +767,14 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain("console.error('start_from_cv.status.failed'");
   });
 
+  it('keeps launch-status live refresh failures on structured server logging', () => {
+    const source = readSource('src/app/api/monitoring/launch-status/route.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('launch_status.live_refresh_failed');
+    expect(source).not.toContain('Live launch-status refresh failed; returning persisted status');
+  });
+
   it('keeps organization detail and profile visibility failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/organizations/[orgId]/route.ts'),

@@ -12,8 +12,15 @@ vi.mock('@/lib/ai/usage-ledger', () => ({
   getAiLaunchOperationalSummary: vi.fn(),
 }));
 
+vi.mock('@/lib/log', () => ({
+  log: {
+    error: vi.fn(),
+  },
+}));
+
 import { GET } from '../launch-status/route';
 import { getAiLaunchOperationalSummary } from '@/lib/ai/usage-ledger';
+import { log } from '@/lib/log';
 import {
   getHttpMonitorKeysNeedingRefresh,
   getPersistedLaunchSyntheticStatus,
@@ -749,6 +756,7 @@ describe('/api/monitoring/launch-status', () => {
   });
 
   it('returns blocked stale persisted monitor evidence when live refresh fails entirely', async () => {
+    const refreshError = new Error('network exploded');
     (getPersistedLaunchSyntheticStatus as any).mockResolvedValue(
       buildStatus({
         ok: false,
@@ -767,9 +775,7 @@ describe('/api/monitoring/launch-status', () => {
       })
     );
     (getHttpMonitorKeysNeedingRefresh as any).mockReturnValue(['api_health']);
-    (getLaunchSyntheticStatusWithFreshHttpRevalidation as any).mockRejectedValue(
-      new Error('network exploded')
-    );
+    (getLaunchSyntheticStatusWithFreshHttpRevalidation as any).mockRejectedValue(refreshError);
 
     const response = await GET(authenticatedRequest());
     const body = await response.json();
@@ -792,6 +798,10 @@ describe('/api/monitoring/launch-status', () => {
         source: 'persisted_http',
       }),
     ]);
+    expect(log.error).toHaveBeenCalledWith('launch_status.live_refresh_failed', {
+      error: refreshError,
+      monitorKeys: ['api_health'],
+    });
   });
 
   it('returns 500 when persisted monitor loading fails', async () => {
