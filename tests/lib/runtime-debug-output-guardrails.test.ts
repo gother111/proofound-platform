@@ -1107,4 +1107,12 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Cache pattern delete error for pattern');
     expect(source).not.toContain('Clearing all caches - this may impact performance');
   });
+
+  it('keeps learning provider fallback diagnostics on structured server logging', () => {
+    const source = readSource('src/lib/learning/coursera.ts');
+
+    expect(source).toContain("import { log } from '@/lib/log'");
+    expect(source).toContain('learning.coursera.fallback_used');
+    expect(source).not.toContain('Coursera API failed, using fallback data');
+  });
 });

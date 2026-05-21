@@ -1,4 +1,5 @@
 import { LearningProvider, LearningRecommendations, LearningResource } from './types';
+import { log } from '@/lib/log';
 
 const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
 
@@ -81,8 +82,13 @@ const fetchCoursesForSkill = async (skill: string): Promise<LearningResource[]> 
     cache.set(key, { expires: Date.now() + CACHE_TTL_MS, data: withSkill });
     return withSkill;
   } catch (error) {
-    console.warn('Coursera API failed, using fallback data', { error });
-    const fallback = FALLBACK_RESOURCES.filter((item) => item.skillMatch === key || item.skillMatch === skill);
+    log.warn('learning.coursera.fallback_used', {
+      skill: key,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    const fallback = FALLBACK_RESOURCES.filter(
+      (item) => item.skillMatch === key || item.skillMatch === skill
+    );
     cache.set(key, { expires: Date.now() + CACHE_TTL_MS, data: fallback });
     return fallback;
   }
@@ -100,4 +106,3 @@ export const courseraProvider: LearningProvider = {
 };
 
 export default courseraProvider;
-

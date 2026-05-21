@@ -5005,3 +5005,11 @@ Browser evidence:
 - Replaced those diagnostics with structured `cache.*` log events and key-family metadata only, avoiding raw cache keys while preserving KV-vs-memory behavior, null-on-get-error fallback, best-effort write/delete behavior, pattern deletes, full-cache clears, and implemented stats reporting.
 - Extended runtime debug-output guardrails so the old raw cache console strings cannot return.
 - Verification passed: focused runtime/launch guard run `npm test -- --run tests/lib/runtime-debug-output-guardrails.test.ts tests/scripts/launch-gate-config.test.ts` (2 files / 212 tests), targeted cache console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Learning Provider Fallback Structured Logging
+
+- Timestamp: 2026-05-21 15:49 CEST.
+- Continued the active provider diagnostics sweep after the Coursera learning provider still emitted a raw console warning when provider fetch failed and fallback resources were used.
+- Replaced that diagnostic with structured `learning.coursera.fallback_used` logging while preserving one-hour cache behavior, API response parsing, fallback filtering, and successful fallback recommendations.
+- Extended runtime debug-output guardrails so the old Coursera fallback console string cannot return.
+- Verification passed: focused learning/runtime guard run `npm test -- --run src/lib/__tests__/learning-provider.test.ts tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 64 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted learning-provider console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
