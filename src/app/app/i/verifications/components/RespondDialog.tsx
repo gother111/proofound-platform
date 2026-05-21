@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
+import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics';
 import {
   HumanObservedAttestationFields,
   buildHumanObservedAttestationPayload,
@@ -105,7 +106,7 @@ export function RespondDialog({
         setError(errorData.error || 'Failed to respond to verification request');
       }
     } catch (err) {
-      console.error('Error responding to verification:', err);
+      dispatchClientErrorDiagnostic('verifications.respond.submit_failed', err);
       setError('Failed to respond to verification request. Please try again.');
     } finally {
       setIsSubmitting(false);

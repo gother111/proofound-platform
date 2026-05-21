@@ -5106,3 +5106,12 @@ Browser evidence:
 - Preserved delete/resend API behavior, bundle-cancel routing, refresh behavior for resent bundle/new requests, toast messages, and pending button-state cleanup.
 - Extended runtime debug-output guardrails so the old verification center console strings cannot return.
 - Verification passed: focused verification/runtime guard run `npm test -- --run tests/ui/verifications-client.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 85 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted verification-client console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.
+
+## Continuation - Verification Dialog Client Diagnostics
+
+- Timestamp: 2026-05-21 16:36 CEST.
+- Continued the active individual verification center sweep after the bundled-cancel and verification-response dialogs still emitted raw console diagnostics for load, cancel, and response-submit failures.
+- Replaced those diagnostics with `proofound:client-diagnostic` events through the shared client diagnostic helper using `verifications.bundle_cancel.*` and `verifications.respond.*` event names.
+- Preserved bundle detail error display, selected-artifact cancel behavior, response error display, completion callback behavior, pending state cleanup, and toast messages.
+- Extended runtime debug-output guardrails so the old verification-dialog console strings cannot return.
+- Verification passed: focused verification/runtime guard run `npm test -- --run tests/ui/verifications-client.test.tsx tests/lib/runtime-debug-output-guardrails.test.ts` (2 files / 86 tests), full launch-gate config `npm test -- --run tests/scripts/launch-gate-config.test.ts` (1 file / 150 tests), targeted verification-dialog console scan, `npm run typecheck`, `npm run lint`, `npm run docs:freshness`, and scoped `git diff --check`. Vitest still printed the known sandbox Vite websocket `EPERM` warning.

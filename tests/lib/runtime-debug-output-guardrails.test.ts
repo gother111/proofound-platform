@@ -479,6 +479,23 @@ describe('runtime debug output guardrails', () => {
     expect(source).not.toContain('Failed to resend sent verification request:');
   });
 
+  it('keeps verification dialog failures on client diagnostics without console output', () => {
+    const sources = [
+      readSource('src/app/app/i/verifications/components/BundleCancelDialog.tsx'),
+      readSource('src/app/app/i/verifications/components/RespondDialog.tsx'),
+    ].join('\n');
+
+    expect(sources).toContain(
+      "import { dispatchClientErrorDiagnostic } from '@/lib/client-diagnostics'"
+    );
+    expect(sources).toContain('verifications.bundle_cancel.details_load_failed');
+    expect(sources).toContain('verifications.bundle_cancel.selected_cancel_failed');
+    expect(sources).toContain('verifications.respond.submit_failed');
+    expect(sources).not.toContain('Failed to load bundle cancellation details:');
+    expect(sources).not.toContain('Failed to cancel selected bundle artifacts:');
+    expect(sources).not.toContain('Error responding to verification:');
+  });
+
   it('keeps candidate invite route failures on structured server logging', () => {
     const sources = [
       readSource('src/app/api/candidate-invites/[token]/route.ts'),
