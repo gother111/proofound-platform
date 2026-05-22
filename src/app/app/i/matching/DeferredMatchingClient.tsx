@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ComponentType } from 'react';
 import { Button } from '@/components/ui/button';
-import LoadingIndividualMatching from './loading';
+import LoadingIndividualMatching from './(workspace)/loading';
 
 type MatchingLoader = () => Promise<{ MatchingClient: ComponentType }>;
 

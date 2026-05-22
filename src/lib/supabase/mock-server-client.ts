@@ -110,6 +110,33 @@ const mockVerificationFeedProfiles = [
   },
 ];
 
+const mockProfileRecord = {
+  id: MOCK_USER_ID,
+  handle: 'mock-individual',
+  displayName: 'Mock Individual',
+  display_name: 'Mock Individual',
+  avatarUrl: null,
+  avatar_url: null,
+  locale: 'en',
+  persona: 'individual' as const,
+  isBetaTesting: false,
+  is_beta_testing: false,
+  tour_completed: true,
+  platform_role: null as 'platform_admin' | 'super_admin' | null,
+  createdAt: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+
+async function buildMockProfileRecord() {
+  return {
+    ...mockProfileRecord,
+    persona: await getMockPersona(),
+    platform_role: getMockPlatformRole(),
+  };
+}
+
 const mockSupabaseClient = {
   auth: {
     getSession: async () => ({
@@ -570,12 +597,7 @@ const mockSupabaseClient = {
         maybeSingle: async () => {
           if (table === 'profiles') {
             return {
-              data: {
-                id: MOCK_USER_ID,
-                platform_role: getMockPlatformRole(),
-                tour_completed: true,
-                persona: await getMockPersona(),
-              },
+              data: await buildMockProfileRecord(),
               error: null,
             };
           }
@@ -641,12 +663,7 @@ const mockSupabaseClient = {
         single: async () => {
           if (table === 'profiles') {
             return {
-              data: {
-                id: MOCK_USER_ID,
-                platform_role: getMockPlatformRole(),
-                tour_completed: true,
-                persona: await getMockPersona(),
-              },
+              data: await buildMockProfileRecord(),
               error: null,
             };
           }

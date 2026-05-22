@@ -3,7 +3,11 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { assignments, organizationMembers, organizations } from '@/db/schema';
 import { CANONICAL_ORG_ROLE_VALUES, normalizeAuthorizedOrgRole, type OrgRole } from '@/lib/authz';
-import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
+import {
+  isVisualAssignmentFixtureId,
+  visualAssignmentFixturesEnabled,
+  VISUAL_ASSIGNMENT_MOCK_ORG_ID,
+} from '@/lib/assignments/visual-fixtures';
 
 export const ASSIGNMENT_MUTATION_ROLES = ['org_manager', 'org_owner'] as const;
 export type AssignmentMutationRole = (typeof ASSIGNMENT_MUTATION_ROLES)[number];
@@ -13,11 +17,7 @@ const MOCK_ORG_ID = '99999999-9999-4999-9999-999999999999';
 const MOCK_ORG_SLUG = 'test-org';
 
 function visualAssignmentAccessFixturesEnabled() {
-  return (
-    isMockSupabaseEnabled() &&
-    process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-    visualFixturesRuntimeAllowed()
-  );
+  return visualAssignmentFixturesEnabled();
 }
 
 type MembershipContext = {
@@ -222,6 +222,23 @@ export async function verifyExplicitAssignmentAccess(
 ): Promise<AssignmentMutationAccessResult> {
   if (!context?.orgId && !context?.orgSlug) {
     return { status: 'missing_org_context' };
+  }
+
+  if (
+    visualAssignmentAccessFixturesEnabled() &&
+    userId === MOCK_USER_ID &&
+    isVisualAssignmentFixtureId(assignmentId) &&
+    (context.orgId === MOCK_ORG_ID ||
+      context.orgId === VISUAL_ASSIGNMENT_MOCK_ORG_ID ||
+      context.orgSlug === MOCK_ORG_SLUG) &&
+    hasRequiredRole('org_manager', requiredRoles)
+  ) {
+    return {
+      status: 'ok',
+      orgId: MOCK_ORG_ID,
+      role: 'org_manager',
+      membershipId: 'visual-assignment-membership',
+    };
   }
 
   const assignment = await db.query.assignments.findFirst({

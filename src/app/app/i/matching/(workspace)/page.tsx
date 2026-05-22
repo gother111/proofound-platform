@@ -1,4 +1,4 @@
-import { DeferredMatchingClient } from './DeferredMatchingClient';
+import { DeferredMatchingClient } from '../DeferredMatchingClient';
 
 export const dynamic = 'force-dynamic';
 

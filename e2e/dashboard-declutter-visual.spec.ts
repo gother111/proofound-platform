@@ -43,9 +43,9 @@ test.describe('Dashboard declutter visual contract', () => {
     await page.goto('/app/i/home', { waitUntil: 'domcontentloaded' });
     await stabilizeDashboard(page);
 
-    await expect(page.getByRole('heading', { name: 'Your Proof Wallet' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Readiness Checklist' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Proof Readiness' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Welcome back/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Readiness corridor' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Trust & privacy controls' })).toBeVisible();
 
     await expect(page.locator('body')).not.toContainText('Current State');
     await expect(page.locator('body')).not.toContainText('Privacy by design');
@@ -73,9 +73,9 @@ test.describe('Dashboard declutter visual contract', () => {
     await page.goto('/app/o/test-org/home', { waitUntil: 'domcontentloaded' });
     await stabilizeDashboard(page);
 
-    await expect(page.getByRole('heading', { name: 'Corridor Queue' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Launch Summary' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Minimal Access' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Test Organization' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Complete the trust page' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Team access' })).toBeVisible();
 
     await expect(page.locator('body')).not.toContainText('Selected corridor');
     await expect(page.locator('body')).not.toContainText('Review only what matters');

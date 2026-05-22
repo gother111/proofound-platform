@@ -10,6 +10,7 @@
   "scripts": {
     "prebuild": "node ./scripts/prebuild-clean-generated-state.mjs && node ./scripts/postbuild-cleanup.mjs && node ./scripts/check-deploy-readiness.mjs",
     "dev": "node ./scripts/next-dev-node24.mjs",
+    "dev:visual": "PROOFOUND_VISUAL_FIXTURES=true PROOFOUND_MATCHING_VISUAL_STATE=filled PROOFOUND_INTERVIEWS_VISUAL_STATE=filled NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ADMIN_MODE=true node ./scripts/next-dev-node24.mjs",
     "build": "next build",
     "postbuild": "node ./scripts/postbuild-cleanup.mjs",
     "start": "next start",
@@ -58,6 +59,7 @@
     "test:e2e:mobile:org": "NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ORG_MODE=true MOCK_ADMIN_MODE=true PLAYWRIGHT=true PLAYWRIGHT_PORT=33102 node ./scripts/playwright-node24.mjs test e2e/mobile-smartphone.spec.ts --project=chromium --workers=1 --reporter=line",
     "test:e2e:mobile:individual": "NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ADMIN_MODE=true PLAYWRIGHT=true PLAYWRIGHT_PORT=33103 node ./scripts/playwright-node24.mjs test e2e/mobile-smartphone.spec.ts --project=chromium --workers=1 --reporter=line",
     "test:e2e:dashboards:visual": "NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true PLAYWRIGHT_PORT=33210 node ./scripts/playwright-node24.mjs test e2e/dashboard-declutter-visual.spec.ts --project=chromium --reporter=line --workers=1 && NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ORG_MODE=true PLAYWRIGHT=true PLAYWRIGHT_PORT=33211 node ./scripts/playwright-node24.mjs test e2e/dashboard-declutter-visual.spec.ts --project=chromium --reporter=line --workers=1",
+    "test:e2e:filled:visual": "PROOFOUND_VISUAL_FIXTURES=true PROOFOUND_MATCHING_VISUAL_STATE=filled PROOFOUND_INTERVIEWS_VISUAL_STATE=filled NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ADMIN_MODE=true PLAYWRIGHT=true PLAYWRIGHT_PORT=33220 node ./scripts/playwright-node24.mjs test e2e/filled-state-visual.spec.ts --project=chromium --reporter=line --workers=1 && PROOFOUND_VISUAL_FIXTURES=true PROOFOUND_MATCHING_VISUAL_STATE=filled PROOFOUND_INTERVIEWS_VISUAL_STATE=filled NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ORG_MODE=true MOCK_ADMIN_MODE=true PLAYWRIGHT=true PLAYWRIGHT_PORT=33221 node ./scripts/playwright-node24.mjs test e2e/filled-state-visual.spec.ts --project=chromium --reporter=line --workers=1",
     "test:e2e:individual:strict": "NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node24.mjs test e2e/strict/individual.strict.spec.ts --project=chromium --reporter=line --workers=1",
     "test:e2e:org:strict": "NEXT_PUBLIC_USE_MOCK_SUPABASE=false PLAYWRIGHT_SERVER_MODE=prod PROOFOUND_SKIP_TRANSACTIONAL_EMAIL_DELIVERY=1 PROOFOUND_LOCAL_SMOKE_RATE_LIMIT_FALLBACK=1 PROOFOUND_LOCAL_SMOKE_ALLOW_INSECURE_CSRF_COOKIE=1 node ./scripts/playwright-node24.mjs test e2e/strict/organization.strict.spec.ts e2e/strict/org-corridor.strict.spec.ts --project=chromium --reporter=line --workers=1",
     "test:e2e:privacy:strict": "NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node24.mjs test e2e/strict/privacy.strict.spec.ts --project=chromium --reporter=line --workers=1",

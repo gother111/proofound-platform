@@ -25,6 +25,7 @@ export function CookieBanner() {
   const pathname = usePathname();
   const isSnippetEmbedRoute = /^\/p\/[^/]+\/embed\/?$/.test(pathname ?? '');
   const isMobileAppRoute = /^\/app\//.test(pathname ?? '');
+  const isLandingRoute = pathname === '/';
 
   useEffect(() => {
     if (isSnippetEmbedRoute) {
@@ -83,7 +84,11 @@ export function CookieBanner() {
     <div
       className={cn(
         'pointer-events-none fixed inset-x-0 z-50 p-2 sm:p-4',
-        isMobileAppRoute ? 'bottom-[4.75rem] md:bottom-0' : 'bottom-0'
+        isMobileAppRoute
+          ? 'bottom-[4.75rem] md:bottom-0'
+          : isLandingRoute
+            ? 'bottom-3 sm:bottom-4'
+            : 'bottom-0'
       )}
     >
       <Card className="pointer-events-auto mx-auto w-full max-w-4xl border border-proofound-stone/70 bg-white/95 shadow-[0_18px_54px_-38px_rgba(86,98,79,0.45)] backdrop-blur">

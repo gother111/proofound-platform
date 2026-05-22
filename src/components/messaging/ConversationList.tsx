@@ -200,7 +200,7 @@ export function ConversationList({
                       {getDisplayName(conversation)}
                     </h3>
                     {conversation.assignmentTitle && (
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-xs leading-5 text-muted-foreground line-clamp-2">
                         Re: {conversation.assignmentTitle}
                       </p>
                     )}

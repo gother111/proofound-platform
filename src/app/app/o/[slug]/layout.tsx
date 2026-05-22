@@ -36,7 +36,14 @@ export default async function OrganizationLayout({
       <LeftNav basePath={`/app/o/${slug}`} isBetaTesting={user.isBetaTesting} />
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar userName={orgName} userInitials={orgInitials} basePath={`/app/o/${slug}`} />
-        <main className="mb-[4.75rem] flex-1 overflow-y-auto overflow-x-hidden pb-[calc(5.5rem+env(safe-area-inset-bottom))] scroll-pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:mb-0 md:pb-0 md:scroll-pb-0">
+        <main
+          id="main-content"
+          className="relative mb-[4.75rem] flex-1 overflow-y-auto overflow-x-hidden pb-[calc(5.5rem+env(safe-area-inset-bottom))] scroll-pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:mb-0 md:pb-0 md:scroll-pb-0"
+          role="main"
+          aria-label="Main content"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- scrollable landmark must be keyboard focusable for WCAG 2.1.1
+          tabIndex={0}
+        >
           {children}
         </main>
       </div>

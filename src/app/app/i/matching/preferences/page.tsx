@@ -29,8 +29,10 @@ export default async function MatchingPreferencesPage() {
     <AppSurface density="compact">
       <div className="mx-auto w-full max-w-4xl px-4 py-8">
         <div className="space-y-2 mb-8">
-          <h1 className="text-3xl font-bold font-display">Matching Preferences</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-3xl font-semibold text-proofound-charcoal">
+            Matching Preferences
+          </h1>
+          <p className="text-sm leading-6 text-muted-foreground">
             Set your work preferences so proof-led assignment reviews can stay relevant and
             privacy-safe.
           </p>

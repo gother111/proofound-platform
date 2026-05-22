@@ -62,8 +62,8 @@ export function PrivacySettingsClient() {
     <AppSurface>
       <div className="mx-auto w-full min-w-0 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-foreground mb-2">Privacy Settings</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-display text-3xl font-semibold text-foreground">Privacy Settings</h1>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
             Control Public Page details, assignment-review visibility, and data controls
           </p>
         </div>

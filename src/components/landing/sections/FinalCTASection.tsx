@@ -25,16 +25,6 @@ export function FinalCTASection({
       className="relative scroll-mt-24 overflow-hidden px-5 py-10 md:px-10 md:py-20"
       data-testid="landing-final-cta-section"
     >
-      <span
-        id="start-individuals"
-        className="absolute top-0 h-px w-px scroll-mt-24"
-        aria-hidden="true"
-      />
-      <span
-        id="start-organizations"
-        className="absolute top-0 h-px w-px scroll-mt-24"
-        aria-hidden="true"
-      />
       <div className="absolute inset-0 bg-transparent" aria-hidden="true" />
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <motion.div
@@ -118,9 +108,10 @@ export function FinalCTASection({
               className="mt-7 grid gap-3 md:mt-12 md:gap-5 lg:grid-cols-2"
             >
               <button
+                id="start-individuals"
                 type="button"
                 onClick={onIndividualSignup ?? onGetStarted}
-                className="group rounded-[1.15rem] border border-proofound-forest/12 bg-proofound-forest px-5 py-5 text-left text-white transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_54px_-34px_rgba(28,77,58,0.68)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 md:rounded-[2rem] md:px-6 md:py-6"
+                className="group scroll-mt-28 rounded-[1.15rem] border border-proofound-forest/12 bg-proofound-forest px-5 py-5 text-left text-white transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_54px_-34px_rgba(28,77,58,0.68)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 md:rounded-[2rem] md:px-6 md:py-6"
               >
                 <p className="text-sm uppercase tracking-[0.24em] text-white/85">For individuals</p>
                 <p className="mt-4 text-3xl font-display leading-tight">
@@ -140,9 +131,10 @@ export function FinalCTASection({
               </button>
 
               <button
+                id="start-organizations"
                 type="button"
                 onClick={onOrganizationSignup ?? onGetStarted}
-                className="group rounded-[1.15rem] border border-border/80 bg-[#FDFCFA] px-5 py-5 text-left text-foreground transition-[background-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_22px_54px_-38px_rgba(86,98,79,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 md:rounded-[2rem] md:px-6 md:py-6"
+                className="group scroll-mt-28 rounded-[1.15rem] border border-border/80 bg-[#FDFCFA] px-5 py-5 text-left text-foreground transition-[background-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_22px_54px_-38px_rgba(86,98,79,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest/35 focus-visible:ring-offset-4 focus-visible:ring-offset-white active:translate-y-0 md:rounded-[2rem] md:px-6 md:py-6"
               >
                 <p className="text-sm uppercase tracking-[0.24em] text-foreground/54">
                   For organizations
@@ -155,7 +147,7 @@ export function FinalCTASection({
                   explainable assignment-fit review.
                 </p>
                 <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-proofound-forest">
-                  Talk to the team
+                  Request a pilot
                   <ArrowRight
                     className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
                     aria-hidden="true"

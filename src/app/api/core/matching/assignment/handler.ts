@@ -17,7 +17,11 @@ import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher'
 import { getPreset, normalizeWeights } from '@/lib/core/matching/presets';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { resolveFeatureFlags } from '@/lib/feature-flags/server';
-import { isMockSupabaseEnabled, visualFixturesRuntimeAllowed } from '@/lib/env';
+import { getMatchingVisualState, buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
+import {
+  VISUAL_ASSIGNMENT_FIXTURE_IDS,
+  visualAssignmentFixturesEnabled,
+} from '@/lib/assignments/visual-fixtures';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 import { log } from '@/lib/log';
 import {
@@ -34,20 +38,8 @@ import {
   resolveCanonicalCorridor,
   resolveCanonicalFallbackState,
 } from '@/lib/matching/review-contract';
-import { getMatchingVisualState, buildVisualOrgMatches } from '@/lib/matching/visual-fixtures';
 
-// Shared handler imported by the kept launch corridor routes.
 export const dynamic = 'force-dynamic';
-
-const VISUAL_ASSIGNMENT_FIXTURE_IDS = new Set([
-  '11111111-1111-4111-8111-111111111111',
-  '22222222-2222-4222-8222-222222222222',
-]);
-
-const visualAssignmentFixturesEnabled = () =>
-  isMockSupabaseEnabled() &&
-  process.env.PROOFOUND_VISUAL_FIXTURES === 'true' &&
-  visualFixturesRuntimeAllowed();
 
 function toVisibilitySafeAssignmentMatchItem<T extends Record<string, unknown>>(item: T) {
   const {

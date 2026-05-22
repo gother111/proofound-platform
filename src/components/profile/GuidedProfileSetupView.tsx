@@ -253,9 +253,11 @@ export function GuidedProfileSetupView({
     onOpenMatchingPreferences,
   });
 
-  const activeIndex = steps.findIndex((s) => s.state === 'active');
-  const displayIndex = activeIndex === -1 ? 1 : activeIndex + 1;
-  const activeStep = steps.find((s) => s.state === 'active') || steps[0];
+  const activeStepIndex = steps.findIndex((s) => s.state === 'active');
+  const completedCount = steps.filter((s) => s.state === 'completed').length;
+  const displayIndex = activeStepIndex === -1 ? steps.length : activeStepIndex + 1;
+  const progressPercent = Math.round((completedCount / steps.length) * 100);
+  const activeStep = steps.find((s) => s.state === 'active') || steps[steps.length - 1];
 
   const dominantAction = !completionState.checks.hasFirstProof
     ? {
@@ -327,12 +329,12 @@ export function GuidedProfileSetupView({
             <span>
               STEP {displayIndex} OF {steps.length}
             </span>
-            <span>{Math.round((activeIndex / steps.length) * 100)}% COMPLETE</span>
+            <span>{progressPercent}% COMPLETE</span>
           </div>
           <div className="h-1 w-full bg-proofound-stone/30 rounded-full overflow-hidden">
             <div
               className="h-full bg-proofound-forest transition-all duration-500"
-              style={{ width: `${(activeIndex / steps.length) * 100}%` }}
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
 

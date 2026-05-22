@@ -5241,12 +5241,13 @@ describe('launch gate package configuration', () => {
       'src/app/app/o/[slug]/home/page.tsx',
       'src/app/app/o/[slug]/assignments/page.tsx',
       'src/app/app/i/matching/MatchingClient.tsx',
-      'src/app/app/i/matching/loading.tsx',
+      'src/app/app/i/matching/(workspace)/loading.tsx',
       'src/app/app/i/matching/preferences/page.tsx',
       'src/components/matching/EnhancedMatchFilters.tsx',
       'src/components/matching/MatchingOrganizationView.tsx',
       'src/app/api/assignments/[id]/route.ts',
       'src/app/api/assignments/route.ts',
+      'src/lib/assignments/visual-fixtures.ts',
       'src/app/api/ai/assignments/clarify/route.ts',
       'src/components/onboarding/OrganizationSetup.tsx',
       'src/app/app/o/[slug]/profile/page.tsx',
@@ -5449,7 +5450,7 @@ describe('launch gate package configuration', () => {
 
   it('keeps active interview pages workflow-led instead of generic hiring-corridor led', () => {
     const interviewPages = [
-      'src/app/app/i/interviews/page.tsx',
+      'src/app/app/i/interviews/IndividualInterviewsPage.tsx',
       'src/app/app/o/[slug]/interviews/page.tsx',
     ]
       .map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'))

@@ -125,11 +125,12 @@ describe('runtime debug output guardrails', () => {
 
   it('keeps fixed assignment mock organization access behind the explicit visual fixture gate', () => {
     const source = readSource('src/lib/assignments/access.ts');
+    const fixturesSource = readSource('src/lib/assignments/visual-fixtures.ts');
 
     expect(source).not.toContain('isMockSupabaseEnabled() &&\n    userId === MOCK_USER_ID');
     expect(source).toContain('visualAssignmentAccessFixturesEnabled()');
-    expect(source).toContain("process.env.PROOFOUND_VISUAL_FIXTURES === 'true'");
-    expect(source).toContain('visualFixturesRuntimeAllowed()');
+    expect(fixturesSource).toContain("process.env.PROOFOUND_VISUAL_FIXTURES === 'true'");
+    expect(fixturesSource).toContain('visualFixturesRuntimeAllowed()');
   });
 
   it('keeps individual dashboard metrics on canonical evidence paths in mock mode', () => {
@@ -649,7 +650,7 @@ describe('runtime debug output guardrails', () => {
   it('keeps interview page load failures on client diagnostics without console output', () => {
     const sources = [
       readSource('src/lib/client-diagnostics.ts'),
-      readSource('src/app/app/i/interviews/page.tsx'),
+      readSource('src/app/app/i/interviews/IndividualInterviewsPage.tsx'),
       readSource('src/app/app/o/[slug]/interviews/page.tsx'),
     ].join('\n');
 

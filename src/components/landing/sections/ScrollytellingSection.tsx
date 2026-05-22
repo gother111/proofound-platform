@@ -92,7 +92,7 @@ const getFrameScrollProgress = (frameIndex: number) => {
 
 export function LandingHeroHeadline() {
   return (
-    <h1 className="max-w-none font-display text-[7.4rem] font-semibold leading-[0.82] text-foreground xl:text-[9.35rem]">
+    <h1 className="max-w-none font-display text-[4.25rem] font-semibold leading-[0.88] text-foreground xl:text-[6.5rem] xl:leading-[0.84] 2xl:text-[9.35rem] 2xl:leading-[0.82]">
       <span className="block">Proof behind</span> <span className="block">the claim</span>
     </h1>
   );
@@ -2084,7 +2084,7 @@ function HeroToBlindBackground({
         ) : null}
         <div
           aria-hidden="true"
-          className="absolute right-[3.9%] top-[31.5%] z-20 hidden h-[7.4rem] w-[6.4rem] rounded-[0.7rem] border border-[#cfbd9d]/70 bg-[#E7D8BD]/95 px-3 py-3 text-center shadow-[0_10px_24px_-18px_rgba(45,51,48,0.25)] lg:block"
+          className="absolute right-[3.9%] top-[31.5%] z-20 hidden h-[7.4rem] w-[6.4rem] rounded-[0.7rem] border border-[#cfbd9d]/70 bg-[#E7D8BD]/95 px-3 py-3 text-center shadow-[0_10px_24px_-18px_rgba(45,51,48,0.25)] xl:block"
           style={{ opacity: 1 - clampedProgress }}
         >
           <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-foreground/62">
@@ -3891,19 +3891,27 @@ function StoryProgressIndicator({ activeIndex }: { activeIndex: number }) {
   const totalFrames = HOMEPAGE_STORY_FRAMES.length;
   const clampedIndex = Math.min(totalFrames - 1, Math.max(0, activeIndex));
   const nextFrame = HOMEPAGE_STORY_FRAMES[Math.min(totalFrames - 1, clampedIndex + 1)];
+  const currentFrame = HOMEPAGE_STORY_FRAMES[clampedIndex];
   const currentLabel = String(clampedIndex + 1).padStart(2, '0');
   const totalLabel = String(totalFrames).padStart(2, '0');
+  const statusLabel =
+    clampedIndex === 0
+      ? 'Scroll to explore'
+      : clampedIndex < totalFrames - 1
+        ? nextFrame.title
+        : 'Build proof-first review';
 
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute bottom-8 left-1/2 z-30 hidden -translate-x-1/2 items-center gap-4 rounded-full border border-proofound-stone/35 bg-proofound-parchment px-4 py-2.5 text-foreground/80 shadow-[0_4px_16px_-8px_rgba(86,98,79,0.12)] lg:flex"
-    >
+    <div className="pointer-events-none absolute bottom-8 left-1/2 z-30 hidden -translate-x-1/2 items-center gap-4 rounded-full border border-proofound-stone/35 bg-proofound-parchment px-4 py-2.5 text-foreground/80 shadow-[0_4px_16px_-8px_rgba(86,98,79,0.12)] xl:flex">
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        Step {clampedIndex + 1} of {totalFrames}: {currentFrame.title}
+      </p>
+
       <span className="tabular-nums text-[0.68rem] font-medium uppercase tracking-[0.24em] text-foreground/70">
         {currentLabel} / {totalLabel}
       </span>
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5" aria-hidden="true">
         {HOMEPAGE_STORY_FRAMES.map((frame, index) => (
           <span
             key={frame.id}
@@ -3920,7 +3928,7 @@ function StoryProgressIndicator({ activeIndex }: { activeIndex: number }) {
       </div>
 
       <span className="max-w-[13rem] truncate text-[0.72rem] font-medium text-foreground/80">
-        {clampedIndex < totalFrames - 1 ? nextFrame.title : 'Build proof-first review'}
+        {statusLabel}
       </span>
     </div>
   );

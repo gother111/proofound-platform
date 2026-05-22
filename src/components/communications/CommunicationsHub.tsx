@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CalendarCheck, Handshake, Loader2, MessageCircle } from 'lucide-react';
 
-import IndividualInterviewsPage from '@/app/app/i/interviews/page';
+import IndividualInterviewsPage from '@/app/app/i/interviews/IndividualInterviewsPage';
 import { MessagesClient as IndividualMessagesClient } from '@/app/app/i/messages/MessagesClient';
 import OrganizationInterviewsPage from '@/app/app/o/[slug]/interviews/page';
 import { DeferredOrgMessagesClient } from '@/app/app/o/[slug]/messages/DeferredOrgMessagesClient';
@@ -87,7 +87,7 @@ export function CommunicationsHub({
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] w-full flex-col bg-japandi-bg md:h-[calc(100vh-3.5rem)] md:flex-row md:overflow-hidden">
       {/* Left Sidebar for Tab/Section Selection */}
-      <aside className="flex w-full shrink-0 flex-col gap-5 border-b border-proofound-stone/70 bg-neutral-light-50/95 p-4 md:w-64 md:justify-between md:border-b-0 md:border-r md:p-5">
+      <aside className="flex w-full shrink-0 flex-col gap-5 border-b border-proofound-stone/70 bg-neutral-light-50/95 p-4 md:w-72 md:justify-between md:border-b-0 md:border-r md:p-5">
         <div className="space-y-4 md:space-y-6">
           <div className="space-y-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-proofound-forest">
@@ -124,7 +124,7 @@ export function CommunicationsHub({
                     <span className="block text-xs font-semibold">{section.label}</span>
                     <span
                       className={cn(
-                        'block text-[10px] truncate',
+                        'block text-[10px] leading-snug line-clamp-2',
                         isActive ? 'text-white/80' : 'text-muted-foreground'
                       )}
                     >

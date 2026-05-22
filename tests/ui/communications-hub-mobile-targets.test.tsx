@@ -10,7 +10,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => usePathnameMock(),
 }));
 
-vi.mock('@/app/app/i/interviews/page', () => ({
+vi.mock('@/app/app/i/interviews/IndividualInterviewsPage', () => ({
   default: () => <div>Individual interviews workspace</div>,
 }));
 

@@ -280,7 +280,9 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <h1 className="text-3xl font-bold text-foreground">Internal review before publish</h1>
+            <h1 className="font-display text-3xl font-semibold text-foreground">
+              Internal review before publish
+            </h1>
             <p className="text-muted-foreground">
               Confirm the assignment is specific, credible, and ready for a narrow publish path.
             </p>

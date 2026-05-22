@@ -157,6 +157,14 @@ const MOCK_LONG_ORG_ID = '99999999-9999-4999-9999-999999999998';
 const MOCK_LONG_ORG_SLUG = 'long-org';
 const MOCK_PROFILE_ID = '77777777-7777-4777-8777-777777777777';
 const MOCK_PROFILE_HANDLE = 'demo-proofound';
+const MOCK_PROFILE_HANDLE_ALIASES = ['mock-individual'] as const;
+
+function isMockPublicIndividualHandle(handle: string) {
+  return (
+    handle === MOCK_PROFILE_HANDLE ||
+    MOCK_PROFILE_HANDLE_ALIASES.includes(handle as (typeof MOCK_PROFILE_HANDLE_ALIASES)[number])
+  );
+}
 
 function visualPublicProjectionFixturesEnabled() {
   return (
@@ -1517,7 +1525,7 @@ function buildMockPublicIndividualPortfolioProjection(): PublicIndividualPortfol
 export async function getPublicIndividualPortfolioProjectionByHandle(
   handle: string
 ): Promise<PublicIndividualPortfolioProjection | null> {
-  if (visualPublicProjectionFixturesEnabled() && handle === MOCK_PROFILE_HANDLE) {
+  if (visualPublicProjectionFixturesEnabled() && isMockPublicIndividualHandle(handle)) {
     return buildMockPublicIndividualPortfolioProjection();
   }
 

@@ -501,6 +501,18 @@ describe('public portfolio projection', () => {
     expect(db.execute).not.toHaveBeenCalled();
   });
 
+  it('accepts the mock individual handle alias in visual fixture mode', async () => {
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
+    process.env.PROOFOUND_VISUAL_FIXTURES = 'true';
+
+    const projection = await getPublicIndividualPortfolioProjectionByHandle('mock-individual');
+
+    expect(projection).not.toBeNull();
+    expect(projection?.handle).toBe('demo-proofound');
+    expect(projection?.publicDisplayName).toBe('Mika Andersson');
+    expect(db.execute).not.toHaveBeenCalled();
+  });
+
   it('does not serve mock individual public pages in plain mock Supabase mode', async () => {
     process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
     vi.mocked(db.execute as any).mockResolvedValueOnce({ rows: [] });

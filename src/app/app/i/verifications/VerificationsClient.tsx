@@ -874,7 +874,9 @@ export function VerificationsClient({
         </div>
 
         {filteredRequests.length === 0 ? (
-          renderEmptyState(activeFilter, mode)
+          requests.length === 0 ? null : (
+            renderEmptyState(activeFilter, mode)
+          )
         ) : (
           <div role="list" className="space-y-3">
             {filteredRequests.map(

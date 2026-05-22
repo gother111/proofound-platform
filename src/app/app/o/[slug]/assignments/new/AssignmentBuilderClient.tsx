@@ -653,14 +653,27 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
 
   return (
     <AppSurface>
-      <div className="mx-auto flex max-w-4xl flex-col gap-6">
+      <div className="mx-auto flex min-w-0 max-w-4xl flex-col gap-6">
+        <header className="space-y-1 border-b border-proofound-stone/50 pb-5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-proofound-forest">
+            Assignment corridor
+          </p>
+          <h1 className="font-display text-3xl font-semibold text-proofound-charcoal">
+            Create assignment
+          </h1>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+            Define one proof-led role with clear expectations, then save for internal review before
+            publish.
+          </p>
+        </header>
+
         <Card className="min-w-0 p-4">
           <div className="flex flex-col gap-4">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-foreground">Lean assignment corridor</p>
-              <p className="text-xs text-muted-foreground">
-                This builder stays narrow on purpose: one structured assignment, then internal
-                review before publish.
+              <p className="text-sm font-semibold text-foreground">Start from scratch or import</p>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Keep the corridor narrow: one structured assignment, then internal review before
+                publish.
               </p>
             </div>
 
@@ -774,9 +787,18 @@ export default function AssignmentBuilderPage({ slug }: AssignmentBuilderClientP
         ) : null}
 
         <div className="rounded-2xl border border-proofound-stone/70 bg-white/75 p-4 lg:hidden">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Step {currentStep} of {STEPS.length}
-          </p>
+          <div className="mb-3 flex items-center justify-between text-xs font-semibold text-proofound-forest">
+            <span>
+              Step {currentStep} of {STEPS.length - 1}
+            </span>
+            <span>{Math.round((currentStep / (STEPS.length - 1)) * 100)}% drafted</span>
+          </div>
+          <div className="mb-3 h-1 overflow-hidden rounded-full bg-proofound-stone/30">
+            <div
+              className="h-full bg-proofound-forest transition-all duration-300"
+              style={{ width: `${(currentStep / (STEPS.length - 1)) * 100}%` }}
+            />
+          </div>
           <p className="mt-1 font-display text-xl font-semibold text-proofound-charcoal">
             {STEPS.find((step) => step.id === currentStep)?.name}
           </p>

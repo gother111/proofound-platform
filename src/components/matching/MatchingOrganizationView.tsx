@@ -399,7 +399,7 @@ export function MatchingOrganizationView({
                   }`}
                 >
                   <div className="flex flex-wrap items-center gap-1.5 justify-between">
-                    <span className="font-semibold text-sm text-proofound-charcoal truncate block max-w-[180px]">
+                    <span className="block line-clamp-2 text-sm font-semibold leading-5 text-proofound-charcoal">
                       {assignment.role}
                     </span>
                     {updateBadge && (
@@ -428,7 +428,7 @@ export function MatchingOrganizationView({
               <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-proofound-forest">
                 Focused Review
               </span>
-              <h2 className="text-lg font-bold text-proofound-charcoal truncate mt-0.5">
+              <h2 className="mt-0.5 line-clamp-2 text-lg font-bold leading-snug text-proofound-charcoal">
                 {currentAssignment ? currentAssignment.role : 'No assignment selected'}
               </h2>
             </div>

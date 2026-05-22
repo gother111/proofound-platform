@@ -2,7 +2,7 @@ import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 
-import InterviewsPage from '@/app/app/i/interviews/page';
+import InterviewsPage from '@/app/app/i/interviews/IndividualInterviewsPage';
 
 const getInterviewCorridorItemsMock = vi.fn();
 

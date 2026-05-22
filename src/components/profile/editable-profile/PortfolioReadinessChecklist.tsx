@@ -27,12 +27,16 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
       passed: completionState.checks.hasRealContext,
     },
     {
-      id: 'proof',
-      label: 'One real proof is added and structured',
-      nextAction: completionState.checks.hasFirstProof
-        ? 'Structure your first Proof Pack'
-        : 'Add your first proof',
-      passed: completionState.checks.hasFirstProof && completionState.checks.hasStructuredProofPack,
+      id: 'first_proof',
+      label: 'First proof artifact added',
+      nextAction: 'Add your first proof',
+      passed: completionState.checks.hasFirstProof,
+    },
+    {
+      id: 'structured_proof',
+      label: 'Proof Pack structured',
+      nextAction: 'Structure your first Proof Pack',
+      passed: completionState.checks.hasStructuredProofPack,
     },
     {
       id: 'verification',

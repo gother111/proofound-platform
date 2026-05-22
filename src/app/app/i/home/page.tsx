@@ -67,8 +67,8 @@ export default async function IndividualHomePage() {
     };
   }
 
-  const userName = user.displayName || user.handle || 'there';
-  const firstName = userName.split(' ')[0];
+  const userName = user.displayName?.trim() || user.handle?.trim() || null;
+  const firstName = userName?.split(' ')[0] ?? null;
   const hasProof = metrics.proofStoriesCount > 0;
   const hasTrustAnchor = metrics.verifiedSkills > 0;
 
@@ -160,7 +160,7 @@ export default async function IndividualHomePage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-proofound-stone/50 pb-5">
           <div className="space-y-1">
             <h1 className="font-display text-3xl font-semibold text-proofound-charcoal dark:text-foreground">
-              Welcome back, {firstName}
+              {firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
             </h1>
             <p className="text-sm text-muted-foreground max-w-2xl">
               {hasProof

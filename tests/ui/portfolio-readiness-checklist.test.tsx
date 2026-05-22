@@ -57,5 +57,6 @@ describe('PortfolioReadinessChecklist', () => {
     );
 
     expect(screen.getByText('Publish one public-safe proof item')).toBeInTheDocument();
+    expect(screen.getByText('5/6')).toBeInTheDocument();
   });
 });

@@ -14,6 +14,11 @@ import { inviteMemberFormAction } from '@/actions/org';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 import type { OrgRole } from '@/lib/authz';
 import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
+import {
+  buildVisualAssignmentFixtures,
+  visualAssignmentFixturesEnabled,
+  VISUAL_ASSIGNMENT_MOCK_ORG_ID,
+} from '@/lib/assignments/visual-fixtures';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -73,12 +78,31 @@ export default async function OrganizationHomePage({
     displayName: m.profiles?.display_name || 'Collaborator',
   }));
 
-  // Fetch assignments
-  const { data: assignmentsData } = await supabase
-    .from('assignments')
-    .select('id, role, status, creation_status, created_at')
-    .eq('org_id', org.id)
-    .order('created_at', { ascending: false });
+  // Fetch assignments (visual fixtures override mock org home when enabled)
+  let assignmentsData: Array<{
+    id: string;
+    role: string;
+    status: string;
+    creation_status: string;
+    created_at: string;
+  }> | null = null;
+
+  if (visualAssignmentFixturesEnabled() && org.id === VISUAL_ASSIGNMENT_MOCK_ORG_ID) {
+    assignmentsData = buildVisualAssignmentFixtures(org.id).map((fixture) => ({
+      id: fixture.id,
+      role: fixture.role,
+      status: fixture.status,
+      creation_status: fixture.creationStatus,
+      created_at: fixture.createdAt,
+    }));
+  } else {
+    const { data } = await supabase
+      .from('assignments')
+      .select('id, role, status, creation_status, created_at')
+      .eq('org_id', org.id)
+      .order('created_at', { ascending: false });
+    assignmentsData = data;
+  }
 
   const activeAssignment =
     assignmentsData?.find((a) => a.status === 'active') || assignmentsData?.[0];

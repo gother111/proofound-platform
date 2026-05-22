@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import MatchingPage from '@/app/app/i/matching/page';
+import MatchingPage from '@/app/app/i/matching/(workspace)/page';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({

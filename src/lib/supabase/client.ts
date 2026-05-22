@@ -3,6 +3,25 @@ import { assertMockDatabaseAllowed, getEnv, isMockSupabaseEnabled } from '@/lib/
 
 const MOCK_USER_ID = '88888888-8888-4888-8888-888888888888';
 const ORG_ID = '99999999-9999-4999-9999-999999999999';
+const mockProfileRecord = {
+  id: MOCK_USER_ID,
+  handle: 'mock-individual',
+  displayName: 'Mock Individual',
+  display_name: 'Mock Individual',
+  avatarUrl: null,
+  avatar_url: null,
+  locale: 'en',
+  persona: 'individual' as const,
+  isBetaTesting: false,
+  is_beta_testing: false,
+  tour_completed: true,
+  platform_role: null as 'platform_admin' | 'super_admin' | null,
+  createdAt: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+
 const getMockPersona = () => (process.env.MOCK_ORG_MODE === 'true' ? 'org_member' : 'individual');
 const isMockAdminTestContext = () =>
   process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true';
@@ -16,6 +35,14 @@ const getMockPlatformRole = (): 'platform_admin' | 'super_admin' | null => {
 
   return process.env.MOCK_ADMIN_MODE === 'true' ? 'platform_admin' : null;
 };
+
+function buildMockProfileRecord() {
+  return {
+    ...mockProfileRecord,
+    persona: getMockPersona(),
+    platform_role: getMockPlatformRole(),
+  };
+}
 
 const mockSupabaseClient = {
   auth: {
@@ -118,12 +145,7 @@ const mockSupabaseClient = {
         maybeSingle: async () => {
           if (table === 'profiles') {
             return {
-              data: {
-                id: MOCK_USER_ID,
-                platform_role: getMockPlatformRole(),
-                tour_completed: false,
-                persona: getMockPersona(),
-              },
+              data: buildMockProfileRecord(),
               error: null,
             };
           }

@@ -23,6 +23,11 @@ import { safeApiErrorResponse, safeValidationErrorResponse } from '@/lib/api/err
 import { ensureOrganizationPrincipal, PrincipalContextSchema } from '@/lib/authz';
 import { log } from '@/lib/log';
 import { sanitizeErrorForLog } from '@/lib/privacy/log-redaction';
+import {
+  buildVisualAssignmentDetailResponse,
+  getVisualAssignmentFixtureById,
+  visualAssignmentFixturesEnabled,
+} from '@/lib/assignments/visual-fixtures';
 
 export const dynamic = 'force-dynamic';
 
@@ -160,6 +165,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
     if (access.status === 'insufficient_role') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    if (visualAssignmentFixturesEnabled() && access.orgId) {
+      const visualAssignment = getVisualAssignmentFixtureById(assignmentId, access.orgId);
+      if (visualAssignment) {
+        return NextResponse.json({
+          assignment: buildVisualAssignmentDetailResponse(visualAssignment),
+        });
+      }
     }
 
     const assignment = await db.query.assignments.findFirst({
