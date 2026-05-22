@@ -274,6 +274,25 @@ export function MatchResultCard({
         : 'Blind by default';
 
   const orgReviewCard = matchExplanation?.reviewCard ?? result.reviewCard;
+  const orgFallbackFitBullets = [
+    topSkills.length > 0
+      ? `Matched skills: ${topSkills.map((skill) => skillDisplayLabel({ label: skill.label, id: skill.id })).join(', ')}.`
+      : 'Skills and proof signals are available for assignment review.',
+    result.profile?.workMode || result.profile?.locationMode
+      ? 'Practical fit is checked against the assignment work mode and constraints.'
+      : 'Practical fit is kept separate from identity-bearing profile details.',
+    orgReviewCard?.verification.summaryLabel
+      ? `Trust signal: ${orgReviewCard.verification.summaryLabel}.`
+      : 'Blind-by-default review keeps identity details hidden until candidate consent.',
+  ];
+  const orgFitBullets =
+    orgReviewCard?.fitSummary.bullets && orgReviewCard.fitSummary.bullets.length > 0
+      ? [...new Set([...orgReviewCard.fitSummary.bullets, ...orgFallbackFitBullets])].slice(0, 3)
+      : orgFallbackFitBullets;
+  const orgReasonCodes =
+    orgReviewCard?.fitSummary.reasonCodes && orgReviewCard.fitSummary.reasonCodes.length > 0
+      ? orgReviewCard.fitSummary.reasonCodes
+      : Object.keys(result.contributions ?? {}).slice(0, 3);
   const showOrgPrimaryAction =
     result.reviewStage === 'blind_review' ||
     (result.reviewStage === 'shortlisted' && result.corridorState === 'shortlist');
@@ -395,16 +414,16 @@ export function MatchResultCard({
               {orgReviewCard?.fitSummary.headline || 'Proof-backed fit available for review.'}
             </p>
             <ul className="space-y-2 text-sm text-proofound-charcoal/85">
-              {(orgReviewCard?.fitSummary.bullets || []).map((bullet: string) => (
+              {orgFitBullets.map((bullet: string) => (
                 <li key={bullet} className="flex items-start gap-2">
                   <span className="mt-1 h-1.5 w-1.5 rounded-full bg-proofound-forest" />
                   <span>{bullet}</span>
                 </li>
               ))}
             </ul>
-            {(orgReviewCard?.fitSummary.reasonCodes || []).length > 0 ? (
+            {orgReasonCodes.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
-                {orgReviewCard?.fitSummary.reasonCodes.map((reasonCode: string) => (
+                {orgReasonCodes.map((reasonCode: string) => (
                   <Badge key={reasonCode} variant="secondary" className="font-mono text-[11px]">
                     {reasonCode}
                   </Badge>

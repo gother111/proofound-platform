@@ -109,4 +109,41 @@ describe('MatchResultCard', () => {
     expect(screen.queryByText('Match breakdown:')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /snooze/i })).not.toBeInTheDocument();
   });
+
+  it('shows fallback explanation signals when org match review bullets are sparse', () => {
+    render(
+      <MatchResultCard
+        result={{
+          id: 'match-2',
+          score: 0.71,
+          profileId: 'candidate-2',
+          reviewStage: 'blind_review',
+          revealScope: 'blind',
+          profile: {
+            workMode: 'Remote',
+          },
+          contributions: {
+            skills: 0.42,
+            proof: 0.31,
+            constraints: 0.22,
+          },
+        }}
+        variant="blind"
+        skills={[
+          { id: 'program-management', label: 'Program management', level: 4 },
+          { id: 'stakeholder-coordination', label: 'Stakeholder coordination', level: 3 },
+        ]}
+      />
+    );
+
+    expect(screen.getByText('Reason-coded fit summary')).toBeInTheDocument();
+    expect(screen.getByText(/Matched skills: Program management/i)).toBeInTheDocument();
+    expect(screen.getByText(/Practical fit is checked/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Blind-by-default review keeps identity details hidden/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('skills')).toBeInTheDocument();
+    expect(screen.getByText('proof')).toBeInTheDocument();
+    expect(screen.getByText('constraints')).toBeInTheDocument();
+  });
 });

@@ -716,6 +716,30 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                   does not publish a public page or broaden the application beyond this assignment.
                 </p>
 
+                <div
+                  className="grid gap-3 rounded-lg border border-proofound-stone bg-white/70 p-4 text-sm sm:grid-cols-3"
+                  data-testid="candidate-proof-demo-path"
+                >
+                  <div className="space-y-1">
+                    <p className="font-medium text-proofound-charcoal">1. Build proof</p>
+                    <p className="text-xs leading-5 text-proofound-charcoal/60">
+                      Use one claim or outcome tied to this assignment.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium text-proofound-charcoal">2. Attach evidence</p>
+                    <p className="text-xs leading-5 text-proofound-charcoal/60">
+                      Add an artifact, link, or placeholder that supports the claim.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium text-proofound-charcoal">3. Review privacy</p>
+                    <p className="text-xs leading-5 text-proofound-charcoal/60">
+                      Submit only after checking what the organization can see.
+                    </p>
+                  </div>
+                </div>
+
                 <Button asChild variant="outline">
                   <Link href={proofOnboardingHref}>
                     Create first Proof Pack
@@ -774,6 +798,11 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                   <Button variant="outline" onClick={openProofPackReview} disabled={submitting}>
                     Review assignment proof
                   </Button>
+                </div>
+
+                <div className="rounded-lg border border-proofound-stone bg-white/70 p-3 text-xs leading-5 text-proofound-charcoal/60">
+                  Minimum demo packet: one claim or outcome, one evidence artifact or link, one
+                  trust or verification signal, and one privacy confirmation.
                 </div>
 
                 {reviewProofPackId ? (

@@ -692,6 +692,30 @@ export default function AssignmentBuilderPage() {
               </Button>
             </div>
 
+            <div
+              className="grid gap-3 rounded-lg border border-proofound-stone bg-proofound-parchment/35 p-4 text-sm sm:grid-cols-3"
+              data-testid="assignment-demo-path"
+            >
+              <div className="space-y-1">
+                <p className="font-medium text-proofound-charcoal">Start</p>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Convert a vague role into one clear assignment purpose.
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium text-proofound-charcoal">Middle</p>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Add outcomes, proof expectations, skills, and practical constraints.
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium text-proofound-charcoal">Finish</p>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Save to internal review so the assignment is visible before publishing.
+                </p>
+              </div>
+            </div>
+
             {entryMode === 'import' ? (
               <div className="space-y-3 rounded-md border bg-muted/30 p-4">
                 <div className="space-y-1">
@@ -813,6 +837,24 @@ export default function AssignmentBuilderPage() {
             );
           })}
         </div>
+
+        <Card className="border-proofound-forest/20 bg-white p-4">
+          <div className="grid gap-3 text-sm md:grid-cols-[0.9fr_1.1fr] md:items-start">
+            <div>
+              <p className="font-semibold text-proofound-charcoal">What this demo proves</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                The company turns a vague role into measurable outcomes and proof-based
+                requirements.
+              </p>
+            </div>
+            <ul className="grid gap-2 text-xs leading-5 text-proofound-charcoal/75 sm:grid-cols-2">
+              <li>Assignment title and reason for opening the role</li>
+              <li>Expected outcomes and work summary</li>
+              <li>Must-have skills and credible proof expectations</li>
+              <li>Practical constraints plus privacy-safe review settings</li>
+            </ul>
+          </div>
+        </Card>
 
         <Card className="p-8">{renderedStep}</Card>
 

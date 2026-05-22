@@ -173,6 +173,13 @@ describe('Assignment builder lean corridor', () => {
     expect(
       screen.getByRole('button', { name: /import existing job description/i })
     ).toBeInTheDocument();
+    expect(screen.getByTestId('assignment-demo-path')).toHaveTextContent(/start.*middle.*finish/i);
+    expect(screen.getByText(/what this demo proves/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /The company turns a vague role into measurable outcomes and proof-based requirements/i
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText('Why this role exists')).toBeInTheDocument();
     expect(screen.getByText('What work will actually be done')).toBeInTheDocument();
     expect(screen.getByText('What proof would count')).toBeInTheDocument();
