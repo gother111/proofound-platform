@@ -91,6 +91,20 @@ describe('LeftNav portfolio gating', () => {
     expect(screen.queryByRole('link', { name: /expertise/i })).not.toBeInTheDocument();
   });
 
+  it('treats the verification center as profile-owned instead of communications-owned', () => {
+    usePathnameMock.mockReturnValue('/app/i/verifications');
+
+    render(<LeftNav basePath="/app/i" />);
+
+    expect(screen.getAllByRole('link', { name: /^profile$/i })[0]).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(screen.getAllByRole('link', { name: /^communications$/i })[0]).not.toHaveAttribute(
+      'aria-current'
+    );
+  });
+
   it('keeps individual settings discoverable from the account menu', () => {
     render(<TopBarProfileMenu userName="Yurii" basePath="/app/i" onClose={vi.fn()} />);
 

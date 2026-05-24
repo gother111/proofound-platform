@@ -65,14 +65,20 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
 
   const individualNavItems: NavItem[] = [
     { href: `${basePath}/home`, icon: Home, label: 'Overview', dataTour: 'home-link' },
-    { href: `${basePath}/profile`, icon: User, label: 'Profile', dataTour: 'profile-link' },
+    {
+      href: `${basePath}/profile`,
+      icon: User,
+      label: 'Profile',
+      dataTour: 'profile-link',
+      activeHrefs: [`${basePath}/verifications`],
+    },
     {
       href: `${basePath}/communications`,
       icon: MessageCircle,
       label: 'Communications',
       mobileLabel: 'Inbox',
       dataTour: 'communications-link',
-      activeHrefs: [`${basePath}/messages`, `${basePath}/interviews`, `${basePath}/verifications`],
+      activeHrefs: [`${basePath}/messages`, `${basePath}/interviews`],
     },
     {
       href: `${basePath}/matching`,
