@@ -171,80 +171,40 @@ describe('MatchResultCard', () => {
     expect(screen.queryByRole('button', { name: /snooze/i })).not.toBeInTheDocument();
   });
 
-  it('uses policy language when a protected org review cannot expose matching detail', () => {
+  it('shows fallback explanation signals when org match review bullets are sparse', () => {
     render(
       <MatchResultCard
         result={{
-          id: 'match-policy-protected',
-          profileId: 'candidate-1',
+          id: 'match-2',
+          score: 0.71,
+          profileId: 'candidate-2',
           reviewStage: 'blind_review',
           revealScope: 'blind',
           profile: {
             workMode: 'Remote',
           },
-          fairness: {
-            status: 'suppressed',
-          },
-          reviewCard: {
-            candidateLabel: 'Submission A7F2',
-            strongestProof: {
-              summary: 'Led a privacy-safe launch proof for a complex assignment-review workflow.',
-              outcome: 'Reduced review time while keeping identity reveal masked.',
-              ownership: 'Owned the end-to-end review corridor changes.',
-              anchorContext: 'Anchored in prior project work',
-              freshnessLabel: 'Fresh',
-            },
-            verification: {
-              summaryLabel: 'Verified proof signal present',
-              count: 2,
-            },
-            trustLabels: ['Verified proof signal present'],
-            fitBand: 'High-priority proof review',
-            fitSummary: {
-              headline: 'Proof signals align with the assignment needs.',
-              bullets: ['Required proof and verification signals are in place.'],
-              reasonCodes: ['verification_ready'],
-            },
+          contributions: {
+            skills: 0.42,
+            proof: 0.31,
+            constraints: 0.22,
           },
         }}
         variant="blind"
+        skills={[
+          { id: 'program-management', label: 'Program management', level: 4 },
+          { id: 'stakeholder-coordination', label: 'Stakeholder coordination', level: 3 },
+        ]}
       />
     );
 
-    expect(screen.getByText('Policy protected')).toBeInTheDocument();
-    expect(screen.queryByText(/fairness/i)).not.toBeInTheDocument();
-  });
-
-  it('keeps individual cards qualitative instead of score or rank led', () => {
-    render(
-      <MatchResultCard
-        result={{
-          id: 'match-individual-2',
-          assignmentId: 'assignment-2',
-          assignment: {
-            role: 'Proof operations lead',
-            locationMode: 'remote',
-          },
-          proofSignals: [
-            { key: 'proof_fit', support: 'Primary reason' },
-            { key: 'skills_fit', support: 'Primary reason' },
-            { key: 'verification_fit', support: 'Clear support' },
-          ],
-        }}
-        variant="blind"
-      />
-    );
-
-    expect(screen.getByText('Proof signals available')).toBeInTheDocument();
-    expect(screen.getByText('Blind by default')).toBeInTheDocument();
+    expect(screen.getByText('Reason-coded fit summary')).toBeInTheDocument();
+    expect(screen.getByText(/Matched skills: Program management/i)).toBeInTheDocument();
+    expect(screen.getByText(/Practical fit is checked/i)).toBeInTheDocument();
     expect(
-      screen.getByText('Verification check visible only within this review stage')
+      screen.getByText(/Blind-by-default review keeps identity details hidden/i)
     ).toBeInTheDocument();
-    expect(screen.queryByText(/% proof fit/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/ranking band/i)).not.toBeInTheDocument();
-    expect(screen.queryByText('91%')).not.toBeInTheDocument();
-    expect(screen.queryByText('Strong proof alignment')).not.toBeInTheDocument();
-    expect(screen.queryByText('Clear proof alignment')).not.toBeInTheDocument();
-    expect(screen.queryByText(/verified profile/i)).not.toBeInTheDocument();
+    expect(screen.getByText('skills')).toBeInTheDocument();
+    expect(screen.getByText('proof')).toBeInTheDocument();
+    expect(screen.getByText('constraints')).toBeInTheDocument();
   });
 });

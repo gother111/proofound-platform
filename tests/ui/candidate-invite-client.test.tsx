@@ -188,7 +188,10 @@ describe('CandidateInviteClient test_match flow', () => {
     expect(
       screen.getByText(/does not publish a public page or broaden visibility/i)
     ).toBeInTheDocument();
-    expect(screen.queryByText(/Owner-only Proof Pack ID/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('candidate-proof-demo-path')).toHaveTextContent(
+      /Build proof.*Attach evidence.*Review privacy/i
+    );
+    expect(screen.getByText(/Minimum demo packet/i)).toBeInTheDocument();
     expect(
       screen.queryByPlaceholderText(/00000000-0000-0000-0000-000000000000/)
     ).not.toBeInTheDocument();
@@ -558,6 +561,8 @@ describe('CandidateInviteClient test_match flow', () => {
     });
 
     expect(screen.getByText(/Create or choose one owner-only Proof Pack/i)).toBeInTheDocument();
+    expect(screen.getByTestId('candidate-proof-demo-path')).toBeInTheDocument();
+    expect(screen.getAllByText(/one claim or outcome/i).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /create first proof pack/i })).toHaveAttribute(
       'href',
       '/onboarding?next=%2Fcandidate-invite%2Ftoken-value'

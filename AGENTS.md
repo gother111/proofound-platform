@@ -1,5 +1,5 @@
 > Doc Class: `governance`
-> Last Verified: `2026-05-19`
+> Last Verified: `2026-05-22`
 
 # Repository Agent Instructions
 
@@ -19,6 +19,14 @@
 
 - Treat the repository as the source of truth.
 - Read files before making assumptions.
+
+## Autonomy and Communication
+
+- Default to taking the next useful local step when it is reversible, repo-local, and within the user's requested scope.
+- Do not ask permission for ordinary reading, searching, targeted edits, formatting, or local verification.
+- Ask first before deploys, database writes, auth changes, payment changes, external comments, Linear status changes, production-like operations, broad refactors, or user-facing behavior choices.
+- Keep progress updates short and practical. Summarize what was found, what changed, and what remains risky.
+- Keep final answers compact unless the task is a review, deploy, risky change, or the user asks for detail.
 
 ## Read Order
 

@@ -120,8 +120,30 @@ export function OrgShortlistClient({ items }: Props) {
     return next;
   }, [items, assignmentFilter, sortBy, search]);
 
+  const fallbackFitBullets = [
+    'Proof evidence is available for assignment-specific review.',
+    'Practical fit and constraints are shown separately from identity.',
+    'Reveal stays limited until the candidate consents to the next step.',
+  ];
+
   return (
     <div className="space-y-4">
+      <Card className="border-proofound-forest/20 bg-proofound-parchment/35 p-4">
+        <div className="grid gap-3 text-sm md:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <p className="font-semibold text-proofound-charcoal">Explainable shortlist</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Review candidates through proof, practical fit, and trust signals before any reveal.
+            </p>
+          </div>
+          <div className="grid gap-2 text-xs leading-5 text-proofound-charcoal/75 sm:grid-cols-3">
+            <span>Strongest relevant proof</span>
+            <span>Reason-coded fit summary</span>
+            <span>Blind-review and fairness status</span>
+          </div>
+        </div>
+      </Card>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Badge variant="outline">
@@ -251,14 +273,17 @@ export function OrgShortlistClient({ items }: Props) {
                   Reason-coded fit summary
                 </p>
                 <ul className="space-y-2 text-sm text-proofound-charcoal/85">
-                  {(item.reviewCard?.fitSummary.bullets || item.why?.summary || []).map(
-                    (bullet) => (
-                      <li key={bullet} className="flex items-start gap-2">
-                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-proofound-forest" />
-                        <span>{bullet}</span>
-                      </li>
-                    )
-                  )}
+                  {(item.reviewCard?.fitSummary.bullets?.length
+                    ? item.reviewCard.fitSummary.bullets
+                    : item.why?.summary?.length
+                      ? item.why.summary
+                      : fallbackFitBullets
+                  ).map((bullet) => (
+                    <li key={bullet} className="flex items-start gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-proofound-forest" />
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
                 </ul>
                 {(item.reviewCard?.fitSummary.reasonCodes || item.why?.reasonCodes || []).length >
                 0 ? (

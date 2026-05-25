@@ -771,11 +771,36 @@ export function CandidateInviteClient({
                 </p>
               </div>
 
-              <div className="space-y-4 md:min-w-80">
-                {error ? <p className="text-sm text-red-600">{error}</p> : null}
-                {successMessage ? (
-                  <p className="text-sm text-emerald-700">{successMessage}</p>
-                ) : null}
+                <div
+                  className="grid gap-3 rounded-lg border border-proofound-stone bg-white/70 p-4 text-sm sm:grid-cols-3"
+                  data-testid="candidate-proof-demo-path"
+                >
+                  <div className="space-y-1">
+                    <p className="font-medium text-proofound-charcoal">1. Build proof</p>
+                    <p className="text-xs leading-5 text-proofound-charcoal/60">
+                      Use one claim or outcome tied to this assignment.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium text-proofound-charcoal">2. Attach evidence</p>
+                    <p className="text-xs leading-5 text-proofound-charcoal/60">
+                      Add an artifact, link, or placeholder that supports the claim.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium text-proofound-charcoal">3. Review privacy</p>
+                    <p className="text-xs leading-5 text-proofound-charcoal/60">
+                      Submit only after checking what the organization can see.
+                    </p>
+                  </div>
+                </div>
+
+                <Button asChild variant="outline">
+                  <Link href={proofOnboardingHref}>
+                    Create first Proof Pack
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
 
                 {!currentUser ? (
                   <div className="space-y-3">
@@ -803,25 +828,22 @@ export function CandidateInviteClient({
                   </div>
                 ) : null}
 
-                {currentUser && invite.status === CANDIDATE_INVITE_STATUS.PENDING ? (
-                  <div className="space-y-3">
-                    <p className="text-sm text-slate-700">
-                      Signed in as <strong>{currentUser.email}</strong>.
-                    </p>
-                    <p className="text-xs leading-5 text-proofound-charcoal/60">
-                      Starting the proof submission does not submit proof, send verification email,
-                      or reveal additional account fields.
-                    </p>
-                    <Button
-                      onClick={claimInvite}
-                      disabled={submitting}
-                      className="w-full sm:w-auto"
-                    >
-                      {isTestFlow ? 'Accept trial invite' : 'Continue to proof submission'}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : null}
+                <div className="rounded-lg border border-proofound-stone bg-white/70 p-3 text-xs leading-5 text-proofound-charcoal/60">
+                  Minimum demo packet: one claim or outcome, one evidence artifact or link, one
+                  trust or verification signal, and one privacy confirmation.
+                </div>
+
+                {reviewProofPackId ? (
+                  <div className="space-y-4 rounded-lg border border-proofound-forest/50 bg-white p-4">
+                    <div>
+                      <p className="text-sm font-semibold text-proofound-charcoal">
+                        Final review before submission
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-proofound-charcoal/70">
+                        Confirm what {organization.displayName} can see before this application is
+                        submitted.
+                      </p>
+                    </div>
 
                 {!isTestFlow && currentUser && !isCompleted && isClaimedByCurrentUser ? (
                   <div className="space-y-5">

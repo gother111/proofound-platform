@@ -179,11 +179,14 @@ describe('Assignment builder lean corridor', () => {
     expect(
       screen.getByRole('button', { name: /import existing assignment brief/i })
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /import existing assignment brief/i }));
-    expect(screen.getByLabelText(/existing assignment brief/i)).toBeInTheDocument();
-    expect(document.body.textContent ?? '').not.toContain('Import existing job description');
-    expect(document.body.textContent ?? '').not.toContain('Existing job description');
-    expect(screen.getAllByText('Why this role exists').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('assignment-demo-path')).toHaveTextContent(/start.*middle.*finish/i);
+    expect(screen.getByText(/what this demo proves/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /The company turns a vague role into measurable outcomes and proof-based requirements/i
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('Why this role exists')).toBeInTheDocument();
     expect(screen.getByText('What work will actually be done')).toBeInTheDocument();
     expect(screen.getByText('What proof would count')).toBeInTheDocument();
     expect(screen.getByText('What practical constraints are real')).toBeInTheDocument();
